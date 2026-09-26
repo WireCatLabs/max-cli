@@ -28,11 +28,11 @@ export const checkParameter = (name: string, node: SchemaNode, raw: string): str
     case "ref": {
       const schema = (schemas as Record<string, v.GenericSchema>)[identifier(node.ref)]
       return schema && !v.safeParse(schema, coerce(raw)).success
-        ? `--${flagOf(name)} ${JSON.stringify(raw)} is not a valid ${node.ref}`
+        ? `--${flagOf(name)} is not a valid ${node.ref}`
         : undefined
     }
     case "integer":
-      if (!DIGITS.test(raw)) return `--${flagOf(name)} takes an integer, not ${JSON.stringify(raw)}`
+      if (!DIGITS.test(raw)) return `--${flagOf(name)} takes an integer`
       if (node.minimum !== undefined && BigInt(raw) < BigInt(node.minimum))
         return `--${flagOf(name)} is at least ${node.minimum}`
       if (node.maximum !== undefined && BigInt(raw) > BigInt(node.maximum))
@@ -74,8 +74,8 @@ export const checkBody = (operation: ManifestOperation, text: string | undefined
   let value: unknown
   try {
     value = parse(text)
-  } catch (error) {
-    throw new CliError("validation_error", `the body is not JSON: ${(error as Error).message}`)
+  } catch {
+    throw new CliError("validation_error", "the body is not valid JSON")
   }
   const schema = operation.request?.schema
     ? (schemas as Record<string, v.GenericSchema>)[operation.request.schema]
@@ -83,7 +83,10 @@ export const checkBody = (operation: ManifestOperation, text: string | undefined
   if (schema) {
     const result = v.safeParse(schema, value)
     if (!result.success) {
-      const where = result.issues.map((issue) => `${v.getDotPath(issue) ?? "(body)"}: ${issue.message}`)
+      // Valibot's own message quotes the value it got — message text, which must not reach a run record.
+      const where = result.issues.map(
+        (issue) => `${v.getDotPath(issue) ?? "(body)"} expects ${issue.expected ?? issue.kind}`,
+      )
       throw new CliError(
         "validation_error",
         `the body does not match ${operation.request?.schema}: ${where.join("; ")}`,

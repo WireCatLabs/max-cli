@@ -108,11 +108,16 @@ export class BotTransport {
         return await this.#once(operation, url, input.body, timeoutMs)
       } catch (error) {
         if (!(error instanceof CliError)) throw error
+        if (this.#signal?.aborted) throw error
         const retryable = reads && error.details.retryable === true && attempt <= this.#retry.retries
         if (!retryable) throw error
         const wait = error.details.retryAfterMs ?? backoffMs(attempt, this.#retry, this.#random)
         if (wait > this.#retry.maxRetryAfterMs) throw error
-        await this.#sleep(wait, this.#signal, "retry")
+        try {
+          await this.#sleep(wait, this.#signal, "retry")
+        } catch {
+          throw error
+        }
       }
     }
   }
@@ -181,9 +186,22 @@ export class BotTransport {
         { operation: operation.id, retryable: false },
       )
     }
+    if (this.#signal?.aborted) {
+      const deadline = (this.#signal.reason as { name?: string } | undefined)?.name === "TimeoutError"
+      if (!deadline) return new CliError("cancelled", `${operation.id} was cancelled`, { operation: operation.id })
+      if (!reads) {
+        return new CliError(
+          "outcome_unknown",
+          `the command's time ran out while ${operation.id} was in flight; MAX may or may not have carried it out`,
+          { operation: operation.id, retryable: false },
+        )
+      }
+      return new CliError("timeout", `the command's time ran out during ${operation.id}`, {
+        operation: operation.id,
+        retryable: false,
+      })
+    }
     const timedOut = (error as { name?: string })?.name === "TimeoutError"
-    const cancelled = (error as { name?: string })?.name === "AbortError"
-    if (cancelled) return new CliError("cancelled", `${operation.id} was cancelled`, { operation: operation.id })
     if (!reads) {
       return new CliError(
         "outcome_unknown",

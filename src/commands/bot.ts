@@ -5,8 +5,9 @@ import { Command, Option } from "commander"
 import { BotTokenStore } from "../bot/auth.js"
 import { BotApiClient, botOperations } from "../bot/client.js"
 import { checkBody, checkParameter, flagOf, optionKey, readBody } from "../bot/input.js"
+import { BOT_PERMISSIONS } from "../bot/permissions.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
-import { type GlobalFlags, resolveSettings } from "../config.js"
+import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { resolveOutput } from "../output.js"
 import { asFirstWord } from "../profile.js"
 import { readSecret } from "../session/prompt.js"
@@ -14,8 +15,10 @@ import { environmentOf } from "./context.js"
 
 const botContext = (command: Command) => {
   const environment = environmentOf(command)
-  const settings = resolveSettings(command.optsWithGlobals<GlobalFlags>())
-  const { renderer } = resolveOutput({
+  const flags = command.optsWithGlobals<GlobalFlags & { offline?: boolean }>()
+  if (flags.offline) throw new CliError("validation_error", "max bot always asks MAX; --offline cannot apply to it")
+  const settings = resolveSettings(flags)
+  const { renderer, streams } = resolveOutput({
     ...settings,
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
@@ -42,7 +45,28 @@ const botContext = (command: Command) => {
     }
     return client(stored.token)
   }
-  return { settings, renderer, store, client, ask, authenticated }
+  return { settings, renderer, streams, store, client, ask, authenticated }
+}
+
+/** The personal account's `readOnly` and `allow` hold for the bot too; a prompt was waived (`NEED-304`), a refusal was not. */
+const assertAllowed = (operation: ManifestOperation, settings: Settings): void => {
+  if (operation.effect === "read") return
+  if (settings.readOnly) {
+    throw new CliError(
+      "permission_error",
+      `profile ${settings.profile} is read-only (readOnly, from the ${settings.sources.readOnly}) — ` +
+        `the bot cannot ${operation.command} either`,
+    )
+  }
+  if (!settings.allow) return
+  const permission = BOT_PERMISSIONS[operation.id]
+  if (!permission || !settings.allow.includes(permission)) {
+    throw new CliError(
+      "permission_error",
+      `profile ${settings.profile} does not allow ${permission ?? operation.command} ` +
+        `(allow: ${settings.allow.join(", ") || "nothing"} — from the ${settings.sources.allow})`,
+    )
+  }
 }
 
 const apiCommand = (operation: ManifestOperation): Command => {
@@ -74,8 +98,9 @@ const apiCommand = (operation: ManifestOperation): Command => {
       if (parameter.in === "path") input.path[parameter.name] = raw
       else if (parameter.in === "query") input.query[parameter.name] = raw
     }
+    const { renderer, authenticated, settings } = botContext(this)
+    assertAllowed(operation, settings)
     const body = checkBody(operation, readBody(options))
-    const { renderer, authenticated } = botContext(this)
     const call: CallInput = body === undefined ? input : { ...input, body }
     renderer.result(plainJson(await authenticated().call(operation, call)))
   })
@@ -92,11 +117,14 @@ export const botCommand = (): Command => {
     .command("set")
     .description("check a bot token with MAX, then keep it — typed at a hidden prompt or piped on stdin")
     .action(async function (this: Command) {
-      const { store, client, ask, renderer, settings } = botContext(this)
-      const token = (process.env.MAX_BOT_TOKEN ?? (await ask("Bot token: ", { secret: true }))).trim()
+      const { store, client, ask, renderer, settings, streams } = botContext(this)
+      const token = (await ask("Bot token: ", { secret: true })).trim()
       if (!token) throw new CliError("validation_error", "no token given")
       const bot = await client(token).me()
       const source = store.write(token)
+      if (process.env.MAX_BOT_TOKEN) {
+        streams.diagnostic("MAX_BOT_TOKEN is set, and it wins over the token just kept until it is unset")
+      }
       renderer.result({
         profile: settings.profile,
         stored: source,
