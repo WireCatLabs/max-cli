@@ -12,8 +12,8 @@ importers:
         specifier: 0.0.22
         version: 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@leemour/cli-core':
-        specifier: file:/tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz
-        version: file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.8.0
+        version: 0.8.0(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -323,9 +323,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@leemour/cli-core@file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz':
-    resolution: {integrity: sha512-r70UNQTTGd3jeKNCOvAUtufVVKLkG5t+ownKE4epOA6UFR4I691b5ZWQe/OByB+2jEE6Q2WfNho7OU7T5qPFDA==, tarball: file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz}
-    version: 0.8.0
+  '@leemour/cli-core@0.8.0':
+    resolution: {integrity: sha512-r70UNQTTGd3jeKNCOvAUtufVVKLkG5t+ownKE4epOA6UFR4I691b5ZWQe/OByB+2jEE6Q2WfNho7OU7T5qPFDA==}
     engines: {node: '>=22'}
     peerDependencies:
       commander: '>=15'
@@ -1307,7 +1306,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@leemour/cli-core@file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-core@0.8.0(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       cli-table3: 0.6.5
       env-paths: 4.0.0
