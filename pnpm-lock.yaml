@@ -12,8 +12,8 @@ importers:
         specifier: 0.0.22
         version: 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@leemour/cli-core':
-        specifier: 0.7.0
-        version: 0.7.0(commander@15.0.0)(typescript@7.0.2)
+        specifier: file:/tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz
+        version: file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -71,7 +71,10 @@ importers:
         version: 7.0.2
       vitest:
         specifier: ^5.0.1
-        version: 5.0.1(@types/node@22.20.4)(vite@7.3.6(@types/node@22.20.4))
+        version: 5.0.1(@types/node@22.20.4)(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
 
 packages:
 
@@ -320,8 +323,9 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@leemour/cli-core@0.7.0':
-    resolution: {integrity: sha512-u9AC2FwSWLmnyPBu8iPT3FksPmuCkCgWeATTelskeg3imAzM/GvDU9KJcIz5Ra3hRthxL3X2OCEFw6weIhx1JQ==}
+  '@leemour/cli-core@file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz':
+    resolution: {integrity: sha512-r70UNQTTGd3jeKNCOvAUtufVVKLkG5t+ownKE4epOA6UFR4I691b5ZWQe/OByB+2jEE6Q2WfNho7OU7T5qPFDA==, tarball: file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz}
+    version: 0.8.0
     engines: {node: '>=22'}
     peerDependencies:
       commander: '>=15'
@@ -1161,6 +1165,11 @@ packages:
       utf-8-validate:
         optional: true
 
+  yaml@2.9.1:
+    resolution: {integrity: sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
   zod@4.6.5:
     resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
@@ -1298,7 +1307,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@leemour/cli-core@0.7.0(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-core@file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-core-0.8.0.tgz(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       cli-table3: 0.6.5
       env-paths: 4.0.0
@@ -1545,14 +1554,14 @@ snapshots:
     dependencies:
       valibot: 1.5.0(typescript@7.0.2)
 
-  '@vitest/mocker@5.0.1(vite@7.3.6(@types/node@22.20.4))':
+  '@vitest/mocker@5.0.1(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.1
       estree-walker: 3.0.3
       magic-string: 1.4.2
     optionalDependencies:
-      vite: 7.3.6(@types/node@22.20.4)
+      vite: 7.3.6(@types/node@22.20.4)(yaml@2.9.1)
 
   '@vitest/spy@5.0.1': {}
 
@@ -1891,7 +1900,7 @@ snapshots:
     optionalDependencies:
       typescript: 7.0.2
 
-  vite@7.3.6(@types/node@22.20.4):
+  vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1):
     dependencies:
       esbuild: 0.28.2
       fdir: 6.5.0(picomatch@4.0.7)
@@ -1902,11 +1911,12 @@ snapshots:
     optionalDependencies:
       '@types/node': 22.20.4
       fsevents: 2.3.3
+      yaml: 2.9.1
 
-  vitest@5.0.1(@types/node@22.20.4)(vite@7.3.6(@types/node@22.20.4)):
+  vitest@5.0.1(@types/node@22.20.4)(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.1(vite@7.3.6(@types/node@22.20.4))
+      '@vitest/mocker': 5.0.1(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -1917,7 +1927,7 @@ snapshots:
       tinybench: 6.1.4
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
-      vite: 7.3.6(@types/node@22.20.4)
+      vite: 7.3.6(@types/node@22.20.4)(yaml@2.9.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/node': 22.20.4
@@ -1939,5 +1949,7 @@ snapshots:
       string-width: 8.3.0
 
   ws@8.21.3: {}
+
+  yaml@2.9.1: {}
 
   zod@4.6.5: {}

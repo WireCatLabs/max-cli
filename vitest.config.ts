@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     globals: false,
     // Every test file runs with config, state and cache pointed at a temporary directory. See the
     // file for why this is not optional.
