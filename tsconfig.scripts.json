@@ -6,7 +6,8 @@
     "declarationMap": false,
     "emitDeclarationOnly": false,
     "noEmit": true,
-    "rootDir": "."
+    "rootDir": ".",
+    "allowImportingTsExtensions": true
   },
   "include": ["scripts/**/*.ts"],
   "exclude": []

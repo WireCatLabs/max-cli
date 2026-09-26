@@ -513,3 +513,27 @@ keyring, deadline and run record as a command, built from flags instead of argv.
 
 User side: [`../mcp.md`](../mcp.md). The research behind the choices is local-only
 (`docs_ai/plans/2026-09-23-mcp-research.md`).
+
+## 18. The bot API is a separate slice, generated from the official schema
+
+`max …` is the personal account over the unofficial protocol; `max bot …` (in progress, `CLI-25`)
+is a bot over MAX's official HTTP Bot API. The two share no transport, no session and no
+generated code. Nothing under `src/bot/` imports `src/protocol/`, `src/session/` or
+`src/generated/`, and the other way round.
+
+```
+spec/bot/schema.yaml        the official OpenAPI document, committed with provenance.json
+   │  pnpm bot:spec:sync    — the only step that reads the network, and only when run by hand
+   ▼
+scripts/bot/openapi-adapter.ts   OpenAPI → cli-core's format-neutral ApiModel; strict, names what it refuses
+scripts/bot/overrides.ts         read / write / destructive, where the HTTP method is wrong
+   │  pnpm bot:generate     — part of `pnpm generate`, so CI's freshness check covers it
+   ▼
+src/bot/generated/{types,schemas,manifest}.ts   docs/dev/bot-api-coverage.md
+```
+
+The generator itself is `@leemour/cli-core/codegen`, shared with other CLIs; only the adapter from
+OpenAPI is ours. The generated Valibot schemas keep the schema's constraints and turn a 64-bit id
+into an exact decimal string. They expect numbers from `lossless-json`, and they decode only — a
+request is validated with them and then sent as the original lossless value. Enums and
+discriminated unions are strict, so an update type newer than the snapshot fails validation.

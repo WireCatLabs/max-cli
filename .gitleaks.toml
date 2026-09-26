@@ -40,5 +40,8 @@ regexes = [
   '''\+?71234567890''',
   '''00000000-0000-0000-0000-0000000000\d\d''',
   '''(?i)your-token-here|example-token|<token>''',
+  # Example upload tokens printed in MAX's public Bot API documentation (spec/bot/schema.yaml,
+  # copied into the generated manifest's descriptions). Allowed by value, so both files stay scanned.
+  '''_3Rarhcf1PtlMXy8jpgie8Ai_KARnVFYNQTtmIRWNh4''',
 ]
 paths = ['''pnpm-lock\.yaml''']
