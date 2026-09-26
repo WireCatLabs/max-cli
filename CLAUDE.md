@@ -31,7 +31,8 @@ Published as `@leemour/max-cli` and working against the real MAX. The commands a
    command the owner typed asked for it.
 2. **We look like the official client, not like ourselves.** The user agent and every other field
    that identifies the client copy what the official MAX client sends. Never a custom user agent,
-   never our own name on the wire (`REQUIREMENTS.md` §34).
+   never our own name on the wire (`REQUIREMENTS.md` §34). This is the personal account's rule: `max bot`
+   talks to the official Bot API as `max-cli/<version>`, since the token already names the bot (`NEED-296`).
 3. **In machine mode, stdout carries data and nothing else.** No spinner, no `✓`, no warning, no
    ANSI. Diagnostics go to stderr. This is the contract agents depend on and it gets a test.
 4. **One-shot means the process exits.** Whatever opens a socket, a timer or a listener closes it

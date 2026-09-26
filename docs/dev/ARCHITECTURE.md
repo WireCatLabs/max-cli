@@ -516,8 +516,8 @@ User side: [`../mcp.md`](../mcp.md). The research behind the choices is local-on
 
 ## 18. The bot API is a separate slice, generated from the official schema
 
-`max …` is the personal account over the unofficial protocol; `max bot …` (in progress, `CLI-25`)
-is a bot over MAX's official HTTP Bot API. The two share no transport, no session and no
+`max …` is the personal account over the unofficial protocol; `max bot …` (`CLI-25`) is a bot over
+MAX's official HTTP Bot API. The two share no transport, no session and no
 generated code. Nothing under `src/bot/` imports `src/protocol/`, `src/session/` or
 `src/generated/`, and the other way round.
 
@@ -537,3 +537,12 @@ OpenAPI is ours. The generated Valibot schemas keep the schema's constraints and
 into an exact decimal string. They expect numbers from `lossless-json`, and they decode only — a
 request is validated with them and then sent as the original lossless value. Enums and
 discriminated unions are strict, so an update type newer than the snapshot fails validation.
+
+At run time: `src/commands/bot.ts` → `src/bot/client.ts` (the only door to the generated code) →
+`src/bot/transport.ts`. The transport sends the token as the bare `Authorization` header, parses
+with `lossless-json`, repeats only reads (429, 502, 503, no answer; `Retry-After` first), and turns a
+write that got no answer into `outcome_unknown`. It trusts the Минцифры root that signs
+`platform-api2.max.ru` inside this process only: Node's process-wide default CA list (22.19+), or
+per request on Bun (`NEED-293`). The bot token is `bot:<profile>` in the keyring (`src/bot/auth.ts`).
+A Biome rule keeps `src/bot/` away from `src/protocol/`, `src/session/`, `src/spec/` and
+`src/client.ts`.

@@ -121,6 +121,33 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/bot/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "../protocol/*",
+                      "../session/*",
+                      "../generated/*",
+                      "../spec/*",
+                      "../client.js",
+                      "../commands/*"
+                    ],
+                    "message": "the bot slice talks to the official HTTP Bot API only; the personal account's protocol, session, spec and client stay out of it (ARCHITECTURE §18)"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

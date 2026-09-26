@@ -1,6 +1,8 @@
 import { existsSync } from "node:fs"
-import type { Renderer, RenderFormat, Streams } from "@leemour/cli-core"
+import type { Renderer, RenderFormat, RetryConfig, Streams } from "@leemour/cli-core"
+import type { FetchLike } from "@leemour/cli-core/http"
 import type { Command } from "commander"
+import type { BotTokenStore } from "../bot/auth.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
@@ -34,6 +36,11 @@ export interface Environment {
   interactive?: boolean
   columns?: number
   update?: UpdateEnvironment
+  /** The bot token store over a memory keyring, and a local stand-in for the Bot API. */
+  botStore?: (profile: string) => BotTokenStore
+  botFetch?: FetchLike
+  botUrl?: string
+  botRetry?: RetryConfig
 }
 
 /** One line from the person at the terminal; `secret` keeps it off the screen. */
