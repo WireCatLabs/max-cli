@@ -142,7 +142,13 @@ try {
     await step("wait for the scheduled send to fire (≤ 3 min)", async () => {
       const deadline = Date.now() + 180_000
       while (Date.now() < deadline) {
-        if (!(await client.messages.scheduled(SAVED)).some((message) => message.id === scheduled)) return
+        if (!(await client.messages.scheduled(SAVED)).some((message) => message.id === scheduled)) {
+          // Sent, it is a new message with a new id; the queued id deletes nothing, and three
+          // copies were left in Saved messages that way on 2026-09-25.
+          const { items } = await client.messages.list(SAVED, { after: Date.parse(stamp), limit: 50 })
+          for (const message of items) if (message.text === "max-cli smoke scheduled") created.push(message.id)
+          return
+        }
         await new Promise((resolve) => setTimeout(resolve, 15_000))
       }
       throw new Error("still queued after 3 minutes — cancel it in the MAX app")
