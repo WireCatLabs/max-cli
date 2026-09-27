@@ -848,7 +848,7 @@ const registerCheck = (
     {
       title,
       description:
-        "Judge what is new in a group since its last check — messages, people who joined, join requests — by the " +
+        "Judge what is new in a group since its last check — messages and people who joined — by the " +
         "owner's rules for it (`max chats rules`), and act where the rules and their consent levels allow. Only " +
         "when the owner asked for a check of this group. Returns rows { kind, rule, personId, personName, " +
         "messageId?, action, outcome, reason?, command? } and notes; a row not done carries the command that would " +

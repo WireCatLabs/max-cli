@@ -191,8 +191,9 @@ export const chatsMembers = defineOperation({
   auth: true,
   request: v.strictObject({
     chatId: id(),
-    type: v.picklist(["MEMBER", "JOIN_REQUEST"]),
-    /** `MEMBER` only: 0 for the first page, then the `marker` the previous answer carried. */
+    /** MAX also takes `JOIN_REQUEST`, and answered `{}`: a group has no join approval to fill it (`FIND-249`). */
+    type: v.literal("MEMBER"),
+    /** 0 for the first page, then the `marker` the previous answer carried. */
     marker: v.optional(v.number()),
     count: v.pipe(v.number(), v.integer(), v.minValue(1)),
   }),
@@ -201,19 +202,21 @@ export const chatsMembers = defineOperation({
   provenance: {
     confidence: "measured",
     sources: [
-      "measured against MAX 2026-09-24 with no requests (`pnpm probe:groups`)",
+      "`JOIN_REQUEST` measured against MAX 2026-09-24 (`pnpm probe:groups`): `{}`",
       "`MEMBER` measured 2026-09-27 on a group of 2 (`pnpm probe:member-list`): `{members: [{contact, presence, readMark}]}`, no `marker`",
       "PyMax get_join_requests, get_chat_members (53103f0)",
     ],
     notes:
-      "With no requests the answer is `{}` — no `members` at all. Paging by `marker` is PyMax's claim: one page of two members carried none.",
+      "Join requests are not sent: MAX groups have no join approval, so nothing can make one (owner, 2026-09-27, `FIND-249`). " +
+      'The web client\'s server config still carries `"join-requests": true` (capture 2026-09-25): they may exist for ' +
+      "channels or in a later MAX — if one ever shows up, bring the feature back after measuring it. " +
+      "Paging by `marker` is PyMax's claim: one page of two members carried none.",
   },
 })
 
 const MEMBER_ACTIONS: Record<string, readonly [ChatAction, ChatAction]> = {
   MEMBER: ["members.add", "members.remove"],
   ADMIN: ["admins.add", "admins.remove"],
-  JOIN_REQUEST: ["requests.accept", "requests.decline"],
 }
 
 export const chatsUpdateMembers = defineOperation({
@@ -226,7 +229,7 @@ export const chatsUpdateMembers = defineOperation({
     userIds: v.pipe(v.array(id()), v.minLength(1)),
     operation: v.picklist(["add", "remove"]),
     /** Absent means an ordinary member. */
-    type: v.optional(v.picklist(["ADMIN", "JOIN_REQUEST"])),
+    type: v.optional(v.literal("ADMIN")),
     showHistory: v.optional(v.boolean()),
     /** Always 0 from us: anything else probably erases the removed person's messages (`NEED-32`). */
     cleanMsgPeriod: v.optional(v.literal(0)),
@@ -254,7 +257,7 @@ export const chatsUpdateMembers = defineOperation({
       "PyMax invite_users_to_group, remove_users_from_group, add_admin, confirm_join_request, decline_join_request",
     ],
     notes:
-      "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. The JOIN_REQUEST forms are PyMax's only: they need somebody asking to join (`MAX-41`). max-api-docs calls 77 pin/archive/mute; measured otherwise. " +
+      "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. PyMax's `JOIN_REQUEST` forms are not sent: MAX groups have no join approval (`FIND-249`). max-api-docs calls 77 pin/archive/mute; measured otherwise. " +
       "Adding a bot answers `participants.filter.out` while the bot's privacy setting forbids group chats, " +
       "its default (measured 2026-09-27; dev.max.ru/docs/chatbots/bots-create/manage).",
   },

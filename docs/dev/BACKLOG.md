@@ -39,9 +39,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   answer, then `AUTH_LOGIN_CHECK_PASSWORD` 115 `{trackId, password}`), and set or remove one
   (112 → 107 → 111). PyMax 2.4.1, code; a user logged in with it on the mobile client (PyMax #106).
   The password is typed at a prompt, never an argument.
-- **MAX-41** · 🟡 P2 · Measure opcode 77 (`CHAT_MEMBERS_UPDATE`). Done 2026-09-24 with a second
-  person (`pnpm probe:members`): add, remove, make admin, take admin back. Left: accept and decline a
-  join request — needs somebody who asks to join a group the owner runs.
 - **MAX-42** · P2 · Profile and contacts, what `MAX-32`/`MAX-33` left out: a profile photo
   (`PHOTO_UPLOAD` 80 with `profile: true`, then `photoToken` and `avatarType: "USER_AVATAR"` in
   `PROFILE` 16 — web.max.ru `Q8r`), the short name (`link` in 16), a name of your own for a contact
@@ -121,12 +118,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 **Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
 `docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46`, MCP `max_chats_check` as `CLI-47`.
 
-- **MAX-59** · P2 · Accept and decline join requests from `max chats check`: they are planned,
-  never sent, until `MAX-41` measures them with a real request (`src/moderation/check.ts`, `act`).
-  **Blocked:** a MAX group has no setting that makes joining need approval (owner, 2026-09-27), so
-  no request can be made to test on. The server config still carries `"join-requests": true`
-  (web capture 2026-09-25) — requests may belong to channels or to a later MAX version. Revisit
-  when a real request shows up in `max chats requests list`.
 - **MAX-60** · P2 · Live test of `max bot chats check` (#199) with bot `test2`, an admin of
   «max-cli probe members» since 2026-09-27. Measured: the bot sees the group under the personal
   account's chat id; it holds `add_remove_members` and `delete`. **Blocked:** with no

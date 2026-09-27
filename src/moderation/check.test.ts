@@ -37,7 +37,7 @@ const person = (id: string, daysOld: number | null, name = `Name ${id}`): GroupM
 const rules = (changes: Partial<GroupRules> = {}): GroupRules => ({ ...defaultRules("Team"), ...changes })
 
 const judged = (input: Partial<Parameters<typeof judge>[0]>) =>
-  judge({ rules: rules(), messages: [], joined: [], requests: [], answerers: new Set(), now: NOW, ...input }).map(
+  judge({ rules: rules(), messages: [], joined: [], answerers: new Set(), now: NOW, ...input }).map(
     ({ rule, action, personId, messageId }) => ({ rule, action, personId, ...(messageId ? { messageId } : {}) }),
   )
 
@@ -151,20 +151,6 @@ describe("judge", () => {
       { rule: "blocked", action: "remove", personId: "7" },
     ])
   })
-
-  it("sorts join requests by the request policy, and reports the rest", () => {
-    const found = judged({
-      rules: rules({ trusted: ["1"], blocked: ["2"], requests: "both", newAccount: { days: 7, action: "remove" } }),
-      requests: [person("1", 1), person("2", 400), person("3", 1), person("4", 400)],
-    })
-
-    expect(found).toEqual([
-      { rule: "trusted", action: "accept", personId: "1" },
-      { rule: "blocked", action: "decline", personId: "2" },
-      { rule: "newAccount", action: "decline", personId: "3" },
-      { rule: "request", action: "report", personId: "4" },
-    ])
-  })
 })
 
 describe("act", () => {
@@ -192,7 +178,7 @@ describe("act", () => {
   })
   const options = (consent: GroupRules["consent"]["delete"], extra = {}) => ({
     chatId: "-1",
-    rules: rules({ consent: { delete: consent, remove: consent, accept: consent, decline: consent } }),
+    rules: rules({ consent: { delete: consent, remove: consent } }),
     allowDangerous: false,
     dryRun: false,
     maxActions: 10,
@@ -220,14 +206,12 @@ describe("act", () => {
     expect(calls).toEqual(["delete 3", "delete 6", "delete 7"])
   })
 
-  it("gives the command for what it did not do, and never accepts or declines yet", async () => {
+  it("gives the command for what it did not do", async () => {
     const { fake, calls } = client()
-    const request: Finding = { kind: "request", rule: "trusted", personId: "5", personName: null, action: "accept" }
 
-    const rows = await act(fake, [deletion("1"), request], options("allow", { dryRun: true }))
+    const rows = await act(fake, [deletion("1")], options("allow", { dryRun: true }))
 
     expect(rows[0]?.command).toBe("max messages delete -1 1 --for-everyone --allow-dangerous")
-    expect(rows[1]).toMatchObject({ outcome: "planned", reason: expect.stringContaining("MAX-41") })
     expect(calls).toEqual([])
   })
 

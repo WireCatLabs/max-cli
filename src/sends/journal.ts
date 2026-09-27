@@ -20,8 +20,6 @@ export type ChatAction =
   | "admins.remove"
   | "update"
   | "settings"
-  | "requests.accept"
-  | "requests.decline"
   | "link.reset"
 
 /** What an `account` entry changed. Never the value it changed it to — no name, number or title. */

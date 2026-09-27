@@ -251,16 +251,12 @@ describe("changing a group", () => {
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: -70000000000001, revokePrivateLink: true }])
   })
 
-  it("lists join requests as people, and accepts one", async () => {
+  it("has no join requests to list, accept or decline: MAX groups have no join approval", async () => {
     const { environment, sent } = messenger()
-    const listed = await runWith(["gr-requests", "chats", "requests", "list", "Team", "--json"], environment)
-    await runWith(["gr-requests", "chats", "requests", "accept", "Team", "30000003"], environment)
+    const { code } = await runWith(["gr-requests", "chats", "requests", "list", "Team", "--json"], environment)
 
-    expect(JSON.parse(listed.stdout)).toMatchObject([{ id: "30000003", name: "Asker" }])
-    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toMatchObject([
-      { userIds: [30000003], type: "JOIN_REQUEST", operation: "add", showHistory: true },
-    ])
-    expect(journalOf("gr-requests")).toMatchObject([{ action: "requests.accept", people: 1 }])
+    expect(code).not.toBe(0)
+    expect(sent(Opcode.CHAT_MEMBERS)).toEqual([])
   })
 
   describe("chats events", () => {

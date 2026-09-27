@@ -35,8 +35,8 @@ const READ_AT_MOST = 2000
 /**
  * `max <bot> bot chats check` — the group check of `max chats check`, done by the bot (plan
  * `2026-09-27-bot-moderation-plan.md`). Removing bans unless `--no-ban` (`NEED-336`); joins come
- * from what `bot updates watch` kept (`NEED-338`); account age and join requests are not in the
- * Bot API, so those rules never fire here.
+ * from what `bot updates watch` kept (`NEED-338`); account age is not in the Bot API, so that rule
+ * never fires here.
  */
 export const botCheckCommand = (): Command =>
   annotate(new Command("check"), { mutates: true })
@@ -165,7 +165,6 @@ const gather = async (
   return {
     messages: messages as Gathered["messages"],
     joined,
-    requests: [],
     answerers,
     until: messages.at(-1)?.timestamp ?? null,
     more,

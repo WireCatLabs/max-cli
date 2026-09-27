@@ -230,29 +230,6 @@ export const chatsCommand = (): Command => {
     await withClient(this, "chats settings", (client) => client.chats.settings(chat, changes))
   })
 
-  const requests = command.command("requests").description("people asking to join a group or channel")
-  requests
-    .command("list")
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("who is asking to join")
-    .action(async function (this: Command, chat: string) {
-      await withClient(this, "chats requests list", (client) => client.chats.requests.list(chat))
-    })
-  annotate(requests.command("accept"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<person...>", "an id from `requests list`")
-    .description("let them in")
-    .action(async function (this: Command, chat: string, people: string[]) {
-      await withClient(this, "chats requests accept", (client) => client.chats.requests.accept(chat, people))
-    })
-  annotate(requests.command("decline"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<person...>", "an id from `requests list`")
-    .description("turn them down")
-    .action(async function (this: Command, chat: string, people: string[]) {
-      await withClient(this, "chats requests decline", (client) => client.chats.requests.decline(chat, people))
-    })
-
   const link = command.command("link").description("a group's invite link")
   link
     .command("show")

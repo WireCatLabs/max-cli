@@ -546,26 +546,6 @@ export class MaxClient {
         this.#updateMembers(reference, [person], "admins.remove", { operation: "remove", type: "ADMIN" }),
     },
 
-    requests: {
-      /** Each with the age of their account, read like a member's — the answer's `{contact}` is the same shape. */
-      list: async (reference: string): Promise<GroupMember[]> => {
-        if (this.#offline)
-          throw new CliError("validation_error", "`--offline` reads what was recorded; join requests never are")
-        const chatId = await this.chats.resolve(reference)
-        await this.#connectOnce()
-        const answer = await this.#wire.chats.members({ chatId, type: "JOIN_REQUEST", count: JOIN_REQUESTS })
-        return asArray(answer.members).map(toGroupMember)
-      },
-      accept: (reference: string, people: string[]) =>
-        this.#updateMembers(reference, people, "requests.accept", {
-          operation: "add",
-          type: "JOIN_REQUEST",
-          showHistory: true,
-        }),
-      decline: (reference: string, people: string[]) =>
-        this.#updateMembers(reference, people, "requests.decline", { operation: "remove", type: "JOIN_REQUEST" }),
-    },
-
     update: async (reference: string, { title, description }: { title?: string; description?: string }) => {
       if (title === undefined && description === undefined) {
         throw new CliError("validation_error", "nothing to change — give --title, --description or both")
@@ -2718,11 +2698,9 @@ export const ADMIN_RIGHTS: Record<AdminRight, number> = {
   delete: 1024,
 }
 
-/** PyMax asks for this many; paging join requests is not known. */
 /** The most chats `max serve` holds from pushes before it logs in again instead. */
 const LIVE_CHATS = 10_000
 
-const JOIN_REQUESTS = 100
 /** PyMax's page, the one measured. */
 const MEMBERS_PAGE = 50
 const MEMBERS_READ = 5000
