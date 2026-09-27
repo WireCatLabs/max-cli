@@ -114,12 +114,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 **Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
 `docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46`, MCP `max_chats_check` as `CLI-47`.
 
-- **MAX-60** · 🟡 P2 · Live test of `max bot chats check`. Done 2026-09-27 with bot `test2` in «max-cli
-  probe members»: it reads the group under the personal account's chat id once it has `--can read`;
-  a check deleted one message of an agreed member for everyone, and another removed them with
-  `block=true`; the owner's account then added them back without trouble. **Left:** whether the ban
-  stops rejoining *by the link* — they were added back before trying it. Bot `test` still cannot
-  join groups (privacy setting, business.max.ru).
 - **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
   lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
   it. Refresh the chat (opcode 48, `CHAT_INFO`) before reading roles, or say the roles may be old.
