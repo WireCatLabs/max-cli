@@ -142,6 +142,19 @@ describe("toMessage", () => {
     expect(empty.attachments).toEqual([])
   })
 
+  it("keeps a service message's event and the people in it, one or many", () => {
+    const control = (attach: object) => toMessage({ ...messageWire, attaches: [attach] }, "7268926").attachments
+    expect(control({ _type: "CONTROL", event: "add", userIds: [30000003, 30000004] })).toEqual([
+      { kind: "control", event: "add", userIds: ["30000003", "30000004"] },
+    ])
+    expect(control({ _type: "CONTROL", event: "remove", userId: 30000003 })).toEqual([
+      { kind: "control", event: "remove", userIds: ["30000003"] },
+    ])
+    expect(control({ _type: "CONTROL", event: "new", title: "Team", userIds: [] })).toEqual([
+      { kind: "control", event: "new", title: "Team", userIds: [] },
+    ])
+  })
+
   it("treats a channel post with no sender as senderless rather than failing", () => {
     expect(toMessage({ ...messageWire, sender: null }, "7268926").senderId).toBeNull()
   })

@@ -230,7 +230,9 @@ export const toReactions = (raw: Payload): Reactions => {
 /**
  * What an attachment is and where it lives — never its bytes. The link fields are the ones
  * `pnpm probe:attachments` measured on 2026-09-22: `baseUrl` on a photo, `url` on a share. A file
- * and a video have no link, only `fileId` and `videoId` (measured 2026-09-23).
+ * and a video have no link, only `fileId` and `videoId` (measured 2026-09-23). A service message is
+ * `CONTROL` with `event`, and `userIds` for `new`/`add` but a single `userId` for `remove`
+ * (`pnpm probe:control`, 2026-09-27).
  */
 const attachments = (value: unknown): Attachment[] => {
   if (!Array.isArray(value)) return []
@@ -246,6 +248,13 @@ const attachments = (value: unknown): Attachment[] => {
       const size = count(entry.size)
       const fileId = asId(entry.fileId)
       const videoId = asId(entry.videoId)
+      const event = text(entry.event)
+      const people = Array.isArray(entry.userIds)
+        ? entry.userIds
+        : entry.userId === undefined
+          ? undefined
+          : [entry.userId]
+      const userIds = people?.map(asId).filter((id): id is Id => id !== undefined)
       return {
         kind: typeof entry._type === "string" ? entry._type.toLowerCase() : "unknown",
         ...(url ? { url } : {}),
@@ -256,6 +265,8 @@ const attachments = (value: unknown): Attachment[] => {
         ...(size !== null ? { size } : {}),
         ...(fileId ? { fileId } : {}),
         ...(videoId ? { videoId } : {}),
+        ...(event ? { event } : {}),
+        ...(userIds ? { userIds } : {}),
       }
     })
 }

@@ -38,6 +38,10 @@ export interface Attachment {
   /** A file or a video carries no link, only these; `messages download` asks MAX for the link. */
   fileId?: Id
   videoId?: Id
+  /** A service message (`control`): what happened, as MAX names it — `new`, `add`, `remove`, `pin`… */
+  event?: string
+  /** A service message: the people it happened to. Who did it is the message's sender. */
+  userIds?: Id[]
 }
 
 /** Where one attachment's bytes can be fetched. Measured 2026-09-23: no token and no cookie needed. */
@@ -226,6 +230,27 @@ export interface GroupSettings {
   onlyAdminsCall: boolean | null
   onlyOwnerEditsInfo: boolean | null
   membersSeeLink: boolean | null
+}
+
+/** Somebody joined, left, was added or removed, or the chat changed — one service message. */
+export interface ChatEvent {
+  messageId: Id
+  /** ISO 8601. */
+  timestamp: string
+  /** As MAX names it: `new`, `add`, `remove`, `pin` measured; anything else passes through. */
+  event: string
+  by: { id: Id | null; name: string | null }
+  people: { id: Id; name: string | null }[]
+  /** `new` carries the chat's title. */
+  title?: string
+}
+
+export interface ChatEvents {
+  chatId: Id
+  since: string
+  events: ChatEvent[]
+  /** More history than one run reads; the oldest are here. */
+  more: boolean
 }
 
 /** A group or channel as the group commands answer it. */
