@@ -18,7 +18,7 @@ import { mockMax } from "../testing/mock-max.js"
 import { VERSION } from "../version.js"
 import { fromLine, lineReader, toLine } from "./lines.js"
 import { answers, MaxServer, type ServerEvent } from "./server.js"
-import { ServerConnection, serverStatus, stopServer } from "./server-connection.js"
+import { OPERATIONS_FINGERPRINT, ServerConnection, serverStatus, stopServer } from "./server-connection.js"
 import { serverEnvironment } from "./start.js"
 import { subscribe } from "./subscribe.js"
 
@@ -946,10 +946,12 @@ describe("max server", () => {
 })
 
 describe("starting a server in the background", () => {
-  it("stops one a command started under another version, and leaves one started by hand", async () => {
+  it("stops one a command started under another version or build, and leaves one started by hand", async () => {
     const { replacedIfStale } = await import("./start.js")
     const oldOne = new SessionStore({ profile: "v-old", keyring: memoryKeyring() })
     const byHand = new SessionStore({ profile: "v-hand", keyring: memoryKeyring() })
+    const otherBuild = new SessionStore({ profile: "v-build", keyring: memoryKeyring() })
+    const current = new SessionStore({ profile: "v-current", keyring: memoryKeyring() })
     const stops: string[] = []
     const fake = (store: SessionStore, status: Record<string, unknown>) => {
       const server = createServer((socket) =>
@@ -969,12 +971,40 @@ describe("starting a server in the background", () => {
     const servers = [
       await fake(oldOne, { version: "0.0.1", byHand: false }),
       await fake(byHand, { version: "0.0.1", byHand: true }),
+      await fake(otherBuild, { version: VERSION, byHand: false }),
+      await fake(current, { version: VERSION, operations: OPERATIONS_FINGERPRINT, byHand: false }),
     ]
 
     expect(await replacedIfStale(oldOne)).toBe(true)
     expect(await replacedIfStale(byHand)).toBe(false)
-    expect(stops).toEqual(["v-old"])
+    expect(await replacedIfStale(otherBuild)).toBe(true)
+    expect(await replacedIfStale(current)).toBe(false)
+    expect(stops).toEqual(["v-old", "v-build"])
     for (const server of servers) server.close()
+  })
+
+  it("tells the command to stop an older server that refuses an operation this build sends", async () => {
+    const store = new SessionStore({ profile: "v-refuses", keyring: memoryKeyring() })
+    const server = createServer((socket) =>
+      socket.on(
+        "data",
+        lineReader((line) => {
+          const { id } = fromLine(line)
+          socket.write(
+            toLine({ id, error: { code: "not_allowed", message: "opcode 82 is not one the server passes on" } }),
+          )
+        }),
+      ),
+    )
+    await new Promise<void>((resolve) => server.listen(store.socketPath(), () => resolve()))
+    const wire = new ServerConnection({ path: store.socketPath(), store })
+
+    await expect(wire.invoke(82, {})).rejects.toMatchObject({
+      code: "configuration_error",
+      message: expect.stringContaining("max server stop"),
+    })
+    await wire.close()
+    server.close()
   })
 
   it("does not try again for a while after MAX refused the login", async () => {

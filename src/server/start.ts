@@ -4,7 +4,7 @@ import { dirname } from "node:path"
 import type { SessionStore } from "../session/store.js"
 import { VERSION } from "../version.js"
 import { answers, startingPath } from "./server.js"
-import { serverStatus, stopServer } from "./server-connection.js"
+import { OPERATIONS_FINGERPRINT, serverStatus, stopServer } from "./server-connection.js"
 
 /** A server a command started stops after this long unused. */
 export const IDLE_MS = 15 * 60_000
@@ -89,13 +89,14 @@ export const ensureServer = async (store: SessionStore): Promise<boolean> => {
 }
 
 /**
- * A server a command started under another version gives way: it speaks to MAX with that
+ * A server a command started under another version, or another build of it, gives way: it speaks to MAX with that
  * version's code, and after an upgrade that can be a different protocol altogether. One started by
  * hand is the owner's to stop.
  */
 export const replacedIfStale = async (store: SessionStore): Promise<boolean> => {
   const status = await serverStatus(store.socketPath())
-  if (!status || status.version === VERSION || status.byHand === true) return false
+  if (!status || status.byHand === true) return false
+  if (status.version === VERSION && status.operations === OPERATIONS_FINGERPRINT) return false
   return (await stopServer(store.socketPath())) === "stopped"
 }
 

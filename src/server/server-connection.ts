@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { connect, type Socket } from "node:net"
 import { CliError, errorCodes } from "@leemour/cli-core"
 import { Opcode } from "../generated/opcodes.generated.js"
@@ -163,6 +164,13 @@ export class ServerConnection implements Wire {
     if (error?.code === "refused") {
       throw new ProtocolError(error.message ?? "MAX refused it", Number(request.opcode), error.payload ?? null)
     }
+    if (error?.code === "not_allowed") {
+      throw new CliError(
+        "configuration_error",
+        `${error.message ?? "the server does not pass this on"} — the running max serve is older than this max; ` +
+          "stop it with `max server stop` and run the command again",
+      )
+    }
     if (error) throw new Error(error.message ?? "max serve could not do it")
     return (answer.payload ?? {}) as Payload
   }
@@ -209,6 +217,22 @@ export const forwardedOperation = (opcode: number): Operation | undefined =>
     (operation) =>
       operation.opcode === opcode && !operation.name.startsWith("session.") && !operation.name.startsWith("login."),
   )
+
+/**
+ * Which operations this build passes on. Two builds can carry the same version number — a checkout
+ * of main against the published package — so the version alone does not tell a server that
+ * refuses a newer operation from one that does not.
+ */
+export const OPERATIONS_FINGERPRINT = createHash("sha256")
+  .update(
+    Object.values(OPERATIONS)
+      .filter((operation) => forwardedOperation(operation.opcode) === operation)
+      .map((operation) => `${operation.name}:${operation.opcode}`)
+      .sort()
+      .join(","),
+  )
+  .digest("hex")
+  .slice(0, 16)
 
 /**
  * Asks a running server to stop. `"refused"` is a server started by hand, which only Ctrl-C

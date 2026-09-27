@@ -5,7 +5,11 @@ import { LosslessNumber, parse } from "lossless-json"
 import * as v from "valibot"
 import { schemas } from "./generated/schemas.js"
 
+/** `--timeout` is the program's own deadline: a parameter spelled like it would never reach MAX (`BUG-61`). */
+const RENAMED: Readonly<Record<string, string>> = { timeout: "poll-timeout" }
+
 export const flagOf = (name: string): string =>
+  RENAMED[name] ??
   name
     .replace(/_/g, "-")
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")

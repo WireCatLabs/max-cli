@@ -25,6 +25,7 @@ let notReady = 0
 
 const answer = (method: string, url: string, body: string): [number, string] => {
   if (url === "/me") return [200, BOT]
+  if (url.startsWith("/updates?")) return [200, `{"updates": [], "marker": 1}`]
   if (method === "PATCH" && url === "/me/commands") return [200, BOT]
   if (method === "POST" && url.startsWith("/uploads?type=")) {
     const type = new URL(url, botUrl).searchParams.get("type")
@@ -133,6 +134,14 @@ describe("max bot messages send to a positive number", () => {
     const { stderr } = await max(["bot", "messages", "send", "-404", "hi", "--json"])
     expect(JSON.parse(stderr).error.code).toBe("not_found")
     expect(stderr).not.toContain("user:")
+  })
+})
+
+describe("max bot api get-updates", () => {
+  it("sends --poll-timeout as the timeout parameter, leaving --timeout to the command", async () => {
+    const { stderr } = await max(["bot", "api", "get-updates", "--poll-timeout", "0", "--limit", "5", "--json"])
+    expect(stderr).toBe("")
+    expect(requests.at(-1)?.url).toBe("/updates?limit=5&timeout=0")
   })
 })
 

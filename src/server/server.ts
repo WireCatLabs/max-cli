@@ -16,7 +16,7 @@ import type { Guarded } from "../spec/define.js"
 import { objectOf } from "../spec/guards.js"
 import { VERSION } from "../version.js"
 import { fromLine, lineReader, toLine } from "./lines.js"
-import { forwardedOperation, stopServer } from "./server-connection.js"
+import { forwardedOperation, OPERATIONS_FINGERPRINT, stopServer } from "./server-connection.js"
 
 export type ServerEvent =
   | { event: "message"; message: MessageHit }
@@ -396,6 +396,7 @@ export class MaxServer {
       byHand: !this.#options.startedByCommand,
       pid: process.pid,
       version: VERSION,
+      operations: OPERATIONS_FINGERPRINT,
       startedAt: this.#startedAt,
     }
     const { id } = request
