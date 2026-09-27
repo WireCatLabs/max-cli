@@ -38,6 +38,25 @@ max chats list --json --trace 2>&1 >/dev/null | jq -c 'select(.event == "respons
 
 `--trace` сильнее `--quiet`: флаг, который дописан руками, срабатывает всегда.
 
+### Команды бота
+
+У `max <имя> bot …` одна строка на HTTP-запрос к Bot API: операция, идентификаторы из адреса
+(чат, сообщение, человек, комментарий), HTTP-код, время, размер ответа.
+
+```sh
+max shop bot messages list -100 --trace
+```
+
+```text
+→ getMyInfo
+← getMyInfo         200  143ms  211 B
+→ getMessages       chat -100
+← getMessages       200  187ms  6.2 kB
+```
+
+Отказ показывает код ошибки и ключ MAX, например `404  not_found  not.found`, но не текст
+ответа. Загрузка файлов (`--file`, `uploads put`) в трассировку и запись пока не попадает.
+
 ## Сохранить
 
 ```sh
