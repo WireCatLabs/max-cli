@@ -3,7 +3,7 @@ import { annotate } from "@leemour/cli-core/commands"
 import { Command, Option } from "commander"
 import { plainJson } from "../bot/transport.js"
 import { UPLOAD_TYPES, type UploadType } from "../bot/uploads.js"
-import { botContext } from "./bot-context.js"
+import { assertAllowed, botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, uploaded } from "./bot-sends.js"
 
@@ -102,6 +102,7 @@ export const webhooksCommand = (): Command => {
     .action(async function (this: Command, url: string) {
       const context = botContext(this)
       const options = this.opts<{ types?: string; secretStdin?: boolean; add?: boolean }>()
+      assertAllowed(operation("subscribe"), context.settings)
       const others = (await subscriptionsOf(context)).filter((one) => one.url !== url)
       if (others.length > 0 && !options.add) {
         throw new CliError(

@@ -282,4 +282,19 @@ describe("max bot webhooks", () => {
     const rows = await journal()
     expect(JSON.stringify(rows)).not.toContain("very-secret-1")
   })
+
+  it("refuses a profile that may not set one before asking for the secret", async () => {
+    await max(["ro", "config", "set", "readOnly", "true"])
+    new BotTokenStore({ profile: "ro", keyring }).write(TOKEN)
+    let asked = false
+    const refused = await max(
+      ["ro", "bot", "webhooks", "set", "https://example.org/hook", "--secret-stdin"],
+      async () => {
+        asked = true
+        return "very-secret-1"
+      },
+    )
+    expect(refused.code).toBe(5)
+    expect(asked).toBe(false)
+  })
 })

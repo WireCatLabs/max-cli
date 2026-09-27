@@ -22,7 +22,7 @@ max messages send "Иван Петров" "Опаздываю на 15 минут
 ```sh
 max sales bot auth set                                   # токен — в скрытом вводе, MAX его проверит
 max sales bot me                                         # какой это бот
-max sales bot api get-updates --timeout 0                # номер чата — в поле chat_id
+max sales bot api get-updates --limit 10                 # номер группы — в поле chat_id
 max sales bot messages send "Команда продаж" "Сборка готова" --file report.pdf
 max sales bot recipients add "Команда продаж"            # писать только сюда
 max bot list --check                                     # все боты на этом компьютере
