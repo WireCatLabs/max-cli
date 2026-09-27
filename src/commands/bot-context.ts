@@ -20,7 +20,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   if (offline && !answersOffline) {
     throw new CliError("validation_error", `--offline reads the local copy; \`${command.name()}\` has to ask MAX`)
   }
-  const settings = resolveSettings(flags)
+  const settings = resolveSettings(flags, { kind: "bot" })
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
     ...(environment.streams ? { streams: environment.streams } : {}),

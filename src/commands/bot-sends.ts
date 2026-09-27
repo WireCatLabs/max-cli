@@ -44,7 +44,7 @@ const recipientsOf = (context: Context) =>
 
 /**
  * cli-messaging's guard with the bot's own recipient list and journal. `readOnly` and `allow` are
- * checked before it, with the bot's permission names; a bot has no hourly limit (owner, `NEED-305`).
+ * checked before it, with the bot's permission names; no hourly limit unless `bot.*` sets one (`NEED-305`, `NEED-356`).
  */
 const guardOf = (context: Context) =>
   sendGuard({
@@ -52,7 +52,7 @@ const guardOf = (context: Context) =>
     command: "max",
     readOnly: false,
     readOnlyFrom: "default",
-    sendsPerHour: Number.POSITIVE_INFINITY,
+    sendsPerHour: context.settings.sendsPerHour,
     journal: new SendJournal(files(context.settings.profile).journal),
     recipients: recipientsOf(context),
     warn: (message) => context.streams.diagnostic(message),

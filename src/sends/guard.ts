@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { CliError } from "@leemour/cli-core"
-import type { Settings } from "../config.js"
+import { type Settings, type Source, setCommandFor } from "../config.js"
 import type { Id } from "../domain/models.js"
 import {
   type AccountAction,
@@ -46,7 +46,7 @@ export interface SendGuardOptions {
   readOnlyFrom: string
   /** `undefined` allows every action; a list only those (`CLI-37`). */
   allow?: readonly Permission[]
-  allowFrom?: string
+  allowFrom?: Source
   sendsPerHour: number
   journal: SendJournal
   recipients: RecipientList
@@ -111,8 +111,7 @@ export const sendGuard = ({
 
     const permission = permissionFor(kind, action)
     if (allow && !allow.includes(permission)) {
-      const command =
-        allowFrom === "config defaults" ? "max config set --defaults allow" : `max ${profile} config set allow`
+      const command = setCommandFor(allowFrom, profile, "allow")
       throw new CliError(
         "permission_error",
         `profile ${profile} does not allow ${permission} (allow: ${allow.join(", ") || "nothing"} — from the ${allowFrom}); ` +

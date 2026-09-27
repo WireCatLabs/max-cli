@@ -292,7 +292,7 @@ describe("a reaction", () => {
     sendGuard({
       profile,
       readOnly: options.readOnly ?? false,
-      readOnlyFrom: "config file",
+      readOnlyFrom: "config file: profiles.work",
       sendsPerHour: options.sendsPerHour ?? 1,
       journal: new SendJournal(sendsPathFor(profile)),
       recipients: new RecipientList(recipientsPathFor(profile)),

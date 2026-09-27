@@ -257,7 +257,10 @@ const keepFailure = async (
   if (wasSettled(error)) return
   let settings: ReturnType<typeof resolveSettings> | undefined
   try {
-    settings = resolveSettings({ ...program.opts(), ...(profile === undefined ? {} : { profile }) })
+    settings = resolveSettings(
+      { ...program.opts(), ...(profile === undefined ? {} : { profile }) },
+      { kind: rest[0] === "bot" ? "bot" : "personal" },
+    )
   } catch {
     // A configuration that will not load is a failure worth keeping too; the flag is all there is to go on.
   }

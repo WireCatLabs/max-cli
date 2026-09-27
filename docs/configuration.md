@@ -5,8 +5,13 @@
 
 ## Порядок, в котором решается настройка
 
-**Флаг → переменная окружения → профиль в файле → `defaults` в файле → встроенное значение.** Один порядок на всю программу, в
+**Флаг → переменная окружения → файл → встроенное значение.** Один порядок на всю программу, в
 одном месте, чтобы никакая команда не могла решить иначе.
+
+Внутри файла побеждает **самая точная запись**. Для команды личного аккаунта на профиле `work`:
+`personal.profiles.work` → `profiles.work` → `personal.defaults` → `defaults`. Для команды
+`max work bot …` — то же, но с `bot` вместо `personal`. Профиль старше раздела: запись про один
+аккаунт важнее записи про все.
 
 ```sh
 max chats list --limit 5          # флаг: 5
@@ -30,8 +35,12 @@ max work config show       # то же для профиля work
 max config show --json     # то же одним объектом
 ```
 
-Против каждой настройки — откуда она: `flag`, `config file` или `default`. Против профиля —
-`first word`, `MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file` или `default`. `configFound: false` значит, что файла
+Против каждой настройки — откуда она: `flag`, `default` или `config file:` с ключом, из которого
+она прочитана, например `config file: bot.profiles.test`. Против профиля — `first word`,
+`MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: defaultProfile` или `default`.
+
+`max test config show --bot` показывает настройки так, как их получит `max test bot …`: у бота свой
+раздел и свой лимит отправок. `configFound: false` значит, что файла
 нет и всё встроенное. Если задана одна из переменных `MAX_*_DIR`, команда скажет об этом в stderr:
 с ними у профиля другая запись в ключнице, и вход, сделанный без них, выглядит как «нет сессии».
 
@@ -44,18 +53,25 @@ max config show --json     # то же одним объектом
 ```json
 {
   "defaultProfile": "personal",
+  "defaults": { "keepRunsForDays": 14 },
   "profiles": {
-    "personal": {
-      "limit": 50,
-      "timeoutMs": 20000,
-      "color": true,
-      "record": false,
-      "keepRunsForDays": 30
-    },
+    "personal": { "limit": 50, "timeoutMs": 20000, "color": true },
     "work": { "limit": 10 }
+  },
+  "personal": {
+    "defaults": { "sendsPerHour": 30 }
+  },
+  "bot": {
+    "defaults": { "allow": ["send", "reaction"] },
+    "profiles": { "shop": { "sendsPerHour": 200 } }
   }
 }
 ```
+
+- `defaults` — всем профилям, и личным аккаунтам, и ботам.
+- `profiles.<имя>` — одному профилю, в какой бы роли он ни работал.
+- `personal.defaults`, `personal.profiles.<имя>` — только командам личного аккаунта.
+- `bot.defaults`, `bot.profiles.<имя>` — только командам `max <имя> bot …`.
 
 | Поле | Что делает | По умолчанию |
 |---|---|---|
@@ -63,13 +79,15 @@ max config show --json     # то же одним объектом
 | `limit` | сколько записей показывать, когда `--limit` не передан | `20` |
 | `timeoutMs` | сколько ждать ответа на **один запрос** | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | по терминалу |
-| `senderColors` | в `max messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует | `false` |
+| `senderColors` | в `max messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | `false` |
 | `record` | записывать ли каждый запуск, как будто передан `--record` | `false` |
-| `serve` | запускать ли `max serve` в фоне, когда команде нужен MAX, а сервера нет; `--no-serve` — на один запуск. С `MAX_TOKEN` сервер не запускается | `true` |
+| `allow` | что профилю разрешено делать, списком: `send`, `reaction`, `edit`, `delete`, `groups`, `contacts` и другие. Без поля — всё | всё |
+| `serve` | запускать ли `max serve` в фоне, когда команде нужен MAX, а сервера нет; `--no-serve` — на один запуск. С `MAX_TOKEN` сервер не запускается. Только для личного аккаунта | `true` |
 | `keepRunsForDays` | сколько дней хранятся записи запусков | `30` |
 | `readOnly` | профиль только для чтения: `max messages send` отказывает с кодом `5` | `false` |
-| `sendsPerHour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями и добавленными в группы людьми; сверх — отказ с кодом `8` | `30` |
+| `sendsPerHour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями и добавленными в группы людьми; сверх — отказ с кодом `8`. **Боту** лимит задаётся только в разделе `bot`; без него бот не ограничен | `30`, у бота — нет |
 | `updateCheck` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | `true` |
+| `transcribeModel` | какой моделью `max messages transcribe` распознаёт речь. **Только в `defaults`** | `gigaam-v3` |
 
 ⚠ **`timeoutMs` и `--timeout` — разные вещи, и перепутать их дорого.** `timeoutMs` — это сколько
 ждать **один ответ** от MAX. `--timeout` — сколько отведено **команде целиком**. Одно чтение это
@@ -102,18 +120,21 @@ max work config set record true         # профилю work
 max config set keepRunsForDays 7 --defaults   # всем профилям сразу
 max work config unset limit             # убрать; снова решает defaults или встроенное
 max agent config set readOnly true      # профиль agent ничего не отправит
+max shop config set --bot sendsPerHour 200    # только боту shop
+max config set --personal --defaults limit 30 # всем личным аккаунтам
+max config set defaultProfile work      # какой профиль без первого слова
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max config set limit 0`
-откажет, и файл останется прежним. В `max config show` настройка из `defaults` помечена
-`config defaults`, из профиля — `config file`.
+откажет, и файл останется прежним. `serve` и `senderColors` с `--bot` не принимаются: у бота нет
+ни сервера, ни цветов авторов.
 
 ## Опечатка — это ошибка, а не умолчание
 
 Неизвестное поле отвергается с именем поля и кодом `configuration_error` (возврат `3`):
 
 ```json
-{"error":{"code":"configuration_error","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, senderColors, record, keepRunsForDays, readOnly, sendsPerHour"}}
+{"error":{"code":"configuration_error","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve"}}
 ```
 
 Значение не того вида называет поле и то, что допустимо: `profiles.default.limit: has to be a
@@ -126,7 +147,7 @@ whole number, 1 or more, not "20"`.
 
 ## Посмотреть, что получилось
 
-Настройки решаются в четыре слоя, и разобрать по файлу, какой из них победил, нельзя. Поэтому есть
+Настройки решаются в несколько слоёв, и разобрать по файлу, какой из них победил, трудно. Поэтому есть
 команда, которая говорит это прямо:
 
 ```sh
@@ -135,11 +156,10 @@ max config show --json
 ```
 
 Она печатает выбранный профиль **и откуда он взялся**, путь к файлу настроек и есть ли он,
-профили, перечисленные в файле, действующие значения всех настроек и каталоги состояния и кеша.
+профили и действующие значения всех настроек с источником каждого.
 
-⚠ **Список профилей — это то, что написано в файле, а не всё, что работает.**
-`max work session start` кладёт токен под именем `work` и ничего в файл не пишет, так что профиль
-может быть в ежедневном употреблении и в списке отсутствовать. Команда говорит об этом на каждом запуске.
+⚠ **В списке профилей — те, что названы в файле, и те, где выполнен вход личным аккаунтом.**
+Профиль, у которого есть только токен бота, виден в `max bot list`.
 
 ⚠ **Это не проверка здоровья.** Она читает файлы: не открывает кеш, не трогает ключницу и не
 связывается с MAX. Вопрос «жива ли сессия» стоит одного входа и относится к другой команде.

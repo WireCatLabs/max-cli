@@ -1026,8 +1026,12 @@ the settings in force, and where each one came from
 the profile, the profiles that exist, and each setting with where it came from
 
 ```sh
-max config show
+max config show [options]
 ```
+
+| Опция | Что делает |
+|---|---|
+| `--bot` | the settings a `max bot` command on this profile gets, rather than the personal account's |
 
 ### `max config set`
 
@@ -1039,12 +1043,14 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, senderColors, record, keepRunsForDays, readOnly, allow, sendsPerHour, serve, updateCheck, transcribeModel |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, updateCheck, transcribeModel, defaultProfile |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction |
 
 | Опция | Что делает |
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile |
+| `--personal` | only for personal accounts — the personal section of the file |
+| `--bot` | only for bots — the bot section of the file |
 
 ### `max config unset`
 
@@ -1056,11 +1062,13 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, senderColors, record, keepRunsForDays, readOnly, allow, sendsPerHour, serve, updateCheck, transcribeModel |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, updateCheck, transcribeModel, defaultProfile |
 
 | Опция | Что делает |
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile |
+| `--personal` | only for personal accounts — the personal section of the file |
+| `--bot` | only for bots — the bot section of the file |
 
 ## `max doctor`
 

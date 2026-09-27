@@ -298,11 +298,38 @@ describe("the program", () => {
       expect(JSON.parse(set.stdout)).toMatchObject({ scope: "profiles.work", setting: "limit", value: 30 })
 
       const { stdout } = await runWith(["work", "config", "show", "--json"])
-      expect(JSON.parse(stdout).settings).toContainEqual({ setting: "limit", value: 30, from: "config file" })
+      expect(JSON.parse(stdout).settings).toContainEqual({
+        setting: "limit",
+        value: 30,
+        from: "config file: profiles.work",
+      })
 
       await runWith(["work", "config", "unset", "limit"])
       const after = await runWith(["work", "config", "show", "--json"])
       expect(JSON.parse(after.stdout).settings).toContainEqual({ setting: "limit", value: 20, from: "default" })
+    })
+
+    it("`config set --bot` writes the bot side, and `config show --bot` reads it back", async () => {
+      const set = await runWith(["test", "config", "set", "--bot", "sendsPerHour", "60", "--json"])
+      expect(JSON.parse(set.stdout)).toMatchObject({ scope: "bot.profiles.test", value: 60 })
+
+      const bot = JSON.parse((await runWith(["test", "config", "show", "--bot", "--json"])).stdout)
+      expect(bot.kind).toBe("bot")
+      expect(bot.settings.map((row: { setting: string }) => row.setting)).not.toContain("serve")
+      expect(bot.settings).toContainEqual({
+        setting: "sendsPerHour",
+        value: 60,
+        from: "config file: bot.profiles.test",
+      })
+      const personal = JSON.parse((await runWith(["test", "config", "show", "--json"])).stdout)
+      expect(personal.settings).toContainEqual({ setting: "sendsPerHour", value: 30, from: "default" })
+    })
+
+    it("`config set defaultProfile` picks the profile a bare `max` uses", async () => {
+      await runWith(["config", "set", "defaultProfile", "mila"])
+      const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout)
+      expect(shown).toMatchObject({ profile: "mila", profileFrom: "config file: defaultProfile" })
+      await runWith(["config", "unset", "defaultProfile"])
     })
 
     it("`skill show` prints the skill file itself", async () => {
