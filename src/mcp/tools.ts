@@ -9,10 +9,10 @@ import {
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
 import { openProfileCache } from "../cache/index.js"
-import { DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
+import { ADMIN_RIGHTS, type AdminRight, DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
 import { hearingFields } from "../commands/hearing.js"
 import { listed } from "../commands/paging.js"
-import { sendTime } from "../config.js"
+import { type McpToolGroup, sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Message, Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
@@ -704,6 +704,18 @@ const TOOL_PERMISSION: Record<string, Permission> = {
   max_polls_create: "send",
   max_chats_read: "read",
   max_messages_delete: "delete",
+  max_contacts_add: "contacts",
+  max_contacts_remove: "contacts",
+  max_contacts_block: "contacts",
+  max_contacts_unblock: "contacts",
+  max_contacts_rename: "contacts",
+  max_polls_close: "reaction",
+  max_chats_join: "groups",
+  max_chats_leave: "groups",
+  max_chats_create: "groups",
+  max_chats_admins_add: "groups",
+  max_chats_admins_remove: "groups",
+  max_account_update: "profile",
 }
 
 /** Registered only with `--allow-mark-read`: the other person sees it, and `--allow-send` does not imply it. */
@@ -734,6 +746,128 @@ const DELETE_TOOLS = {
     _meta: APPROVE,
     answer: async (client, args) => client.messages.delete(await client.chats.resolve(args.chat), args.messages),
   }),
+}
+
+const person = v.pipe(v.string(), v.minLength(1), v.description("person id, or part of a known name"))
+
+const contactTool = (name: "add" | "remove" | "block" | "unblock", title: string, description: string) =>
+  tool({
+    title,
+    description: `${description} Only when the owner asked for this, about this person.`,
+    input: v.object({ person }),
+    annotations: WRITE,
+    _meta: APPROVE,
+    answer: async (client, args) => client.contacts[name](args.person),
+  })
+
+/**
+ * Changes to the account beyond messages (`NEED-350`). **Each group is off until `mcpTools` in the
+ * configuration file names it** — no `max mcp` flag reaches them — and each still passes `allow`
+ * and the send guard like any write.
+ */
+const ACCOUNT_TOOLS: Record<McpToolGroup, Record<string, AnyTool>> = {
+  contacts: {
+    max_contacts_add: contactTool("add", "Add a contact", "Add a person to the owner's contacts."),
+    max_contacts_remove: contactTool("remove", "Remove a contact", "Remove a person from the owner's contacts."),
+    max_contacts_block: contactTool("block", "Block a person", "Stop a person from writing to the owner."),
+    max_contacts_unblock: contactTool("unblock", "Unblock a person", "Let a blocked person write to the owner again."),
+    max_contacts_rename: tool({
+      title: "Rename a contact",
+      description: "Give a person a name only the owner sees. Only when the owner asked for this name for this person.",
+      input: v.object({ person, firstName: v.pipe(v.string(), v.minLength(1)), lastName: v.optional(v.string()) }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => client.contacts.rename(args.person, args.firstName, args.lastName),
+    }),
+  },
+  polls: {
+    max_polls_close: tool({
+      title: "Close a poll",
+      description: "Close one of the owner's own polls; nobody can vote after. Only when the owner asked for it.",
+      input: v.object({ chat, message: v.pipe(message, v.description("the message that carries the poll")) }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => client.polls.close(await client.chats.resolve(args.chat), args.message),
+    }),
+  },
+  groups: {
+    max_chats_join: tool({
+      title: "Join a group or channel",
+      description:
+        "Join by an invite link or a public link; the others see that the owner joined. Only when the owner asked " +
+        "to join this one.",
+      input: v.object({
+        link: v.pipe(v.string(), v.minLength(1), v.description("https://max.ru/join/… or https://max.ru/<name>")),
+      }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => client.chats.join(args.link),
+    }),
+    max_chats_leave: tool({
+      title: "Leave a group or channel",
+      description: "Leave; the others see that the owner left. Only when the owner asked to leave this one.",
+      input: v.object({ chat }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => client.chats.leave(args.chat),
+    }),
+    max_chats_create: tool({
+      title: "Create a group",
+      description: "Create a group; the people added are told. Only when the owner asked for this group with them.",
+      input: v.object({
+        title: v.pipe(v.string(), v.minLength(1)),
+        people: v.optional(v.array(person)),
+      }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => client.chats.create(args.title, args.people ?? []),
+    }),
+    max_chats_admins_add: tool({
+      title: "Make a member an admin",
+      description: "Give a member admin rights in a group. Only when the owner asked for these rights for this person.",
+      input: v.object({
+        chat,
+        person,
+        can: v.pipe(
+          v.array(v.picklist(Object.keys(ADMIN_RIGHTS) as AdminRight[])),
+          v.minLength(1),
+          v.description("what they may do"),
+        ),
+      }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => client.chats.admins.add(args.chat, args.person, args.can),
+    }),
+    max_chats_admins_remove: tool({
+      title: "Take admin rights back",
+      description: "Take an admin's rights back; they stay a member. Only when the owner asked for it.",
+      input: v.object({ chat, person }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => client.chats.admins.remove(args.chat, args.person),
+    }),
+  },
+  profile: {
+    max_account_update: tool({
+      title: "Change the owner's profile",
+      description:
+        "Change the name or description everyone sees on the owner's profile. Only when the owner asked for this " +
+        "exact text.",
+      input: v.object({
+        firstName: v.optional(v.pipe(v.string(), v.minLength(1))),
+        lastName: v.optional(v.string()),
+        description: v.optional(v.string()),
+      }),
+      annotations: WRITE,
+      _meta: APPROVE,
+      answer: async (client, args) => {
+        if (Object.values(args).every((value) => value === undefined)) {
+          throw new CliError("validation_error", "nothing to change — give firstName, lastName or description")
+        }
+        return maskedProfile(await client.account.update(args))
+      },
+    }),
+  },
 }
 
 const answered = (value: object): CallToolResult =>
@@ -774,6 +908,7 @@ export const registerTools = (
     profile,
     transcribeModel = DEFAULT_MODEL,
     permitted,
+    toolGroups = [],
   }: {
     allowSend: boolean
     confirmSend?: boolean
@@ -787,6 +922,8 @@ export const registerTools = (
     transcribeModel?: string
     /** What the profile allows; `undefined` is everything. The guard refuses anyway — this only hides. */
     permitted?: readonly Permission[]
+    /** From the configuration file only. */
+    toolGroups?: readonly McpToolGroup[]
   },
 ): void => {
   const confirmed = confirmSend ? confirmer() : undefined
@@ -795,6 +932,7 @@ export const registerTools = (
     ...(allowSend ? SEND_TOOLS : {}),
     ...(allowMarkRead ? MARK_READ_TOOLS : {}),
     ...(allowDelete ? DELETE_TOOLS : {}),
+    ...Object.assign({}, ...toolGroups.map((group) => ACCOUNT_TOOLS[group])),
   }
   const tools: Record<string, AnyTool> = {
     ...READ_TOOLS,

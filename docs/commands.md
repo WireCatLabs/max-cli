@@ -1266,7 +1266,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, updateCheck, transcribeModel, defaultProfile |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, updateCheck, transcribeModel, defaultProfile |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction |
 
 | Опция | Что делает |
@@ -1285,7 +1285,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, updateCheck, transcribeModel, defaultProfile |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, updateCheck, transcribeModel, defaultProfile |
 
 | Опция | Что делает |
 |---|---|

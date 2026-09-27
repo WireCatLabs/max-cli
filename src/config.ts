@@ -18,6 +18,13 @@ const plain =
 const wholeNumber = plain("has to be a whole number, 1 or more")
 const count = v.pipe(v.number(wholeNumber), v.integer(wholeNumber), v.minValue(1, wholeNumber))
 const flag = v.boolean(plain("has to be true or false"))
+/** MCP tools that change the account beyond messages, each group off until named here (`NEED-350`). */
+export const MCP_TOOL_GROUPS = ["contacts", "polls", "groups", "profile"] as const
+export type McpToolGroup = (typeof MCP_TOOL_GROUPS)[number]
+const mcpToolList = v.array(
+  v.picklist(MCP_TOOL_GROUPS, (issue) => `has to be one of ${MCP_TOOL_GROUPS.join(", ")}, not ${issue.received}`),
+  plain("has to be a list of tool groups, like contacts,polls"),
+)
 const permissionList = v.array(
   v.picklist(PERMISSIONS, (issue) => `has to be one of ${PERMISSIONS.join(", ")}, not ${issue.received}`),
   plain("has to be a list of actions, like send,reaction"),
@@ -60,6 +67,8 @@ const personalEntries = {
   senderColors: v.optional(flag),
   /** Start `max serve` in the background when a command needs MAX and none is running (`MAX-35`). */
   serve: v.optional(flag),
+  /** Only the file turns these on — no `max mcp` flag does (`NEED-350`). */
+  mcpTools: v.optional(mcpToolList),
 }
 const strict = <T extends v.ObjectEntries>(entries: T) => v.strictObject(entries, objectMessage(Object.keys(entries)))
 const profileSettings = strict(personalEntries)
@@ -172,6 +181,7 @@ export interface Settings {
   /** `undefined` is every action, as before `CLI-37`; a list is only those. */
   allow: readonly Permission[] | undefined
   sendsPerHour: number
+  mcpTools: readonly McpToolGroup[]
   /** Whether a person at a terminal hears, once a day, that a newer version exists. */
   updateCheck: boolean
   /** Which speech model `max messages transcribe` uses unless `--model` says otherwise. */
@@ -208,6 +218,7 @@ export type SourcedSetting =
   | "readOnly"
   | "allow"
   | "sendsPerHour"
+  | "mcpTools"
   | "updateCheck"
   | "transcribeModel"
 
@@ -303,6 +314,7 @@ export const resolveSettings = (
         )
       : first(fromFile("sendsPerHour"), DEFAULT_SENDS_PER_HOUR)
 
+  const mcpTools = first<readonly McpToolGroup[]>(fromFile("mcpTools"), [])
   const shared = config.defaults ?? {}
   const updateCheck = first([["config file: defaults", shared.updateCheck]], true)
   const transcribeModel = first<string>([["config file: defaults", shared.transcribeModel]], DEFAULT_MODEL)
@@ -341,6 +353,7 @@ export const resolveSettings = (
     readOnly: readOnly.value,
     allow: allow.value,
     sendsPerHour: sendsPerHour.value,
+    mcpTools: mcpTools.value,
     updateCheck: updateCheck.value,
     transcribeModel: transcribeModel.value,
     configPath,
@@ -360,6 +373,7 @@ export const resolveSettings = (
       readOnly: readOnly.from,
       allow: allow.from,
       sendsPerHour: sendsPerHour.from,
+      mcpTools: mcpTools.from,
       updateCheck: updateCheck.from,
       transcribeModel: transcribeModel.from,
     },
@@ -555,7 +569,7 @@ export const changeSetting = (
   const table = (profile === undefined ? section.defaults : section.profiles?.[profile]) as Record<string, unknown>
   const scope = { ...table }
   if (value === undefined) delete scope[setting]
-  else scope[setting] = setting === "allow" ? parseList(value) : parseValue(value)
+  else scope[setting] = setting === "allow" || setting === "mcpTools" ? parseList(value) : parseValue(value)
   const empty = Object.keys(scope).length === 0
 
   const place = (holder: { defaults?: unknown; profiles?: Record<string, unknown> }) => {

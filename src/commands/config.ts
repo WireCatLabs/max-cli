@@ -25,6 +25,7 @@ const SHOWN: SourcedSetting[] = [
   "readOnly",
   "allow",
   "sendsPerHour",
+  "mcpTools",
   "updateCheck",
   "transcribeModel",
 ]

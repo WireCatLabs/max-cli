@@ -46,6 +46,7 @@ export const createMaxServer = (
           allowModerate,
           profile: context.settings.profile,
           permitted,
+          toolGroups: context.settings.mcpTools,
         }),
       },
     )
@@ -60,6 +61,7 @@ export const createMaxServer = (
       profile: context.settings.profile,
       transcribeModel: context.settings.transcribeModel,
       permitted,
+      toolGroups: context.settings.mcpTools,
     })
     registerPrompts(server)
     registerResources(server, session, { profile: context.settings.profile, defaultLimit: context.settings.limit })

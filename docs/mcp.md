@@ -121,6 +121,27 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 оба. `max mcp --allow-send --allow-delete` для профиля с `allow` = `send` покажет отправку, но не
 правку, пересылку, закрепление и удаление. Инструменты чтения видны всегда.
 
+### Изменения аккаунта — только из файла настроек
+
+Контакты, закрытие опроса, вступление в группы и выход из них, создание групп, админы и профиль
+флагом не включаются. Их включает только `mcpTools` в файле настроек, по группам:
+
+```sh
+max config set mcpTools contacts,polls      # профилю по умолчанию
+max work config set mcpTools groups         # профилю work
+```
+
+| Группа | Инструменты | Разрешение в `allow` |
+|---|---|---|
+| `contacts` | `max_contacts_add`, `_remove`, `_rename`, `_block`, `_unblock` | `contacts` |
+| `polls` | `max_polls_close` | `reaction` |
+| `groups` | `max_chats_join`, `_leave`, `_create`, `max_chats_admins_add`, `_remove` | `groups` |
+| `profile` | `max_account_update` — имя и описание, без фото | `profile` |
+
+Так агент не может включить их сам, дописав флаг в свою же команду запуска. Каждое действие проходит
+`readOnly`, `allow` и журнал отправок, как команда; `--confirm-send` показывает и их. В разделе `bot`
+файла настроек `mcpTools` не принимается.
+
 ## Инструменты
 
 | Инструмент | Команда | Что делает |
@@ -154,6 +175,7 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 | `max_chats_read` | `max chats read` | отметить чат прочитанным, только с `--allow-mark-read` |
 | `max_messages_delete` | `max messages delete` | удалить у владельца, только с `--allow-delete` |
 | `max_chats_check` | `max chats check` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |
+| `max_contacts_*`, `max_polls_close`, `max_chats_join` и другие | `max contacts …`, `max polls close`, `max chats …`, `max account update` | только если группа названа в `mcpTools` (выше) |
 
 Ответы — те же, что `--json` у команды: список — `{ items, page, limit, hasMore }`, id — строки.
 Ошибка — `{ error: { code, message, … } }` с теми же кодами, что у CLI; неоднозначное имя чата

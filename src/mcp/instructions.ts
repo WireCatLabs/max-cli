@@ -1,3 +1,4 @@
+import type { McpToolGroup } from "../config.js"
 import type { Permission } from "../sends/permissions.js"
 
 /**
@@ -12,6 +13,7 @@ export const instructions = ({
   allowModerate = false,
   profile,
   permitted,
+  toolGroups = [],
 }: {
   allowSend: boolean
   confirmSend?: boolean
@@ -20,6 +22,7 @@ export const instructions = ({
   allowModerate?: boolean
   profile: string
   permitted?: readonly Permission[]
+  toolGroups?: readonly McpToolGroup[]
 }): string =>
   [
     `The owner's personal MAX Messenger account (profile "${profile}"). A mistake here reaches a real person.`,
@@ -44,6 +47,11 @@ export const instructions = ({
         ]
       : []),
     ...(allowModerate ? ["- max_chats_check: only when the owner asked to check that group."] : []),
+    ...(toolGroups.length > 0
+      ? [
+          `- The owner turned on changes to the account (${toolGroups.join(", ")}): each only when asked for that exact change — others see a join, a leave, a new group or a profile change.`,
+        ]
+      : []),
     ...(permitted
       ? [
           `- Profile "${profile}" allows only: ${permitted.join(", ") || "nothing"}. Tools for anything else are not offered; a refusal naming \`allow\` is final.`,

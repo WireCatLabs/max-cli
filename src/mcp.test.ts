@@ -359,6 +359,86 @@ describe("the MCP server", () => {
     expect(names).toContain("max_messages_list")
   })
 
+  describe("tools that change the account (mcpTools)", () => {
+    const ACCOUNT = [
+      "max_contacts_add",
+      "max_contacts_remove",
+      "max_contacts_block",
+      "max_contacts_unblock",
+      "max_contacts_rename",
+      "max_polls_close",
+      "max_chats_join",
+      "max_chats_leave",
+      "max_chats_create",
+      "max_chats_admins_add",
+      "max_chats_admins_remove",
+      "max_account_update",
+    ]
+    const offered = async (profile: string) =>
+      (
+        await (
+          await connect({ allowSend: true, allowDelete: true, allowMarkRead: true, allowModerate: true }, { profile })
+        ).client.listTools()
+      ).tools.map(({ name }) => name)
+    const configure = (profile: string, ...argv: string[]) =>
+      run([profile, "config", "set", ...argv], { streams: captureStreams(), tty: false })
+
+    it("are off whatever the flags, until the configuration file names their group", async () => {
+      expect((await offered("mcp-no-groups")).filter((name) => ACCOUNT.includes(name))).toEqual([])
+
+      await configure("mcp-groups", "mcpTools", "contacts,polls")
+      const names = await offered("mcp-groups")
+      expect(names.filter((name) => ACCOUNT.includes(name)).sort()).toEqual(
+        ACCOUNT.filter((name) => name.startsWith("max_contacts") || name === "max_polls_close").sort(),
+      )
+    })
+
+    it("are still hidden when the profile's allow list leaves their action out", async () => {
+      await configure("mcp-groups-allow", "mcpTools", "contacts,profile")
+      await configure("mcp-groups-allow", "allow", "contacts")
+      const names = await offered("mcp-groups-allow")
+      expect(names).toContain("max_contacts_block")
+      expect(names).not.toContain("max_account_update")
+    })
+
+    it("go through the client like the command: block sends CONTACT_UPDATE with BLOCK", async () => {
+      await configure("mcp-block", "mcpTools", "contacts")
+      const { client, max } = await connect(
+        {},
+        {
+          profile: "mcp-block",
+          answers: { [Opcode.CONTACT_UPDATE]: { contact: { id: 20000002, names: [{ name: "Found Person" }] } } },
+        },
+      )
+      const { isError } = await call(client, "max_contacts_block", { person: "20000002" })
+      expect(isError).toBe(false)
+      expect(
+        max.sent
+          .filter(({ opcode }) => opcode === Opcode.CONTACT_UPDATE)
+          .map(({ payload }) => ({ contactId: String(payload.contactId), action: payload.action })),
+      ).toEqual([{ contactId: "20000002", action: "BLOCK" }])
+    })
+
+    it("refuse on a read-only profile, and nothing goes out", async () => {
+      await configure("mcp-block-ro", "mcpTools", "contacts")
+      await configure("mcp-block-ro", "readOnly", "true")
+      const { client, max } = await connect({}, { profile: "mcp-block-ro" })
+      const { isError, body } = await call(client, "max_contacts_block", { person: "20000002" })
+      expect(isError).toBe(true)
+      expect((body.error as { code: string }).code).toBe("permission_error")
+      expect(max.sent.filter(({ opcode }) => opcode === Opcode.CONTACT_UPDATE)).toEqual([])
+    })
+
+    it("cannot be named in the bot section", async () => {
+      const { stderr } = await (async () => {
+        const streams = captureStreams()
+        await run(["mcp-bot", "config", "set", "--bot", "mcpTools", "contacts"], { streams, tty: false })
+        return { stderr: streams.stderr.join("\n") }
+      })()
+      expect(stderr).toContain("personal accounts")
+    })
+  })
+
   it("marks a chat read up to the message given, through the send guards", async () => {
     const { client, max } = await connect(
       { allowMarkRead: true },
