@@ -354,22 +354,7 @@ export class MaxClient {
     events: async (reference: string, { since }: { since: number }): Promise<ChatEvents> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` has no history to read events from")
       const chatId = await this.chats.resolve(reference)
-      const read: Message[] = []
-      let from = since
-      let more = false
-      while (true) {
-        const page = (
-          await this.#history(chatId, { from, backward: 0, forward: REVIEW_PAGE + 1 }, { reactions: false })
-        ).filter((message) => Date.parse(message.timestamp) > from)
-        read.push(...page)
-        const last = page.at(-1)
-        if (page.length < REVIEW_PAGE || !last) break
-        if (read.length >= EVENTS_READ) {
-          more = true
-          break
-        }
-        from = Date.parse(last.timestamp)
-      }
+      const { messages: read, more } = await this.chats.since(chatId, since)
 
       const found = read.flatMap((message) =>
         message.attachments
@@ -400,6 +385,25 @@ export class MaxClient {
           people: (attachment.userIds ?? []).map((id) => ({ id, name: nameOf(id) })),
           ...(attachment.title ? { title: attachment.title } : {}),
         })),
+      }
+    },
+
+    /**
+     * A chat's history after `since`, oldest first and without reactions, at most `EVENTS_READ`
+     * messages; `more` when there was more than that.
+     */
+    since: async (chatId: Id, since: number): Promise<{ messages: Message[]; more: boolean }> => {
+      const read: Message[] = []
+      let from = since
+      while (true) {
+        const page = (
+          await this.#history(chatId, { from, backward: 0, forward: REVIEW_PAGE + 1 }, { reactions: false })
+        ).filter((message) => Date.parse(message.timestamp) > from)
+        read.push(...page)
+        const last = page.at(-1)
+        if (page.length < REVIEW_PAGE || !last) return { messages: read, more: false }
+        if (read.length >= EVENTS_READ) return { messages: read, more: true }
+        from = Date.parse(last.timestamp)
       }
     },
 
@@ -528,13 +532,14 @@ export class MaxClient {
     },
 
     requests: {
-      list: async (reference: string): Promise<Contact[]> => {
+      /** Each with the age of their account, read like a member's — the answer's `{contact}` is the same shape. */
+      list: async (reference: string): Promise<GroupMember[]> => {
         if (this.#offline)
           throw new CliError("validation_error", "`--offline` reads what was recorded; join requests never are")
         const chatId = await this.chats.resolve(reference)
         await this.#connectOnce()
         const answer = await this.#wire.chats.members({ chatId, type: "JOIN_REQUEST", count: JOIN_REQUESTS })
-        return asArray(answer.members).map((member) => toContact(record(member.contact) ?? {}))
+        return asArray(answer.members).map(toGroupMember)
       },
       accept: (reference: string, people: string[]) =>
         this.#updateMembers(reference, people, "requests.accept", {

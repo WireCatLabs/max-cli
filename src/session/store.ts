@@ -27,6 +27,8 @@ export interface SessionState {
   lastLoginAt?: string
   /** Where `max inbox` starts next time: the newest message it has read (`NEED-162`). */
   lastCheckAt?: string
+  /** Where `max chats check` starts next time in each group: the newest message it has judged. */
+  checkedUntil?: Record<string, string>
   /** Logins MAX refused for too many attempts in a row; a login that succeeds clears it (`MAX-38`). */
   loginRefusals?: number
   /** No login before this time, ISO 8601. */
@@ -172,6 +174,7 @@ const pick = (state: Partial<SessionState>) => {
   if (typeof state.viewerId === "string") extra.viewerId = state.viewerId
   if (typeof state.lastLoginAt === "string") extra.lastLoginAt = state.lastLoginAt
   if (typeof state.lastCheckAt === "string") extra.lastCheckAt = state.lastCheckAt
+  if (state.checkedUntil && typeof state.checkedUntil === "object") extra.checkedUntil = state.checkedUntil
   if (typeof state.loginRefusals === "number") extra.loginRefusals = state.loginRefusals
   if (typeof state.loginPausedUntil === "string") extra.loginPausedUntil = state.loginPausedUntil
   return extra
