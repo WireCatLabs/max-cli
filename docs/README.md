@@ -1,8 +1,8 @@
 # Documentation
 
-`max` is a command line interface for a personal MAX Messenger account. Every command and option
-is listed in [commands.md](commands.md). The protocol underneath is unofficial and
-reverse-engineered.
+`max` is a command line interface for MAX Messenger bots, through the official Bot API, and for a
+personal MAX account, through an unofficial, reverse-engineered protocol. Every command and option
+is listed in [commands.md](commands.md).
 
 ## Building it
 
@@ -28,7 +28,8 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 Каждая страница отвечает на один вопрос и открывается под задачу, а не читается подряд.
 
 - [installation.md](installation.md) — установка, требования, куда ложатся файлы, обновление
-- [usage.md](usage.md) — вход, профили, чтение, страницы, отправка, машинный режим — по порядку
+- [bot.md](bot.md) — бот через официальный Bot API: токен, несколько ботов, сообщения, чаты, список получателей, `bot api`
+- [usage.md](usage.md) — личный аккаунт: вход, профили, чтение, страницы, отправка, машинный режим — по порядку
 - [sessions.md](sessions.md) — откуда берётся токен, ключница, профили, `MAX_TOKEN`
 - [configuration.md](configuration.md) — каждая настройка, каждая переменная, порядок разрешения
 - [mcp.md](mcp.md) — MCP-сервер для клиентов без терминала: подключение, отправка, соединение с MAX
