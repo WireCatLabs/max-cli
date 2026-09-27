@@ -125,13 +125,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   even for a message sent after it joined. The owner grants that right in the app; then one agreed
   delete and one removal with a ban (a person who agrees). Bot `test` cannot join groups: its privacy
   setting forbids them (`participants.filter.out`), changed only on business.max.ru.
-- **MAX-61** · P3 · Measure the admin-rights bit for «read all messages» on opcode 77, so
-  `max chats admins add --can` can grant it (`ADMIN_RIGHTS`, `src/client.ts`). Known bits: members 2,
-  admins 4, info 8, pin 16, post 256, edit 512, delete 1024; the bot API lists `read_all_messages`
-  first, so 1 is a guess — never guess on a real group. Measure instead: the owner switches rights
-  on for bot `test2` in the app, and `pnpm probe:admin-rights <id>` prints the number the login
-  carries for it. On 2026-09-27 it printed 1026 (2 + 1024) after switches were set in the app, and
-  the Bot API agreed (`add_remove_members`, `delete`) — the change had not been saved.
 - **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
   lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
   it. Refresh the chat (opcode 48, `CHAT_INFO`) before reading roles, or say the roles may be old.
