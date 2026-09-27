@@ -145,7 +145,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 Added by the owner on 2026-09-24. Each one goes against REQUIREMENTS §3 or §18, and the line says
 which; the plan for it starts by saying so.
 
-- **CLI-24** · 🟡 P1 · Voice messages to text with a local speech model, downloaded on first use
+- **CLI-24** · 🟡 P1 · 🚧 feat/cli-24-transcribe · Voice messages to text with a local speech model, downloaded on first use
   and never bundled. Builds on `max messages download`. The model runs on this machine; audio never
   leaves it. Model: **GigaAM v3** (int8, ~230 MB) through the WebAssembly build of `sherpa-onnx`,
   Silero VAD for audio over 25 s, `ogg-opus-decoder` — no native module (owner, 2026-09-24,
