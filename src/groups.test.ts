@@ -217,6 +217,22 @@ describe("changing a group", () => {
     ])
   })
 
+  it("grants reading as the app does — both bits of «Read messages» — and the link right", async () => {
+    const { environment, sent } = messenger()
+
+    await runWith(["gr-read", "chats", "admins", "add", "Team", "20000002", "--can", "read,delete,link"], environment)
+
+    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([
+      {
+        chatId: -70000000000001,
+        userIds: [20000002],
+        operation: "add",
+        type: "ADMIN",
+        permissions: 1 + 32 + 128 + 1024,
+      },
+    ])
+  })
+
   it("takes admin rights back with the measured shape, which no other client had", async () => {
     const { environment, sent } = messenger()
     expect((await runWith(["gr-unadmin", "chats", "admins", "remove", "Team", "20000002"], environment)).code).toBe(0)

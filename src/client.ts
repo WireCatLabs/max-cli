@@ -2685,14 +2685,21 @@ export interface ChatChange {
   chat: GroupCard | null
 }
 
-export type AdminRight = "members" | "admins" | "info" | "pin" | "post" | "edit" | "delete"
+export type AdminRight = "read" | "members" | "admins" | "info" | "pin" | "link" | "post" | "edit" | "delete"
 
-/** PyMax `AdminPermission`; the sum is what MAX takes. */
+/**
+ * PyMax `AdminPermission`; the sum is what MAX takes. `read` and `link` measured 2026-09-27 by
+ * switching them in the app for a bot and reading its `permissions` back (`MAX-61`): «Read messages»
+ * sets 1 and 32 together — the Bot API calls them `read_all_messages` and `write` — and «Update chat
+ * link» 128. A bot without `read` sees no message of the group.
+ */
 export const ADMIN_RIGHTS: Record<AdminRight, number> = {
+  read: 1 | 32,
   members: 2,
   admins: 4,
   info: 8,
   pin: 16,
+  link: 128,
   post: 256,
   edit: 512,
   delete: 1024,

@@ -140,7 +140,8 @@ max sales bot chats leave "Команда продаж"    # вернуть бо
 добавить его не выйдет — ни из приложения, ни командой `max chats members add` (ответ
 `participants.filter.out`). Разрешить — на [business.max.ru](https://business.max.ru/self): бот →
 **⋮ → Настройки → Приватность** ([документация MAX](https://dev.max.ru/docs/chatbots/bots-create/manage)).
-Потом добавьте его в группу и сделайте админом в приложении MAX.
+Потом добавьте его в группу и сделайте админом в приложении MAX. Для проверки чата боту нужно
+право читать сообщения: без него MAX не отдаёт боту ни одного сообщения группы.
 
 ```sh
 max sales bot members list "Команда продаж" --limit 50
