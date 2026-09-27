@@ -16,7 +16,8 @@ import { afterAll } from "vitest"
  * write anything a person owns**, and that has to be true of the next test file as well as this
  * one.
  *
- * The three variables move config, state and cache together. They also scope the keyring entry
+ * The three variables move config, state and cache together; `MESSAGING_STORE` moves the shared
+ * message store, which lives in cli-messaging's own directory. They also scope the keyring entry
  * (`ARCHITECTURE.md` §14) — the documented trap, which here is precisely the isolation wanted.
  *
  * `TMPDIR` points into it too, and the whole of it goes when the file is done: every test makes
@@ -29,6 +30,8 @@ const sandbox = mkdtempSync(join(process.platform === "darwin" ? "/tmp" : tmpdir
 process.env.MAX_CONFIG_DIR = join(sandbox, "config")
 process.env.MAX_STATE_DIR = join(sandbox, "state")
 process.env.MAX_CACHE_DIR = join(sandbox, "cache")
+// cli-messaging's store is one file for every messenger, outside all three.
+process.env.MESSAGING_STORE = join(sandbox, "messages.db")
 process.env.TMPDIR = sandbox
 // Read before the keyring, so a token exported in the shell would log the suite in to the real account.
 delete process.env.MAX_TOKEN
