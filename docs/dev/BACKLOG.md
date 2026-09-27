@@ -75,7 +75,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   (`src/commands/chats.ts:22` and every command that opens it).
 - **CLI-5** · P3 · `max raw <operation>` — a debug escape hatch, validated against the spec, never
   arbitrary frames (REQUIREMENTS §22).
-- **MAX-52** · 🟡 P2 · The requests a real tab sends right after LOGIN: 21 on a fresh start
+- **MAX-52** · 🟡 P2 · 🚧 `feat/max-52-recorder-ids` (the recorder names which ids; the code waits on a recording) · The requests a real tab sends right after LOGIN: 21 on a fresh start
   (`48 48 272 35 32 302 163 208 27×4 209 28 22 48 28 35 53 209 35`) and 9 after a re-login. `max`
   sends none, which shows on every login — a stronger difference than telemetry. Decide per
   request: the read-only ones (272 folders, 302 banners, 163 call history, 27) could be copied; 22
