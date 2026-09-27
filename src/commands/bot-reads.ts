@@ -5,6 +5,7 @@ import { Command } from "commander"
 import { botOperations } from "../bot/client.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { assertAllowed, botContext } from "./bot-context.js"
+import { sendCommands } from "./bot-sends.js"
 
 const CHAT_ID = /^-?\d+$/
 
@@ -55,6 +56,7 @@ export const messagesCommand = (): Command => {
       show(context, [await client.message(message, self)])
     })
 
+  sendCommands(command)
   return command
 }
 

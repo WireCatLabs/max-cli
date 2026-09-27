@@ -8,7 +8,8 @@ export interface SeenChat extends Chat {
   lastSeenAt: string
 }
 
-const botsDirectory = (env: NodeJS.ProcessEnv): string =>
+/** Everything this machine keeps about its bots: seen chats, recipients, the send journal. */
+export const botsDirectory = (env: NodeJS.ProcessEnv = process.env): string =>
   join(resolvePaths({ appName: "max-cli", prefix: "MAX", env }).state, "bots")
 
 /**

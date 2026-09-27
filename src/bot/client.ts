@@ -57,6 +57,11 @@ export class BotApiClient {
     return (answer?.messages ?? []).map((raw) => this.#message(raw, selfId))
   }
 
+  /** A message from any answer — a send's result, an update — decoded the same way as a read. */
+  decodeMessage(raw: unknown, selfId?: string): Message {
+    return this.#message(raw, selfId)
+  }
+
   call(operation: ManifestOperation, input: CallInput): Promise<unknown> {
     return this.#transport.call(operation, input)
   }

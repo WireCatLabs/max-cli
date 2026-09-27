@@ -10,6 +10,7 @@ import { type CallInput, plainJson } from "../bot/transport.js"
 import { configuredProfiles } from "../config.js"
 import { assertAllowed, botContext } from "./bot-context.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
+import { recipientsCommand, sendsCommand } from "./bot-sends.js"
 import { environmentOf } from "./context.js"
 
 const apiCommand = (operation: ManifestOperation): Command => {
@@ -143,6 +144,8 @@ export const botCommand = (): Command => {
 
   command.addCommand(messagesCommand())
   command.addCommand(chatsCommand())
+  command.addCommand(recipientsCommand())
+  command.addCommand(sendsCommand())
 
   const api = new Command("api").description(
     "every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md",

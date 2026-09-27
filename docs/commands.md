@@ -1072,6 +1072,22 @@ the chats this bot is in — MAX gives a bot no list of them, so `list` shows th
 max bot chats
 ```
 
+### `max bot recipients`
+
+the chats this bot may write to; with no list, every chat — `off` removes the list
+
+```sh
+max bot recipients
+```
+
+### `max bot sends`
+
+what this bot sent, edited and deleted from this machine — ids and outcomes, never text
+
+```sh
+max bot sends
+```
+
 ### `max bot api`
 
 every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md
