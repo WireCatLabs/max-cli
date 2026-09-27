@@ -3,7 +3,10 @@ import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import type { Inbox, MessageHit } from "../domain/models.js"
 import { renderMessages } from "../rendering/messages.js"
+import { spoken, withTranscript } from "../transcribe/index.js"
+import { speechModel } from "../transcribe/models.js"
 import { forCommand } from "./context.js"
+import { hearingFields, hearingOptions, hearMessages } from "./hearing.js"
 
 const FIRST_LOOK_MS = 24 * 60 * 60 * 1000
 
@@ -24,6 +27,8 @@ export const inboxCommand = (): Command =>
     .option("--new", "what arrived since the last check, each message once — for scheduled runs")
     .option("--since <id-or-time>", "what arrived after this message id or ISO 8601 time; the saved point stays put")
     .option("--limit <n>", "at most this many per chat, the newest", (value) => Number.parseInt(value, 10))
+    .option(...hearingOptions.transcribe)
+    .option(...hearingOptions.model)
     .action(async function (this: Command) {
       const options = this.optsWithGlobals()
       const context = forCommand(this)
@@ -31,6 +36,8 @@ export const inboxCommand = (): Command =>
       if (options.offline === true) {
         throw new CliError("validation_error", "`inbox` asks MAX what is new; with `--offline` there is nothing new")
       }
+      const transcribe = options.transcribe === true
+      const model = speechModel(options.model === undefined ? settings.transcribeModel : String(options.model)).id
 
       const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
 
@@ -39,7 +46,7 @@ export const inboxCommand = (): Command =>
 
         try {
           const saved = store.readState().lastCheckAt
-          const inbox =
+          const read =
             options.since !== undefined
               ? await client.inbox.since({
                   since: client.messages.moment(String(options.since), "--since"),
@@ -51,7 +58,21 @@ export const inboxCommand = (): Command =>
                     limit: settings.limit,
                   })
                 : await client.inbox.unread({ limit: settings.limit })
-          notes(inbox, renderer.note.bind(renderer))
+          notes(read, renderer.note.bind(renderer))
+          const heard = await hearMessages(
+            context,
+            client,
+            read.chats.flatMap((chat) => chat.messages),
+            { transcribe, model, offline: false, cache },
+          )
+          const inbox = {
+            ...read,
+            chats: read.chats.map((chat) => ({
+              ...chat,
+              messages: chat.messages.map((message) => withTranscript(message, heard)),
+            })),
+            ...hearingFields(heard, transcribe),
+          }
 
           const messages: MessageHit[] = inbox.chats.flatMap((chat) =>
             chat.messages.map((message) => ({ ...message, chatTitle: chat.title })),
@@ -63,7 +84,7 @@ export const inboxCommand = (): Command =>
           } else {
             messages.sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
             streams.data(
-              renderMessages(messages, {
+              renderMessages(messages.map(spoken), {
                 color: context.color,
                 senderColors: settings.senderColors,
                 verbosity: settings.detail,

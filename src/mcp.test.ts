@@ -153,6 +153,31 @@ describe("the MCP server", () => {
     expect(streams.stdout).toEqual([])
   })
 
+  it("hears voice messages on request, and without a model says why instead of failing", async () => {
+    const voice = {
+      id: 116762160362694583n,
+      time: 1789776000000,
+      sender: 10000002,
+      text: "",
+      attaches: [{ _type: "AUDIO", audioId: 5, duration: 3000, url: "https://example.test/voice.ogg" }],
+    }
+    const { client, max } = await connect(
+      {},
+      { answers: { [Opcode.CHAT_HISTORY]: { messages: [voice] }, [Opcode.CONTACT_INFO]: { contacts: [] } } },
+    )
+
+    const plain = await call(client, "max_messages_list", { chat: "111" })
+    const asked = await call(client, "max_messages_list", { chat: "111", transcribe: true })
+    const inbox = await call(client, "max_inbox", { since: "2026-09-01T00:00:00Z", transcribe: true })
+
+    expect(plain.body.unheard).toBeUndefined()
+    expect(asked.isError).toBe(false)
+    expect(asked.body).toMatchObject({ unheard: [{ chatId: "111", messageId: "116762160362694583" }] })
+    expect(asked.body.transcribeProblem).toMatch(/max models audio download/)
+    expect(inbox.body.transcribeProblem).toMatch(/max models audio download/)
+    expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
+  })
+
   it("runs calls that arrive together one after another, over the one login", async () => {
     const { client, logins } = await connect()
 

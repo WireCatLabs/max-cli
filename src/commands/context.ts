@@ -7,7 +7,7 @@ import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
-import { publicOnly, type Reach } from "../download.js"
+import { fetchBytes, publicOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
 import { rootOf } from "../profile.js"
 import { recorded } from "../runs/recording.js"
@@ -17,6 +17,7 @@ import { ensureServer } from "../server/start.js"
 import { type BrowserDoors, realBrowser } from "../session/browser.js"
 import { readSecret } from "../session/prompt.js"
 import { SessionStore } from "../session/store.js"
+import type { HearAllOptions } from "../transcribe/index.js"
 import type { UpdateEnvironment } from "../update.js"
 
 /**
@@ -33,6 +34,8 @@ export interface Environment {
   browser?: BrowserDoors
   /** Where a download may go; a test serving files from this machine allows it. */
   reach?: Reach
+  /** A stand-in speech model, so a test hears without one. */
+  recognizer?: HearAllOptions["open"]
   ask?: Ask
   interactive?: boolean
   columns?: number
@@ -95,6 +98,8 @@ export interface CommandContext {
   track: (closeable: Closeable) => void
   browser: BrowserDoors
   reach: Reach
+  /** How voice messages are fetched and heard: through `reach`, and by the downloaded model. */
+  hearing: Pick<HearAllOptions, "fetchAudio" | "open">
   ask: Ask
   /** Whether a person is there to scan a code or type one: both stdin and stderr are a terminal. */
   interactive: boolean
@@ -179,6 +184,10 @@ export const contextFor = (
     },
     browser: environment.browser ?? realBrowser,
     reach: environment.reach ?? publicOnly,
+    hearing: {
+      fetchAudio: (link) => fetchBytes(link, environment.reach ?? publicOnly),
+      ...(environment.recognizer ? { open: environment.recognizer } : {}),
+    },
     ask: environment.ask ?? ((prompt, { secret = false } = {}) => readSecret(prompt, { echo: !secret })),
     interactive: environment.interactive ?? (process.stdin.isTTY === true && process.stderr.isTTY === true),
     columns: environment.columns ?? process.stderr.columns,

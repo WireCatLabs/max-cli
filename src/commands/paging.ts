@@ -46,6 +46,8 @@ export const renderPage = <T>(
   view?: (items: T[]) => string,
   /** What to type for the rest, when the listing is not paged by `--page`. */
   more?: (items: T[]) => string,
+  /** Fields beside the page in `--json`. */
+  extra: object = {},
 ): void => {
   if (format === "jsonl") {
     renderer.stream(items)
@@ -60,6 +62,7 @@ export const renderPage = <T>(
       page: settings.all ? 1 : settings.page,
       limit: settings.all ? items.length : settings.limit,
       hasMore: settings.all ? false : hasMore,
+      ...extra,
     })
     return
   }

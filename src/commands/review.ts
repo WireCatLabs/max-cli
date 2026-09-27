@@ -4,6 +4,7 @@ import { openProfileCache } from "../cache/index.js"
 import type { MessageHit, Review } from "../domain/models.js"
 import { renderMessages } from "../rendering/messages.js"
 import { REVIEW_DAYS, review, reviewStart, UNANSWERED_HOURS, unansweredHours } from "../review.js"
+import { hearingLine, spoken } from "../transcribe/index.js"
 import { forCommand } from "./context.js"
 
 /**
@@ -44,19 +45,15 @@ export const reviewCommand = (): Command =>
             ...(chatId === undefined ? {} : { chatId }),
             ...(hours === undefined ? {} : { unansweredAfterHours: hours }),
             ...(options.transcribe === true ? { transcribeWith: settings.transcribeModel } : {}),
+            release: () => client.close(),
+            progress: (count) => renderer.note(hearingLine(count, settings.transcribeModel)),
+            hearing: context.hearing,
           })
 
           if (format !== "pretty") renderer.result(found)
           else {
             const messages: MessageHit[] = found.chats.flatMap((chat) =>
-              chat.messages.map(({ transcript, ...message }) => ({
-                ...message,
-                text:
-                  transcript === undefined
-                    ? message.text
-                    : [message.text, `🎤 ${transcript}`].filter(Boolean).join("\n"),
-                chatTitle: chat.title,
-              })),
+              chat.messages.map((message) => ({ ...spoken(message), chatTitle: chat.title })),
             )
             if (messages.length > 0) {
               streams.data(
