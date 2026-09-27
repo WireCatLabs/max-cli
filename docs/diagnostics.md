@@ -48,10 +48,10 @@ max shop bot messages list -100 --trace
 ```
 
 ```text
-→ getMyInfo
-← getMyInfo         200  143ms  211 B
-→ getMessages       chat -100
-← getMessages       200  187ms  6.2 kB
+→ getMyInfo        
+← getMyInfo        200  143ms  211 B
+→ getMessages      chat -100
+← getMessages      200  chat -100  187ms  6.2 kB
 ```
 
 Отказ показывает код ошибки и ключ MAX, например `404  not_found  not.found`, но не текст
