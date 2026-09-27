@@ -1,6 +1,6 @@
 {
   "name": "@leemour/max-cli",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal \u2014 built for agents and scripts",
   "license": "MIT",
   "author": "Viacheslav Ptsarev",
