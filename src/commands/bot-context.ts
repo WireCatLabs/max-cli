@@ -22,7 +22,7 @@ const recordings = new WeakMap<Command, Recording>()
 export const startBotRecording = (command: Command): void => {
   const environment = environmentOf(command)
   // The program's own flags only: `bot api get-updates --limit` is the API's limit, not ours.
-  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>())
+  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>(), { kind: "bot" })
   const { streams, format } = resolveOutput({
     ...settings,
     ...(environment.streams ? { streams: environment.streams } : {}),

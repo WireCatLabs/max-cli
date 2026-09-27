@@ -123,8 +123,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **CLI-50** · P2 · 🚧 `feat/profiles-doctor` (#218) · Every profile with its kind in `config show` and `doctor`; a bot section and
   `--online` bot check in `doctor`; the right fix named for a bot-only profile. `src/diagnose.ts`,
   `src/commands/doctor.ts:90`, `src/client.ts:1963`.
-- **CLI-51** · P2 · 🚧 `feat/bot-run-log` (#217) · Bot commands honour `--trace` and `--record`; a failed bot run keeps its requests.
-  `src/bot/transport.ts:146`, `src/runs/recording.ts:35`.
 - **CLI-57** · P2 · MCP write tools on the personal account — contacts, `polls close`, chats
   join/leave/create, admins, `account update` — each group off until `mcpTools` in the config file
   names it (`NEED-350`). `src/mcp/tools.ts:687`.
