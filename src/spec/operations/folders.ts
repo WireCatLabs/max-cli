@@ -50,6 +50,7 @@ export const foldersUpdate = defineOperation({
     confidence: "measured",
     sources: [
       "measured against MAX 2026-09-24 (`pnpm probe:account`): created, renamed and deleted a folder; a 21-character title came back `folder.validation.title.too-long`, 15 was taken",
+      "a chat put in and taken out measured 2026-09-27 (`max chats folders update --add|--remove`): `chats folders list` showed the chat in the folder, then an empty folder; the owner saw it in the app",
       webClient,
       "PyMax 53103f0 `create_folder`, `update_folder`",
     ],
