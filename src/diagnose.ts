@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join } from "node:path"
 import { pathsAreOverridden, resolvePaths } from "@leemour/cli-core"
+import { storePath } from "@leemour/cli-messaging/store"
 import { openCache } from "./cache/open.js"
 import { SCHEMA_VERSION } from "./cache/schema.js"
 import { checkInstall, type Install, ownScript } from "./install.js"
@@ -20,6 +21,10 @@ export interface DiagnoseOptions {
   readSchemaVersion?: (file: string) => Promise<number | undefined>
   /** Where a stored token is — the keyring, or the file that stands in for one; `undefined` for none. */
   storedToken?: (profile: string) => "keyring" | "file" | undefined
+  /** The same for the bot token, keyring account `bot:<profile>` (`src/bot/auth.ts`). */
+  storedBotToken?: (profile: string) => "keyring" | "file" | undefined
+  /** Profile names the configuration file mentions, for the list of every profile. */
+  configured?: string[]
   now?: () => Date
   install?: () => Install
   native?: () => Promise<Native>
@@ -35,6 +40,14 @@ export interface Native {
 }
 
 export type TokenSource = "environment" | "keyring" | "file" | "none"
+
+/** A profile is a personal account, a bot, or both (`NEED-294`); which one is read off what exists. */
+export interface ProfileRow {
+  name: string
+  personal: boolean
+  bot: boolean
+  configured: boolean
+}
 
 export interface Diagnosis {
   /** ⚠ Never the token, and never a prefix or a length of it — only whether one is reachable. */
@@ -58,6 +71,16 @@ export interface Diagnosis {
     loginPausedUntil: string | null
   }
   loggedInProfiles: string[]
+  /** Every profile this machine knows of, with what it holds. */
+  profiles: ProfileRow[]
+  /** This profile's bot side. ⚠ Never the token; the bot's id only as known or not. */
+  bot: {
+    token: { present: boolean; from: TokenSource }
+    registry: { file: string; exists: boolean; botKnown: boolean; chats: number }
+    sends: string
+  }
+  /** Where this profile's files live — one place to look instead of nine. */
+  paths: { state: string; cache: string; runs: string; bots: string; sends: string; messages: string }
   cache: {
     file: string
     exists: boolean
@@ -100,6 +123,8 @@ export const diagnose = async ({
   cacheDir,
   readSchemaVersion = schemaVersionOf,
   storedToken = () => undefined,
+  storedBotToken = () => undefined,
+  configured = [],
   now = () => new Date(),
   install = () => thisInstall(env),
   native = loadNative,
@@ -122,6 +147,16 @@ export const diagnose = async ({
   const schemaVersion = cacheExists ? await readSchemaVersion(cacheFile) : undefined
 
   const runsDirectory = join(state, "runs")
+  const bots = join(state, "bots")
+  const registryFile = join(bots, `${profile}.json`)
+  const registry = readState(registryFile)
+  const botFromEnvironment = (env.MAX_BOT_TOKEN ?? "").trim() !== ""
+  const botTokenAt = botFromEnvironment ? undefined : storedBotToken(profile)
+  const profiles = knownProfiles({ stateDir: state, configured }).map((row) => ({
+    ...row,
+    personal: row.personal || storedToken(row.name) !== undefined,
+    bot: row.bot || storedBotToken(row.name) !== undefined,
+  }))
 
   return {
     token: {
@@ -142,6 +177,28 @@ export const diagnose = async ({
           : null,
     },
     loggedInProfiles: profilesWithState(join(state, "profiles")),
+    profiles,
+    bot: {
+      token: {
+        present: botFromEnvironment || botTokenAt !== undefined,
+        from: botFromEnvironment ? "environment" : (botTokenAt ?? "none"),
+      },
+      registry: {
+        file: registryFile,
+        exists: registry !== undefined,
+        botKnown: typeof registry?.botId === "string",
+        chats: Array.isArray(registry?.chats) ? registry.chats.length : 0,
+      },
+      sends: join(bots, "sends", `${profile}.jsonl`),
+    },
+    paths: {
+      state,
+      cache: cacheHome,
+      runs: runsDirectory,
+      bots,
+      sends: join(state, "sends", `${profile}.jsonl`),
+      messages: storePath(env),
+    },
     cache: {
       file: cacheFile,
       exists: cacheExists,
@@ -205,15 +262,41 @@ const MODERATION_SUFFIX = ".moderation.json"
  * **Which profiles have been logged in**, which is not the same list as the configured ones —
  * `config show` says so and cannot answer it, because a profile needs no configuration entry.
  */
-export const profilesWithState = (directory: string): string[] => {
+const profilesWithState = (directory: string): string[] => jsonNames(directory, MODERATION_SUFFIX)
+
+/** File names only: `bots/joins/` and `bots/sends/` are folders, not profiles. */
+const jsonNames = (directory: string, except?: string): string[] => {
   try {
-    return readdirSync(directory)
-      .filter((name) => name.endsWith(".json") && !name.endsWith(MODERATION_SUFFIX))
-      .map((name) => name.slice(0, -".json".length))
+    return readdirSync(directory, { withFileTypes: true })
+      .filter((entry) => entry.isFile() && entry.name.endsWith(".json") && !(except && entry.name.endsWith(except)))
+      .map((entry) => entry.name.slice(0, -".json".length))
       .sort()
   } catch {
     return []
   }
+}
+
+/**
+ * **Every profile, from files only**: a personal state file, a bot registry file, or a name in the
+ * configuration. It never reads the keyring — `config show` uses it as is, and that is `doctor`'s
+ * job (`CLI-12`); `diagnose` adds the keyring on top.
+ */
+export const knownProfiles = ({
+  stateDir,
+  configured = [],
+  env = process.env,
+}: {
+  stateDir?: string
+  configured?: string[]
+  env?: NodeJS.ProcessEnv
+}): ProfileRow[] => {
+  const state = stateDir ?? resolvePaths({ appName: "max-cli", prefix: "MAX", env }).state
+  const personal = new Set(profilesWithState(join(state, "profiles")))
+  const bot = new Set(jsonNames(join(state, "bots")))
+  const named = new Set(configured)
+  return [...new Set([...personal, ...bot, ...named])]
+    .sort()
+    .map((name) => ({ name, personal: personal.has(name), bot: bot.has(name), configured: named.has(name) }))
 }
 
 const countEntries = (directory: string): number => {

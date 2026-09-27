@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, readdirSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@leemour/cli-core"
@@ -35,6 +35,7 @@ const clientWith = (max: ReturnType<typeof mockMax>, token = "a-token") => {
   const events: DiagnosticEvent[] = []
 
   return {
+    dir,
     store,
     notes,
     events,
@@ -65,6 +66,18 @@ describe("MaxClient", () => {
     expect(message).toContain("keyring")
     expect(message).not.toContain("session start")
     await expect(client.connect()).rejects.toMatchObject({ code: "authentication_error" })
+  })
+
+  it("names the bot commands when the profile holds a bot and no personal session", async () => {
+    const max = mockMax({ answers: {} })
+    const { client, dir } = clientWith(max, "")
+    const bots = join(dir, "state", "bots")
+    mkdirSync(bots, { recursive: true })
+    writeFileSync(join(bots, "default.json"), "{}")
+
+    const message = String(await client.connect().catch((error: Error) => error.message))
+    expect(message).toContain("is a bot")
+    expect(message).toContain("`max bot …`")
   })
 
   it("leaves no state file behind when a profile nobody logged in under is refused", async () => {

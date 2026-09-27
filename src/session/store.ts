@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto"
-import { readFileSync } from "node:fs"
+import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import {
   type CredentialSource,
@@ -122,6 +122,11 @@ export class SessionStore {
   }
 
   /** Whether this profile has logged in on this machine. Reads only: unlike `readState`, never creates the file. */
+  /** The same name holds a bot (`bots/<profile>.json`, written by `max <p> bot auth set`). Files only. */
+  isBot(): boolean {
+    return existsSync(join(this.#stateDir, "bots", `${this.profile}.json`))
+  }
+
   hasLoggedIn(): boolean {
     try {
       const parsed = JSON.parse(readFileSync(this.#statePath(), "utf8")) as Partial<SessionState>

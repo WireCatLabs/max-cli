@@ -180,6 +180,29 @@ export const createBotServer = (options: BotServerOptions) => {
       )
     }
     if (checks) registerCheck(server, inner, resolveChat)
+    server.registerTool(
+      "max_bot_status",
+      {
+        title: "This server's bot and profile",
+        description:
+          "Which profile this server speaks for, where its bot token comes from, which bot MAX says it is, and " +
+          "which writing tools are on. Sends nothing.",
+        inputSchema: toStandardJsonSchema(v.object({})),
+        annotations: READ,
+      },
+      async () => {
+        const auth = await inner({ words: ["auth", "show"] }).catch((error: unknown) =>
+          isCliError(error) ? { error: { code: error.code, message: error.message } } : { error: String(error) },
+        )
+        return answered({
+          profile: options.profile,
+          kind: "bot",
+          auth,
+          writes: offered.filter(([, tool]) => tool.gate !== "read").map(([name]) => name),
+          allow: permitted ?? "all",
+        })
+      },
+    )
     return server
   }
   return { build }

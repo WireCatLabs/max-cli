@@ -1,14 +1,17 @@
 import { resolve } from "node:path"
 import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@leemour/cli-core"
 import { Command } from "commander"
+import { BotTokenStore } from "../bot/auth.js"
+import { BotApiClient } from "../bot/client.js"
 import { type Diagnosis, diagnose } from "../diagnose.js"
 import { ownScript } from "../install.js"
-import { checkOnline, mcpHandshake } from "../online.js"
+import { type Check, checkOnline, mcpHandshake } from "../online.js"
+import { asFirstWord } from "../profile.js"
 import { buildReport, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
 import { runsDirFor } from "../runs/run.js"
 import { SendJournal, sendsPathFor } from "../sends/journal.js"
-import type { SessionStore } from "../session/store.js"
-import { forCommand } from "./context.js"
+import { SessionStore } from "../session/store.js"
+import { environmentOf, forCommand } from "./context.js"
 
 /**
  * The state every other command depends on, read from disk and **never from MAX**.
@@ -33,18 +36,22 @@ export const doctorCommand = (): Command => {
   command.action(async function (this: Command) {
     const { online } = this.opts<{ online?: boolean }>()
     const { renderer, settings, format, run, store, createClient } = forCommand(this)
+    const botStore = botStoreFor(this)
 
     await run("doctor", async (events) => {
-      const report = await diagnoseProfile(settings.profile, store, settings.transcribeModel)
-      const checks = online
-        ? await checkOnline(createClient({ events }), () =>
-            mcpHandshake({
-              execPath: process.execPath,
-              scriptPath: ownScript(),
-              env: { ...process.env, MAX_PROFILE: settings.profile },
-            }),
-          )
-        : undefined
+      const report = await diagnoseProfile(settings, store, botStore, sessionStoreFor(this))
+      const personal =
+        online && report.token.present
+          ? await checkOnline(createClient({ events }), () =>
+              mcpHandshake({
+                execPath: process.execPath,
+                scriptPath: ownScript(),
+                env: { ...process.env, MAX_PROFILE: settings.profile },
+              }),
+            )
+          : []
+      const bot = online && report.bot.token.present ? [await checkBot(this, botStore(settings.profile))] : []
+      const checks = online ? [...personal, ...bot] : undefined
 
       renderer.result(
         format === "pretty"
@@ -82,13 +89,24 @@ export const doctorCommand = (): Command => {
         )
       }
 
+      const words = asFirstWord(settings.profile)
       if (!report.token.present && ((report.session.logins ?? 0) > 0 || report.session.viewerId)) {
         renderer.note(
           "no token, although this profile has logged in here — the keyring is probably out of reach " +
             "(cron, ssh: set XDG_RUNTIME_DIR). Log in again only if the token was removed",
         )
+      } else if (!report.token.present && report.bot.token.present) {
+        renderer.note(
+          `this profile is a bot — its commands are \`max ${words}bot …\`; ` +
+            `\`max ${words}session start\` would add a personal account to it`,
+        )
+      } else if (!report.token.present && report.bot.registry.exists) {
+        renderer.note(`this profile was a bot, and its token is gone — \`max ${words}bot auth set\` stores one`)
       } else if (!report.token.present) {
-        renderer.note(`no token for this profile — \`max ${settings.profile} session start\` stores one`)
+        renderer.note(
+          `no token for this profile — \`max ${words}session start\` for a personal account, ` +
+            `\`max ${words}bot auth set\` for a bot`,
+        )
       }
 
       const failed = checks?.filter((check) => !check.ok).map((check) => check.name) ?? []
@@ -100,21 +118,58 @@ export const doctorCommand = (): Command => {
   return command
 }
 
-const diagnoseProfile = (profile: string, store: SessionStore, speechModel?: string) =>
+const botStoreFor = (command: Command) => {
+  const environment = environmentOf(command)
+  return (profile: string) => environment.botStore?.(profile) ?? new BotTokenStore({ profile })
+}
+
+const sessionStoreFor = (command: Command) => {
+  const environment = environmentOf(command)
+  return (profile: string) => environment.store?.(profile) ?? new SessionStore({ profile })
+}
+
+// Reading the keyring is the one thing here that can prompt or hang on a locked keyring, so its
+// failure is "no token found" rather than a failed command.
+const storedIn = (source: () => string | undefined): "keyring" | "file" | undefined => {
+  try {
+    const found = source()
+    return found === "keyring" || found === "file" ? found : undefined
+  } catch {
+    return undefined
+  }
+}
+
+const diagnoseProfile = (
+  settings: { profile: string; transcribeModel?: string; configuredProfiles: string[] },
+  store: SessionStore,
+  botStore: (profile: string) => BotTokenStore,
+  sessionStore: (profile: string) => SessionStore,
+) =>
   diagnose({
-    profile,
-    ...(speechModel === undefined ? {} : { speechModel }),
-    // Reading the keyring is the one thing here that can prompt or hang on a locked keyring,
-    // so its failure is "no token found" rather than a failed command.
-    storedToken: () => {
-      try {
-        const source = store.tokenSource()
-        return source === "keyring" || source === "file" ? source : undefined
-      } catch {
-        return undefined
-      }
-    },
+    profile: settings.profile,
+    configured: settings.configuredProfiles,
+    ...(settings.transcribeModel === undefined ? {} : { speechModel: settings.transcribeModel }),
+    storedToken: (profile) =>
+      storedIn(() => (profile === settings.profile ? store : sessionStore(profile)).tokenSource()),
+    storedBotToken: (profile) => storedIn(() => botStore(profile).read()?.source),
   })
+
+/** One `getMyInfo`: whose token it is. Nothing is sent. */
+const checkBot = async (command: Command, store: BotTokenStore): Promise<Check> => {
+  const environment = environmentOf(command)
+  try {
+    const stored = store.read()
+    if (!stored) return { name: "bot", ok: false, detail: "no bot token" }
+    const bot = await new BotApiClient({
+      token: stored.token,
+      ...(environment.botFetch ? { fetch: environment.botFetch } : {}),
+      ...(environment.botUrl ? { baseUrl: environment.botUrl } : {}),
+    }).me()
+    return { name: "bot", ok: true, detail: `${bot.username ? `@${bot.username}` : bot.first_name}, id ${bot.user_id}` }
+  } catch (error) {
+    return { name: "bot", ok: false, detail: error instanceof Error ? error.message : String(error) }
+  }
+}
 
 const INCLUDES = [
   "версия max, среда (node или bun) и система",
@@ -151,7 +206,7 @@ const reportCommand = (): Command => {
         const now = new Date()
         const built = buildReport({
           profile: settings.profile,
-          doctor: await diagnoseProfile(settings.profile, store),
+          doctor: await diagnoseProfile(settings, store, botStoreFor(this), sessionStoreFor(this)),
           runsDir: runsDirFor(),
           ...(options.run === undefined ? {} : { runId: options.run }),
           sends: new SendJournal(sendsPathFor(settings.profile)).entries(),
@@ -222,6 +277,16 @@ const explain = (renderer: Renderer, format: RenderFormat, streams: Streams): vo
   )
 }
 
+const profileLine = ({ name, personal, bot }: Diagnosis["profiles"][number]): string =>
+  `${name} (${[personal ? "personal" : "", bot ? "bot" : ""].filter(Boolean).join(" + ") || "not logged in"})`
+
+const BOT_TOKEN_FROM = {
+  environment: "MAX_BOT_TOKEN",
+  keyring: "the keyring",
+  file: "credentials.json — there is no keyring here",
+  none: "nowhere",
+} as const
+
 const TOKEN_FROM = {
   environment: "MAX_TOKEN",
   keyring: "the keyring",
@@ -272,7 +337,9 @@ const forPerson = (report: Diagnosis, profile: string) => ({
   "account known": report.session.viewerId,
   ...(report.session.loginPausedUntil ? { "login paused until": report.session.loginPausedUntil } : {}),
   "presents as": `web client ${report.client.appVersion}, ${report.client.chrome}, read ${report.client.readOn} (${report.client.ageDays} days ago)`,
-  "profiles logged in": report.loggedInProfiles.length === 0 ? "none" : report.loggedInProfiles.join(", "),
+  "bot token": report.bot.token.present ? `yes, from ${BOT_TOKEN_FROM[report.bot.token.from]}` : "none",
+  ...(report.bot.registry.exists ? { "bot chats seen": `${report.bot.registry.chats}` } : {}),
+  profiles: report.profiles.length === 0 ? "none" : report.profiles.map(profileLine).join(", "),
   "local copy": report.cache.exists
     ? `schema ${report.cache.schemaVersion ?? "unreadable"}, this max speaks ${report.cache.speaks}`
     : "not created yet",

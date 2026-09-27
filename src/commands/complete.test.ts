@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs"
 import { captureStreams } from "@leemour/cli-core"
 import { beforeAll, describe, expect, it } from "vitest"
+import { ChatRegistry } from "../bot/registry.js"
 import { openProfileCache, profileCacheFile } from "../cache/index.js"
 import { run } from "../program.js"
 
@@ -51,6 +52,20 @@ describe("max complete", () => {
     expect(lines).toContain("101\tFamily")
     expect(lines).toContain("102\tWork chat")
     expect(values(lines)).toEqual(["101", "102", "103", "104", "105"])
+  })
+
+  it("offers a bot's own chats to a bot command, not the personal account's", async () => {
+    const registry = new ChatRegistry("tabbed")
+    registry.observe([{ id: "-900", title: "Shop group" }])
+    const { lines } = await complete("tabbed", "bot", "messages", "list", "")
+    expect(values(lines)).toEqual(["-900"])
+    expect(lines).toContain("-900\tShop group")
+  })
+
+  it("offers profiles that hold only a bot as a first word", async () => {
+    new ChatRegistry("shopbot").touch()
+    const { lines } = await complete("")
+    expect(values(lines)).toContain("shopbot")
   })
 
   it("shows a title's control characters instead of passing them to the shell", async () => {

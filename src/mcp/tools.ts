@@ -828,6 +828,34 @@ export const registerTools = (
   if (allowModerate && (!permitted || (permitted.includes("delete") && permitted.includes("groups")))) {
     registerCheck(server, session, { store, profile })
   }
+
+  server.registerTool(
+    "max_status",
+    {
+      title: "This server's profile and login",
+      description:
+        "Which profile this server speaks for, whether it has a token and has logged in here, and which writing " +
+        "tools are on. Never logs in, so it answers when the login is what is broken.",
+      inputSchema: toStandardJsonSchema(v.object({})),
+      annotations: { ...READ, idempotentHint: true },
+    },
+    async () => {
+      let token: string
+      try {
+        token = store.tokenSource() ?? "none"
+      } catch {
+        token = "unreachable"
+      }
+      return answered({
+        profile,
+        kind: store.isBot() ? "personal + bot" : "personal",
+        token,
+        loggedInHere: store.hasLoggedIn(),
+        writes: Object.keys(offered),
+        allow: permitted ?? "all",
+      })
+    },
+  )
 }
 
 /**

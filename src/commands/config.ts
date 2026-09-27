@@ -1,5 +1,4 @@
-import { join } from "node:path"
-import { CliError, pathsAreOverridden, resolvePaths } from "@leemour/cli-core"
+import { CliError, pathsAreOverridden } from "@leemour/cli-core"
 import { Command } from "commander"
 import {
   ALL_SETTINGS,
@@ -11,7 +10,7 @@ import {
   type SourcedSetting,
   scopePath,
 } from "../config.js"
-import { profilesWithState } from "../diagnose.js"
+import { knownProfiles } from "../diagnose.js"
 import { forCommand } from "./context.js"
 
 const SHOWN: SourcedSetting[] = [
@@ -53,12 +52,7 @@ export const configCommand = (): Command => {
         profile: settings.profile,
         profileFrom: settings.sources.profile,
         kind: settings.kind,
-        profiles: [
-          ...new Set([
-            ...settings.configuredProfiles,
-            ...profilesWithState(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")),
-          ]),
-        ].sort(),
+        profiles: knownProfiles({ configured: settings.configuredProfiles }),
         configFile: settings.configPath,
         configFound: settings.configFound,
         pathsOverridden: overridden,

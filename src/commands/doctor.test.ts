@@ -1,4 +1,4 @@
-import { existsSync, mkdtempSync, rmSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
@@ -17,8 +17,15 @@ import { installNotes } from "./doctor.js"
  */
 const homes: string[] = []
 
-const inAnEmptyHome = async (argv: string[], { token = false, loggedIn = false, tty = false } = {}) => {
+const inAnEmptyHome = async (
+  argv: string[],
+  { token = false, loggedIn = false, tty = false, bots = [] as string[] } = {},
+) => {
   const home = mkdtempSync(join(tmpdir(), "max-doctor-cmd-"))
+  for (const bot of bots) {
+    mkdirSync(join(home, "state", "bots"), { recursive: true })
+    writeFileSync(join(home, "state", "bots", `${bot}.json`), JSON.stringify({ chats: [] }))
+  }
   const before = { ...process.env }
   homes.push(home)
 
@@ -54,6 +61,12 @@ afterEach(() => {
 })
 
 describe("max doctor", () => {
+  it("tells a profile whose bot token is gone how to store one, not to run session start", async () => {
+    const { stderr } = await inAnEmptyHome(["shop", "doctor", "--json"], { bots: ["shop"] })
+    expect(stderr).toContain("max shop bot auth set")
+    expect(stderr).not.toContain("session start")
+  })
+
   it("**answers on a machine with no session, and exits 0**", async () => {
     // The only time anybody runs it is when something is wrong, so a non-zero code for "there is
     // no session" would make it useless for the one question it exists to answer.

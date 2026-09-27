@@ -1958,6 +1958,13 @@ export class MaxClient {
             `\`max ${asFirstWord(profile)}doctor\` shows it. Log in again only if the token was removed`,
         )
       }
+      if (this.#store.isBot()) {
+        throw new CliError(
+          "authentication_error",
+          `profile "${profile}" is a bot — its commands are \`max ${asFirstWord(profile)}bot …\`; ` +
+            `\`max ${asFirstWord(profile)}session start\` would add a personal account to it`,
+        )
+      }
       // The fix has to carry the profile, or it logs the wrong one in: a name nobody has logged
       // in under is the ordinary shape of this failure now that the first word is the profile.
       throw new CliError(
