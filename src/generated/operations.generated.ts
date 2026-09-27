@@ -29,6 +29,7 @@ import {
 import {
   messagesDelete,
   messagesEdit,
+  messagesPollVote,
   messagesReact,
   messagesReactions,
   messagesSend,
@@ -75,6 +76,7 @@ export const OPERATIONS = {
   "messages.edit": messagesEdit,
   "messages.react": messagesReact,
   "messages.unreact": messagesUnreact,
+  "messages.pollVote": messagesPollVote,
   "messages.reactions": messagesReactions,
   "messages.delete": messagesDelete,
   "attachments.video": attachmentsVideo,

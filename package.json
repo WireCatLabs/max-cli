@@ -66,6 +66,7 @@
     "probe:media-send": "pnpm build && node --experimental-strip-types scripts/probe-media-send.ts",
     "probe:video": "pnpm build && node --experimental-strip-types scripts/probe-video.ts",
     "probe:voice": "pnpm build && node --experimental-strip-types scripts/probe-voice.ts",
+    "probe:polls": "pnpm build && node --experimental-strip-types scripts/probe-polls.ts",
     "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts"
   },
   "dependencies": {
