@@ -10,6 +10,7 @@ import { type CallInput, plainJson } from "../bot/transport.js"
 import { configuredProfiles } from "../config.js"
 import { callbacksCommand, commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext } from "./bot-context.js"
+import { botMcpCommand } from "./bot-mcp.js"
 import { adminsCommand, membersCommand } from "./bot-members.js"
 import { peopleCommand } from "./bot-people.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
@@ -162,6 +163,7 @@ export const botCommand = (): Command => {
     uploadsCommand(),
     webhooksCommand(),
     updatesCommand(),
+    botMcpCommand(),
   ])
     command.addCommand(more)
 

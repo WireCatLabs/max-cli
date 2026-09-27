@@ -1277,6 +1277,21 @@ what happens in this bot's chats, as MAX reports it
 max bot updates
 ```
 
+### `max bot mcp`
+
+serve this bot to an agent over MCP, on stdin and stdout — `claude mcp add sales-bot -- max sales bot mcp`
+
+```sh
+max bot mcp [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--allow-send` | offer the tools that write as the bot; without it the server can only read |
+| `--confirm-send` | show the owner every write in a form from the server first |
+| `--allow-delete` | offer the tools that delete messages and comments; it cannot be undone |
+| `--allow-moderate` | offer max_bot_chats_check and adding and removing members — the bot acts on a group's rules |
+
 ### `max bot api`
 
 every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md

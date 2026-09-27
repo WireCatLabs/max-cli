@@ -1,13 +1,11 @@
 import { isInputRequiredResult, type ServerContext } from "@modelcontextprotocol/server"
 import { describe, expect, it, vi } from "vitest"
-import type { MaxClient } from "../client.js"
-import { confirmer } from "./confirm.js"
+import { confirmer, type ResolveChat } from "./confirm.js"
 
-const client = {
-  chats: {
-    show: async (reference: string) => ({ id: reference === "Alpha" ? "111" : reference, title: "Team Alpha" }),
-  },
-} as unknown as MaxClient
+const client: ResolveChat = async (reference) => ({
+  id: reference === "Alpha" ? "111" : reference,
+  title: "Team Alpha",
+})
 
 const SEND = { name: "max_messages_send", title: "Send a message" }
 const FORWARD = { name: "max_messages_forward", title: "Forward a message" }
