@@ -108,6 +108,9 @@ export const review = async (
   return { ...found, chats, unanswered: { olderThanHours: unansweredAfterHours } }
 }
 
+/** A shared link's query string is not a question. */
+const LINKS = /https?:\/\/\S+/g
+
 interface UnansweredOptions {
   /** Besides the owner, whose words count as an answer. */
   answerers: ReadonlySet<Id>
@@ -128,7 +131,7 @@ export const unanswered = (messages: ReviewMessage[], { answerers, before }: Una
   return messages.filter((message, index) => {
     if (answers(message) || Date.parse(message.timestamp) >= before) return false
     const text = message.transcript ?? message.text
-    const asked = text.includes("?") || (message.replyTo !== null && answers(message.replyTo))
+    const asked = text.replace(LINKS, "").includes("?") || (message.replyTo !== null && answers(message.replyTo))
     if (!asked) return false
 
     const later = messages.slice(index + 1)

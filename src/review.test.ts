@@ -164,6 +164,7 @@ describe("max review", () => {
             message(200, THEM, "anyone know the address?"),
             message(190, OTHER, "no idea"),
             message(150, THEM, "thanks all"),
+            message(140, THEM, "here it is https://shop.example/item?id=5&utm_source=max"),
             replied,
             message(90, OTHER, "good question"),
             replyByMe,
