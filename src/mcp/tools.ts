@@ -11,6 +11,7 @@ import * as v from "valibot"
 import { openProfileCache } from "../cache/index.js"
 import { DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
 import { hearingFields } from "../commands/hearing.js"
+import { listed } from "../commands/paging.js"
 import { sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Message, Page } from "../domain/models.js"
@@ -290,17 +291,19 @@ const READ_TOOLS = {
     description:
       "A chat's service messages since `since`: who joined, was added or removed, and by whom, oldest first. " +
       `\`event\` as MAX names it — new, add, remove, pin; others pass through. ${EVENTS_DAYS} days back if not given. ` +
-      "Returns { chatId, since, more, events: [{ messageId, timestamp, event, by, people, title? }] }.",
+      "Returns { items: [{ messageId, timestamp, event, by, people, title? }], page, limit, hasMore, chatId, since }.",
     input: v.object({
       chat,
       since: v.optional(v.pipe(v.string(), v.description("a message id, an ISO 8601 time, or 2h / 1d ago"))),
     }),
     annotations: READ,
-    answer: (client, args) =>
-      client.chats.events(
+    answer: async (client, args) => {
+      const found = await client.chats.events(
         args.chat,
         args.since === undefined ? {} : { since: client.messages.moment(args.since, "since") },
-      ),
+      )
+      return { ...listed(found.events), hasMore: found.more, chatId: found.chatId, since: found.since }
+    },
   }),
 
   max_chats_members: tool({
@@ -309,10 +312,13 @@ const READ_TOOLS = {
       "Every member of a group or channel, from MAX: { id, name, username, registeredAt, lastSeenAt, role? }. " +
       "`role` is owner, admin or member, absent when `rolesKnown` is false. " +
       "`registeredAt` is when their MAX account was made — a days-old account is worth a look. " +
-      "Returns { chatId, members, complete, rolesKnown }.",
+      "Returns { items, page, limit, hasMore, chatId, rolesKnown }; hasMore means MAX had more than one read takes.",
     input: v.object({ chat }),
     annotations: READ,
-    answer: (client, args) => client.chats.members.list(args.chat),
+    answer: async (client, args) => {
+      const found = await client.chats.members.list(args.chat)
+      return { ...listed(found.members), hasMore: !found.complete, chatId: found.chatId, rolesKnown: found.rolesKnown }
+    },
   }),
 
   max_chats_rules: tool({
@@ -738,7 +744,9 @@ const answered = (value: object): CallToolResult =>
           { type: "text", text: JSON.stringify(value.about) },
         ],
       }
-    : { content: [{ type: "text", text: JSON.stringify(value) }], structuredContent: value as Record<string, unknown> }
+    : ((body) => ({ content: [{ type: "text", text: JSON.stringify(body) }], structuredContent: body }))(
+        (Array.isArray(value) ? listed(value) : value) as Record<string, unknown>,
+      )
 
 /** The same object the CLI prints on stderr, so an agent reads one error shape from both. */
 const failed = (error: unknown): CallToolResult => {
@@ -880,7 +888,7 @@ const registerCheck = (
       description:
         "Judge what is new in a group since its last check — messages and people who joined — by the " +
         "owner's rules for it (`max chats rules`), and act where the rules and their consent levels allow. Only " +
-        "when the owner asked for a check of this group. Returns rows { kind, rule, personId, personName, " +
+        "when the owner asked for a check of this group. Returns { items, … } of rows { kind, rule, personId, personName, " +
         "messageId?, action, outcome, reason?, command? } and notes; a row not done carries the command that would " +
         `do it. ${UNTRUSTED}`,
       inputSchema: toStandardJsonSchema(

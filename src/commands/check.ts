@@ -4,6 +4,7 @@ import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import { type CheckRow, describe, finish, MAX_ACTIONS, personal, prepare, sessionPoints } from "../moderation/check.js"
 import { forCommand } from "./context.js"
+import { renderList } from "./paging.js"
 
 /**
  * **The one command that acts on a group's rules** (`NEED-306`): what the owner types is the
@@ -48,7 +49,7 @@ export const checkCommand = (): Command =>
               ? { confirm: async (finding) => /^y(es)?$/i.test((await ask(`${describe(finding)}? [y/N] `)).trim()) }
               : {}),
           })
-          renderer.stream(format === "pretty" ? rows.map(pretty) : rows)
+          renderList(renderer, format, format === "pretty" ? rows.map(pretty) : rows)
           for (const note of notes) renderer.note(note)
         } finally {
           await client.close()

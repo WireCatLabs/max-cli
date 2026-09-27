@@ -25,6 +25,7 @@ import { botContext } from "./bot-context.js"
 import { chatIdOf } from "./bot-reads.js"
 import { guardedCall, operation } from "./bot-sends.js"
 import { environmentOf } from "./context.js"
+import { renderList } from "./paging.js"
 
 type Context = ReturnType<typeof botContext>
 
@@ -99,7 +100,7 @@ export const botCheckCommand = (): Command =>
             }
           : {}),
       })
-      context.renderer.stream(context.format === "pretty" ? rows.map(pretty) : rows)
+      renderList(context.renderer, context.format, context.format === "pretty" ? rows.map(pretty) : rows)
       for (const note of notes) context.streams.diagnostic(note)
     })
 

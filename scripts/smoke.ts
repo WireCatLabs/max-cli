@@ -65,7 +65,7 @@ check("an unknown option explains itself on stderr", bad.stderr.includes("unknow
 // The explanation is a diagnostic, so stdout still carries one JSON value and nothing else.
 const empty = maxHere("runs", "list", "--json")
 check("`runs list` exits cleanly with nothing to show", empty.status === 0)
-check("`runs list` prints an empty list on stdout", empty.stdout.trim() === "[]")
+check("`runs list` prints an empty list on stdout", JSON.parse(empty.stdout).items?.length === 0)
 check("`runs list` says on stderr why it is empty", empty.stderr.includes("--record"))
 
 // Pino writes the event log, and this is the only place it runs under Bun. `session end` reaches
@@ -84,7 +84,7 @@ check("the run directory holds its metadata", existsSync(join(runDir, "run.json"
 check("the run directory holds its event log", existsSync(join(runDir, "events.jsonl")))
 
 const listed = maxHere("runs", "list", "--json")
-check("`runs list` finds the run that was just kept", JSON.parse(listed.stdout)[0]?.status === "success")
+check("`runs list` finds the run that was just kept", JSON.parse(listed.stdout).items?.[0]?.status === "success")
 
 const path = maxHere("runs", "path", kept[0] ?? "", "--json")
 check("`runs path` answers with the directory, as one JSON value", JSON.parse(path.stdout).path === runDir)

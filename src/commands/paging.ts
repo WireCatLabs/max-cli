@@ -36,6 +36,23 @@ export const window = ({ limit, page, all }: Settings): { limit?: number; offset
   all ? { offset: 0 } : { limit, offset: (page - 1) * limit }
 
 /**
+ * A list with no pages — folders, members, runs, everything a bot lists — in the envelope a paged
+ * one uses (`NEED-358`), so an agent reads one shape. `--jsonl` streams it and a person gets the table.
+ * `extra` goes beside it: a Bot API list paged by `marker` carries its marker and `hasMore`.
+ */
+export const renderList = (
+  renderer: Renderer,
+  format: RenderFormat,
+  items: readonly unknown[],
+  extra: { hasMore?: boolean } & Record<string, unknown> = {},
+): void => {
+  if (format === "json") renderer.result({ ...listed(items), ...extra })
+  else renderer.stream(items)
+}
+
+export const listed = (items: readonly unknown[]) => ({ items, page: 1, limit: items.length, hasMore: false })
+
+/**
  * **One shape for every listing**, and the caller never has to work out which one it got.
  *
  * In the machine modes stdout carries the envelope. For a person it carries the table it always

@@ -47,7 +47,7 @@ const group = () => {
 const check = async (argv: string[], environment: Environment) => {
   const streams = captureStreams()
   const code = await run(argv, { ...environment, streams, tty: false })
-  return { code, json: JSON.parse(streams.stdout.join("\n") || "null"), stderr: streams.stderr.join("\n") }
+  return { code, json: JSON.parse(streams.stdout.join("\n") || "null")?.items, stderr: streams.stderr.join("\n") }
 }
 
 describe("max chats check", () => {

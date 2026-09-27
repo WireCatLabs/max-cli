@@ -18,6 +18,7 @@ import { guardedCall, recipientsCommand, sendsCommand } from "./bot-sends.js"
 import { menuCommand, uploadsCommand, webhooksCommand } from "./bot-setup.js"
 import { updatesCommand } from "./bot-updates.js"
 import { environmentOf } from "./context.js"
+import { renderList } from "./paging.js"
 
 const apiCommand = (operation: ManifestOperation): Command => {
   const binding =
@@ -128,7 +129,7 @@ export const botCommand = (): Command => {
     .description("every name on this machine that has a bot token; --check asks MAX which bot each is")
     .option("--check", "ask MAX who each bot is")
     .action(async function (this: Command) {
-      const { renderer, streams } = botContext(this)
+      const { renderer, format, streams } = botContext(this)
       const check = this.opts<{ check?: boolean }>().check === true
       const environment = environmentOf(this)
       const names = [...new Set(["default", ...configuredProfiles(), ...registryProfiles()])].sort()
@@ -149,7 +150,7 @@ export const botCommand = (): Command => {
         }
         rows.push(row)
       }
-      renderer.result(rows)
+      renderList(renderer, format, rows)
     })
 
   command.addCommand(messagesCommand())

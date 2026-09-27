@@ -6,6 +6,7 @@ import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { chatIdOf } from "./bot-reads.js"
 import { guardedCall, operation } from "./bot-sends.js"
+import { renderList } from "./paging.js"
 
 const USER_ID = /^\d+$/
 
@@ -28,9 +29,11 @@ const limitOf = (limit: number): string => {
   return String(limit)
 }
 
-const listOf = (answer: unknown) => {
-  const { members, marker } = plainJson(answer) as { members?: unknown[]; marker?: unknown }
-  return { members: members ?? [], marker: marker ?? null }
+/** The Bot API's page of members, in our envelope with string ids (`NEED-358`); `marker` asks for the next. */
+const showMembers = (context: ReturnType<typeof botContext>, answer: unknown): void => {
+  const { members, marker } = plainJson(answer) as { members?: Record<string, unknown>[]; marker?: unknown }
+  const items = (members ?? []).map((member) => ({ ...member, user_id: String(member.user_id) }))
+  renderList(context.renderer, context.format, items, { marker: marker ?? null, hasMore: marker != null })
 }
 
 export const membersCommand = (): Command => {
@@ -48,7 +51,7 @@ export const membersCommand = (): Command => {
         path: { chatId: chatIdOf(chat, context.registry) },
         query: { count: limitOf(context.settings.limit), ...(marker ? { marker } : {}) },
       })
-      context.renderer.result(listOf(answer))
+      showMembers(context, answer)
     })
 
   annotate(command.command("add <chat> <users...>"), { mutates: true })
@@ -120,7 +123,7 @@ export const adminsCommand = (): Command => {
       const answer = await context.authenticated().call(operation("getAdmins"), {
         path: { chatId: chatIdOf(chat, context.registry) },
       })
-      context.renderer.result(listOf(answer))
+      showMembers(context, answer)
     })
 
   annotate(command.command("add <chat> <user>"), { mutates: true })

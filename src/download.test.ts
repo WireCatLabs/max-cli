@@ -86,7 +86,12 @@ describe("max messages download", () => {
     expect(code).toBe(0)
     expect(max.unexpected).toEqual([])
     expect(String(max.sent.find((call) => call.opcode === Opcode.FILE_DOWNLOAD)?.payload.fileId)).toBe("42")
-    expect(JSON.parse(stdout)).toEqual({ items: [{ kind: "file", path: join(directory, "report.pdf"), bytes: 10 }] })
+    expect(JSON.parse(stdout)).toEqual({
+      items: [{ kind: "file", path: join(directory, "report.pdf"), bytes: 10 }],
+      page: 1,
+      limit: 1,
+      hasMore: false,
+    })
     expect(stderr).toContain("not downloadable: call")
     expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
   })

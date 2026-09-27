@@ -143,9 +143,9 @@ describe("max bot people show", () => {
 
 describe("max bot messages search --from", () => {
   it("finds what one person wrote, with or without text", async () => {
-    const all = await json(["first", "bot", "messages", "search", "--from", "@ann"])
+    const all = (await json(["first", "bot", "messages", "search", "--from", "@ann"])).items
     expect(all.map((message: { id: string }) => message.id)).toEqual(["mid.a1", "mid.d1"])
-    const some = await json(["first", "bot", "messages", "search", "team", "--from", "@ann", "--from", "Bob"])
+    const some = (await json(["first", "bot", "messages", "search", "team", "--from", "@ann", "--from", "Bob"])).items
     expect(some.map((message: { id: string }) => message.id)).toEqual(["mid.b1", "mid.a1"])
   })
 })

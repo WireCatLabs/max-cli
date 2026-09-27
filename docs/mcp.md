@@ -155,7 +155,7 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 | `max_messages_delete` | `max messages delete` | удалить у владельца, только с `--allow-delete` |
 | `max_chats_check` | `max chats check` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |
 
-Ответы — те же, что `--json` у команды: список со страницами — `{ items, page, limit, hasMore }`, id — строки.
+Ответы — те же, что `--json` у команды: список — `{ items, page, limit, hasMore }`, id — строки.
 Ошибка — `{ error: { code, message, … } }` с теми же кодами, что у CLI; неоднозначное имя чата
 отвечает списком `candidates` и ничего не отправляет.
 

@@ -6,6 +6,16 @@
 
 ## 0.17.0 — 28.09.2026
 
+### Изменено — может сломать скрипты
+
+- **Любой список в `--json` — объект `{items, page, limit, hasMore}`**, а не массив: теперь и
+  `account sessions list`, `chats members list`, `chats folders list`, `messages scheduled`,
+  `messages download`, `messages context`, `models audio list`, `recipients list`, `sends list`,
+  `runs list`, `chats check`, `chats events` (было `{events, more}`) и все списки бота. У списка без
+  страниц `page` — 1, `limit` — сколько пришло. `bot members list` и `bot admins list` кладут рядом
+  `marker`, а `user_id` у них теперь строка. `bot messages get` отвечает самим сообщением, а не
+  массивом из одного. `--jsonl` и таблица для человека не изменились. В MCP — то же самое.
+
 ### Что нового
 
 - **`max doctor` и `max config show` видят ботов.** Список профилей — все, что есть на машине, с
@@ -33,6 +43,8 @@
   новое фото профиля. `max contacts rename <кто> <имя> [фамилия]` даёт человеку имя, которое видите
   только вы. `max contacts block <кто>` и `unblock` — блокировка; заблокировать можно и того, кого
   нет в контактах. Всё проходит те же проверки, что `account update` и `contacts add`.
+- **Каналы.** `max chats create <название> --channel` создаёт закрытый канал. Людей в него зовут
+  ссылкой-приглашением (`max chats link show`): добавить человека напрямую MAX может не дать.
 - **Права админа: чтение и ссылка.** `max chats admins add <чат> <кто> --can read,link` — читать все
   сообщения группы и менять ссылку-приглашение. Боту без `read` сообщения группы не видны.
 - **Время назад.** `--since`, `--before` и `--after` понимают `30m`, `2h`, `1d` — столько назад:

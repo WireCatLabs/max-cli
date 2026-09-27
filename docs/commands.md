@@ -230,18 +230,22 @@ max chats leave <chat>
 
 ### `max chats create`
 
-create a group; the people added are told
+create a group or a channel; the people added are told
 
 **Меняет что-то в MAX.**
 
 ```sh
-max chats create <title> [person]
+max chats create <title> [person] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `title` | обязательный | the group's name |
 | `person` | необязательный | people to add: an id, or part of a name |
+
+| Опция | Что делает |
+|---|---|
+| `--channel` | a private channel instead of a group; people join it by its link |
 
 ### `max chats members`
 

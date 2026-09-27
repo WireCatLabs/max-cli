@@ -135,9 +135,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 **From the live run of 2026-09-28** (`docs_ai/plans/2026-09-28-live-scenarios.md`).
 
-- **CLI-56** · P3 · 🚩 · Lists answer in three shapes: the envelope (`NEED-86`), a bare array
-  (`runs list`, `folders list`, `members list`, `scheduled`, every `bot … list`), and the Bot API's
-  own `{marker, members}` with numeric ids. One contract for agents before 1.0 — waits on the owner.
 - **OPS-17** · P1 · 🚧 `fix/live-run-findings` · Release 0.17: npm 0.16.0 lacks what `docs/`
   describes (contacts rename/block/unblock, profile photo, `admins add --can read,link`).
 

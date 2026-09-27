@@ -2,6 +2,7 @@ import { CliError } from "@leemour/cli-core"
 import { Command } from "commander"
 import { RecipientList, recipientsPathFor } from "../sends/recipients.js"
 import { forCommand } from "./context.js"
+import { renderList } from "./paging.js"
 
 /**
  * The chats this profile may send to. Off until the first `add`; `off` turns it off again.
@@ -16,10 +17,10 @@ export const recipientsCommand = (): Command => {
     .command("list")
     .description("the chats on the list; empty and off until the first add")
     .action(async function (this: Command) {
-      const { settings, renderer, run } = forCommand(this)
+      const { settings, renderer, format, run } = forCommand(this)
       await run("recipients list", async () => {
         const chats = listFor(settings.profile).read()
-        renderer.stream(chats ?? [])
+        renderList(renderer, format, chats ?? [])
         if (!chats) renderer.note("the recipient list is off — this profile may send to any chat")
         else if (chats.length === 0) renderer.note("the recipient list is on and empty — this profile may send nowhere")
       })

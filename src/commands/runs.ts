@@ -2,6 +2,7 @@ import { CliError } from "@leemour/cli-core"
 import { Command } from "commander"
 import { findRun, listRuns, readEvents, runsDirFor } from "../runs/run.js"
 import { outputFor } from "./context.js"
+import { renderList, wholeNumber } from "./paging.js"
 
 /**
  * What this tool did, when it was asked to keep the record.
@@ -15,13 +16,13 @@ export const runsCommand = (): Command => {
   command
     .command("list")
     .description("recorded runs, newest first")
-    .option("--limit <n>", "how many to show", (value) => Number.parseInt(value, 10), 20)
+    .option("--limit <n>", "how many to show", wholeNumber("--limit"), 20)
     .action(function (this: Command) {
       const options = this.optsWithGlobals()
-      const { renderer } = outputFor(this)
+      const { renderer, format } = outputFor(this)
       const runs = listRuns(runsDirFor())
 
-      renderer.result(runs.slice(0, options.limit))
+      renderList(renderer, format, runs.slice(0, options.limit))
 
       // An empty list reads as broken otherwise, and the reason is that nothing asked for a
       // record — recording is off unless it is asked for (`NEED-52`). The explanation is a

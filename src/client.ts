@@ -476,7 +476,7 @@ export class MaxClient {
      * Not retried, unlike a message: a second attempt with a new `cid` is a second group, and
      * whether MAX deduplicates a creation by `cid` is not measured.
      */
-    create: async (title: string, people: string[] = []): Promise<GroupCard> => {
+    create: async (title: string, people: string[] = [], { channel = false } = {}): Promise<GroupCard> => {
       const userIds = await this.#personIds(people)
       return this.#changeChat(
         null,
@@ -485,7 +485,7 @@ export class MaxClient {
           const answer = await this.#wire.messages.send({
             message: {
               cid: this.#nextCid(),
-              attaches: [{ _type: "CONTROL", event: "new", chatType: "CHAT", title, userIds }],
+              attaches: [{ _type: "CONTROL", event: "new", chatType: channel ? "CHANNEL" : "CHAT", title, userIds }],
             },
             notify: true,
           })

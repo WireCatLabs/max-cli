@@ -42,6 +42,7 @@ export const messagesSend = defineOperation({
     /**
      * Creating a group is a message too: a CONTROL attachment with no chat to send it to. Measured
      * 2026-09-24 with nobody invited (`pnpm probe:groups`); the answer adds `chat` and `chatId`.
+     * `CHANNEL` measured 2026-09-28 (`scripts/probe-channel.ts`): the answer is a private channel.
      */
     v.strictObject({
       message: v.strictObject({
@@ -50,7 +51,7 @@ export const messagesSend = defineOperation({
           v.strictObject({
             _type: v.literal("CONTROL"),
             event: v.literal("new"),
-            chatType: v.literal("CHAT"),
+            chatType: v.picklist(["CHAT", "CHANNEL"]),
             title: v.pipe(v.string(), v.minLength(1)),
             userIds: v.array(id()),
           }),

@@ -10,6 +10,7 @@ import { botCheckCommand, botRulesCommand } from "./bot-check.js"
 import { botContext } from "./bot-context.js"
 import { addBetween, searchMessages } from "./bot-people.js"
 import { guardedCall, sendCommands } from "./bot-sends.js"
+import { renderList } from "./paging.js"
 
 type Context = ReturnType<typeof botContext>
 
@@ -76,7 +77,7 @@ export const messagesCommand = (): Command => {
         const botId = storedBotId(context)
         const kept = await fromStore((store) => store.message(accountOf(botId), message))
         if (!kept) throw new CliError("not_found", `message ${message} is not in the local copy`)
-        show(context, [kept])
+        show(context, [kept], true)
         return
       }
       const client = context.authenticated()
@@ -84,7 +85,7 @@ export const messagesCommand = (): Command => {
       context.registry.rememberBot(self)
       const found = await client.message(message, self)
       await keep(self, [found], "history", context.streams.diagnostic, client.takeSenders())
-      show(context, [found])
+      show(context, [found], true)
     })
 
   command
@@ -120,9 +121,13 @@ const storedBotId = (context: Context): string => {
   )
 }
 
-const show = (context: Context, messages: Message[]): void => {
+const show = (context: Context, messages: Message[], one = false): void => {
+  if (one && context.format === "json") {
+    context.renderer.result(messages[0])
+    return
+  }
   if (context.format !== "pretty") {
-    context.renderer.result(messages)
+    renderList(context.renderer, context.format, messages)
     return
   }
   context.streams.data(
@@ -146,8 +151,8 @@ export const chatsCommand = (): Command => {
     .command("list")
     .description("chats this bot has seen on this machine — not a complete list from MAX")
     .action(function (this: Command) {
-      const { renderer, registry } = botContext(this, { offline: true })
-      renderer.result(registry.list())
+      const { renderer, format, registry } = botContext(this, { offline: true })
+      renderList(renderer, format, registry.list())
     })
 
   command

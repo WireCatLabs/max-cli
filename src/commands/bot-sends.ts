@@ -22,6 +22,7 @@ import {
 } from "../bot/uploads.js"
 import { asFirstWord } from "../profile.js"
 import { assertAllowed, botContext } from "./bot-context.js"
+import { renderList } from "./paging.js"
 
 type Context = ReturnType<typeof botContext>
 
@@ -300,7 +301,7 @@ export const recipientsCommand = (): Command => {
     .description("the chats on the list, or nothing when there is no list")
     .action(function (this: Command) {
       const context = botContext(this)
-      context.renderer.result(recipientsOf(context).read() ?? [])
+      renderList(context.renderer, context.format, recipientsOf(context).read() ?? [])
     })
   command
     .command("add <chat>")
@@ -310,7 +311,7 @@ export const recipientsCommand = (): Command => {
       const target = targetOf(chat, context)
       const title = context.registry.list().find((seen) => seen.id === target.key)?.title ?? null
       recipientsOf(context).add({ id: target.key, title, addedAt: new Date().toISOString() })
-      context.renderer.result(recipientsOf(context).read() ?? [])
+      renderList(context.renderer, context.format, recipientsOf(context).read() ?? [])
     })
   command
     .command("remove <chat>")
@@ -335,6 +336,6 @@ export const sendsCommand = (): Command =>
     .addCommand(
       new Command("list").action(function (this: Command) {
         const context = botContext(this)
-        context.renderer.result(new SendJournal(files(context.settings.profile).journal).entries())
+        renderList(context.renderer, context.format, new SendJournal(files(context.settings.profile).journal).entries())
       }),
     )

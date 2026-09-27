@@ -13,7 +13,7 @@ import { speechModel } from "../transcribe/models.js"
 import { readBody } from "./body.js"
 import { type CommandContext, forCommand } from "./context.js"
 import { hearingFields, hearingOptions, hearMessages } from "./hearing.js"
-import { renderPage } from "./paging.js"
+import { renderList, renderPage } from "./paging.js"
 
 export const messagesCommand = (): Command => {
   const command = new Command("messages").description("read and send messages in a chat")
@@ -189,7 +189,7 @@ export const messagesCommand = (): Command => {
           }
 
           if (format === "pretty") streams.data(`${saved.map((file) => singleLine(file.path)).join("\n")}\n`)
-          else renderer.result({ items: saved })
+          else renderList(renderer, format, saved)
         } finally {
           await client.close()
         }
@@ -329,8 +329,7 @@ export const messagesCommand = (): Command => {
         const client = createClient({ events })
         try {
           const messages = await client.messages.scheduled(await client.chats.resolve(chat))
-          if (format === "jsonl") renderer.stream(messages)
-          else if (format !== "pretty") renderer.result(messages)
+          if (format !== "pretty") renderList(renderer, format, messages)
           else if (messages.length === 0) renderer.note("nothing scheduled")
           else streams.data(feed(context)(messages.map((m) => ({ ...m, timestamp: m.scheduledFor ?? m.timestamp }))))
         } finally {
@@ -523,8 +522,8 @@ const readWindow = async (
       const single = window.before === 0 && window.after === 0
 
       if (format === "pretty") streams.data(feed(context)(found))
-      else if (format === "jsonl") renderer.stream(found)
-      else renderer.result(single ? found[0] : { items: found })
+      else if (single && format === "json") renderer.result(found[0])
+      else renderList(renderer, format, found)
     } finally {
       await client.close()
       cache?.close()

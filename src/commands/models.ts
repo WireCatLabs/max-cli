@@ -10,6 +10,7 @@ import {
 } from "../transcribe/install.js"
 import { MODELS, speechModel, VAD } from "../transcribe/models.js"
 import { forCommand } from "./context.js"
+import { renderList } from "./paging.js"
 
 /**
  * Local models, by what they work on. `audio` is the speech models behind `max messages transcribe`;
@@ -35,7 +36,7 @@ export const modelsCommand = (): Command => {
           default: model.id === settings.transcribeModel,
         }))
         if (format !== "pretty") {
-          renderer.result({ items })
+          renderList(renderer, format, items)
           return
         }
         const lines = items.map(

@@ -139,6 +139,17 @@ describe("creating a group", () => {
     expect(sent(Opcode.MSG_SEND)).toHaveLength(1)
   })
 
+  it("--channel asks for a channel with the same message", async () => {
+    const { environment, sent } = messenger()
+    const created = await runWith(["gr-create-channel", "chats", "create", "News", "--channel", "--json"], environment)
+
+    expect(created.code).toBe(0)
+    const [request] = sent(Opcode.MSG_SEND) as { message: { attaches: Payload[] } }[]
+    expect(request?.message.attaches).toEqual([
+      { _type: "CONTROL", event: "new", chatType: "CHANNEL", title: "News", userIds: [] },
+    ])
+  })
+
   it("is never retried: an unanswered creation is sent once", async () => {
     const { environment, sent } = messenger({ [Opcode.MSG_SEND]: () => undefined })
     const created = await runWith(["gr-create-once", "chats", "create", "Team"], environment)
@@ -337,13 +348,13 @@ describe("changing a group", () => {
 
       expect(code).toBe(0)
       const found = JSON.parse(stdout)
-      expect(found.events.map((one: { event: string }) => one.event)).toEqual(["new", "add", "remove"])
-      expect(found.events[1]).toMatchObject({
+      expect(found.items.map((one: { event: string }) => one.event)).toEqual(["new", "add", "remove"])
+      expect(found.items[1]).toMatchObject({
         messageId: "3",
         by: { id: "10000001", name: "Owner" },
         people: [{ id: "30000003", name: "Newcomer" }],
       })
-      expect(found.events[0].title).toBe("Team")
+      expect(found.items[0].title).toBe("Team")
       expect(sent(Opcode.MSG_GET_REACTIONS)).toEqual([])
       expect(sent(Opcode.CHAT_MARK)).toEqual([])
     })
@@ -366,7 +377,7 @@ describe("changing a group", () => {
         environment,
       )
 
-      expect(JSON.parse(stdout).events.map((one: { event: string }) => one.event)).toEqual(["remove"])
+      expect(JSON.parse(stdout).items.map((one: { event: string }) => one.event)).toEqual(["remove"])
     })
   })
 
@@ -387,7 +398,7 @@ describe("changing a group", () => {
       )
 
       expect(code).toBe(0)
-      expect(JSON.parse(stdout).map((one: { id: string }) => one.id)).toEqual(["1", "2", "3"])
+      expect(JSON.parse(stdout).items.map((one: { id: string }) => one.id)).toEqual(["1", "2", "3"])
       expect(sent(Opcode.CHAT_MEMBERS)).toEqual([
         { chatId: GROUP.id, type: "MEMBER", marker: 0, count: 50 },
         { chatId: GROUP.id, type: "MEMBER", marker: 77, count: 50 },
@@ -423,8 +434,10 @@ describe("changing a group", () => {
     const { stdout } = await runWith(["gr-roles", "chats", "members", "list", "Team", "--json"], environment)
     const plain = await runWith(["gr-noroles", "chats", "members", "list", "Team", "--json"], unknown.environment)
 
-    expect(JSON.parse(stdout).map((one: { role: string }) => one.role)).toEqual(["owner", "admin", "member"])
-    expect(JSON.parse(plain.stdout)[0].role).toBeUndefined()
+    expect(JSON.parse(stdout).items.map((one: { role: string }) => one.role)).toEqual(["owner", "admin", "member"])
+    expect(JSON.parse(stdout)).toMatchObject({ hasMore: false, rolesKnown: true })
+    expect(JSON.parse(plain.stdout)).toMatchObject({ hasMore: false, rolesKnown: false })
+    expect(JSON.parse(plain.stdout).items[0].role).toBeUndefined()
     expect(plain.stderr).toContain("who is owner or admin is not known")
   })
 

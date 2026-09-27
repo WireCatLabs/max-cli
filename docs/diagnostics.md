@@ -117,13 +117,13 @@ max runs path <id>            # каталог, для jq и grep
 
 ```sh
 # сколько времени ушло на вход в последних запусках
-for id in $(max runs list --json | jq -r '.[].runId'); do
+for id in $(max runs list --json | jq -r '.items[].runId'); do
   jq -r 'select(.operation=="session.login" and .event=="response") | "\(.durationMs)ms"' \
     "$(max runs path "$id" --json | jq -r .path)/events.jsonl"
 done
 
 # какие запуски закончились плохо
-max runs list --json | jq '.[] | select(.status=="failed") | {runId, command, errorCode}'
+max runs list --json | jq '.items[] | select(.status=="failed") | {runId, command, errorCode}'
 ```
 
 `max runs show` печатает то же самое, убрав служебные поля, которые Pino повторяет в каждой
