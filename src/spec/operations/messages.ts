@@ -216,10 +216,15 @@ export const messagesDelete = defineOperation({
     forEveryone: request.forMe === false,
   }),
   provenance: {
-    confidence: "observed",
-    sources: ["PyMax 2.4.1 `delete_message`", "tsmax"],
+    confidence: "measured",
+    sources: [
+      "PyMax 2.4.1 `delete_message`",
+      "tsmax",
+      "`forMe: false` measured 2026-09-27: the owner, as the group's admin, deleted another member's message in a test group by `max chats check` (`NEED-318`); it was gone from the history MAX returned",
+    ],
     notes:
-      "`forMe: true` removes the messages for this account only, `false` for everyone in the chat. Sent only by " +
-      "`max messages delete`, on the owner's word each time (`NEED-32` corrected, `MAX-47`). Not yet measured.",
+      "`forMe: true` removes the messages for this account only, `false` for everyone in the chat. An admin may " +
+      "delete another member's message for everyone. Sent by `max messages delete` and `max chats check`, on the " +
+      "owner's word each time (`NEED-32` corrected, `MAX-47`, `NEED-308`).",
   },
 })
