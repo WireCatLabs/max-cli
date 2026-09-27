@@ -127,6 +127,9 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 | `max_account_show` | `max account show` | под кем вход |
 | `max_chats_list` | `max chats list` | чаты, с поиском по имени, видом и непрочитанными |
 | `max_chats_show` | `max chats show` | один чат и кто в нём |
+| `max_chats_events` | `max chats events` | кто вступил, вышел, кого добавили и удалили — по служебным сообщениям; без `since` — за 7 дней |
+| `max_chats_members` | `max chats members list` | все участники группы или канала от MAX: когда заведён аккаунт, когда был в сети |
+| `max_chats_rules` | `max chats rules show` | правила модерации группы; менять их может только владелец, командой |
 | `max_contacts_list` | `max contacts list` | люди, с кем есть личная переписка |
 | `max_contacts_show` | `max contacts show` | один человек и общие чаты |
 | `max_messages_list` | `max messages list` | сообщения чата; ничего не отмечает прочитанным |

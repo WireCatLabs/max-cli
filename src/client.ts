@@ -351,7 +351,10 @@ export class MaxClient {
      * Who joined, left, was added or removed since a point: the service messages in the chat's
      * history, read forward from `since` without reactions. At most `EVENTS_READ` messages, the oldest.
      */
-    events: async (reference: string, { since }: { since: number }): Promise<ChatEvents> => {
+    events: async (
+      reference: string,
+      { since = Date.now() - EVENTS_DAYS * 86_400_000 }: { since?: number } = {},
+    ): Promise<ChatEvents> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` has no history to read events from")
       const chatId = await this.chats.resolve(reference)
       const { messages: read, more } = await this.chats.since(chatId, since)
@@ -2591,6 +2594,8 @@ const REVIEW_CHATS = 50
 const REVIEW_PAGE = 100
 const REVIEW_PER_CHAT = 500
 const EVENTS_READ = 2000
+/** How far back `chats events` looks without `since`. */
+export const EVENTS_DAYS = 7
 
 /** What `readLikeTab` sends back to MAX on the next login. */
 export interface TabSync {
