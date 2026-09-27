@@ -51,8 +51,12 @@ export const contactsUpdate = defineOperation({
     action: request.action === "REMOVE" ? "contact-remove" : "contact-add",
   }),
   provenance: {
-    confidence: "confirmed",
-    sources: [webClient, "PyMax 53103f0 `add_contact`, `remove_contact`"],
+    confidence: "measured",
+    sources: [
+      "measured 2026-09-27: `max contacts add` then `remove` on a person the owner named; the owner saw the contact appear in the app",
+      webClient,
+      "PyMax 53103f0 `add_contact`, `remove_contact`",
+    ],
     notes:
       "The web client also sends `UPDATE` (a name of your own for the person), `BLOCK` and `UNBLOCK` here. Only adding and removing are declared.",
   },
