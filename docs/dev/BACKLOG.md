@@ -31,7 +31,7 @@ operation is measured first in Saved messages (chat 0), as replies and reactions
 and needs the owner's yes before it ships. Deleting messages was ruled out (`NEED-32`) until the owner asked for it on 2026-09-24 (`MAX-47`); marking
 read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
-- **MAX-28** · P2 · Polls: show them when reading, vote (`SEND_VOTE` 304
+- **MAX-28** · P2 · 🚧 `feat/polls` · Polls: show them when reading, vote (`SEND_VOTE` 304
   `{chatId, messageId, pollId, answersIds}`), create one (a `_type: "POLL"` attachment on `MSG_SEND`
   64, `settings` 2 multiple | 4 revote). **Creating one works over the binary protocol** — accepted
   and deleted in Saved messages by `pnpm smoke:live`, 2026-09-25; over JSON it was refused with
