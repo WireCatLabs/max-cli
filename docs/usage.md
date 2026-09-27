@@ -470,6 +470,8 @@ max messages send 0 "встреча **в 15:00**, не _в 14_" --markdown
 
 ### Группы и каналы
 
+Сценарии для админа группы, все правила и ограничения — [groups.md](groups.md).
+
 ```sh
 max chats inspect https://max.ru/join/…          # что за ссылкой; не вступает
 max chats join https://max.ru/join/…             # вступить в группу или канал
