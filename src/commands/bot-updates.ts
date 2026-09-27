@@ -96,6 +96,14 @@ const print = (context: Context, update: Decoded): void => {
     context.streams.data(JSON.stringify(update.line))
     return
   }
+  if (update.type === "message_callback") {
+    const callback = (update.line.callback ?? {}) as { payload?: unknown; user?: { first_name?: unknown } }
+    const who = typeof callback.user?.first_name === "string" ? ` from ${callback.user.first_name}` : ""
+    context.streams.data(
+      `button pressed${who}${update.chatId ? ` in ${update.chatId}` : ""}: ${String(callback.payload ?? "")}\n`,
+    )
+    return
+  }
   if (update.message) {
     const edited = update.type === "message_edited" ? "edited:\n" : ""
     context.streams.data(

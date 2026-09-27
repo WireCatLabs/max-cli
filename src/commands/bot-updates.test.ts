@@ -108,8 +108,11 @@ describe("max bot updates watch", () => {
   })
 
   it("starts where the last watch stopped", async () => {
-    const { code } = await max(["bot", "updates", "watch", "--jsonl"])
-    expect(code).toBe(0)
+    new BotTokenStore({ profile: "again", keyring }).write(TOKEN)
+    script = [BATCH]
+    await max(["again", "bot", "updates", "watch", "--jsonl"])
+    polls.length = 0
+    expect((await max(["again", "bot", "updates", "watch", "--jsonl"])).code).toBe(0)
     expect(polls[0]).toContain("marker=7")
   })
 
