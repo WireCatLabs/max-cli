@@ -7,6 +7,7 @@ import {
   toContact,
   toFolder,
   toGroupCard,
+  toGroupMember,
   toMessage,
   toProfile,
   toReactions,
@@ -24,6 +25,8 @@ import type {
   Deletion,
   Folder,
   GroupCard,
+  GroupMember,
+  GroupMembers,
   GroupSettings,
   Id,
   Inbox,
@@ -478,6 +481,34 @@ export class MaxClient {
     },
 
     members: {
+      /**
+       * Everyone in a group or channel, from MAX, page by page. Paging follows PyMax: each answer's
+       * `marker` asks for the next page, and none means the last. Stops at `MEMBERS_READ`, or when a
+       * page repeats its marker or brings nobody new, so a misread marker cannot loop.
+       */
+      list: async (reference: string): Promise<GroupMembers> => {
+        if (this.#offline) throw new CliError("validation_error", "`--offline` has no member list; MAX has")
+        const chatId = await this.chats.resolve(reference)
+        await this.#connectOnce()
+        const members = new Map<Id, GroupMember>()
+        let marker = 0
+        let complete = false
+        while (members.size < MEMBERS_READ) {
+          const answer = await this.#wire.chats.members({ chatId, type: "MEMBER", marker, count: MEMBERS_PAGE })
+          const before = members.size
+          for (const raw of asArray(answer.members)) {
+            const member = toGroupMember(raw)
+            if (member.id) members.set(member.id, member)
+          }
+          const next = typeof answer.marker === "number" ? answer.marker : 0
+          if (!next || next === marker || members.size === before) {
+            complete = !next
+            break
+          }
+          marker = next
+        }
+        return { chatId, members: [...members.values()], complete }
+      },
       /** No history unless asked (`NEED-272`): what was said before somebody joined is not theirs by default. */
       add: (reference: string, people: string[], { history = false }: { history?: boolean } = {}) =>
         this.#updateMembers(reference, people, "members.add", { operation: "add", showHistory: history }),
@@ -2462,6 +2493,9 @@ export const ADMIN_RIGHTS: Record<AdminRight, number> = {
 const LIVE_CHATS = 10_000
 
 const JOIN_REQUESTS = 100
+/** PyMax's page, the one measured. */
+const MEMBERS_PAGE = 50
+const MEMBERS_READ = 5000
 
 /**
  * A private link goes as `join/<token>`, whatever came before it, as PyMax sends it and as

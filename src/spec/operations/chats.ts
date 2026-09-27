@@ -191,15 +191,22 @@ export const chatsMembers = defineOperation({
   auth: true,
   request: v.strictObject({
     chatId: id(),
-    type: v.literal("JOIN_REQUEST"),
+    type: v.picklist(["MEMBER", "JOIN_REQUEST"]),
+    /** `MEMBER` only: 0 for the first page, then the `marker` the previous answer carried. */
+    marker: v.optional(v.number()),
     count: v.pipe(v.number(), v.integer(), v.minValue(1)),
   }),
-  response: v.looseObject({ members: v.optional(v.array(v.looseObject({}))) }),
+  response: v.looseObject({ members: v.optional(v.array(v.looseObject({}))), marker: v.optional(v.number()) }),
   guard: null,
   provenance: {
     confidence: "measured",
-    sources: ["measured against MAX 2026-09-24 with no requests (`pnpm probe:groups`)", "PyMax get_join_requests"],
-    notes: "With no requests the answer is `{}` — no `members` at all. Each member is `{contact, presence}` in PyMax.",
+    sources: [
+      "measured against MAX 2026-09-24 with no requests (`pnpm probe:groups`)",
+      "`MEMBER` measured 2026-09-27 on a group of 2 (`pnpm probe:member-list`): `{members: [{contact, presence, readMark}]}`, no `marker`",
+      "PyMax get_join_requests, get_chat_members (53103f0)",
+    ],
+    notes:
+      "With no requests the answer is `{}` — no `members` at all. Paging by `marker` is PyMax's claim: one page of two members carried none.",
   },
 })
 

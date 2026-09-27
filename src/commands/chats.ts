@@ -152,7 +152,24 @@ export const chatsCommand = (): Command => {
       await withClient(this, "chats create", (client) => client.chats.create(title, people))
     })
 
-  const members = command.command("members").description("add people to a group or channel, or remove them")
+  const members = command.command("members").description("who is in a group or channel; add or remove people")
+  members
+    .command("list")
+    .argument("<chat>", "chat id, or part of a chat name")
+    .description("everyone in a group or channel, from MAX: when their account was made and when they were last seen")
+    .action(async function (this: Command, chat: string) {
+      const { renderer, createClient, run } = forCommand(this)
+      await run("chats members list", async (events) => {
+        const client = createClient({ events })
+        try {
+          const found = await client.chats.members.list(chat)
+          renderer.stream(found.members)
+          if (!found.complete) renderer.note(`only the first ${found.members.length} members were read`)
+        } finally {
+          await client.close()
+        }
+      })
+    })
   annotate(members.command("add"), { mutates: true })
     .argument("<chat>", "chat id, or part of a chat name")
     .argument("<person...>", "an id, or part of a name")

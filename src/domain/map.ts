@@ -7,6 +7,7 @@ import type {
   Contact,
   Folder,
   GroupCard,
+  GroupMember,
   GroupSettings,
   Id,
   Message,
@@ -121,6 +122,29 @@ export const toContact = (raw: Payload): Contact => ({
   description: text(raw.description),
   lastMessagedAt: null,
 })
+
+/**
+ * One entry of opcode 59 `MEMBER`: `{contact, presence: {seen, status?}, readMark}` (measured
+ * 2026-09-27). The unit of `seen` and `registrationTime` was not seen, so both are read either way.
+ */
+export const toGroupMember = (raw: Payload): GroupMember => {
+  const contact = asRecord(raw.contact) ?? {}
+  const { id, name, username } = toContact(contact)
+  return {
+    id,
+    name,
+    username,
+    registeredAt: timestamp(inMilliseconds(contact.registrationTime)),
+    lastSeenAt: timestamp(inMilliseconds(asRecord(raw.presence)?.seen)),
+  }
+}
+
+/** Seconds and milliseconds since 1970 differ by three orders: before 2001 in ms is a time in seconds. */
+const inMilliseconds = (value: unknown): number | null => {
+  const n = count(value)
+  if (n === null) return null
+  return n < 1e12 ? n * 1000 : n
+}
 
 export const toProfile = (raw: Payload): Profile => {
   const contact = asRecord(raw.contact) ?? raw

@@ -61,6 +61,7 @@
     "probe:read-mark": "pnpm build && node --experimental-strip-types scripts/probe-read-mark.ts",
     "probe:pre-release": "pnpm build && node --experimental-strip-types scripts/probe-pre-release.ts",
     "probe:control": "pnpm build && node --experimental-strip-types scripts/probe-control.ts",
+    "probe:member-list": "pnpm build && node --experimental-strip-types scripts/probe-member-list.ts",
     "probe:message-count": "pnpm build && node --experimental-strip-types scripts/probe-message-count.ts",
     "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts"
   },

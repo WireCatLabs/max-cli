@@ -218,6 +218,21 @@ export interface Contact {
 /** Somebody in a chat, as much of them as a chat card shows. */
 export type Member = Pick<Contact, "id" | "name" | "username">
 
+/** A group's member as MAX lists them (`max chats members list`). */
+export interface GroupMember extends Member {
+  /** ISO 8601, when the MAX account was created — a days-old account is worth a look. */
+  registeredAt: string | null
+  /** ISO 8601, when MAX last saw them; `null` when their privacy hides it. */
+  lastSeenAt: string | null
+}
+
+export interface GroupMembers {
+  chatId: Id
+  members: GroupMember[]
+  /** Every page was read. */
+  complete: boolean
+}
+
 /** One chat and who is in it. `members` is `null` where nobody recorded that — a channel, always. */
 export interface ChatCard extends Chat {
   members: Member[] | null
