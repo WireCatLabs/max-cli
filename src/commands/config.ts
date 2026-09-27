@@ -1,7 +1,16 @@
 import { join } from "node:path"
 import { CliError, pathsAreOverridden, resolvePaths } from "@leemour/cli-core"
 import { Command } from "commander"
-import { ALL_SETTINGS, changeSetting, type SourcedSetting } from "../config.js"
+import {
+  ALL_SETTINGS,
+  changeSetting,
+  type GlobalFlags,
+  PERSONAL_ONLY_SETTINGS,
+  type ProfileKind,
+  resolveSettings,
+  type SourcedSetting,
+  scopePath,
+} from "../config.js"
 import { profilesWithState } from "../diagnose.js"
 import { forCommand } from "./context.js"
 
@@ -31,13 +40,19 @@ export const configCommand = (): Command => {
   command
     .command("show")
     .description("the profile, the profiles that exist, and each setting with where it came from")
-    .action(function (this: Command) {
-      const { settings, renderer } = forCommand(this)
+    .option("--bot", "the settings a `max bot` command on this profile gets, rather than the personal account's")
+    .action(function (this: Command, options: { bot?: boolean }) {
+      const context = forCommand(this)
+      const { renderer } = context
+      const settings = options.bot
+        ? resolveSettings(this.optsWithGlobals<GlobalFlags>(), { kind: "bot" })
+        : context.settings
       const overridden = pathsAreOverridden({ appName: "max-cli", prefix: "MAX" })
 
       renderer.result({
         profile: settings.profile,
         profileFrom: settings.sources.profile,
+        kind: settings.kind,
         profiles: [
           ...new Set([
             ...settings.configuredProfiles,
@@ -47,7 +62,9 @@ export const configCommand = (): Command => {
         configFile: settings.configPath,
         configFound: settings.configFound,
         pathsOverridden: overridden,
-        settings: SHOWN.map((setting) => ({
+        settings: SHOWN.filter(
+          (setting) => settings.kind === "personal" || !(PERSONAL_ONLY_SETTINGS as string[]).includes(setting),
+        ).map((setting) => ({
           setting,
           // No list is every action, and `null` would read as none.
           value: setting === "allow" ? (settings.allow ?? "all") : (settings[setting] ?? null),
@@ -68,6 +85,8 @@ export const configCommand = (): Command => {
       .command(action)
       .argument("<setting>", `one of: ${ALL_SETTINGS.join(", ")}`)
       .option("--defaults", "change what every profile gets, rather than this profile")
+      .option("--personal", "only for personal accounts — the personal section of the file")
+      .option("--bot", "only for bots — the bot section of the file")
     if (action === "set")
       sub
         .argument("<value>", "a number, true or false, or for allow a list like send,reaction")
@@ -77,22 +96,24 @@ export const configCommand = (): Command => {
     sub.action(function (this: Command, setting: string, given: unknown) {
       const value = action === "set" ? String(given) : undefined
       const { settings, renderer } = forCommand(this)
-      const defaults = this.opts<{ defaults?: boolean }>().defaults === true
-      if (defaults && process.env.MAX_PROFILE_LOCK) {
-        // The defaults are every other profile's settings too.
+      const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
+      if (flags.personal && flags.bot) {
+        throw new CliError("validation_error", "--personal and --bot name different sections; use one")
+      }
+      const kind: ProfileKind | undefined = flags.bot ? "bot" : flags.personal ? "personal" : undefined
+      const defaults = flags.defaults === true
+      if ((defaults || setting === "defaultProfile") && process.env.MAX_PROFILE_LOCK) {
+        // Both reach past this profile: the defaults are every profile's, defaultProfile picks one.
         throw new CliError(
           "permission_error",
-          `this process is locked to profile ${settings.profile} (MAX_PROFILE_LOCK) — --defaults changes every profile`,
+          `this process is locked to profile ${settings.profile} (MAX_PROFILE_LOCK) — ${setting === "defaultProfile" ? "defaultProfile" : "--defaults"} changes other profiles`,
         )
       }
-      const saved = changeSetting(settings.configPath, {
-        profile: defaults ? undefined : settings.profile,
-        setting,
-        value,
-      })
+      const scope = { profile: defaults ? undefined : settings.profile, kind }
+      const saved = changeSetting(settings.configPath, { ...scope, setting, value })
       renderer.result({
         configFile: settings.configPath,
-        scope: defaults ? "defaults" : `profiles.${settings.profile}`,
+        scope: setting === "defaultProfile" ? "defaultProfile" : scopePath(scope),
         setting,
         value: saved,
       })

@@ -42,28 +42,35 @@ const objectMessage =
  * **No field here can hold a secret.** No token, no phone number, no chat id: a schema with
  * nowhere to put one is stronger than a rule saying do not put one there.
  */
-const profileEntries = {
+const sharedEntries = {
   limit: v.optional(count),
   timeoutMs: v.optional(count),
   color: v.optional(flag),
-  senderColors: v.optional(flag),
   /** The run log reads these two; nothing records anything until it exists. */
   record: v.optional(flag),
   keepRunsForDays: v.optional(count),
   readOnly: v.optional(flag),
   allow: v.optional(permissionList),
   sendsPerHour: v.optional(count),
+}
+
+/** A bot has no server and no sender colours, so `bot.*` refuses these rather than ignoring them. */
+const personalEntries = {
+  ...sharedEntries,
+  senderColors: v.optional(flag),
   /** Start `max serve` in the background when a command needs MAX and none is running (`MAX-35`). */
   serve: v.optional(flag),
 }
-const profileSettings = v.strictObject(profileEntries, objectMessage(Object.keys(profileEntries)))
+const strict = <T extends v.ObjectEntries>(entries: T) => v.strictObject(entries, objectMessage(Object.keys(entries)))
+const profileSettings = strict(personalEntries)
+const botSettings = strict(sharedEntries)
 
 /**
  * One program, one version: whether to look for a newer one is not a per-profile matter. Nor is the
  * speech model — it is a download on this machine, not a property of an account.
  */
 const defaultsEntries = {
-  ...profileEntries,
+  ...personalEntries,
   updateCheck: v.optional(flag),
   transcribeModel: v.optional(
     v.picklist(
@@ -72,22 +79,39 @@ const defaultsEntries = {
     ),
   ),
 }
-const defaultsSettings = v.strictObject(defaultsEntries, objectMessage(Object.keys(defaultsEntries)))
+const defaultsSettings = strict(defaultsEntries)
+
+const profilesOf = <T extends v.GenericSchema>(settings: T) =>
+  v.record(v.string(), settings, "has to be an object of profiles, by name")
+
+/** Every personal account, or every bot, and then one of them by name (`NEED-355`). */
+const kindSection = <T extends v.ObjectEntries>(entries: T) => {
+  const settings = strict(entries)
+  return strict({ defaults: v.optional(settings), profiles: v.optional(profilesOf(settings)) })
+}
 
 const configEntries = {
   defaultProfile: v.optional(v.string(plain("has to be a profile name, in quotes"))),
   /** What every profile gets unless it says otherwise. */
   defaults: v.optional(defaultsSettings),
-  profiles: v.optional(v.record(v.string(), profileSettings, "has to be an object of profiles, by name"), {}),
+  profiles: v.optional(profilesOf(profileSettings), {}),
+  personal: v.optional(kindSection(personalEntries)),
+  bot: v.optional(kindSection(sharedEntries)),
 }
 export const configSchema = v.strictObject(configEntries, objectMessage(Object.keys(configEntries)))
 
 export type Config = v.InferOutput<typeof configSchema>
 
+/** Which side of a profile a command speaks for: `max <p> bot …` is the bot, everything else the account. */
+export type ProfileKind = "personal" | "bot"
+
 export type ProfileSetting = keyof v.InferOutput<typeof profileSettings>
 export const PROFILE_SETTINGS = Object.keys(profileSettings.entries) as ProfileSetting[]
+export const PERSONAL_ONLY_SETTINGS = Object.keys(personalEntries).filter(
+  (key) => !(key in botSettings.entries),
+) as ProfileSetting[]
 export const DEFAULTS_ONLY_SETTINGS = ["updateCheck", "transcribeModel"] as const
-export const ALL_SETTINGS: string[] = [...PROFILE_SETTINGS, ...DEFAULTS_ONLY_SETTINGS]
+export const ALL_SETTINGS: string[] = [...PROFILE_SETTINGS, ...DEFAULTS_ONLY_SETTINGS, "defaultProfile"]
 
 /** Whatever the command line carried. Everything is optional: absent means "not given here". */
 export interface GlobalFlags {
@@ -155,20 +179,21 @@ export interface Settings {
   /** Named in errors and in `max --help`, so a person can find the file that decided this. */
   configPath: string
   configFound: boolean
+  kind: ProfileKind
   /** Profiles the configuration file names, whether or not anyone has logged in to them. */
   configuredProfiles: string[]
   /** Where each value came from — `max config show` prints it. */
   sources: Record<SourcedSetting, Source>
 }
 
+/** A value from the configuration file names the key it was read from: `config file: bot.profiles.test`. */
 export type Source =
   | "first word"
   | "flag"
   | "MAX_PROFILE"
   | "MAX_PROFILE_LOCK"
   | "MAX_TIMEOUT"
-  | "config file"
-  | "config defaults"
+  | `config file: ${string}`
   | "default"
 export type SourcedSetting =
   | "profile"
@@ -215,6 +240,8 @@ const first = <T>(candidates: [Source, T | undefined][], fallback: T): { value: 
 
 export interface ResolveOptions {
   env?: NodeJS.ProcessEnv
+  /** Personal unless the command is under `max bot`. */
+  kind?: ProfileKind
   /** Tests pass a temporary directory; nothing else should need this. */
   configDir?: string
 }
@@ -233,7 +260,10 @@ export interface ResolveOptions {
  * `MAX_STATE_DIR` or `MAX_CACHE_DIR` move the whole installation — including which keyring entry
  * a profile means (`ARCHITECTURE.md` §14).
  */
-export const resolveSettings = (flags: GlobalFlags = {}, { env = process.env, configDir }: ResolveOptions = {}) => {
+export const resolveSettings = (
+  flags: GlobalFlags = {},
+  { env = process.env, configDir, kind = "personal" }: ResolveOptions = {},
+) => {
   const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
   const configPath = configFilePath(configDir ?? paths.config)
   const config = readConfig(configPath)
@@ -243,91 +273,39 @@ export const resolveSettings = (flags: GlobalFlags = {}, { env = process.env, co
       [
         ["first word", flags.profile],
         ["MAX_PROFILE", given(env.MAX_PROFILE)],
-        ["config file", config.defaultProfile],
+        ["config file: defaultProfile", config.defaultProfile],
       ],
       DEFAULT_PROFILE,
     ),
     given(env.MAX_PROFILE_LOCK),
   )
-  const configured = config.profiles[usableProfileName(profile.value)] ?? {}
+  const layers = layersFor(config, usableProfileName(profile.value), kind)
+  const fromFile = <K extends keyof Layer>(key: K, flag?: Layer[K]): [Source, Layer[K] | undefined][] => [
+    ["flag", flag],
+    ...layers.map(([from, layer]): [Source, Layer[K] | undefined] => [from, layer?.[key]]),
+  ]
+
+  const limit = first<number>(fromFile("limit", flags.limit), DEFAULT_LIMIT)
+  const timeoutMs = first<number | undefined>(fromFile("timeoutMs"), undefined)
+  const color = first<boolean | undefined>(fromFile("color"), undefined)
+  const senderColors = first(fromFile("senderColors"), false)
+  const record = first(fromFile("record", flags.record), false)
+  const serve = first(fromFile("serve", flags.serve), true)
+  const keepRunsForDays = first(fromFile("keepRunsForDays"), DEFAULT_KEEP_RUNS_FOR_DAYS)
+  const readOnly = first(fromFile("readOnly"), false)
+  const allow = first<readonly Permission[] | undefined>(fromFile("allow"), undefined)
+  // A bot has no hourly limit unless a `bot.*` section gives it one (`NEED-305`, `NEED-356`).
+  const sendsPerHour =
+    kind === "bot"
+      ? first(
+          fromFile("sendsPerHour").filter(([from]) => from.startsWith("config file: bot.")),
+          Number.POSITIVE_INFINITY,
+        )
+      : first(fromFile("sendsPerHour"), DEFAULT_SENDS_PER_HOUR)
+
   const shared = config.defaults ?? {}
-
-  const limit = first<number>(
-    [
-      ["flag", flags.limit],
-      ["config file", configured.limit],
-      ["config defaults", shared.limit],
-    ],
-    DEFAULT_LIMIT,
-  )
-  const timeoutMs = first<number | undefined>(
-    [
-      ["config file", configured.timeoutMs],
-      ["config defaults", shared.timeoutMs],
-    ],
-    undefined,
-  )
-  const color = first<boolean | undefined>(
-    [
-      ["config file", configured.color],
-      ["config defaults", shared.color],
-    ],
-    undefined,
-  )
-  const senderColors = first(
-    [
-      ["config file", configured.senderColors],
-      ["config defaults", shared.senderColors],
-    ],
-    false,
-  )
-  const record = first(
-    [
-      ["flag", flags.record],
-      ["config file", configured.record],
-      ["config defaults", shared.record],
-    ],
-    false,
-  )
-  const serve = first(
-    [
-      ["flag", flags.serve],
-      ["config file", configured.serve],
-      ["config defaults", shared.serve],
-    ],
-    true,
-  )
-  const keepRunsForDays = first(
-    [
-      ["config file", configured.keepRunsForDays],
-      ["config defaults", shared.keepRunsForDays],
-    ],
-    DEFAULT_KEEP_RUNS_FOR_DAYS,
-  )
-  const readOnly = first(
-    [
-      ["config file", configured.readOnly],
-      ["config defaults", shared.readOnly],
-    ],
-    false,
-  )
-  const allow = first<readonly Permission[] | undefined>(
-    [
-      ["config file", configured.allow],
-      ["config defaults", shared.allow],
-    ],
-    undefined,
-  )
-  const sendsPerHour = first(
-    [
-      ["config file", configured.sendsPerHour],
-      ["config defaults", shared.sendsPerHour],
-    ],
-    DEFAULT_SENDS_PER_HOUR,
-  )
-
-  const updateCheck = first([["config defaults", shared.updateCheck]], true)
-  const transcribeModel = first<string>([["config defaults", shared.transcribeModel]], DEFAULT_MODEL)
+  const updateCheck = first([["config file: defaults", shared.updateCheck]], true)
+  const transcribeModel = first<string>([["config file: defaults", shared.transcribeModel]], DEFAULT_MODEL)
 
   /**
    * ⚠ **The only setting with no `config file` row, on purpose.** A budget for one command is
@@ -367,7 +345,8 @@ export const resolveSettings = (flags: GlobalFlags = {}, { env = process.env, co
     transcribeModel: transcribeModel.value,
     configPath,
     configFound: existsSync(configPath),
-    configuredProfiles: Object.keys(config.profiles),
+    kind,
+    configuredProfiles: namedProfiles(config),
     sources: {
       profile: profile.from,
       limit: limit.from,
@@ -405,6 +384,29 @@ export const resolveSettings = (flags: GlobalFlags = {}, { env = process.env, co
   return settings
 }
 
+type Layer = Partial<v.InferOutput<typeof profileSettings>>
+
+/**
+ * **The most specific entry wins** (`NEED-355`): this profile's personal or bot entry, then the
+ * profile, then every personal account or every bot, then everyone. Naming one account says more
+ * than naming all of them, so a profile beats a kind.
+ */
+const layersFor = (config: Config, profile: string, kind: ProfileKind): [Source, Layer | undefined][] => [
+  [`config file: ${kind}.profiles.${profile}`, config[kind]?.profiles?.[profile]],
+  [`config file: profiles.${profile}`, config.profiles[profile]],
+  [`config file: ${kind}.defaults`, config[kind]?.defaults],
+  ["config file: defaults", config.defaults],
+]
+
+const namedProfiles = (config: Config): string[] =>
+  [
+    ...new Set([
+      ...Object.keys(config.profiles),
+      ...Object.keys(config.personal?.profiles ?? {}),
+      ...Object.keys(config.bot?.profiles ?? {}),
+    ]),
+  ].sort()
+
 /**
  * The profile names written in the configuration file.
  *
@@ -414,7 +416,7 @@ export const resolveSettings = (flags: GlobalFlags = {}, { env = process.env, co
  */
 export const configuredProfiles = ({ env = process.env, configDir }: ResolveOptions = {}): string[] => {
   const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
-  return Object.keys(readConfig(configFilePath(configDir ?? paths.config)).profiles).sort()
+  return namedProfiles(readConfig(configFilePath(configDir ?? paths.config)))
 }
 
 /**
@@ -483,37 +485,92 @@ export const sendTime = (value: string, now = Date.now()): number => {
   return at - (at % MINUTE)
 }
 
+/** Where `config set` writes: one profile, or everyone, optionally narrowed to one kind. */
+export interface SettingScope {
+  profile: string | undefined
+  kind?: ProfileKind | undefined
+}
+
+export const scopePath = ({ profile, kind }: SettingScope): string =>
+  [kind, profile === undefined ? "defaults" : `profiles.${profile}`].filter(Boolean).join(".")
+
+/** The `config set` that writes where a value came from, so a refusal can say what to type. */
+export const setCommandFor = (from: Source, profile: string, setting: string): string => {
+  const path = from.startsWith("config file: ") ? from.slice("config file: ".length) : `profiles.${profile}`
+  const [first, second] = path.split(".")
+  const kind = first === "personal" || first === "bot" ? first : undefined
+  const everyone = (kind ? second : first) === "defaults"
+  const words = [
+    "max",
+    ...(everyone ? [] : [profile]),
+    "config set",
+    ...(kind ? [`--${kind}`] : []),
+    ...(everyone ? ["--defaults"] : []),
+    setting,
+  ]
+  return words.join(" ")
+}
+
 /**
  * Sets or removes one setting of one profile, or of `defaults`, and writes the file back.
+ * `defaultProfile` is the one top-level key, and takes no scope.
  *
  * **The value is checked by the same schema that reads the file**, on the whole result, before
  * anything is written — so `config set` cannot produce a file the next command refuses to load.
  */
 export const changeSetting = (
   path: string,
-  { profile, setting, value }: { profile: string | undefined; setting: string; value: string | undefined },
+  { profile, kind, setting, value }: SettingScope & { setting: string; value: string | undefined },
 ): unknown => {
   if (!ALL_SETTINGS.includes(setting)) {
     throw new CliError("validation_error", `no setting called "${setting}" — one of: ${ALL_SETTINGS.join(", ")}`)
   }
-  if (profile !== undefined && (DEFAULTS_ONLY_SETTINGS as readonly string[]).includes(setting)) {
-    throw new CliError(
-      "validation_error",
-      `${setting} is one setting for the whole program, not per profile — add --defaults`,
-    )
+  const config = readConfig(path)
+  if (setting === "defaultProfile") {
+    if (kind !== undefined)
+      throw new CliError("validation_error", "defaultProfile is one for the whole file — drop --personal or --bot")
+    return changeDefaultProfile(path, config, value)
   }
 
-  const config = readConfig(path)
-  const scope = { ...(profile === undefined ? config.defaults : config.profiles[profile]) } as Record<string, unknown>
+  if (
+    (profile !== undefined || kind !== undefined) &&
+    (DEFAULTS_ONLY_SETTINGS as readonly string[]).includes(setting)
+  ) {
+    throw new CliError(
+      "validation_error",
+      `${setting} is one setting for the whole program, not per profile — use --defaults without --personal or --bot`,
+    )
+  }
+  if (kind === "bot" && (PERSONAL_ONLY_SETTINGS as string[]).includes(setting)) {
+    throw new CliError("validation_error", `${setting} is for personal accounts; a bot has no use for it`)
+  }
+
+  const section = kind === undefined ? config : { ...config[kind] }
+  const table = (profile === undefined ? section.defaults : section.profiles?.[profile]) as Record<string, unknown>
+  const scope = { ...table }
   if (value === undefined) delete scope[setting]
   else scope[setting] = setting === "allow" ? parseList(value) : parseValue(value)
+  const empty = Object.keys(scope).length === 0
 
-  const changed =
-    profile === undefined
-      ? { ...config, defaults: scope }
-      : { ...config, profiles: { ...config.profiles, [profile]: scope } }
-  if (profile === undefined && Object.keys(scope).length === 0) delete changed.defaults
-  if (profile !== undefined && Object.keys(scope).length === 0) delete changed.profiles[profile]
+  const place = (holder: { defaults?: unknown; profiles?: Record<string, unknown> }) => {
+    const next = { ...holder, profiles: { ...holder.profiles } }
+    if (profile === undefined) {
+      if (empty) delete next.defaults
+      else next.defaults = scope
+    } else if (empty) delete next.profiles[profile]
+    else next.profiles[profile] = scope
+    return next
+  }
+
+  let changed: Record<string, unknown>
+  if (kind === undefined) {
+    changed = place(config)
+  } else {
+    const placed = place(config[kind] ?? {})
+    if (Object.keys(placed.profiles).length === 0) delete (placed as { profiles?: unknown }).profiles
+    changed = { ...config, [kind]: placed }
+    if (Object.keys(placed).length === 0) delete changed[kind]
+  }
 
   const checked = v.safeParse(configSchema, changed)
   if (!checked.success) {
@@ -524,6 +581,14 @@ export const changeSetting = (
   }
   saveConfigFile(path, checked.output)
   return scope[setting] ?? null
+}
+
+const changeDefaultProfile = (path: string, config: Config, value: string | undefined): string | null => {
+  const changed = { ...config }
+  if (value === undefined) delete changed.defaultProfile
+  else changed.defaultProfile = usableProfileName(value)
+  saveConfigFile(path, changed)
+  return changed.defaultProfile ?? null
 }
 
 /** `send,reaction` as the owner types it, or the JSON array the file holds; blank is the empty list. */

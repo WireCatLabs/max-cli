@@ -24,8 +24,8 @@ const guardFor = (profile: string, allow: readonly Permission[] | undefined, rea
   sendGuard({
     profile,
     readOnly,
-    readOnlyFrom: "config file",
-    ...(allow ? { allow, allowFrom: "config file" } : {}),
+    readOnlyFrom: "config file: profiles.p",
+    ...(allow ? { allow, allowFrom: "config file: profiles.p" } : {}),
     sendsPerHour: 1000,
     journal: new SendJournal(sendsPathFor(profile)),
     recipients: new RecipientList(recipientsPathFor(profile)),
@@ -112,7 +112,7 @@ describe("a profile with an allow list", () => {
         JSON.parse(stdout).settings.find((s: { setting: string }) => s.setting === "allow"),
       )
 
-    expect(await shown("p-show")).toEqual({ setting: "allow", value: ["send"], from: "config file" })
+    expect(await shown("p-show")).toEqual({ setting: "allow", value: ["send"], from: "config file: profiles.p-show" })
     expect(await shown("p-none")).toEqual({ setting: "allow", value: "all", from: "default" })
   })
 
@@ -141,7 +141,7 @@ describe("a profile with an allow list", () => {
     expect(refused.code).toBe(5)
     expect(max.sent).toEqual([])
     expect(JSON.parse(refused.stderr).error.message).toBe(
-      "profile p-cmd does not allow send (allow: reaction — from the config file); " +
+      "profile p-cmd does not allow send (allow: reaction — from the config file: profiles.p-cmd); " +
         "to allow it: max p-cmd config set allow reaction,send",
     )
     expect(new SendJournal(sendsPathFor("p-cmd")).entries()).toMatchObject([{ chatId: "111", outcome: "refused" }])
@@ -155,7 +155,7 @@ describe("a profile with an allow list", () => {
       readOnly: false,
       readOnlyFrom: "default",
       allow: ["send"],
-      allowFrom: "config defaults",
+      allowFrom: "config file: defaults",
       sendsPerHour: 10,
       journal: new SendJournal(sendsPathFor("p-def")),
       recipients: new RecipientList(recipientsPathFor("p-def")),
