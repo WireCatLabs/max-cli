@@ -6,7 +6,6 @@ import {
   inputResponse,
   type ServerContext,
 } from "@modelcontextprotocol/server"
-import type { MaxClient } from "../client.js"
 import { sendTime } from "../config.js"
 
 export interface SendArgs {
@@ -27,6 +26,9 @@ export const sendOptions = (args: SendArgs, at: number | undefined) => ({
   ...(args.reply_to === undefined ? {} : { replyTo: args.reply_to }),
   ...(args.markdown === true ? { markdown: true } : {}),
 })
+
+/** A chat as the form shows it: the personal account asks MAX, a bot looks at the chats it has seen. */
+export type ResolveChat = (reference: string) => Promise<{ id: string; title?: string | null }>
 
 /** The arguments that name a chat: each is shown as the chat it resolved to, and sealed as its id. */
 const CHAT_ARGUMENTS = ["chat", "to"]
@@ -63,7 +65,7 @@ export const confirmer = ({ now = () => Date.now() }: { now?: () => number } = {
 
   return async (
     tool: { name: string; title: string },
-    client: MaxClient,
+    resolveChat: ResolveChat,
     args: Arguments,
     ctx: ServerContext,
     act: (resolved: Arguments) => Promise<object>,
@@ -74,7 +76,7 @@ export const confirmer = ({ now = () => Date.now() }: { now?: () => number } = {
     const resolved: Arguments = { ...args }
     for (const name of CHAT_ARGUMENTS) {
       if (typeof args[name] !== "string") continue
-      const chat = await client.chats.show(args[name])
+      const chat = await resolveChat(args[name])
       resolved[name] = chat.id
       shown.push(`${name}: ${JSON.stringify(chat.title ?? chat.id)} (${chat.id})`)
     }

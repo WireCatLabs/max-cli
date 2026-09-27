@@ -808,8 +808,12 @@ export const registerTools = (
           const result = await session.use(name.replace(/^max_/, "mcp ").replaceAll("_", " "), (client, release) => {
             const defaults = { limit: defaultLimit, profile, transcribeModel, release }
             return confirmed && name in offered
-              ? confirmed({ name, title: definition.title }, client, args, ctx, (resolved) =>
-                  definition.answer(client, resolved, defaults),
+              ? confirmed(
+                  { name, title: definition.title },
+                  (reference) => client.chats.show(reference),
+                  args,
+                  ctx,
+                  (resolved) => definition.answer(client, resolved, defaults),
                 )
               : definition.answer(client, args, defaults)
           })
@@ -886,8 +890,12 @@ const registerCheck = (
           const asked = dryRun ? [] : prepared.findings.filter((finding) => needsConfirm(prepared.rules, finding))
           if (asked.length === 0) return run()
           const actions = asked.map(describe)
-          return confirmed({ name: "max_chats_check", title }, client, { chat: prepared.chatId, actions }, ctx, () =>
-            run(async (finding) => actions.includes(describe(finding))),
+          return confirmed(
+            { name: "max_chats_check", title },
+            (reference) => client.chats.show(reference),
+            { chat: prepared.chatId, actions },
+            ctx,
+            () => run(async (finding) => actions.includes(describe(finding))),
           )
         })
         return isInputRequiredResult(result) ? result : answered(result)
