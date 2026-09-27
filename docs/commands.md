@@ -1071,6 +1071,7 @@ max mcp config [options]
 | `--confirm-send` | show the owner every send, edit, forward, pin, mark-read and delete in a form from the server first |
 | `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it |
 | `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone |
+| `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it |
 
 ## `max bot`
 

@@ -9,6 +9,7 @@ interface Flags {
   confirmSend?: boolean
   allowMarkRead?: boolean
   allowDelete?: boolean
+  allowModerate?: boolean
 }
 
 const withFlags = (command: Command): Command =>
@@ -20,12 +21,16 @@ const withFlags = (command: Command): Command =>
     )
     .option("--allow-mark-read", "offer the tool that marks a chat read; the other person sees it")
     .option("--allow-delete", "offer the tool that deletes messages for you only; it cannot be undone")
+    .option(
+      "--allow-moderate",
+      "let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it",
+    )
 
 const checked = (flags: Flags): Flags => {
-  if (flags.confirmSend && !flags.allowSend && !flags.allowMarkRead && !flags.allowDelete) {
+  if (flags.confirmSend && !flags.allowSend && !flags.allowMarkRead && !flags.allowDelete && !flags.allowModerate) {
     throw new CliError(
       "validation_error",
-      "`--confirm-send` confirms writes, and without `--allow-send`, `--allow-mark-read` or `--allow-delete` there are none",
+      "`--confirm-send` confirms writes, and without `--allow-send`, `--allow-mark-read`, `--allow-delete` or `--allow-moderate` there are none",
     )
   }
   return flags
@@ -37,7 +42,7 @@ export const mcpCommand = (): Command => {
       "serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max mcp`",
     ),
   ).action(async function (this: Command) {
-    const { allowSend, confirmSend, allowMarkRead, allowDelete } = checked(this.opts<Flags>())
+    const { allowSend, confirmSend, allowMarkRead, allowDelete, allowModerate } = checked(this.opts<Flags>())
     // Loaded here, not at the top: every other command would otherwise pay for the SDK and zod.
     const { serveOverStdio } = await import("../mcp/server.js")
     await serveOverStdio(forCommand(this), {
@@ -45,6 +50,7 @@ export const mcpCommand = (): Command => {
       confirmSend: confirmSend === true,
       allowMarkRead: allowMarkRead === true,
       allowDelete: allowDelete === true,
+      allowModerate: allowModerate === true,
     })
   })
 
@@ -79,6 +85,7 @@ const FLAG_ARGS: [keyof Flags, string][] = [
   ["confirmSend", "--confirm-send"],
   ["allowMarkRead", "--allow-mark-read"],
   ["allowDelete", "--allow-delete"],
+  ["allowModerate", "--allow-moderate"],
 ]
 
 /** They choose the keyring entry, so a server without them would answer "no session". */

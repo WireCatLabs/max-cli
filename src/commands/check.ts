@@ -2,13 +2,8 @@ import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
-import { act, type CheckRow, type Gathered, gather, judge } from "../moderation/check.js"
-import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
+import { type CheckRow, describe, finish, MAX_ACTIONS, prepare } from "../moderation/check.js"
 import { forCommand } from "./context.js"
-
-/** A group never checked before is looked at this far back. */
-const FIRST_LOOK_MS = 24 * 3_600_000
-const MAX_ACTIONS = 10
 
 /**
  * **The one command that acts on a group's rules** (`NEED-306`): what the owner types is the
@@ -36,67 +31,28 @@ export const checkCommand = (): Command =>
       await run("chats check", async (events) => {
         const client = createClient({ events, ...(cache ? { cache } : {}) })
         try {
-          const group = await client.chats.show(chat)
-          const saved = new ModerationRules(moderationPathFor(settings.profile)).read(group.id)
-          const rules = saved ?? defaultRules(group.title)
-          if (!saved) renderer.note(`${group.title ?? group.id} has no rules yet — the defaults only report`)
-
-          const savedPoint = store.readState().checkedUntil?.[group.id]
-          const since =
-            options.since !== undefined
-              ? client.messages.moment(String(options.since), "--since")
-              : savedPoint === undefined
-                ? Date.now() - FIRST_LOOK_MS
-                : Date.parse(savedPoint)
-
-          const found = await gather(client, group.id, since)
-          for (const note of found.notes) renderer.note(note)
-          const rows = await act(client, judge({ ...found, rules, now: Date.now() }), {
-            chatId: group.id,
-            rules,
+          const prepared = await prepare(client, {
+            store,
+            profile: settings.profile,
+            chat,
+            ...(options.since === undefined ? {} : { since: client.messages.moment(String(options.since), "--since") }),
+          })
+          const { rows, notes } = await finish(client, store, prepared, {
             allowDangerous: options.allowDangerous === true,
             dryRun: options.dryRun === true,
             maxActions,
             ...(interactive
-              ? { confirm: async (question: string) => /^y(es)?$/i.test((await ask(question)).trim()) }
+              ? { confirm: async (finding) => /^y(es)?$/i.test((await ask(`${describe(finding)}? [y/N] `)).trim()) }
               : {}),
           })
-
           renderer.stream(format === "pretty" ? rows.map(pretty) : rows)
-          const next = nextPoint(rows, found)
-          if (options.since === undefined && options.dryRun !== true && next !== null) {
-            const state = store.readState()
-            store.writeState({ ...state, checkedUntil: { ...state.checkedUntil, [group.id]: next } })
-          }
-          if (next !== found.until && rows.some(undone)) {
-            renderer.note("some actions are not done — the next check starts at the first of them")
-          } else if (found.more) {
-            renderer.note("more history than one check reads — the next check goes on from here")
-          }
+          for (const note of notes) renderer.note(note)
         } finally {
           await client.close()
           cache?.close()
         }
       })
     })
-
-const undone = (row: CheckRow) => ["planned", "skipped", "failed"].includes(row.outcome) && row.kind !== "request"
-
-/**
- * Where the next check starts: after the newest message read, or just before the first message whose
- * action is still undone — so it is judged again, and what came after it is still read. A person
- * who joined and is still undone keeps the point where it was, since the join is not a row's message.
- */
-const nextPoint = (rows: CheckRow[], found: Gathered): string | null => {
-  const waiting = rows.filter(undone)
-  if (waiting.some((row) => row.messageId === undefined)) return null
-  const times = waiting
-    .map((row) => found.messages.find((message) => message.id === row.messageId)?.timestamp)
-    .filter((time): time is string => time !== undefined)
-    .map(Date.parse)
-  if (times.length === 0) return found.until
-  return new Date(Math.min(...times) - 1).toISOString()
-}
 
 const pretty = (row: CheckRow) => ({
   what: row.kind,

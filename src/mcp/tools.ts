@@ -14,8 +14,10 @@ import { sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
+import { describe, type Finding, finish, MAX_ACTIONS, needsConfirm, prepare } from "../moderation/check.js"
 import { REVIEW_DAYS, review, reviewStart } from "../review.js"
 import type { Permission } from "../sends/permissions.js"
+import type { SessionStore } from "../session/store.js"
 import { transcribe } from "../transcribe/index.js"
 import { modelsDirectory } from "../transcribe/install.js"
 import { DEFAULT_MODEL, speechModel } from "../transcribe/models.js"
@@ -601,6 +603,8 @@ export const registerTools = (
     confirmSend = false,
     allowMarkRead = false,
     allowDelete = false,
+    allowModerate = false,
+    store,
     defaultLimit,
     profile,
     transcribeModel = DEFAULT_MODEL,
@@ -610,6 +614,9 @@ export const registerTools = (
     confirmSend?: boolean
     allowMarkRead?: boolean
     allowDelete?: boolean
+    allowModerate?: boolean
+    /** Where each group's saved point is kept, as for `max chats check`. */
+    store: SessionStore
     defaultLimit: number
     profile: string
     transcribeModel?: string
@@ -658,4 +665,80 @@ export const registerTools = (
       },
     )
   }
+
+  if (allowModerate && (!permitted || (permitted.includes("delete") && permitted.includes("groups")))) {
+    registerCheck(server, session, { store, profile })
+  }
+}
+
+/**
+ * `max_chats_check`, offered with `--allow-moderate` (`NEED-310`): that flag is what consent level
+ * `flag` asks for. `confirm` actions wait for one form listing them all: the first call does
+ * nothing, the second re-judges and does only what the form showed — sealed by the same confirmer
+ * as the send form, so a changed list is refused.
+ */
+const registerCheck = (
+  server: McpServer,
+  session: MaxSession,
+  { store, profile }: { store: SessionStore; profile: string },
+) => {
+  const confirmed = confirmer()
+  const title = "Check a group by its rules"
+  server.registerTool(
+    "max_chats_check",
+    {
+      title,
+      description:
+        "Judge what is new in a group since its last check — messages, people who joined, join requests — by the " +
+        "owner's rules for it (`max chats rules`), and act where the rules and their consent levels allow. Only " +
+        "when the owner asked for a check of this group. Returns rows { kind, rule, personId, personName, " +
+        "messageId?, action, outcome, reason?, command? } and notes; a row not done carries the command that would " +
+        `do it. ${UNTRUSTED}`,
+      inputSchema: toStandardJsonSchema(
+        v.object({
+          chat,
+          since: v.optional(
+            v.pipe(
+              v.string(),
+              v.description("judge what came after this message id or ISO 8601 time; the saved point stays"),
+            ),
+          ),
+          dry_run: v.optional(v.pipe(v.boolean(), v.description("judge and plan; do nothing"))),
+        }),
+      ),
+      annotations: WRITE,
+      _meta: APPROVE,
+    },
+    async (args: Record<string, unknown>, ctx: ServerContext) => {
+      try {
+        const result = await session.use("mcp chats check", async (client) => {
+          const since = typeof args.since === "string" ? client.messages.moment(args.since, "since") : undefined
+          const prepared = await prepare(client, {
+            store,
+            profile,
+            chat: String(args.chat),
+            ...(since === undefined ? {} : { since }),
+          })
+          const dryRun = args.dry_run === true
+          const run = (confirm?: (finding: Finding) => Promise<boolean>) =>
+            finish(client, store, prepared, {
+              allowDangerous: true,
+              dryRun,
+              maxActions: MAX_ACTIONS,
+              ...(confirm ? { confirm } : {}),
+            })
+
+          const asked = dryRun ? [] : prepared.findings.filter((finding) => needsConfirm(prepared.rules, finding))
+          if (asked.length === 0) return run()
+          const actions = asked.map(describe)
+          return confirmed({ name: "max_chats_check", title }, client, { chat: prepared.chatId, actions }, ctx, () =>
+            run(async (finding) => actions.includes(describe(finding))),
+          )
+        })
+        return isInputRequiredResult(result) ? result : answered(result)
+      } catch (error) {
+        return failed(error)
+      }
+    },
+  )
 }
