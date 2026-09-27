@@ -71,10 +71,11 @@ export const messagesCommand = (): Command => {
     .action(async function (this: Command, message: string) {
       const context = botContext(this, { offline: true })
       if (context.offline) {
-        throw new CliError(
-          "validation_error",
-          "`get --offline` needs a lookup by id the local copy does not have yet — use `messages list <chat> --offline`",
-        )
+        const botId = storedBotId(context)
+        const kept = await fromStore((store) => store.message(accountOf(botId), message))
+        if (!kept) throw new CliError("not_found", `message ${message} is not in the local copy`)
+        show(context, [kept])
+        return
       }
       const client = context.authenticated()
       const self = (await client.me()).user_id

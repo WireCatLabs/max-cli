@@ -140,6 +140,16 @@ describe("max bot updates watch", () => {
     }
   }, 10_000)
 
+  it("takes a deleted message out of the local copy", async () => {
+    new BotTokenStore({ profile: "tidy", keyring }).write(TOKEN)
+    const removed = `{"marker": 8, "updates": [{"update_type": "message_removed", "timestamp": 1758888890000,
+      "message_id": "mid.1", "chat_id": -100, "user_id": 42}]}`
+    script = [BATCH, removed]
+    const { code } = await max(["tidy", "bot", "updates", "watch", "--jsonl"])
+    expect(code).toBe(0)
+    expect(JSON.parse((await max(["tidy", "bot", "messages", "search", "hello bot", "--json"])).stdout)).toEqual([])
+  })
+
   it("refuses while a webhook is set, before asking for any update", async () => {
     webhook = true
     const { code, stderr } = await max(["bot", "updates", "watch", "--jsonl"])

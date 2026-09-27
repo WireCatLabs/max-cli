@@ -5,7 +5,7 @@ import { annotate } from "@leemour/cli-core/commands"
 import { type Message, renderMessages } from "@leemour/cli-messaging"
 import { Command } from "commander"
 import { type BotApiClient, botOperations } from "../bot/client.js"
-import { keep, PROVIDER } from "../bot/keep.js"
+import { forget, keep, PROVIDER } from "../bot/keep.js"
 import { botsDirectory } from "../bot/registry.js"
 import { plainJson } from "../bot/transport.js"
 import { asFirstWord } from "../profile.js"
@@ -51,6 +51,7 @@ interface Decoded {
   line: Record<string, unknown>
   message?: Message
   chatId?: string
+  removal?: { chatId: string; messageId: string }
 }
 
 /**
@@ -67,6 +68,9 @@ const decode = (raw: unknown, client: BotApiClient, self: string): Decoded => {
     line: message ? { ...update, message } : update,
     ...(message ? { message } : {}),
     ...(chatId && CHAT_ID.test(chatId) ? { chatId } : {}),
+    ...(update.update_type === "message_removed" && chatId && typeof update.message_id === "string"
+      ? { removal: { chatId, messageId: update.message_id } }
+      : {}),
   }
 }
 
@@ -169,8 +173,12 @@ export const updatesCommand = (): Command => {
           }
           const updates = (page?.updates ?? []).map((raw) => decode(raw, client, self))
           const messages = updates.flatMap((update) => (update.message ? [update.message] : []))
+          const removals = updates.flatMap((update) => (update.removal ? [update.removal] : []))
+          const kept =
+            (await keep(self, messages, "update", context.streams.diagnostic)) &&
+            (await forget(self, removals, context.streams.diagnostic))
           // Not printed, and the marker not moved: the next poll with the same marker gets this batch again.
-          if (!(await keep(self, messages, "update", context.streams.diagnostic))) {
+          if (!kept) {
             await wait("the updates were not kept")
             continue
           }

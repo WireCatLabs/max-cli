@@ -114,6 +114,10 @@ describe("the local copy", () => {
     expect(kept.map((message: { id: string }) => message.id)).toEqual(["mid.1", "mid.2", "mid.3"])
     expect(kept[1]).toMatchObject({ text: online[1].text, outgoing: true, replyToId: "mid.1" })
 
+    const one = JSON.parse((await max(["copy", "bot", "messages", "get", "mid.2", "--offline", "--json"])).stdout)
+    expect(one).toMatchObject([{ id: "mid.2", outgoing: true }])
+    expect((await max(["copy", "bot", "messages", "get", "mid.404", "--offline", "--json"])).code).not.toBe(0)
+
     const found = JSON.parse((await max(["copy", "bot", "messages", "search", "second", "--json"])).stdout)
     expect(found).toMatchObject([{ id: "mid.2", locator: expect.stringContaining("max-bot") }])
     expect(requests).toHaveLength(0)
@@ -143,7 +147,7 @@ describe("the local copy", () => {
   it("refuses --offline on a command that has to ask MAX", async () => {
     for (const argv of [
       ["bot", "messages", "send", "-100", "hi", "--offline", "--json"],
-      ["bot", "messages", "get", "mid.1", "--offline", "--json"],
+      ["bot", "updates", "watch", "--offline", "--json"],
     ]) {
       expect((await max(argv)).code).not.toBe(0)
     }
