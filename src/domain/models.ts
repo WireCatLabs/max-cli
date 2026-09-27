@@ -224,6 +224,8 @@ export interface GroupMember extends Member {
   registeredAt: string | null
   /** ISO 8601, when MAX last saw them; `null` when their privacy hides it. */
   lastSeenAt: string | null
+  /** Absent where the login did not say who runs the group. */
+  role?: "owner" | "admin" | "member"
 }
 
 export interface GroupMembers {
@@ -231,6 +233,8 @@ export interface GroupMembers {
   members: GroupMember[]
   /** Every page was read. */
   complete: boolean
+  /** Whether `role` is filled in: the login names a group's owner and admins only for chats that changed lately. */
+  rolesKnown: boolean
 }
 
 /** One chat and who is in it. `members` is `null` where nobody recorded that — a channel, always. */

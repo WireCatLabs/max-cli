@@ -164,6 +164,7 @@ export const chatsCommand = (): Command => {
           const found = await client.chats.members.list(chat)
           renderer.stream(found.members)
           if (!found.complete) renderer.note(`only the first ${found.members.length} members were read`)
+          if (!found.rolesKnown) renderer.note("who is owner or admin is not known: the login did not carry this group")
         } finally {
           await client.close()
         }
@@ -253,6 +254,22 @@ export const chatsCommand = (): Command => {
     })
 
   const link = command.command("link").description("a group's invite link")
+  link
+    .command("show")
+    .argument("<chat>", "chat id, or part of a chat name")
+    .description("the invite link, if you may see it")
+    .action(async function (this: Command, chat: string) {
+      await withClient(this, "chats link show", async (client) => {
+        const { id, title, link: current } = await client.chats.settings(chat)
+        if (current === null) {
+          throw new CliError(
+            "not_found",
+            `${title ?? id} shows you no invite link — only admins, or members when the group allows it`,
+          )
+        }
+        return { chatId: id, title, link: current }
+      })
+    })
   annotate(link.command("reset"), { mutates: true })
     .argument("<chat>", "chat id, or part of a chat name")
     .description("replace the invite link; the old one stops working")
