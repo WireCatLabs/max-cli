@@ -17,6 +17,14 @@ export const contactsInfo = defineOperation({
   },
 })
 
+const CONTACT_ACTIONS = {
+  ADD: "contact-add",
+  REMOVE: "contact-remove",
+  UPDATE: "contact-rename",
+  BLOCK: "contact-block",
+  UNBLOCK: "contact-unblock",
+} as const
+
 const webClient = "web.max.ru chunk `_app/immutable/chunks/5oCuRT0F.js`, read 2026-09-24"
 
 export const contactsByPhone = defineOperation({
@@ -43,22 +51,31 @@ export const contactsUpdate = defineOperation({
   constant: "CONTACT_UPDATE",
   opcode: 34,
   auth: true,
-  request: v.strictObject({ contactId: id(), action: v.picklist(["ADD", "REMOVE"]) }),
+  request: v.union([
+    v.strictObject({ contactId: id(), action: v.picklist(["ADD", "REMOVE", "BLOCK", "UNBLOCK"]) }),
+    /** A name of your own for the person. */
+    v.strictObject({
+      contactId: id(),
+      action: v.literal("UPDATE"),
+      firstName: v.pipe(v.string(), v.minLength(1)),
+      lastName: v.optional(v.string()),
+    }),
+  ]),
   response: v.looseObject({ contact: v.optional(v.looseObject({})) }),
   guard: (request) => ({
     chatId: null,
     kind: "account",
-    action: request.action === "REMOVE" ? "contact-remove" : "contact-add",
+    action: CONTACT_ACTIONS[(request as { action: keyof typeof CONTACT_ACTIONS }).action],
   }),
   provenance: {
     confidence: "measured",
     sources: [
       "measured 2026-09-27: `max contacts add` then `remove` on a person the owner named; the owner saw the contact appear in the app",
+      "measured 2026-09-27 (`pnpm probe:profile`), on a person who agreed: `UPDATE` answers `{contact}` and keeps the name as a `CUSTOM` entry beside theirs; `BLOCK` and `UNBLOCK` answer `{}`, and CONTACT_INFO shows `status: BLOCKED` in between",
       webClient,
       "PyMax 53103f0 `add_contact`, `remove_contact`",
     ],
-    notes:
-      "The web client also sends `UPDATE` (a name of your own for the person), `BLOCK` and `UNBLOCK` here. Only adding and removing are declared.",
+    notes: "Blocking works for somebody who is not a contact (`status: REMOVED` before and after).",
   },
 })
 

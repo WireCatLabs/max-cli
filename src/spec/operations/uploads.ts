@@ -13,7 +13,8 @@ export const uploadsPhoto = defineOperation({
   constant: "PHOTO_UPLOAD",
   opcode: 80,
   auth: true,
-  request: uploadRequest,
+  /** `profile: true` for a profile photo (2026-09-27, `pnpm probe:profile`). */
+  request: v.strictObject({ ...uploadRequest.entries, profile: v.boolean() }),
   response: v.looseObject({ url: v.optional(v.string()) }),
   guard: null,
   provenance: {

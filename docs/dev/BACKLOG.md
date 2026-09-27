@@ -39,7 +39,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   answer, then `AUTH_LOGIN_CHECK_PASSWORD` 115 `{trackId, password}`), and set or remove one
   (112 → 107 → 111). PyMax 2.4.1, code; a user logged in with it on the mobile client (PyMax #106).
   The password is typed at a prompt, never an argument.
-- **MAX-42** · P2 · Profile and contacts, what `MAX-32`/`MAX-33` left out: a profile photo
+- **MAX-42** · P2 · 🚧 `feat/max-42-profile` · Profile and contacts, what `MAX-32`/`MAX-33` left out: a profile photo
   (`PHOTO_UPLOAD` 80 with `profile: true`, then `photoToken` and `avatarType: "USER_AVATAR"` in
   `PROFILE` 16 — web.max.ru `Q8r`), the short name (`link` in 16), a name of your own for a contact
   and blocking (`CONTACT_UPDATE` 34 with `UPDATE`, `BLOCK`, `UNBLOCK` — web.max.ru). Code, not measured.

@@ -192,10 +192,12 @@ export class MaxClient {
           throw new CliError("validation_error", "MAX needs a first name, and the profile has none — pass --first-name")
         const lastName = change.lastName ?? current.lastName
 
+        const photoToken = change.photo === undefined ? undefined : await this.#profilePhoto(change.photo)
         const answer = await this.#wire.account.update({
           firstName,
           ...(lastName === undefined ? {} : { lastName }),
           ...(change.description === undefined ? {} : { description: change.description }),
+          ...(photoToken === undefined ? {} : { photoToken, avatarType: "USER_AVATAR" as const }),
         })
         return toProfile(record(answer.profile) ?? {})
       }),
@@ -662,9 +664,25 @@ export class MaxClient {
       return this.#remember(toContact(contact))
     },
 
-    add: (reference: string): Promise<Contact> => this.#contactAction("contact-add", "ADD", reference),
+    add: (reference: string): Promise<Contact> => this.#contactAction("contact-add", { action: "ADD" }, reference),
 
-    remove: (reference: string): Promise<Contact> => this.#contactAction("contact-remove", "REMOVE", reference),
+    remove: (reference: string): Promise<Contact> =>
+      this.#contactAction("contact-remove", { action: "REMOVE" }, reference),
+
+    /** They can no longer write to you. Works for somebody who is not a contact too (measured). */
+    block: (reference: string): Promise<Contact> =>
+      this.#contactAction("contact-block", { action: "BLOCK" }, reference),
+
+    unblock: (reference: string): Promise<Contact> =>
+      this.#contactAction("contact-unblock", { action: "UNBLOCK" }, reference),
+
+    /** A name of your own for them, kept beside the one they chose; they do not see it. */
+    rename: (reference: string, firstName: string, lastName?: string): Promise<Contact> =>
+      this.#contactAction(
+        "contact-rename",
+        { action: "UPDATE", firstName, ...(lastName === undefined ? {} : { lastName }) },
+        reference,
+      ),
 
     /** Uploads phone numbers to MAX — other people's — under the names they were saved with. */
     import: (entries: PhoneBookEntry[]): Promise<ContactImport> =>
@@ -2393,6 +2411,14 @@ export class MaxClient {
    * Uploads one file and answers what the message attaches (measured 2026-09-24). An upload is never
    * retried: a failure here happens before `MSG_SEND`, so nothing was sent.
    */
+  async #profilePhoto(path: string): Promise<string> {
+    if (!isImage(path)) throw new CliError("validation_error", `${path} is not an image MAX takes as a photo`)
+    const bytes = await readUpload(path)
+    const { url } = await this.#wire.uploads.photo({ count: 1, type: 0, uploaderType: 0, profile: true })
+    if (typeof url !== "string") throw new CliError("provider_error", "MAX gave no address to upload the photo to")
+    return uploadPhoto(url, path, bytes)
+  }
+
   async #upload({ path, bytes, kind, voice }: Upload): Promise<Payload> {
     const request = { count: 1, type: 0, uploaderType: 0, profile: false } as const
     if (kind === "photo") {
@@ -2633,7 +2659,7 @@ export class MaxClient {
     }
   }
 
-  #contactAction(action: AccountAction, wire: "ADD" | "REMOVE", reference: string): Promise<Contact> {
+  #contactAction(action: AccountAction, wire: ContactWire, reference: string): Promise<Contact> {
     return this.#change(action, async () => {
       const cache = this.#cache
       const known = isId(reference) ? cache?.people.get(reference.trim()) : undefined
@@ -2645,7 +2671,7 @@ export class MaxClient {
       }
       const id = isId(reference) ? reference.trim() : pickPerson(reference, cache as CacheStore).id
 
-      const answer = await this.#wire.contacts.update({ contactId: id, action: wire })
+      const answer = await this.#wire.contacts.update({ contactId: id, ...wire })
       const contact = record(answer.contact)
       if (contact) return this.#remember(toContact(contact))
       return known ?? { id, name: null, username: null, description: null, lastMessagedAt: null }
@@ -2978,10 +3004,16 @@ export const refuseWhilePaused = (state: SessionState): void => {
   )
 }
 
+type ContactWire =
+  | { action: "ADD" | "REMOVE" | "BLOCK" | "UNBLOCK" }
+  | { action: "UPDATE"; firstName: string; lastName?: string }
+
 export interface ProfileChange {
   firstName?: string
   lastName?: string
   description?: string
+  /** A path to an image; uploaded first, so a failed upload leaves the profile as it was. */
+  photo?: string
 }
 
 export interface FolderChange {

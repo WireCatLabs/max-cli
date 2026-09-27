@@ -29,14 +29,18 @@ export const accountCommand = (): Command => {
     })
 
   annotate(command.command("update"), { mutates: true })
-    .description("change the name or the description everyone sees on your profile")
+    .description("change the name, the description or the photo everyone sees on your profile")
     .option("--first-name <name>", "your first name")
     .option("--last-name <name>", "your last name")
     .option("--description <text>", "about you")
+    .option("--photo <file>", "a new profile photo — an image file")
     .action(async function (this: Command) {
-      const options = this.opts<{ firstName?: string; lastName?: string; description?: string }>()
-      if (options.firstName === undefined && options.lastName === undefined && options.description === undefined) {
-        throw new CliError("validation_error", "nothing to change — pass --first-name, --last-name or --description")
+      const options = this.opts<{ firstName?: string; lastName?: string; description?: string; photo?: string }>()
+      if (Object.values(options).every((value) => value === undefined)) {
+        throw new CliError(
+          "validation_error",
+          "nothing to change — pass --first-name, --last-name, --description or --photo",
+        )
       }
       const { renderer, createClient, run } = forCommand(this)
 

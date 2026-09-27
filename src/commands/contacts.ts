@@ -124,6 +124,8 @@ export const contactsCommand = (): Command => {
   for (const [name, description] of [
     ["add", "add a person to your contacts — `contacts list` still shows only people you have a dialog with"],
     ["remove", "remove a person from your contacts; the chat stays, a name you gave them may not"],
+    ["block", "stop a person from writing to you — they need not be a contact"],
+    ["unblock", "let a blocked person write to you again"],
   ] as const) {
     annotate(command.command(name), { mutates: true })
       .argument("<person>", "person id — `contacts lookup` finds one — or part of a known name")
@@ -144,6 +146,27 @@ export const contactsCommand = (): Command => {
         })
       })
   }
+
+  annotate(command.command("rename"), { mutates: true })
+    .argument("<person>", "person id — `contacts lookup` finds one — or part of a known name")
+    .argument("<first-name>", "the name you want to see for them")
+    .argument("[last-name]")
+    .description("give a person a name of your own — they do not see it")
+    .action(async function (this: Command, person: string, firstName: string, lastName?: string) {
+      const { renderer, settings, createClient, run } = forCommand(this)
+      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+
+      await run("contacts rename", async (events) => {
+        const client = createClient({ events, ...(cache ? { cache } : {}) })
+
+        try {
+          renderer.result(await client.contacts.rename(person, firstName, lastName))
+        } finally {
+          await client.close()
+          cache?.close()
+        }
+      })
+    })
 
   /** A file rather than lines on argv, for the same reason `lookup` asks: these are phone numbers. */
   annotate(command.command("import"), { mutates: true })
