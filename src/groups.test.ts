@@ -262,4 +262,83 @@ describe("changing a group", () => {
     ])
     expect(journalOf("gr-requests")).toMatchObject([{ action: "requests.accept", people: 1 }])
   })
+
+  describe("chats events", () => {
+    const at = (minutesAgo: number) => Date.now() - minutesAgo * 60_000
+    const history = [
+      {
+        id: 1n,
+        time: at(300),
+        sender: 10000001,
+        text: "",
+        attaches: [{ _type: "CONTROL", event: "new", title: "Team", userIds: [] }],
+      },
+      { id: 2n, time: at(200), sender: 10000001, text: "hi", attaches: [] },
+      {
+        id: 3n,
+        time: at(100),
+        sender: 10000001,
+        text: "",
+        attaches: [{ _type: "CONTROL", event: "add", userIds: [30000003] }],
+      },
+      {
+        id: 4n,
+        time: at(50),
+        sender: 10000001,
+        text: "",
+        attaches: [{ _type: "CONTROL", event: "remove", userId: 30000003 }],
+      },
+    ]
+    const withHistory = () =>
+      messenger({
+        [Opcode.CHAT_HISTORY]: (request) => ({
+          messages: history.filter((message) => message.time >= Number(request.from)).slice(0, Number(request.forward)),
+        }),
+        [Opcode.CONTACT_INFO]: {
+          contacts: [
+            { id: 30000003, names: [{ name: "Newcomer", type: "FULL_NAME" }] },
+            { id: 10000001, names: [{ name: "Owner", type: "FULL_NAME" }] },
+          ],
+        },
+      })
+
+    it("lists who was added and removed, by whom, and reads no reactions", async () => {
+      const { environment, sent } = withHistory()
+
+      const { code, stdout } = await runWith(["gr-events", "chats", "events", "Team", "--json"], environment)
+
+      expect(code).toBe(0)
+      const found = JSON.parse(stdout)
+      expect(found.events.map((one: { event: string }) => one.event)).toEqual(["new", "add", "remove"])
+      expect(found.events[1]).toMatchObject({
+        messageId: "3",
+        by: { id: "10000001", name: "Owner" },
+        people: [{ id: "30000003", name: "Newcomer" }],
+      })
+      expect(found.events[0].title).toBe("Team")
+      expect(sent(Opcode.MSG_GET_REACTIONS)).toEqual([])
+      expect(sent(Opcode.CHAT_MARK)).toEqual([])
+    })
+
+    it("keeps only the events --event names, and none from before --since", async () => {
+      const { environment } = withHistory()
+
+      const { stdout } = await runWith(
+        [
+          "gr-events",
+          "chats",
+          "events",
+          "Team",
+          "--event",
+          "add,remove",
+          "--since",
+          new Date(at(60)).toISOString(),
+          "--json",
+        ],
+        environment,
+      )
+
+      expect(JSON.parse(stdout).events.map((one: { event: string }) => one.event)).toEqual(["remove"])
+    })
+  })
 })

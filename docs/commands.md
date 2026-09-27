@@ -134,6 +134,23 @@ max chats show <chat>
 |---|---|---|
 | `chat` | обязательный | chat id, or part of a chat name |
 
+### `max chats events`
+
+who joined, left, was added or removed, and by whom — from the chat's service messages
+
+```sh
+max chats events <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | chat id, or part of a chat name |
+
+| Опция | Что делает |
+|---|---|
+| `--since <id-or-time>` | from this message id or ISO 8601 time; 7 days ago if not given |
+| `--event <names>` | only these, comma-separated, as MAX names them: new, add, remove, pin… |
+
 ### `max chats inspect`
 
 what a link leads to, without joining it

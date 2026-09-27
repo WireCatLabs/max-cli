@@ -17,6 +17,7 @@ import type {
   AttachmentLink,
   Chat,
   ChatCard,
+  ChatEvents,
   ChatKind,
   Contact,
   ContactImport,
@@ -341,6 +342,62 @@ export class MaxClient {
         ...Object.keys(record(raw.adminParticipants) ?? {}),
       ]
       return [...new Set(ids.filter((id): id is Id => id !== undefined))]
+    },
+
+    /**
+     * Who joined, left, was added or removed since a point: the service messages in the chat's
+     * history, read forward from `since` without reactions. At most `EVENTS_READ` messages, the oldest.
+     */
+    events: async (reference: string, { since }: { since: number }): Promise<ChatEvents> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` has no history to read events from")
+      const chatId = await this.chats.resolve(reference)
+      const read: Message[] = []
+      let from = since
+      let more = false
+      while (true) {
+        const page = (
+          await this.#history(chatId, { from, backward: 0, forward: REVIEW_PAGE + 1 }, { reactions: false })
+        ).filter((message) => Date.parse(message.timestamp) > from)
+        read.push(...page)
+        const last = page.at(-1)
+        if (page.length < REVIEW_PAGE || !last) break
+        if (read.length >= EVENTS_READ) {
+          more = true
+          break
+        }
+        from = Date.parse(last.timestamp)
+      }
+
+      const found = read.flatMap((message) =>
+        message.attachments
+          .filter((attachment) => attachment.kind === "control" && attachment.event !== undefined)
+          .map((attachment) => ({ message, attachment })),
+      )
+      const contacts = namesFrom(this.#session().contacts)
+      const ids = [
+        ...new Set([
+          ...found.flatMap(({ attachment }) => attachment.userIds ?? []),
+          ...found.flatMap(({ message }) =>
+            message.senderName === null && message.senderId ? [message.senderId] : [],
+          ),
+        ]),
+      ]
+      const names = await this.#namesOf(ids.filter((id) => !contacts.has(id)))
+      const nameOf = (id: Id) => contacts.get(id) ?? names.get(id) ?? null
+
+      return {
+        chatId,
+        since: new Date(since).toISOString(),
+        more,
+        events: found.map(({ message, attachment }) => ({
+          messageId: message.id,
+          timestamp: message.timestamp,
+          event: attachment.event ?? "",
+          by: { id: message.senderId, name: message.senderName ?? (message.senderId && nameOf(message.senderId)) },
+          people: (attachment.userIds ?? []).map((id) => ({ id, name: nameOf(id) })),
+          ...(attachment.title ? { title: attachment.title } : {}),
+        })),
+      }
     },
 
     /** What a link leads to, without joining it. */
@@ -1957,6 +2014,20 @@ export class MaxClient {
     const ids = [...new Set([...messages, ...quoted].filter(needsName).map((message) => message.senderId as Id))]
     if (ids.length === 0) return messages
 
+    const names = await this.#namesOf(ids)
+    const name = <T extends QuotedMessage | Message>(message: T): T =>
+      needsName(message) && names.has(message.senderId as Id)
+        ? { ...message, senderName: names.get(message.senderId as Id) ?? null }
+        : message
+    return messages.map((message) => ({
+      ...name(message),
+      replyTo: message.replyTo && name(message.replyTo),
+      forwardedFrom: message.forwardedFrom && name(message.forwardedFrom),
+    }))
+  }
+
+  /** Names we hold first, the rest from `CONTACT_INFO`, kept for next time. A refusal costs the names only. */
+  async #namesOf(ids: Id[]): Promise<Map<Id, string>> {
     const names = this.#cache?.people.names(ids) ?? new Map<Id, string>()
     const fetched: Contact[] = []
     try {
@@ -1975,20 +2046,11 @@ export class MaxClient {
     } catch (error) {
       this.#warnAbout(
         "names_unread",
-        `some senders are shown by id: their names could not be looked up (${reasonOf(error)})`,
+        `some people are shown by id: their names could not be looked up (${reasonOf(error)})`,
       )
     }
     if (fetched.length > 0) this.#cache?.people.upsert(fetched, "info")
-
-    const name = <T extends QuotedMessage | Message>(message: T): T =>
-      needsName(message) && names.has(message.senderId as Id)
-        ? { ...message, senderName: names.get(message.senderId as Id) ?? null }
-        : message
-    return messages.map((message) => ({
-      ...name(message),
-      replyTo: message.replyTo && name(message.replyTo),
-      forwardedFrom: message.forwardedFrom && name(message.forwardedFrom),
-    }))
+    return names
   }
 
   /** INIT with the profile's own device, which is the device MAX then issues the token to (bite 8). */
@@ -2489,6 +2551,7 @@ const INBOX_CHATS = 20
 const REVIEW_CHATS = 50
 const REVIEW_PAGE = 100
 const REVIEW_PER_CHAT = 500
+const EVENTS_READ = 2000
 
 /** What `readLikeTab` sends back to MAX on the next login. */
 export interface TabSync {

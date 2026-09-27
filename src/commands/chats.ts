@@ -8,6 +8,8 @@ import { forCommand } from "./context.js"
 import { foldersCommand } from "./folders.js"
 import { renderPage, window, withPaging } from "./paging.js"
 
+const EVENTS_DAYS = 7
+
 export const chatsCommand = (): Command => {
   const command = new Command("chats").description("the chats this account is in")
 
@@ -54,6 +56,54 @@ export const chatsCommand = (): Command => {
 
         try {
           renderer.result(await client.chats.show(chat))
+        } finally {
+          await client.close()
+          cache?.close()
+        }
+      })
+    })
+
+  command
+    .command("events")
+    .argument("<chat>", "chat id, or part of a chat name")
+    .option("--since <id-or-time>", `from this message id or ISO 8601 time; ${EVENTS_DAYS} days ago if not given`)
+    .option("--event <names>", "only these, comma-separated, as MAX names them: new, add, remove, pin…")
+    .description("who joined, left, was added or removed, and by whom — from the chat's service messages")
+    .action(async function (this: Command, chat: string) {
+      const options = this.optsWithGlobals()
+      const { renderer, settings, format, createClient, run } = forCommand(this)
+      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const only =
+        options.event === undefined
+          ? undefined
+          : new Set(
+              String(options.event)
+                .split(",")
+                .map((e) => e.trim()),
+            )
+
+      await run("chats events", async (events) => {
+        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        try {
+          const since =
+            options.since === undefined
+              ? Date.now() - EVENTS_DAYS * 86_400_000
+              : client.messages.moment(String(options.since), "--since")
+          const found = await client.chats.events(chat, { since })
+          const kept = only ? { ...found, events: found.events.filter((one) => only.has(one.event)) } : found
+
+          if (format !== "pretty") renderer.result(kept)
+          else {
+            renderer.stream(
+              kept.events.map((one) => ({
+                time: one.timestamp,
+                event: one.event,
+                by: one.by.name ?? one.by.id,
+                people: one.people.map((person) => person.name ?? person.id).join(", "),
+              })),
+            )
+          }
+          if (kept.more) renderer.note(`more history than one run reads — run again with --since after the last one`)
         } finally {
           await client.close()
           cache?.close()
