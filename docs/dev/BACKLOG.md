@@ -164,9 +164,10 @@ which; the plan for it starts by saying so.
   beside the personal account. Reopens REQUIREMENTS §3 ("not a bot-account client"). Bots are
   issued only to verified organisations, sole traders and the self-employed
   ([dev.max.ru](https://dev.max.ru/docs/maxbusiness/connection)).
-  In progress (owner, 2026-09-26): first the schema snapshot and generated code, then
-  `max bot me`, `max bot auth` and `max bot api <operation>` over all operations; the ergonomic
-  commands, the chat registry and bot MCP after cli-messaging's messenger port exists.
+  First half built 2026-09-27: the schema snapshot and generated code (#174), then `max bot me`,
+  `max bot auth` and `max bot api <operation>` over all 33 operations. Left: the ergonomic
+  commands, the chat registry, `updates watch`, webhook and upload helpers and bot MCP — after
+  cli-messaging's messenger port exists (`NEED-302`).
 - **CLI-27** · P3 · Hooks for workflows: `max` runs a configured command when a check finds
   something new. Asked by the owner 2026-09-24 (`NEED-172`). Two things to settle in the plan: the
   message text reaches that command, so it must go as data on stdin and never into the command

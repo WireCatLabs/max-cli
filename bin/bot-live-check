@@ -1,0 +1,33 @@
+#!/usr/bin/env sh
+# The live check for `max bot`, with a real bot token. Reads only: nothing is sent.
+#
+#   bin/bot-live-check            # the default profile
+#   bin/bot-live-check work       # the profile "work"
+#
+# Builds this checkout, keeps the token (hidden prompt; MAX checks it before it is stored), then
+# asks MAX who the bot is on Node and on Bun — with NODE_EXTRA_CA_CERTS unset, so the certificate
+# max-cli ships is what makes TLS work. The token is never printed.
+set -eu
+
+cd "$(dirname "$0")/.."
+profile="${1:-default}"
+max() { node dist/bin/max.js "$profile" "$@"; }
+
+pnpm -s build
+
+if ! max bot auth show --json >/dev/null 2>&1; then
+  echo "== keeping a bot token for profile \"$profile\" (typed at a hidden prompt) =="
+  max bot auth set
+fi
+
+echo "== node =="
+env -u NODE_EXTRA_CA_CERTS MAX_PROFILE="$profile" node --experimental-strip-types scripts/probe-bot-me.ts
+
+if command -v bun >/dev/null 2>&1; then
+  echo "== bun =="
+  env -u NODE_EXTRA_CA_CERTS MAX_PROFILE="$profile" bun scripts/probe-bot-me.ts
+fi
+
+echo "== max bot me, and the same through max bot api =="
+env -u NODE_EXTRA_CA_CERTS node dist/bin/max.js "$profile" bot me
+env -u NODE_EXTRA_CA_CERTS node dist/bin/max.js "$profile" bot api get-my-info --json >/dev/null && echo "get-my-info: ok"

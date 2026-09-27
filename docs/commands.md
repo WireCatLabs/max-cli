@@ -1024,6 +1024,34 @@ max mcp config [options]
 | `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it |
 | `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone |
 
+## `max bot`
+
+a MAX bot, through the official Bot API and a bot token — not your personal account
+
+### `max bot auth`
+
+the bot token this profile uses
+
+```sh
+max bot auth
+```
+
+### `max bot me`
+
+the bot this profile's token belongs to: name, id, description, commands
+
+```sh
+max bot me
+```
+
+### `max bot api`
+
+every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md
+
+```sh
+max bot api
+```
+
 ## Коды возврата
 
 Скрипт ветвится по коду, а не по тексту: текст меняется, код — нет.

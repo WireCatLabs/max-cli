@@ -9,6 +9,7 @@ import {
 import { Command, CommanderError } from "commander"
 import { accountCommand } from "./commands/account.js"
 import { backupCommand } from "./commands/backup.js"
+import { botCommand } from "./commands/bot.js"
 import { cacheCommand } from "./commands/cache.js"
 import { chatsCommand } from "./commands/chats.js"
 import { commandsCommand } from "./commands/commands.js"
@@ -116,6 +117,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(selfUpdateCommand())
   program.addCommand(completeCommand(), { hidden: true })
   program.addCommand(mcpCommand())
+  program.addCommand(botCommand())
 
   // Depth-first: Commander does not pass `configureOutput` down to a command added with
   // `addCommand`, so `max messages --help` would write to the real terminal while the top level
