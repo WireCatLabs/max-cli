@@ -279,3 +279,38 @@ describe("the generated bot commands", () => {
     }
   })
 })
+
+describe("the run log for a bot command", () => {
+  beforeEach(() => store().write(GOOD))
+
+  const runsOf = async (command: string) =>
+    (JSON.parse((await max(["runs", "list", "--json", "--limit", "100"])).stdout) as Record<string, unknown>[]).filter(
+      (run) => run.command === command,
+    )
+
+  it("traces each request on stderr and keeps stdout to the answer", async () => {
+    const { code, stdout, stderr } = await max(["bot", "api", "get-chat", "--chat-id", "7", "--trace", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toEqual({ success: true })
+    const events = stderr.split("\n").map((line) => JSON.parse(line))
+    expect(events).toEqual([
+      { event: "request", operation: "getChat", ids: { chat: "7" } },
+      expect.objectContaining({ event: "response", operation: "getChat", status: 200, outcome: "ok" }),
+    ])
+  })
+
+  it("records a run with --record", async () => {
+    await max(["bot", "api", "get-membership", "--chat-id", "8", "--record", "--json"])
+    expect(await runsOf("bot api get-membership")).toEqual([
+      expect.objectContaining({ status: "success", requests: 1 }),
+    ])
+  })
+
+  it("keeps a failed run with its request, unasked, and never twice", async () => {
+    const { code } = await max(["bot", "api", "get-pinned-message", "--chat-id", "404", "--json"])
+    expect(code).not.toBe(0)
+    expect(await runsOf("bot api get-pinned-message")).toEqual([
+      expect.objectContaining({ status: "failed", requests: 1, errorCode: "not_found", keptBecauseFailed: true }),
+    ])
+  })
+})

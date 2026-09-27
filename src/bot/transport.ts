@@ -11,6 +11,7 @@ import {
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { type FetchLike, providerWaitMs, statusToCode } from "@leemour/cli-core/http"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
+import { type DiagnosticEvent, maxErrorKey, type RequestEvent } from "../runs/events.js"
 import { VERSION } from "../version.js"
 import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"
 
@@ -54,6 +55,17 @@ export interface TransportOptions {
   sleep?: SleepLike
   random?: () => number
   signal?: AbortSignal
+  /** `--trace` and the run log; one request and one response per HTTP attempt. */
+  events?: (event: DiagnosticEvent) => void
+  now?: () => number
+}
+
+/** Path parameters that are ids, by the name the run log uses. `videoToken` is not one of them. */
+const LOGGED_IDS: Record<string, string> = {
+  chatId: "chat",
+  messageId: "message",
+  userId: "user",
+  commentId: "comment",
 }
 
 const TLS_FAILURES = new Set([
@@ -82,6 +94,8 @@ export class BotTransport {
   readonly #sleep: SleepLike
   readonly #random: () => number
   readonly #signal: AbortSignal | undefined
+  readonly #events: (event: DiagnosticEvent) => void
+  readonly #now: () => number
 
   constructor(options: TransportOptions) {
     this.#token = options.token
@@ -92,6 +106,8 @@ export class BotTransport {
     this.#sleep = options.sleep ?? realSleep
     this.#random = options.random ?? Math.random
     this.#signal = options.signal
+    this.#events = options.events ?? (() => {})
+    this.#now = options.now ?? Date.now
   }
 
   /** The parsed answer, numbers still lossless; `null` when MAX answered with no body. */
@@ -103,10 +119,17 @@ export class BotTransport {
     const reads = operation.effect === "read"
     const timeoutMs = this.#timeoutFor(operation, input)
 
+    const ids = idsIn(input)
     for (let attempt = 1; ; attempt++) {
+      const said = { operation: operation.id, ...(ids ? { ids } : {}) }
+      const started = this.#now()
+      this.#events({ event: "request", ...said })
       try {
-        return await this.#once(operation, url, input.body, timeoutMs)
+        const { answer, status, bytes } = await this.#once(operation, url, input.body, timeoutMs)
+        this.#events({ event: "response", ...said, status, bytes, durationMs: this.#now() - started, outcome: "ok" })
+        return answer
       } catch (error) {
+        this.#events({ event: "response", ...said, durationMs: this.#now() - started, ...failureOf(error) })
         if (!(error instanceof CliError)) throw error
         if (this.#signal?.aborted) throw error
         const retryable = reads && error.details.retryable === true && attempt <= this.#retry.retries
@@ -142,7 +165,12 @@ export class BotTransport {
       : this.#timeoutMs
   }
 
-  async #once(operation: ManifestOperation, url: URL, body: string | undefined, timeoutMs: number): Promise<unknown> {
+  async #once(
+    operation: ManifestOperation,
+    url: URL,
+    body: string | undefined,
+    timeoutMs: number,
+  ): Promise<{ answer: unknown; status: number; bytes: number }> {
     const signals = [AbortSignal.timeout(timeoutMs), ...(this.#signal ? [this.#signal] : [])]
     const reads = operation.effect === "read"
     let response: Response
@@ -164,9 +192,10 @@ export class BotTransport {
 
     const text = await response.text()
     if (!response.ok) throw this.#refusal(operation, response, text)
-    if (text.trim() === "") return null
+    const answered = { status: response.status, bytes: Buffer.byteLength(text) }
+    if (text.trim() === "") return { answer: null, ...answered }
     try {
-      return parse(text)
+      return { answer: parse(text), ...answered }
     } catch {
       throw new CliError("invalid_response", `MAX answered ${operation.id} with something that is not JSON`, {
         operation: operation.id,
@@ -252,3 +281,24 @@ export const plainJson = (value: unknown): unknown =>
       isLosslessNumber(inner) && !isSafeNumber(inner.value) ? inner.toString() : inner,
     ) ?? "null",
   )
+
+const idsIn = (input: CallInput): Record<string, string> | undefined => {
+  const ids = Object.entries(input.path ?? {}).flatMap(([name, value]) => {
+    const logged = LOGGED_IDS[name]
+    return logged ? [[logged, value]] : []
+  })
+  return ids.length ? Object.fromEntries(ids) : undefined
+}
+
+/** The code and MAX's own key, never the message: MAX's refusal can quote what we sent. */
+const failureOf = (error: unknown): Pick<RequestEvent, "outcome" | "errorCode" | "status" | "maxError"> => {
+  if (!(error instanceof CliError)) return { outcome: "error", errorCode: "generic_failure" }
+  const status = typeof error.details.status === "number" ? error.details.status : undefined
+  const maxError = maxErrorKey(error.details.maxCode)
+  return {
+    outcome: "error",
+    errorCode: error.code,
+    ...(status === undefined ? {} : { status }),
+    ...(maxError ? { maxError } : {}),
+  }
+}
