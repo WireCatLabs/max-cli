@@ -120,6 +120,22 @@ describe("contacts", () => {
     ])
   })
 
+  it("`block`, `unblock` and `rename` send CONTACT_UPDATE with their action", async () => {
+    const { environment, sent } = account()
+    for (const argv of [
+      ["contacts", "block", "20000002"],
+      ["contacts", "unblock", "20000002"],
+      ["contacts", "rename", "20000002", "Neighbour", "Ana"],
+    ])
+      expect((await runWith(argv, environment)).code).toBe(0)
+
+    expect(sent(Opcode.CONTACT_UPDATE).map((one) => ({ ...one, contactId: String(one.contactId) }))).toEqual([
+      { contactId: "20000002", action: "BLOCK" },
+      { contactId: "20000002", action: "UNBLOCK" },
+      { contactId: "20000002", action: "UPDATE", firstName: "Neighbour", lastName: "Ana" },
+    ])
+  })
+
   it("`import` sends each line of the file as number and name, and reports what MAX recognised", async () => {
     const { environment, sent } = account()
     const file = join(process.env.TMPDIR ?? "/tmp", "phone-book.csv")

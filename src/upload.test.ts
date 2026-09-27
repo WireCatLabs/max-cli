@@ -73,6 +73,50 @@ const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
 
 type Sent = { message: { text: string; attaches: Record<string, unknown>[] } }
 
+describe("the profile photo", () => {
+  const update = async (file: string, url = "/photo") => {
+    const max = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.LOGIN]: { profile: { contact: { id: 10000001, names: [{ firstName: "Test", type: "ONEME" }] } } },
+        [Opcode.PHOTO_UPLOAD]: { url: `${origin}${url}` },
+        [Opcode.PROFILE]: { profile: { contact: { id: 10000001, names: [{ name: "Test", type: "ONEME" }] } } },
+      },
+    })
+    const keyring = memoryKeyring()
+    const streams = captureStreams()
+    const code = await run(["account", "update", "--photo", join(directory, file), "--json"], {
+      streams,
+      tty: false,
+      store: (profile: string) => {
+        const store = new SessionStore({ profile, keyring })
+        store.writeToken("a-token")
+        return store
+      },
+      connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+    })
+    const of = (opcode: number) => max.sent.filter((call) => call.opcode === opcode).map((call) => call.payload)
+    return { code, slots: of(Opcode.PHOTO_UPLOAD), profiles: of(Opcode.PROFILE) }
+  }
+
+  it("uploads as a profile photo, then sends its token with the current name", async () => {
+    const { code, slots, profiles } = await update("picture.png")
+    expect(code).toBe(0)
+    expect(slots).toEqual([{ count: 1, type: 0, uploaderType: 0, profile: true }])
+    expect(profiles).toEqual([{ firstName: "Test", photoToken: "photo-token", avatarType: "USER_AVATAR" }])
+  })
+
+  it("**leaves the profile alone when the upload fails**, and refuses a file that is not an image", async () => {
+    const broken = await update("picture.png", "/broken")
+    expect(broken.code).not.toBe(0)
+    expect(broken.profiles).toEqual([])
+
+    const text = await update("report.txt")
+    expect(text.code).not.toBe(0)
+    expect(text.slots).toEqual([])
+  })
+})
+
 describe("sending a video and a voice message", () => {
   it("sends an .mp4 as a video, uploaded with the bytes unit", async () => {
     const { code, sends, slots } = await send(["--file", join(directory, "clip.mp4")])

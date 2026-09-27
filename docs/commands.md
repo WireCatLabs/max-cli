@@ -79,7 +79,7 @@ max account show [options]
 
 ### `max account update`
 
-change the name or the description everyone sees on your profile
+change the name, the description or the photo everyone sees on your profile
 
 **Меняет что-то в MAX.**
 
@@ -92,6 +92,7 @@ max account update [options]
 | `--first-name <name>` | your first name |
 | `--last-name <name>` | your last name |
 | `--description <text>` | about you |
+| `--photo <file>` | a new profile photo — an image file |
 
 ### `max account sessions`
 
@@ -401,6 +402,50 @@ max contacts remove <person>
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name |
+
+### `max contacts block`
+
+stop a person from writing to you — they need not be a contact
+
+**Меняет что-то в MAX.**
+
+```sh
+max contacts block <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name |
+
+### `max contacts unblock`
+
+let a blocked person write to you again
+
+**Меняет что-то в MAX.**
+
+```sh
+max contacts unblock <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name |
+
+### `max contacts rename`
+
+give a person a name of your own — they do not see it
+
+**Меняет что-то в MAX.**
+
+```sh
+max contacts rename <person> <first-name> [last-name]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name |
+| `first-name` | обязательный | the name you want to see for them |
+| `last-name` | необязательный |  |
 
 ### `max contacts import`
 

@@ -13,6 +13,9 @@ export const accountUpdate = defineOperation({
     firstName: v.pipe(v.string(), v.minLength(1)),
     lastName: v.optional(v.string()),
     description: v.optional(v.string()),
+    /** From a photo uploaded with `profile: true`; goes with `avatarType`. */
+    photoToken: v.optional(v.pipe(v.string(), v.minLength(1))),
+    avatarType: v.optional(v.literal("USER_AVATAR")),
   }),
   response: v.looseObject({ profile: v.optional(v.looseObject({})) }),
   guard: () => ({ chatId: null, kind: "account", action: "profile" }),
@@ -20,12 +23,13 @@ export const accountUpdate = defineOperation({
     confidence: "measured",
     sources: [
       "measured against MAX 2026-09-24 (`pnpm probe:account`): the profile rewritten with its own values answered `{profile}` shaped like LOGIN's",
+      "measured 2026-09-27 (`pnpm probe:profile`): `photoToken` from an upload with `profile: true` and `avatarType` set the photo — confirmed by the owner in the app; MAX's answers were not kept (`BUG-67`)",
       webClient,
       "PyMax 53103f0 `change_profile`",
       "measured against MAX 2026-09-19: refused an empty payload",
     ],
     notes:
-      "Changes the profile everyone sees. It does not read one: your own profile arrives with the login response. `link` (the short name) and `photoToken` exist and are not sent.",
+      "Changes the profile everyone sees. It does not read one: your own profile arrives with the login response. `link` (the short name) is not declared: MAX refused every name for this personal account with `link.not.available` (2026-09-27, `MAX-42`).",
   },
 })
 
