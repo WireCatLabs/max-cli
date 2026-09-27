@@ -1,14 +1,16 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { CliError } from "@leemour/cli-core"
+import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { annotate } from "@leemour/cli-core/commands"
 import { pickChat } from "@leemour/cli-messaging"
 import { newSendId, RecipientList, SendJournal, type SendKind, sendGuard } from "@leemour/cli-messaging/sends"
 import { Command, Option } from "commander"
 import { botOperations } from "../bot/client.js"
 import { checkBody } from "../bot/input.js"
+import { BOT_JOURNAL_KINDS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
-import { plainJson } from "../bot/transport.js"
+import { type CallInput, plainJson } from "../bot/transport.js"
 import { asFirstWord } from "../profile.js"
 import { assertAllowed, botContext } from "./bot-context.js"
 
@@ -24,8 +26,8 @@ const operation = (id: string) => {
 const botWords = (profile: string): string => `${asFirstWord(profile)}bot`
 
 const files = (profile: string) => ({
-  journal: join(botsDirectory(), `${profile}.sends.jsonl`),
-  recipients: join(botsDirectory(), `${profile}.recipients.json`),
+  journal: join(botsDirectory(), "sends", `${profile}.jsonl`),
+  recipients: join(botsDirectory(), "recipients", `${profile}.json`),
 })
 
 const recipientsOf = (context: Context) =>
@@ -68,7 +70,7 @@ const textOf = (text: string): string => (text === "-" ? readFileSync(0, "utf8")
 /** Runs one write through the guard and the journal, on every outcome. */
 const guarded = async <T>(
   context: Context,
-  request: { chatId: string; kind: SendKind; count?: number },
+  request: { chatId: string | null; kind: SendKind; count?: number },
   body: (sendId: string) => Promise<{ result: T; messageId?: string }>,
   length?: number,
 ): Promise<T> => {
@@ -105,6 +107,31 @@ const guarded = async <T>(
 const chatOfMessage = async (context: Context, messageId: string): Promise<string> => {
   const message = await context.authenticated().message(messageId)
   return message.chatId
+}
+
+/**
+ * Which chat a write reaches, from its own parameters — the recipient list must hold for
+ * `max bot api` as much as for `messages send`, or the raw command is the way around it.
+ */
+const chatOfCall = async (context: Context, input: CallInput): Promise<string | null> => {
+  const chat = input.path?.chatId ?? input.query?.chat_id
+  if (typeof chat === "string") return chat
+  const user = input.query?.user_id
+  if (typeof user === "string") return `user:${user}`
+  const message = input.path?.messageId ?? input.query?.message_id
+  if (typeof message === "string") return chatOfMessage(context, message)
+  return null
+}
+
+/** Every bot write, from any command: readOnly and allow, then the recipient list and the journal. */
+export const guardedCall = async (context: Context, target: ManifestOperation, input: CallInput): Promise<unknown> => {
+  const client = context.authenticated()
+  if (target.effect === "read") return client.call(target, input)
+  assertAllowed(target, context.settings)
+  const kind = BOT_JOURNAL_KINDS[target.id]
+  if (!kind) return client.call(target, input)
+  const chatId = await chatOfCall(context, input)
+  return guarded(context, { chatId, kind }, async () => ({ result: await client.call(target, input) }))
 }
 
 export const sendCommands = (messages: Command): void => {

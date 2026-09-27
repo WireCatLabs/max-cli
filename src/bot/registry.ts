@@ -71,7 +71,8 @@ export class ChatRegistry {
 export const registryProfiles = (env: NodeJS.ProcessEnv = process.env): string[] => {
   const directory = botsDirectory(env)
   if (!existsSync(directory)) return []
-  return readdirSync(directory)
-    .filter((name) => name.endsWith(".json"))
+  return readdirSync(directory, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+    .map((entry) => entry.name)
     .map((name) => name.slice(0, -".json".length))
 }

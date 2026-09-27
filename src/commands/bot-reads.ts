@@ -4,8 +4,8 @@ import { type Message, pickChat, renderMessages } from "@leemour/cli-messaging"
 import { Command } from "commander"
 import { botOperations } from "../bot/client.js"
 import type { ChatRegistry } from "../bot/registry.js"
-import { assertAllowed, botContext } from "./bot-context.js"
-import { sendCommands } from "./bot-sends.js"
+import { botContext } from "./bot-context.js"
+import { guardedCall, sendCommands } from "./bot-sends.js"
 
 const CHAT_ID = /^-?\d+$/
 
@@ -102,11 +102,10 @@ export const chatsCommand = (): Command => {
     annotate(command.command(name), { mutates: true })
       .description(description)
       .action(async function (this: Command, chat: string, argument?: string) {
-        const { renderer, registry, authenticated, settings } = botContext(this)
-        const target = operation(operationId)
-        assertAllowed(target, settings)
+        const context = botContext(this)
+        const { renderer, registry } = context
         const chatId = chatIdOf(chat, registry)
-        const answer = await authenticated().call(target, {
+        const answer = await guardedCall(context, operation(operationId), {
           path: { chatId },
           ...(body ? { body: body(argument) } : {}),
         })

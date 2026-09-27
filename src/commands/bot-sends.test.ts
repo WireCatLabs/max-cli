@@ -65,7 +65,8 @@ const max = async (argv: string[], timeoutMs?: number) => {
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
   })
-  return { code, out: streams.stdout.join("\n") + streams.stderr.join("\n"), stdout: streams.stdout.join("\n") }
+  const stderr = streams.stderr.join("\n")
+  return { code, out: streams.stdout.join("\n") + stderr, stdout: streams.stdout.join("\n"), stderr }
 }
 
 describe("max bot messages send", () => {
@@ -132,11 +133,74 @@ describe("max bot messages edit and delete", () => {
 
 describe("the bot's files", () => {
   it("never hold message text", () => {
-    const directory = botsDirectory()
-    const text = readdirSync(directory)
-      .map((name) => readFileSync(join(directory, name), "utf8"))
+    const text = readdirSync(botsDirectory(), { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => readFileSync(join(entry.parentPath, entry.name), "utf8"))
       .join("\n")
     expect(text).not.toContain("hello there")
     expect(text).not.toContain("new text")
+  })
+})
+
+describe("every bot write, whichever command sends it", () => {
+  it("meets the recipient list and the journal through max bot api and chats pin too", async () => {
+    await max(["team", "bot", "recipients", "off"])
+    await max(["team", "bot", "recipients", "add", "-100"])
+    requests.length = 0
+    const raw = await max([
+      "team",
+      "bot",
+      "api",
+      "send-message",
+      "--chat-id",
+      "-200",
+      "--body",
+      `{"text": "x"}`,
+      "--json",
+    ])
+    const pin = await max(["team", "bot", "chats", "pin", "-200", "mid.9", "--json"])
+    for (const refused of [raw, pin]) {
+      expect(refused.code).toBe(7)
+      expect(refused.stdout).toBe("")
+      expect(JSON.parse(refused.stderr).error.code).toBe("confirmation_required")
+    }
+    expect(requests.filter((request) => request.method !== "GET")).toHaveLength(0)
+    const journal = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout)
+    expect(journal.slice(-2)).toMatchObject([
+      { chatId: "-200", kind: "message", outcome: "refused" },
+      { chatId: "-200", kind: "pin", outcome: "refused" },
+    ])
+  })
+
+  it("finds the chat of a write that names only a message", async () => {
+    const refused = await max([
+      "team",
+      "bot",
+      "api",
+      "edit-message",
+      "--message-id",
+      "mid.9",
+      "--body",
+      `{"text": "y"}`,
+      "--json",
+    ])
+    expect(refused.code).toBe(0)
+    await max(["team", "bot", "recipients", "remove", "-100"])
+    await max(["team", "bot", "recipients", "add", "-300"])
+    expect(
+      (await max(["team", "bot", "api", "edit-message", "--message-id", "mid.9", "--body", `{"text": "y"}`, "--json"]))
+        .code,
+    ).toBe(7)
+  })
+
+  it("does not list a bot's recipients file as a bot", async () => {
+    const names = JSON.parse((await max(["bot", "list", "--json"])).stdout).map((row: { name: string }) => row.name)
+    expect(names.some((name: string) => name.includes("recipients"))).toBe(false)
+  })
+
+  it("exits like the personal account for an unknown chat title", async () => {
+    const { code, stderr } = await max(["bot", "messages", "send", "Nowhere", "hi", "--json"])
+    expect(code).toBe(6)
+    expect(JSON.parse(stderr).error.code).toBe("not_found")
   })
 })

@@ -10,7 +10,7 @@ import { type CallInput, plainJson } from "../bot/transport.js"
 import { configuredProfiles } from "../config.js"
 import { assertAllowed, botContext } from "./bot-context.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
-import { recipientsCommand, sendsCommand } from "./bot-sends.js"
+import { guardedCall, recipientsCommand, sendsCommand } from "./bot-sends.js"
 import { environmentOf } from "./context.js"
 
 const apiCommand = (operation: ManifestOperation): Command => {
@@ -42,11 +42,11 @@ const apiCommand = (operation: ManifestOperation): Command => {
       if (parameter.in === "path") input.path[parameter.name] = raw
       else if (parameter.in === "query") input.query[parameter.name] = raw
     }
-    const { renderer, authenticated, settings } = botContext(this)
-    assertAllowed(operation, settings)
+    const context = botContext(this)
+    if (operation.effect !== "read") assertAllowed(operation, context.settings)
     const body = checkBody(operation, readBody(options))
     const call: CallInput = body === undefined ? input : { ...input, body }
-    renderer.result(plainJson(await authenticated().call(operation, call)))
+    context.renderer.result(plainJson(await guardedCall(context, operation, call)))
   })
 }
 

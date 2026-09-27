@@ -1,5 +1,8 @@
 import {
   CliError,
+  type CliErrorDetails,
+  type ErrorCode,
+  errorCodes,
   exitCodeFor,
   GENERIC_FAILURE,
   processStreams,
@@ -189,7 +192,8 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     const line = await notice
     if (line) streams.diagnostic(line)
     return process.exitCode === undefined ? 0 : Number(process.exitCode)
-  } catch (error) {
+  } catch (thrown) {
+    const error = ownCliError(thrown)
     if (!(error instanceof CommanderError) || error.exitCode !== 0) {
       const failure = error instanceof CommanderError ? new CliError("validation_error", error.message) : error
       await keepFailure(failure, program, rest, profile, streams)
@@ -224,6 +228,17 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
  * command that never opens one — through the same recorder, unless recording was turned off by
  * name (`OPS-15`). Only the command's words are named, never its arguments: those can be a message.
  */
+/**
+ * cli-messaging brings its own copy of cli-core, and its `CliError` is not an `instanceof` ours —
+ * a recipient-list refusal would otherwise leave with exit 1 and `generic_failure`.
+ */
+const ownCliError = (error: unknown): unknown => {
+  if (error instanceof CliError || !(error instanceof Error) || error.name !== "CliError") return error
+  const { code, details } = error as Error & { code?: unknown; details?: CliErrorDetails }
+  if (typeof code !== "string" || !(errorCodes as readonly string[]).includes(code)) return error
+  return new CliError(code as ErrorCode, error.message, details ?? {})
+}
+
 const keepFailure = async (
   error: unknown,
   program: Command,
