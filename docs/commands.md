@@ -305,6 +305,14 @@ your chat folders
 max chats folders
 ```
 
+### `max chats rules`
+
+a group's moderation rules, kept on this machine
+
+```sh
+max chats rules
+```
+
 ## `max contacts`
 
 people you have a one-to-one chat with
