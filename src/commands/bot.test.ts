@@ -6,7 +6,8 @@ import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-c
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { botOperations } from "../bot/client.js"
-import { run } from "../program.js"
+import { RESERVED_FLAGS } from "../bot/input.js"
+import { createProgram, run } from "../program.js"
 
 const GOOD = "good-bot-token"
 const BOT = `{"user_id": 9007199254740993, "first_name": "Helper", "username": "helper_bot", "is_bot": true, "last_activity_time": 1}`
@@ -129,6 +130,32 @@ describe("max bot api", () => {
     const { code, stdout, stderr } = await max(["bot", "api", "send-message", "--chat-id", "1", "--json"])
     expect(code).not.toBe(0)
     expect(stdout + stderr).toContain("needs a JSON body")
+  })
+
+  it("passes a parameter named like a global flag under its location: get-updates --query-timeout", async () => {
+    const { code, stderr } = await max([
+      "bot",
+      "api",
+      "get-updates",
+      "--query-timeout",
+      "0",
+      "--query-limit",
+      "5",
+      "--json",
+    ])
+    expect(stderr).toBe("")
+    expect(code).toBe(0)
+    expect(requests[0]?.url).toBe("/updates?limit=5&timeout=0")
+  })
+
+  it("gives no generated flag a reserved name, and reserves every global one", () => {
+    const program = createProgram()
+    const globals = program.options.map((option) => option.long?.slice(2)).filter((flag) => flag !== "version")
+    expect(globals.filter((flag) => !RESERVED_FLAGS.has(flag ?? ""))).toEqual([])
+    const api = program.commands.find((command) => command.name() === "bot")?.commands.find((c) => c.name() === "api")
+    const generated = api?.commands.flatMap((command) => command.options.map((option) => option.long?.slice(2))) ?? []
+    expect(generated.length).toBeGreaterThan(0)
+    expect(generated.filter((flag) => RESERVED_FLAGS.has(flag ?? ""))).toEqual([])
   })
 
   it("lists every operation as a command", async () => {

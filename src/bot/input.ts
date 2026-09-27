@@ -11,8 +11,37 @@ export const flagOf = (name: string): string =>
     .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
     .toLowerCase()
 
-export const optionKey = (name: string): string =>
-  flagOf(name).replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())
+/**
+ * Names a generated parameter may not take. The program's own flags go to the root wherever they
+ * appear, and `botContext` reads settings through `optsWithGlobals()`, so a parameter named like
+ * either never reaches its command (`BUG-61`: `get-updates --timeout`, `--limit`).
+ */
+export const RESERVED_FLAGS: ReadonlySet<string> = new Set([
+  "profile",
+  "verbose",
+  "json",
+  "jsonl",
+  "quiet",
+  "trace",
+  "timeout",
+  "offline",
+  "record",
+  "no-record",
+  "serve",
+  "no-serve",
+  "limit",
+  "page",
+  "all",
+])
+
+/** A parameter's flag, named after where it goes when its own name is reserved: `--query-timeout`. */
+export const parameterFlag = (parameter: { name: string; in: string }): string => {
+  const flag = flagOf(parameter.name)
+  return RESERVED_FLAGS.has(flag) ? `${parameter.in}-${flag}` : flag
+}
+
+export const optionKey = (flag: string): string =>
+  flag.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())
 
 const DIGITS = /^-?\d+$/
 
@@ -23,29 +52,27 @@ const coerce = (raw: string): unknown => {
   return raw
 }
 
-export const checkParameter = (name: string, node: SchemaNode, raw: string): string | undefined => {
+export const checkParameter = (flag: string, node: SchemaNode, raw: string): string | undefined => {
   switch (node.type) {
     case "ref": {
       const schema = (schemas as Record<string, v.GenericSchema>)[identifier(node.ref)]
-      return schema && !v.safeParse(schema, coerce(raw)).success
-        ? `--${flagOf(name)} is not a valid ${node.ref}`
-        : undefined
+      return schema && !v.safeParse(schema, coerce(raw)).success ? `--${flag} is not a valid ${node.ref}` : undefined
     }
     case "integer":
-      if (!DIGITS.test(raw)) return `--${flagOf(name)} takes an integer`
+      if (!DIGITS.test(raw)) return `--${flag} takes an integer`
       if (node.minimum !== undefined && BigInt(raw) < BigInt(node.minimum))
-        return `--${flagOf(name)} is at least ${node.minimum}`
+        return `--${flag} is at least ${node.minimum}`
       if (node.maximum !== undefined && BigInt(raw) > BigInt(node.maximum))
-        return `--${flagOf(name)} is at most ${node.maximum}`
+        return `--${flag} is at most ${node.maximum}`
       return undefined
     case "boolean":
-      return raw === "true" || raw === "false" ? undefined : `--${flagOf(name)} takes true or false`
+      return raw === "true" || raw === "false" ? undefined : `--${flag} takes true or false`
     case "string":
-      return node.enum && !node.enum.includes(raw) ? `--${flagOf(name)} is one of ${node.enum.join(", ")}` : undefined
+      return node.enum && !node.enum.includes(raw) ? `--${flag} is one of ${node.enum.join(", ")}` : undefined
     case "array":
       return raw
         .split(",")
-        .map((item) => checkParameter(name, node.items, item.trim()))
+        .map((item) => checkParameter(flag, node.items, item.trim()))
         .find((problem) => problem !== undefined)
     default:
       return undefined

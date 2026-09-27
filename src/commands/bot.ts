@@ -4,7 +4,7 @@ import { annotate } from "@leemour/cli-core/commands"
 import { Command, Option } from "commander"
 import { BotTokenStore } from "../bot/auth.js"
 import { botOperations } from "../bot/client.js"
-import { checkBody, checkParameter, flagOf, optionKey, readBody } from "../bot/input.js"
+import { checkBody, checkParameter, optionKey, parameterFlag, readBody } from "../bot/input.js"
 import { registryProfiles } from "../bot/registry.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
 import { configuredProfiles } from "../config.js"
@@ -25,7 +25,7 @@ const apiCommand = (operation: ManifestOperation): Command => {
   )
   for (const parameter of operation.parameters) {
     const option = new Option(
-      `--${flagOf(parameter.name)} <value>`,
+      `--${parameterFlag(parameter)} <value>`,
       parameter.description?.split("\n")[0] ?? parameter.name,
     )
     command.addOption(parameter.required ? option.makeOptionMandatory() : option)
@@ -39,9 +39,9 @@ const apiCommand = (operation: ManifestOperation): Command => {
     const options = this.opts<Record<string, string | undefined>>()
     const input: { path: Record<string, string>; query: Record<string, string> } = { path: {}, query: {} }
     for (const parameter of operation.parameters) {
-      const raw = options[optionKey(parameter.name)]
+      const raw = options[optionKey(parameterFlag(parameter))]
       if (raw === undefined) continue
-      const problem = checkParameter(parameter.name, parameter.schema, raw)
+      const problem = checkParameter(parameterFlag(parameter), parameter.schema, raw)
       if (problem) throw new CliError("validation_error", problem)
       if (parameter.in === "path") input.path[parameter.name] = raw
       else if (parameter.in === "query") input.query[parameter.name] = raw

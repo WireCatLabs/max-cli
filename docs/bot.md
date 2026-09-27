@@ -28,7 +28,7 @@ max sales bot me                                        # какой это бо
 - **Группа или канал.** Добавьте туда бота, потом попросите у MAX последние обновления:
 
   ```sh
-  max sales bot api get-updates --limit 10
+  max sales bot api get-updates --query-limit 10
   ```
 
   Номер чата — в поле `chat_id`. Если нового нет, команда ждёт до 30 секунд. Полученные так
