@@ -65,6 +65,7 @@ describe("max commands", () => {
       "chats folders create",
       "chats folders update",
       "chats folders delete",
+      "chats check",
       "contacts add",
       "contacts remove",
       "contacts import",

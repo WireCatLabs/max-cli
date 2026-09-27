@@ -313,6 +313,27 @@ a group's moderation rules, kept on this machine
 max chats rules
 ```
 
+### `max chats check`
+
+judge a group's new messages, members and join requests by its rules, and act as they allow
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats check <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | chat id, or part of a chat name |
+
+| Опция | Что делает |
+|---|---|
+| `--since <id-or-time>` | judge what came after this message id or ISO 8601 time; the saved point stays |
+| `--dry-run` | judge and plan; do nothing |
+| `--allow-dangerous` | do what a rule at consent level flag asks: delete messages, remove people |
+| `--max-actions <n>` | at most this many actions in one check; 10 if not given |
+
 ## `max contacts`
 
 people you have a one-to-one chat with

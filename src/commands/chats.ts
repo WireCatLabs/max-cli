@@ -4,6 +4,7 @@ import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import { ADMIN_RIGHTS, type AdminRight, type MaxClient } from "../client.js"
 import type { ChatKind, GroupSettings } from "../domain/models.js"
+import { checkCommand } from "./check.js"
 import { forCommand } from "./context.js"
 import { foldersCommand } from "./folders.js"
 import { renderPage, window, withPaging } from "./paging.js"
@@ -263,6 +264,7 @@ export const chatsCommand = (): Command => {
     })
   command.addCommand(foldersCommand())
   command.addCommand(rulesCommand())
+  command.addCommand(checkCommand())
 
   return command
 }
