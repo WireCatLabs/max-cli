@@ -549,7 +549,9 @@ max messages send <chat> [text] [options]
 | `--cid <n>` | reuse a client id from an earlier ambiguous send; MAX collapses the duplicate |
 | `--silent` | deliver without a notification |
 | `--reply-to <message>` | answer this message id in the same chat |
-| `--file <path>` | attach a file; .jpg .png .webp .gif go as a photo. Repeat it for more than one |
+| `--file <path>` | attach a file; .jpg .png .webp .gif go as a photo, .mp4 .mov .webm .mkv as a video. Repeat it for more than one |
+| `--as-file` | send every --file as a plain file to download, a video included |
+| `--voice <path>` | send an Ogg Opus file as a voice message, alone, with no text |
 | `--allow-any-file` | send a --file even from a hidden folder, ~/.ssh or max's own folders |
 | `--md, --markdown` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
 | `--at <time>` | let MAX send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now |

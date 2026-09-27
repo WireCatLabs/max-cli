@@ -63,6 +63,7 @@
     "probe:control": "pnpm build && node --experimental-strip-types scripts/probe-control.ts",
     "probe:member-list": "pnpm build && node --experimental-strip-types scripts/probe-member-list.ts",
     "probe:message-count": "pnpm build && node --experimental-strip-types scripts/probe-message-count.ts",
+    "probe:media-send": "pnpm build && node --experimental-strip-types scripts/probe-media-send.ts",
     "probe:video": "pnpm build && node --experimental-strip-types scripts/probe-video.ts",
     "probe:voice": "pnpm build && node --experimental-strip-types scripts/probe-voice.ts",
     "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts"

@@ -53,7 +53,7 @@ export interface SendEntry {
   cid?: number
   length?: number
   /** What was attached, by kind and size — never a file name. */
-  attachments?: { kind: "photo" | "file"; bytes: number }[]
+  attachments?: { kind: "photo" | "video" | "file" | "voice"; bytes: number }[]
   /** When MAX will send it; it counts toward the limit of that hour, not of the hour it was queued. */
   scheduledFor?: string
   /** Whether a pin told the members. */

@@ -2,7 +2,7 @@
  * Does a voice message go through over the binary protocol (`MAX-24`)? Run by hand, never by CI,
  * and only with the owner's yes.
  *
- *   pnpm probe:voice <voice.ogg>            # VARIANT=ms (default) | seconds
+ *   pnpm probe:voice <voice.ogg>            # VARIANT=ms (default) | seconds; TEXT=1 adds a caption
  *
  * **Saved messages (chat 0) only**, one login through `MaxClient`, and the message is deleted at the
  * end. The attachment is the one web.max.ru builds (`FIND-104`, read from its bundles):
@@ -99,10 +99,11 @@ try {
     try {
       const sent = await connection.invoke(64, {
         chatId: 0n,
-        message: { cid: Date.now(), text: "", attaches: [attach] },
+        message: { cid: Date.now(), text: process.env.TEXT ? "max-cli probe caption" : "", attaches: [attach] },
         notify: true,
       })
       sentId = asId(record(sent.message).id)
+      console.log(`  text kept: ${String(record(sent.message).text ?? "").length > 0}`)
       console.log(`64 send: ok (attempt ${attempt}), answer message keys=${keys(sent.message)}`)
       for (const back of Array.isArray(record(sent.message).attaches)
         ? (record(sent.message).attaches as unknown[])

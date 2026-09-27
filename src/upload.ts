@@ -20,6 +20,11 @@ const IMAGE_TYPES: Record<string, string> = {
 
 export const isImage = (path: string): boolean => extname(path).toLowerCase() in IMAGE_TYPES
 
+/** The Bot API's list of video formats; MAX transcodes what it takes. */
+const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".webm", ".mkv"])
+
+export const isVideo = (path: string): boolean => VIDEO_EXTENSIONS.has(extname(path).toLowerCase())
+
 /**
  * A file somebody talked an agent into sending would be a key or a token: those live in hidden
  * files and folders, `~/.ssh` among them, and in max's own folders, which `MAX_*_DIR` can move out
@@ -84,22 +89,29 @@ export const uploadPhoto = async (url: string, path: string, bytes: Buffer): Pro
   return token
 }
 
-/**
- * Measured 2026-09-24: the bytes raw, with `Content-Range: 0-<end>/<size>` — no `bytes ` unit, as
- * PyMax sends it and MAX accepted.
- */
-export const uploadFile = async (url: string, path: string, bytes: Buffer): Promise<void> => {
+const postRaw = async (kind: string, url: string, path: string, bytes: Buffer, range: string): Promise<void> => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
       ...HEADERS,
       "Content-Disposition": `attachment; filename=${encodeURIComponent(basename(path))}`,
-      "Content-Range": `0-${bytes.length - 1}/${bytes.length}`,
+      "Content-Range": range,
       "Content-Type": "application/octet-stream",
     },
     body: bytes,
     signal: uploadDeadline(),
   })
   await response.body?.cancel()
-  if (!response.ok) throw refused("file", response.status)
+  if (!response.ok) throw refused(kind, response.status)
 }
+
+/**
+ * Measured 2026-09-24: the bytes raw, with `Content-Range: 0-<end>/<size>` — no `bytes ` unit, as
+ * PyMax sends it and MAX accepted.
+ */
+export const uploadFile = (url: string, path: string, bytes: Buffer): Promise<void> =>
+  postRaw("file", url, path, bytes, `0-${bytes.length - 1}/${bytes.length}`)
+
+/** Measured 2026-09-27 with the `bytes ` unit, which PyMax and the web client send for these. */
+export const uploadMedia = (kind: "video" | "voice message", url: string, path: string, bytes: Buffer) =>
+  postRaw(kind, url, path, bytes, `bytes 0-${bytes.length - 1}/${bytes.length}`)

@@ -101,6 +101,7 @@ export const wireClient = (invoke: Invoke) => ({
   uploads: {
     photo: (request: RequestOf<(typeof OPERATIONS)["uploads.photo"]>) => invoke(OPERATIONS["uploads.photo"], request),
     file: (request: RequestOf<(typeof OPERATIONS)["uploads.file"]>) => invoke(OPERATIONS["uploads.file"], request),
+    video: (request: RequestOf<(typeof OPERATIONS)["uploads.video"]>) => invoke(OPERATIONS["uploads.video"], request),
   },
 })
 

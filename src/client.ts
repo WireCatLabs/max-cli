@@ -68,7 +68,16 @@ import { WEB_USER_AGENT } from "./spec/identity.js"
 import { buildRequest, checkResponse, type Operation, type RequestOf } from "./spec/index.js"
 import { ASSET_TYPES } from "./spec/operations/assets.js"
 import type { chatsUpdateMembers } from "./spec/operations/chats.js"
-import { isImage, readUpload, uploadFile, uploadPhoto } from "./upload.js"
+import { isImage, isVideo, readUpload, uploadFile, uploadMedia, uploadPhoto } from "./upload.js"
+import { voiceOf } from "./voice.js"
+
+/** One file on its way into a message; `voice` is what a voice message carries besides the bytes. */
+interface Upload {
+  path: string
+  bytes: Buffer
+  kind: "photo" | "video" | "file" | "voice"
+  voice?: { durationMs: number; wave: Uint8Array }
+}
 
 export interface MaxClientOptions {
   store: SessionStore
@@ -1020,11 +1029,19 @@ export class MaxClient {
         replyTo?: Id
         markdown?: boolean
         files?: string[]
+        /** Send every file as a plain file, a video included — how a video went before `MAX-23`. */
+        asFile?: boolean
+        /** An Ogg Opus file sent as a voice message, alone in its message. */
+        voice?: string
         anyFile?: boolean
         at?: number
       } = {},
     ): Promise<Message> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot send")
+      if (options.voice !== undefined && (text !== "" || (options.files ?? []).length > 0)) {
+        // MAX kept a caption beside a voice message (measured 2026-09-27), but web.max.ru never sends one; §34.
+        throw new CliError("validation_error", "a voice message goes alone — no text and no --file beside it")
+      }
       if (options.at !== undefined && options.notify === false) {
         // The web client always sends a scheduled message with `notify: true`; §34.
         throw new CliError(
@@ -1040,19 +1057,24 @@ export class MaxClient {
       }
 
       // Read before the guard holds a place under the limit: a file that is refused sends nothing.
-      const files = await Promise.all(
+      const files: Upload[] = await Promise.all(
         (options.files ?? []).map(async (path) => ({
           path,
           bytes: await readUpload(path, { anyFile: options.anyFile === true }),
-          photo: isImage(path),
+          kind: isImage(path) ? "photo" : isVideo(path) && options.asFile !== true ? "video" : "file",
         })),
       )
+      if (options.voice !== undefined) {
+        const bytes = await readUpload(options.voice, { anyFile: options.anyFile === true })
+        files.push({ path: options.voice, bytes, kind: "voice", voice: await voiceOf(options.voice, bytes) })
+      }
 
       // Measured 2026-09-24: photos share a message, but a file with anything beside it is refused `proto.payload`.
-      if (files.some((file) => !file.photo) && files.length > 1) {
+      // A video is kept alone the same way; a mixed message was never measured.
+      if (files.some((file) => file.kind !== "photo") && files.length > 1) {
         throw new CliError(
           "validation_error",
-          "a file goes in a message of its own — photos can share one; send them apart",
+          "a file or a video goes in a message of its own — photos can share one; send them apart",
         )
       }
 
@@ -1070,10 +1092,7 @@ export class MaxClient {
       }
 
       const cid = options.cid ?? this.#nextCid()
-      const attachments = files.map(({ bytes, photo }) => ({
-        kind: photo ? ("photo" as const) : ("file" as const),
-        bytes: bytes.length,
-      }))
+      const attachments = files.map(({ bytes, kind }) => ({ kind, bytes: bytes.length }))
       const summary = {
         ...(attachments.length > 0 ? { attachments } : {}),
         ...(options.at === undefined ? {} : { scheduledFor: new Date(options.at).toISOString() }),
@@ -1506,7 +1525,7 @@ export class MaxClient {
       replyTo?: Id
       forward?: { chatId: Id; messageId: Id }
       markdown?: boolean
-      files?: { path: string; bytes: Buffer; photo: boolean }[]
+      files?: Upload[]
       /** The command that repeats this attempt, named in `outcome_unknown`. */
       repeat?: string
       at?: number
@@ -2215,12 +2234,23 @@ export class MaxClient {
    * Uploads one file and answers what the message attaches (measured 2026-09-24). An upload is never
    * retried: a failure here happens before `MSG_SEND`, so nothing was sent.
    */
-  async #upload({ path, bytes, photo }: { path: string; bytes: Buffer; photo: boolean }): Promise<Payload> {
+  async #upload({ path, bytes, kind, voice }: Upload): Promise<Payload> {
     const request = { count: 1, type: 0, uploaderType: 0, profile: false } as const
-    if (photo) {
+    if (kind === "photo") {
       const { url } = await this.#wire.uploads.photo(request)
       if (typeof url !== "string") throw new CliError("provider_error", "MAX gave no address to upload the photo to")
       return { _type: "PHOTO", photoToken: await uploadPhoto(url, path, bytes) }
+    }
+    if (kind === "video" || kind === "voice") {
+      const slot = voice ? ({ ...request, type: 2, uploaderType: 1 } as const) : request
+      const info = record(asArray((await this.#wire.uploads.video(slot)).info)[0]) ?? {}
+      if (typeof info.url !== "string" || info.videoId === undefined) {
+        throw new CliError("provider_error", `MAX gave no address to upload the ${kind} to`)
+      }
+      await uploadMedia(voice ? "voice message" : "video", info.url, path, bytes)
+      return voice
+        ? { _type: "AUDIO", audioId: info.videoId, duration: voice.durationMs, wave: voice.wave, token: info.token }
+        : { _type: "VIDEO", videoId: info.videoId, token: info.token, videoType: 0 }
     }
     const info = record(asArray((await this.#wire.uploads.file(request)).info)[0]) ?? {}
     if (typeof info.url !== "string" || info.fileId === undefined) {

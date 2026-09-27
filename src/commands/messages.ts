@@ -244,9 +244,11 @@ export const messagesCommand = (): Command => {
     .option("--reply-to <message>", "answer this message id in the same chat")
     .option(
       "--file <path>",
-      "attach a file; .jpg .png .webp .gif go as a photo. Repeat it for more than one",
+      "attach a file; .jpg .png .webp .gif go as a photo, .mp4 .mov .webm .mkv as a video. Repeat it for more than one",
       (value: string, previous: string[] = []) => [...previous, value],
     )
+    .option("--as-file", "send every --file as a plain file to download, a video included")
+    .option("--voice <path>", "send an Ogg Opus file as a voice message, alone, with no text")
     .option("--allow-any-file", "send a --file even from a hidden folder, ~/.ssh or max's own folders")
     .option("--md, --markdown", "read **bold**, _italic_, ~~struck~~ and `code` in the text; \\ keeps a mark literal")
     .option(
@@ -261,7 +263,8 @@ export const messagesCommand = (): Command => {
       // Before the run directory and before the socket: a body we cannot read is a command that
       // never attempted anything, so there is nothing to record and nothing to close.
       const files: string[] = options.file ?? []
-      const body = text ?? (files.length > 0 ? "" : await readBody())
+      const voice = options.voice === undefined ? undefined : String(options.voice)
+      const body = text ?? (files.length > 0 || voice !== undefined ? "" : await readBody())
 
       const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
 
@@ -276,6 +279,8 @@ export const messagesCommand = (): Command => {
             ...(options.replyTo === undefined ? {} : { replyTo: String(options.replyTo).trim() }),
             ...(options.markdown === true ? { markdown: true } : {}),
             ...(files.length > 0 ? { files } : {}),
+            ...(options.asFile === true ? { asFile: true } : {}),
+            ...(voice === undefined ? {} : { voice }),
             ...(options.allowAnyFile === true ? { anyFile: true } : {}),
             ...(at === undefined ? {} : { at }),
           })

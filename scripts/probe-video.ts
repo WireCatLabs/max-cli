@@ -2,7 +2,7 @@
  * Does a video go out as a video, not as a file (`MAX-23`)? Run by hand, never by CI, and only with
  * the owner's yes.
  *
- *   pnpm probe:video <clip.mp4>
+ *   pnpm probe:video <clip.mp4>          # EARLY=1 sends before push 136; TEXT=1 adds a caption
  *
  * **Saved messages (chat 0) only**, one login through `MaxClient`, and the message is deleted at the
  * end. The steps are PyMax 2.4.1's `upload_video` (code, not measured): 82 `{type: 0,
@@ -76,7 +76,7 @@ try {
   if (!upload.ok) throw new Error("the upload was refused")
 
   const videoId = asId(info.videoId)
-  const deadline = Date.now() + 60_000
+  const deadline = process.env.EARLY ? Date.now() : Date.now() + 60_000
   let ready: (typeof pushes)[number] | undefined
   while (!ready && Date.now() < deadline) {
     ready = pushes.find((push) => push.opcode === 136 && asId(push.payload.videoId) === videoId)
@@ -92,14 +92,15 @@ try {
 
   const attach = { _type: "VIDEO", videoId: info.videoId, token: info.token, videoType: 0 }
   for (let attempt = 1; attempt <= 5; attempt++) {
-    await pause(attempt === 1 ? 2000 : 3000)
+    await pause(attempt === 1 && !process.env.EARLY ? 2000 : attempt === 1 ? 0 : 1000)
     try {
       const sent = await connection.invoke(64, {
         chatId: 0n,
-        message: { cid: Date.now(), text: "", attaches: [attach] },
+        message: { cid: Date.now(), text: process.env.TEXT ? "max-cli probe caption" : "", attaches: [attach] },
         notify: true,
       })
       sentId = asId(record(sent.message).id)
+      console.log(`  text kept: ${String(record(sent.message).text ?? "").length > 0}`)
       console.log(`64 send: ok (attempt ${attempt})`)
       for (const back of Array.isArray(record(sent.message).attaches)
         ? (record(sent.message).attaches as unknown[])

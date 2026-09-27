@@ -39,3 +39,26 @@ export const uploadsFile = defineOperation({
       'Answers `{info: [{url, fileId, token}]}`. The bytes are POSTed raw with `Content-Range: 0-<end>/<size>`; MAX then pushes 136 `{fileId}`, and a send before that is refused `attachment.not.ready`. The message attaches `{_type: "FILE", fileId}`.',
   },
 })
+
+export const uploadsVideo = defineOperation({
+  name: "uploads.video",
+  constant: "VIDEO_UPLOAD",
+  opcode: 82,
+  auth: true,
+  request: v.union([
+    v.strictObject({ count: v.literal(1), type: v.literal(0), uploaderType: v.literal(0), profile: v.literal(false) }),
+    v.strictObject({ count: v.literal(1), type: v.literal(2), uploaderType: v.literal(1), profile: v.literal(false) }),
+  ]),
+  response: v.looseObject({ info: v.optional(v.array(v.looseObject({}))) }),
+  guard: null,
+  provenance: {
+    confidence: "measured",
+    sources: [
+      "measured against MAX 2026-09-27 in Saved messages (`pnpm probe:video`, `pnpm probe:voice`)",
+      "PyMax 2.4.1 upload_video",
+      "web.max.ru bundle (voice)",
+    ],
+    notes:
+      'Answers `{info: [{url, videoId, token}]}`. `type: 0` is a video; `type: 2, uploaderType: 1` an Ogg Opus voice message. The bytes are POSTed raw with `Content-Range: bytes 0-<end>/<size>`; a send straight after the upload was accepted, before push 136 `{videoId}`. A video attaches `{_type: "VIDEO", videoId, token, videoType: 0}`, a voice message `{_type: "AUDIO", audioId: <videoId>, duration, wave, token}` — `duration` in ms, `wave` 80 bytes of 0–127.',
+  },
+})
