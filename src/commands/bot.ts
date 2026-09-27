@@ -11,6 +11,7 @@ import { configuredProfiles } from "../config.js"
 import { callbacksCommand, commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext } from "./bot-context.js"
 import { adminsCommand, membersCommand } from "./bot-members.js"
+import { peopleCommand } from "./bot-people.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
 import { guardedCall, recipientsCommand, sendsCommand } from "./bot-sends.js"
 import { menuCommand, uploadsCommand, webhooksCommand } from "./bot-setup.js"
@@ -149,6 +150,7 @@ export const botCommand = (): Command => {
 
   command.addCommand(messagesCommand())
   command.addCommand(chatsCommand())
+  command.addCommand(peopleCommand())
   command.addCommand(recipientsCommand())
   command.addCommand(sendsCommand())
   for (const more of [

@@ -7,6 +7,7 @@ import { accountOf, fromStore, keep, keepChat, PROVIDER } from "../bot/keep.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { asFirstWord } from "../profile.js"
 import { botContext } from "./bot-context.js"
+import { addBetween, searchMessages } from "./bot-people.js"
 import { guardedCall, sendCommands } from "./bot-sends.js"
 
 type Context = ReturnType<typeof botContext>
@@ -60,7 +61,7 @@ export const messagesCommand = (): Command => {
       const self = (await client.me()).user_id
       context.registry.rememberBot(self)
       const messages = await client.messages(chatId, limit, self)
-      await keep(self, messages, "history", context.streams.diagnostic)
+      await keep(self, messages, "history", context.streams.diagnostic, client.takeSenders())
       context.registry.observe([{ id: chatId }])
       show(context, messages)
     })
@@ -81,24 +82,29 @@ export const messagesCommand = (): Command => {
       const self = (await client.me()).user_id
       context.registry.rememberBot(self)
       const found = await client.message(message, self)
-      await keep(self, [found], "history", context.streams.diagnostic)
+      await keep(self, [found], "history", context.streams.diagnostic, client.takeSenders())
       show(context, [found])
     })
 
   command
-    .command("search <text>")
+    .command("search [text]")
     .option("--limit <n>", "how many", (value) => Number.parseInt(value, 10))
-    .description(
-      "search the messages this bot has read, sent or received on this machine — the local copy only, newest first",
+    .option(
+      "--from <who>",
+      "only what this person wrote — an id, @username or part of a name; repeat it for any of several",
+      (value: string, previous: string[] = []) => [...previous, value],
     )
-    .action(async function (this: Command, text: string) {
+    .description(
+      "search the messages this bot has read, sent or received on this machine — the local copy only, newest " +
+        "first; by text, by --from, or both",
+    )
+    .action(async function (this: Command, text: string | undefined, options: { from?: string[] }) {
       const context = botContext(this, { offline: true })
-      const botId = storedBotId(context)
-      const page = await fromStore((store) =>
-        store.search(text, { limit: context.settings.limit, account: accountOf(botId) }),
-      )
-      show(context, page.items)
+      storedBotId(context)
+      show(context, await searchMessages(context, text, options.from))
     })
+
+  addBetween(command)
 
   sendCommands(command)
   return command
