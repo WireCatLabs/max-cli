@@ -170,6 +170,11 @@ export interface ReviewChat extends Pick<Chat, "id" | "title" | "kind"> {
   messages: ReviewMessage[]
   /** The chat had more in the window than one review reads; the oldest are here. */
   more: boolean
+  /**
+   * `--unanswered` only: whose words count as an answer. `owner` when the login did not say who
+   * the group's admins are.
+   */
+  answeredBy?: "owner" | "owner-and-admins"
 }
 
 /** `max review`: everything said since a point, for someone sorting out who owes what. */
@@ -186,6 +191,8 @@ export interface Review {
   /** Why `--transcribe` could not run, when it could not. */
   transcribeProblem?: string
   partial: boolean
+  /** `--unanswered`: only questions still open after this many hours are in `chats`. */
+  unanswered?: { olderThanHours: number }
 }
 
 export interface Contact {

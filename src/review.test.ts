@@ -10,18 +10,32 @@ import { mockMax } from "./testing/mock-max.js"
 
 const ME = 10000001
 const THEM = 10000002
+const ADMIN = 10000003
+const OTHER = 10000004
 const now = Date.now()
 
-type Wire = { id: bigint; time: number; sender: number; text: string; attaches: object[] }
+type Wire = { id: bigint; time: number; sender: number; text: string; attaches: object[]; link?: object }
 
 const message = (minutesAgo: number, sender: number, text: string, attaches: object[] = []): Wire => {
   const time = now - minutesAgo * 60 * 1000
   return { id: (BigInt(time) << 16n) + 1n, time, sender, text, attaches }
 }
 
+const replyTo = (question: Wire, minutesAgo: number, sender: number, text: string): Wire => ({
+  ...message(minutesAgo, sender, text),
+  link: { type: "REPLY", chatId: 111, message: { id: question.id, sender: question.sender, text: question.text } },
+})
+
 /** History that honours `from` and `forward`, as MAX does, so paging is exercised for real. */
-const reviewMax = (histories: Record<number, Wire[]>, { lastEventMinutesAgo = {} as Record<number, number> } = {}) => {
+const reviewMax = (
+  histories: Record<number, Wire[]>,
+  {
+    lastEventMinutesAgo = {} as Record<number, number>,
+    groupFields = {} as Record<number, Record<string, unknown>>,
+  } = {},
+) => {
   const chats = Object.entries(histories).map(([id, messages]) => ({
+    ...groupFields[Number(id)],
     id: Number(id),
     title: `Chat ${id}`,
     type: "CHAT",
@@ -46,6 +60,7 @@ const reviewMax = (histories: Record<number, Wire[]>, { lastEventMinutesAgo = {}
       },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
       [Opcode.CHATS_LIST]: { chats: [] },
+      [Opcode.CONTACT_INFO]: { contacts: [] },
     },
   })
   const keyring = memoryKeyring()
@@ -131,5 +146,86 @@ describe("max review", () => {
     expect(asked.code).toBe(0)
     expect(asked.json.transcribeProblem).toMatch(/max models audio download/)
     expect(asked.stderr).toContain("incomplete")
+  })
+
+  describe("--unanswered", () => {
+    it("keeps questions nobody on the admin side answered, and drops answered, fresh and non-questions", async () => {
+      const post = message(400, ADMIN, "The meetup moves to Sunday")
+      const replied = message(100, THEM, "and the price?")
+      const replyByMe = message(80, THEM, "can you check the date?")
+      const { environment } = reviewMax(
+        {
+          111: [
+            post,
+            replyTo(post, 350, THEM, "that clashes with the market"),
+            message(340, OTHER, "for me too"),
+            message(300, THEM, "when is the meetup?"),
+            message(290, ADMIN, "Saturday"),
+            message(200, THEM, "anyone know the address?"),
+            message(190, OTHER, "no idea"),
+            message(150, THEM, "thanks all"),
+            message(140, THEM, "here it is https://shop.example/item?id=5&utm_source=max"),
+            replied,
+            message(90, OTHER, "good question"),
+            replyByMe,
+            replyTo(replied, 50, ADMIN, "free"),
+            replyTo(replyByMe, 45, ME, "checking"),
+            message(30, THEM, "is it still on?"),
+          ],
+        },
+        { groupFields: { 111: { owner: ME, admins: [ADMIN] } } },
+      )
+
+      const { code, json, stderr } = await review(
+        ["r-open", "review", "--since", since(500), "--unanswered", "1", "--json"],
+        environment,
+      )
+
+      expect(code).toBe(0)
+      expect(texts(json.chats[0])).toEqual(["that clashes with the market", "anyone know the address?"])
+      expect(json.chats[0].answeredBy).toBe("owner-and-admins")
+      expect(json.unanswered).toEqual({ olderThanHours: 1 })
+      expect(stderr).not.toContain("the next review starts")
+    })
+
+    it("says so when a group's admins are not known, and then counts only the owner's answers", async () => {
+      const { environment } = reviewMax({ 111: [message(300, THEM, "when is it?"), message(290, ADMIN, "Sunday")] })
+
+      const { json, stderr } = await review(
+        ["r-unknown", "review", "--since", since(400), "--unanswered", "--json"],
+        environment,
+      )
+
+      expect(json.chats).toEqual([])
+      const loose = await review(
+        ["r-unknown", "review", "--since", since(400), "--unanswered", "0", "--json"],
+        environment,
+      )
+      expect(texts(loose.json.chats[0])).toEqual(["when is it?"])
+      expect(loose.json.chats[0].answeredBy).toBe("owner")
+      expect(loose.stderr).toContain("admins are not known")
+      expect(stderr).not.toContain("admins are not known")
+    })
+
+    it("reads only the chat --chat names", async () => {
+      const { environment } = reviewMax({
+        111: [message(300, THEM, "one?")],
+        222: [message(300, THEM, "two?")],
+      })
+
+      const { json } = await review(
+        ["r-chat", "review", "--since", since(400), "--chat", "222", "--unanswered", "0", "--json"],
+        environment,
+      )
+
+      expect(json.chats.map((chat: { id: string }) => chat.id)).toEqual(["222"])
+    })
+
+    it("refuses hours that are not a number", async () => {
+      const { environment } = reviewMax({ 111: [message(300, THEM, "one?")] })
+      const { code, stderr } = await review(["r-bad", "review", "--unanswered", "soon", "--json"], environment)
+      expect(code).not.toBe(0)
+      expect(stderr).toContain("--unanswered takes hours")
+    })
   })
 })

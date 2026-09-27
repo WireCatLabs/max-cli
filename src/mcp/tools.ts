@@ -141,8 +141,11 @@ const READ_TOOLS = {
       "owes, what others owe and what is unclear; the sorting is yours. Voice messages carry `transcript` when " +
       "heard; `unheard` lists the rest, and `transcribe: true` hears them on this machine (slow, up to a minute " +
       "per five minutes of speech; never downloads a model). `complete: false` means something was skipped, cut " +
-      "short or unheard — then do not move the boundary. Marks nothing read. Returns { since, until, complete, " +
-      "chats: [{ id, title, kind, more, messages }], skipped, unheard, partial }.",
+      "short or unheard — then do not move the boundary. With `unanswered_after_hours`, `chats` holds only " +
+      "questions nobody answered: a message with `?` or a reply to the owner or an admin, that none of them replied " +
+      "to or spoke next after; `answeredBy: owner` means the group's admins were not known. Marks nothing read. " +
+      "Returns { since, until, complete, chats: [{ id, title, kind, more, messages, answeredBy? }], skipped, " +
+      "unheard, partial, unanswered? }.",
     input: v.object({
       since: v.optional(
         v.pipe(
@@ -153,15 +156,28 @@ const READ_TOOLS = {
         ),
       ),
       transcribe: v.optional(v.pipe(v.boolean(), v.description("hear voice messages that have no text yet"))),
+      chat: v.optional(v.pipe(v.string(), v.description("only this chat: an id, or part of a chat name"))),
+      unanswered_after_hours: v.optional(
+        v.pipe(
+          v.number(),
+          v.minValue(0),
+          v.description(
+            "only questions to the owner or a group's admins that nobody answered, asked at least this many hours ago",
+          ),
+        ),
+      ),
     }),
     annotations: READ,
     answer: async (client, args, { profile, transcribeModel }) => {
       const since = args.since === undefined ? reviewStart() : client.messages.moment(args.since, "since")
+      const chatId = args.chat === undefined ? undefined : await client.chats.resolve(args.chat)
       const cache = await openProfileCache(profile)
       try {
         return await review(client, {
           since,
           cache,
+          ...(chatId === undefined ? {} : { chatId }),
+          ...(args.unanswered_after_hours === undefined ? {} : { unansweredAfterHours: args.unanswered_after_hours }),
           ...(args.transcribe === true ? { transcribeWith: transcribeModel } : {}),
         })
       } finally {

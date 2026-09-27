@@ -3,7 +3,7 @@ import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import type { MessageHit, Review } from "../domain/models.js"
 import { renderMessages } from "../rendering/messages.js"
-import { REVIEW_DAYS, review, reviewStart } from "../review.js"
+import { REVIEW_DAYS, review, reviewStart, UNANSWERED_HOURS, unansweredHours } from "../review.js"
 import { forCommand } from "./context.js"
 
 /**
@@ -16,6 +16,11 @@ export const reviewCommand = (): Command =>
     .description("every message, yours too, in chats that changed since a point — for reviewing who owes what")
     .option("--since <id-or-time>", `where the last review ended; ${REVIEW_DAYS} days ago if not given`)
     .option("--transcribe", "transcribe voice messages not heard yet; slow, and the model must be downloaded")
+    .option("--chat <chat>", "only this chat: an id, or part of a chat name")
+    .option(
+      "--unanswered [hours]",
+      `only questions to you or a group's admins that nobody answered, asked at least this long ago; ${UNANSWERED_HOURS} hours if not given`,
+    )
     .action(async function (this: Command) {
       const options = this.optsWithGlobals()
       const context = forCommand(this)
@@ -31,9 +36,13 @@ export const reviewCommand = (): Command =>
         try {
           const since =
             options.since === undefined ? reviewStart() : client.messages.moment(String(options.since), "--since")
+          const chatId = options.chat === undefined ? undefined : await client.chats.resolve(String(options.chat))
+          const hours = options.unanswered === undefined ? undefined : unansweredHours(options.unanswered)
           const found = await review(client, {
             since,
             cache,
+            ...(chatId === undefined ? {} : { chatId }),
+            ...(hours === undefined ? {} : { unansweredAfterHours: hours }),
             ...(options.transcribe === true ? { transcribeWith: settings.transcribeModel } : {}),
           })
 
@@ -84,6 +93,18 @@ const notes = (found: Review, note: (message: string) => void): void => {
     )
   }
   if (found.transcribeProblem) note(`not transcribed: ${found.transcribeProblem}`)
+  for (const chat of found.chats) {
+    if (chat.answeredBy === "owner") {
+      note(`${chat.title ?? chat.id}: its admins are not known, so only your own answers count`)
+    }
+  }
+  if (found.unanswered) {
+    note(
+      `questions from ${found.since} to ${found.until} still open after ${found.unanswered.olderThanHours} hours; ` +
+        "an answer after the review's end is not seen",
+    )
+    return
+  }
   note(
     found.complete
       ? `from ${found.since} to ${found.until} — the next review starts with --since ${found.until}`
