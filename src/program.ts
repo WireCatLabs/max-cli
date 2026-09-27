@@ -26,6 +26,7 @@ import { inboxCommand } from "./commands/inbox.js"
 import { mcpCommand } from "./commands/mcp.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
+import { pollsCommand } from "./commands/polls.js"
 import { reactionsCommand } from "./commands/reactions.js"
 import { recipientsCommand } from "./commands/recipients.js"
 import { reviewCommand } from "./commands/review.js"
@@ -103,6 +104,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(backupCommand())
   program.addCommand(exportCommand())
   program.addCommand(modelsCommand())
+  program.addCommand(pollsCommand())
   program.addCommand(reactionsCommand())
   program.addCommand(recipientsCommand())
   program.addCommand(sendsCommand())

@@ -31,14 +31,6 @@ operation is measured first in Saved messages (chat 0), as replies and reactions
 and needs the owner's yes before it ships. Deleting messages was ruled out (`NEED-32`) until the owner asked for it on 2026-09-24 (`MAX-47`); marking
 read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
-- **MAX-28** · P2 · 🚧 `feat/polls` · Polls: show them when reading, vote (`SEND_VOTE` 304
-  `{chatId, messageId, pollId, answersIds}`), create one (a `_type: "POLL"` attachment on `MSG_SEND`
-  64, `settings` 2 multiple | 4 revote). **Creating one works over the binary protocol** — accepted
-  and deleted in Saved messages by `pnpm smoke:live`, 2026-09-25; over JSON it was refused with
-  `proto.payload`, most likely the float64 of `FIND-163`. Reopened by the owner 2026-09-25 (`NEED-261`)
-  after the ⏸️ of the same morning. web.max.ru still does not display polls («Обновите MAX…»), so
-  say in the output that recipients on the web will not see it. Branch `feat/max-28-polls` is on
-  the old JSON protocol: start again from `main`, take its parser and command.
 - **MAX-48** · P3 · Send a round video note ("кружок"): opcode 82 `{type: 1, uploaderType: 1}`,
   `thumbhash` from the upload answer, `_type: "VIDEO"` with `videoType: 1`. MAX refuses a file that
   is not 480×480, `yuv420p`, limited range, bt709, baseline, AAC 48 kHz mono (PyMax #94). `thumbhash`

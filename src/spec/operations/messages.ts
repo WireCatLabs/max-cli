@@ -117,8 +117,9 @@ export const messagesEdit = defineOperation({
   request: v.strictObject({
     chatId: id(),
     messageId: id(),
-    text: v.string(),
-    elements: v.array(v.strictObject({ type: v.string(), from: v.number(), length: v.number() })),
+    /** Left out when closing a poll, as the web client does: only the attachment changes. */
+    text: v.optional(v.string()),
+    elements: v.optional(v.array(v.strictObject({ type: v.string(), from: v.number(), length: v.number() }))),
     /** `attachments`, not `attaches` as in MSG_SEND — every source spells them differently. */
     attachments: v.array(v.unknown()),
   }),
@@ -199,6 +200,33 @@ export const messagesUnreact = defineOperation({
     confidence: "measured",
     sources: ["measured against MAX 2026-09-24 in Saved messages", "tsmax removeReaction", "PyMax remove_reaction"],
     notes: "Answers the reactions left, `{reactionInfo: {}}` when none. A second call is answered the same.",
+  },
+})
+
+export const messagesPollVote = defineOperation({
+  name: "messages.pollVote",
+  constant: "SEND_VOTE",
+  opcode: 304,
+  auth: true,
+  request: v.strictObject({
+    chatId: id(),
+    messageId: id(),
+    pollId: id(),
+    /** Plain integers, not ids: wrapped as 64-bit, MAX answered `proto.payload` and closed the connection. Empty takes the vote back. */
+    answersIds: v.array(v.pipe(v.number(), v.integer(), v.minValue(0))),
+  }),
+  response: v.looseObject({ state: v.optional(v.looseObject({})) }),
+  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", ...messageOf(request) }),
+  provenance: {
+    confidence: "measured",
+    sources: [
+      "measured 2026-09-27 in Saved messages (`pnpm probe:polls`, `FIND-247`): a vote, two answers, an empty list, a vote on a closed poll",
+      "web.max.ru `_app/immutable/chunks/5oCuRT0F.js` (2026-09-24, `FIND-140`)",
+      "PyMax 2.4.1 `vote_poll`",
+    ],
+    notes:
+      "Answers the poll's new `state`: `{total, result: [{answerId, voteCount, options, rate, votes}], voterPreviewIds}`, " +
+      "bit 1 of `options` marking the owner's own vote. A closed poll is refused with `poll.denied`.",
   },
 })
 

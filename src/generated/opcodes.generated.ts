@@ -71,6 +71,7 @@ export const Opcode = {
   AUTH_QR_APPROVE: 290,
   LOGIN_BY_QR: 291,
   BANNERS_GET: 302,
+  SEND_VOTE: 304,
 } as const
 
 export type Opcode = (typeof Opcode)[keyof typeof Opcode]

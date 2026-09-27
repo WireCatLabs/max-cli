@@ -2,6 +2,8 @@ import { CliError } from "@leemour/cli-core"
 import type { CacheStore, PersonOrder, SyncSummary } from "./cache/store.js"
 import {
   namesFrom,
+  POLL_CLOSED,
+  pollSettings,
   SETTING_FLAGS,
   toChat,
   toContact,
@@ -9,6 +11,7 @@ import {
   toGroupCard,
   toGroupMember,
   toMessage,
+  toPoll,
   toProfile,
   toReactions,
   toSession,
@@ -37,6 +40,8 @@ import type {
   Page,
   PersonCard,
   Pin,
+  Poll,
+  PollMessage,
   Profile,
   QuotedMessage,
   Reactions,
@@ -1280,6 +1285,178 @@ export class MaxClient {
     },
   }
 
+  /**
+   * **Polls: vote, take a vote back, close one's own, create one.** Every one of them is a write
+   * somebody else can see, so it passes the send guard and the journal under the kind of what it is:
+   * a vote is a `reaction`, closing is an `edit` of the owner's message, a new poll is a `message`.
+   * A vote is never retried — nothing measured makes a blind repeat safe.
+   *
+   * The shapes were measured in Saved messages on 2026-09-27 (`pnpm probe:polls`, `FIND-247`). The
+   * checks before sending are the web client's, so what it would refuse never reaches MAX.
+   */
+  readonly polls = {
+    vote: async (chatId: Id, messageId: Id, answerIds: Id[]): Promise<PollMessage> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot vote")
+      this.#guard({ chatId, kind: "reaction" }, messageId)
+
+      try {
+        await this.#connectOnce()
+        const { attach, poll } = await this.#poll(chatId, messageId)
+        const voted = poll.answers.some((answer) => answer.mine)
+        if (answerIds.length === 0 && !voted) {
+          throw new CliError("validation_error", `you have not voted in the poll of message ${messageId}`)
+        }
+        if (answerIds.length === 0 && !poll.revote) {
+          throw new CliError("validation_error", `the poll of message ${messageId} does not let a vote be taken back`)
+        }
+        if (answerIds.length > 0 && voted && !poll.revote) {
+          throw new CliError(
+            "validation_error",
+            `you have voted in the poll of message ${messageId}, and it does not let a vote change`,
+          )
+        }
+        if (answerIds.length > 1 && !poll.multiple) {
+          throw new CliError(
+            "validation_error",
+            `the poll of message ${messageId} takes one answer, not ${answerIds.length}`,
+          )
+        }
+        const unknown = answerIds.find((id) => !poll.answers.some((answer) => answer.id === id))
+        if (unknown !== undefined) {
+          throw new CliError(
+            "validation_error",
+            `the poll of message ${messageId} has no answer ${unknown} — its answers are ${poll.answers.map((answer) => answer.id).join(", ")}`,
+          )
+        }
+
+        const answer = await this.#wire.messages.pollVote({
+          chatId,
+          messageId,
+          pollId: poll.id,
+          answersIds: answerIds.map(Number),
+        })
+        this.#cache?.messages.invalidate(chatId)
+        this.#sends?.record({ chatId, kind: "reaction", outcome: "sent", messageId })
+        const state = record(answer.state)
+        return { chatId, messageId, poll: (state && toPoll({ ...attach, state })) ?? poll }
+      } catch (error) {
+        this.#sends?.record({
+          chatId,
+          kind: "reaction",
+          outcome: "failed",
+          messageId,
+          errorCode: asCliError(error).code,
+        })
+        throw error
+      }
+    },
+
+    /** Closes the owner's own poll: the web client edits the message with the `closed` bit raised. */
+    close: async (chatId: Id, messageId: Id): Promise<PollMessage> => {
+      if (this.#offline)
+        throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot close a poll")
+      this.#guard({ chatId, kind: "edit" }, messageId)
+
+      try {
+        await this.#connectOnce()
+        const { attach, poll, outgoing } = await this.#poll(chatId, messageId)
+        if (!outgoing) throw new CliError("validation_error", `the poll of message ${messageId} is not yours to close`)
+
+        // What the web client sends back: the answers' text only, no ids and no votes.
+        const closed = {
+          _type: "POLL",
+          pollId: attach.pollId,
+          title: attach.title,
+          answers: asArray(attach.answers).map((each) => ({ text: each.text })),
+          settings: (typeof attach.settings === "number" ? attach.settings : 0) | POLL_CLOSED,
+        }
+        const answer = await this.#wire.messages.edit({ chatId, messageId, attachments: [closed] })
+        this.#cache?.messages.invalidate(chatId)
+        this.#sends?.record({ chatId, kind: "edit", outcome: "sent", messageId })
+        const after = asArray(record(answer.message)?.attaches).find((each) => each._type === "POLL")
+        return { chatId, messageId, poll: (after && toPoll(after)) ?? { ...poll, closed: true } }
+      } catch (error) {
+        this.#sends?.record({ chatId, kind: "edit", outcome: "failed", messageId, errorCode: asCliError(error).code })
+        throw error
+      }
+    },
+
+    /**
+     * A new message whose one attachment is the poll — so it goes through `#deliver`, with its `cid`
+     * and its one retry, like any message.
+     */
+    create: async (
+      chatId: Id,
+      question: string,
+      answers: string[],
+      options: { multiple?: boolean; anonymous?: boolean; revote?: boolean; cid?: number; notify?: boolean } = {},
+    ): Promise<Message> => {
+      if (this.#offline)
+        throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot create a poll")
+      if (question.trim() === "") throw new CliError("validation_error", "a poll needs a question")
+      if (answers.length < 2 || answers.some((answer) => answer.trim() === "")) {
+        throw new CliError("validation_error", "a poll needs at least two answers, none of them empty")
+      }
+
+      try {
+        this.#sends?.check({ chatId, kind: "message", ...(options.cid === undefined ? {} : { cid: options.cid }) })
+      } catch (error) {
+        this.#sends?.record({ chatId, kind: "message", outcome: "refused", errorCode: asCliError(error).code })
+        throw error
+      }
+
+      const cid = options.cid ?? this.#nextCid()
+      const attach = {
+        _type: "POLL",
+        title: question,
+        answers: answers.map((text) => ({ text })),
+        settings: pollSettings(options),
+      }
+      try {
+        const sent = await this.#deliver(chatId, "", cid, {
+          ...options,
+          attaches: [attach],
+          repeat: `max polls create ${chatId} …`,
+        })
+        this.#sends?.record({
+          chatId,
+          kind: "message",
+          outcome: "sent",
+          messageId: sent.id,
+          cid,
+          length: question.length,
+        })
+        return sent
+      } catch (error) {
+        const failure = asCliError(error)
+        this.#sends?.record({
+          chatId,
+          kind: "message",
+          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
+          cid,
+          errorCode: failure.code,
+        })
+        throw error
+      }
+    },
+  }
+
+  /** The poll of one message, whole as MAX sends it and read, or a refusal that says why there is none. */
+  async #poll(chatId: Id, messageId: Id): Promise<{ attach: Payload; poll: Poll; outgoing: boolean }> {
+    const raw = await this.#rawMessage(chatId, messageId)
+    const attach = asArray(raw.attaches).find((each) => each._type === "POLL")
+    if (!attach) throw new CliError("validation_error", `message ${messageId} carries no poll`)
+    const poll = toPoll(attach)
+    if (!poll)
+      throw new CliError(
+        "validation_error",
+        `the poll of message ${messageId} is a newer kind this version cannot read`,
+      )
+    if (poll.closed) throw new CliError("validation_error", `the poll of message ${messageId} is closed`)
+    const lookup = { names: namesFrom(this.#session().contacts), ...viewer(this.#store) }
+    return { attach, poll, outgoing: toMessage(raw, chatId, lookup).outgoing === true }
+  }
+
   readonly folders = {
     list: async (): Promise<Folder[]> => (await this.#folders()).map(toFolder),
 
@@ -1526,6 +1703,8 @@ export class MaxClient {
       forward?: { chatId: Id; messageId: Id }
       markdown?: boolean
       files?: Upload[]
+      /** Attachments that need no upload — a poll. */
+      attaches?: Payload[]
       /** The command that repeats this attempt, named in `outcome_unknown`. */
       repeat?: string
       at?: number
@@ -1533,7 +1712,7 @@ export class MaxClient {
   ): Promise<Message> {
     await this.#connectOnce()
     const session = this.#session()
-    const attaches = []
+    const attaches: unknown[] = [...(options.attaches ?? [])]
     for (const file of options.files ?? []) attaches.push(await this.#upload(file))
     const { text: plain, markup } = options.markdown ? parseMarkdown(text) : { text, markup: [] }
     // A forward carries no text or markup of its own — the web client leaves both out, and so was it measured.
