@@ -4,8 +4,10 @@ import { CliError, singleLine } from "@leemour/cli-core"
 import { describeOptions, describeProgram } from "@leemour/cli-core/commands"
 import { type CompletionSources, formatSuggestions, type Suggestion, suggest } from "@leemour/cli-core/completion"
 import { Command } from "commander"
+import { ChatRegistry } from "../bot/registry.js"
 import { type CacheStore, openProfileCache, profileCacheFile } from "../cache/index.js"
 import { configuredProfiles } from "../config.js"
+import { knownProfiles } from "../diagnose.js"
 import { commandWords, DEFAULT_PROFILE, liftProfile, rootOf, usableProfileName } from "../profile.js"
 import { outputFor } from "./context.js"
 
@@ -43,15 +45,15 @@ export const completeCommand = (): Command =>
       // The last word is still being typed, so it is never taken for a profile: `mess` is on its way to `messages`.
       const { profile, rest } =
         words.length > 1 ? liftProfile(words, commandWords(root)) : { profile: undefined, rest: words }
-      const cache = await readableCache(
-        profile ?? process.env.MAX_PROFILE_LOCK ?? process.env.MAX_PROFILE ?? DEFAULT_PROFILE,
-      )
+      const named = profile ?? process.env.MAX_PROFILE_LOCK ?? process.env.MAX_PROFILE ?? DEFAULT_PROFILE
+      const bot = rest[0] === "bot"
+      const cache = bot ? undefined : await readableCache(named)
       try {
         const suggestions = suggest({
           commands: describeProgram(root),
           globalOptions: describeOptions(root),
           words: rest.length > 0 ? rest : [""],
-          sources: sourcesFrom(cache, profile === undefined),
+          sources: bot ? botSourcesFrom(named, profile === undefined) : sourcesFrom(cache, profile === undefined),
         })
         streams.data(formatSuggestions(suggestions))
       } finally {
@@ -80,6 +82,25 @@ const sourcesFrom = (cache: CacheStore | undefined, atTheStart: boolean): Comple
   }
 }
 
+/** A bot's chats are the ones it has seen (`bots/<profile>.json`); the personal cache is another account's. */
+const botSourcesFrom = (profile: string, atTheStart: boolean): CompletionSources => {
+  const chats = (): Suggestion[] => {
+    if (process.env.MAX_PROFILE_LOCK && profile !== process.env.MAX_PROFILE_LOCK) return []
+    try {
+      return new ChatRegistry(usableProfileName(profile))
+        .list()
+        .map((chat) => ({ value: chat.id, description: singleLine(chat.title ?? "") }))
+    } catch {
+      return []
+    }
+  }
+  return {
+    arguments: { chat: chats },
+    options: { chat: chats },
+    ...(atTheStart ? { firstWord: profileNames } : {}),
+  }
+}
+
 /**
  * **Ids only, never a title or a name as the word.** bash's `compgen -W` expands `$(…)` in every
  * word it is given, and a title is whatever somebody else typed — so the id is the word, and the
@@ -98,7 +119,7 @@ const personSuggestions = (cache: CacheStore): Suggestion[] =>
 
 const profileNames = (): string[] => {
   try {
-    return configuredProfiles()
+    return knownProfiles({ configured: configuredProfiles() }).map(({ name }) => name)
   } catch {
     return []
   }

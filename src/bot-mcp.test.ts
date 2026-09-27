@@ -120,6 +120,14 @@ describe("max bot mcp", () => {
     expect((await call(client, "max_bot_me")).body).toMatchObject({ username: "helper_bot" })
   })
 
+  it("answers max_bot_status with the token's source, the bot and the writing tools that are on", async () => {
+    const { client } = await connect({ allowSend: true })
+    const { body } = await call(client, "max_bot_status")
+    expect(body).toMatchObject({ kind: "bot", auth: { username: "helper_bot" }, allow: "all" })
+    expect(body.writes).toContain("max_bot_messages_send")
+    expect(JSON.stringify(body)).not.toContain("bot-token")
+  })
+
   it("sends through the command, so the journal has it — and a text starting with - is text", async () => {
     const { client } = await connect({ allowSend: true })
     const { isError } = await call(client, "max_bot_messages_send", { chat: "-100", text: "-5 градусов" })

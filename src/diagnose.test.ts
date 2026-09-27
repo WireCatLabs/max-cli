@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { beforeEach, describe, expect, it } from "vitest"
 import { SCHEMA_VERSION } from "./cache/schema.js"
-import { diagnose } from "./diagnose.js"
+import { diagnose, knownProfiles } from "./diagnose.js"
 
 let home: string
 
@@ -74,6 +74,39 @@ describe("what a command depends on", () => {
     writeFileSync(at("state", "profiles", "work.moderation.json"), "{}")
 
     expect((await look()).loggedInProfiles).toEqual(["work"])
+  })
+
+  it("lists every profile with what it holds: personal, bot, both, or only configured", async () => {
+    withState("home", { deviceId: "d", logins: 1 })
+    withState("both", { deviceId: "e", logins: 1 })
+    mkdirSync(at("state", "bots", "joins"), { recursive: true })
+    writeFileSync(at("state", "bots", "shop.json"), JSON.stringify({ chats: [] }))
+    writeFileSync(at("state", "bots", "both.json"), JSON.stringify({ chats: [] }))
+    writeFileSync(at("state", "profiles", "home.moderation.json"), "{}")
+
+    expect(knownProfiles({ stateDir: at("state"), configured: ["planned"] })).toEqual([
+      { name: "both", personal: true, bot: true, configured: false },
+      { name: "home", personal: true, bot: false, configured: false },
+      { name: "planned", personal: false, bot: false, configured: true },
+      { name: "shop", personal: false, bot: true, configured: false },
+    ])
+  })
+
+  it("reports the bot side of a profile, never its token", async () => {
+    mkdirSync(at("state", "bots"), { recursive: true })
+    writeFileSync(at("state", "bots", "shop.json"), JSON.stringify({ botId: "42", chats: [{ id: "1" }, { id: "2" }] }))
+
+    const report = await look({
+      profile: "shop",
+      storedBotToken: (profile: string) => (profile === "shop" ? "keyring" : undefined),
+    })
+
+    expect(report.bot).toMatchObject({
+      token: { present: true, from: "keyring" },
+      registry: { exists: true, botKnown: true, chats: 2 },
+    })
+    expect(report.profiles).toEqual([{ name: "shop", personal: false, bot: true, configured: false }])
+    expect(JSON.stringify(report)).not.toContain('"42"')
   })
 
   describe("the token", () => {

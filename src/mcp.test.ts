@@ -112,6 +112,16 @@ const call = async (client: Client, name: string, args: Record<string, unknown> 
 }
 
 describe("the MCP server", () => {
+  it("answers max_status without logging in", async () => {
+    const { client, logins } = await connect({ allowSend: true })
+    const { isError, body } = await call(client, "max_status")
+
+    expect(isError).toBe(false)
+    expect(body).toMatchObject({ kind: "personal", token: "keyring", loggedInHere: false, allow: "all" })
+    expect(body.writes).toContain("max_messages_send")
+    expect(logins()).toBe(0)
+  })
+
   it("offers only reading unless it was started with --allow-send", async () => {
     const { client } = await connect()
     const { tools } = await client.listTools()
