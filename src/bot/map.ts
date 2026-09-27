@@ -1,4 +1,5 @@
 import type { Attachment, Chat, ChatKind, Message, QuotedMessage } from "@leemour/cli-messaging"
+import type { PersonFacts } from "@leemour/cli-messaging/store"
 import type {
   Attachment as BotAttachment,
   Chat as BotChat,
@@ -8,13 +9,20 @@ import type {
 } from "./generated/types.js"
 
 const PROVIDER_KINDS: Record<string, string> = { image: "photo", audio: "voice" }
-const KINDS: Record<string, ChatKind> = { dialog: "dialog", chat: "group", channel: "channel" }
+export const KINDS: Record<string, ChatKind> = { dialog: "dialog", chat: "group", channel: "channel" }
 
 const iso = (milliseconds: string | number | undefined | null): string | null =>
   milliseconds === undefined || milliseconds === null ? null : new Date(Number(milliseconds)).toISOString()
 
 const nameOf = (user: User | null | undefined): string | null =>
   user ? [user.first_name, user.last_name].filter(Boolean).join(" ") || null : null
+
+export const toPerson = (user: User): PersonFacts => ({
+  id: user.user_id,
+  name: nameOf(user),
+  username: user.username ?? null,
+  isBot: user.is_bot,
+})
 
 const attachmentOf = (attachment: BotAttachment): Attachment | undefined => {
   if (attachment.type === "inline_keyboard") return undefined

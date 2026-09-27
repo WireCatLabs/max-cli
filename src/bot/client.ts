@@ -1,11 +1,12 @@
 import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import type { Chat, Message } from "@leemour/cli-messaging"
+import type { PersonFacts } from "@leemour/cli-messaging/store"
 import * as v from "valibot"
 import { operations } from "./generated/manifest.js"
 import { BotInfo, Chat as ChatSchema, Message as MessageSchema } from "./generated/schemas.js"
 import type { BotInfo as BotInfoType, Message as BotMessage } from "./generated/types.js"
-import { toChat, toMessage } from "./map.js"
+import { toChat, toMessage, toPerson } from "./map.js"
 import { BotTransport, type CallInput, plainJson, type TransportOptions } from "./transport.js"
 
 /** Every operation of the committed schema, as the manifest describes it. */
@@ -22,6 +23,7 @@ const required = (id: string): ManifestOperation => {
 /** The one door to the Bot API: generated operations stay behind it. */
 export class BotApiClient {
   readonly #transport: BotTransport
+  readonly #senders = new Map<string, PersonFacts>()
 
   constructor(options: TransportOptions) {
     this.#transport = new BotTransport(options)
@@ -62,6 +64,16 @@ export class BotApiClient {
     return this.#message(raw, selfId)
   }
 
+  /**
+   * Who wrote the messages decoded since the last call, with the username and bot flag a `Message`
+   * has no field for — for the local copy.
+   */
+  takeSenders(): PersonFacts[] {
+    const senders = [...this.#senders.values()]
+    this.#senders.clear()
+    return senders
+  }
+
   call(operation: ManifestOperation, input: CallInput): Promise<unknown> {
     return this.#transport.call(operation, input)
   }
@@ -83,7 +95,11 @@ export class BotApiClient {
    */
   #message(raw: unknown, selfId?: string): Message {
     const parsed = v.safeParse(MessageSchema, raw)
-    if (parsed.success) return toMessage(parsed.output as BotMessage, selfId)
+    if (parsed.success) {
+      const message = parsed.output as BotMessage
+      if (message.sender) this.#senders.set(message.sender.user_id, toPerson(message.sender))
+      return toMessage(message, selfId)
+    }
     const loose = plainJson(raw) as {
       body?: { mid?: string; text?: string; seq?: unknown }
       timestamp?: number

@@ -175,7 +175,7 @@ export const updatesCommand = (): Command => {
           const messages = updates.flatMap((update) => (update.message ? [update.message] : []))
           const removals = updates.flatMap((update) => (update.removal ? [update.removal] : []))
           const kept =
-            (await keep(self, messages, "update", context.streams.diagnostic)) &&
+            (await keep(self, messages, "update", context.streams.diagnostic, client.takeSenders())) &&
             (await forget(self, removals, context.streams.diagnostic))
           // Not printed, and the marker not moved: the next poll with the same marker gets this batch again.
           if (!kept) {

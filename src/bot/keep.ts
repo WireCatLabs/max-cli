@@ -1,6 +1,12 @@
 import { CliError } from "@leemour/cli-core"
 import type { Chat, Message } from "@leemour/cli-messaging"
-import { type AccountKey, type IngestedVia, type MessageStore, openStore } from "@leemour/cli-messaging/store"
+import {
+  type AccountKey,
+  type IngestedVia,
+  type MessageStore,
+  openStore,
+  type PersonFacts,
+} from "@leemour/cli-messaging/store"
 import type { ChatRegistry } from "./registry.js"
 
 /** How a bot's messages are told apart from a personal account's in the shared store and its locators. */
@@ -47,6 +53,7 @@ export const keep = async (
   messages: readonly Message[],
   via: IngestedVia,
   warn: (message: string) => void,
+  senders: readonly PersonFacts[] = [],
 ): Promise<boolean> => {
   const byChat = new Map<string, Message[]>()
   for (const message of messages.filter(storable)) {
@@ -55,6 +62,7 @@ export const keep = async (
   if (byChat.size === 0) return true
   return quietly((store) => {
     for (const [chatId, chatMessages] of byChat) store.saveMessages(accountOf(botId), chatId, chatMessages, { via })
+    store.savePeople(PROVIDER, [...senders])
   }, warn)
 }
 

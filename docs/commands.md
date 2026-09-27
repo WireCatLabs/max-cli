@@ -1127,6 +1127,14 @@ the chats this bot is in — MAX gives a bot no list of them, so `list` shows th
 max bot chats
 ```
 
+### `max bot people`
+
+people this bot has seen write — from the local copy on this machine, never asking MAX unless told to
+
+```sh
+max bot people
+```
+
 ### `max bot recipients`
 
 the chats this bot may write to; with no list, every chat — `off` removes the list
