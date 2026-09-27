@@ -15,8 +15,8 @@ importers:
         specifier: 0.8.0
         version: 0.8.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: file:/tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-messaging-0.2.0.tgz
-        version: file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-messaging-0.2.0.tgz(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.2.0
+        version: 0.2.0(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -344,9 +344,8 @@ packages:
       commander:
         optional: true
 
-  '@leemour/cli-messaging@file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-messaging-0.2.0.tgz':
-    resolution: {integrity: sha512-/VBLipJA/yv9az20DgsVw2Bx5TRmjnohfMPPI0VBxU4BsV/c3rWI7kHFC0icRqzWRT+rEcPzvXAqKvl5IoleZQ==, tarball: file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-messaging-0.2.0.tgz}
-    version: 0.2.0
+  '@leemour/cli-messaging@0.2.0':
+    resolution: {integrity: sha512-eKuN75CDsmQlwlwits2wzveKq0DHylUADU8/UiVeZ1R+HdobuCaRHrVkkSM55LK5knoeWUtX/iE9sWvUhS1/4A==}
     engines: {node: '>=22'}
     peerDependencies:
       commander: '>=15'
@@ -1351,7 +1350,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@leemour/cli-messaging@file:../../../../../tmp/claude-1000/-home-leemour-Projects-AI-max-cli/71cd5447-43ed-4305-b30d-30bc4b233d6f/scratchpad/leemour-cli-messaging-0.2.0.tgz(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-messaging@0.2.0(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       '@leemour/cli-core': 0.7.0(commander@15.0.0)(typescript@7.0.2)
       commander: 15.0.0
