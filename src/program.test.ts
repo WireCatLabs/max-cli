@@ -287,6 +287,11 @@ describe("the program", () => {
       expect(JSON.parse(stdout)).toMatchObject({ profile: "default", configFound: false })
     })
 
+    it("`config show` includes the speech model", async () => {
+      const { stdout } = await runWith(["config", "show", "--json"])
+      expect(JSON.parse(stdout).settings.map((row: { setting: string }) => row.setting)).toContain("transcribeModel")
+    })
+
     it("`config set` saves a setting that `config show` then reports from the file", async () => {
       const set = await runWith(["work", "config", "set", "limit", "30", "--json"])
       expect(set.code).toBe(0)
@@ -509,6 +514,14 @@ describe("the program", () => {
 
     expect(stderr).toContain("unknown command 'list'")
     expect(stderr).toContain('"chat" is not a command, so it was read as a profile name')
+    expect(code).not.toBe(0)
+  })
+
+  it("does not blame the profile when the word after it is a command", async () => {
+    const { stderr, code } = await runWith(["work", "bot", "auth", "status"])
+
+    expect(stderr).toContain("unknown command 'status'")
+    expect(stderr).not.toContain("read as a profile name")
     expect(code).not.toBe(0)
   })
 })
