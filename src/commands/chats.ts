@@ -2,15 +2,13 @@ import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
-import { ADMIN_RIGHTS, type AdminRight, type MaxClient } from "../client.js"
+import { ADMIN_RIGHTS, type AdminRight, EVENTS_DAYS, type MaxClient } from "../client.js"
 import type { ChatKind, GroupSettings } from "../domain/models.js"
 import { checkCommand } from "./check.js"
 import { forCommand } from "./context.js"
 import { foldersCommand } from "./folders.js"
 import { renderPage, window, withPaging } from "./paging.js"
 import { rulesCommand } from "./rules.js"
-
-const EVENTS_DAYS = 7
 
 export const chatsCommand = (): Command => {
   const command = new Command("chats").description("the chats this account is in")
@@ -87,11 +85,10 @@ export const chatsCommand = (): Command => {
       await run("chats events", async (events) => {
         const client = createClient({ events, ...(cache ? { cache } : {}) })
         try {
-          const since =
-            options.since === undefined
-              ? Date.now() - EVENTS_DAYS * 86_400_000
-              : client.messages.moment(String(options.since), "--since")
-          const found = await client.chats.events(chat, { since })
+          const found = await client.chats.events(
+            chat,
+            options.since === undefined ? {} : { since: client.messages.moment(String(options.since), "--since") },
+          )
           const kept = only ? { ...found, events: found.events.filter((one) => only.has(one.event)) } : found
 
           if (format !== "pretty") renderer.result(kept)

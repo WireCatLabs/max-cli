@@ -9,12 +9,13 @@ import {
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
 import { openProfileCache } from "../cache/index.js"
-import { DELETE_AT_ONCE, type MaxClient } from "../client.js"
+import { DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
 import { sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
 import { describe, type Finding, finish, MAX_ACTIONS, needsConfirm, prepare } from "../moderation/check.js"
+import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
 import { REVIEW_DAYS, review, reviewStart } from "../review.js"
 import type { Permission } from "../sends/permissions.js"
 import type { SessionStore } from "../session/store.js"
@@ -228,6 +229,55 @@ const READ_TOOLS = {
     input: v.object({ chat }),
     annotations: READ,
     answer: (client, args) => client.chats.show(args.chat),
+  }),
+
+  max_chats_events: tool({
+    title: "Who joined or left a group",
+    description:
+      "A chat's service messages since `since`: who joined, was added or removed, and by whom, oldest first. " +
+      `\`event\` as MAX names it — new, add, remove, pin; others pass through. ${EVENTS_DAYS} days back if not given. ` +
+      "Returns { chatId, since, more, events: [{ messageId, timestamp, event, by, people, title? }] }.",
+    input: v.object({
+      chat,
+      since: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time"))),
+    }),
+    annotations: READ,
+    answer: (client, args) =>
+      client.chats.events(
+        args.chat,
+        args.since === undefined ? {} : { since: client.messages.moment(args.since, "since") },
+      ),
+  }),
+
+  max_chats_members: tool({
+    title: "Everyone in a group",
+    description:
+      "Every member of a group or channel, from MAX: { id, name, username, registeredAt, lastSeenAt }. " +
+      "`registeredAt` is when their MAX account was made — a days-old account is worth a look. " +
+      "Returns { chatId, members, complete }.",
+    input: v.object({ chat }),
+    annotations: READ,
+    answer: (client, args) => client.chats.members.list(args.chat),
+  }),
+
+  max_chats_rules: tool({
+    title: "A group's moderation rules",
+    description:
+      "The owner's rules for a group, as `max_chats_check` applies them: trusted and blocked people, what to do with " +
+      "links, invites, forwards, floods and new accounts, and a consent level per action (forbid, flag, confirm, " +
+      "allow). `saved: false` means the defaults, which only report. Changing them is the owner's: `max chats rules set`.",
+    input: v.object({ chat }),
+    annotations: READ,
+    answer: async (client, args, { profile }) => {
+      const group = await client.chats.show(args.chat)
+      const saved = new ModerationRules(moderationPathFor(profile)).read(group.id)
+      return {
+        chatId: group.id,
+        title: group.title,
+        saved: saved !== undefined,
+        rules: saved ?? defaultRules(group.title),
+      }
+    },
   }),
 
   max_contacts_list: tool({

@@ -834,3 +834,60 @@ describe("max_chats_check", () => {
     expect(deletes(max)).toEqual([])
   })
 })
+
+describe("group reads", () => {
+  it("reads who joined, everyone in the group with the age of their account, and the group's rules", async () => {
+    new ModerationRules(moderationPathFor("gr-mcp")).set("111", "Team Alpha", "invites", "delete")
+    const { client, max } = await connect(
+      {},
+      {
+        profile: "gr-mcp",
+        answers: {
+          [Opcode.CHAT_HISTORY]: (request: { from?: unknown }) => ({
+            messages:
+              Date.now() - 60_000 > Number(request.from)
+                ? [
+                    {
+                      id: 7n,
+                      time: Date.now() - 60_000,
+                      sender: 10000001,
+                      text: "",
+                      attaches: [{ _type: "CONTROL", event: "add", userIds: [30000003] }],
+                    },
+                  ]
+                : [],
+          }),
+          [Opcode.CONTACT_INFO]: { contacts: [{ id: 30000003, names: [{ name: "Newcomer", type: "FULL_NAME" }] }] },
+          [Opcode.CHAT_MEMBERS]: {
+            members: [
+              {
+                contact: {
+                  id: 30000003,
+                  names: [{ name: "Newcomer", type: "FULL_NAME" }],
+                  registrationTime: 1789000000000,
+                },
+                presence: {},
+              },
+            ],
+          },
+        },
+      },
+    )
+
+    const events = await call(client, "max_chats_events", { chat: "111" })
+    const members = await call(client, "max_chats_members", { chat: "111" })
+    const rules = await call(client, "max_chats_rules", { chat: "111" })
+    const other = await call(client, "max_chats_rules", { chat: "222" })
+
+    expect(events.body.events).toEqual([
+      expect.objectContaining({ event: "add", people: [{ id: "30000003", name: "Newcomer" }] }),
+    ])
+    expect(members.body).toMatchObject({
+      members: [{ id: "30000003", name: "Newcomer", registeredAt: new Date(1789000000000).toISOString() }],
+      complete: true,
+    })
+    expect(rules.body).toMatchObject({ saved: true, rules: { invites: "delete" } })
+    expect(other.body).toMatchObject({ saved: false, rules: { invites: "report" } })
+    expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_DELETE)
+  })
+})
