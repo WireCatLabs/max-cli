@@ -1137,6 +1137,62 @@ what this bot sent, edited and deleted from this machine — ids and outcomes, n
 max bot sends
 ```
 
+### `max bot members`
+
+the people in a group chat or channel the bot is in
+
+```sh
+max bot members
+```
+
+### `max bot admins`
+
+the admins of a group chat or channel the bot is an admin in
+
+```sh
+max bot admins
+```
+
+### `max bot comments`
+
+comments under a channel post — each command takes the post's message id (mid.…) first
+
+```sh
+max bot comments
+```
+
+### `max bot callbacks`
+
+answers to the buttons people press under the bot's messages
+
+```sh
+max bot callbacks
+```
+
+### `max bot commands`
+
+the bot's command menu — what people see after /
+
+```sh
+max bot commands
+```
+
+### `max bot uploads`
+
+files uploaded to MAX, to attach to a message
+
+```sh
+max bot uploads
+```
+
+### `max bot webhooks`
+
+where MAX pushes this bot's updates — while one is set, the bot cannot read updates by polling
+
+```sh
+max bot webhooks
+```
+
 ### `max bot api`
 
 every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md

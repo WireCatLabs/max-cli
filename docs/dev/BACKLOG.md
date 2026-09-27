@@ -171,9 +171,10 @@ which; the plan for it starts by saying so.
   issued only to verified organisations, sole traders and the self-employed
   ([dev.max.ru](https://dev.max.ru/docs/maxbusiness/connection)).
   First half built 2026-09-27: the schema snapshot and generated code (#174), then `max bot me`,
-  `max bot auth` and `max bot api <operation>` over all 33 operations. Left: the ergonomic
-  commands, the chat registry, `updates watch`, webhook and upload helpers and bot MCP — after
-  cli-messaging's messenger port exists (`NEED-302`).
+  `max bot auth` and `max bot api <operation>` over all 33 operations. Then the named bots,
+  messages, chats, the chat registry, recipients and journal (#179), and members, admins,
+  comments, callbacks, the command menu, file sending and webhooks (#184). Left: the message
+  store and `updates watch` (`feat/bot-store`), and bot MCP.
 - **CLI-27** · P3 · Hooks for workflows: `max` runs a configured command when a check finds
   something new. Asked by the owner 2026-09-24 (`NEED-172`). Two things to settle in the plan: the
   message text reaches that command, so it must go as data on stdin and never into the command

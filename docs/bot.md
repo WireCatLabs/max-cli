@@ -14,11 +14,33 @@
 ```sh
 max sales bot auth set                                  # токен — в скрытом вводе
 max sales bot me                                        # какой это бот
-max sales bot messages send -72894839451 "Сборка готова"
 ```
 
 `auth set` сначала спрашивает у MAX, чей это токен, и только потом сохраняет его. Опечатка не
 затрёт токен, который уже работает.
+
+## Где взять номер чата
+
+У MAX нет списка чатов бота, поэтому номер чата узнают из того, что бот уже делал или получил.
+
+- **Диалог с человеком.** Пишите ему как `user:<номер>`. Отправка печатает номер чата, куда ушло
+  сообщение, — поле `chatId`.
+- **Группа или канал.** Добавьте туда бота, потом попросите у MAX последние обновления:
+
+  ```sh
+  max sales bot api get-updates --limit 10
+  ```
+
+  Номер чата — в поле `chat_id`. Если нового нет, команда ждёт до 30 секунд. Полученные так
+  обновления MAX второй раз не отдаёт. Пока у бота задан вебхук, эта команда не работает.
+
+Откройте чат командой `max sales bot chats get` с этим номером: после этого бот знает его название,
+и в командах ниже чат можно называть по названию. `chats list` показывает все чаты, которые бот уже
+видел.
+
+- У группы и канала номер **отрицательный**.
+- Положительный номер — почти всегда человек. Человеку пишут как `user:<номер>`: номер без
+  `user:` MAX примет за чат и ответит «чат не найден» (код `6`), а `max` подскажет, как надо.
 
 ## Несколько ботов
 
@@ -53,17 +75,39 @@ max sales bot auth remove     # забыть токен
 названием:
 
 ```sh
-max sales bot messages send -72894839451 "Сборка готова"
+max sales bot messages send "Команда продаж" "Сборка готова"
 max sales bot messages send user:4815162342 "Здравствуйте"
 max sales bot messages send "Команда продаж" "**Итоги недели** в закрепе" --format markdown
-max sales bot messages send -72894839451 "Принято" --reply-to mid.0000019a7f3c21de
-echo "Текст из трубы" | max sales bot messages send -72894839451 -
+max sales bot messages send "Команда продаж" "Принято" --reply-to mid.0000019a7f3c21de
+echo "Текст из трубы" | max sales bot messages send "Команда продаж" -
 ```
 
-`--silent` отправляет без уведомления. Текст — до 4000 символов.
+`--silent` отправляет без уведомления. Текст — до 4000 символов. Номера `user:4815162342` и
+`mid.0000019a7f3c21de` здесь и ниже выдуманы — подставьте свои.
+
+### Файлы
+
+`--file` прикладывает файл с диска. Картинка, видео и звук узнаются по расширению, всё остальное
+уходит файлом; `--type image|video|audio|file` задаёт вид явно. Текст с файлом можно не писать:
 
 ```sh
-max sales bot messages list -72894839451 --limit 20
+max sales bot messages send "Команда продаж" "Отчёт за неделю" --file report.pdf
+max sales bot messages send "Команда продаж" --file screenshot.png
+```
+
+Файл сначала загружается в MAX, потом уходит сообщение. Пока MAX обрабатывает видео или большой
+файл, он отвечает «ещё не готово», и `max` ждёт — четыре раза, всего около девяти секунд. Если
+загрузка не удалась, в чат ничего не уходит.
+
+`uploads put` только загружает файл и печатает вложение — его кладут в `attachments` тела для
+`bot api send-message`:
+
+```sh
+max sales bot uploads put report.pdf
+```
+
+```sh
+max sales bot messages list "Команда продаж" --limit 20
 max sales bot messages get mid.0000019a7f3c21de
 max sales bot messages edit mid.0000019a7f3c21de "Исправленный текст"
 max sales bot messages delete mid.0000019a7f3c21de
@@ -79,13 +123,87 @@ max sales bot messages delete mid.0000019a7f3c21de
 полный список.
 
 ```sh
-max sales bot chats get -72894839451      # и запомнить его
 max sales bot chats list
-max sales bot chats pin -72894839451 mid.0000019a7f3c21de
-max sales bot chats unpin -72894839451
-max sales bot chats action -72894839451 typing_on
-max sales bot chats leave -72894839451    # вернуть бота может только админ чата
+max sales bot chats get "Команда продаж"
+max sales bot chats pin "Команда продаж" mid.0000019a7f3c21de
+max sales bot chats unpin "Команда продаж"
+max sales bot chats action "Команда продаж" typing_on
+max sales bot chats leave "Команда продаж"    # вернуть бота может только админ чата
 ```
+
+### Участники и админы
+
+Боту нужно быть админом чата с правом на это действие.
+
+```sh
+max sales bot members list "Команда продаж" --limit 50
+max sales bot members add "Команда продаж" 4815162342 2342481516
+max sales bot members remove "Команда продаж" 4815162342 --block
+max sales bot admins list "Команда продаж"
+max sales bot admins add "Команда продаж" 4815162342 --permissions write,pin_message --alias "Дежурный"
+max sales bot admins remove "Команда продаж" 4815162342
+```
+
+`members list` отдаёт до 100 человек и `marker`; следующая страница — `--marker` с этим числом.
+Права админа: `read_all_messages`, `add_remove_members`, `add_admins`, `change_chat_info`,
+`pin_message`, `edit_link`, `write`, `edit`, `delete`, `can_call`, `view_stats`.
+
+## Комментарии
+
+Комментарии — под постом канала. Первым идёт номер поста (`mid.…`), вторым — номер комментария:
+
+```sh
+max sales bot comments list mid.0000019a7f3c21de --limit 20
+max sales bot comments get mid.0000019a7f3c21de 42
+max sales bot comments send mid.0000019a7f3c21de "Спасибо за вопрос"
+max sales bot comments edit mid.0000019a7f3c21de 42 "Исправлено"
+max sales bot comments delete mid.0000019a7f3c21de 42
+```
+
+Комментарий проходит тот же список получателей, что и сообщение в канал.
+
+## Кнопки
+
+Когда человек нажимает кнопку под сообщением бота, бот получает номер нажатия (`callback_id`) и
+отвечает на него:
+
+```sh
+max sales bot callbacks answer f9LHodD0cOL5 --notification "Готово"
+max sales bot callbacks answer f9LHodD0cOL5 --text "Заказ подтверждён"
+```
+
+`--notification` показывает короткую надпись только нажавшему, `--text` заменяет текст сообщения с
+кнопкой. Ответ идёт в тот чат, где нажали, а по номеру нажатия чат не узнать, поэтому список
+получателей к ответу не применяется.
+
+## Меню команд
+
+Меню — то, что человек видит, набрав `/` в чате с ботом.
+
+```sh
+max sales bot commands list
+max sales bot commands set start=Начать help=Помощь "report=Отчёт за день"
+max sales bot commands clear
+```
+
+`set` заменяет меню целиком. Каждая команда — `имя=описание`; описание можно не писать.
+
+## Вебхуки
+
+Вебхук — адрес, на который MAX сам присылает всё, что получил бот. Пока вебхук задан, получать
+обновления через `get-updates` бот не может.
+
+```sh
+max sales bot webhooks list
+max sales bot webhooks set https://bot.example.ru/max --secret-stdin --types message_created,bot_started
+max sales bot webhooks delete https://bot.example.ru/max
+```
+
+- Адрес — HTTPS на порту 443, с сертификатом, которому доверяет MAX.
+- Новый адрес **не заменяет** старый: MAX шлёт каждое обновление на оба. Поэтому `set` отказывает,
+  пока задан другой адрес. Удалите старый или добавьте `--add`, если два адреса нужны.
+- `--secret-stdin` спрашивает секрет в скрытом вводе или читает его из трубы. MAX присылает его в
+  заголовке `X-Max-Bot-Api-Secret`, по нему сервер узнаёт MAX. В командной строке секрета нет.
 
 ## Кому бот может писать
 
@@ -99,9 +217,9 @@ max sales bot chats leave -72894839451    # вернуть бота может �
 У каждого бота свой список чатов, в которые ему можно писать:
 
 ```sh
-max sales bot recipients add -72894839451
+max sales bot recipients add "Команда продаж"
 max sales bot recipients list
-max sales bot recipients remove -72894839451
+max sales bot recipients remove "Команда продаж"
 max sales bot recipients off              # писать можно снова в любой чат
 ```
 
@@ -124,10 +242,9 @@ API, поэтому новая операция MAX появляется зде�
 
 ```sh
 max sales bot api get-my-info
-max sales bot api get-chat --chat-id -72894839451
-max sales bot api get-members --chat-id -72894839451 --count 50
+max sales bot api get-subscriptions
 max sales bot api answer-on-callback --callback-id f9LHodD0cOL5 --body '{"notification": "Готово"}'
-max sales bot api send-message --chat-id -72894839451 --body-file message.json
+max sales bot api send-message --user-id 4815162342 --body-file message.json
 ```
 
 Параметры пути и запроса — флаги, тело — JSON в `--body`, `--body -` (из трубы) или `--body-file`.
@@ -143,7 +260,7 @@ max sales bot api send-message --chat-id -72894839451 --body-file message.json
 |---|---|
 | `4` | нет токена бота или MAX его не принял |
 | `5` | профиль только для чтения или действие не разрешено `allow` |
-| `6` | чат не найден — например, по названию, которого бот ещё не видел |
+| `6` | чат не найден — например, по названию, которого бот ещё не видел, или человек без `user:` |
 | `7` | чата нет в списке получателей бота |
 | `14` | ответа не пришло: неизвестно, выполнил ли MAX запись |
 
@@ -158,6 +275,5 @@ max sales bot api send-message --chat-id -72894839451 --body-file message.json
 
 ## Чего пока нет
 
-Удобных команд пока нет для участников и админов, комментариев, ответов на кнопки, меню команд
-бота, вебхуков, получения обновлений и загрузки файлов. Всё это, кроме загрузки файлов, уже доступно
-через `max bot api`. MCP-сервера для бота тоже пока нет.
+Удобной команды пока нет для получения обновлений — оно доступно через `max bot api get-updates`.
+MCP-сервера для бота тоже пока нет.

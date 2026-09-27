@@ -8,9 +8,12 @@ import { checkBody, checkParameter, flagOf, optionKey, readBody } from "../bot/i
 import { registryProfiles } from "../bot/registry.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
 import { configuredProfiles } from "../config.js"
+import { callbacksCommand, commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext } from "./bot-context.js"
+import { adminsCommand, membersCommand } from "./bot-members.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
 import { guardedCall, recipientsCommand, sendsCommand } from "./bot-sends.js"
+import { menuCommand, uploadsCommand, webhooksCommand } from "./bot-setup.js"
 import { environmentOf } from "./context.js"
 
 const apiCommand = (operation: ManifestOperation): Command => {
@@ -146,6 +149,16 @@ export const botCommand = (): Command => {
   command.addCommand(chatsCommand())
   command.addCommand(recipientsCommand())
   command.addCommand(sendsCommand())
+  for (const more of [
+    membersCommand(),
+    adminsCommand(),
+    commentsCommand(),
+    callbacksCommand(),
+    menuCommand(),
+    uploadsCommand(),
+    webhooksCommand(),
+  ])
+    command.addCommand(more)
 
   const api = new Command("api").description(
     "every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md",

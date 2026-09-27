@@ -1,8 +1,12 @@
 #!/usr/bin/env sh
 # The live check for `max bot`, with a real bot token. Reads only: nothing is sent.
 #
-#   bin/bot-live-check            # the default profile
-#   bin/bot-live-check work       # the profile "work"
+#   bin/bot-live-check                          # the default profile
+#   bin/bot-live-check work                     # the profile "work"
+#   bin/bot-live-check work --write user:<id>   # also sends an image and a video there
+#
+# `--write <chat>` is the only part that sends: a generated test image and a one-second test video
+# (ffmpeg), each with `messages send --file`, to the one chat named — then `commands list`.
 #
 # Builds this checkout, keeps the token (hidden prompt; MAX checks it before it is stored), then
 # asks MAX who the bot is on Node and on Bun — with NODE_EXTRA_CA_CERTS unset, so the certificate
@@ -11,6 +15,10 @@ set -eu
 
 cd "$(dirname "$0")/.."
 profile="${1:-default}"
+write=""
+if [ "${2:-}" = "--write" ]; then
+  write="${3:?--write needs the chat to send to}"
+fi
 max() { node dist/bin/max.js "$profile" "$@"; }
 
 pnpm -s build
@@ -31,3 +39,19 @@ fi
 echo "== max bot me, and the same through max bot api =="
 env -u NODE_EXTRA_CA_CERTS node dist/bin/max.js "$profile" bot me
 env -u NODE_EXTRA_CA_CERTS node dist/bin/max.js "$profile" bot api get-my-info --json >/dev/null && echo "get-my-info: ok"
+
+echo "== the bot's command menu =="
+env -u NODE_EXTRA_CA_CERTS node dist/bin/max.js "$profile" bot commands list
+
+if [ -n "$write" ]; then
+  media="$(mktemp -d)"
+  trap 'rm -rf "$media"' EXIT
+  ffmpeg -loglevel error -f lavfi -i testsrc=size=320x240:rate=1 -frames:v 1 "$media/max-cli-check.png"
+  ffmpeg -loglevel error -f lavfi -i testsrc=size=320x240:rate=25 -t 1 -pix_fmt yuv420p "$media/max-cli-check.mp4"
+  echo "== an image to $write =="
+  env -u NODE_EXTRA_CA_CERTS node dist/bin/max.js "$profile" bot messages send "$write" "max-cli live check: image" \
+    --file "$media/max-cli-check.png" --json >/dev/null && echo "image: sent"
+  echo "== a video to $write =="
+  env -u NODE_EXTRA_CA_CERTS node dist/bin/max.js "$profile" bot messages send "$write" "max-cli live check: video" \
+    --file "$media/max-cli-check.mp4" --json >/dev/null && echo "video: sent"
+fi
