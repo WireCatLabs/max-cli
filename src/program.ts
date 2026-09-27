@@ -69,7 +69,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
     .name("max")
     .usage("[profile] [options] <command>")
     .description(
-      "A local command line interface for a personal MAX Messenger account\n\n" +
+      "MAX Messenger from the terminal: bots through the official Bot API (`max bot …`), and your personal account\n\n" +
         "The first word is the profile whenever it is not a command — `max personal chats list`.\n" +
         "`MAX_PROFILE` says the same thing for a whole shell session; without either it is `default`.",
     )
