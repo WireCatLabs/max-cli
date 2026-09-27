@@ -8,7 +8,7 @@ import { newSendId, RecipientList, SendJournal, type SendKind, sendGuard } from 
 import { Command, Option } from "commander"
 import { botOperations } from "../bot/client.js"
 import { checkBody } from "../bot/input.js"
-import { keepSent } from "../bot/keep.js"
+import { forget, keepSent } from "../bot/keep.js"
 import { BOT_JOURNAL_KINDS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
@@ -285,6 +285,8 @@ export const sendCommands = (messages: Command): void => {
         result: plainJson(await context.authenticated().call(remove, { query: { message_id: messageId } })),
         messageId,
       }))
+      const botId = context.registry.botId()
+      if (botId) await forget(botId, [{ chatId, messageId }], context.streams.diagnostic)
       context.renderer.result(answer ?? { success: true })
     })
 }

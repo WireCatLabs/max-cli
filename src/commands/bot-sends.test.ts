@@ -123,10 +123,12 @@ describe("max bot messages send", () => {
 
 describe("max bot messages edit and delete", () => {
   it("finds the message's chat, checks it against the list, then changes it", async () => {
+    await max(["bot", "messages", "send", "-100", "hello there", "--json"])
     expect((await max(["bot", "messages", "edit", "mid.9", "new text", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "PUT", url: "/messages?message_id=mid.9" })
     expect((await max(["bot", "messages", "delete", "mid.9", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/messages?message_id=mid.9" })
+    expect(JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout)).toEqual([])
     await max(["team", "bot", "recipients", "off"])
     await max(["team", "bot", "recipients", "add", "-200"])
     expect((await max(["team", "bot", "messages", "delete", "mid.9", "--json"])).code).not.toBe(0)

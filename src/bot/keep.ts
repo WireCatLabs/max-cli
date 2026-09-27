@@ -66,6 +66,22 @@ export const keepChat = async (botId: string | undefined, chat: Chat, warn: (mes
   if (botId && CHAT_ID.test(chat.id)) await quietly((store) => store.saveChats(accountOf(botId), [chat]), warn)
 }
 
+/**
+ * A message MAX says was deleted. The store keeps it as a tombstone: reads, `--offline` and
+ * search stop returning it.
+ */
+export const forget = async (
+  botId: string,
+  removals: readonly { chatId: string; messageId: string }[],
+  warn: (message: string) => void,
+): Promise<boolean> => {
+  const known = removals.filter((removal) => CHAT_ID.test(removal.chatId))
+  if (known.length === 0) return true
+  return quietly((store) => {
+    for (const { chatId, messageId } of known) store.markDeleted(accountOf(botId), [messageId], { chatId })
+  }, warn)
+}
+
 /** A send's answer names the bot as its sender, so the store needs no `me()` to know whose it is. */
 export const keepSent = async (registry: ChatRegistry, sent: unknown, warn: (message: string) => void) => {
   const message = sent as Partial<Message>
