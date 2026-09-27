@@ -15,7 +15,16 @@ import { sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Message, Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
-import { describe, type Finding, finish, MAX_ACTIONS, needsConfirm, personal, prepare } from "../moderation/check.js"
+import {
+  describe,
+  type Finding,
+  finish,
+  MAX_ACTIONS,
+  needsConfirm,
+  personal,
+  prepare,
+  sessionPoints,
+} from "../moderation/check.js"
 import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
 import { REVIEW_DAYS, review, reviewStart } from "../review.js"
 import type { Permission } from "../sends/permissions.js"
@@ -820,14 +829,14 @@ const registerCheck = (
         const result = await session.use("mcp chats check", async (client) => {
           const since = typeof args.since === "string" ? client.messages.moment(args.since, "since") : undefined
           const prepared = await prepare(client, {
-            store,
+            points: sessionPoints(store),
             profile,
             chat: String(args.chat),
             ...(since === undefined ? {} : { since }),
           })
           const dryRun = args.dry_run === true
           const run = (confirm?: (finding: Finding) => Promise<boolean>) =>
-            finish(personal(client), store, prepared, {
+            finish(personal(client), sessionPoints(store), prepared, {
               allowDangerous: true,
               dryRun,
               maxActions: MAX_ACTIONS,

@@ -80,6 +80,7 @@ describe("max commands", () => {
       "bot messages send",
       "bot messages edit",
       "bot messages delete",
+      "bot chats check",
       "bot chats pin",
       "bot chats unpin",
       "bot chats leave",

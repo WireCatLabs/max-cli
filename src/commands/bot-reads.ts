@@ -6,6 +6,7 @@ import { botOperations } from "../bot/client.js"
 import { accountOf, fromStore, keep, keepChat, PROVIDER } from "../bot/keep.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { asFirstWord } from "../profile.js"
+import { botCheckCommand, botRulesCommand } from "./bot-check.js"
 import { botContext } from "./bot-context.js"
 import { addBetween, searchMessages } from "./bot-people.js"
 import { guardedCall, sendCommands } from "./bot-sends.js"
@@ -138,6 +139,8 @@ export const chatsCommand = (): Command => {
   const command = new Command("chats").description(
     "the chats this bot is in — MAX gives a bot no list of them, so `list` shows the ones it has seen",
   )
+  command.addCommand(botCheckCommand())
+  command.addCommand(botRulesCommand())
 
   command
     .command("list")

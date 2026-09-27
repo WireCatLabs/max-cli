@@ -5,6 +5,7 @@ import { annotate } from "@leemour/cli-core/commands"
 import { type Message, renderMessages } from "@leemour/cli-messaging"
 import { Command } from "commander"
 import { type BotApiClient, botOperations } from "../bot/client.js"
+import { JoinLog, joinsOf } from "../bot/joins.js"
 import { forget, keep, PROVIDER } from "../bot/keep.js"
 import { botsDirectory } from "../bot/registry.js"
 import { plainJson } from "../bot/transport.js"
@@ -71,6 +72,17 @@ const decode = (raw: unknown, client: BotApiClient, self: string): Decoded => {
     ...(update.update_type === "message_removed" && chatId && typeof update.message_id === "string"
       ? { removal: { chatId, messageId: update.message_id } }
       : {}),
+  }
+}
+
+/** Joins go where `bot chats check` reads them; one that fails to save holds the marker, like a message. */
+const keepJoins = (log: JoinLog, updates: unknown[], warn: (message: string) => void): boolean => {
+  try {
+    log.add(joinsOf(updates.map(plainJson)))
+    return true
+  } catch (error) {
+    warn(`the joins were not kept: ${error instanceof Error ? error.message : String(error)}`)
+    return false
   }
 }
 
@@ -145,6 +157,7 @@ export const updatesCommand = (): Command => {
         context.registry.rememberBot(self)
         await refuseWebhook(context, client)
         const markers = markerFile(context.settings.profile)
+        const joins = JoinLog.for(context.settings.profile)
         let marker = markers.read()
         let failures = 0
         const wait = async (reason: string) => {
@@ -176,7 +189,8 @@ export const updatesCommand = (): Command => {
           const removals = updates.flatMap((update) => (update.removal ? [update.removal] : []))
           const kept =
             (await keep(self, messages, "update", context.streams.diagnostic, client.takeSenders())) &&
-            (await forget(self, removals, context.streams.diagnostic))
+            (await forget(self, removals, context.streams.diagnostic)) &&
+            keepJoins(joins, page?.updates ?? [], context.streams.diagnostic)
           // Not printed, and the marker not moved: the next poll with the same marker gets this batch again.
           if (!kept) {
             await wait("the updates were not kept")

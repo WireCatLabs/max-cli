@@ -326,6 +326,21 @@ export const gather = async (client: MaxClient, chatId: Id, since: number): Prom
 
 export const MAX_ACTIONS = 10
 
+/** Where each chat's next check starts, ISO 8601. */
+export interface SavedPoints {
+  read(chatId: Id): string | undefined
+  write(chatId: Id, at: string): void
+}
+
+/** The personal account keeps them in its session state, beside `max inbox`'s. */
+export const sessionPoints = (store: SessionStore): SavedPoints => ({
+  read: (chatId) => store.readState().checkedUntil?.[chatId],
+  write: (chatId, at) => {
+    const state = store.readState()
+    store.writeState({ ...state, checkedUntil: { ...state.checkedUntil, [chatId]: at } })
+  },
+})
+
 /** A group never checked before is looked at this far back. */
 const FIRST_LOOK_MS = 24 * 3_600_000
 
@@ -343,12 +358,12 @@ export interface Prepared {
 /** Reads and judges; changes nothing. `since` overrides the group's saved point. */
 export const prepare = async (
   client: MaxClient,
-  { store, profile, chat, since }: { store: SessionStore; profile: string; chat: string; since?: number },
+  { points, profile, chat, since }: { points: SavedPoints; profile: string; chat: string; since?: number },
 ): Promise<Prepared> => {
   const group = await client.chats.show(chat)
   const saved = new ModerationRules(moderationPathFor(profile)).read(group.id)
   const rules = saved ?? defaultRules(group.title)
-  const point = store.readState().checkedUntil?.[group.id]
+  const point = points.read(group.id)
   const from = since ?? (point === undefined ? Date.now() - FIRST_LOOK_MS : Date.parse(point))
   const found = await gather(client, group.id, from)
   return {
@@ -368,7 +383,7 @@ export const prepare = async (
 /** Acts on what `prepare` found, moves the group's saved point, and says what is left. */
 export const finish = async (
   moderator: Moderator,
-  store: SessionStore,
+  points: SavedPoints,
   prepared: Prepared,
   options: Omit<ActOptions, "chatId" | "rules">,
 ): Promise<{ rows: CheckRow[]; notes: string[] }> => {
@@ -378,8 +393,7 @@ export const finish = async (
 
   const next = nextPoint(rows, found)
   if (!explicit && !options.dryRun && next !== null) {
-    const state = store.readState()
-    store.writeState({ ...state, checkedUntil: { ...state.checkedUntil, [chatId]: next } })
+    points.write(chatId, next)
   }
   if (next !== found.until && rows.some(undone)) {
     notes.push("some actions are not done — the next check starts at the first of them")
