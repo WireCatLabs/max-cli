@@ -1,8 +1,8 @@
-import { existsSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { CliError, pathsAreOverridden, resolvePaths } from "@leemour/cli-core"
 import { Command } from "commander"
 import { ALL_SETTINGS, changeSetting, type SourcedSetting } from "../config.js"
+import { profilesWithState } from "../diagnose.js"
 import { forCommand } from "./context.js"
 
 const SHOWN: SourcedSetting[] = [
@@ -37,7 +37,12 @@ export const configCommand = (): Command => {
       renderer.result({
         profile: settings.profile,
         profileFrom: settings.sources.profile,
-        profiles: [...new Set([...settings.configuredProfiles, ...profilesWithState()])].sort(),
+        profiles: [
+          ...new Set([
+            ...settings.configuredProfiles,
+            ...profilesWithState(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")),
+          ]),
+        ].sort(),
         configFile: settings.configPath,
         configFound: settings.configFound,
         pathsOverridden: overridden,
@@ -94,12 +99,4 @@ export const configCommand = (): Command => {
   }
 
   return command
-}
-
-const profilesWithState = (): string[] => {
-  const dir = join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")
-  if (!existsSync(dir)) return []
-  return readdirSync(dir)
-    .filter((name) => name.endsWith(".json"))
-    .map((name) => name.slice(0, -".json".length))
 }

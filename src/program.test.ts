@@ -511,4 +511,12 @@ describe("the program", () => {
     expect(stderr).toContain('"chat" is not a command, so it was read as a profile name')
     expect(code).not.toBe(0)
   })
+
+  it("does not blame the profile when the word after it is a command", async () => {
+    const { stderr, code } = await runWith(["work", "bot", "auth", "status"])
+
+    expect(stderr).toContain("unknown command 'status'")
+    expect(stderr).not.toContain("read as a profile name")
+    expect(code).not.toBe(0)
+  })
 })

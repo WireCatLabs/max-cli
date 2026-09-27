@@ -198,14 +198,17 @@ const readState = (file: string): Record<string, unknown> | undefined => {
   }
 }
 
+/** `<profile>.moderation.json` shares the directory (`moderation/rules.ts`). */
+const MODERATION_SUFFIX = ".moderation.json"
+
 /**
  * **Which profiles have been logged in**, which is not the same list as the configured ones —
  * `config show` says so and cannot answer it, because a profile needs no configuration entry.
  */
-const profilesWithState = (directory: string): string[] => {
+export const profilesWithState = (directory: string): string[] => {
   try {
     return readdirSync(directory)
-      .filter((name) => name.endsWith(".json"))
+      .filter((name) => name.endsWith(".json") && !name.endsWith(MODERATION_SUFFIX))
       .map((name) => name.slice(0, -".json".length))
       .sort()
   } catch {

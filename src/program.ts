@@ -204,9 +204,15 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     if (error instanceof CommanderError) {
       // `max chat list` — one letter short of `chats` — now reports an unknown command `list`,
       // which is baffling on its own. This is the everyday cost of the first word being a profile.
-      if (profile !== undefined && error.code === "commander.unknownCommand") {
+      const first = rest[0]
+      if (
+        profile !== undefined &&
+        error.code === "commander.unknownCommand" &&
+        first !== undefined &&
+        !commandWords(program).has(first)
+      ) {
         streams.diagnostic(
-          `"${profile}" is not a command, so it was read as a profile name — which left "${rest[0]}" to be one.`,
+          `"${profile}" is not a command, so it was read as a profile name — which left "${first}" to be one.`,
         )
       }
       return error.exitCode

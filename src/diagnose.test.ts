@@ -69,6 +69,13 @@ describe("what a command depends on", () => {
     expect((await look()).loggedInProfiles).toEqual(["default", "work"])
   })
 
+  it("does not take a profile's moderation rules for another profile", async () => {
+    withState("work", { deviceId: "e", logins: 2 })
+    writeFileSync(at("state", "profiles", "work.moderation.json"), "{}")
+
+    expect((await look()).loggedInProfiles).toEqual(["work"])
+  })
+
   describe("the token", () => {
     it("says it came from the environment, and never what it is", async () => {
       const report = await look({ env: { MAX_TOKEN: "a-secret" }, storedToken: () => "keyring" })
