@@ -136,6 +136,19 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **SPEC-4** · P3 · A generated list of implemented operations (§8, §30). Deferred: listing what MAX
   has and we lack means maintaining MAX's whole surface (§10).
 
+**Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
+`docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`.
+
+- **CLI-44** · P2 · `max chats events <chat>` — who joined, left, was added or removed. First a
+  read-only probe of the `CONTROL` attachment's keys and `event` values; the mapper keeps only the
+  kind today (`src/domain/map.ts:250`).
+- **CLI-45** · P2 · `max chats members list <chat>` — the whole membership from MAX, channels too.
+  Opcode 59 with `type: "MEMBER"` is PyMax's claim, measured read-only first
+  (`src/spec/operations/chats.ts:193`).
+- **CLI-46** · P2 · `max chats check <chat>` and `max chats rules show|set|unset` — trusted and
+  blocked lists, rules, and actions under four consent levels (default `flag`). Accept and decline
+  wait on `MAX-41`.
+
 ## Foundation and risks
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package

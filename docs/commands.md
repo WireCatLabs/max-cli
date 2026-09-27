@@ -793,6 +793,8 @@ max review [options]
 |---|---|
 | `--since <id-or-time>` | where the last review ended; 3 days ago if not given |
 | `--transcribe` | transcribe voice messages not heard yet; slow, and the model must be downloaded |
+| `--chat <chat>` | only this chat: an id, or part of a chat name |
+| `--unanswered [hours]` | only questions to you or a group's admins that nobody answered, asked at least this long ago; 24 hours if not given |
 
 ## `max serve`
 

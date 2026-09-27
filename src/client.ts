@@ -323,6 +323,26 @@ export class MaxClient {
       return raw ? this.#partnerOf(raw) : undefined
     },
 
+    /**
+     * The owner and admins of a group, from the chat as the login carried it (`owner`, `admins`,
+     * `adminParticipants` — measured 2026-09-24, `FIND-116`). `undefined` when the login did not
+     * carry this chat or its admins: the login carries only chats that changed lately, and the rest
+     * come from the local copy.
+     */
+    adminIds: async (chatId: Id): Promise<Id[] | undefined> => {
+      await this.#connectOnce()
+      const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)
+      if (!raw || (raw.owner === undefined && raw.admins === undefined && raw.adminParticipants === undefined)) {
+        return undefined
+      }
+      const ids = [
+        asId(raw.owner),
+        ...(Array.isArray(raw.admins) ? raw.admins.map(asId) : []),
+        ...Object.keys(record(raw.adminParticipants) ?? {}),
+      ]
+      return [...new Set(ids.filter((id): id is Id => id !== undefined))]
+    },
+
     /** What a link leads to, without joining it. */
     inspect: async (link: string): Promise<GroupCard> => {
       if (this.#offline)
@@ -1269,8 +1289,15 @@ export class MaxClient {
      * forward from `since`; a chat with more than `REVIEW_PER_CHAT` in the window is cut short and
      * says so.
      */
-    review: async ({ since }: { since: number }): Promise<Omit<Review, "complete" | "unheard">> => {
-      const { chats, changed, cut } = await this.#changedSince(since)
+    review: async ({
+      since,
+      chatId,
+    }: {
+      since: number
+      chatId?: Id
+    }): Promise<Omit<Review, "complete" | "unheard">> => {
+      const { chats, changed: all, cut } = await this.#changedSince(since)
+      const changed = chatId === undefined ? all : all.filter((chat) => chat.id === chatId)
       const { read, skipped } = capped(changed, REVIEW_CHATS)
 
       const found: ReviewChat[] = []
