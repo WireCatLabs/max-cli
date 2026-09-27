@@ -53,7 +53,7 @@ sources disagree.
 | `messages.react` | 178 | `MSG_REACTION` | after login | measured | measured against MAX 2026-09-23 in Saved messages (`pnpm probe:reply`); tsmax addReaction; PyMax add_reaction |
 | `messages.unreact` | 179 | `MSG_CANCEL_REACTION` | after login | measured | measured against MAX 2026-09-24 in Saved messages; tsmax removeReaction; PyMax remove_reaction |
 | `messages.reactions` | 180 | `MSG_GET_REACTIONS` | after login | measured | measured against MAX 2026-09-24 in Saved messages (`pnpm probe:message-shapes`); tsmax getReactions; PyMax get_reactions |
-| `messages.delete` | 66 | `MSG_DELETE` | after login | observed | PyMax 2.4.1 `delete_message`; tsmax |
+| `messages.delete` | 66 | `MSG_DELETE` | after login | measured | PyMax 2.4.1 `delete_message`; tsmax; `forMe: false` measured 2026-09-27: the owner, as the group's admin, deleted another member's message in a test group by `max chats check` (`NEED-318`); it was gone from the history MAX returned |
 | `attachments.video` | 83 | `VIDEO_PLAY` | after login | measured | measured against MAX 2026-09-23 (`pnpm probe:download`); tsmax getVideoById; PyMax get_video_by_id |
 | `attachments.file` | 88 | `FILE_DOWNLOAD` | after login | measured | measured against MAX 2026-09-23 (`pnpm probe:download`); tsmax getFileById; PyMax get_file_by_id |
 | `uploads.photo` | 80 | `PHOTO_UPLOAD` | after login | measured | measured against MAX 2026-09-24 in Saved messages (`pnpm probe:upload`); PyMax upload_photo |
