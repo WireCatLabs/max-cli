@@ -2,7 +2,7 @@ import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
-import { type CheckRow, describe, finish, MAX_ACTIONS, prepare } from "../moderation/check.js"
+import { type CheckRow, describe, finish, MAX_ACTIONS, personal, prepare } from "../moderation/check.js"
 import { forCommand } from "./context.js"
 
 /**
@@ -37,7 +37,7 @@ export const checkCommand = (): Command =>
             chat,
             ...(options.since === undefined ? {} : { since: client.messages.moment(String(options.since), "--since") }),
           })
-          const { rows, notes } = await finish(client, store, prepared, {
+          const { rows, notes } = await finish(personal(client), store, prepared, {
             allowDangerous: options.allowDangerous === true,
             dryRun: options.dryRun === true,
             maxActions,

@@ -1,8 +1,7 @@
 import { CliError } from "@leemour/cli-core"
 import { describe, expect, it } from "vitest"
-import type { MaxClient } from "../client.js"
 import type { GroupMember, Message } from "../domain/models.js"
-import { act, type Finding, judge } from "./check.js"
+import { act, type Finding, judge, type Moderator } from "./check.js"
 import { defaultRules, type GroupRules } from "./rules.js"
 
 const NOW = Date.parse("2026-09-27T12:00:00Z")
@@ -171,22 +170,16 @@ describe("judge", () => {
 describe("act", () => {
   const client = (fail?: CliError) => {
     const calls: string[] = []
-    const fake = {
-      messages: {
-        delete: async (_chat: string, ids: string[]) => {
-          if (fail) throw fail
-          calls.push(`delete ${ids.join()}`)
-        },
+    const fake: Moderator = {
+      deleteMessage: async (_chat, id) => {
+        if (fail) throw fail
+        calls.push(`delete ${id}`)
       },
-      chats: {
-        members: {
-          remove: async (_chat: string, people: string[]) => {
-            if (fail) throw fail
-            calls.push(`remove ${people.join()}`)
-          },
-        },
+      removePerson: async (_chat, person) => {
+        if (fail) throw fail
+        calls.push(`remove ${person}`)
       },
-    } as unknown as MaxClient
+    }
     return { fake, calls }
   }
   const deletion = (id: string): Finding => ({

@@ -153,7 +153,23 @@ const CONSENT: Record<Exclude<Action, "report">, keyof GroupRules["consent"]> = 
  * Does what the findings ask, as far as consent, the per-run limit and the guard let it. Stops
  * acting at the first hourly-limit refusal: the rest is `skipped`, never tried.
  */
-export const act = async (client: MaxClient, findings: Finding[], options: ActOptions): Promise<CheckRow[]> => {
+/** The two things a check may do, whoever does them: the personal account, or a bot. */
+export interface Moderator {
+  deleteMessage(chatId: Id, messageId: Id): Promise<void>
+  removePerson(chatId: Id, personId: Id): Promise<void>
+}
+
+/** The personal account: deleting is for everyone, removing leaves messages and cannot ban. */
+export const personal = (client: MaxClient): Moderator => ({
+  deleteMessage: async (chatId, messageId) => {
+    await client.messages.delete(chatId, [messageId], { forEveryone: true })
+  },
+  removePerson: async (chatId, personId) => {
+    await client.chats.members.remove(chatId, [personId])
+  },
+})
+
+export const act = async (moderator: Moderator, findings: Finding[], options: ActOptions): Promise<CheckRow[]> => {
   const { chatId, rules, allowDangerous, dryRun, maxActions, confirm } = options
   const rows: CheckRow[] = []
   let acted = 0
@@ -207,9 +223,9 @@ export const act = async (client: MaxClient, findings: Finding[], options: ActOp
     acted += 1
     try {
       if (finding.action === "delete" && finding.messageId) {
-        await client.messages.delete(chatId, [finding.messageId], { forEveryone: true })
+        await moderator.deleteMessage(chatId, finding.messageId)
       } else {
-        await client.chats.members.remove(chatId, [finding.personId])
+        await moderator.removePerson(chatId, finding.personId)
       }
       rows.push(row("done"))
     } catch (error) {
@@ -351,13 +367,13 @@ export const prepare = async (
 
 /** Acts on what `prepare` found, moves the group's saved point, and says what is left. */
 export const finish = async (
-  client: MaxClient,
+  moderator: Moderator,
   store: SessionStore,
   prepared: Prepared,
   options: Omit<ActOptions, "chatId" | "rules">,
 ): Promise<{ rows: CheckRow[]; notes: string[] }> => {
   const { chatId, rules, found, findings, explicit } = prepared
-  const rows = await act(client, findings, { ...options, chatId, rules })
+  const rows = await act(moderator, findings, { ...options, chatId, rules })
   const notes = [...prepared.notes]
 
   const next = nextPoint(rows, found)
