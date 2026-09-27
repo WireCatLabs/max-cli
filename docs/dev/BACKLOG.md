@@ -118,18 +118,22 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 **Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
 `docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46`, MCP `max_chats_check` as `CLI-47`.
 
-- **MAX-60** · P2 · Live test of `max bot chats check` (#199) with bot `test2`, an admin of
-  «max-cli probe members» since 2026-09-27. Measured: the bot sees the group under the personal
-  account's chat id; it holds `add_remove_members` and `delete`. **Blocked:** with no
-  `read_all_messages` right the bot reads no group messages at all — `get-messages` returns none,
-  even for a message sent after it joined. The owner grants that right in the app; then one agreed
-  delete and one removal with a ban (a person who agrees). Bot `test` cannot join groups: its privacy
-  setting forbids them (`participants.filter.out`), changed only on business.max.ru.
+- **MAX-60** · 🟡 P2 · Live test of `max bot chats check`. Done 2026-09-27 with bot `test2` in «max-cli
+  probe members»: it reads the group under the personal account's chat id once it has `--can read`;
+  a check deleted one message of an agreed member for everyone, and another removed them with
+  `block=true`; the owner's account then added them back without trouble. **Left:** whether the ban
+  stops rejoining *by the link* — they were added back before trying it. Bot `test` still cannot
+  join groups (privacy setting, business.max.ru).
 - **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
   lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
   it. Refresh the chat (opcode 48, `CHAT_INFO`) before reading roles, or say the roles may be old.
 
 ## Foundation and risks
+
+- **OPS-16** · P2 · Tests that time out on a slow CI runner: `src/upload.test.ts` «sends an .mp4 as
+  a video», `src/commands/bot-reads.test.ts` «lists a chat's messages…», `src/commands/bot-sends.test.ts`
+  «has no hourly limit» — each just over vitest's 5 s on run 36351058448 (#210), green on the rerun
+  with no code change. Find what is slow in them (a real timer, a retry wait) rather than raise the limit.
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
