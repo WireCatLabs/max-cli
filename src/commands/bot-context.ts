@@ -12,10 +12,14 @@ import { asFirstWord } from "../profile.js"
 import { readSecret } from "../session/prompt.js"
 import { environmentOf } from "./context.js"
 
-export const botContext = (command: Command) => {
+/** `offline` is for the reads the local copy can answer; every other command still refuses the flag. */
+export const botContext = (command: Command, { offline: answersOffline = false }: { offline?: boolean } = {}) => {
   const environment = environmentOf(command)
   const flags = command.optsWithGlobals<GlobalFlags & { offline?: boolean }>()
-  if (flags.offline) throw new CliError("validation_error", "max bot always asks MAX; --offline cannot apply to it")
+  const offline = flags.offline === true
+  if (offline && !answersOffline) {
+    throw new CliError("validation_error", `--offline reads the local copy; \`${command.name()}\` has to ask MAX`)
+  }
   const settings = resolveSettings(flags)
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
@@ -59,6 +63,7 @@ export const botContext = (command: Command) => {
     authenticated,
     signal,
     uploadFetch,
+    offline,
   }
 }
 

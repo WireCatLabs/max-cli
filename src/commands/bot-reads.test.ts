@@ -1,5 +1,8 @@
+import { mkdtempSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-core"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
@@ -11,14 +14,15 @@ const BOT = `{"user_id": ${BIG}, "first_name": "Helper", "username": "helper_bot
 const CHAT = `{"chat_id": -100, "type": "chat", "status": "active", "title": "Team", "last_event_time": 1758888888000,
   "participants_count": 3, "is_public": false}`
 const person = `{"user_id": 42, "first_name": "Ann", "is_bot": false, "last_activity_time": 1}`
+// Newest first, as MAX answers.
 const MESSAGES = `{"messages": [
-  {"sender": ${person}, "recipient": {"chat_id": -100, "chat_type": "chat"}, "timestamp": 1758888888000,
-   "body": {"mid": "mid.1", "seq": 1, "text": "first"}},
+  {"sender": ${person}, "recipient": {"chat_id": -100, "chat_type": "chat"}, "timestamp": 1758888890000,
+   "body": {"mid": "mid.3", "seq": 3, "text": "with something new", "attachments": [{"type": "hologram", "payload": {}}]}},
   {"sender": ${BOT}, "recipient": {"chat_id": -100, "chat_type": "chat"}, "timestamp": 1758888889000,
    "link": {"type": "reply", "sender": ${person}, "message": {"mid": "mid.1", "seq": 1, "text": "first"}},
    "body": {"mid": "mid.2", "seq": 2, "text": "second"}},
-  {"sender": ${person}, "recipient": {"chat_id": -100, "chat_type": "chat"}, "timestamp": 1758888890000,
-   "body": {"mid": "mid.3", "seq": 3, "text": "with something new", "attachments": [{"type": "hologram", "payload": {}}]}}
+  {"sender": ${person}, "recipient": {"chat_id": -100, "chat_type": "chat"}, "timestamp": 1758888888000,
+   "body": {"mid": "mid.1", "seq": 1, "text": "first"}}
 ]}`
 
 let server: Server
@@ -94,6 +98,56 @@ describe("max bot messages", () => {
     expect(code).toBe(0)
     expect(stdout).toContain("first")
     expect(stdout).toContain("Ann")
+  })
+})
+
+describe("the local copy", () => {
+  it("keeps what `list` read, answers it back with --offline without asking MAX, and searches it", async () => {
+    new BotTokenStore({ profile: "copy", keyring }).write(TOKEN)
+    const online = JSON.parse((await max(["copy", "bot", "messages", "list", "-100", "--json"])).stdout)
+    requests.length = 0
+
+    const offline = await max(["copy", "bot", "messages", "list", "-100", "--offline", "--json"])
+    expect(offline.code).toBe(0)
+    expect(requests).toHaveLength(0)
+    const kept = JSON.parse(offline.stdout)
+    expect(kept.map((message: { id: string }) => message.id)).toEqual(["mid.1", "mid.2", "mid.3"])
+    expect(kept[1]).toMatchObject({ text: online[1].text, outgoing: true, replyToId: "mid.1" })
+
+    const found = JSON.parse((await max(["copy", "bot", "messages", "search", "second", "--json"])).stdout)
+    expect(found).toMatchObject([{ id: "mid.2", locator: expect.stringContaining("max-bot") }])
+    expect(requests).toHaveLength(0)
+  })
+
+  it("says what to run when nothing is recorded yet, rather than printing an empty list", async () => {
+    new BotTokenStore({ profile: "blank", keyring }).write(TOKEN)
+    const { code, stderr } = await max(["blank", "bot", "messages", "list", "-100", "--offline", "--json"])
+    expect(code).not.toBe(0)
+    expect(stderr).toContain("once")
+    expect(requests).toHaveLength(0)
+  })
+
+  it("**still answers from MAX when the local copy cannot be opened**, and says so on stderr only", async () => {
+    const real = process.env.MESSAGING_STORE
+    process.env.MESSAGING_STORE = mkdtempSync(join(tmpdir(), "not-a-file-"))
+    try {
+      const { code, stdout, stderr } = await max(["bot", "messages", "list", "-100", "--json"])
+      expect(code).toBe(0)
+      expect(JSON.parse(stdout)).toHaveLength(3)
+      expect(stderr).toContain("the local copy was not updated")
+    } finally {
+      process.env.MESSAGING_STORE = real
+    }
+  })
+
+  it("refuses --offline on a command that has to ask MAX", async () => {
+    for (const argv of [
+      ["bot", "messages", "send", "-100", "hi", "--offline", "--json"],
+      ["bot", "messages", "get", "mid.1", "--offline", "--json"],
+    ]) {
+      expect((await max(argv)).code).not.toBe(0)
+    }
+    expect(requests).toHaveLength(0)
   })
 })
 

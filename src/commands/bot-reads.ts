@@ -3,9 +3,13 @@ import { annotate } from "@leemour/cli-core/commands"
 import { type Message, pickChat, renderMessages } from "@leemour/cli-messaging"
 import { Command } from "commander"
 import { botOperations } from "../bot/client.js"
+import { accountOf, fromStore, keep, keepChat, PROVIDER } from "../bot/keep.js"
 import type { ChatRegistry } from "../bot/registry.js"
+import { asFirstWord } from "../profile.js"
 import { botContext } from "./bot-context.js"
 import { guardedCall, sendCommands } from "./bot-sends.js"
+
+type Context = ReturnType<typeof botContext>
 
 const CHAT_ID = /^-?\d+$/
 
@@ -31,17 +35,32 @@ export const messagesCommand = (): Command => {
     .command("list <chat>")
     .option("--limit <n>", "how many, up to 100", (value) => Number.parseInt(value, 10))
     .description(
-      "the latest messages in a chat (--limit, up to 100) — its id, or the title of a chat this bot has seen",
+      "the latest messages in a chat (--limit, up to 100) — its id, or the title of a chat this bot has seen; " +
+        "--offline answers from the local copy",
     )
     .action(async function (this: Command, chat: string) {
-      const context = botContext(this)
+      const context = botContext(this, { offline: true })
       const limit = context.settings.limit
       if (limit > 100)
         throw new CliError("validation_error", "a bot reads at most 100 messages at a time — --limit 100")
-      const client = context.authenticated()
       const chatId = chatIdOf(chat, context.registry)
+      if (context.offline) {
+        const botId = storedBotId(context)
+        const page = await fromStore((store) => store.messages(accountOf(botId), chatId, { limit }))
+        if (page.items.length === 0) {
+          throw new CliError(
+            "not_found",
+            `nothing is recorded for chat ${chatId} on this machine — run it once without --offline`,
+          )
+        }
+        show(context, page.items)
+        return
+      }
+      const client = context.authenticated()
       const self = (await client.me()).user_id
+      context.registry.rememberBot(self)
       const messages = await client.messages(chatId, limit, self)
+      await keep(self, messages, "history", context.streams.diagnostic)
       context.registry.observe([{ id: chatId }])
       show(context, messages)
     })
@@ -50,17 +69,50 @@ export const messagesCommand = (): Command => {
     .command("get <message>")
     .description("one message by its id (mid.…)")
     .action(async function (this: Command, message: string) {
-      const context = botContext(this)
+      const context = botContext(this, { offline: true })
+      if (context.offline) {
+        throw new CliError(
+          "validation_error",
+          "`get --offline` needs a lookup by id the local copy does not have yet — use `messages list <chat> --offline`",
+        )
+      }
       const client = context.authenticated()
       const self = (await client.me()).user_id
-      show(context, [await client.message(message, self)])
+      context.registry.rememberBot(self)
+      const found = await client.message(message, self)
+      await keep(self, [found], "history", context.streams.diagnostic)
+      show(context, [found])
+    })
+
+  command
+    .command("search <text>")
+    .option("--limit <n>", "how many", (value) => Number.parseInt(value, 10))
+    .description(
+      "search the messages this bot has read, sent or received on this machine — the local copy only, newest first",
+    )
+    .action(async function (this: Command, text: string) {
+      const context = botContext(this, { offline: true })
+      const botId = storedBotId(context)
+      const page = await fromStore((store) =>
+        store.search(text, { limit: context.settings.limit, account: accountOf(botId) }),
+      )
+      show(context, page.items)
     })
 
   sendCommands(command)
   return command
 }
 
-const show = (context: ReturnType<typeof botContext>, messages: Message[]): void => {
+const storedBotId = (context: Context): string => {
+  const botId = context.registry.botId()
+  if (botId) return botId
+  throw new CliError(
+    "not_found",
+    `nothing is recorded for this bot on this machine — run \`max ${asFirstWord(context.settings.profile)}bot messages list <chat>\` once`,
+  )
+}
+
+const show = (context: Context, messages: Message[]): void => {
   if (context.format !== "pretty") {
     context.renderer.result(messages)
     return
@@ -70,7 +122,7 @@ const show = (context: ReturnType<typeof botContext>, messages: Message[]): void
       verbosity: context.settings.detail,
       color: context.color,
       profile: context.settings.profile,
-      provider: "max-bot",
+      provider: PROVIDER,
     }),
   )
 }
@@ -84,7 +136,7 @@ export const chatsCommand = (): Command => {
     .command("list")
     .description("chats this bot has seen on this machine — not a complete list from MAX")
     .action(function (this: Command) {
-      const { renderer, registry } = botContext(this)
+      const { renderer, registry } = botContext(this, { offline: true })
       renderer.result(registry.list())
     })
 
@@ -92,9 +144,10 @@ export const chatsCommand = (): Command => {
     .command("get <chat>")
     .description("one chat from MAX, and remember it")
     .action(async function (this: Command, chat: string) {
-      const { renderer, registry, authenticated } = botContext(this)
+      const { renderer, registry, authenticated, streams } = botContext(this)
       const found = await authenticated().chat(chatIdOf(chat, registry))
       registry.observe([found])
+      await keepChat(registry.botId(), found, streams.diagnostic)
       renderer.result(found)
     })
 
