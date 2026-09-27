@@ -1044,6 +1044,50 @@ the bot this profile's token belongs to: name, id, description, commands
 max bot me
 ```
 
+### `max bot list`
+
+every name on this machine that has a bot token; --check asks MAX which bot each is
+
+```sh
+max bot list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--check` | ask MAX who each bot is |
+
+### `max bot messages`
+
+messages in the chats this bot is in
+
+```sh
+max bot messages
+```
+
+### `max bot chats`
+
+the chats this bot is in — MAX gives a bot no list of them, so `list` shows the ones it has seen
+
+```sh
+max bot chats
+```
+
+### `max bot recipients`
+
+the chats this bot may write to; with no list, every chat — `off` removes the list
+
+```sh
+max bot recipients
+```
+
+### `max bot sends`
+
+what this bot sent, edited and deleted from this machine — ids and outcomes, never text
+
+```sh
+max bot sends
+```
+
 ### `max bot api`
 
 every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md
