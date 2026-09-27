@@ -379,4 +379,39 @@ describe("changing a group", () => {
       expect(stderr).toContain("only the first 1 members were read")
     })
   })
+
+  it("marks the owner and admins in the member list when the login names them", async () => {
+    const { environment } = messenger({
+      [Opcode.LOGIN]: {
+        profile: { contact: { id: 10000001 } },
+        chats: [{ ...GROUP, owner: 10000001, admins: [30000004] }],
+      },
+      [Opcode.CHAT_MEMBERS]: {
+        members: [10000001, 30000004, 30000005].map((id) => ({ contact: { id }, presence: {} })),
+      },
+    })
+    const unknown = messenger({ [Opcode.CHAT_MEMBERS]: { members: [{ contact: { id: 30000005 }, presence: {} }] } })
+
+    const { stdout } = await runWith(["gr-roles", "chats", "members", "list", "Team", "--json"], environment)
+    const plain = await runWith(["gr-noroles", "chats", "members", "list", "Team", "--json"], unknown.environment)
+
+    expect(JSON.parse(stdout).map((one: { role: string }) => one.role)).toEqual(["owner", "admin", "member"])
+    expect(JSON.parse(plain.stdout)[0].role).toBeUndefined()
+    expect(plain.stderr).toContain("who is owner or admin is not known")
+  })
+
+  it("shows the invite link, and says so when there is none to see", async () => {
+    const { environment } = messenger()
+
+    const shown = await runWith(["gr-link", "chats", "link", "show", "Team", "--json"], environment)
+    const none = await runWith(["gr-link", "chats", "link", "show", "Strangers", "--json"], environment)
+
+    expect(JSON.parse(shown.stdout)).toEqual({
+      chatId: String(GROUP.id),
+      title: "Team",
+      link: "https://max.ru/join/abcdef",
+    })
+    expect(none.code).not.toBe(0)
+    expect(none.stderr).toContain("shows you no invite link")
+  })
 })

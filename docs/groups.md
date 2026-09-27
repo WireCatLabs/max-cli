@@ -91,12 +91,13 @@ max chats rules set "Поход" consent.delete confirm    # но перед у�
 |---|---|
 | `max review --chat <чат> --unanswered [часы]` | вопросы, на которые вы и админы не ответили за столько часов (по умолчанию 24) |
 | `max chats events <чат>` | кто вступил, вышел, кого добавили и удалили, кем; по умолчанию за 7 дней |
-| `max chats members list <чат>` | все участники от MAX: когда заведён аккаунт, когда был в сети |
+| `max chats members list <чат>` | все участники от MAX: кто владелец и админы, когда заведён аккаунт, когда был в сети |
 | `max chats rules show\|set\|unset <чат>` | правила группы |
 | `max chats check <чат>` | проверка по правилам; делает то, что правила разрешают |
 | `max chats members add\|remove`, `admins add\|remove` | участники и админы |
 | `max chats requests list\|accept\|decline` | заявки на вступление |
-| `max chats settings`, `update`, `link reset` | настройки, название, описание, новая ссылка |
+| `max chats link show\|reset <чат>` | ссылка-приглашение; `reset` — новая, старая перестаёт работать |
+| `max chats settings`, `update` | настройки, название, описание |
 | `max messages delete --for-everyone`, `pin`, `unpin` | удалить у всех, закрепить |
 
 Агенту без терминала то же самое дают инструменты MCP: `max_review` с `unanswered_after_hours`,

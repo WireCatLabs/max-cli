@@ -334,17 +334,8 @@ export class MaxClient {
      * come from the local copy.
      */
     adminIds: async (chatId: Id): Promise<Id[] | undefined> => {
-      await this.#connectOnce()
-      const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)
-      if (!raw || (raw.owner === undefined && raw.admins === undefined && raw.adminParticipants === undefined)) {
-        return undefined
-      }
-      const ids = [
-        asId(raw.owner),
-        ...(Array.isArray(raw.admins) ? raw.admins.map(asId) : []),
-        ...Object.keys(record(raw.adminParticipants) ?? {}),
-      ]
-      return [...new Set(ids.filter((id): id is Id => id !== undefined))]
+      const roles = await this.#roles(chatId)
+      return roles && [...new Set([...(roles.owner ? [roles.owner] : []), ...roles.admins])]
     },
 
     /**
@@ -514,7 +505,14 @@ export class MaxClient {
           }
           marker = next
         }
-        return { chatId, members: [...members.values()], complete }
+        const roles = await this.#roles(chatId)
+        const role = (id: Id) => (id === roles?.owner ? "owner" : roles?.admins.has(id) ? "admin" : "member")
+        return {
+          chatId,
+          members: [...members.values()].map((member) => (roles ? { ...member, role: role(member.id) } : member)),
+          complete,
+          rolesKnown: roles !== undefined,
+        }
       },
       /** No history unless asked (`NEED-272`): what was said before somebody joined is not theirs by default. */
       add: (reference: string, people: string[], { history = false }: { history?: boolean } = {}) =>
@@ -2063,6 +2061,21 @@ export class MaxClient {
       replyTo: message.replyTo && name(message.replyTo),
       forwardedFrom: message.forwardedFrom && name(message.forwardedFrom),
     }))
+  }
+
+  /** The chat's owner and admins as the login carried them; `undefined` when it did not. */
+  async #roles(chatId: Id): Promise<{ owner?: Id; admins: Set<Id> } | undefined> {
+    await this.#connectOnce()
+    const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)
+    if (!raw || (raw.owner === undefined && raw.admins === undefined && raw.adminParticipants === undefined)) {
+      return undefined
+    }
+    const admins = [
+      ...(Array.isArray(raw.admins) ? raw.admins.map(asId) : []),
+      ...Object.keys(record(raw.adminParticipants) ?? {}),
+    ].filter((id): id is Id => id !== undefined)
+    const owner = asId(raw.owner)
+    return { ...(owner ? { owner } : {}), admins: new Set(admins.filter((id) => id !== owner)) }
   }
 
   /** Names we hold first, the rest from `CONTACT_INFO`, kept for next time. A refusal costs the names only. */

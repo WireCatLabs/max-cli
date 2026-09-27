@@ -252,9 +252,10 @@ const READ_TOOLS = {
   max_chats_members: tool({
     title: "Everyone in a group",
     description:
-      "Every member of a group or channel, from MAX: { id, name, username, registeredAt, lastSeenAt }. " +
+      "Every member of a group or channel, from MAX: { id, name, username, registeredAt, lastSeenAt, role? }. " +
+      "`role` is owner, admin or member, absent when `rolesKnown` is false. " +
       "`registeredAt` is when their MAX account was made — a days-old account is worth a look. " +
-      "Returns { chatId, members, complete }.",
+      "Returns { chatId, members, complete, rolesKnown }.",
     input: v.object({ chat }),
     annotations: READ,
     answer: (client, args) => client.chats.members.list(args.chat),
