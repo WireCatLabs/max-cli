@@ -7,11 +7,12 @@ import { sendTime } from "../config.js"
 import type { Id, Message, WindowedMessage } from "../domain/models.js"
 import { type Saved, save } from "../download.js"
 import { renderMessages } from "../rendering/messages.js"
-import { notDownloaded, transcribe } from "../transcribe/index.js"
+import { notDownloaded, spoken, transcribe, withTranscript } from "../transcribe/index.js"
 import { isInstalled, modelsDirectory } from "../transcribe/install.js"
 import { speechModel } from "../transcribe/models.js"
 import { readBody } from "./body.js"
 import { type CommandContext, forCommand } from "./context.js"
+import { hearingFields, hearingOptions, hearMessages } from "./hearing.js"
 import { renderPage } from "./paging.js"
 
 export const messagesCommand = (): Command => {
@@ -32,6 +33,8 @@ export const messagesCommand = (): Command => {
     .option("--before <id-or-time>", "read what came before this message id, or this ISO 8601 time")
     .option("--after <id-or-time>", "read what came after this message id, or this ISO 8601 time; not with --before")
     .option("--mark-read", "also mark the chat read up to the newest message shown; the other person sees it")
+    .option(...hearingOptions.transcribe)
+    .option(...hearingOptions.model)
     .action(async function (this: Command, chat: string) {
       const options = this.optsWithGlobals()
       if (options.before !== undefined && options.after !== undefined) {
@@ -40,6 +43,8 @@ export const messagesCommand = (): Command => {
 
       const context = forCommand(this)
       const { renderer, settings, createClient, run } = context
+      const transcribe = options.transcribe === true
+      const model = speechModel(options.model === undefined ? settings.transcribeModel : String(options.model)).id
       const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
 
       await run("messages list", async (events) => {
@@ -60,10 +65,21 @@ export const messagesCommand = (): Command => {
             const mark = await client.chats.markRead(chatId, newest.id)
             renderer.note(`marked read up to ${mark.messageId}`)
           }
-          renderPage(context, page, feed(context), (items) =>
-            "after" in anchor
-              ? `newer ones: \`--after ${items.at(-1)?.id}\``
-              : `older ones: \`--before ${items[0]?.id}\``,
+          const heard = await hearMessages(context, client, page.items, {
+            transcribe,
+            model,
+            offline: options.offline === true,
+            cache,
+          })
+          renderPage(
+            context,
+            { ...page, items: page.items.map((message) => withTranscript(message, heard)) },
+            (items) => feed(context)(items.map(spoken)),
+            (items) =>
+              "after" in anchor
+                ? `newer ones: \`--after ${items.at(-1)?.id}\``
+                : `older ones: \`--before ${items[0]?.id}\``,
+            hearingFields(heard, transcribe),
           )
         } finally {
           await client.close()

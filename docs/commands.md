@@ -446,6 +446,8 @@ max messages list <chat> [options]
 | `--before <id-or-time>` | read what came before this message id, or this ISO 8601 time |
 | `--after <id-or-time>` | read what came after this message id, or this ISO 8601 time; not with --before |
 | `--mark-read` | also mark the chat read up to the newest message shown; the other person sees it |
+| `--transcribe` | hear voice messages not heard yet, on this machine; slow, the model must be downloaded |
+| `--model <id>` | which downloaded speech model hears them; `max models audio list` shows them |
 
 ### `max messages search`
 
@@ -828,6 +830,8 @@ max inbox [options]
 | `--new` | what arrived since the last check, each message once — for scheduled runs |
 | `--since <id-or-time>` | what arrived after this message id or ISO 8601 time; the saved point stays put |
 | `--limit <n>` | at most this many per chat, the newest |
+| `--transcribe` | hear voice messages not heard yet, on this machine; slow, the model must be downloaded |
+| `--model <id>` | which downloaded speech model hears them; `max models audio list` shows them |
 
 ## `max review`
 

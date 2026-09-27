@@ -10,16 +10,17 @@ import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
 import { openProfileCache } from "../cache/index.js"
 import { DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
+import { hearingFields } from "../commands/hearing.js"
 import { sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
-import type { Page } from "../domain/models.js"
+import type { Message, Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
 import { describe, type Finding, finish, MAX_ACTIONS, needsConfirm, prepare } from "../moderation/check.js"
 import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
 import { REVIEW_DAYS, review, reviewStart } from "../review.js"
 import type { Permission } from "../sends/permissions.js"
 import type { SessionStore } from "../session/store.js"
-import { transcribe } from "../transcribe/index.js"
+import { type Heard, hearAll, isVoice, transcribe, withTranscript } from "../transcribe/index.js"
 import { modelsDirectory } from "../transcribe/install.js"
 import { DEFAULT_MODEL, speechModel } from "../transcribe/models.js"
 import { confirmer, sendOptions } from "./confirm.js"
@@ -89,6 +90,28 @@ interface Defaults {
   release: () => Promise<void>
 }
 
+/** Kept transcripts always; with `transcribe`, the rest heard after the connection is released. */
+const heardIn = async (
+  client: MaxClient,
+  messages: readonly Message[],
+  transcribe: boolean,
+  { profile, transcribeModel, release }: Defaults,
+): Promise<Heard> => {
+  const voices = messages.filter(isVoice).map((message) => ({ chatId: message.chatId, messageId: message.id }))
+  if (voices.length === 0) return { transcripts: new Map(), unheard: [] }
+  const cache = await openProfileCache(profile)
+  try {
+    return await hearAll(client, voices, {
+      model: transcribe ? speechModel(transcribeModel) : undefined,
+      directory: modelsDirectory(),
+      cache,
+      release,
+    })
+  } finally {
+    cache?.close()
+  }
+}
+
 type AnyTool = Omit<Tool<v.ObjectSchema<v.ObjectEntries, undefined>>, "answer"> & {
   answer: (client: MaxClient, args: Record<string, unknown>, defaults: Defaults) => Promise<object>
 }
@@ -120,19 +143,40 @@ const READ_TOOLS = {
     description:
       "Other people's messages waiting for the owner, grouped by chat, in one call: the unread ones, or with " +
       "`since` everything after that point. Marks nothing read and moves no saved point — the owner's " +
-      "`max inbox --new` is unaffected, whatever `mode` says. Returns { mode, chats: [{ id, title, messages, more }], skipped, partial }.",
+      "`max inbox --new` is unaffected, whatever `mode` says. A voice message carries `transcript` once heard; " +
+      "`transcribe: true` hears the rest on this machine (slow, up to a minute per five minutes of speech; never " +
+      "downloads a model) and adds `unheard` and `transcribeProblem`. " +
+      "Returns { mode, chats: [{ id, title, messages, more }], skipped, partial }.",
     input: v.object({
       since: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time"))),
       limit: v.optional(
         v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(100), v.description("at most this many per chat")),
       ),
+      transcribe: v.optional(
+        v.pipe(v.boolean(), v.description("hear voice messages that have no text yet; slow, never downloads a model")),
+      ),
     }),
     annotations: READ,
-    answer: async (client, args) => {
+    answer: async (client, args, defaults) => {
       const limit = args.limit ?? INBOX_LIMIT
-      return args.since === undefined
-        ? client.inbox.unread({ limit })
-        : client.inbox.since({ since: client.messages.moment(args.since, "since"), limit })
+      const inbox =
+        args.since === undefined
+          ? await client.inbox.unread({ limit })
+          : await client.inbox.since({ since: client.messages.moment(args.since, "since"), limit })
+      const heard = await heardIn(
+        client,
+        inbox.chats.flatMap((chat) => chat.messages),
+        args.transcribe === true,
+        defaults,
+      )
+      return {
+        ...inbox,
+        chats: inbox.chats.map((chat) => ({
+          ...chat,
+          messages: chat.messages.map((message) => withTranscript(message, heard)),
+        })),
+        ...hearingFields(heard, args.transcribe === true),
+      }
     },
   }),
 
@@ -171,7 +215,7 @@ const READ_TOOLS = {
       ),
     }),
     annotations: READ,
-    answer: async (client, args, { profile, transcribeModel }) => {
+    answer: async (client, args, { profile, transcribeModel, release }) => {
       const since = args.since === undefined ? reviewStart() : client.messages.moment(args.since, "since")
       const chatId = args.chat === undefined ? undefined : await client.chats.resolve(args.chat)
       const cache = await openProfileCache(profile)
@@ -182,6 +226,7 @@ const READ_TOOLS = {
           ...(chatId === undefined ? {} : { chatId }),
           ...(args.unanswered_after_hours === undefined ? {} : { unansweredAfterHours: args.unanswered_after_hours }),
           ...(args.transcribe === true ? { transcribeWith: transcribeModel } : {}),
+          release,
         })
       } finally {
         cache?.close()
@@ -325,12 +370,17 @@ const READ_TOOLS = {
     title: "Read a chat",
     description:
       "Recent messages in a chat, oldest first. Does not mark anything read. For older messages pass " +
-      "`before` = the id of the first item; for newer, `after` = the id of the last. Returns { items, page, limit, hasMore }.",
+      "`before` = the id of the first item; for newer, `after` = the id of the last. A voice message carries " +
+      "`transcript` once heard; `transcribe: true` hears the rest on this machine (slow; never downloads a model). " +
+      "Returns { items, page, limit, hasMore }.",
     input: v.object({
       chat,
       limit,
       before: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time"))),
       after: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time; not with before"))),
+      transcribe: v.optional(
+        v.pipe(v.boolean(), v.description("hear voice messages that have no text yet; slow, never downloads a model")),
+      ),
     }),
     annotations: READ,
     answer: async (client, args, defaults) => {
@@ -345,7 +395,12 @@ const READ_TOOLS = {
           : args.before !== undefined
             ? { before: client.messages.moment(args.before, "before") }
             : {}
-      return envelope(await client.messages.list(chatId, { limit: size, ...anchor }), 1, size)
+      const page = await client.messages.list(chatId, { limit: size, ...anchor })
+      const heard = await heardIn(client, page.items, args.transcribe === true, defaults)
+      return {
+        ...envelope({ ...page, items: page.items.map((message) => withTranscript(message, heard)) }, 1, size),
+        ...hearingFields(heard, args.transcribe === true),
+      }
     },
   }),
 

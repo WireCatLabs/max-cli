@@ -2,10 +2,9 @@ import { CliError } from "@leemour/cli-core"
 import type { CacheStore } from "./cache/index.js"
 import type { MaxClient } from "./client.js"
 import type { Id, Review, ReviewChat, ReviewMessage } from "./domain/models.js"
-import { notDownloaded, openInstalled, transcribe } from "./transcribe/index.js"
-import { isInstalled, modelsDirectory } from "./transcribe/install.js"
-import { type SpeechModel, speechModel } from "./transcribe/models.js"
-import type { Recognizer } from "./transcribe/speech.js"
+import { type HearAllOptions, hearAll, isVoice, withTranscript } from "./transcribe/index.js"
+import { modelsDirectory } from "./transcribe/install.js"
+import { speechModel } from "./transcribe/models.js"
 
 /** Owner's ruling: without a boundary, a review looks at the last three days. */
 export const REVIEW_DAYS = 3
@@ -33,79 +32,78 @@ export interface ReviewOptions {
   /** Keep only questions nobody answered in this many hours. */
   unansweredAfterHours?: number
   now?: number
+  /** Drops the connection before the model runs; nothing after it needs MAX. */
+  release?: () => Promise<void>
+  progress?: (count: number) => void
+  hearing?: Pick<HearAllOptions, "fetchAudio" | "open">
 }
 
 /**
  * `max review` and `max_review` alike. A text already heard comes from the cache with no model
- * loaded; with `transcribeWith`, the rest are transcribed one by one. A missing model or a recording
- * that will not decode is a field in the answer, not a failed review: the messages are still worth
- * reading. The model is never downloaded from here (`NEED-231`).
+ * loaded; with `transcribeWith`, the rest are transcribed. A missing model or a recording that will
+ * not decode is a field in the answer, not a failed review: the messages are still worth reading.
+ * The model is never downloaded from here (`NEED-231`). Everything that needs MAX — the admins for
+ * `--unanswered` too — is asked before the model runs, so the connection can close first.
  */
 export const review = async (
   client: MaxClient,
-  { since, cache, transcribeWith, chatId, unansweredAfterHours, now = Date.now() }: ReviewOptions,
+  {
+    since,
+    cache,
+    transcribeWith,
+    chatId,
+    unansweredAfterHours,
+    now = Date.now(),
+    release,
+    progress,
+    hearing,
+  }: ReviewOptions,
 ): Promise<Review> => {
   const read = await client.inbox.review({ since, ...(chatId === undefined ? {} : { chatId }) })
-  const unheard: Review["unheard"] = []
-  const model = transcribeWith === undefined ? undefined : speechModel(transcribeWith)
-  const directory = modelsDirectory()
-  let transcribeProblem = model && !isInstalled(model, directory) ? notDownloaded(model).message : undefined
-  const canTranscribe = model !== undefined && transcribeProblem === undefined
-  // Loading takes seconds and up to 1.3 GB, so one recognizer hears every voice message of the review.
-  let loaded: Recognizer | undefined
-  const shared = (speech: SpeechModel, at: string): Recognizer => {
-    loaded ??= openInstalled(speech, at)
-    const recognizer = loaded
-    return { recognize: (pcm) => recognizer.recognize(pcm), free: () => {} }
+  const admins = new Map<Id, Id[] | undefined>()
+  if (unansweredAfterHours !== undefined) {
+    for (const chat of read.chats)
+      admins.set(chat.id, chat.kind === "dialog" ? [] : await client.chats.adminIds(chat.id))
   }
 
-  try {
-    for (const chat of read.chats) {
-      for (const message of chat.messages) {
-        if (!message.attachments.some(({ kind }) => kind === "audio")) continue
-        const kept = cache?.messages.transcript(chat.id, message.id)
-        if (kept) {
-          message.transcript = kept.text
-          continue
-        }
-        if (canTranscribe) {
-          try {
-            message.transcript = (
-              await transcribe(client, chat.id, message.id, { model, directory, cache, open: shared })
-            ).text
-            continue
-          } catch (error) {
-            transcribeProblem ??= error instanceof Error ? error.message : String(error)
-          }
-        }
-        unheard.push({ chatId: chat.id, messageId: message.id })
-      }
-    }
-  } finally {
-    loaded?.free()
-  }
+  const voices = read.chats.flatMap((chat) =>
+    chat.messages.filter(isVoice).map((message) => ({ chatId: chat.id, messageId: message.id })),
+  )
+  const heard = await hearAll(client, voices, {
+    model: transcribeWith === undefined ? undefined : speechModel(transcribeWith),
+    directory: modelsDirectory(),
+    cache,
+    ...(release ? { release } : {}),
+    ...(progress ? { progress } : {}),
+    ...hearing,
+  })
+  const chats = read.chats.map((chat) => ({
+    ...chat,
+    messages: chat.messages.map((message): ReviewMessage => withTranscript(message, heard)),
+  }))
 
   const complete =
-    read.skipped.length === 0 && !read.partial && unheard.length === 0 && read.chats.every((chat) => !chat.more)
+    read.skipped.length === 0 && !read.partial && heard.unheard.length === 0 && chats.every((chat) => !chat.more)
   const found: Review = {
     ...read,
+    chats,
     complete,
-    unheard,
-    ...(transcribeProblem === undefined ? {} : { transcribeProblem }),
+    unheard: heard.unheard,
+    ...(heard.problem === undefined ? {} : { transcribeProblem: heard.problem }),
   }
   if (unansweredAfterHours === undefined) return found
 
-  const chats: ReviewChat[] = []
+  const open: ReviewChat[] = []
   for (const chat of found.chats) {
-    const admins = chat.kind === "dialog" ? [] : await client.chats.adminIds(chat.id)
-    const open = unanswered(chat.messages, {
-      answerers: new Set(admins ?? []),
+    const answerers = admins.get(chat.id)
+    const questions = unanswered(chat.messages, {
+      answerers: new Set(answerers ?? []),
       before: now - unansweredAfterHours * 3_600_000,
     })
-    if (open.length === 0) continue
-    chats.push({ ...chat, messages: open, answeredBy: admins === undefined ? "owner" : "owner-and-admins" })
+    if (questions.length === 0) continue
+    open.push({ ...chat, messages: questions, answeredBy: answerers === undefined ? "owner" : "owner-and-admins" })
   }
-  return { ...found, chats, unanswered: { olderThanHours: unansweredAfterHours } }
+  return { ...found, chats: open, unanswered: { olderThanHours: unansweredAfterHours } }
 }
 
 /** A shared link's query string is not a question. */

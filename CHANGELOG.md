@@ -13,6 +13,10 @@
   его отправляет `--as-file`. `max messages send <чат> --voice заметка.ogg` отправляет голосовое с
   полоской громкости и длительностью; файл — Ogg Opus, для другого звука команда подскажет строку
   `ffmpeg`. Подробнее — [docs/usage.md](docs/usage.md).
+- **Голосовые в тексте прямо в списке.** `max messages list <чат> --transcribe` и
+  `max inbox --transcribe` расшифровывают показанные голосовые на этом компьютере; текст — под
+  сообщением со значком 🎤, в `--json` — поле `transcript`. Уже расшифрованные показывают текст и
+  без флага. То же в MCP: `transcribe: true` у `max_messages_list` и `max_inbox`.
 - **Остальные команды бота.** `max <имя> bot messages send --file <путь>` прикладывает картинку,
   видео, звук или файл, а `bot uploads put` только загружает его. `bot members list|add|remove` и
   `bot admins list|add|remove` — участники и админы чата, `bot comments list|get|send|edit|delete` —
@@ -29,6 +33,9 @@
   настроен вебхук, не работает.
 
 ### Исправлено
+
+- `max review --transcribe` больше не держит соединение с MAX открытым, пока работает модель:
+  записи скачиваются заранее, соединение закрывается, потом идёт распознавание.
 
 - `max bot api edit-my-commands`, `subscribe`, `unsubscribe` и `get-upload-url` падали с
   «an account change without a known action» и ничего не отправляли.
