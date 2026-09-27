@@ -62,6 +62,7 @@
     "probe:pre-release": "pnpm build && node --experimental-strip-types scripts/probe-pre-release.ts",
     "probe:control": "pnpm build && node --experimental-strip-types scripts/probe-control.ts",
     "probe:member-list": "pnpm build && node --experimental-strip-types scripts/probe-member-list.ts",
+    "probe:admin-rights": "pnpm build && node --experimental-strip-types scripts/probe-admin-rights.ts",
     "probe:message-count": "pnpm build && node --experimental-strip-types scripts/probe-message-count.ts",
     "probe:media-send": "pnpm build && node --experimental-strip-types scripts/probe-media-send.ts",
     "probe:video": "pnpm build && node --experimental-strip-types scripts/probe-video.ts",

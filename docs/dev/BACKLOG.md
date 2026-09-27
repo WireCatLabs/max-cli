@@ -123,10 +123,10 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 - **MAX-59** · P2 · Accept and decline join requests from `max chats check`: they are planned,
   never sent, until `MAX-41` measures them with a real request (`src/moderation/check.ts`, `act`).
-  To measure: the owner turns on approval of new members for «max-cli probe members» in the MAX
-  app (no known option does it from `max`), the second person asks to join by
-  `max chats link show`; then `requests list`, `requests accept`, and `chats settings` shows which
-  raw option the approval switch changed.
+  **Blocked:** a MAX group has no setting that makes joining need approval (owner, 2026-09-27), so
+  no request can be made to test on. The server config still carries `"join-requests": true`
+  (web capture 2026-09-25) — requests may belong to channels or to a later MAX version. Revisit
+  when a real request shows up in `max chats requests list`.
 - **MAX-60** · P2 · Live test of `max bot chats check` (#199) with bot `test2`, an admin of
   «max-cli probe members» since 2026-09-27. Measured: the bot sees the group under the personal
   account's chat id; it holds `add_remove_members` and `delete`. **Blocked:** with no
@@ -137,7 +137,10 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **MAX-61** · P3 · Measure the admin-rights bit for «read all messages» on opcode 77, so
   `max chats admins add --can` can grant it (`ADMIN_RIGHTS`, `src/client.ts`). Known bits: members 2,
   admins 4, info 8, pin 16, post 256, edit 512, delete 1024; the bot API lists `read_all_messages`
-  first, so 1 is a guess — measure it on the test group, never guess on a real one.
+  first, so 1 is a guess — never guess on a real group. Measure instead: the owner switches rights
+  on for bot `test2` in the app, and `pnpm probe:admin-rights <id>` prints the number the login
+  carries for it. On 2026-09-27 it printed 1026 (2 + 1024) after switches were set in the app, and
+  the Bot API agreed (`add_remove_members`, `delete`) — the change had not been saved.
 - **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
   lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
   it. Refresh the chat (opcode 48, `CHAT_INFO`) before reading roles, or say the roles may be old.
