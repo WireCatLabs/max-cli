@@ -94,6 +94,52 @@ date they were measured — deduplication by `cid`, 18-digit message ids, `chats
 When you re-run one, update the sentence it supports. A measurement nobody can replay is a rumour,
 and a measurement that has quietly stopped being true is worse.
 
+### Live scenarios — the whole tool, end to end
+
+The probes measure one operation each. The scenarios check what a person actually does, across two
+personal accounts and two bots, so that a message one account sends is proven to arrive at the
+other. The full list, with the test chats' ids and each run's results, is private
+(`docs_ai/plans/2026-09-28-live-scenarios.md`); this is its shape.
+
+**Cast.** Two personal profiles — the owner's and a second account that agreed to be acted on — and
+two bots. **A bot with a live webhook is read-only**: its updates go to real operators. Test chats
+only: Saved messages (chat `0`), the dialog between the two accounts, a test group and a test
+channel with the second account and one bot as admin. Never a real person's chat.
+
+**How to run.** The published build, `max`, since that is what a reader installs. Each command with
+`--json --timeout 60s` inside a wall-clock `timeout 90`, and the check is: exit code, stdout one JSON
+value, stderr empty or one diagnostic, and the shape (keys, item count) — never the values, which
+are other people's messages. A command that does not exit is a failure. Snapshot before a change,
+restore the exact value after. Long-running commands (`watch`, `serve`, `mcp`, `bot updates watch`)
+run in the background and are stopped by the PID taken at start.
+
+| Set | What a person does | Commands it exercises |
+|---|---|---|
+| P1 | the start of the day | `account show`, `account sessions list`, `chats list` (`--kind`, `--unread`), `inbox`, `review --since 1d`, `contacts list\|show` |
+| P2 | a conversation between the two accounts | `messages send`, the other side's `messages list`, `reactions add\|remove`, `--reply-to`, `messages edit`, `messages show\|context` |
+| P3 | mark read, delete for everyone | `chats read`, `messages delete` without and with `--allow-dangerous` |
+| P4 | Saved messages as a notebook | `--md`, `--file` (photo, `--as-file`), `messages download`, `--at 2h`, `messages scheduled`, `messages forward` |
+| P5 | find and keep | `messages search`, `backup messages` (plan, `--run`), `export messages` (md, jsonl), `--offline` |
+| P6 | live stream | `max watch` while the other account writes |
+| P7 | folders and a contact's name | `chats folders create\|update\|delete`, `contacts rename` and back |
+| P8 | guard rails | `recipients add\|off`, a refused send (exit 7), `sends list` |
+| G1–G7 | a group from creation to leaving | `chats create`, `update`, `settings`, `link show\|reset`, `members add\|remove\|list`, the other side's `inspect\|join`, `events`, `admins add\|remove`, `messages pin\|unpin`, `polls create\|vote\|close`, `rules set\|unset`, `chats check --dry-run`, `leave` |
+| C1 | a channel | `chats create --channel`, the link, the other account joins, a bot made admin |
+| T1–T6 | the bots | `bot list --check`, `me`, `webhooks list`, `commands set\|list\|clear`, `messages send\|edit\|get\|delete` in the group, `chats pin\|unpin\|action`, `members\|admins list`, `admins add\|remove`, `--file`, `recipients`, `updates watch`, `people show`, `api get-my-info` |
+| X1–X3 | agents and operations | `commands`, `skill show`, `config show`, `doctor --online`, `update --check`, `--record` + `runs list`, `mcp` and `bot mcp` (`initialize`, `tools/list`, one `tools/call`), errors: exit code and JSON on stderr |
+
+Not run, on purpose: anything writing as a bot with a live webhook; `bot webhooks set|delete`;
+`bot members remove` (its ban cannot be lifted, `MAX-62`); `account update` (a description or photo
+cannot be put back exactly); `contacts block|remove|import` and `chats read|leave` on real people;
+`messages transcribe` without a downloaded model.
+
+**Results.** 2026-09-28 on 0.16.0: every set worked, and the run found five defects, fixed in
+0.17.0 — the owner's own rename shown late (`MAX-63`), a false «before 1970» gap in exports
+(`CLI-53`), error texts (`CLI-54`), three shapes of JSON list (`CLI-56`), and `--limit abc` still
+«NaN» outside the paged lists (fixed after 0.17.0). Then on 0.17.0: the rename and the dead invite
+link checked live. An MCP call in flight when stdin closes gets no answer — by design of the MCP
+SDK's stdio transport, which real clients keep open (`CLI-55`).
+
 **A manual run from a checkout goes through `bin/max`**, never `node dist/bin/max.js` directly:
 
 ```sh

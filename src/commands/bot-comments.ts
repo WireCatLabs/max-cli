@@ -5,7 +5,7 @@ import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, textOf } from "./bot-sends.js"
-import { renderList } from "./paging.js"
+import { renderList, wholeNumber } from "./paging.js"
 
 const format = () => new Option("--format <format>", "how the text is marked up").choices(["markdown", "html"])
 
@@ -20,7 +20,7 @@ export const commentsCommand = (): Command => {
   command
     .command("list <message>")
     .description("the comments under a post, newest last")
-    .option("--limit <n>", "how many, up to 100", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .action(async function (this: Command, message: string) {
       const context = botContext(this)
       const limit = context.settings.limit

@@ -13,7 +13,7 @@ import { speechModel } from "../transcribe/models.js"
 import { readBody } from "./body.js"
 import { type CommandContext, forCommand } from "./context.js"
 import { hearingFields, hearingOptions, hearMessages } from "./hearing.js"
-import { renderList, renderPage } from "./paging.js"
+import { renderList, renderPage, wholeNumber } from "./paging.js"
 
 export const messagesCommand = (): Command => {
   const command = new Command("messages").description("read and send messages in a chat")
@@ -26,7 +26,7 @@ export const messagesCommand = (): Command => {
     .command("list")
     .argument("<chat>", "chat id, or part of a chat name")
     .description("recent messages in a chat, oldest first")
-    .option("--limit <n>", "how many to read", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many to read", wholeNumber("--limit"))
     // Not `--page`: this history is anchored in time, so paging backwards through it is exact
     // rather than approximate. A message id is what the reader has in front of them, having just
     // read the output; an ISO 8601 time is what still works once that message is gone.
@@ -107,7 +107,7 @@ export const messagesCommand = (): Command => {
     .argument("<text>", "what to look for; at least 3 characters")
     .description("find messages in what this machine has already read")
     .option("--chat <id>", "only this chat; an id, because searching never connects to resolve a name")
-    .option("--limit <n>", "how many to show", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many to show", wholeNumber("--limit"))
     .action(async function (this: Command, text: string) {
       const options = this.optsWithGlobals()
       const context = forCommand(this)

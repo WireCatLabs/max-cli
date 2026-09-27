@@ -1,7 +1,7 @@
 import { Command } from "commander"
 import { SendJournal, sendsPathFor } from "../sends/journal.js"
 import { forCommand } from "./context.js"
-import { renderList } from "./paging.js"
+import { renderList, wholeNumber } from "./paging.js"
 
 /** Every attempt to send from this profile, kept whatever `--record` says. Never the text. */
 export const sendsCommand = (): Command => {
@@ -10,7 +10,7 @@ export const sendsCommand = (): Command => {
   command
     .command("list")
     .description("attempts to send, newest first: sent, refused, failed, or not known")
-    .option("--limit <n>", "how many to show", (value) => Number.parseInt(value, 10), 20)
+    .option("--limit <n>", "how many to show", wholeNumber("--limit"), 20)
     .action(async function (this: Command) {
       const { limit } = this.opts<{ limit: number }>()
       const { settings, renderer, format, run } = forCommand(this)

@@ -7,6 +7,7 @@ import { spoken, withTranscript } from "../transcribe/index.js"
 import { speechModel } from "../transcribe/models.js"
 import { forCommand } from "./context.js"
 import { hearingFields, hearingOptions, hearMessages } from "./hearing.js"
+import { wholeNumber } from "./paging.js"
 
 const FIRST_LOOK_MS = 24 * 60 * 60 * 1000
 
@@ -29,7 +30,7 @@ export const inboxCommand = (): Command =>
       "--since <id-or-time>",
       "what arrived after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays put",
     )
-    .option("--limit <n>", "at most this many per chat, the newest", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "at most this many per chat, the newest", wholeNumber("--limit"))
     .option(...hearingOptions.transcribe)
     .option(...hearingOptions.model)
     .action(async function (this: Command) {
