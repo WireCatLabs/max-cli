@@ -27,11 +27,12 @@ const said = (sender: string, chatId: number, chatType: string, mid: string, tex
     "body": {"mid": "${mid}", "seq": 1, "text": "${text}"}}`
 
 // Newest first, as MAX answers.
+const TEAM = [said(BOB, -100, "chat", "mid.b1", "bob in team"), said(ANN, -100, "chat", "mid.a1", "ann in team")]
 const HISTORY: Record<string, Record<string, string[]>> = {
   first: {
-    "-100": [said(BOB, -100, "chat", "mid.b1", "bob in team"), said(ANN, -100, "chat", "mid.a1", "ann in team")],
+    "-100": TEAM,
     "500": [
-      said(BOTS.first as string, 500, "dialog", "mid.d2", "hello Ann"),
+      said(BOTS.first as string, 500, "dialog", "mid.d2", "hello Ann \\u001b[2J"),
       said(ANN, 500, "dialog", "mid.d1", "hi bot"),
     ],
     "-400": [said(ANNA, -400, "chat", "mid.n1", "anna here")],
@@ -39,6 +40,7 @@ const HISTORY: Record<string, Record<string, string[]>> = {
   second: {
     "-200": [said(ANN, -200, "chat", "mid.a2", "ann elsewhere"), said(BOB, -200, "chat", "mid.b2", "bob elsewhere")],
     "-300": [said(ANN, -300, "chat", "mid.a3", "ann alone")],
+    "-100": TEAM,
   },
 }
 
@@ -103,13 +105,27 @@ describe("max bot people show", () => {
       ["-100", "group"],
       ["500", "dialog"],
     ])
-    expect(card.messages.map((message: { text: string }) => message.text)).toEqual(["hi bot", "hello Ann"])
+    expect(card.messages.map((message: { text: string }) => message.text)).toEqual(["hi bot", "hello Ann \u001b[2J"])
     expect(requests).toEqual([])
   })
 
   it("looks through every bot on this machine with --all-bots", async () => {
     const card = await json(["first", "bot", "people", "show", "42", "--all-bots"])
     expect(card.chats.map((chat: { id: string }) => chat.id).toSorted()).toEqual(["-100", "-200", "-300", "500"])
+  })
+
+  it("prints for a person without letting a message's escape codes reach the terminal", async () => {
+    const streams = captureStreams()
+    const code = await run(["first", "bot", "people", "show", "42", "--all-bots"], {
+      streams,
+      tty: true,
+      botStore: (profile) => new BotTokenStore({ profile, keyring }),
+      botUrl,
+    })
+    const stdout = streams.stdout.join("\n")
+    expect(code).toBe(0)
+    expect(stdout).toContain("hello Ann")
+    expect(stdout).not.toContain("\u001b[2J")
   })
 
   it("refuses a name that matches two people, and lists them", async () => {

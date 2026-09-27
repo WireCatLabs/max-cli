@@ -1,5 +1,12 @@
-import { CliError } from "@leemour/cli-core"
-import { type Contact, type Message, type PersonCard, parseLocator, pickPerson } from "@leemour/cli-messaging"
+import { CliError, singleLine } from "@leemour/cli-core"
+import {
+  type Contact,
+  type Message,
+  type PersonCard,
+  parseLocator,
+  pickPerson,
+  renderMessages,
+} from "@leemour/cli-messaging"
 import type { MessageStore, StoredHit } from "@leemour/cli-messaging/store"
 import { Command } from "commander"
 import { accountOf, fromStore, keep, PROVIDER } from "../bot/keep.js"
@@ -44,10 +51,24 @@ const once = <T extends Message>(messages: T[]): T[] => {
 
 const byTime = (a: Message, b: Message) => a.timestamp.localeCompare(b.timestamp)
 
+const messagesText = (context: Context, messages: Message[]) =>
+  renderMessages(messages, {
+    verbosity: context.settings.detail,
+    color: context.color,
+    profile: context.settings.profile,
+    provider: PROVIDER,
+  })
+
+const nameLine = (person: Contact) =>
+  singleLine(
+    [person.name ?? "(no name)", person.username && `@${person.username}`, person.id].filter(Boolean).join("  "),
+  )
+
 const cardOf = (store: MessageStore, context: Context, who: string, allBots: boolean, limit: number) => {
   const { filter, account } = scopeOf(context, allBots)
   const [person] = resolve(store, [who], account) as [Contact]
-  const latest = once(store.find({ ...filter, senders: [person.id], perChat: true, limit: 1 }).items)
+  const rows = store.find({ ...filter, senders: [person.id], perChat: true, limit: 1 }).items
+  const latest = rows.filter((hit, index) => rows.findIndex((other) => other.chatId === hit.chatId) === index)
   const kindOf = (hit: StoredHit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown"
   const dialogs = latest.filter((hit) => kindOf(hit) === "dialog")
   const messages = dialogs
@@ -103,7 +124,14 @@ export const peopleCommand = (): Command => {
           card = (await fromStore((store) => cardOf(store, context, who, allBots, limit))).card
         }
       }
-      context.renderer.result(card)
+      if (context.format !== "pretty") {
+        context.renderer.result(card)
+        return
+      }
+      const chats = card.chats.map(
+        (chat) => `  ${chat.id}  ${chat.kind}  ${singleLine(chat.title ?? "")}  ${chat.lastMessageAt ?? ""}`,
+      )
+      context.streams.data([nameLine(card), ...chats, "", messagesText(context, card.messages)].join("\n"))
     })
 
   return command
@@ -151,7 +179,18 @@ export const addBetween = (messages: Command): void => {
         chat.messages.push(hit)
         chats.set(hit.chatId, chat)
       }
-      const grouped = [...chats.values()].map((chat) => ({ ...chat, messages: chat.messages.toSorted(byTime) }))
-      context.renderer.result({ basis: BASIS, chats: grouped, hasMore: page.hasMore })
+      const limit = context.settings.limit
+      const grouped = [...chats.values()].map((chat) => ({
+        ...chat,
+        messages: chat.messages.toSorted(byTime).slice(-limit),
+      }))
+      if (context.format !== "pretty") {
+        context.renderer.result({ basis: BASIS, chats: grouped, hasMore: page.hasMore })
+        return
+      }
+      const blocks = grouped.map(
+        (chat) => `${chat.id}  ${singleLine(chat.title ?? "")}\n${messagesText(context, chat.messages)}`,
+      )
+      context.streams.data(blocks.join("\n\n"))
     })
 }
