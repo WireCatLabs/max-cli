@@ -35,7 +35,7 @@ import {
   messagesUnreact,
 } from "../spec/operations/messages.js"
 import { sessionInit, sessionLog, sessionLogin, sessionPing } from "../spec/operations/session.js"
-import { uploadsFile, uploadsPhoto } from "../spec/operations/uploads.js"
+import { uploadsFile, uploadsPhoto, uploadsVideo } from "../spec/operations/uploads.js"
 
 /** Every operation that may be sent, by the name the client calls it. */
 export const OPERATIONS = {
@@ -81,6 +81,7 @@ export const OPERATIONS = {
   "attachments.file": attachmentsFile,
   "uploads.photo": uploadsPhoto,
   "uploads.file": uploadsFile,
+  "uploads.video": uploadsVideo,
 } as const
 
 export type OperationName = keyof typeof OPERATIONS

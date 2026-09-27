@@ -8,6 +8,11 @@
 
 ### Что нового
 
+- **Видео и голосовые с личного аккаунта.** `max messages send <чат> --file ролик.mp4` отправляет
+  видео, которое смотрят прямо в чате (`.mp4 .mov .webm .mkv`); раньше оно уходило файлом, и так
+  его отправляет `--as-file`. `max messages send <чат> --voice заметка.ogg` отправляет голосовое с
+  полоской громкости и длительностью; файл — Ogg Opus, для другого звука команда подскажет строку
+  `ffmpeg`. Подробнее — [docs/usage.md](docs/usage.md).
 - **Остальные команды бота.** `max <имя> bot messages send --file <путь>` прикладывает картинку,
   видео, звук или файл, а `bot uploads put` только загружает его. `bot members list|add|remove` и
   `bot admins list|add|remove` — участники и админы чата, `bot comments list|get|send|edit|delete` —

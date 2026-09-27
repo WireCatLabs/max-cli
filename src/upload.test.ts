@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
@@ -13,13 +14,16 @@ import { mockMax } from "./testing/mock-max.js"
 let server: Server
 let origin: string
 let directory: string
+const ranges: Record<string, string | undefined> = {}
 
 beforeAll(async () => {
   server = createServer((request, response) => {
     request.resume()
     request.on("end", () => {
+      ranges[request.url ?? ""] = request.headers["content-range"]
       if (request.url === "/broken") return response.writeHead(500).end()
       if (request.url === "/photo") return response.end(JSON.stringify({ photos: { a: { token: "photo-token" } } }))
+      if (request.url === "/voice") return response.end("{}")
       response.end("0")
     })
   })
@@ -28,6 +32,9 @@ beforeAll(async () => {
   directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "upload-"))
   await writeFile(join(directory, "picture.png"), "not really a png")
   await writeFile(join(directory, "report.txt"), "a report")
+  await writeFile(join(directory, "clip.mp4"), "not really a video")
+  await writeFile(join(directory, "note.ogg"), readFileSync(new URL("./testing/fixtures/tone.ogg", import.meta.url)))
+  await writeFile(join(directory, "song.mp3"), "not an ogg")
 })
 
 afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())))
@@ -40,6 +47,9 @@ const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
       [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, chats: [{ id: 0, type: "DIALOG" }] },
       [Opcode.PHOTO_UPLOAD]: { url: `${origin}/photo` },
       [Opcode.FILE_UPLOAD]: { info: [{ url: `${origin}${fileUrl}`, fileId: 42, token: "t" }] },
+      [Opcode.VIDEO_UPLOAD]: (request) => ({
+        info: [{ url: `${origin}/${request.type === 2 ? "voice" : "video"}`, videoId: 77, token: "media-token" }],
+      }),
       [Opcode.MSG_SEND]: { message: { id: 116762160362694590n, time: 1789776000000, sender: 10000001, text: "" } },
     },
     refuse: { [Opcode.MSG_SEND]: () => (refusals-- > 0 ? "attachment.not.ready" : undefined) },
@@ -57,8 +67,57 @@ const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
   })
   const sends = max.sent.filter((call) => call.opcode === Opcode.MSG_SEND).map((call) => call.payload)
-  return { code, sends, stderr: streams.stderr.join("") }
+  const slots = max.sent.filter((call) => call.opcode === Opcode.VIDEO_UPLOAD).map((call) => call.payload)
+  return { code, sends, slots, stderr: streams.stderr.join("") }
 }
+
+type Sent = { message: { text: string; attaches: Record<string, unknown>[] } }
+
+describe("sending a video and a voice message", () => {
+  it("sends an .mp4 as a video, uploaded with the bytes unit", async () => {
+    const { code, sends, slots } = await send(["--file", join(directory, "clip.mp4")])
+
+    expect(code).toBe(0)
+    expect(slots).toEqual([{ count: 1, type: 0, uploaderType: 0, profile: false }])
+    const attach = (sends.at(-1) as Sent).message.attaches[0]
+    expect(attach).toMatchObject({ _type: "VIDEO", token: "media-token", videoType: 0 })
+    expect(String(attach?.videoId)).toBe("77")
+    expect(ranges["/video"]).toMatch(/^bytes 0-\d+\/\d+$/)
+  })
+
+  it("sends a video as a plain file with --as-file", async () => {
+    const { code, sends, slots } = await send(["--file", join(directory, "clip.mp4"), "--as-file"])
+
+    expect(code).toBe(0)
+    expect(slots).toEqual([])
+    expect((sends.at(-1) as Sent).message.attaches[0]).toMatchObject({ _type: "FILE" })
+  })
+
+  it("sends an Ogg Opus file as a voice message with its length and waveform", async () => {
+    const { code, sends, slots } = await send(["--voice", join(directory, "note.ogg")])
+
+    expect(code).toBe(0)
+    expect(slots).toEqual([{ count: 1, type: 2, uploaderType: 1, profile: false }])
+    const attach = (sends.at(-1) as Sent).message.attaches[0] as Record<string, unknown>
+    expect(attach).toMatchObject({ _type: "AUDIO", token: "media-token" })
+    expect(String(attach.audioId)).toBe("77")
+    expect(attach.duration).toBeGreaterThan(0)
+    expect(attach.wave).toBeInstanceOf(Uint8Array)
+    expect((attach.wave as Uint8Array).length).toBe(80)
+    expect(Math.max(...(attach.wave as Uint8Array))).toBeLessThanOrEqual(127)
+  })
+
+  it("**refuses a voice message that is not Ogg Opus, or has company, before sending anything**", async () => {
+    const notOgg = await send(["--voice", join(directory, "song.mp3")])
+    expect(notOgg.code).not.toBe(0)
+    expect(notOgg.stderr).toContain("ffmpeg -i")
+    const withText = await send(["hello", "--voice", join(directory, "note.ogg")])
+    expect(withText.stderr).toContain("goes alone")
+    const withPhoto = await send(["--file", join(directory, "clip.mp4"), "--file", join(directory, "picture.png")])
+    expect(withPhoto.stderr).toContain("a message of its own")
+    for (const refused of [notOgg, withText, withPhoto]) expect(refused.sends).toEqual([])
+  })
+})
 
 describe("sending files", () => {
   it("uploads a file, and sends again with the same cid while it is not ready", async () => {

@@ -31,16 +31,6 @@ operation is measured first in Saved messages (chat 0), as replies and reactions
 and needs the owner's yes before it ships. Deleting messages was ruled out (`NEED-32`) until the owner asked for it on 2026-09-24 (`MAX-47`); marking
 read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
-- **MAX-23** · 🟡 P1 · Send photos, videos and files. Done: `--file` sends photos
-  (several in one message) and files (one per message, measured 2026-09-24). Left: a video as a
-  video, not as a file: opcode 82 with `type: 0`, POST, wait for push 136, then `_type: "VIDEO"`
-  with `videoType: 0` (PyMax 2.4.1 `upload_video`, code; a user reports it works, PyMax #94).
-  Correction 2026-09-24: this line said `type: 1`, which is a round video note (`MAX-48`).
-- **MAX-24** · P1 · Send a voice message. The upload works (opcode 82, `uploaderType: 1` for
-  .ogg); the message does not: the web client sends `{_type: "AUDIO", audioId, duration, wave, token}`
-  with `wave` as 80 raw bytes in a binary MessagePack frame, and none of six JSON forms was accepted
-  (`FIND-104`). Unblocked: frames are binary since `MAX-40`, and a `Uint8Array` in a payload goes out
-  as MessagePack bin.
 - **MAX-28** · P2 · Polls: show them when reading, vote (`SEND_VOTE` 304
   `{chatId, messageId, pollId, answersIds}`), create one (a `_type: "POLL"` attachment on `MSG_SEND`
   64, `settings` 2 multiple | 4 revote). **Creating one works over the binary protocol** — accepted

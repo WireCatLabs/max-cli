@@ -58,6 +58,7 @@ sources disagree.
 | `attachments.file` | 88 | `FILE_DOWNLOAD` | after login | measured | measured against MAX 2026-09-23 (`pnpm probe:download`); tsmax getFileById; PyMax get_file_by_id |
 | `uploads.photo` | 80 | `PHOTO_UPLOAD` | after login | measured | measured against MAX 2026-09-24 in Saved messages (`pnpm probe:upload`); PyMax upload_photo |
 | `uploads.file` | 87 | `FILE_UPLOAD` | after login | measured | measured against MAX 2026-09-24 in Saved messages (`pnpm probe:upload`); PyMax upload_file |
+| `uploads.video` | 82 | `VIDEO_UPLOAD` | after login | measured | measured against MAX 2026-09-27 in Saved messages (`pnpm probe:video`, `pnpm probe:voice`); PyMax 2.4.1 upload_video; web.max.ru bundle (voice) |
 
 ## The numbers that are declared and never sent
 
