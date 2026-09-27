@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { namesFrom, toChat, toMessage, toProfile } from "./map.js"
+import { namesFrom, toChat, toGroupMember, toMessage, toProfile } from "./map.js"
 
 /**
  * Field names are from a real MAX response, observed 2026-09-19; every **value** here is invented.
@@ -157,6 +157,24 @@ describe("toMessage", () => {
 
   it("treats a channel post with no sender as senderless rather than failing", () => {
     expect(toMessage({ ...messageWire, sender: null }, "7268926").senderId).toBeNull()
+  })
+})
+
+describe("toGroupMember", () => {
+  it("reads when the account was made and last seen, in seconds or milliseconds alike", () => {
+    const member = toGroupMember({
+      contact: { id: 30000003, names: [{ name: "Asker", type: "FULL_NAME" }], registrationTime: 1700000000000 },
+      presence: { seen: 1789776000 },
+      readMark: 0,
+    })
+    expect(member).toEqual({
+      id: "30000003",
+      name: "Asker",
+      username: null,
+      registeredAt: "2023-11-14T22:13:20.000Z",
+      lastSeenAt: new Date(1789776000000).toISOString(),
+    })
+    expect(toGroupMember({ contact: { id: 1 }, presence: {} }).lastSeenAt).toBeNull()
   })
 })
 

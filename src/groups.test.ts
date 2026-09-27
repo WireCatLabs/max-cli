@@ -341,4 +341,42 @@ describe("changing a group", () => {
       expect(JSON.parse(stdout).events.map((one: { event: string }) => one.event)).toEqual(["remove"])
     })
   })
+
+  describe("chats members list", () => {
+    const member = (id: number) => ({ contact: { id, names: [{ name: `P${id}`, type: "FULL_NAME" }] }, presence: {} })
+
+    it("reads every page by marker and lists each person once", async () => {
+      const { environment, sent } = messenger({
+        [Opcode.CHAT_MEMBERS]: (request) =>
+          Number(request.marker) === 0
+            ? { members: [member(1), member(2)], marker: 77 }
+            : { members: [member(2), member(3)] },
+      })
+
+      const { code, stdout, stderr } = await runWith(
+        ["gr-list", "chats", "members", "list", "Team", "--json"],
+        environment,
+      )
+
+      expect(code).toBe(0)
+      expect(JSON.parse(stdout).map((one: { id: string }) => one.id)).toEqual(["1", "2", "3"])
+      expect(sent(Opcode.CHAT_MEMBERS)).toEqual([
+        { chatId: GROUP.id, type: "MEMBER", marker: 0, count: 50 },
+        { chatId: GROUP.id, type: "MEMBER", marker: 77, count: 50 },
+      ])
+      expect(stderr).not.toContain("only the first")
+    })
+
+    it("stops when a marker repeats instead of asking forever, and says the list is short", async () => {
+      const { environment, sent } = messenger({
+        [Opcode.CHAT_MEMBERS]: () => ({ members: [member(1)], marker: 5 }),
+      })
+
+      const { code, stderr } = await runWith(["gr-loop", "chats", "members", "list", "Team", "--json"], environment)
+
+      expect(code).toBe(0)
+      expect(sent(Opcode.CHAT_MEMBERS).length).toBe(2)
+      expect(stderr).toContain("only the first 1 members were read")
+    })
+  })
 })

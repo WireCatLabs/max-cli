@@ -128,6 +128,7 @@ max watch --events --jsonl                     # плюс правки, удал
 max server status --json                       # работает ли фоновый сервер, какой версии, подключён ли
 max chats show -1000 --json                    # один чат и кто в нём
 max chats events -1000 --since 2026-09-20T00:00 --json   # кто вступил, вышел, кого добавили и удалили
+max chats members list -1000 --json            # все участники от MAX: registeredAt, lastSeenAt
 max contacts show @ivan --json                 # один человек и общие чаты
 max messages list -1000 --limit 20 --json      # последние сообщения, от старых к новым
 max messages list -1000 --after 100000000000000001 --json   # что было после этого сообщения

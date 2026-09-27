@@ -226,7 +226,7 @@ max chats create <title> [person]
 
 ### `max chats members`
 
-add people to a group or channel, or remove them
+who is in a group or channel; add or remove people
 
 ```sh
 max chats members
