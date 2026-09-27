@@ -1007,6 +1007,35 @@ describe("starting a server in the background", () => {
     server.close()
   })
 
+  it("lets `ensure` check the server before the first request, even one that answers, and only once", async () => {
+    const store = new SessionStore({ profile: "v-ensure", keyring: memoryKeyring() })
+    const server = createServer((socket) =>
+      socket.on(
+        "data",
+        lineReader((line) => {
+          const { id } = fromLine(line)
+          socket.write(toLine({ id, answer: {} }))
+        }),
+      ),
+    )
+    await new Promise<void>((resolve) => server.listen(store.socketPath(), () => resolve()))
+    let ensured = 0
+    const wire = new ServerConnection({
+      path: store.socketPath(),
+      store,
+      ensure: async () => {
+        ensured += 1
+        return true
+      },
+    })
+
+    await wire.invoke(Opcode.SESSION_INIT, {})
+    await wire.invoke(Opcode.SESSION_INIT, {})
+    expect(ensured).toBe(1)
+    await wire.close()
+    server.close()
+  })
+
   it("does not try again for a while after MAX refused the login", async () => {
     const { refusedPath, startInBackground } = await import("./start.js")
     const store = new SessionStore({ profile: "b-refused", keyring: memoryKeyring() })

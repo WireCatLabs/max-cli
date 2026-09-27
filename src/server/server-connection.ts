@@ -23,7 +23,8 @@ interface Pending {
  * connection, sends included**. The server runs the send guards on every write and journals it;
  * the command's client checks too, so a refusal comes before an upload, and journals only that.
  *
- * No server answering: `ensure` starts one and waits for it. A connection of the command's own
+ * Before the first request, `ensure` replaces a server a command started under another build; with
+ * none answering, it starts one and waits for it. A connection of the command's own
  * is opened only when there is no `ensure` (the owner said `serve: false`) and no server, or for
  * a token being tried out (`max session start`), which is by definition not the server's.
  */
@@ -40,6 +41,7 @@ export class ServerConnection implements Wire {
   /** What the client sent as INIT; a fallback at LOGIN has to send it first, or MAX refuses. */
   #init: Payload | undefined
   #own: Connection | undefined
+  #ensured = false
 
   constructor({
     path,
@@ -94,6 +96,12 @@ export class ServerConnection implements Wire {
 
   /** The server's answer, starting one if `ensure` may; `undefined` when there is none to be had. */
   async #askServer(request: Record<string, unknown>): Promise<Payload | undefined> {
+    // Once, even when a server answers: it may be another build's, and only `ensure` replaces one a
+    // command started (`BUG-66` — an old server refused opcodes this build sends).
+    if (this.#ensure && !this.#ensured) {
+      this.#ensured = true
+      await this.#ensure()
+    }
     try {
       return await this.#ask(request)
     } catch (error) {
