@@ -145,8 +145,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 Added by the owner on 2026-09-24. Each one goes against REQUIREMENTS §3 or §18, and the line says
 which; the plan for it starts by saying so.
 
-- **CLI-25** · P3 · 🚧 `feat/bot-people` (`bot people show`, `messages search --from`, `messages between`) ·
-  `max bot …` — work with a MAX bot through the official bot API and a bot token,
+- **CLI-25** · P3 · 🟡 · `max bot …` — work with a MAX bot through the official bot API and a bot token,
   beside the personal account. Reopens REQUIREMENTS §3 ("not a bot-account client"). Bots are
   issued only to verified organisations, sole traders and the self-employed
   ([dev.max.ru](https://dev.max.ru/docs/maxbusiness/connection)).
@@ -156,8 +155,8 @@ which; the plan for it starts by saying so.
   comments, callbacks, the command menu, file sending and webhooks (#184). The local copy: `list`,
   `get`, sends and `updates watch` save into cli-messaging's store; `--offline` on `messages list`,
   `messages get` and `chats list`; `messages search`; a deleted message leaves the copy (#185, #192).
-  `updates watch` checked live on the `test2` bot. Left: people and conversations from the local
-  copy (`feat/bot-people`), and bot MCP.
+  `updates watch` checked live on the `test2` bot. People and conversations from the local
+  copy — `bot people show`, `messages search --from`, `messages between` (#197). Left: bot MCP.
 - **CLI-27** · P3 · Hooks for workflows: `max` runs a configured command when a check finds
   something new. Asked by the owner 2026-09-24 (`NEED-172`). Two things to settle in the plan: the
   message text reaches that command, so it must go as data on stdin and never into the command
