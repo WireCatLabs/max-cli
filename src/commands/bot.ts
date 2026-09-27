@@ -46,7 +46,8 @@ const apiCommand = (operation: ManifestOperation): Command => {
       if (parameter.in === "path") input.path[parameter.name] = raw
       else if (parameter.in === "query") input.query[parameter.name] = raw
     }
-    const context = botContext(this)
+    // The operation's own flags (`--limit` of get-updates) are MAX's parameters, not this program's settings.
+    const context = botContext(this.parent ?? this)
     if (operation.effect !== "read") assertAllowed(operation, context.settings)
     const body = checkBody(operation, readBody(options))
     const call: CallInput = body === undefined ? input : { ...input, body }
