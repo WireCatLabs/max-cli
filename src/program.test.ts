@@ -287,6 +287,11 @@ describe("the program", () => {
       expect(JSON.parse(stdout)).toMatchObject({ profile: "default", configFound: false })
     })
 
+    it("`config show` includes the speech model", async () => {
+      const { stdout } = await runWith(["config", "show", "--json"])
+      expect(JSON.parse(stdout).settings.map((row: { setting: string }) => row.setting)).toContain("transcribeModel")
+    })
+
     it("`config set` saves a setting that `config show` then reports from the file", async () => {
       const set = await runWith(["work", "config", "set", "limit", "30", "--json"])
       expect(set.code).toBe(0)

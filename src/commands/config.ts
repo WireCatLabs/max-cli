@@ -18,6 +18,7 @@ const SHOWN: SourcedSetting[] = [
   "allow",
   "sendsPerHour",
   "updateCheck",
+  "transcribeModel",
 ]
 
 export const configCommand = (): Command => {
