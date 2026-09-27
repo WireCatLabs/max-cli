@@ -136,6 +136,12 @@ max sales bot chats leave "Команда продаж"    # вернуть бо
 
 Боту нужно быть админом чата с правом на это действие.
 
+Сначала бота нужно пустить в группы: по умолчанию MAX запрещает добавлять бота в групповые чаты, и
+добавить его не выйдет — ни из приложения, ни командой `max chats members add` (ответ
+`participants.filter.out`). Разрешить — на [business.max.ru](https://business.max.ru/self): бот →
+**⋮ → Настройки → Приватность** ([документация MAX](https://dev.max.ru/docs/chatbots/bots-create/manage)).
+Потом добавьте его в группу и сделайте админом в приложении MAX.
+
 ```sh
 max sales bot members list "Команда продаж" --limit 50
 max sales bot members add "Команда продаж" 4815162342 2342481516

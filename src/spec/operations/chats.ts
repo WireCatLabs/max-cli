@@ -254,7 +254,9 @@ export const chatsUpdateMembers = defineOperation({
       "PyMax invite_users_to_group, remove_users_from_group, add_admin, confirm_join_request, decline_join_request",
     ],
     notes:
-      "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. The JOIN_REQUEST forms are PyMax's only: they need somebody asking to join (`MAX-41`). max-api-docs calls 77 pin/archive/mute; measured otherwise.",
+      "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. The JOIN_REQUEST forms are PyMax's only: they need somebody asking to join (`MAX-41`). max-api-docs calls 77 pin/archive/mute; measured otherwise. " +
+      "Adding a bot answers `participants.filter.out` while the bot's privacy setting forbids group chats, " +
+      "its default (measured 2026-09-27; dev.max.ru/docs/chatbots/bots-create/manage).",
   },
 })
 
