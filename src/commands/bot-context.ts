@@ -27,9 +27,10 @@ export const botContext = (command: Command, { offline: answersOffline = false }
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
   const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile })
-  const signal = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
-  const client = (token: string) =>
-    new BotApiClient({
+  const deadline = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
+  const client = (token: string, stop?: AbortSignal) => {
+    const signal = deadline && stop ? AbortSignal.any([deadline, stop]) : (deadline ?? stop)
+    return new BotApiClient({
       token,
       ...(environment.botFetch ? { fetch: environment.botFetch } : {}),
       ...(environment.botUrl ? { baseUrl: environment.botUrl } : {}),
@@ -37,8 +38,10 @@ export const botContext = (command: Command, { offline: answersOffline = false }
       ...(environment.botRetry ? { retry: environment.botRetry } : {}),
       ...(signal ? { signal } : {}),
     })
+  }
   const ask = environment.ask ?? ((prompt: string) => readSecret(prompt, { echo: false }))
-  const authenticated = () => {
+  /** `stop` is for a command that runs until told to — `updates watch` — and ends its request in flight. */
+  const authenticated = (stop?: AbortSignal) => {
     const stored = store.read()
     if (!stored) {
       throw new CliError(
@@ -46,7 +49,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
         `no bot token for profile "${settings.profile}" — run \`max ${asFirstWord(settings.profile)}bot auth set\``,
       )
     }
-    return client(stored.token)
+    return client(stored.token, stop)
   }
   const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
   const uploadFetch = () => environment.botFetch ?? botFetch()
@@ -61,7 +64,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
     client,
     ask,
     authenticated,
-    signal,
+    signal: deadline,
     uploadFetch,
     offline,
   }
