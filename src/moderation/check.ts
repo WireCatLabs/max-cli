@@ -37,9 +37,12 @@ export interface CheckInput {
 const INVITE = /max\.ru\/join\//i
 const LINK = /https?:\/\/\S+/i
 
+/** Which action wins when a message breaks several rules; the first rule listed breaks a tie. */
+const STRENGTH: Record<GroupRules["links"], number> = { report: 0, delete: 1, remove: 2 }
+
 /**
  * What the rules say about what is new. Pure: nothing here talks to MAX. One finding per message —
- * the first rule it breaks — and one removal per person, whatever else they did.
+ * the rule with the strongest action — and one removal per person, whatever else they did.
  */
 export const judge = ({ rules, messages, joined, requests, answerers, now }: CheckInput): Finding[] => {
   const trusted = new Set(rules.trusted)
@@ -94,18 +97,19 @@ export const judge = ({ rules, messages, joined, requests, answerers, now }: Che
     if (message.attachments.some((attachment) => attachment.kind === "control")) continue
     const base = { kind: "message" as const, personId: id, personName: message.senderName, messageId: message.id }
     const text = message.text
-    const rule: [Finding["rule"], GroupRules["links"]] | undefined = blocked(id, message.senderName)
-      ? ["blocked", rules.blockedPeople]
-      : INVITE.test(text)
-        ? ["invites", rules.invites]
-        : LINK.test(text) || message.attachments.some((attachment) => attachment.kind === "share")
-          ? ["links", rules.links]
-          : message.forwardedFrom !== null
-            ? ["forwards", rules.forwards]
-            : flooding.has(message.id)
-              ? ["flood", rules.flood.action]
-              : undefined
-    if (rule) add({ ...base, rule: rule[0], action: rule[1] })
+    const broken: [Finding["rule"], GroupRules["links"]][] = []
+    if (blocked(id, message.senderName)) broken.push(["blocked", rules.blockedPeople])
+    if (INVITE.test(text)) broken.push(["invites", rules.invites])
+    if (LINK.test(text) || message.attachments.some((attachment) => attachment.kind === "share")) {
+      broken.push(["links", rules.links])
+    }
+    if (message.forwardedFrom !== null) broken.push(["forwards", rules.forwards])
+    if (flooding.has(message.id)) broken.push(["flood", rules.flood.action])
+    const strongest = broken.reduce<(typeof broken)[number] | undefined>(
+      (best, rule) => (best === undefined || STRENGTH[rule[1]] > STRENGTH[best[1]] ? rule : best),
+      undefined,
+    )
+    if (strongest) add({ ...base, rule: strongest[0], action: strongest[1] })
   }
   return found
 }

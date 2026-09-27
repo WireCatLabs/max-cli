@@ -43,9 +43,9 @@ const judged = (input: Partial<Parameters<typeof judge>[0]>) =>
   )
 
 describe("judge", () => {
-  it("names the first rule a message breaks: blocked, then invites, links, forwards", () => {
+  it("names one rule per message, the first of blocked, invites, links, forwards when they act alike", () => {
     const found = judged({
-      rules: rules({ blocked: ["9"], invites: "delete", links: "report", forwards: "remove" }),
+      rules: rules({ blocked: ["9"], invites: "report", links: "report", forwards: "remove" }),
       messages: [
         message("9", "https://max.ru/join/abc"),
         message("2", "join us https://max.ru/join/abc"),
@@ -68,10 +68,43 @@ describe("judge", () => {
 
     expect(found.map(({ rule, action, personId }) => [rule, action, personId])).toEqual([
       ["blocked", "report", "9"],
-      ["invites", "delete", "2"],
+      ["invites", "report", "2"],
       ["links", "report", "3"],
       ["links", "report", "4"],
       ["forwards", "remove", "5"],
+    ])
+  })
+
+  it("takes the strongest action a message calls for, so blocking an author never softens it", () => {
+    const found = judged({
+      rules: rules({
+        blocked: ["9"],
+        invites: "delete",
+        forwards: "delete",
+        flood: { messages: 1, minutes: 1, action: "remove" },
+      }),
+      messages: [
+        message("9", "https://max.ru/join/abc"),
+        message("5", "https://a.example", {
+          forwardedFrom: {
+            id: "1",
+            senderId: "7",
+            senderName: null,
+            timestamp: null,
+            text: "",
+            attachments: [],
+            outgoing: null,
+          },
+        }),
+        message("6", "one"),
+        message("6", "https://a.example"),
+      ],
+    })
+
+    expect(found.map(({ rule, action, personId }) => [rule, action, personId])).toEqual([
+      ["invites", "delete", "9"],
+      ["forwards", "delete", "5"],
+      ["flood", "remove", "6"],
     ])
   })
 

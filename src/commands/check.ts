@@ -2,7 +2,7 @@ import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
-import { act, type CheckRow, gather, judge } from "../moderation/check.js"
+import { act, type CheckRow, type Gathered, gather, judge } from "../moderation/check.js"
 import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
 import { forCommand } from "./context.js"
 
@@ -63,17 +63,15 @@ export const checkCommand = (): Command =>
           })
 
           renderer.stream(format === "pretty" ? rows.map(pretty) : rows)
-          if (found.more) renderer.note("more history than one check reads — the next check goes on from here")
-
-          const pending = rows.some(
-            (row) => ["planned", "skipped", "failed"].includes(row.outcome) && row.kind !== "request",
-          )
-          const moves = options.since === undefined && options.dryRun !== true && !pending && found.until !== null
-          if (moves) {
+          const next = nextPoint(rows, found)
+          if (options.since === undefined && options.dryRun !== true && next !== null) {
             const state = store.readState()
-            store.writeState({ ...state, checkedUntil: { ...state.checkedUntil, [group.id]: found.until as string } })
-          } else if (pending) {
-            renderer.note("some actions are not done — the next check looks at the same messages again")
+            store.writeState({ ...state, checkedUntil: { ...state.checkedUntil, [group.id]: next } })
+          }
+          if (next !== found.until && rows.some(undone)) {
+            renderer.note("some actions are not done — the next check starts at the first of them")
+          } else if (found.more) {
+            renderer.note("more history than one check reads — the next check goes on from here")
           }
         } finally {
           await client.close()
@@ -81,6 +79,24 @@ export const checkCommand = (): Command =>
         }
       })
     })
+
+const undone = (row: CheckRow) => ["planned", "skipped", "failed"].includes(row.outcome) && row.kind !== "request"
+
+/**
+ * Where the next check starts: after the newest message read, or just before the first message whose
+ * action is still undone — so it is judged again, and what came after it is still read. A person
+ * who joined and is still undone keeps the point where it was, since the join is not a row's message.
+ */
+const nextPoint = (rows: CheckRow[], found: Gathered): string | null => {
+  const waiting = rows.filter(undone)
+  if (waiting.some((row) => row.messageId === undefined)) return null
+  const times = waiting
+    .map((row) => found.messages.find((message) => message.id === row.messageId)?.timestamp)
+    .filter((time): time is string => time !== undefined)
+    .map(Date.parse)
+  if (times.length === 0) return found.until
+  return new Date(Math.min(...times) - 1).toISOString()
+}
 
 const pretty = (row: CheckRow) => ({
   what: row.kind,

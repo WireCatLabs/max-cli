@@ -84,7 +84,7 @@ describe("max chats check", () => {
     expect(second.json).toEqual([])
   })
 
-  it("at consent level flag, plans the deletion and looks at the same messages again", async () => {
+  it("at consent level flag, plans the deletion and starts the next check at that message", async () => {
     const { environment, deletes } = group()
     new ModerationRules(moderationPathFor("ck-flag")).set(String(GROUP.id), "Team", "invites", "delete")
 
@@ -92,7 +92,7 @@ describe("max chats check", () => {
     const again = await check(["ck-flag", "chats", "check", "Team", "--allow-dangerous", "--json"], environment)
 
     expect(first.json[0]).toMatchObject({ outcome: "planned", command: expect.stringContaining("--for-everyone") })
-    expect(first.stderr).toContain("looks at the same messages again")
+    expect(first.stderr).toContain("starts at the first of them")
     expect(again.json[0]).toMatchObject({ outcome: "done" })
     expect(deletes()).toHaveLength(1)
   })
