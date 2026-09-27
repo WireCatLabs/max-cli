@@ -284,9 +284,9 @@ describe("the run log for a bot command", () => {
   beforeEach(() => store().write(GOOD))
 
   const runsOf = async (command: string) =>
-    (JSON.parse((await max(["runs", "list", "--json", "--limit", "100"])).stdout) as Record<string, unknown>[]).filter(
-      (run) => run.command === command,
-    )
+    (
+      JSON.parse((await max(["runs", "list", "--json", "--limit", "100"])).stdout).items as Record<string, unknown>[]
+    ).filter((run) => run.command === command)
 
   it("traces each request on stderr and keeps stdout to the answer", async () => {
     const { code, stdout, stderr } = await max(["bot", "api", "get-chat", "--chat-id", "7", "--trace", "--json"])
