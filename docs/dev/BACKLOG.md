@@ -137,11 +137,8 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   has and we lack means maintaining MAX's whole surface (§10).
 
 **Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
-`docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46`.
+`docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46`, MCP `max_chats_check` as `CLI-47`.
 
-- **CLI-47** · P2 · MCP tool `max_chats_check` under the same consent levels (`NEED-310`): `flag`
-  means the server was started with an `--allow-…` option, `confirm` is the form of
-  `src/mcp/confirm.ts`. Starts at `src/moderation/check.ts` (`gather`, `judge`, `act`).
 - **MAX-59** · P2 · Accept and decline join requests from `max chats check`: they are planned,
   never sent, until `MAX-41` measures them with a real request (`src/moderation/check.ts`, `act`).
 

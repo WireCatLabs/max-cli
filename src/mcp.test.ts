@@ -7,6 +7,7 @@ import { contextFor } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { instructions } from "./mcp/instructions.js"
 import { createMaxServer, type ServerOptions } from "./mcp/server.js"
+import { type GroupRules, ModerationRules, moderationPathFor } from "./moderation/rules.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
@@ -691,6 +692,7 @@ describe("what the MCP server offers beyond the basics", () => {
       confirmSend: true,
       allowMarkRead: true,
       allowDelete: true,
+      allowModerate: true,
       profile: "a-profile-name-of-some-length",
       permitted: ["send", "forward", "reaction", "edit", "pin", "read", "delete"],
     })
@@ -761,5 +763,74 @@ describe("MCP prompts and resources", () => {
     const body = JSON.parse(String((read.contents[0] as { text: string }).text))
     expect(body).toMatchObject({ chat: { id: "111", title: "Team Alpha" }, messages: [{ id: "116762160362694583" }] })
     expect(logins()).toBe(1)
+  })
+})
+
+describe("max_chats_check", () => {
+  const invite = { id: 5n, time: Date.now() - 60_000, sender: 30000003, text: "https://max.ru/join/x", attaches: [] }
+  const groupAnswers = {
+    [Opcode.CHAT_HISTORY]: (request: { from?: unknown }) => ({
+      messages: invite.time > Number(request.from) ? [invite] : [],
+    }),
+    [Opcode.CHAT_MEMBERS]: {},
+    [Opcode.CONTACT_INFO]: { contacts: [] },
+    [Opcode.MSG_DELETE]: {},
+  } as MockMaxOptions["answers"]
+  const withRules = (profile: string, consent: GroupRules["consent"]["delete"]) => {
+    const rules = new ModerationRules(moderationPathFor(profile))
+    rules.set("111", "Team Alpha", "invites", "delete")
+    rules.set("111", "Team Alpha", "consent.delete", consent)
+  }
+  const deletes = (max: ReturnType<typeof mockMax>) => max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)
+  const rows = (body: Record<string, unknown>) => body.rows as { outcome: string }[]
+
+  it("is offered only with --allow-moderate, and plans without acting on dry_run", async () => {
+    withRules("ck-mcp-dry", "allow")
+    const off = await connect({}, { profile: "ck-mcp-dry", answers: groupAnswers })
+    const { client, max } = await connect({ allowModerate: true }, { profile: "ck-mcp-dry", answers: groupAnswers })
+
+    const { tools } = await off.client.listTools()
+    const { body } = await call(client, "max_chats_check", { chat: "111", dry_run: true })
+
+    expect(tools.map(({ name }) => name)).not.toContain("max_chats_check")
+    expect(rows(body).map((row) => row.outcome)).toEqual(["planned"])
+    expect(deletes(max)).toEqual([])
+  })
+
+  it("with --allow-moderate, does what consent level flag asks", async () => {
+    withRules("ck-mcp-flag", "flag")
+    const { client, max } = await connect({ allowModerate: true }, { profile: "ck-mcp-flag", answers: groupAnswers })
+
+    const { body } = await call(client, "max_chats_check", { chat: "111" })
+
+    expect(rows(body).map((row) => row.outcome)).toEqual(["done"])
+    expect(deletes(max)).toHaveLength(1)
+  })
+
+  it("asks in one form at level confirm, and deletes only once the owner accepts", async () => {
+    withRules("ck-mcp-yes", "confirm")
+    const { client, max, forms } = await connect(
+      { allowModerate: true },
+      { profile: "ck-mcp-yes", answers: groupAnswers, form: () => ({ action: "accept", content: {} }) },
+    )
+
+    const { body } = await call(client, "max_chats_check", { chat: "111" })
+
+    expect(forms[0]).toContain("delete message 5 from 30000003 for everyone (invites)")
+    expect(rows(body).map((row) => row.outcome)).toEqual(["done"])
+    expect(deletes(max)).toHaveLength(1)
+  })
+
+  it("deletes nothing when the owner declines the form", async () => {
+    withRules("ck-mcp-no", "confirm")
+    const { client, max } = await connect(
+      { allowModerate: true },
+      { profile: "ck-mcp-no", answers: groupAnswers, form: () => ({ action: "decline" }) },
+    )
+
+    const { isError } = await call(client, "max_chats_check", { chat: "111" })
+
+    expect(isError).toBe(true)
+    expect(deletes(max)).toEqual([])
   })
 })

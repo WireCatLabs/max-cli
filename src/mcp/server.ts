@@ -13,6 +13,7 @@ export interface ServerOptions extends SessionOptions {
   confirmSend?: boolean
   allowMarkRead?: boolean
   allowDelete?: boolean
+  allowModerate?: boolean
 }
 
 /**
@@ -22,7 +23,14 @@ export interface ServerOptions extends SessionOptions {
  */
 export const createMaxServer = (
   context: CommandContext,
-  { allowSend, confirmSend = false, allowMarkRead = false, allowDelete = false, ...sessionOptions }: ServerOptions,
+  {
+    allowSend,
+    confirmSend = false,
+    allowMarkRead = false,
+    allowDelete = false,
+    allowModerate = false,
+    ...sessionOptions
+  }: ServerOptions,
 ) => {
   const session = new MaxSession(context, sessionOptions)
   const permitted = context.settings.allow
@@ -35,6 +43,7 @@ export const createMaxServer = (
           confirmSend,
           allowMarkRead,
           allowDelete,
+          allowModerate,
           profile: context.settings.profile,
           permitted,
         }),
@@ -45,6 +54,8 @@ export const createMaxServer = (
       confirmSend,
       allowMarkRead,
       allowDelete,
+      allowModerate,
+      store: context.store,
       defaultLimit: context.settings.limit,
       profile: context.settings.profile,
       transcribeModel: context.settings.transcribeModel,

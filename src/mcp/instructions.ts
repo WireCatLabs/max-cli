@@ -9,6 +9,7 @@ export const instructions = ({
   confirmSend = false,
   allowMarkRead = false,
   allowDelete = false,
+  allowModerate = false,
   profile,
   permitted,
 }: {
@@ -16,6 +17,7 @@ export const instructions = ({
   confirmSend?: boolean
   allowMarkRead?: boolean
   allowDelete?: boolean
+  allowModerate?: boolean
   profile: string
   permitted?: readonly Permission[]
 }): string =>
@@ -41,6 +43,7 @@ export const instructions = ({
           "- Delete a message only when the owner named it and asked for it to go. It goes for the owner only, and it cannot be undone.",
         ]
       : []),
+    ...(allowModerate ? ["- max_chats_check: only when the owner asked to check that group."] : []),
     ...(permitted
       ? [
           `- Profile "${profile}" allows only: ${permitted.join(", ") || "nothing"}. Tools for anything else are not offered; a refusal naming \`allow\` is final.`,

@@ -1,7 +1,8 @@
 import { CliError } from "@leemour/cli-core"
 import type { MaxClient } from "../client.js"
 import type { GroupMember, Id, Message } from "../domain/models.js"
-import type { GroupRules } from "./rules.js"
+import type { SessionStore } from "../session/store.js"
+import { defaultRules, type GroupRules, ModerationRules, moderationPathFor } from "./rules.js"
 
 export type Action = "report" | "delete" | "remove" | "accept" | "decline"
 
@@ -137,8 +138,8 @@ export interface ActOptions {
   allowDangerous: boolean
   dryRun: boolean
   maxActions: number
-  /** Asks the owner; `undefined` when nobody is there to ask. */
-  confirm?: (question: string) => Promise<boolean>
+  /** Asks the owner about one action; `undefined` when nobody is there to ask. */
+  confirm?: (finding: Finding) => Promise<boolean>
 }
 
 const CONSENT: Record<Exclude<Action, "report">, keyof GroupRules["consent"]> = {
@@ -197,7 +198,7 @@ export const act = async (client: MaxClient, findings: Finding[], options: ActOp
         rows.push(row("planned", `consent.${CONSENT[finding.action]} is confirm, and nobody is there to ask`))
         continue
       }
-      if (!(await confirm(questionFor(finding)))) {
+      if (!(await confirm(finding))) {
         rows.push(row("declined", "not confirmed"))
         continue
       }
@@ -228,10 +229,15 @@ const asCliError = (error: unknown): CliError =>
 
 const who = (finding: Finding) => finding.personName ?? finding.personId
 
-const questionFor = (finding: Finding): string =>
+/** One action in words, for a prompt or a confirmation form. */
+export const describe = (finding: Finding): string =>
   finding.action === "delete"
-    ? `delete message ${finding.messageId} from ${who(finding)} for everyone (${finding.rule})? [y/N] `
-    : `remove ${who(finding)} from the group (${finding.rule})? [y/N] `
+    ? `delete message ${finding.messageId} from ${who(finding)} for everyone (${finding.rule})`
+    : `remove ${who(finding)} from the group (${finding.rule})`
+
+/** Whether acting on it waits for the owner's yes. */
+export const needsConfirm = (rules: GroupRules, finding: Finding): boolean =>
+  (finding.action === "delete" || finding.action === "remove") && rules.consent[finding.action] === "confirm"
 
 const commandFor = (chatId: Id, finding: Finding): string => {
   switch (finding.action) {
@@ -300,4 +306,87 @@ export const gather = async (client: MaxClient, chatId: Id, since: number): Prom
     more,
     notes,
   }
+}
+
+export const MAX_ACTIONS = 10
+
+/** A group never checked before is looked at this far back. */
+const FIRST_LOOK_MS = 24 * 3_600_000
+
+export interface Prepared {
+  chatId: Id
+  title: string | null
+  rules: GroupRules
+  found: Gathered
+  findings: Finding[]
+  /** `--since` was given: the saved point is not read, and not moved. */
+  explicit: boolean
+  notes: string[]
+}
+
+/** Reads and judges; changes nothing. `since` overrides the group's saved point. */
+export const prepare = async (
+  client: MaxClient,
+  { store, profile, chat, since }: { store: SessionStore; profile: string; chat: string; since?: number },
+): Promise<Prepared> => {
+  const group = await client.chats.show(chat)
+  const saved = new ModerationRules(moderationPathFor(profile)).read(group.id)
+  const rules = saved ?? defaultRules(group.title)
+  const point = store.readState().checkedUntil?.[group.id]
+  const from = since ?? (point === undefined ? Date.now() - FIRST_LOOK_MS : Date.parse(point))
+  const found = await gather(client, group.id, from)
+  return {
+    chatId: group.id,
+    title: group.title,
+    rules,
+    found,
+    findings: judge({ ...found, rules, now: Date.now() }),
+    explicit: since !== undefined,
+    notes: [
+      ...(saved ? [] : [`${group.title ?? group.id} has no rules yet — the defaults only report`]),
+      ...found.notes,
+    ],
+  }
+}
+
+/** Acts on what `prepare` found, moves the group's saved point, and says what is left. */
+export const finish = async (
+  client: MaxClient,
+  store: SessionStore,
+  prepared: Prepared,
+  options: Omit<ActOptions, "chatId" | "rules">,
+): Promise<{ rows: CheckRow[]; notes: string[] }> => {
+  const { chatId, rules, found, findings, explicit } = prepared
+  const rows = await act(client, findings, { ...options, chatId, rules })
+  const notes = [...prepared.notes]
+
+  const next = nextPoint(rows, found)
+  if (!explicit && !options.dryRun && next !== null) {
+    const state = store.readState()
+    store.writeState({ ...state, checkedUntil: { ...state.checkedUntil, [chatId]: next } })
+  }
+  if (next !== found.until && rows.some(undone)) {
+    notes.push("some actions are not done — the next check starts at the first of them")
+  } else if (found.more) {
+    notes.push("more history than one check reads — the next check goes on from here")
+  }
+  return { rows, notes }
+}
+
+const undone = (row: CheckRow) => ["planned", "skipped", "failed"].includes(row.outcome) && row.kind !== "request"
+
+/**
+ * Where the next check starts: after the newest message read, or just before the first message whose
+ * action is still undone — so it is judged again, and what came after it is still read. A person
+ * who joined and is still undone keeps the point where it was, since the join is not a row's message.
+ */
+const nextPoint = (rows: CheckRow[], found: Gathered): string | null => {
+  const waiting = rows.filter(undone)
+  if (waiting.some((row) => row.messageId === undefined)) return null
+  const times = waiting
+    .map((row) => found.messages.find((message) => message.id === row.messageId)?.timestamp)
+    .filter((time): time is string => time !== undefined)
+    .map(Date.parse)
+  if (times.length === 0) return found.until
+  return new Date(Math.min(...times) - 1).toISOString()
 }
