@@ -9,7 +9,7 @@ import { registryProfiles } from "../bot/registry.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
 import { configuredProfiles } from "../config.js"
 import { callbacksCommand, commentsCommand } from "./bot-comments.js"
-import { assertAllowed, botContext } from "./bot-context.js"
+import { assertAllowed, botContext, botRecordingOf, startBotRecording } from "./bot-context.js"
 import { botMcpCommand } from "./bot-mcp.js"
 import { adminsCommand, membersCommand } from "./bot-members.js"
 import { peopleCommand } from "./bot-people.js"
@@ -61,6 +61,9 @@ export const botCommand = (): Command => {
   const command = new Command("bot").description(
     "a MAX bot, through the official Bot API and a bot token — not your personal account",
   )
+  command
+    .hook("preAction", (_group, action) => startBotRecording(action))
+    .hook("postAction", async (_group, action) => botRecordingOf(action)?.succeed())
 
   const auth = new Command("auth").description("the bot token this profile uses")
 

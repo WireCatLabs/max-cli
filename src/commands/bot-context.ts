@@ -8,9 +8,42 @@ import { ChatRegistry } from "../bot/registry.js"
 import { botFetch } from "../bot/transport.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { resolveOutput } from "../output.js"
-import { asFirstWord } from "../profile.js"
+import { asFirstWord, rootOf } from "../profile.js"
+import { type Recording, startRecording } from "../runs/recording.js"
 import { readSecret } from "../session/prompt.js"
 import { environmentOf } from "./context.js"
+
+const recordings = new WeakMap<Command, Recording>()
+
+/**
+ * Every `max bot` command is recorded like a personal one, from the group's hooks rather than in each
+ * action: the run starts before the action and ends after it, or fails in the program's catch.
+ */
+export const startBotRecording = (command: Command): void => {
+  const environment = environmentOf(command)
+  // The program's own flags only: `bot api get-updates --limit` is the API's limit, not ours.
+  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>(), { kind: "bot" })
+  const { streams, format } = resolveOutput({
+    ...settings,
+    ...(environment.streams ? { streams: environment.streams } : {}),
+    ...(environment.tty === undefined ? {} : { tty: environment.tty }),
+  })
+  const words: string[] = []
+  for (let at: Command | null = command; at?.parent; at = at.parent) words.unshift(at.name())
+  recordings.set(
+    rootOf(command),
+    startRecording({
+      command: words.join(" "),
+      profile: settings.profile,
+      options: { record: settings.record, keepFailed: settings.keepFailedRuns, trace: settings.trace },
+      format,
+      streams,
+      keepDays: settings.keepRunsForDays,
+    }),
+  )
+}
+
+export const botRecordingOf = (command: Command): Recording | undefined => recordings.get(rootOf(command))
 
 /** `offline` is for the reads the local copy can answer; every other command still refuses the flag. */
 export const botContext = (command: Command, { offline: answersOffline = false }: { offline?: boolean } = {}) => {
@@ -27,6 +60,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
   const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile })
+  const recording = botRecordingOf(command)
   const deadline = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
   const client = (token: string, stop?: AbortSignal) => {
     const signal = deadline && stop ? AbortSignal.any([deadline, stop]) : (deadline ?? stop)
@@ -37,6 +71,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
       ...(settings.timeoutMs === undefined ? {} : { timeoutMs: settings.timeoutMs }),
       ...(environment.botRetry ? { retry: environment.botRetry } : {}),
       ...(signal ? { signal } : {}),
+      ...(recording ? { events: recording.events } : {}),
     })
   }
   const ask = environment.ask ?? ((prompt: string) => readSecret(prompt, { echo: false }))

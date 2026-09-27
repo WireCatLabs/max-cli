@@ -13,6 +13,7 @@ import { Command, CommanderError } from "commander"
 import { accountCommand } from "./commands/account.js"
 import { backupCommand } from "./commands/backup.js"
 import { botCommand } from "./commands/bot.js"
+import { botRecordingOf } from "./commands/bot-context.js"
 import { cacheCommand } from "./commands/cache.js"
 import { chatsCommand } from "./commands/chats.js"
 import { commandsCommand } from "./commands/commands.js"
@@ -196,6 +197,7 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     return process.exitCode === undefined ? 0 : Number(process.exitCode)
   } catch (thrown) {
     const error = ownCliError(thrown)
+    await botRecordingOf(program)?.fail(error)
     if (!(error instanceof CommanderError) || error.exitCode !== 0) {
       const failure = error instanceof CommanderError ? new CliError("validation_error", error.message) : error
       await keepFailure(failure, program, rest, profile, streams)

@@ -155,3 +155,15 @@ describe("BotTransport", () => {
     expect((await failure(pending)).code).toBe("cancelled")
   })
 })
+
+describe("events for the run log", () => {
+  it("name ids from the path, and never a video token", async () => {
+    handler = answer(200, `{"success": true}`)
+    const events: unknown[] = []
+    const traced = transport({ events: (event: unknown) => events.push(event) })
+    await traced.call(operation("getVideoAttachmentDetails"), { path: { videoToken: "vt-secret" } })
+    await traced.call(operation("getChat"), { path: { chatId: "5" } })
+    expect(JSON.stringify(events)).not.toContain("vt-secret")
+    expect(events.at(-2)).toEqual({ event: "request", operation: "getChat", ids: { chat: "5" } })
+  })
+})

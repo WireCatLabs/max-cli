@@ -16,8 +16,11 @@ export interface RequestEvent {
   event: "request" | "response"
   /** Ours, not MAX's: `chats.history`, not `CHAT_HISTORY`. */
   operation: string
-  opcode: number
-  seq: number
+  /** The personal protocol's frame; a Bot API call has neither, and says `status` instead. */
+  opcode?: number
+  seq?: number
+  /** The HTTP status of a Bot API answer. */
+  status?: number
   /** The frame that went out, or the one that came back. Absent when nothing came back. */
   bytes?: number
   /** Which things the request named — `{ chat: "0" }`. Never how they are called. */
@@ -159,7 +162,8 @@ export const renderEvent = (event: DiagnosticEvent): string => {
     parts.push(event.reason)
     if (event.ageMs !== undefined) parts.push(`cached ${age(event.ageMs)}`)
   } else {
-    parts.push(`op ${event.opcode}`, `seq ${event.seq}`)
+    if (event.opcode !== undefined) parts.push(`op ${event.opcode}`, `seq ${event.seq}`)
+    if (event.status !== undefined) parts.push(`${event.status}`)
   }
 
   if (event.ids) for (const [name, value] of Object.entries(event.ids)) parts.push(`${name} ${value}`)

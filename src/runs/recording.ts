@@ -36,6 +36,29 @@ export const recorded = async <T>(
   options: RecordingOptions,
   body: (events: (event: DiagnosticEvent) => void) => Promise<T>,
 ): Promise<T> => {
+  const recording = startRecording(options)
+  try {
+    const answer = await body(recording.events)
+    await recording.succeed()
+    return answer
+  } catch (error) {
+    await recording.fail(error)
+    throw error
+  }
+}
+
+export interface Recording {
+  events: (event: DiagnosticEvent) => void
+  succeed: () => Promise<void>
+  /** Marks the error as dealt with, so the program's last catch does not keep it a second time. */
+  fail: (error: unknown) => Promise<void>
+}
+
+/**
+ * `recorded` in two halves, for a caller that cannot wrap the body in one function — the `max bot`
+ * group starts one before any of its commands runs and ends it after (`src/commands/bot.ts`).
+ */
+export const startRecording = (options: RecordingOptions): Recording => {
   const streams = options.streams ?? processStreams
   const trace = options.options.trace === true
 
@@ -77,22 +100,22 @@ export const recorded = async <T>(
     }
   }
 
-  try {
-    const answer = await body(events)
-    await run?.finish("success", { requests })
-    return answer
-  } catch (error) {
-    settled.add(error)
-    const failed = run ?? (held ? keep(open({ startedAt }), held) : undefined)
-    if (failed) {
+  return {
+    events,
+    succeed: async () => {
+      await run?.finish("success", { requests })
+    },
+    fail: async (error) => {
+      settled.add(error)
+      const failed = run ?? (held ? keep(open({ startedAt }), held) : undefined)
+      if (!failed) return
       if (!(error instanceof CliError)) failed.logger.info(crashOf(error))
       await failed.finish("failed", {
         requests,
         ...outcomeOf(error),
         ...(run ? {} : { keptBecauseFailed: true }),
       })
-    }
-    throw error
+    },
   }
 }
 
