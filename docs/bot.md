@@ -148,6 +148,33 @@ max sales bot admins remove "Команда продаж" 4815162342
 Права админа: `read_all_messages`, `add_remove_members`, `add_admins`, `change_chat_info`,
 `pin_message`, `edit_link`, `write`, `edit`, `delete`, `can_call`, `view_stats`.
 
+## Локальная копия
+
+Всё, что бот прочитал, отправил или получил, `max` сохраняет на этом компьютере. Из этой копии
+можно читать без сети и искать:
+
+```sh
+max sales bot messages list "Команда продаж" --offline
+max sales bot messages search "итоги недели"
+```
+
+Обычные команды всё равно спрашивают MAX: у него вся история чата. Удалённые сообщения пока
+остаются в копии.
+
+## Обновления
+
+```sh
+max sales bot updates watch                # до Ctrl-C
+max sales bot updates watch --jsonl --types message_created,message_edited
+```
+
+`watch` печатает события по мере прихода и сохраняет их сообщения в локальную копию. Следующий
+запуск продолжает с того места, где остановился прошлый. Пока у бота задан вебхук, `watch` не
+работает.
+
+Всё, что получил `watch`, MAX больше не отдаст никому другому, кто читает этого бота через
+`get-updates`.
+
 ## Комментарии
 
 Комментарии — под постом канала. Первым идёт номер поста (`mid.…`), вторым — номер комментария:
@@ -275,5 +302,4 @@ max sales bot api send-message --user-id 4815162342 --body-file message.json
 
 ## Чего пока нет
 
-Удобной команды пока нет для получения обновлений — оно доступно через `max bot api get-updates`.
-MCP-сервера для бота тоже пока нет.
+MCP-сервера для бота пока нет.
