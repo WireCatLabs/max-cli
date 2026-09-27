@@ -118,6 +118,13 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
   it. Refresh the chat (opcode 48, `CHAT_INFO`) before reading roles, or say the roles may be old.
 
+- **MAX-62** · P3 · Lifting a bot's ban. `max <bot> bot members remove --block` (and `bot chats check`)
+  ban a person from rejoining by the invite link (measured 2026-09-27). The Bot API has no unblock,
+  and the owner found no ban list in the MAX app. Re-adding the person by an admin works, but
+  whether it lifts the ban is unknown — after leaving, the link may still refuse them. Find where MAX
+  keeps the ban (a capture of the web client's group settings, or `CHAT_MEMBERS` 59 with another
+  `type`), then offer `max chats members unban`.
+
 ## Foundation and risks
 
 - **OPS-16** · P2 · Tests that time out on a slow CI runner: `src/upload.test.ts` «sends an .mp4 as
