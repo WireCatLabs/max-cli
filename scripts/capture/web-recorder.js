@@ -153,6 +153,9 @@
   const ENUM = /^[A-Za-z0-9_.:/ -]{1,40}$/
   // The reads a tab sends right after LOGIN (MAX-51, MAX-52): their answers' key names and sync numbers.
   const AFTER_LOGIN = new Set([27, 53, 163, 208, 209, 272, 302])
+  // MAX-52: which chats and contacts these ask about, and what they answer — as labels, never ids.
+  const ID_LISTS = /Ids$|^ids$|^owners$/
+  const LABELLED_ANSWERS = new Set([28, 32, 35, 48])
   const EPOCH_MS = (v) => typeof v === "number" && v > 1e12 && v < 1e13
 
   const placeholder = (v) => {
@@ -175,6 +178,33 @@
     if (typeof v === "object") return Object.fromEntries(Object.entries(v).map(([kk, vv]) => [kk, clean(vv, kk)]))
     return `<${typeof v}>`
   }
+  const cursorForm = (x) => (x === "" ? "" : /^\d+$/.test(x) ? `digits ${x.length}` : "<text>")
+
+  // Every id anywhere inside, as labels, in order — to tie a later request's list to an answer.
+  const labelsIn = (v, k = "", depth = 0, found = []) => {
+    if (v === null || typeof v !== "object") {
+      if (ID.test(k) && !KEPT_IDS.has(k) && v !== null && v !== undefined) found.push(placeholder(v))
+    } else if (depth < 4) {
+      for (const [kk, vv] of Array.isArray(v) ? v.map((x) => [k, x]) : Object.entries(v))
+        labelsIn(vv, kk, depth + 1, found)
+    }
+    return found
+  }
+
+  // A chat list (the LOGIN answer, 53) in order: each chat's label and type, and a dialog's other side.
+  const chatList = (chats) =>
+    Array.isArray(chats)
+      ? chats.map((chat, at) => ({
+          at,
+          id: placeholder(chat?.id),
+          type: ENUM.test(String(chat?.type)) ? chat.type : typeof chat?.type,
+          ...(chat?.type === "DIALOG" && chat.participants
+            ? { with: Object.keys(chat.participants).map(placeholder) }
+            : {}),
+          ...(EPOCH_MS(chat?.lastEventTime) ? { lastEventTime: relative(chat.lastEventTime) } : {}),
+        }))
+      : undefined
+
   const shape = (v) => {
     if (!v || typeof v !== "object" || Array.isArray(v)) return v === undefined ? undefined : typeof v
     return Object.fromEntries(
@@ -182,6 +212,8 @@
         if (typeof x === "boolean" && !SECRET.test(k)) return [k, x]
         if (typeof x === "number" && !SECRET.test(k) && !ID.test(k)) return [k, EPOCH_MS(x) ? relative(x) : x]
         if (k === "type" && typeof x === "string" && ENUM.test(x)) return [k, x]
+        if (ID_LISTS.test(k) && Array.isArray(x)) return [k, x.map(placeholder)]
+        if (k === "cursor" && typeof x === "string") return [k, cursorForm(x)]
         return [k, Array.isArray(x) ? "array" : typeof x]
       }),
     )
@@ -256,6 +288,15 @@
         if (answers !== undefined) frame.answers = answers
         if (answers === 5 || answers === 1) frame.payload = clean(payload)
         else if (answers === 6 || answers === 19 || AFTER_LOGIN.has(answers)) frame.payload = shape(payload)
+        else if (LABELLED_ANSWERS.has(answers)) frame.payload = structure(payload)
+        if (answers === 19 || answers === 53) {
+          frame.chatList = chatList(payload?.chats)
+          if (Array.isArray(payload?.contacts))
+            frame.contactList = payload.contacts.map((contact) => placeholder(contact?.id))
+          if (payload?.presence && typeof payload.presence === "object")
+            frame.presenceOf = Object.keys(payload.presence).map(placeholder)
+        }
+        if (answers === 208 || answers === 209 || LABELLED_ANSWERS.has(answers)) frame.labels = labelsIn(payload)
         else if (header.cmd === 0 && header.opcode !== 1) frame.payload = structure(payload)
       }
       cap.frames.push(frame)
