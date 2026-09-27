@@ -133,6 +133,24 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 ## Foundation and risks
 
+**From the live run of 2026-09-28** (`docs_ai/plans/2026-09-28-live-scenarios.md`).
+
+- **MAX-63** · P2 · 🚧 `fix/live-run-findings` · After the owner's own `chats update`, `settings` or
+  `link reset`, `chats show` and `chats list` print the old chat for minutes: the background server
+  forwards MAX's answer but does not apply the chat it carries (`src/server/server.ts` `#pass`).
+- **CLI-53** · P2 · 🚧 `fix/live-run-findings` · `export messages` after a backup that reached the
+  chat's start warns «anything before 1970-01-01, never read» (`src/export.ts` `unreadStretches`).
+- **CLI-54** · P3 · 🚧 `fix/live-run-findings` · Error texts: `--limit abc` says «not NaN»
+  (`src/commands/paging.ts:14`); a dead invite link is «MAX refused opcode 89» (`src/client.ts`
+  `inspect`); `--since` refuses `1d`, while `--at` takes it (`src/client.ts` `moment`).
+- **CLI-55** · P3 · 🚧 `fix/live-run-findings` · `max mcp` exits when stdin ends and drops a request
+  still in flight (`src/mcp/server.ts` `serveOverStdio`).
+- **CLI-56** · P3 · 🚩 · Lists answer in three shapes: the envelope (`NEED-86`), a bare array
+  (`runs list`, `folders list`, `members list`, `scheduled`, every `bot … list`), and the Bot API's
+  own `{marker, members}` with numeric ids. One contract for agents before 1.0 — waits on the owner.
+- **OPS-17** · P1 · 🚧 `fix/live-run-findings` · Release 0.17: npm 0.16.0 lacks what `docs/`
+  describes (contacts rename/block/unblock, profile photo, `admins add --can read,link`).
+
 - **OPS-16** · P2 · Tests that time out on a slow CI runner: `src/upload.test.ts` «sends an .mp4 as
   a video», `src/commands/bot-reads.test.ts` «lists a chat's messages…», `src/commands/bot-sends.test.ts`
   «has no hourly limit» — each just over vitest's 5 s on run 36351058448 (#210), green on the rerun
