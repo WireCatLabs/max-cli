@@ -120,18 +120,14 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 **Bots as first-class profiles** (plan `docs_ai/plans/2026-09-28-bot-first-class.md`, approved 2026-09-28).
 
-- **CLI-49** · P2 · 🚧 `feat/config-sections` · Config sections for all personal accounts and all bots, each with its own defaults and
-  profiles; the more specific entry wins. `config set --personal|--bot`, `config set defaultProfile`.
-  `src/config.ts:236`.
-- **CLI-50** · P2 · Every profile with its kind in `config show` and `doctor`; a bot section and
+- **CLI-50** · P2 · 🚧 `feat/profiles-doctor` (#218) · Every profile with its kind in `config show` and `doctor`; a bot section and
   `--online` bot check in `doctor`; the right fix named for a bot-only profile. `src/diagnose.ts`,
   `src/commands/doctor.ts:90`, `src/client.ts:1963`.
-- **CLI-51** · P2 · Bot commands honour `--trace` and `--record`; a failed bot run keeps its requests.
+- **CLI-51** · P2 · 🚧 `feat/bot-run-log` (#217) · Bot commands honour `--trace` and `--record`; a failed bot run keeps its requests.
   `src/bot/transport.ts:146`, `src/runs/recording.ts:35`.
 - **CLI-57** · P2 · MCP write tools on the personal account — contacts, `polls close`, chats
   join/leave/create, admins, `account update` — each group off until `mcpTools` in the config file
   names it (`NEED-350`). `src/mcp/tools.ts:687`.
-- **CLI-52** · P3 · Bot sections in `docs/troubleshooting.md` and `docs/diagnostics.md`.
 
 - **MAX-62** · P3 · Lifting a bot's ban. `max <bot> bot members remove --block` (and `bot chats check`)
   ban a person from rejoining by the invite link (measured 2026-09-27). The Bot API has no unblock,
