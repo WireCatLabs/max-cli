@@ -7,6 +7,7 @@ import type { ChatKind, GroupSettings } from "../domain/models.js"
 import { forCommand } from "./context.js"
 import { foldersCommand } from "./folders.js"
 import { renderPage, window, withPaging } from "./paging.js"
+import { rulesCommand } from "./rules.js"
 
 const EVENTS_DAYS = 7
 
@@ -261,6 +262,7 @@ export const chatsCommand = (): Command => {
       await withClient(this, "chats link reset", (client) => client.chats.resetLink(chat))
     })
   command.addCommand(foldersCommand())
+  command.addCommand(rulesCommand())
 
   return command
 }
