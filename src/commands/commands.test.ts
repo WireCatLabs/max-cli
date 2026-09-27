@@ -97,6 +97,7 @@ describe("max commands", () => {
       "bot uploads put",
       "bot webhooks set",
       "bot webhooks delete",
+      "bot updates watch",
       "bot api edit-my-commands",
       "bot api edit-chat",
       "bot api send-action",

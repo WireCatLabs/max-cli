@@ -26,13 +26,19 @@ export class ChatRegistry {
   }
 
   list(): SeenChat[] {
-    if (!existsSync(this.#path)) return []
-    try {
-      const parsed = JSON.parse(readFileSync(this.#path, "utf8")) as { chats?: SeenChat[] }
-      return Array.isArray(parsed.chats) ? parsed.chats : []
-    } catch {
-      return []
-    }
+    const { chats } = this.#read()
+    return Array.isArray(chats) ? chats : []
+  }
+
+  /** The bot's own user id, once any command has learned it — the key its messages are stored under. */
+  botId(): string | undefined {
+    const { botId } = this.#read()
+    return typeof botId === "string" ? botId : undefined
+  }
+
+  rememberBot(id: string): void {
+    const file = this.#read()
+    if (file.botId !== id) this.#write({ ...file, botId: id })
   }
 
   /** Makes this bot known to `max bot list` before it has seen any chat. */
@@ -63,7 +69,21 @@ export class ChatRegistry {
         lastSeenAt: at,
       })
     }
-    writeSecurely(this.#path, `${JSON.stringify({ chats: [...byId.values()] }, null, 2)}\n`, 0o600)
+    this.#write({ ...this.#read(), chats: [...byId.values()] })
+  }
+
+  #read(): { chats?: SeenChat[]; botId?: unknown } {
+    if (!existsSync(this.#path)) return {}
+    try {
+      const parsed = JSON.parse(readFileSync(this.#path, "utf8"))
+      return parsed && typeof parsed === "object" ? parsed : {}
+    } catch {
+      return {}
+    }
+  }
+
+  #write(file: object): void {
+    writeSecurely(this.#path, `${JSON.stringify(file, null, 2)}\n`, 0o600)
   }
 }
 

@@ -8,6 +8,7 @@ import { newSendId, RecipientList, SendJournal, type SendKind, sendGuard } from 
 import { Command, Option } from "commander"
 import { botOperations } from "../bot/client.js"
 import { checkBody } from "../bot/input.js"
+import { keepSent } from "../bot/keep.js"
 import { BOT_JOURNAL_KINDS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
@@ -232,7 +233,7 @@ export const sendCommands = (messages: Command): void => {
             () => client.call(send, { query: target.query, ...(body ? { body } : {}) }),
             context.signal,
           )) as { message?: unknown } | null
-          const message = answer?.message ? client.decodeMessage(answer.message) : undefined
+          const message = answer?.message ? { ...client.decodeMessage(answer.message), outgoing: true } : undefined
           return { result: message ?? plainJson(answer), ...(message ? { messageId: message.id } : {}) }
         },
         content.length,
@@ -241,6 +242,7 @@ export const sendCommands = (messages: Command): void => {
       })
       const recipientChat = (sent as { chatId?: string }).chatId
       if (recipientChat && DIGITS.test(recipientChat)) context.registry.observe([{ id: recipientChat }])
+      await keepSent(context.registry, sent, context.streams.diagnostic)
       context.renderer.result(sent)
     })
 

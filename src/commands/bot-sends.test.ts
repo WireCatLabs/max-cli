@@ -73,7 +73,7 @@ describe("max bot messages send", () => {
   it("sends, answers with the sent message, and journals it without its text", async () => {
     const { code, stdout } = await max(["bot", "messages", "send", "-100", "hello there", "--silent", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ id: "mid.9", chatId: "-100", text: "hello there", outgoing: null })
+    expect(JSON.parse(stdout)).toMatchObject({ id: "mid.9", chatId: "-100", text: "hello there", outgoing: true })
     expect(requests.at(-1)).toMatchObject({ method: "POST", url: "/messages?chat_id=-100" })
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "hello there", notify: false })
     const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout)
@@ -85,6 +85,8 @@ describe("max bot messages send", () => {
       length: 11,
     })
     expect(JSON.stringify(journal)).not.toContain("hello there")
+    const kept = JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout)
+    expect(kept).toMatchObject([{ id: "mid.9", chatId: "-100", outgoing: true }])
   })
 
   it("writes a direct message to a person by user:<id>", async () => {

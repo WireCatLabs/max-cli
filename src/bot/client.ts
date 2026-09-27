@@ -49,12 +49,12 @@ export class BotApiClient {
     return this.#message(answer, selfId)
   }
 
-  /** Newest last, as MAX returns them. */
+  /** Oldest first, like `max messages list`; MAX answers newest first (`BUG-59`). */
   async messages(chatId: string, count: number, selfId?: string): Promise<Message[]> {
     const answer = (await this.#transport.call(required("getMessages"), {
       query: { chat_id: chatId, count: String(count) },
     })) as { messages?: unknown[] } | null
-    return (answer?.messages ?? []).map((raw) => this.#message(raw, selfId))
+    return (answer?.messages ?? []).map((raw) => this.#message(raw, selfId)).reverse()
   }
 
   /** A message from any answer — a send's result, an update — decoded the same way as a read. */

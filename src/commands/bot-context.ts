@@ -12,10 +12,14 @@ import { asFirstWord } from "../profile.js"
 import { readSecret } from "../session/prompt.js"
 import { environmentOf } from "./context.js"
 
-export const botContext = (command: Command) => {
+/** `offline` is for the reads the local copy can answer; every other command still refuses the flag. */
+export const botContext = (command: Command, { offline: answersOffline = false }: { offline?: boolean } = {}) => {
   const environment = environmentOf(command)
   const flags = command.optsWithGlobals<GlobalFlags & { offline?: boolean }>()
-  if (flags.offline) throw new CliError("validation_error", "max bot always asks MAX; --offline cannot apply to it")
+  const offline = flags.offline === true
+  if (offline && !answersOffline) {
+    throw new CliError("validation_error", `--offline reads the local copy; \`${command.name()}\` has to ask MAX`)
+  }
   const settings = resolveSettings(flags)
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
@@ -23,9 +27,10 @@ export const botContext = (command: Command) => {
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
   const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile })
-  const signal = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
-  const client = (token: string) =>
-    new BotApiClient({
+  const deadline = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
+  const client = (token: string, stop?: AbortSignal) => {
+    const signal = deadline && stop ? AbortSignal.any([deadline, stop]) : (deadline ?? stop)
+    return new BotApiClient({
       token,
       ...(environment.botFetch ? { fetch: environment.botFetch } : {}),
       ...(environment.botUrl ? { baseUrl: environment.botUrl } : {}),
@@ -33,8 +38,10 @@ export const botContext = (command: Command) => {
       ...(environment.botRetry ? { retry: environment.botRetry } : {}),
       ...(signal ? { signal } : {}),
     })
+  }
   const ask = environment.ask ?? ((prompt: string) => readSecret(prompt, { echo: false }))
-  const authenticated = () => {
+  /** `stop` is for a command that runs until told to — `updates watch` — and ends its request in flight. */
+  const authenticated = (stop?: AbortSignal) => {
     const stored = store.read()
     if (!stored) {
       throw new CliError(
@@ -42,7 +49,7 @@ export const botContext = (command: Command) => {
         `no bot token for profile "${settings.profile}" — run \`max ${asFirstWord(settings.profile)}bot auth set\``,
       )
     }
-    return client(stored.token)
+    return client(stored.token, stop)
   }
   const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
   const uploadFetch = () => environment.botFetch ?? botFetch()
@@ -57,8 +64,9 @@ export const botContext = (command: Command) => {
     client,
     ask,
     authenticated,
-    signal,
+    signal: deadline,
     uploadFetch,
+    offline,
   }
 }
 

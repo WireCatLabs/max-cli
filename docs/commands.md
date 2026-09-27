@@ -1193,6 +1193,14 @@ where MAX pushes this bot's updates — while one is set, the bot cannot read up
 max bot webhooks
 ```
 
+### `max bot updates`
+
+what happens in this bot's chats, as MAX reports it
+
+```sh
+max bot updates
+```
+
 ### `max bot api`
 
 every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md

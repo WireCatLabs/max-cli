@@ -14,6 +14,7 @@ import { adminsCommand, membersCommand } from "./bot-members.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
 import { guardedCall, recipientsCommand, sendsCommand } from "./bot-sends.js"
 import { menuCommand, uploadsCommand, webhooksCommand } from "./bot-setup.js"
+import { updatesCommand } from "./bot-updates.js"
 import { environmentOf } from "./context.js"
 
 const apiCommand = (operation: ManifestOperation): Command => {
@@ -157,6 +158,7 @@ export const botCommand = (): Command => {
     menuCommand(),
     uploadsCommand(),
     webhooksCommand(),
+    updatesCommand(),
   ])
     command.addCommand(more)
 

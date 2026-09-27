@@ -166,7 +166,7 @@ which; the plan for it starts by saying so.
   `parakeet-v3`), the text kept in the cache (schema 5), MCP tool `max_messages_transcribe`. On the
   owner's own voice messages `gigaam-v3` was best and stays the default (`NEED-235`). Left:
   `--transcribe` on `messages list` and `inbox`.
-- **CLI-25** · P3 · `max bot …` — work with a MAX bot through the official bot API and a bot token,
+- **CLI-25** · P3 · 🚧 `feat/bot-store` (the message store, `--offline`, `search`, `updates watch`) · `max bot …` — work with a MAX bot through the official bot API and a bot token,
   beside the personal account. Reopens REQUIREMENTS §3 ("not a bot-account client"). Bots are
   issued only to verified organisations, sole traders and the self-employed
   ([dev.max.ru](https://dev.max.ru/docs/maxbusiness/connection)).
