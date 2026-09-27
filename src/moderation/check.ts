@@ -4,14 +4,14 @@ import type { GroupMember, Id, Message } from "../domain/models.js"
 import type { SessionStore } from "../session/store.js"
 import { defaultRules, type GroupRules, ModerationRules, moderationPathFor } from "./rules.js"
 
-export type Action = "report" | "delete" | "remove" | "accept" | "decline"
+export type Action = "report" | "delete" | "remove"
 
 export type Outcome = "reported" | "done" | "planned" | "forbidden" | "declined" | "refused" | "failed" | "skipped"
 
 export interface Finding {
-  /** A message, somebody who joined, or somebody asking to join. */
-  kind: "message" | "member" | "request"
-  rule: "blocked" | "invites" | "links" | "forwards" | "flood" | "newAccount" | "trusted" | "request"
+  /** A message, or somebody who joined. */
+  kind: "message" | "member"
+  rule: "blocked" | "invites" | "links" | "forwards" | "flood" | "newAccount"
   personId: Id
   personName: string | null
   messageId?: Id
@@ -29,7 +29,6 @@ export interface CheckInput {
   rules: GroupRules
   messages: Message[]
   joined: GroupMember[]
-  requests: GroupMember[]
   /** The owner's admins; the owner's own messages are known by `outgoing`. */
   answerers: ReadonlySet<Id>
   now: number
@@ -45,7 +44,7 @@ const STRENGTH: Record<GroupRules["links"], number> = { report: 0, delete: 1, re
  * What the rules say about what is new. Pure: nothing here talks to MAX. One finding per message —
  * the rule with the strongest action — and one removal per person, whatever else they did.
  */
-export const judge = ({ rules, messages, joined, requests, answerers, now }: CheckInput): Finding[] => {
+export const judge = ({ rules, messages, joined, answerers, now }: CheckInput): Finding[] => {
   const trusted = new Set(rules.trusted)
   const blocked = (id: Id | null, name: string | null) =>
     (id !== null && rules.blocked.includes(id)) ||
@@ -61,24 +60,6 @@ export const judge = ({ rules, messages, joined, requests, answerers, now }: Che
       return
     }
     found.push(finding)
-  }
-
-  for (const request of requests) {
-    const person = { kind: "request" as const, personId: request.id, personName: request.name }
-    const policy = rules.requests
-    if (trusted.has(request.id) && (policy === "accept-trusted" || policy === "both")) {
-      add({ ...person, rule: "trusted", action: "accept" })
-    } else if (blocked(request.id, request.name)) {
-      add({
-        ...person,
-        rule: "blocked",
-        action: policy === "decline-blocked" || policy === "both" ? "decline" : "report",
-      })
-    } else if (young(request)) {
-      add({ ...person, rule: "newAccount", action: rules.newAccount.action === "remove" ? "decline" : "report" })
-    } else {
-      add({ ...person, rule: "request", action: "report" })
-    }
   }
 
   for (const member of joined) {
@@ -145,8 +126,6 @@ export interface ActOptions {
 const CONSENT: Record<Exclude<Action, "report">, keyof GroupRules["consent"]> = {
   delete: "delete",
   remove: "remove",
-  accept: "accept",
-  decline: "decline",
 }
 
 /**
@@ -191,10 +170,6 @@ export const act = async (moderator: Moderator, findings: Finding[], options: Ac
 
     if (level === "forbid") {
       rows.push(row("forbidden", `consent.${CONSENT[finding.action]} is forbid`))
-      continue
-    }
-    if (finding.action === "accept" || finding.action === "decline") {
-      rows.push(row("planned", "accepting and declining are not measured against MAX yet (MAX-41)"))
       continue
     }
     if (dryRun) {
@@ -261,10 +236,6 @@ const commandFor = (chatId: Id, finding: Finding): string => {
       return `max messages delete ${chatId} ${finding.messageId} --for-everyone --allow-dangerous`
     case "remove":
       return `max chats members remove ${chatId} ${finding.personId}`
-    case "accept":
-      return `max chats requests accept ${chatId} ${finding.personId}`
-    case "decline":
-      return `max chats requests decline ${chatId} ${finding.personId}`
     default:
       return ""
   }
@@ -303,20 +274,12 @@ export const gather = async (client: MaxClient, chatId: Id, since: number): Prom
       ? []
       : (await client.chats.members.list(chatId)).members.filter((member) => joinedIds.has(member.id))
 
-  let requests: GroupMember[] = []
-  try {
-    requests = await client.chats.requests.list(chatId)
-  } catch (error) {
-    notes.push(`join requests not read: ${asCliError(error).message}`)
-  }
-
   const admins = await client.chats.adminIds(chatId)
   if (admins === undefined) notes.push("the group's admins are not known, so only your own messages are exempt")
 
   return {
     messages,
     joined,
-    requests,
     answerers: new Set(admins ?? []),
     until: messages.at(-1)?.timestamp ?? null,
     more,
@@ -403,7 +366,7 @@ export const finish = async (
   return { rows, notes }
 }
 
-const undone = (row: CheckRow) => ["planned", "skipped", "failed"].includes(row.outcome) && row.kind !== "request"
+const undone = (row: CheckRow) => ["planned", "skipped", "failed"].includes(row.outcome)
 
 /**
  * Where the next check starts: after the newest message read, or just before the first message whose

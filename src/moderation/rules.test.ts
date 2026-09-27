@@ -23,10 +23,24 @@ describe("ModerationRules", () => {
     expect(JSON.parse(readFileSync(rules.path, "utf8")).groups["-1"].consent).toEqual({
       delete: "flag",
       remove: "flag",
-      accept: "flag",
-      decline: "flag",
     })
     expect(saved.newAccount).toEqual({ days: 7, action: "report" })
+  })
+
+  it("loads a file written when join requests had rules, and drops them on the next write", () => {
+    const rules = fresh()
+    const old = {
+      ...defaultRules("Team"),
+      requests: "both",
+      consent: { delete: "flag", remove: "flag", accept: "allow", decline: "allow" },
+    }
+    writeFileSync(rules.path, JSON.stringify({ groups: { "-1": old } }))
+
+    expect(rules.read("-1")).toEqual(defaultRules("Team"))
+    rules.set("-1", "Team", "links", "delete")
+    const written = JSON.parse(readFileSync(rules.path, "utf8")).groups["-1"]
+    expect(written.requests).toBeUndefined()
+    expect(written.consent).toEqual({ delete: "flag", remove: "flag" })
   })
 
   it("reads lists and numbers from text, and puts a rule back with unset", () => {

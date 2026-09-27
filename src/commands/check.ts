@@ -17,7 +17,7 @@ export const checkCommand = (): Command =>
     .option("--dry-run", "judge and plan; do nothing")
     .option("--allow-dangerous", "do what a rule at consent level flag asks: delete messages, remove people")
     .option("--max-actions <n>", `at most this many actions in one check; ${MAX_ACTIONS} if not given`)
-    .description("judge a group's new messages, members and join requests by its rules, and act as they allow")
+    .description("judge a group's new messages and members by its rules, and act as they allow")
     .action(async function (this: Command, chat: string) {
       const options = this.optsWithGlobals()
       const { renderer, settings, format, store, interactive, ask, createClient, run } = forCommand(this)

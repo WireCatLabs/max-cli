@@ -281,14 +281,6 @@ max chats settings <chat> [options]
 | `--only-owner-edits-info <on\|off>` | only the owner may change the name and photo |
 | `--members-see-link <on\|off>` | members may see the invite link |
 
-### `max chats requests`
-
-people asking to join a group or channel
-
-```sh
-max chats requests
-```
-
 ### `max chats link`
 
 a group's invite link
@@ -315,7 +307,7 @@ max chats rules
 
 ### `max chats check`
 
-judge a group's new messages, members and join requests by its rules, and act as they allow
+judge a group's new messages and members by its rules, and act as they allow
 
 **Меняет что-то в MAX.**
 
