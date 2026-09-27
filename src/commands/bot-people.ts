@@ -12,13 +12,12 @@ import { Command } from "commander"
 import { accountOf, fromStore, keep, PROVIDER } from "../bot/keep.js"
 import { KINDS } from "../bot/map.js"
 import { botContext } from "./bot-context.js"
+import { wholeNumber } from "./paging.js"
 
 type Context = ReturnType<typeof botContext>
 
 /** What "common chats" rests on: who has written where in this copy, not who is a member. */
 const BASIS = "messages seen"
-
-const count = (value: string) => Number.parseInt(value, 10)
 
 /** This bot's messages, or every bot's on this machine — identities are per provider, so a person is the same in both. */
 const scopeOf = (context: Context, allBots: boolean) => {
@@ -97,7 +96,7 @@ export const peopleCommand = (): Command => {
 
   command
     .command("show <who>")
-    .option("--limit <n>", "how many messages from the private chat", count)
+    .option("--limit <n>", "how many messages from the private chat", wholeNumber("--limit"))
     .option("--all-bots", "look through every bot's local copy on this machine, not only this one's")
     .option("--refresh", "read the private chat with them from MAX first — one request")
     .description(
@@ -158,7 +157,7 @@ export const searchMessages = (
 export const addBetween = (messages: Command): void => {
   messages
     .command("between <people...>")
-    .option("--limit <n>", "how many of the latest messages from each chat", count)
+    .option("--limit <n>", "how many of the latest messages from each chat", wholeNumber("--limit"))
     .option("--all-bots", "look through every bot's local copy on this machine, not only this one's")
     .description(
       "what two or more people wrote in the chats they have all written in — from the local copy, grouped by " +

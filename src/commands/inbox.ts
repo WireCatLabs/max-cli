@@ -25,7 +25,10 @@ export const inboxCommand = (): Command =>
   new Command("inbox")
     .description("other people's unread messages in every chat; --new for what arrived since the last check")
     .option("--new", "what arrived since the last check, each message once — for scheduled runs")
-    .option("--since <id-or-time>", "what arrived after this message id or ISO 8601 time; the saved point stays put")
+    .option(
+      "--since <id-or-time>",
+      "what arrived after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays put",
+    )
     .option("--limit <n>", "at most this many per chat, the newest", (value) => Number.parseInt(value, 10))
     .option(...hearingOptions.transcribe)
     .option(...hearingOptions.model)

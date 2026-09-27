@@ -13,7 +13,10 @@ import { forCommand } from "./context.js"
 export const checkCommand = (): Command =>
   annotate(new Command("check"), { mutates: true })
     .argument("<chat>", "chat id, or part of a chat name")
-    .option("--since <id-or-time>", "judge what came after this message id or ISO 8601 time; the saved point stays")
+    .option(
+      "--since <id-or-time>",
+      "judge what came after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays",
+    )
     .option("--dry-run", "judge and plan; do nothing")
     .option("--allow-dangerous", "do what a rule at consent level flag asks: delete messages, remove people")
     .option("--max-actions <n>", `at most this many actions in one check; ${MAX_ACTIONS} if not given`)

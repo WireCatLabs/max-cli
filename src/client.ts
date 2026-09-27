@@ -1,5 +1,6 @@
 import { CliError } from "@leemour/cli-core"
 import type { CacheStore, PersonOrder, SyncSummary } from "./cache/store.js"
+import { delayMs } from "./config.js"
 import {
   namesFrom,
   POLL_CLOSED,
@@ -423,13 +424,14 @@ export class MaxClient {
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot read a link")
       const wire = wireLink(link)
       await this.#connectOnce()
-      return toGroupCard(record((await this.#wire.chats.linkInfo({ link: wire })).chat) ?? {})
+      const answer = await this.#wire.chats.linkInfo({ link: wire }).catch(deadLink(link))
+      return toGroupCard(record(answer.chat) ?? {})
     },
 
     join: (link: string): Promise<GroupCard> => {
       const wire = wireLink(link)
       return this.#changeChat(null, "join", async () => {
-        const chat = toGroupCard(record((await this.#wire.chats.join({ link: wire })).chat) ?? {})
+        const chat = toGroupCard(record((await this.#wire.chats.join({ link: wire }).catch(deadLink(link))).chat) ?? {})
         return { chatId: chat.id, result: chat }
       })
     },
@@ -999,9 +1001,17 @@ export class MaxClient {
      */
     moment: (reference: string, flag = "--before"): number => {
       const wanted = reference.trim()
-      const time = /^\d+$/.test(wanted) ? timeOfMessageId(wanted) : Date.parse(wanted)
+      const ago = delayMs(wanted)
+      const time = /^\d+$/.test(wanted)
+        ? timeOfMessageId(wanted)
+        : ago === undefined
+          ? Date.parse(wanted)
+          : Date.now() - ago
       if (time === undefined || Number.isNaN(time)) {
-        throw new CliError("validation_error", `${flag} takes a message id or an ISO 8601 time, not "${wanted}"`)
+        throw new CliError(
+          "validation_error",
+          `${flag} takes a message id, an ISO 8601 time or 30m, 2h, 1d ago — not "${wanted}"`,
+        )
       }
       return time
     },
@@ -2997,6 +3007,15 @@ const asRefusal = (error: ProtocolError): CliError => {
   }
   return new CliError("provider_error", error.message, { operation: String(error.opcode) })
 }
+
+/** A link that was reset, or never led anywhere, is `not.found` from MAX (measured 2026-09-28). */
+const deadLink =
+  (link: string) =>
+  (error: unknown): never => {
+    const failure = asCliError(error)
+    if (failure.details.maxError !== "not.found") throw failure
+    throw new CliError("not_found", `${link.trim()} leads nowhere — the link was reset, or never worked`)
+  }
 
 const LIMIT_WORDS = ["limit.violate", "rate_limit", "rate limit", "too many", "слишком много"]
 

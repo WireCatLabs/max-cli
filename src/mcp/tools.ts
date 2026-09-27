@@ -157,7 +157,7 @@ const READ_TOOLS = {
       "downloads a model) and adds `unheard` and `transcribeProblem`. " +
       "Returns { mode, chats: [{ id, title, messages, more }], skipped, partial }.",
     input: v.object({
-      since: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time"))),
+      since: v.optional(v.pipe(v.string(), v.description("a message id, an ISO 8601 time, or 2h / 1d ago"))),
       limit: v.optional(
         v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(100), v.description("at most this many per chat")),
       ),
@@ -293,7 +293,7 @@ const READ_TOOLS = {
       "Returns { chatId, since, more, events: [{ messageId, timestamp, event, by, people, title? }] }.",
     input: v.object({
       chat,
-      since: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time"))),
+      since: v.optional(v.pipe(v.string(), v.description("a message id, an ISO 8601 time, or 2h / 1d ago"))),
     }),
     annotations: READ,
     answer: (client, args) =>
@@ -385,8 +385,10 @@ const READ_TOOLS = {
     input: v.object({
       chat,
       limit,
-      before: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time"))),
-      after: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time; not with before"))),
+      before: v.optional(v.pipe(v.string(), v.description("a message id, an ISO 8601 time, or 2h / 1d ago"))),
+      after: v.optional(
+        v.pipe(v.string(), v.description("a message id, an ISO 8601 time, or 2h / 1d ago; not with before")),
+      ),
       transcribe: v.optional(
         v.pipe(v.boolean(), v.description("hear voice messages that have no text yet; slow, never downloads a model")),
       ),
@@ -887,7 +889,9 @@ const registerCheck = (
           since: v.optional(
             v.pipe(
               v.string(),
-              v.description("judge what came after this message id or ISO 8601 time; the saved point stays"),
+              v.description(
+                "judge what came after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays",
+              ),
             ),
           ),
           dry_run: v.optional(v.pipe(v.boolean(), v.description("judge and plan; do nothing"))),

@@ -23,7 +23,7 @@ export const exportCommand = (): Command => {
     .argument("<chat>", "chat id, or part of a chat name this machine has listed")
     .description("a chat's messages from the local copy, oldest first, as JSON lines or Markdown")
     .addOption(new Option("--format <format>", "jsonl or md").choices(["jsonl", "md"]).makeOptionMandatory())
-    .option("--since <id-or-time>", "only from this message id or ISO 8601 time on")
+    .option("--since <id-or-time>", "only from this message id, ISO 8601 time, or 2h / 1d ago on")
     .option("--output <file>", "write to this file, readable only by you, instead of stdout")
     .action(async function (this: Command, chat: string) {
       const options = this.opts<{ format: "jsonl" | "md"; since?: string; output?: string }>()

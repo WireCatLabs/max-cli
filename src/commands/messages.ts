@@ -30,8 +30,11 @@ export const messagesCommand = (): Command => {
     // Not `--page`: this history is anchored in time, so paging backwards through it is exact
     // rather than approximate. A message id is what the reader has in front of them, having just
     // read the output; an ISO 8601 time is what still works once that message is gone.
-    .option("--before <id-or-time>", "read what came before this message id, or this ISO 8601 time")
-    .option("--after <id-or-time>", "read what came after this message id, or this ISO 8601 time; not with --before")
+    .option("--before <id-or-time>", "read what came before this message id, this ISO 8601 time, or 2h / 1d ago")
+    .option(
+      "--after <id-or-time>",
+      "read what came after this message id, this ISO 8601 time, or 2h / 1d ago; not with --before",
+    )
     .option("--mark-read", "also mark the chat read up to the newest message shown; the other person sees it")
     .option(...hearingOptions.transcribe)
     .option(...hearingOptions.model)

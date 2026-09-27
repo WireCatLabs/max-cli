@@ -66,7 +66,10 @@ export const chatsCommand = (): Command => {
   command
     .command("events")
     .argument("<chat>", "chat id, or part of a chat name")
-    .option("--since <id-or-time>", `from this message id or ISO 8601 time; ${EVENTS_DAYS} days ago if not given`)
+    .option(
+      "--since <id-or-time>",
+      `from this message id, ISO 8601 time, or 2h / 1d ago; ${EVENTS_DAYS} days ago if not given`,
+    )
     .option("--event <names>", "only these, comma-separated, as MAX names them: new, add, remove, pin…")
     .description("who joined, left, was added or removed, and by whom — from the chat's service messages")
     .action(async function (this: Command, chat: string) {

@@ -20,8 +20,12 @@ const GROUP = {
   options: { ALL_CAN_PIN_MESSAGE: true, ONLY_ADMIN_CAN_ADD_MEMBER: false, OFFICIAL: false },
 }
 
-const messenger = (answers: Record<number, Payload | ((request: Payload) => Payload | undefined)> = {}) => {
+const messenger = (
+  answers: Record<number, Payload | ((request: Payload) => Payload | undefined)> = {},
+  refuse: Record<number, string> = {},
+) => {
   const max = mockMax({
+    refuse,
     answers: {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: {
@@ -86,6 +90,18 @@ describe("joining and leaving", () => {
 
     expect(refused.code).toBe(2)
     expect(max.sent).toEqual([])
+  })
+
+  it("a link that was reset leads nowhere: not found, in plain words, for `inspect` and `join`", async () => {
+    const { environment } = messenger({}, { [Opcode.LINK_INFO]: "not.found", [Opcode.CHAT_JOIN]: "not.found" })
+
+    for (const action of ["inspect", "join"]) {
+      const answer = await runWith([`gr-dead-${action}`, "chats", action, "max.ru/join/gone", "--json"], environment)
+
+      expect(answer.code).toBe(6)
+      expect(JSON.parse(answer.stderr)).toMatchObject({ error: { code: "not_found" } })
+      expect(answer.stderr).toContain("leads nowhere")
+    }
   })
 
   it("`inspect` reads a link and joins nothing", async () => {

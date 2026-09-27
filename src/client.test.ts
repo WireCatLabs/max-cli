@@ -1339,6 +1339,8 @@ describe("with a cache", () => {
       expect(client.messages.moment("116762160362694583")).toBe(Number(116762160362694583n >> 16n))
       expect(client.messages.moment("2026-09-20T01:00:00Z")).toBe(Date.parse("2026-09-20T01:00:00Z"))
       expect(() => client.messages.moment("next tuesday")).toThrow(/ISO 8601/)
+      const dayAgo = Date.now() - 24 * 60 * 60_000
+      expect(Math.abs(client.messages.moment("1d", "--since") - dayAgo)).toBeLessThan(1000)
       await client.close()
     })
 

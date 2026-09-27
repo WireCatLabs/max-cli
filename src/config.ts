@@ -460,6 +460,12 @@ const YEAR = 365 * 24 * 60 * MINUTE
 const DELAY = /^(\d+)(m|h|d)$/
 const DELAY_UNIT_MS: Record<string, number> = { m: MINUTE, h: 60 * MINUTE, d: 24 * 60 * MINUTE }
 
+/** `30m`, `2h`, `1d` as milliseconds; anything else is `undefined`. */
+export const delayMs = (value: string): number | undefined => {
+  const [, amount, unit] = DELAY.exec(value.trim()) ?? []
+  return amount && unit ? Number(amount) * (DELAY_UNIT_MS[unit] ?? 0) : undefined
+}
+
 /**
  * Rounded down to the minute: MAX drops the seconds and sends at the start of the minute (measured
  * 2026-09-24, `FIND-141`), so the time we print is the time it goes. A time without an offset is
@@ -468,11 +474,11 @@ const DELAY_UNIT_MS: Record<string, number> = { m: MINUTE, h: 60 * MINUTE, d: 24
  */
 export const sendTime = (value: string, now = Date.now()): number => {
   const trimmed = value.trim()
-  const delay = DELAY.exec(trimmed)
+  const delay = delayMs(trimmed)
   const at = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(trimmed)
     ? Date.parse(trimmed.replace(" ", "T"))
-    : delay?.[1] && delay[2]
-      ? now + Number(delay[1]) * (DELAY_UNIT_MS[delay[2]] ?? 0)
+    : delay !== undefined
+      ? now + delay
       : Number.NaN
   if (Number.isNaN(at)) {
     throw new CliError(

@@ -42,6 +42,12 @@ describe("what an export cannot contain", () => {
     ])
   })
 
+  it("names nothing before a window a backup read back to the chat's start", () => {
+    const ranges = [{ from: 0, to: at("2026-09-02T01:00:00Z") }]
+
+    expect(unreadStretches(ranges)).toEqual([])
+  })
+
   it("starts at --since, and reaches the chat's last message when that is newer than what was read", () => {
     const ranges = [{ from: at("2026-09-02T00:00:00Z"), to: at("2026-09-02T01:00:00Z") }]
 

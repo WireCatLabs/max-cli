@@ -1,7 +1,17 @@
-import type { Renderer, RenderFormat, Streams } from "@leemour/cli-core"
+import { CliError, type Renderer, type RenderFormat, type Streams } from "@leemour/cli-core"
 import type { Command } from "commander"
 import type { Settings } from "../config.js"
 import type { Page } from "../domain/models.js"
+
+/** Checked while parsing, so the error can quote what was typed rather than the `NaN` it became. */
+export const wholeNumber =
+  (flag: string) =>
+  (value: string): number => {
+    if (!/^\d+$/.test(value.trim()) || Number(value) < 1) {
+      throw new CliError("validation_error", `${flag} takes a whole number from 1 upwards, not "${value}"`)
+    }
+    return Number(value)
+  }
 
 /**
  * The three flags every listing shares, so no command invents its own spelling of them.
@@ -11,8 +21,8 @@ import type { Page } from "../domain/models.js"
  */
 export const withPaging = (command: Command): Command =>
   command
-    .option("--limit <n>", "how many to show", (value) => Number.parseInt(value, 10))
-    .option("--page <n>", "which page, starting at 1", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many to show", wholeNumber("--limit"))
+    .option("--page <n>", "which page, starting at 1", wholeNumber("--page"))
     .option("--all", "every row, no paging")
 
 /**

@@ -149,7 +149,7 @@ max chats events <chat> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | from this message id or ISO 8601 time; 7 days ago if not given |
+| `--since <id-or-time>` | from this message id, ISO 8601 time, or 2h / 1d ago; 7 days ago if not given |
 | `--event <names>` | only these, comma-separated, as MAX names them: new, add, remove, pin… |
 
 ### `max chats inspect`
@@ -322,7 +322,7 @@ max chats check <chat> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | judge what came after this message id or ISO 8601 time; the saved point stays |
+| `--since <id-or-time>` | judge what came after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays |
 | `--dry-run` | judge and plan; do nothing |
 | `--allow-dangerous` | do what a rule at consent level flag asks: delete messages, remove people |
 | `--max-actions <n>` | at most this many actions in one check; 10 if not given |
@@ -480,8 +480,8 @@ max messages list <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many to read |
-| `--before <id-or-time>` | read what came before this message id, or this ISO 8601 time |
-| `--after <id-or-time>` | read what came after this message id, or this ISO 8601 time; not with --before |
+| `--before <id-or-time>` | read what came before this message id, this ISO 8601 time, or 2h / 1d ago |
+| `--after <id-or-time>` | read what came after this message id, this ISO 8601 time, or 2h / 1d ago; not with --before |
 | `--mark-read` | also mark the chat read up to the newest message shown; the other person sees it |
 | `--transcribe` | hear voice messages not heard yet, on this machine; slow, the model must be downloaded |
 | `--model <id>` | which downloaded speech model hears them; `max models audio list` shows them |
@@ -719,7 +719,7 @@ max backup messages <chat> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | back to this message id or ISO 8601 time |
+| `--since <id-or-time>` | back to this message id, ISO 8601 time, or 2h / 1d ago |
 | `--last <n>` | the newest n messages |
 | `--run` | fetch what is missing; without it nothing is sent |
 | `--max-pages <n>` | pages of 30 per run По умолчанию: `40`. |
@@ -744,7 +744,7 @@ max export messages <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--format <format>` | jsonl or md |
-| `--since <id-or-time>` | only from this message id or ISO 8601 time on |
+| `--since <id-or-time>` | only from this message id, ISO 8601 time, or 2h / 1d ago on |
 | `--output <file>` | write to this file, readable only by you, instead of stdout |
 
 ## `max models`
@@ -927,7 +927,7 @@ max inbox [options]
 | Опция | Что делает |
 |---|---|
 | `--new` | what arrived since the last check, each message once — for scheduled runs |
-| `--since <id-or-time>` | what arrived after this message id or ISO 8601 time; the saved point stays put |
+| `--since <id-or-time>` | what arrived after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays put |
 | `--limit <n>` | at most this many per chat, the newest |
 | `--transcribe` | hear voice messages not heard yet, on this machine; slow, the model must be downloaded |
 | `--model <id>` | which downloaded speech model hears them; `max models audio list` shows them |
@@ -942,7 +942,7 @@ max review [options]
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | where the last review ended; 3 days ago if not given |
+| `--since <id-or-time>` | where the last review ended — a message id, ISO 8601 time, or 2h / 1d ago; 3 days ago if not given |
 | `--transcribe` | transcribe voice messages not heard yet; slow, and the model must be downloaded |
 | `--chat <chat>` | only this chat: an id, or part of a chat name |
 | `--unanswered [hours]` | only questions to you or a group's admins that nobody answered, asked at least this long ago; 24 hours if not given |

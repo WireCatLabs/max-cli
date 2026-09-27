@@ -22,7 +22,7 @@ export const backupCommand = (): Command => {
     .command("messages")
     .argument("<chat>", "chat id, or part of a chat name")
     .description("what a chat's history back to --since or --last costs; with --run, fetch it")
-    .option("--since <id-or-time>", "back to this message id or ISO 8601 time")
+    .option("--since <id-or-time>", "back to this message id, ISO 8601 time, or 2h / 1d ago")
     .option("--last <n>", "the newest n messages", (value) => Number.parseInt(value, 10))
     .option("--run", "fetch what is missing; without it nothing is sent")
     .option("--max-pages <n>", `pages of ${BACKUP_PAGE} per run`, (value) => Number.parseInt(value, 10), MAX_PAGES)
