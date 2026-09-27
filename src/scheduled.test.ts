@@ -141,7 +141,7 @@ describe("messages scheduled", () => {
     expect(listed.code).toBe(0)
     expect(sentWith(Opcode.CHAT_HISTORY)[0]?.payload).toMatchObject({ itemType: "DELAYED", from: 1, backward: 0 })
     expect(
-      JSON.parse(listed.stdout).map((m: { text: string; scheduledFor: string }) => [m.text, m.scheduledFor]),
+      JSON.parse(listed.stdout).items.map((m: { text: string; scheduledFor: string }) => [m.text, m.scheduledFor]),
     ).toEqual([
       ["first", new Date(FIRE).toISOString()],
       ["second", new Date(FIRE + MINUTE).toISOString()],

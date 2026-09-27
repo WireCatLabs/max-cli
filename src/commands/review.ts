@@ -15,7 +15,10 @@ import { forCommand } from "./context.js"
 export const reviewCommand = (): Command =>
   new Command("review")
     .description("every message, yours too, in chats that changed since a point — for reviewing who owes what")
-    .option("--since <id-or-time>", `where the last review ended; ${REVIEW_DAYS} days ago if not given`)
+    .option(
+      "--since <id-or-time>",
+      `where the last review ended — a message id, ISO 8601 time, or 2h / 1d ago; ${REVIEW_DAYS} days ago if not given`,
+    )
     .option("--transcribe", "transcribe voice messages not heard yet; slow, and the model must be downloaded")
     .option("--chat <chat>", "only this chat: an id, or part of a chat name")
     .option(

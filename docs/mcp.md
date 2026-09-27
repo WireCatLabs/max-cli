@@ -125,7 +125,7 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 
 | Инструмент | Команда | Что делает |
 |---|---|---|
-| `max_inbox` | `max inbox`, `--since` | что пришло: непрочитанное или всё после момента, одним вызовом; ничего не отмечает и не сдвигает точку `max inbox --new` |
+| `max_inbox` | `max inbox`, `--since` | что пришло: непрочитанное или всё после момента, одним вызовом; с `transcribe` расшифровывает голосовые; ничего не отмечает и не сдвигает точку `max inbox --new` |
 | `max_review` | `max review` | все сообщения, свои тоже, во всех изменившихся чатах с момента `since` (по умолчанию 3 дня) — для обзора обязательств; с `transcribe` расшифровывает голосовые; `chat` — только один чат; `unanswered_after_hours` — только вопросы, на которые столько часов не ответили ни вы, ни админы группы; ничего не отмечает |
 | `max_account_show` | `max account show` | под кем вход |
 | `max_status` | `max doctor` | за какой профиль говорит сервер, есть ли токен, был ли вход и какие пишущие инструменты включены; в MAX не входит |
@@ -136,7 +136,7 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 | `max_chats_rules` | `max chats rules show` | правила модерации группы; менять их может только владелец, командой |
 | `max_contacts_list` | `max contacts list` | люди, с кем есть личная переписка |
 | `max_contacts_show` | `max contacts show` | один человек и общие чаты |
-| `max_messages_list` | `max messages list` | сообщения чата; ничего не отмечает прочитанным |
+| `max_messages_list` | `max messages list` | сообщения чата; с `transcribe` расшифровывает голосовые; ничего не отмечает прочитанным |
 | `max_messages_search` | `max messages search` | поиск по уже прочитанному на этой машине |
 | `max_messages_context` | `max messages show`, `context` | одно сообщение и соседние |
 | `max_messages_photo` | `max messages download` | фото из сообщения как картинка, до 512 КБ; файл, видео, голосовое или фото крупнее — отказ с командой, которая их сохранит. ссылку на фото этот инструмент не отдаёт |
@@ -145,10 +145,12 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 | `max_messages_send` | `max messages send` | отправка, только с `--allow-send`; с `at` — позже, как `--at`; `reply_to` — ответ на сообщение, `markdown` — оформление |
 | `max_messages_edit` | `max messages edit` | правка своего сообщения, только с `--allow-send`; `markdown` — оформление |
 | `max_messages_forward` | `max messages forward` | пересылка в другой чат, только с `--allow-send`; `silent` — без уведомления |
-| `max_messages_pin` | `max messages pin` | закрепить, только с `--allow-send`; без уведомления, если не передан `notify` |
+| `max_messages_pin` | `max messages pin` | закрепить в группе или канале, только с `--allow-send`; без уведомления, если не передан `notify` |
 | `max_messages_unpin` | `max messages unpin` | открепить, только с `--allow-send` |
 | `max_reactions_add` | `max reactions add` | поставить реакцию, только с `--allow-send` и разрешением `reaction` |
 | `max_reactions_remove` | `max reactions remove` | снять свою реакцию, так же |
+| `max_polls_vote` | `max polls vote` | проголосовать или снять голос, только с `--allow-send` |
+| `max_polls_create` | `max polls create` | создать опрос, только с `--allow-send` |
 | `max_chats_read` | `max chats read` | отметить чат прочитанным, только с `--allow-mark-read` |
 | `max_messages_delete` | `max messages delete` | удалить у владельца, только с `--allow-delete` |
 | `max_chats_check` | `max chats check` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |

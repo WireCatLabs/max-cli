@@ -5,6 +5,7 @@ import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, textOf } from "./bot-sends.js"
+import { renderList } from "./paging.js"
 
 const format = () => new Option("--format <format>", "how the text is marked up").choices(["markdown", "html"])
 
@@ -28,7 +29,11 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         query: { count: String(limit) },
       })
-      context.renderer.result((plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? [])
+      renderList(
+        context.renderer,
+        context.format,
+        (plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? [],
+      )
     })
 
   command

@@ -64,6 +64,9 @@
 | записи запусков — с `--record`, а неудачные всегда: слова команды, id, время, код ошибки; текстов нет | `~/.local/share/max-cli/runs/…` | каталог `0700`, файлы `0600` |
 | журнал отправок — **всегда**: чат, время, id, длина, исход; текста нет | `~/.local/share/max-cli/sends/<профиль>.jsonl` | каталог `0700`, файлы `0600` |
 | список разрешённых получателей, если включён | `~/.local/share/max-cli/profiles/<профиль>.recipients.json` | `0600` |
+| правила модерации групп — после первого `chats rules set` | `~/.local/share/max-cli/profiles/<профиль>.moderation.json` | `0600` |
+| бот: чаты, которые он видел, журнал отправок, список получателей, отметка `updates watch` | `~/.local/share/max-cli/bots/…` | каталог `0700`, файлы `0600` |
+| локальная копия сообщений бота — с текстами | `~/.local/share/cli-messaging/messages.db` | каталог `0700`, файл `0600` |
 | сокет и журнал фонового сервера `max serve` | `~/.local/share/max-cli/profiles/<профиль>.sock`, `.serve.log` | `0600` |
 | локальная копия чатов и сообщений, с расшифровками голосовых | `~/.cache/max-cli/<профиль>.db` и её `-wal`, `-shm` | каталог `0700`, файлы `0600` |
 | выгрузка переписки — **только `max export messages --output`** | куда вы укажете | `0600` |
@@ -95,9 +98,10 @@ Windows. Своего шифрования у локальной копии не
   операции протокола. Вторую отправляют только `max chats read` и `messages list --mark-read`, и
   на то, что чтение её не отправляет, есть тест.
 - **Не отправляет ничего, чего не просили.** Что-то меняют только `messages send|edit|delete|forward|pin|unpin`,
-  `reactions add|remove`, `contacts add|remove|import`, `account update`, `account sessions end-others`,
-  `chats join|leave|create|update|settings`, `chats members|admins|requests …`, `chats link reset`,
-  `chats folders create|update|delete`, `chats read` и `messages list --mark-read` — и каждая делает
+  `reactions add|remove`, `polls vote|close|create`, `contacts add|remove|import|rename|block|unblock`,
+  `account update`, `account sessions end-others`, `chats join|leave|create|update|settings`,
+  `chats members|admins …`, `chats link reset`, `chats folders create|update|delete`, `chats check`
+  (только то, что разрешают правила группы), `chats read` и `messages list --mark-read` — и каждая делает
   только то, что написано в набранной строке. `max commands --json` помечает их `mutates`.
 - **Не удаляет сообщения без явного слова.** `max messages delete` требует `--allow-dangerous`, а
   удалить у всех — ещё и `--for-everyone`. Удалённое не вернуть.
@@ -152,7 +156,7 @@ Windows. Своего шифрования у локальной копии не
 имён, номеров и названий.
 
 Список необязательный: пока в него ничего не добавлено, отправлять можно в любой чат. Пустой, но
-включённый список — «никуда». Когда он включён, `chats create --people` и `chats members add`
+включённый список — «никуда». Когда он включён, `chats create <название> <люди…>` и `chats members add`
 принимают только людей, личный чат с которыми есть в списке. Новый участник группы старых сообщений
 не видит, пока не передан `--history`. Отложенное сообщение считается в лимит того часа, когда
 уйдёт. Две команды, запущенные разом, лимит не перепрыгнут: место под лимитом держится от проверки

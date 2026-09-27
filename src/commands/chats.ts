@@ -7,7 +7,7 @@ import type { ChatKind, GroupSettings } from "../domain/models.js"
 import { checkCommand } from "./check.js"
 import { forCommand } from "./context.js"
 import { foldersCommand } from "./folders.js"
-import { renderPage, window, withPaging } from "./paging.js"
+import { renderList, renderPage, window, withPaging } from "./paging.js"
 import { rulesCommand } from "./rules.js"
 
 export const chatsCommand = (): Command => {
@@ -66,7 +66,10 @@ export const chatsCommand = (): Command => {
   command
     .command("events")
     .argument("<chat>", "chat id, or part of a chat name")
-    .option("--since <id-or-time>", `from this message id or ISO 8601 time; ${EVENTS_DAYS} days ago if not given`)
+    .option(
+      "--since <id-or-time>",
+      `from this message id, ISO 8601 time, or 2h / 1d ago; ${EVENTS_DAYS} days ago if not given`,
+    )
     .option("--event <names>", "only these, comma-separated, as MAX names them: new, add, remove, pin…")
     .description("who joined, left, was added or removed, and by whom — from the chat's service messages")
     .action(async function (this: Command, chat: string) {
@@ -91,8 +94,9 @@ export const chatsCommand = (): Command => {
           )
           const kept = only ? { ...found, events: found.events.filter((one) => only.has(one.event)) } : found
 
-          if (format !== "pretty") renderer.result(kept)
-          else {
+          if (format !== "pretty") {
+            renderList(renderer, format, kept.events, { hasMore: kept.more, chatId: kept.chatId, since: kept.since })
+          } else {
             renderer.stream(
               kept.events.map((one) => ({
                 time: one.timestamp,
@@ -146,9 +150,11 @@ export const chatsCommand = (): Command => {
   annotate(command.command("create"), { mutates: true })
     .argument("<title>", "the group's name")
     .argument("[person...]", "people to add: an id, or part of a name")
-    .description("create a group; the people added are told")
+    .option("--channel", "a private channel instead of a group; people join it by its link")
+    .description("create a group or a channel; the people added are told")
     .action(async function (this: Command, title: string, people: string[]) {
-      await withClient(this, "chats create", (client) => client.chats.create(title, people))
+      const channel = this.opts<{ channel?: boolean }>().channel === true
+      await withClient(this, "chats create", (client) => client.chats.create(title, people, { channel }))
     })
 
   const members = command.command("members").description("who is in a group or channel; add or remove people")
@@ -157,12 +163,16 @@ export const chatsCommand = (): Command => {
     .argument("<chat>", "chat id, or part of a chat name")
     .description("everyone in a group or channel, from MAX: when their account was made and when they were last seen")
     .action(async function (this: Command, chat: string) {
-      const { renderer, createClient, run } = forCommand(this)
+      const { renderer, format, createClient, run } = forCommand(this)
       await run("chats members list", async (events) => {
         const client = createClient({ events })
         try {
           const found = await client.chats.members.list(chat)
-          renderer.stream(found.members)
+          renderList(renderer, format, found.members, {
+            hasMore: !found.complete,
+            chatId: found.chatId,
+            rolesKnown: found.rolesKnown,
+          })
           if (!found.complete) renderer.note(`only the first ${found.members.length} members were read`)
           if (!found.rolesKnown) renderer.note("who is owner or admin is not known: the login did not carry this group")
         } finally {

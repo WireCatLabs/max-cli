@@ -916,12 +916,14 @@ describe("group reads", () => {
     const rules = await call(client, "max_chats_rules", { chat: "111" })
     const other = await call(client, "max_chats_rules", { chat: "222" })
 
-    expect(events.body.events).toEqual([
+    expect(events.body).toMatchObject({ chatId: "111", hasMore: false })
+    expect(events.body.items).toEqual([
       expect.objectContaining({ event: "add", people: [{ id: "30000003", name: "Newcomer" }] }),
     ])
     expect(members.body).toMatchObject({
-      members: [{ id: "30000003", name: "Newcomer", registeredAt: new Date(1789000000000).toISOString() }],
-      complete: true,
+      items: [{ id: "30000003", name: "Newcomer", registeredAt: new Date(1789000000000).toISOString() }],
+      hasMore: false,
+      chatId: "111",
     })
     expect(rules.body).toMatchObject({ saved: true, rules: { invites: "delete" } })
     expect(other.body).toMatchObject({ saved: false, rules: { invites: "report" } })

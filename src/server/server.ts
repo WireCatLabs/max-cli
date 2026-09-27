@@ -66,6 +66,7 @@ const CHAT_LIST_SHOWN_AFTER_MS = 500
 
 /** A message arrived — what MAX pushes, and what a send through this server is handed on as. */
 const NEW_MESSAGE = 128
+const CHAT_CHANGED = 135
 
 /** A request is a command's payload; a message with its markup is a few kilobytes. */
 const MAX_REQUEST_LENGTH = 1024 * 1024
@@ -508,6 +509,9 @@ export class MaxServer {
       if (opcode === Opcode.MSG_SEND && answer.message && !scheduled) {
         this.#pushed(client, NEW_MESSAGE, { chatId: request.chatId, message: answer.message })
       }
+      // Nor a chat we changed: the answer carries it whole, as a 135 push would. Without this the
+      // owner's own rename showed the old title until something else touched the chat.
+      if (answer.chat) this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
       // Nor does it push our own deletion back; the chat's last message may be the one deleted.
       if (opcode === Opcode.MSG_DELETE) this.#goneStale()
       return { payload: answer }

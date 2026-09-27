@@ -117,13 +117,13 @@ max runs path <id>            # каталог, для jq и grep
 
 ```sh
 # сколько времени ушло на вход в последних запусках
-for id in $(max runs list --json | jq -r '.[].runId'); do
+for id in $(max runs list --json | jq -r '.items[].runId'); do
   jq -r 'select(.operation=="session.login" and .event=="response") | "\(.durationMs)ms"' \
     "$(max runs path "$id" --json | jq -r .path)/events.jsonl"
 done
 
 # какие запуски закончились плохо
-max runs list --json | jq '.[] | select(.status=="failed") | {runId, command, errorCode}'
+max runs list --json | jq '.items[] | select(.status=="failed") | {runId, command, errorCode}'
 ```
 
 `max runs show` печатает то же самое, убрав служебные поля, которые Pino повторяет в каждой
@@ -155,7 +155,8 @@ max runs list --json | jq '.[] | select(.status=="failed") | {runId, command, er
 ```
 
 Тогда пишется каждый запуск, а `--no-record` отключает запись для одного вызова. Обратное — то,
-что по умолчанию: не записывается ничего, пока не попросили. Мессенджер, который сам собирает
+что по умолчанию: удачный запуск не записывается, пока не попросили; неудачный сохраняется всегда,
+без текстов, чтобы было что приложить к сообщению об ошибке. Мессенджер, который сам собирает
 каталог с историей того, кого вы читали и когда, — это чужая жизнь в чужом логе.
 
 ## Дальше

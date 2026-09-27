@@ -76,7 +76,7 @@ describe("max bot messages send", () => {
     expect(JSON.parse(stdout)).toMatchObject({ id: "mid.9", chatId: "-100", text: "hello there", outgoing: true })
     expect(requests.at(-1)).toMatchObject({ method: "POST", url: "/messages?chat_id=-100" })
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "hello there", notify: false })
-    const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout)
+    const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
     expect(journal.at(-1)).toMatchObject({
       chatId: "-100",
       kind: "message",
@@ -85,7 +85,7 @@ describe("max bot messages send", () => {
       length: 11,
     })
     expect(JSON.stringify(journal)).not.toContain("hello there")
-    const kept = JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout)
+    const kept = JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items
     expect(kept).toMatchObject([{ id: "mid.9", chatId: "-100", outgoing: true }])
   })
 
@@ -102,7 +102,7 @@ describe("max bot messages send", () => {
     expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
     expect((await max(["team", "bot", "messages", "send", "-100", "hi", "--json"])).code).toBe(0)
     expect((await max(["bot", "messages", "send", "-200", "hi", "--json"])).code).toBe(0)
-    const refusedRow = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout)[0]
+    const refusedRow = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout).items[0]
     expect(refusedRow).toMatchObject({ chatId: "-200", outcome: "refused" })
   })
 
@@ -116,7 +116,7 @@ describe("max bot messages send", () => {
     const { out } = await max(["bot", "messages", "send", "-555", "hi", "--json"], 300)
     expect(out).toContain("outcome_unknown")
     expect(requests.filter((request) => request.url?.includes("-555"))).toHaveLength(1)
-    const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout)
+    const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
     expect(journal.at(-1)).toMatchObject({ chatId: "-555", outcome: "outcome_unknown" })
   })
 })
@@ -128,7 +128,7 @@ describe("max bot messages edit and delete", () => {
     expect(requests.at(-1)).toMatchObject({ method: "PUT", url: "/messages?message_id=mid.9" })
     expect((await max(["bot", "messages", "delete", "mid.9", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/messages?message_id=mid.9" })
-    expect(JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout)).toEqual([])
+    expect(JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items).toEqual([])
     await max(["team", "bot", "recipients", "off"])
     await max(["team", "bot", "recipients", "add", "-200"])
     expect((await max(["team", "bot", "messages", "delete", "mid.9", "--json"])).code).not.toBe(0)
@@ -169,7 +169,7 @@ describe("every bot write, whichever command sends it", () => {
       expect(JSON.parse(refused.stderr).error.code).toBe("confirmation_required")
     }
     expect(requests.filter((request) => request.method !== "GET")).toHaveLength(0)
-    const journal = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout)
+    const journal = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout).items
     expect(journal.slice(-2)).toMatchObject([
       { chatId: "-200", kind: "message", outcome: "refused" },
       { chatId: "-200", kind: "pin", outcome: "refused" },
@@ -198,7 +198,9 @@ describe("every bot write, whichever command sends it", () => {
   })
 
   it("does not list a bot's recipients file as a bot", async () => {
-    const names = JSON.parse((await max(["bot", "list", "--json"])).stdout).map((row: { name: string }) => row.name)
+    const names = JSON.parse((await max(["bot", "list", "--json"])).stdout).items.map(
+      (row: { name: string }) => row.name,
+    )
     expect(names.some((name: string) => name.includes("recipients"))).toBe(false)
   })
 

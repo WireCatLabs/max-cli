@@ -112,7 +112,7 @@ const max = async (argv: string[], ask?: () => Promise<string>) => {
 
 const writes = () => requests.filter((request) => request.method !== "GET")
 const journal = async (profile = "default") =>
-  JSON.parse((await max([profile, "bot", "sends", "list", "--json"])).stdout) as Record<string, unknown>[]
+  JSON.parse((await max([profile, "bot", "sends", "list", "--json"])).stdout).items as Record<string, unknown>[]
 
 const file = (name: string, content = "bytes") => {
   const path = join(mkdtempSync(join(tmpdir(), "bot-upload-")), name)
@@ -204,7 +204,13 @@ describe("max bot uploads put", () => {
 describe("max bot members and admins", () => {
   it("lists members with ids above 2^53 as their digits and the marker to continue from", async () => {
     const { stdout } = await max(["bot", "members", "list", "-100", "--limit", "5", "--json"])
-    expect(JSON.parse(stdout)).toEqual({ members: [{ user_id: BIG, name: "Big" }], marker: 7 })
+    expect(JSON.parse(stdout)).toEqual({
+      items: [{ user_id: BIG, name: "Big" }],
+      page: 1,
+      limit: 1,
+      hasMore: true,
+      marker: 7,
+    })
     expect(requests.at(-1)?.url).toBe("/chats/-100/members?count=5")
   })
 
@@ -250,7 +256,7 @@ describe("max bot comments and callbacks", () => {
 
 describe("max bot commands", () => {
   it("lists the menu from /me and replaces it", async () => {
-    expect(JSON.parse((await max(["bot", "commands", "list", "--json"])).stdout)).toEqual([
+    expect(JSON.parse((await max(["bot", "commands", "list", "--json"])).stdout).items).toEqual([
       { name: "start", description: "Начать" },
     ])
     expect(
@@ -287,7 +293,7 @@ describe("max bot webhooks", () => {
     expect(JSON.parse(second.stderr).error.message).toContain("https://example.org/hook")
     expect((await max(["bot", "webhooks", "set", "https://example.org/other", "--add", "--json"])).code).toBe(0)
     const left = await max(["bot", "webhooks", "delete", "https://example.org/hook", "--json"])
-    expect(JSON.parse(left.stdout)).toEqual([{ url: "https://example.org/other", time: 1 }])
+    expect(JSON.parse(left.stdout).items).toEqual([{ url: "https://example.org/other", time: 1 }])
     const rows = await journal()
     expect(JSON.stringify(rows)).not.toContain("very-secret-1")
   })

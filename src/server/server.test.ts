@@ -601,6 +601,21 @@ describe("a command through max serve", () => {
     expect(max.sent.filter((call) => call.opcode === Opcode.LOGIN)).toHaveLength(2)
   })
 
+  it("shows the owner's own rename to the next command, since MAX does not push that back (MAX-63)", async () => {
+    const renamed = { id: 111, title: "Renamed", type: "CHAT", lastEventTime: 1789776000000 }
+    const { store } = await serve("c-rename", scripted({ [Opcode.CHAT_UPDATE]: { chat: renamed } }))
+    await settle()
+    const first = commandClient(store)
+    await first.client.chats.update("111", { title: "Renamed" })
+    await first.client.close()
+    const second = commandClient(store)
+
+    const [chat] = (await second.client.chats.list()).items
+    await second.client.close()
+
+    expect(chat).toMatchObject({ id: "111", title: "Renamed" })
+  })
+
   it("follows a chat read on another device: the unread count becomes what MAX says", async () => {
     const { store, max } = await serve("c-read-elsewhere")
     max.push(

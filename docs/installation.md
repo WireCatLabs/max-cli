@@ -114,8 +114,7 @@ PowerShell — `max complete powershell | Out-String | Invoke-Expression` в п�
 
 Tab **никогда не подключается к MAX**: подключение на каждое нажатие — это вход в аккаунт сотни раз
 подряд. Пока локальной копии нет, дополняются только команды и флаги. Чат предлагается по id, а
-название стоит рядом: название с пробелом дошло бы до `max` двумя словами. Однословное название
-предлагается и само.
+название стоит рядом: название с пробелом дошло бы до `max` двумя словами.
 
 ## Обновление и удаление
 
@@ -133,9 +132,9 @@ max update --check    # только сказать, есть ли новее; �
 Удаление уносит команду, но не данные:
 
 ```sh
-npm uninstall -g @leemour/max-cli
 max session end                        # забыть токен ДО удаления команды
-rm -rf ~/.config/max-cli ~/.local/share/max-cli ~/.cache/max-cli
+npm uninstall -g @leemour/max-cli
+rm -rf ~/.config/max-cli ~/.local/share/max-cli ~/.cache/max-cli ~/.local/share/cli-messaging
 ```
 
 `max session end` стирает токен из ключницы. Если сначала удалить команду, запись в ключнице

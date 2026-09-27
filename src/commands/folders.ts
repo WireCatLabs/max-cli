@@ -1,6 +1,7 @@
 import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { forCommand } from "./context.js"
+import { renderList } from "./paging.js"
 
 const collect = (value: string, previous: string[] = []) => [...previous, value]
 
@@ -12,13 +13,13 @@ export const foldersCommand = (): Command => {
     .command("list")
     .description("your chat folders, in the order MAX shows them")
     .action(async function (this: Command) {
-      const { renderer, createClient, run } = forCommand(this)
+      const { renderer, format, createClient, run } = forCommand(this)
 
       await run("chats folders list", async (events) => {
         const client = createClient({ events })
 
         try {
-          renderer.result(await client.folders.list())
+          renderList(renderer, format, await client.folders.list())
         } finally {
           await client.close()
         }

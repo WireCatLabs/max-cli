@@ -3,6 +3,7 @@ import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { maskedProfile } from "../domain/map.js"
 import { forCommand } from "./context.js"
+import { renderList } from "./paging.js"
 
 export const accountCommand = (): Command => {
   const command = new Command("account").description("the account this profile is logged in as")
@@ -63,13 +64,13 @@ export const accountCommand = (): Command => {
     .command("list")
     .description("every device and browser logged in to this account")
     .action(async function (this: Command) {
-      const { renderer, createClient, run } = forCommand(this)
+      const { renderer, format, createClient, run } = forCommand(this)
 
       await run("account sessions list", async (events) => {
         const client = createClient({ events })
 
         try {
-          renderer.result(await client.account.sessions())
+          renderList(renderer, format, await client.account.sessions())
         } finally {
           await client.close()
         }

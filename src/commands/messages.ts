@@ -13,7 +13,7 @@ import { speechModel } from "../transcribe/models.js"
 import { readBody } from "./body.js"
 import { type CommandContext, forCommand } from "./context.js"
 import { hearingFields, hearingOptions, hearMessages } from "./hearing.js"
-import { renderPage } from "./paging.js"
+import { renderList, renderPage } from "./paging.js"
 
 export const messagesCommand = (): Command => {
   const command = new Command("messages").description("read and send messages in a chat")
@@ -30,8 +30,11 @@ export const messagesCommand = (): Command => {
     // Not `--page`: this history is anchored in time, so paging backwards through it is exact
     // rather than approximate. A message id is what the reader has in front of them, having just
     // read the output; an ISO 8601 time is what still works once that message is gone.
-    .option("--before <id-or-time>", "read what came before this message id, or this ISO 8601 time")
-    .option("--after <id-or-time>", "read what came after this message id, or this ISO 8601 time; not with --before")
+    .option("--before <id-or-time>", "read what came before this message id, this ISO 8601 time, or 2h / 1d ago")
+    .option(
+      "--after <id-or-time>",
+      "read what came after this message id, this ISO 8601 time, or 2h / 1d ago; not with --before",
+    )
     .option("--mark-read", "also mark the chat read up to the newest message shown; the other person sees it")
     .option(...hearingOptions.transcribe)
     .option(...hearingOptions.model)
@@ -186,7 +189,7 @@ export const messagesCommand = (): Command => {
           }
 
           if (format === "pretty") streams.data(`${saved.map((file) => singleLine(file.path)).join("\n")}\n`)
-          else renderer.result({ items: saved })
+          else renderList(renderer, format, saved)
         } finally {
           await client.close()
         }
@@ -326,8 +329,7 @@ export const messagesCommand = (): Command => {
         const client = createClient({ events })
         try {
           const messages = await client.messages.scheduled(await client.chats.resolve(chat))
-          if (format === "jsonl") renderer.stream(messages)
-          else if (format !== "pretty") renderer.result(messages)
+          if (format !== "pretty") renderList(renderer, format, messages)
           else if (messages.length === 0) renderer.note("nothing scheduled")
           else streams.data(feed(context)(messages.map((m) => ({ ...m, timestamp: m.scheduledFor ?? m.timestamp }))))
         } finally {
@@ -520,8 +522,8 @@ const readWindow = async (
       const single = window.before === 0 && window.after === 0
 
       if (format === "pretty") streams.data(feed(context)(found))
-      else if (format === "jsonl") renderer.stream(found)
-      else renderer.result(single ? found[0] : { items: found })
+      else if (single && format === "json") renderer.result(found[0])
+      else renderList(renderer, format, found)
     } finally {
       await client.close()
       cache?.close()

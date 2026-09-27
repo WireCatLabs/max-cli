@@ -1,6 +1,7 @@
 import { Command } from "commander"
 import { SendJournal, sendsPathFor } from "../sends/journal.js"
 import { forCommand } from "./context.js"
+import { renderList } from "./paging.js"
 
 /** Every attempt to send from this profile, kept whatever `--record` says. Never the text. */
 export const sendsCommand = (): Command => {
@@ -12,10 +13,10 @@ export const sendsCommand = (): Command => {
     .option("--limit <n>", "how many to show", (value) => Number.parseInt(value, 10), 20)
     .action(async function (this: Command) {
       const { limit } = this.opts<{ limit: number }>()
-      const { settings, renderer, run } = forCommand(this)
+      const { settings, renderer, format, run } = forCommand(this)
       await run("sends list", async () => {
         const entries = new SendJournal(sendsPathFor(settings.profile)).entries().reverse()
-        renderer.stream(entries.slice(0, limit))
+        renderList(renderer, format, entries.slice(0, limit))
         if (entries.length === 0) renderer.note(`profile ${settings.profile} has not tried to send anything`)
       })
     })

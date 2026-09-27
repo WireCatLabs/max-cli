@@ -65,7 +65,7 @@ const bot = async (profile: string, argv: string[]) => {
   })
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
-const rows = (stdout: string) => JSON.parse(stdout) as { rule: string; action: string; outcome: string }[]
+const rows = (stdout: string) => JSON.parse(stdout).items as { rule: string; action: string; outcome: string }[]
 const deletes = () => calls.filter((call) => call.startsWith("DELETE"))
 
 describe("max bot chats check", () => {

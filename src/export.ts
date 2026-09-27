@@ -41,7 +41,8 @@ export const unreadStretches = (
 
   const iso = (time: number) => new Date(time).toISOString()
   const stretches: Unread[] = []
-  if (since === undefined || first.from > since) {
+  // A window from 0 is one a backup read back to the chat's first message.
+  if (first.from > 0 && (since === undefined || first.from > since)) {
     stretches.push({ from: since === undefined ? null : iso(since), to: iso(first.from) })
   }
   for (const [index, window] of held.slice(1).entries()) {

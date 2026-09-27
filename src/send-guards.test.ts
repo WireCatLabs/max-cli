@@ -115,7 +115,7 @@ describe("sending", () => {
     await runWith(["g-empty", "recipients", "remove", "Friends"])
 
     const listed = await runWith(["g-empty", "recipients", "list", "--json"])
-    expect(JSON.parse(listed.stdout)).toEqual([])
+    expect(JSON.parse(listed.stdout).items).toEqual([])
     expect(listed.stderr).toContain("on and empty")
 
     expect((await runWith(["g-empty", "messages", "send", "111", TEXT], environment)).code).toBe(7)
@@ -144,7 +144,10 @@ describe("sending", () => {
     await runWith(["g-keep", "cache", "clear"])
 
     const listed = await runWith(["g-keep", "sends", "list", "--json"])
-    expect(JSON.parse(listed.stdout).map((entry: { outcome: string }) => entry.outcome)).toEqual(["refused", "sent"])
+    expect(JSON.parse(listed.stdout).items.map((entry: { outcome: string }) => entry.outcome)).toEqual([
+      "refused",
+      "sent",
+    ])
   })
 })
 

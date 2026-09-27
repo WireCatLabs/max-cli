@@ -80,7 +80,7 @@ describe("max bot messages", () => {
     const { code, stdout, stderr } = await max(["bot", "messages", "list", "-100", "--limit", "3", "--json"])
     expect(stderr).toBe("")
     expect(code).toBe(0)
-    const messages = JSON.parse(stdout)
+    const messages = JSON.parse(stdout).items
     expect(requests.at(-1)?.url).toBe("/messages?chat_id=-100&count=3")
     expect(messages[0]).toMatchObject({ id: "mid.1", chatId: "-100", senderName: "Ann", outgoing: false })
     expect(messages[1]).toMatchObject({ id: "mid.2", outgoing: true, replyToId: "mid.1", replyTo: { text: "first" } })
@@ -88,7 +88,7 @@ describe("max bot messages", () => {
   })
 
   it("still shows a message MAX added something unknown to, instead of failing the list", async () => {
-    const messages = JSON.parse((await max(["bot", "messages", "list", "-100", "--json"])).stdout)
+    const messages = JSON.parse((await max(["bot", "messages", "list", "-100", "--json"])).stdout).items
     expect(messages[2]).toMatchObject({ id: "mid.3", text: "with something new" })
     expect(messages[2].providerMetadata.unparsed).toBeDefined()
   })
@@ -104,21 +104,21 @@ describe("max bot messages", () => {
 describe("the local copy", () => {
   it("keeps what `list` read, answers it back with --offline without asking MAX, and searches it", async () => {
     new BotTokenStore({ profile: "copy", keyring }).write(TOKEN)
-    const online = JSON.parse((await max(["copy", "bot", "messages", "list", "-100", "--json"])).stdout)
+    const online = JSON.parse((await max(["copy", "bot", "messages", "list", "-100", "--json"])).stdout).items
     requests.length = 0
 
     const offline = await max(["copy", "bot", "messages", "list", "-100", "--offline", "--json"])
     expect(offline.code).toBe(0)
     expect(requests).toHaveLength(0)
-    const kept = JSON.parse(offline.stdout)
+    const kept = JSON.parse(offline.stdout).items
     expect(kept.map((message: { id: string }) => message.id)).toEqual(["mid.1", "mid.2", "mid.3"])
     expect(kept[1]).toMatchObject({ text: online[1].text, outgoing: true, replyToId: "mid.1" })
 
     const one = JSON.parse((await max(["copy", "bot", "messages", "get", "mid.2", "--offline", "--json"])).stdout)
-    expect(one).toMatchObject([{ id: "mid.2", outgoing: true }])
+    expect(one).toMatchObject({ id: "mid.2", outgoing: true })
     expect((await max(["copy", "bot", "messages", "get", "mid.404", "--offline", "--json"])).code).not.toBe(0)
 
-    const found = JSON.parse((await max(["copy", "bot", "messages", "search", "second", "--json"])).stdout)
+    const found = JSON.parse((await max(["copy", "bot", "messages", "search", "second", "--json"])).stdout).items
     expect(found).toMatchObject([{ id: "mid.2", locator: expect.stringContaining("max-bot") }])
     expect(requests).toHaveLength(0)
   })
@@ -137,7 +137,7 @@ describe("the local copy", () => {
     try {
       const { code, stdout, stderr } = await max(["bot", "messages", "list", "-100", "--json"])
       expect(code).toBe(0)
-      expect(JSON.parse(stdout)).toHaveLength(3)
+      expect(JSON.parse(stdout).items).toHaveLength(3)
       expect(stderr).toContain("the local copy was not updated")
     } finally {
       process.env.MESSAGING_STORE = real
@@ -158,10 +158,10 @@ describe("the local copy", () => {
 describe("max bot chats", () => {
   it("remembers a chat once seen, and finds it by title afterwards", async () => {
     new BotTokenStore({ profile: "fresh", keyring }).write(TOKEN)
-    expect(JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout)).toEqual([])
+    expect(JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout).items).toEqual([])
     const chat = JSON.parse((await max(["fresh", "bot", "chats", "get", "-100", "--json"])).stdout)
     expect(chat).toMatchObject({ id: "-100", title: "Team", kind: "group", participantsCount: 3 })
-    const seen = JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout)
+    const seen = JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout).items
     expect(seen).toMatchObject([{ id: "-100", title: "Team", firstSeenAt: expect.any(String) }])
     requests.length = 0
     expect((await max(["fresh", "bot", "messages", "list", "Team", "--json"])).code).toBe(0)
@@ -193,7 +193,7 @@ describe("max bot list", () => {
   it("shows each name with a bot token, and which bot it is with --check", async () => {
     new BotTokenStore({ profile: "sales", keyring }).write(TOKEN)
     await max(["sales", "bot", "chats", "get", "-100", "--json"])
-    const rows = JSON.parse((await max(["bot", "list", "--check", "--json"])).stdout)
+    const rows = JSON.parse((await max(["bot", "list", "--check", "--json"])).stdout).items
     expect(rows).toEqual(
       expect.arrayContaining([
         { name: "default", token: "keyring", bot: "helper_bot", id: BIG },

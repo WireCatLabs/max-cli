@@ -46,4 +46,5 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 code, the code is right and the document gets corrected in place.**
 
 The working trail — the handoff, plans, the session journal and the cleanup list — lives in
-`docs_ai/` on the machine doing the work and is deliberately not committed.
+`docs_ai/`, ~~on the machine doing the work and is deliberately not committed~~ **correction
+2026-09-28:** a separate private repository, cloned into `docs_ai/`; this one ignores the folder.

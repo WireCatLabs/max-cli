@@ -154,16 +154,16 @@ max shop bot messages list -100
 ## «is not a valid config»
 
 ```json
-{"error":{"code":"configuration_error","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, senderColors, record, keepRunsForDays"}}
+{"error":{"code":"configuration_error","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, senderColors, record, keepRunsForDays, readOnly, allow, sendsPerHour, serve, updateCheck, transcribeModel"}}
 ```
 
 Код `3`. В файле настроек поле, которого нет в схеме — почти всегда опечатка, и сообщение
 называет её путь. Отвергается намеренно: молча проигнорированное поле стоит полдня недоумения.
 Список полей — [configuration.md](configuration.md).
 
-## «--limit takes a whole number from 1 upwards, not NaN»
+## «--limit takes a whole number from 1 upwards, not "abc"»
 
-Код `2`. `--limit abc`. Без этой проверки нечисло тихо обрезало бы список до пустого.
+Код `2`. То же для `--page`. Без этой проверки нечисло тихо обрезало бы список до пустого.
 
 ## «--all and --page ask for different things; use one or the other»
 
@@ -181,13 +181,6 @@ max messages list 0 --before 2026-09-20T01:00:00Z
 ```
 
 Голое число `--before` всегда читает как id сообщения, никогда как миллисекунды.
-
-## Список пустой, хотя чаты есть
-
-Если это случилось на **втором** запуске подряд, а на первом список был — это дефект, и о нём
-стоит сообщить. Второй вход получает от MAX только то, что изменилось, то есть почти ничего;
-отвечать полагается из локальной копии. Пустой ответ означает, что что-то отрисовало ответ
-сервера вместо копии.
 
 ## Команда висит
 
@@ -256,6 +249,9 @@ max messages send 0 "текст" --cid 1789784741828
 max chats list --trace     # видны ли запросы к MAX
 max cache clear              # забыть локальную копию и спросить заново
 ```
+
+Если на первом запуске список был, а на втором подряд пуст — это дефект, сообщите о нём. Второй
+вход получает от MAX только то, что изменилось, а остальное полагается брать из локальной копии.
 
 ## `npx @leemour/max-cli` ставит не ту версию
 

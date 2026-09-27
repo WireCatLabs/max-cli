@@ -71,16 +71,20 @@ const body = (command: CommandInfo): string[] => {
   return parts
 }
 
-const action = (command: CommandInfo): string =>
-  [`### \`max ${command.path.join(" ")}\``, "", ...body(command)].join("\n")
+/**
+ * A command, and every action under it at any depth — `chats members add` is three words down.
+ * A group shows its own usage only when it takes options of its own, as `doctor --online` does.
+ */
+const section = (command: CommandInfo, depth: number): string => {
+  const heading = `${"#".repeat(Math.min(depth, 4))} \`max ${command.path.join(" ")}\``
+  if (command.commands.length === 0) return [heading, "", ...body(command)].join("\n")
+  const own = command.options.length > 0 ? body(command) : [cell(command.description)]
+  return [heading, "", ...own, "", command.commands.map((child) => section(child, depth + 1)).join("\n\n")]
+    .join("\n")
+    .trimEnd()
+}
 
-/** A resource and its actions — or, for a command with no actions of its own, the command itself. */
-const resource = (command: CommandInfo): string =>
-  command.commands.length === 0
-    ? [`## \`max ${command.name}\``, "", ...body(command)].join("\n")
-    : [`## \`max ${command.name}\``, "", cell(command.description), "", command.commands.map(action).join("\n\n")]
-        .join("\n")
-        .trimEnd()
+const resource = (command: CommandInfo): string => section(command, 2)
 
 const exitCodes = (): string =>
   [

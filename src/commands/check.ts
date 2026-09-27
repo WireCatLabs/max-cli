@@ -4,6 +4,7 @@ import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import { type CheckRow, describe, finish, MAX_ACTIONS, personal, prepare, sessionPoints } from "../moderation/check.js"
 import { forCommand } from "./context.js"
+import { renderList } from "./paging.js"
 
 /**
  * **The one command that acts on a group's rules** (`NEED-306`): what the owner types is the
@@ -13,7 +14,10 @@ import { forCommand } from "./context.js"
 export const checkCommand = (): Command =>
   annotate(new Command("check"), { mutates: true })
     .argument("<chat>", "chat id, or part of a chat name")
-    .option("--since <id-or-time>", "judge what came after this message id or ISO 8601 time; the saved point stays")
+    .option(
+      "--since <id-or-time>",
+      "judge what came after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays",
+    )
     .option("--dry-run", "judge and plan; do nothing")
     .option("--allow-dangerous", "do what a rule at consent level flag asks: delete messages, remove people")
     .option("--max-actions <n>", `at most this many actions in one check; ${MAX_ACTIONS} if not given`)
@@ -45,7 +49,7 @@ export const checkCommand = (): Command =>
               ? { confirm: async (finding) => /^y(es)?$/i.test((await ask(`${describe(finding)}? [y/N] `)).trim()) }
               : {}),
           })
-          renderer.stream(format === "pretty" ? rows.map(pretty) : rows)
+          renderList(renderer, format, format === "pretty" ? rows.map(pretty) : rows)
           for (const note of notes) renderer.note(note)
         } finally {
           await client.close()

@@ -6,6 +6,7 @@ import { UPLOAD_TYPES, type UploadType } from "../bot/uploads.js"
 import { assertAllowed, botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, uploaded } from "./bot-sends.js"
+import { renderList } from "./paging.js"
 
 const commandOf = (entry: string): { name: string; description?: string } => {
   const split = entry.indexOf("=")
@@ -23,7 +24,11 @@ export const menuCommand = (): Command => {
     .description("the commands in the menu now")
     .action(async function (this: Command) {
       const context = botContext(this)
-      context.renderer.result(plainJson((await context.authenticated().me()).commands ?? []))
+      renderList(
+        context.renderer,
+        context.format,
+        plainJson((await context.authenticated().me()).commands ?? []) as unknown[],
+      )
     })
 
   const edit = async (context: ReturnType<typeof botContext>, commands: { name: string; description?: string }[]) => {
@@ -88,7 +93,7 @@ export const webhooksCommand = (): Command => {
     .description("the webhooks this bot has")
     .action(async function (this: Command) {
       const context = botContext(this)
-      context.renderer.result(await subscriptionsOf(context))
+      renderList(context.renderer, context.format, await subscriptionsOf(context))
     })
 
   annotate(command.command("set <url>"), { mutates: true })
@@ -123,7 +128,7 @@ export const webhooksCommand = (): Command => {
           JSON.stringify({ url, ...(secret ? { secret } : {}), ...(types?.length ? { update_types: types } : {}) }),
         ),
       })
-      context.renderer.result(await subscriptionsOf(context))
+      renderList(context.renderer, context.format, await subscriptionsOf(context))
     })
 
   annotate(command.command("delete <url>"), { mutates: true })
@@ -131,7 +136,7 @@ export const webhooksCommand = (): Command => {
     .action(async function (this: Command, url: string) {
       const context = botContext(this)
       await guardedCall(context, operation("unsubscribe"), { query: { url } })
-      context.renderer.result(await subscriptionsOf(context))
+      renderList(context.renderer, context.format, await subscriptionsOf(context))
     })
 
   return command

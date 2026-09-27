@@ -1,7 +1,17 @@
-import type { Renderer, RenderFormat, Streams } from "@leemour/cli-core"
+import { CliError, type Renderer, type RenderFormat, type Streams } from "@leemour/cli-core"
 import type { Command } from "commander"
 import type { Settings } from "../config.js"
 import type { Page } from "../domain/models.js"
+
+/** Checked while parsing, so the error can quote what was typed rather than the `NaN` it became. */
+export const wholeNumber =
+  (flag: string) =>
+  (value: string): number => {
+    if (!/^\d+$/.test(value.trim()) || Number(value) < 1) {
+      throw new CliError("validation_error", `${flag} takes a whole number from 1 upwards, not "${value}"`)
+    }
+    return Number(value)
+  }
 
 /**
  * The three flags every listing shares, so no command invents its own spelling of them.
@@ -11,8 +21,8 @@ import type { Page } from "../domain/models.js"
  */
 export const withPaging = (command: Command): Command =>
   command
-    .option("--limit <n>", "how many to show", (value) => Number.parseInt(value, 10))
-    .option("--page <n>", "which page, starting at 1", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many to show", wholeNumber("--limit"))
+    .option("--page <n>", "which page, starting at 1", wholeNumber("--page"))
     .option("--all", "every row, no paging")
 
 /**
@@ -24,6 +34,23 @@ export const withPaging = (command: Command): Command =>
  */
 export const window = ({ limit, page, all }: Settings): { limit?: number; offset: number } =>
   all ? { offset: 0 } : { limit, offset: (page - 1) * limit }
+
+/**
+ * A list with no pages — folders, members, runs, everything a bot lists — in the envelope a paged
+ * one uses (`NEED-358`), so an agent reads one shape. `--jsonl` streams it and a person gets the table.
+ * `extra` goes beside it: a Bot API list paged by `marker` carries its marker and `hasMore`.
+ */
+export const renderList = (
+  renderer: Renderer,
+  format: RenderFormat,
+  items: readonly unknown[],
+  extra: { hasMore?: boolean } & Record<string, unknown> = {},
+): void => {
+  if (format === "json") renderer.result({ ...listed(items), ...extra })
+  else renderer.stream(items)
+}
+
+export const listed = (items: readonly unknown[]) => ({ items, page: 1, limit: items.length, hasMore: false })
 
 /**
  * **One shape for every listing**, and the caller never has to work out which one it got.
