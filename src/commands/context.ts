@@ -3,6 +3,7 @@ import type { Renderer, RenderFormat, RetryConfig, Streams } from "@leemour/cli-
 import type { FetchLike } from "@leemour/cli-core/http"
 import type { Command } from "commander"
 import type { BotTokenStore } from "../bot/auth.js"
+import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
@@ -41,6 +42,7 @@ export interface Environment {
   botFetch?: FetchLike
   botUrl?: string
   botRetry?: RetryConfig
+  botRegistry?: (profile: string) => ChatRegistry
 }
 
 /** One line from the person at the terminal; `secret` keeps it off the screen. */
