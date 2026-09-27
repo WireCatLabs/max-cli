@@ -4,6 +4,26 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Что нового
+
+- **Остальные команды бота.** `max <имя> bot messages send --file <путь>` прикладывает картинку,
+  видео, звук или файл, а `bot uploads put` только загружает его. `bot members list|add|remove` и
+  `bot admins list|add|remove` — участники и админы чата, `bot comments list|get|send|edit|delete` —
+  комментарии под постом канала, `bot callbacks answer` — ответ на нажатую кнопку, `bot commands
+  list|set|clear` — меню команд бота, `bot webhooks list|set|delete` — вебхуки. `webhooks set`
+  отказывает, пока задан другой адрес: MAX не заменяет старый вебхук, а шлёт на оба.
+  Всё — в [docs/bot.md](docs/bot.md).
+
+### Исправлено
+
+- `max bot api edit-my-commands`, `subscribe`, `unsubscribe` и `get-upload-url` падали с
+  «an account change without a known action» и ничего не отправляли.
+- Отправка боту на положительный номер без `user:` подсказывает, что это, скорее всего, человек.
+- Примеры в [docs/bot.md](docs/bot.md) больше не содержат выдуманного номера чата; там же — как
+  узнать настоящий.
+
 ## 0.14.0 — 27.09.2026
 
 ### Что нового

@@ -5,6 +5,7 @@ import { BotTokenStore } from "../bot/auth.js"
 import { BotApiClient } from "../bot/client.js"
 import { BOT_PERMISSIONS } from "../bot/permissions.js"
 import { ChatRegistry } from "../bot/registry.js"
+import { botFetch } from "../bot/transport.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { resolveOutput } from "../output.js"
 import { asFirstWord } from "../profile.js"
@@ -44,7 +45,21 @@ export const botContext = (command: Command) => {
     return client(stored.token)
   }
   const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
-  return { settings, renderer, streams, format, color, store, registry, client, ask, authenticated }
+  const uploadFetch = () => environment.botFetch ?? botFetch()
+  return {
+    settings,
+    renderer,
+    streams,
+    format,
+    color,
+    store,
+    registry,
+    client,
+    ask,
+    authenticated,
+    signal,
+    uploadFetch,
+  }
 }
 
 /** The personal account's `readOnly` and `allow` hold for the bot too; a prompt was waived (`NEED-304`), a refusal was not. */

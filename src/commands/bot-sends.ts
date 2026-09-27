@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { CliError } from "@leemour/cli-core"
+import { CliError, type CliErrorDetails, type ErrorCode } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { annotate } from "@leemour/cli-core/commands"
 import { pickChat } from "@leemour/cli-messaging"
@@ -11,12 +11,20 @@ import { checkBody } from "../bot/input.js"
 import { BOT_JOURNAL_KINDS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
+import {
+  endpointOf,
+  UPLOAD_TYPES,
+  type UploadType,
+  uploadFile,
+  uploadTypeOf,
+  whenAttachmentReady,
+} from "../bot/uploads.js"
 import { asFirstWord } from "../profile.js"
 import { assertAllowed, botContext } from "./bot-context.js"
 
 type Context = ReturnType<typeof botContext>
 
-const operation = (id: string) => {
+export const operation = (id: string) => {
   const found = botOperations.find((candidate) => candidate.id === id)
   if (!found) throw new CliError("configuration_error", `the generated manifest has no operation ${id}`)
   return found
@@ -65,18 +73,57 @@ const targetOf = (reference: string, context: Context): Target => {
   return { key: id, query: { chat_id: id } }
 }
 
-const textOf = (text: string): string => (text === "-" ? readFileSync(0, "utf8").replace(/\n$/, "") : text)
+/**
+ * `UX-14`: a positive number is a person far more often than a chat — group chats are negative —
+ * yet a dialog's chat id is positive too, so this is a hint and never a refusal.
+ */
+const withPersonHint = (error: unknown, reference: string): unknown => {
+  const failure = error as { code?: ErrorCode; message?: string; details?: CliErrorDetails & { maxCode?: string } }
+  if (!/^\d+$/.test(reference) || failure.details?.maxCode !== "chat.not.found" || !failure.code) return error
+  return new CliError(
+    failure.code,
+    `${failure.message} — a positive number is usually a person, not a chat: to write to them, use user:${reference}`,
+    failure.details,
+  )
+}
+
+/** Step one through the client, step two to the upload host; the attachment a body carries. */
+export const uploaded = async (
+  context: Context,
+  path: string,
+  type: UploadType = uploadTypeOf(path),
+  call: (target: ManifestOperation, input: CallInput) => Promise<unknown> = (target, input) =>
+    context.authenticated().call(target, input),
+) => {
+  const answer = await call(operation("getUploadUrl"), { query: { type } })
+  return uploadFile({
+    path,
+    type,
+    endpoint: endpointOf(answer),
+    fetch: context.uploadFetch(),
+    ...(context.signal ? { signal: context.signal } : {}),
+    ...(context.settings.timeoutMs === undefined ? {} : { timeoutMs: context.settings.timeoutMs }),
+  })
+}
+
+export const textOf = (text: string): string => (text === "-" ? readFileSync(0, "utf8").replace(/\n$/, "") : text)
 
 /** Runs one write through the guard and the journal, on every outcome. */
 const guarded = async <T>(
   context: Context,
-  request: { chatId: string | null; kind: SendKind; count?: number },
+  request: { chatId: string | null; kind: SendKind; action?: "profile"; count?: number },
   body: (sendId: string) => Promise<{ result: T; messageId?: string }>,
   length?: number,
 ): Promise<T> => {
   const guard = guardOf(context)
   const sendId = newSendId()
-  const base = { chatId: request.chatId, kind: request.kind, sendId, ...(length === undefined ? {} : { length }) }
+  const base = {
+    chatId: request.chatId,
+    kind: request.kind,
+    sendId,
+    ...(request.action ? { action: request.action } : {}),
+    ...(length === undefined ? {} : { length }),
+  }
   try {
     guard.check(request)
   } catch (error) {
@@ -131,7 +178,9 @@ export const guardedCall = async (context: Context, target: ManifestOperation, i
   const kind = BOT_JOURNAL_KINDS[target.id]
   if (!kind) return client.call(target, input)
   const chatId = await chatOfCall(context, input)
-  return guarded(context, { chatId, kind }, async () => ({ result: await client.call(target, input) }))
+  // The guard names every account change; the bot's own `allow` check has already run in assertAllowed.
+  const action = kind === "account" ? { action: "profile" as const } : {}
+  return guarded(context, { chatId, kind, ...action }, async () => ({ result: await client.call(target, input) }))
 }
 
 export const sendCommands = (messages: Command): void => {
@@ -140,39 +189,56 @@ export const sendCommands = (messages: Command): void => {
       "send a message as the bot — to a chat id, `user:<id>`, or the title of a chat it has seen; - reads stdin",
     )
     .argument("<chat>")
-    .argument("<text>")
+    .argument("[text]", "may be left out with --file")
     .addOption(new Option("--format <format>", "how the text is marked up").choices(["markdown", "html"]))
     .option("--reply-to <message>", "answer this message")
     .option("--silent", "no notification for the people in the chat")
-    .action(async function (this: Command, chat: string, text: string) {
+    .option("--file <path>", "attach a file from disk: an image, video or audio by its extension, else a file")
+    .addOption(new Option("--type <type>", "send --file as this kind instead of guessing").choices(UPLOAD_TYPES))
+    .action(async function (this: Command, chat: string, text: string | undefined) {
       const context = botContext(this)
-      const options = this.opts<{ format?: string; replyTo?: string; silent?: boolean }>()
+      const options = this.opts<{
+        format?: string
+        replyTo?: string
+        silent?: boolean
+        file?: string
+        type?: UploadType
+      }>()
+      if (text === undefined && !options.file)
+        throw new CliError("validation_error", "nothing to send: give a text or --file")
       const send = operation("sendMessage")
       assertAllowed(send, context.settings)
       const target = targetOf(chat, context)
-      const content = textOf(text)
-      const body = checkBody(
-        send,
-        JSON.stringify({
-          text: content,
-          ...(options.format ? { format: options.format } : {}),
-          ...(options.silent ? { notify: false } : {}),
-          ...(options.replyTo ? { link: { type: "reply", mid: options.replyTo } } : {}),
-        }),
-      )
+      const content = text === undefined ? "" : textOf(text)
+      const bodyWith = (attachments?: unknown[]) =>
+        checkBody(
+          send,
+          JSON.stringify({
+            ...(content ? { text: content } : {}),
+            ...(attachments ? { attachments } : {}),
+            ...(options.format ? { format: options.format } : {}),
+            ...(options.silent ? { notify: false } : {}),
+            ...(options.replyTo ? { link: { type: "reply", mid: options.replyTo } } : {}),
+          }),
+        )
       const client = context.authenticated()
       const sent = await guarded(
         context,
         { chatId: target.key, kind: "message" },
         async () => {
-          const answer = (await client.call(send, { query: target.query, ...(body ? { body } : {}) })) as {
-            message?: unknown
-          } | null
+          const attachment = options.file ? await uploaded(context, options.file, options.type) : undefined
+          const body = bodyWith(attachment ? [attachment] : undefined)
+          const answer = (await whenAttachmentReady(
+            () => client.call(send, { query: target.query, ...(body ? { body } : {}) }),
+            context.signal,
+          )) as { message?: unknown } | null
           const message = answer?.message ? client.decodeMessage(answer.message) : undefined
           return { result: message ?? plainJson(answer), ...(message ? { messageId: message.id } : {}) }
         },
         content.length,
-      )
+      ).catch((error: unknown) => {
+        throw withPersonHint(error, chat)
+      })
       const recipientChat = (sent as { chatId?: string }).chatId
       if (recipientChat && DIGITS.test(recipientChat)) context.registry.observe([{ id: recipientChat }])
       context.renderer.result(sent)
