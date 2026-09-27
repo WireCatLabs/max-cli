@@ -123,6 +123,24 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 - **MAX-59** · P2 · Accept and decline join requests from `max chats check`: they are planned,
   never sent, until `MAX-41` measures them with a real request (`src/moderation/check.ts`, `act`).
+  To measure: the owner turns on approval of new members for «max-cli probe members» in the MAX
+  app (no known option does it from `max`), the second person asks to join by
+  `max chats link show`; then `requests list`, `requests accept`, and `chats settings` shows which
+  raw option the approval switch changed.
+- **MAX-60** · P2 · Live test of `max bot chats check` (#199) with bot `test2`, an admin of
+  «max-cli probe members» since 2026-09-27. Measured: the bot sees the group under the personal
+  account's chat id; it holds `add_remove_members` and `delete`. **Blocked:** with no
+  `read_all_messages` right the bot reads no group messages at all — `get-messages` returns none,
+  even for a message sent after it joined. The owner grants that right in the app; then one agreed
+  delete and one removal with a ban (a person who agrees). Bot `test` cannot join groups: its privacy
+  setting forbids them (`participants.filter.out`), changed only on business.max.ru.
+- **MAX-61** · P3 · Measure the admin-rights bit for «read all messages» on opcode 77, so
+  `max chats admins add --can` can grant it (`ADMIN_RIGHTS`, `src/client.ts`). Known bits: members 2,
+  admins 4, info 8, pin 16, post 256, edit 512, delete 1024; the bot API lists `read_all_messages`
+  first, so 1 is a guess — measure it on the test group, never guess on a real one.
+- **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
+  lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
+  it. Refresh the chat (opcode 48, `CHAT_INFO`) before reading roles, or say the roles may be old.
 
 ## Foundation and risks
 
