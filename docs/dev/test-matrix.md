@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**226 ✅ · 0 ⛔ · 201 ❌** — 175 commands, 252 options.
+**242 ✅ · 23 ⛔ · 162 ❌** — 175 commands, 252 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -96,7 +96,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages list` | `--after` | ✅ |  |
 | `messages list` | `--mark-read` | ✅ |  |
 | `messages list` | `--transcribe` | ✅ |  |
-| `messages list` | `--model` | ❌ |  |
+| `messages list` | `--model` | ✅ |  |
 | `messages search` |  | ✅ |  |
 | `messages search` | `--chat` | ✅ |  |
 | `messages search` | `--limit` | ❌ |  |
@@ -106,8 +106,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages context` | `--after` | ❌ |  |
 | `messages download` |  | ✅ |  |
 | `messages download` | `--output` | ✅ |  |
-| `messages transcribe` |  | ❌ |  |
-| `messages transcribe` | `--model` | ❌ |  |
+| `messages transcribe` |  | ✅ |  |
+| `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
 | `messages send` | `--cid` | ❌ |  |
 | `messages send` | `--silent` | ✅ |  |
@@ -141,7 +141,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `export messages` | `--format` | ✅ |  |
 | `export messages` | `--since` | ❌ |  |
 | `export messages` | `--output` | ✅ |  |
-| `models audio list` |  | ❌ |  |
+| `models audio list` |  | ✅ |  |
 | `models audio download` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
 | `polls vote` | `--retract` | ✅ |  |
@@ -164,25 +164,25 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `inbox` | `--since` | ✅ |  |
 | `inbox` | `--limit` | ✅ |  |
 | `inbox` | `--transcribe` | ✅ |  |
-| `inbox` | `--model` | ❌ |  |
+| `inbox` | `--model` | ✅ |  |
 | `review` |  | ✅ |  |
 | `review` | `--since` | ✅ |  |
 | `review` | `--transcribe` | ✅ |  |
 | `review` | `--chat` | ✅ |  |
 | `review` | `--unanswered` | ✅ |  |
-| `serve` |  | ❌ |  |
-| `serve` | `--idle` | ❌ |  |
-| `serve` | `--detach` | ❌ |  |
-| `serve` | `--stop` | ❌ |  |
-| `serve` | `--started-by-command` | ❌ |  |
-| `server start` |  | ❌ |  |
-| `server start` | `--idle` | ❌ |  |
+| `serve` |  | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` | `--detach` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` | `--stop` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `server start` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
+| `server start` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server stop` |  | ✅ |  |
 | `server status` |  | ✅ |  |
-| `server restart` |  | ❌ |  |
-| `server restart` | `--idle` | ❌ |  |
-| `watch` |  | ❌ |  |
-| `watch` | `--events` | ❌ |  |
+| `server restart` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
+| `server restart` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
+| `watch` |  | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
+| `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `config show` |  | ✅ |  |
 | `config show` | `--bot` | ✅ |  |
 | `config set` |  | ✅ |  |
@@ -194,7 +194,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `config unset` | `--personal` | ❌ |  |
 | `config unset` | `--bot` | ❌ |  |
 | `doctor` |  | ✅ |  |
-| `doctor` | `--online` | ❌ |  |
+| `doctor` | `--online` | ⛔ | logs in to MAX and starts `max mcp` as a child; src/online.test.ts covers both steps, live X3 |
 | `doctor report` |  | ✅ |  |
 | `doctor report create` |  | ✅ |  |
 | `doctor report create` | `--run` | ✅ |  |
@@ -209,18 +209,18 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `update` |  | ✅ |  |
 | `update` | `--check` | ✅ |  |
 | `complete` |  | ✅ |  |
-| `mcp` |  | ❌ |  |
-| `mcp` | `--allow-send` | ❌ |  |
-| `mcp` | `--confirm-send` | ❌ |  |
-| `mcp` | `--allow-mark-read` | ❌ |  |
-| `mcp` | `--allow-delete` | ❌ |  |
-| `mcp` | `--allow-moderate` | ❌ |  |
-| `mcp config` |  | ❌ |  |
-| `mcp config` | `--allow-send` | ❌ |  |
-| `mcp config` | `--confirm-send` | ❌ |  |
-| `mcp config` | `--allow-mark-read` | ❌ |  |
-| `mcp config` | `--allow-delete` | ❌ |  |
-| `mcp config` | `--allow-moderate` | ❌ |  |
+| `mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
+| `mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
+| `mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
+| `mcp` | `--allow-mark-read` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
+| `mcp` | `--allow-delete` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
+| `mcp` | `--allow-moderate` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
+| `mcp config` |  | ✅ |  |
+| `mcp config` | `--allow-send` | ✅ |  |
+| `mcp config` | `--confirm-send` | ✅ |  |
+| `mcp config` | `--allow-mark-read` | ✅ |  |
+| `mcp config` | `--allow-delete` | ✅ |  |
+| `mcp config` | `--allow-moderate` | ✅ |  |
 | `bot auth set` |  | ✅ |  |
 | `bot auth show` |  | ✅ |  |
 | `bot auth remove` |  | ❌ |  |
@@ -304,16 +304,16 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot webhooks delete` |  | ✅ |  |
 | `bot updates watch` |  | ✅ |  |
 | `bot updates watch` | `--types` | ❌ |  |
-| `bot mcp` |  | ❌ |  |
-| `bot mcp` | `--allow-send` | ❌ |  |
-| `bot mcp` | `--confirm-send` | ❌ |  |
-| `bot mcp` | `--allow-delete` | ❌ |  |
-| `bot mcp` | `--allow-moderate` | ❌ |  |
-| `bot mcp config` |  | ❌ |  |
-| `bot mcp config` | `--allow-send` | ❌ |  |
-| `bot mcp config` | `--confirm-send` | ❌ |  |
-| `bot mcp config` | `--allow-delete` | ❌ |  |
-| `bot mcp config` | `--allow-moderate` | ❌ |  |
+| `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
+| `bot mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
+| `bot mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
+| `bot mcp` | `--allow-delete` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
+| `bot mcp` | `--allow-moderate` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
+| `bot mcp config` |  | ✅ |  |
+| `bot mcp config` | `--allow-send` | ✅ |  |
+| `bot mcp config` | `--confirm-send` | ✅ |  |
+| `bot mcp config` | `--allow-delete` | ✅ |  |
+| `bot mcp config` | `--allow-moderate` | ✅ |  |
 | `bot api get-my-info` |  | ❌ |  |
 | `bot api edit-my-commands` |  | ❌ |  |
 | `bot api edit-my-commands` | `--body` | ❌ |  |
