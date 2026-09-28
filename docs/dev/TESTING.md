@@ -114,7 +114,7 @@ each request's duration.
 pnpm test:coverage              # CI runs this; the report is in coverage/index.html
 ```
 
-`vitest.config.ts` holds the floor: lines 90 %, statements 88 %, functions 86 %, branches 77 % over
+`vitest.config.ts` holds the floor: lines 92 %, statements 90 %, functions 88 %, branches 79 % over
 the whole of `src/`, and **every file at least 50 % of its lines**. A change that drops below fails
 CI. The numbers sit just under what the suite reached on 2026-09-28; raise them when coverage rises,
 never lower them to let a change through — write the test instead.

@@ -207,6 +207,10 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     }
 
     if (error instanceof CommanderError) {
+      // --version exits before any action, so the preAction log never sees it.
+      if (argvLog && error.code === "commander.version") {
+        appendFileSync(argvLog, `${JSON.stringify({ command: "", options: ["--version"] })}\n`)
+      }
       // `max chat list` — one letter short of `chats` — now reports an unknown command `list`,
       // which is baffling on its own. This is the everyday cost of the first word being a profile.
       const first = rest[0]

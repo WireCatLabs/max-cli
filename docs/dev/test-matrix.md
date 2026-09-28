@@ -7,26 +7,26 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**242 ✅ · 23 ⛔ · 162 ❌** — 175 commands, 252 options.
+**404 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 252 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
 | `session start` |  | ✅ |  |
-| `session end` |  | ❌ |  |
+| `session end` |  | ✅ |  |
 | `account show` |  | ✅ |  |
 | `account show` | `--show-phone` | ✅ |  |
 | `account update` |  | ✅ |  |
 | `account update` | `--first-name` | ✅ |  |
-| `account update` | `--last-name` | ❌ |  |
+| `account update` | `--last-name` | ✅ |  |
 | `account update` | `--description` | ✅ |  |
 | `account update` | `--photo` | ✅ |  |
-| `account sessions list` |  | ❌ |  |
+| `account sessions list` |  | ✅ |  |
 | `account sessions end-others` |  | ✅ |  |
 | `account sessions end-others` | `--yes` | ✅ |  |
 | `chats list` |  | ✅ |  |
-| `chats list` | `--limit` | ❌ |  |
-| `chats list` | `--page` | ❌ |  |
-| `chats list` | `--all` | ❌ |  |
+| `chats list` | `--limit` | ✅ |  |
+| `chats list` | `--page` | ✅ |  |
+| `chats list` | `--all` | ✅ |  |
 | `chats list` | `--search` | ✅ |  |
 | `chats list` | `--kind` | ✅ |  |
 | `chats list` | `--unread` | ✅ |  |
@@ -43,23 +43,23 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats create` | `--channel` | ✅ |  |
 | `chats members list` |  | ✅ |  |
 | `chats members add` |  | ✅ |  |
-| `chats members add` | `--history` | ❌ |  |
+| `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
 | `chats admins add` |  | ✅ |  |
 | `chats admins add` | `--can` | ✅ |  |
 | `chats admins remove` |  | ✅ |  |
 | `chats update` |  | ✅ |  |
 | `chats update` | `--title` | ✅ |  |
-| `chats update` | `--description` | ❌ |  |
+| `chats update` | `--description` | ✅ |  |
 | `chats settings` |  | ✅ |  |
 | `chats settings` | `--all-can-pin` | ✅ |  |
-| `chats settings` | `--only-admins-add` | ❌ |  |
-| `chats settings` | `--only-admins-call` | ❌ |  |
-| `chats settings` | `--only-owner-edits-info` | ❌ |  |
-| `chats settings` | `--members-see-link` | ❌ |  |
+| `chats settings` | `--only-admins-add` | ✅ |  |
+| `chats settings` | `--only-admins-call` | ✅ |  |
+| `chats settings` | `--only-owner-edits-info` | ✅ |  |
+| `chats settings` | `--members-see-link` | ✅ |  |
 | `chats link show` |  | ✅ |  |
 | `chats link reset` |  | ✅ |  |
-| `chats folders list` |  | ❌ |  |
+| `chats folders list` |  | ✅ |  |
 | `chats folders create` |  | ✅ |  |
 | `chats folders create` | `--chat` | ✅ |  |
 | `chats folders update` |  | ✅ |  |
@@ -69,20 +69,20 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats folders delete` |  | ✅ |  |
 | `chats rules show` |  | ✅ |  |
 | `chats rules set` |  | ✅ |  |
-| `chats rules unset` |  | ❌ |  |
+| `chats rules unset` |  | ✅ |  |
 | `chats check` |  | ✅ |  |
-| `chats check` | `--since` | ❌ |  |
-| `chats check` | `--dry-run` | ❌ |  |
+| `chats check` | `--since` | ✅ |  |
+| `chats check` | `--dry-run` | ✅ |  |
 | `chats check` | `--allow-dangerous` | ✅ |  |
-| `chats check` | `--max-actions` | ❌ |  |
-| `contacts list` |  | ❌ |  |
-| `contacts list` | `--limit` | ❌ |  |
-| `contacts list` | `--page` | ❌ |  |
-| `contacts list` | `--all` | ❌ |  |
-| `contacts list` | `--order` | ❌ |  |
-| `contacts list` | `--search` | ❌ |  |
+| `chats check` | `--max-actions` | ✅ |  |
+| `contacts list` |  | ✅ |  |
+| `contacts list` | `--limit` | ✅ |  |
+| `contacts list` | `--page` | ✅ |  |
+| `contacts list` | `--all` | ✅ |  |
+| `contacts list` | `--order` | ✅ |  |
+| `contacts list` | `--search` | ✅ |  |
 | `contacts show` |  | ✅ |  |
-| `contacts sync` |  | ❌ |  |
+| `contacts sync` |  | ✅ |  |
 | `contacts lookup` |  | ✅ |  |
 | `contacts add` |  | ✅ |  |
 | `contacts remove` |  | ✅ |  |
@@ -99,17 +99,17 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages list` | `--model` | ✅ |  |
 | `messages search` |  | ✅ |  |
 | `messages search` | `--chat` | ✅ |  |
-| `messages search` | `--limit` | ❌ |  |
-| `messages show` |  | ❌ |  |
-| `messages context` |  | ❌ |  |
-| `messages context` | `--before` | ❌ |  |
-| `messages context` | `--after` | ❌ |  |
+| `messages search` | `--limit` | ✅ |  |
+| `messages show` |  | ✅ |  |
+| `messages context` |  | ✅ |  |
+| `messages context` | `--before` | ✅ |  |
+| `messages context` | `--after` | ✅ |  |
 | `messages download` |  | ✅ |  |
 | `messages download` | `--output` | ✅ |  |
 | `messages transcribe` |  | ✅ |  |
 | `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
-| `messages send` | `--cid` | ❌ |  |
+| `messages send` | `--cid` | ✅ |  |
 | `messages send` | `--silent` | ✅ |  |
 | `messages send` | `--reply-to` | ✅ |  |
 | `messages send` | `--file` | ✅ |  |
@@ -126,8 +126,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages delete` | `--allow-dangerous` | ✅ |  |
 | `messages forward` |  | ✅ |  |
 | `messages forward` | `--to` | ✅ |  |
-| `messages forward` | `--cid` | ❌ |  |
-| `messages forward` | `--silent` | ❌ |  |
+| `messages forward` | `--cid` | ✅ |  |
+| `messages forward` | `--silent` | ✅ |  |
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |
 | `messages unpin` |  | ✅ |  |
@@ -139,7 +139,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `backup messages` | `--pause` | ✅ |  |
 | `export messages` |  | ✅ |  |
 | `export messages` | `--format` | ✅ |  |
-| `export messages` | `--since` | ❌ |  |
+| `export messages` | `--since` | ✅ |  |
 | `export messages` | `--output` | ✅ |  |
 | `models audio list` |  | ✅ |  |
 | `models audio download` |  | ✅ |  |
@@ -148,9 +148,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `polls close` |  | ✅ |  |
 | `polls create` |  | ✅ |  |
 | `polls create` | `--multiple` | ✅ |  |
-| `polls create` | `--anonymous` | ❌ |  |
+| `polls create` | `--anonymous` | ✅ |  |
 | `polls create` | `--revote` | ✅ |  |
-| `polls create` | `--silent` | ❌ |  |
+| `polls create` | `--silent` | ✅ |  |
 | `reactions add` |  | ✅ |  |
 | `reactions remove` |  | ✅ |  |
 | `recipients list` |  | ✅ |  |
@@ -187,12 +187,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `config show` | `--bot` | ✅ |  |
 | `config set` |  | ✅ |  |
 | `config set` | `--defaults` | ✅ |  |
-| `config set` | `--personal` | ❌ |  |
+| `config set` | `--personal` | ✅ |  |
 | `config set` | `--bot` | ✅ |  |
 | `config unset` |  | ✅ |  |
 | `config unset` | `--defaults` | ✅ |  |
-| `config unset` | `--personal` | ❌ |  |
-| `config unset` | `--bot` | ❌ |  |
+| `config unset` | `--personal` | ✅ |  |
+| `config unset` | `--bot` | ✅ |  |
 | `doctor` |  | ✅ |  |
 | `doctor` | `--online` | ⛔ | logs in to MAX and starts `max mcp` as a child; src/online.test.ts covers both steps, live X3 |
 | `doctor report` |  | ✅ |  |
@@ -202,8 +202,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `cache clear` |  | ✅ |  |
 | `runs list` |  | ✅ |  |
 | `runs list` | `--limit` | ✅ |  |
-| `runs show` |  | ❌ |  |
-| `runs path` |  | ❌ |  |
+| `runs show` |  | ✅ |  |
+| `runs path` |  | ✅ |  |
 | `skill show` |  | ✅ |  |
 | `commands` |  | ✅ |  |
 | `update` |  | ✅ |  |
@@ -223,7 +223,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp config` | `--allow-moderate` | ✅ |  |
 | `bot auth set` |  | ✅ |  |
 | `bot auth show` |  | ✅ |  |
-| `bot auth remove` |  | ❌ |  |
+| `bot auth remove` |  | ✅ |  |
 | `bot me` |  | ✅ |  |
 | `bot list` |  | ✅ |  |
 | `bot list` | `--check` | ✅ |  |
@@ -231,79 +231,79 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot messages list` | `--limit` | ✅ |  |
 | `bot messages get` |  | ✅ |  |
 | `bot messages search` |  | ✅ |  |
-| `bot messages search` | `--limit` | ❌ |  |
+| `bot messages search` | `--limit` | ✅ |  |
 | `bot messages search` | `--from` | ✅ |  |
 | `bot messages between` |  | ✅ |  |
 | `bot messages between` | `--limit` | ✅ |  |
 | `bot messages between` | `--all-bots` | ✅ |  |
 | `bot messages send` |  | ✅ |  |
-| `bot messages send` | `--format` | ❌ |  |
-| `bot messages send` | `--reply-to` | ❌ |  |
+| `bot messages send` | `--format` | ✅ |  |
+| `bot messages send` | `--reply-to` | ✅ |  |
 | `bot messages send` | `--silent` | ✅ |  |
 | `bot messages send` | `--file` | ✅ |  |
-| `bot messages send` | `--type` | ❌ |  |
+| `bot messages send` | `--type` | ✅ |  |
 | `bot messages edit` |  | ✅ |  |
-| `bot messages edit` | `--format` | ❌ |  |
+| `bot messages edit` | `--format` | ✅ |  |
 | `bot messages delete` |  | ✅ |  |
 | `bot chats check` |  | ✅ |  |
 | `bot chats check` | `--since` | ✅ |  |
 | `bot chats check` | `--dry-run` | ✅ |  |
 | `bot chats check` | `--allow-dangerous` | ✅ |  |
 | `bot chats check` | `--no-ban` | ✅ |  |
-| `bot chats check` | `--max-actions` | ❌ |  |
+| `bot chats check` | `--max-actions` | ✅ |  |
 | `bot chats rules show` |  | ✅ |  |
 | `bot chats rules set` |  | ✅ |  |
-| `bot chats rules unset` |  | ❌ |  |
+| `bot chats rules unset` |  | ✅ |  |
 | `bot chats list` |  | ✅ |  |
 | `bot chats get` |  | ✅ |  |
 | `bot chats pin` |  | ✅ |  |
-| `bot chats unpin` |  | ❌ |  |
-| `bot chats leave` |  | ❌ |  |
-| `bot chats action` |  | ❌ |  |
+| `bot chats unpin` |  | ✅ |  |
+| `bot chats leave` |  | ✅ |  |
+| `bot chats action` |  | ✅ |  |
 | `bot people show` |  | ✅ |  |
-| `bot people show` | `--limit` | ❌ |  |
+| `bot people show` | `--limit` | ✅ |  |
 | `bot people show` | `--all-bots` | ✅ |  |
 | `bot people show` | `--refresh` | ✅ |  |
-| `bot recipients list` |  | ❌ |  |
+| `bot recipients list` |  | ✅ |  |
 | `bot recipients add` |  | ✅ |  |
 | `bot recipients remove` |  | ✅ |  |
 | `bot recipients off` |  | ✅ |  |
 | `bot sends list` |  | ✅ |  |
 | `bot members list` |  | ✅ |  |
 | `bot members list` | `--limit` | ✅ |  |
-| `bot members list` | `--marker` | ❌ |  |
+| `bot members list` | `--marker` | ✅ |  |
 | `bot members add` |  | ✅ |  |
 | `bot members remove` |  | ✅ |  |
-| `bot members remove` | `--block` | ❌ |  |
-| `bot admins list` |  | ❌ |  |
+| `bot members remove` | `--block` | ✅ |  |
+| `bot admins list` |  | ✅ |  |
 | `bot admins add` |  | ✅ |  |
 | `bot admins add` | `--permissions` | ✅ |  |
-| `bot admins add` | `--alias` | ❌ |  |
+| `bot admins add` | `--alias` | ✅ |  |
 | `bot admins remove` |  | ✅ |  |
 | `bot comments list` |  | ✅ |  |
-| `bot comments list` | `--limit` | ❌ |  |
-| `bot comments get` |  | ❌ |  |
+| `bot comments list` | `--limit` | ✅ |  |
+| `bot comments get` |  | ✅ |  |
 | `bot comments send` |  | ✅ |  |
-| `bot comments send` | `--format` | ❌ |  |
-| `bot comments edit` |  | ❌ |  |
-| `bot comments edit` | `--format` | ❌ |  |
+| `bot comments send` | `--format` | ✅ |  |
+| `bot comments edit` |  | ✅ |  |
+| `bot comments edit` | `--format` | ✅ |  |
 | `bot comments delete` |  | ✅ |  |
 | `bot callbacks answer` |  | ✅ |  |
-| `bot callbacks answer` | `--text` | ❌ |  |
+| `bot callbacks answer` | `--text` | ✅ |  |
 | `bot callbacks answer` | `--notification` | ✅ |  |
 | `bot commands list` |  | ✅ |  |
 | `bot commands set` |  | ✅ |  |
 | `bot commands clear` |  | ✅ |  |
 | `bot uploads put` |  | ✅ |  |
-| `bot uploads put` | `--type` | ❌ |  |
-| `bot webhooks list` |  | ❌ |  |
+| `bot uploads put` | `--type` | ✅ |  |
+| `bot webhooks list` |  | ✅ |  |
 | `bot webhooks set` |  | ✅ |  |
 | `bot webhooks set` | `--types` | ✅ |  |
 | `bot webhooks set` | `--secret-stdin` | ✅ |  |
 | `bot webhooks set` | `--add` | ✅ |  |
 | `bot webhooks delete` |  | ✅ |  |
 | `bot updates watch` |  | ✅ |  |
-| `bot updates watch` | `--types` | ❌ |  |
+| `bot updates watch` | `--types` | ✅ |  |
 | `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
 | `bot mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
 | `bot mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
@@ -314,120 +314,120 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot mcp config` | `--confirm-send` | ✅ |  |
 | `bot mcp config` | `--allow-delete` | ✅ |  |
 | `bot mcp config` | `--allow-moderate` | ✅ |  |
-| `bot api get-my-info` |  | ❌ |  |
-| `bot api edit-my-commands` |  | ❌ |  |
-| `bot api edit-my-commands` | `--body` | ❌ |  |
-| `bot api edit-my-commands` | `--body-file` | ❌ |  |
+| `bot api get-my-info` |  | ✅ |  |
+| `bot api edit-my-commands` |  | ✅ |  |
+| `bot api edit-my-commands` | `--body` | ✅ |  |
+| `bot api edit-my-commands` | `--body-file` | ✅ |  |
 | `bot api get-chat` |  | ✅ |  |
 | `bot api get-chat` | `--chat-id` | ✅ |  |
-| `bot api edit-chat` |  | ❌ |  |
-| `bot api edit-chat` | `--chat-id` | ❌ |  |
-| `bot api edit-chat` | `--body` | ❌ |  |
-| `bot api edit-chat` | `--body-file` | ❌ |  |
-| `bot api send-action` |  | ❌ |  |
-| `bot api send-action` | `--chat-id` | ❌ |  |
-| `bot api send-action` | `--body` | ❌ |  |
-| `bot api send-action` | `--body-file` | ❌ |  |
+| `bot api edit-chat` |  | ✅ |  |
+| `bot api edit-chat` | `--chat-id` | ✅ |  |
+| `bot api edit-chat` | `--body` | ✅ |  |
+| `bot api edit-chat` | `--body-file` | ✅ |  |
+| `bot api send-action` |  | ✅ |  |
+| `bot api send-action` | `--chat-id` | ✅ |  |
+| `bot api send-action` | `--body` | ✅ |  |
+| `bot api send-action` | `--body-file` | ✅ |  |
 | `bot api get-pinned-message` |  | ✅ |  |
 | `bot api get-pinned-message` | `--chat-id` | ✅ |  |
 | `bot api pin-message` |  | ✅ |  |
 | `bot api pin-message` | `--chat-id` | ✅ |  |
 | `bot api pin-message` | `--body` | ✅ |  |
-| `bot api pin-message` | `--body-file` | ❌ |  |
-| `bot api unpin-message` |  | ❌ |  |
-| `bot api unpin-message` | `--chat-id` | ❌ |  |
+| `bot api pin-message` | `--body-file` | ✅ |  |
+| `bot api unpin-message` |  | ✅ |  |
+| `bot api unpin-message` | `--chat-id` | ✅ |  |
 | `bot api get-membership` |  | ✅ |  |
 | `bot api get-membership` | `--chat-id` | ✅ |  |
-| `bot api leave-chat` |  | ❌ |  |
-| `bot api leave-chat` | `--chat-id` | ❌ |  |
-| `bot api get-admins` |  | ❌ |  |
-| `bot api get-admins` | `--chat-id` | ❌ |  |
-| `bot api post-admins` |  | ❌ |  |
-| `bot api post-admins` | `--chat-id` | ❌ |  |
-| `bot api post-admins` | `--body` | ❌ |  |
-| `bot api post-admins` | `--body-file` | ❌ |  |
-| `bot api delete-admins` |  | ❌ |  |
-| `bot api delete-admins` | `--chat-id` | ❌ |  |
-| `bot api delete-admins` | `--user-id` | ❌ |  |
-| `bot api get-members` |  | ❌ |  |
-| `bot api get-members` | `--chat-id` | ❌ |  |
-| `bot api get-members` | `--user-ids` | ❌ |  |
-| `bot api get-members` | `--marker` | ❌ |  |
-| `bot api get-members` | `--count` | ❌ |  |
-| `bot api add-members` |  | ❌ |  |
-| `bot api add-members` | `--chat-id` | ❌ |  |
-| `bot api add-members` | `--body` | ❌ |  |
-| `bot api add-members` | `--body-file` | ❌ |  |
-| `bot api remove-member` |  | ❌ |  |
-| `bot api remove-member` | `--chat-id` | ❌ |  |
-| `bot api remove-member` | `--user-id` | ❌ |  |
-| `bot api remove-member` | `--block` | ❌ |  |
-| `bot api get-subscriptions` |  | ❌ |  |
+| `bot api leave-chat` |  | ✅ |  |
+| `bot api leave-chat` | `--chat-id` | ✅ |  |
+| `bot api get-admins` |  | ✅ |  |
+| `bot api get-admins` | `--chat-id` | ✅ |  |
+| `bot api post-admins` |  | ✅ |  |
+| `bot api post-admins` | `--chat-id` | ✅ |  |
+| `bot api post-admins` | `--body` | ✅ |  |
+| `bot api post-admins` | `--body-file` | ✅ |  |
+| `bot api delete-admins` |  | ✅ |  |
+| `bot api delete-admins` | `--chat-id` | ✅ |  |
+| `bot api delete-admins` | `--user-id` | ✅ |  |
+| `bot api get-members` |  | ✅ |  |
+| `bot api get-members` | `--chat-id` | ✅ |  |
+| `bot api get-members` | `--user-ids` | ✅ |  |
+| `bot api get-members` | `--marker` | ✅ |  |
+| `bot api get-members` | `--count` | ✅ |  |
+| `bot api add-members` |  | ✅ |  |
+| `bot api add-members` | `--chat-id` | ✅ |  |
+| `bot api add-members` | `--body` | ✅ |  |
+| `bot api add-members` | `--body-file` | ✅ |  |
+| `bot api remove-member` |  | ✅ |  |
+| `bot api remove-member` | `--chat-id` | ✅ |  |
+| `bot api remove-member` | `--user-id` | ✅ |  |
+| `bot api remove-member` | `--block` | ✅ |  |
+| `bot api get-subscriptions` |  | ✅ |  |
 | `bot api subscribe` |  | ✅ |  |
 | `bot api subscribe` | `--body` | ✅ |  |
-| `bot api subscribe` | `--body-file` | ❌ |  |
-| `bot api unsubscribe` |  | ❌ |  |
-| `bot api unsubscribe` | `--url` | ❌ |  |
-| `bot api get-upload-url` |  | ❌ |  |
-| `bot api get-upload-url` | `--type` | ❌ |  |
-| `bot api get-messages` |  | ❌ |  |
-| `bot api get-messages` | `--chat-id` | ❌ |  |
-| `bot api get-messages` | `--message-ids` | ❌ |  |
-| `bot api get-messages` | `--from` | ❌ |  |
-| `bot api get-messages` | `--to` | ❌ |  |
-| `bot api get-messages` | `--before` | ❌ |  |
-| `bot api get-messages` | `--after` | ❌ |  |
-| `bot api get-messages` | `--count` | ❌ |  |
+| `bot api subscribe` | `--body-file` | ✅ |  |
+| `bot api unsubscribe` |  | ✅ |  |
+| `bot api unsubscribe` | `--url` | ✅ |  |
+| `bot api get-upload-url` |  | ✅ |  |
+| `bot api get-upload-url` | `--type` | ✅ |  |
+| `bot api get-messages` |  | ✅ |  |
+| `bot api get-messages` | `--chat-id` | ✅ |  |
+| `bot api get-messages` | `--message-ids` | ✅ |  |
+| `bot api get-messages` | `--from` | ✅ |  |
+| `bot api get-messages` | `--to` | ✅ |  |
+| `bot api get-messages` | `--before` | ✅ |  |
+| `bot api get-messages` | `--after` | ✅ |  |
+| `bot api get-messages` | `--count` | ✅ |  |
 | `bot api send-message` |  | ✅ |  |
-| `bot api send-message` | `--user-id` | ❌ |  |
+| `bot api send-message` | `--user-id` | ✅ |  |
 | `bot api send-message` | `--chat-id` | ✅ |  |
-| `bot api send-message` | `--disable-link-preview` | ❌ |  |
+| `bot api send-message` | `--disable-link-preview` | ✅ |  |
 | `bot api send-message` | `--body` | ✅ |  |
-| `bot api send-message` | `--body-file` | ❌ |  |
+| `bot api send-message` | `--body-file` | ✅ |  |
 | `bot api edit-message` |  | ✅ |  |
 | `bot api edit-message` | `--message-id` | ✅ |  |
 | `bot api edit-message` | `--body` | ✅ |  |
-| `bot api edit-message` | `--body-file` | ❌ |  |
-| `bot api delete-message` |  | ❌ |  |
-| `bot api delete-message` | `--message-id` | ❌ |  |
-| `bot api get-message-by-id` |  | ❌ |  |
-| `bot api get-message-by-id` | `--message-id` | ❌ |  |
-| `bot api get-comments` |  | ❌ |  |
-| `bot api get-comments` | `--message-id` | ❌ |  |
-| `bot api get-comments` | `--comment-ids` | ❌ |  |
-| `bot api get-comments` | `--before` | ❌ |  |
-| `bot api get-comments` | `--after` | ❌ |  |
-| `bot api get-comments` | `--count` | ❌ |  |
-| `bot api send-comment` |  | ❌ |  |
-| `bot api send-comment` | `--message-id` | ❌ |  |
-| `bot api send-comment` | `--disable-link-preview` | ❌ |  |
-| `bot api send-comment` | `--body` | ❌ |  |
-| `bot api send-comment` | `--body-file` | ❌ |  |
-| `bot api edit-comment` |  | ❌ |  |
-| `bot api edit-comment` | `--message-id` | ❌ |  |
-| `bot api edit-comment` | `--comment-id` | ❌ |  |
-| `bot api edit-comment` | `--body` | ❌ |  |
-| `bot api edit-comment` | `--body-file` | ❌ |  |
-| `bot api delete-comment` |  | ❌ |  |
-| `bot api delete-comment` | `--message-id` | ❌ |  |
-| `bot api delete-comment` | `--comment-id` | ❌ |  |
-| `bot api get-comment-by-id` |  | ❌ |  |
-| `bot api get-comment-by-id` | `--message-id` | ❌ |  |
-| `bot api get-comment-by-id` | `--comment-id` | ❌ |  |
-| `bot api get-video-attachment-details` |  | ❌ |  |
-| `bot api get-video-attachment-details` | `--video-token` | ❌ |  |
-| `bot api answer-on-callback` |  | ❌ |  |
-| `bot api answer-on-callback` | `--callback-id` | ❌ |  |
-| `bot api answer-on-callback` | `--disable-link-preview` | ❌ |  |
-| `bot api answer-on-callback` | `--body` | ❌ |  |
-| `bot api answer-on-callback` | `--body-file` | ❌ |  |
+| `bot api edit-message` | `--body-file` | ✅ |  |
+| `bot api delete-message` |  | ✅ |  |
+| `bot api delete-message` | `--message-id` | ✅ |  |
+| `bot api get-message-by-id` |  | ✅ |  |
+| `bot api get-message-by-id` | `--message-id` | ✅ |  |
+| `bot api get-comments` |  | ✅ |  |
+| `bot api get-comments` | `--message-id` | ✅ |  |
+| `bot api get-comments` | `--comment-ids` | ✅ |  |
+| `bot api get-comments` | `--before` | ✅ |  |
+| `bot api get-comments` | `--after` | ✅ |  |
+| `bot api get-comments` | `--count` | ✅ |  |
+| `bot api send-comment` |  | ✅ |  |
+| `bot api send-comment` | `--message-id` | ✅ |  |
+| `bot api send-comment` | `--disable-link-preview` | ✅ |  |
+| `bot api send-comment` | `--body` | ✅ |  |
+| `bot api send-comment` | `--body-file` | ✅ |  |
+| `bot api edit-comment` |  | ✅ |  |
+| `bot api edit-comment` | `--message-id` | ✅ |  |
+| `bot api edit-comment` | `--comment-id` | ✅ |  |
+| `bot api edit-comment` | `--body` | ✅ |  |
+| `bot api edit-comment` | `--body-file` | ✅ |  |
+| `bot api delete-comment` |  | ✅ |  |
+| `bot api delete-comment` | `--message-id` | ✅ |  |
+| `bot api delete-comment` | `--comment-id` | ✅ |  |
+| `bot api get-comment-by-id` |  | ✅ |  |
+| `bot api get-comment-by-id` | `--message-id` | ✅ |  |
+| `bot api get-comment-by-id` | `--comment-id` | ✅ |  |
+| `bot api get-video-attachment-details` |  | ✅ |  |
+| `bot api get-video-attachment-details` | `--video-token` | ✅ |  |
+| `bot api answer-on-callback` |  | ✅ |  |
+| `bot api answer-on-callback` | `--callback-id` | ✅ |  |
+| `bot api answer-on-callback` | `--disable-link-preview` | ✅ |  |
+| `bot api answer-on-callback` | `--body` | ✅ |  |
+| `bot api answer-on-callback` | `--body-file` | ✅ |  |
 | `bot api get-updates` |  | ✅ |  |
 | `bot api get-updates` | `--limit` | ✅ |  |
 | `bot api get-updates` | `--poll-timeout` | ✅ |  |
-| `bot api get-updates` | `--marker` | ❌ |  |
-| `bot api get-updates` | `--types` | ❌ |  |
-| *global* | `--version` | ❌ |  |
-| *global* | `--verbose` | ❌ |  |
+| `bot api get-updates` | `--marker` | ✅ |  |
+| `bot api get-updates` | `--types` | ✅ |  |
+| *global* | `--version` | ✅ |  |
+| *global* | `--verbose` | ✅ |  |
 | *global* | `--json` | ✅ |  |
 | *global* | `--jsonl` | ✅ |  |
 | *global* | `--quiet` | ✅ |  |
@@ -436,5 +436,5 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | *global* | `--offline` | ✅ |  |
 | *global* | `--record` | ✅ |  |
 | *global* | `--no-record` | ✅ |  |
-| *global* | `--serve` | ❌ |  |
-| *global* | `--no-serve` | ❌ |  |
+| *global* | `--serve` | ✅ |  |
+| *global* | `--no-serve` | ✅ |  |
