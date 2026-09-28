@@ -1,7 +1,7 @@
 {
   "name": "@leemour/max-cli",
   "version": "0.18.1",
-  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal \u2014 built for agents and scripts",
+  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal — built for agents and scripts",
   "license": "MIT",
   "author": "Viacheslav Ptsarev",
   "repository": {
@@ -33,6 +33,7 @@
     "lint:fix": "biome check --write .",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:slow": "vitest run --reporter=json --outputFile=coverage/tests.json >/dev/null; node --experimental-strip-types scripts/slow-tests.ts",
     "smoke:bun": "bun run scripts/smoke.ts",
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
@@ -94,6 +95,7 @@
     "@modelcontextprotocol/client": "~2.1.0",
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "^5.0.2",
     "lefthook": "^2.1.8",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1",

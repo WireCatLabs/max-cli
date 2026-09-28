@@ -24,7 +24,7 @@ jobs:
       # `max --version` reads src/version.ts, not package.json, so the two can drift apart in
       # silence — and the day they do is a release day (OPS-4).
       - run: pnpm version:check
-      - run: pnpm test
+      - run: pnpm test:coverage
       - run: pnpm build
       # Generated files are committed, so a specification change that was not regenerated is a
       # stale tree rather than a surprise at runtime (OPS-3).
