@@ -87,6 +87,10 @@ Review the diff against:
 Each item gets **holds** or **broken** with `path:line`. A broken item stops the release until it is
 fixed or the owner rules on it.
 
+A `FAIL` caused by the account's state rather than the build — a live check or the smoke — is still
+reported and still stops the release until the owner rules (a `NEED`). Show that the code did not
+change: `git diff --stat v<prev>..HEAD -- <the paths that step exercises>`.
+
 ## 5. Live scenarios
 
 `docs_ai/plans/2026-09-28-live-scenarios.md` holds the scenarios, the cast and the rules for running.
@@ -97,10 +101,13 @@ fixed or the owner rules on it.
    plan's "Not run, and why" table rules out, whatever the diff says.
 3. Run with `bin/max` from the release worktree, after `pnpm build`. It copies the owner's sessions
    from the installed `max` on first use, so no profile needs `session start`.
-4. `pnpm smoke:live` — every write once in Saved messages, cleaned up after. Any `FAIL`: no release.
-5. Follow the plan's rules: `--json`, a timeout on everything, the shape recorded and never the
+4. MCP scenarios (X2): `pnpm mcp:tools -- mcp`, `-- mcp --allow-send`, `-- mcp --allow-send
+   --confirm-send`, `-- <bot> bot mcp` — the count and names per flag set. Compare with the previous
+   release's X2 row in the Results table; a count that moved needs a PR that explains it.
+5. `pnpm smoke:live` — every write once in Saved messages, cleaned up after. Any `FAIL`: no release.
+6. Follow the plan's rules: `--json`, a timeout on everything, the shape recorded and never the
    content, a snapshot before a change and the exact value put back after.
-6. Append the results to the plan's Results table, dated, with the version.
+7. Append the results to the plan's Results table, dated, with the version.
 
 ## 6. The report
 

@@ -20,6 +20,7 @@ import { join } from "node:path"
 import { MaxClient } from "../dist/client.js"
 import { Connection } from "../dist/protocol/connection.js"
 import { SessionStore } from "../dist/session/store.js"
+import { smokeReason } from "./smoke-reason.ts"
 
 const SAVED = "0"
 const MULTIPLE = 2
@@ -37,11 +38,6 @@ const client = new MaxClient({ store, connection, timeoutMs: 20_000 })
 const created: string[] = []
 const failures: string[] = []
 
-const reason = (error: unknown): string => {
-  const payload = (error as { payload?: { error?: unknown } }).payload
-  return String(payload?.error ?? (error as Error).message)
-}
-
 /**
  * On 2026-09-26 eight writes in 0.7 s were followed by MAX closing the connection and refusing the
  * token; the same photo sent alone went through. A person's pace between writes costs half a minute.
@@ -55,7 +51,7 @@ const step = async <T>(label: string, run: () => Promise<T>): Promise<T | undefi
     console.log(`ok    ${label}`)
     return result
   } catch (error) {
-    console.log(`FAIL  ${label}: ${reason(error)}`)
+    console.log(`FAIL  ${label}: ${smokeReason(error)}`)
     failures.push(label)
     return undefined
   }
