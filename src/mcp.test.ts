@@ -401,6 +401,15 @@ describe("the MCP server", () => {
       expect(names).not.toContain("max_account_update")
     })
 
+    it("closing a poll is an edit, as `polls close` is", async () => {
+      await configure("mcp-poll-edit", "mcpTools", "polls")
+      await configure("mcp-poll-edit", "allow", "edit")
+      await configure("mcp-poll-reaction", "mcpTools", "polls")
+      await configure("mcp-poll-reaction", "allow", "reaction")
+      expect(await offered("mcp-poll-edit")).toContain("max_polls_close")
+      expect(await offered("mcp-poll-reaction")).not.toContain("max_polls_close")
+    })
+
     it("go through the client like the command: block sends CONTACT_UPDATE with BLOCK", async () => {
       await configure("mcp-block", "mcpTools", "contacts")
       const { client, max } = await connect(

@@ -709,7 +709,7 @@ const TOOL_PERMISSION: Record<string, Permission> = {
   max_contacts_block: "contacts",
   max_contacts_unblock: "contacts",
   max_contacts_rename: "contacts",
-  max_polls_close: "reaction",
+  max_polls_close: "edit",
   max_chats_join: "groups",
   max_chats_leave: "groups",
   max_chats_create: "groups",

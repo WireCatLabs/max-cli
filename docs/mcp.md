@@ -97,7 +97,8 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 - «Да» привязано к тому, что было в форме: если агент подменит чат, текст или инструмент после
   подтверждения, ничего не будет сделано.
 - «Да» действует один раз и 5 минут. Повтор того же ответа ничего не отправляет.
-- Без `--allow-send`, `--allow-mark-read`, `--allow-delete` или `--allow-moderate` флаг — ошибка запуска.
+- Без `--allow-send`, `--allow-mark-read`, `--allow-delete`, `--allow-moderate` и без `mcpTools` в настройках флаг —
+  ошибка запуска: подтверждать нечего.
 
 `--allow-mark-read` даёт агенту инструмент `max_chats_read` — отметить чат прочитанным. Собеседник
 это видит, поэтому флаг отдельный и `--allow-send` его не включает. Отметка проходит те же проверки,
@@ -134,7 +135,7 @@ max work config set mcpTools groups         # профилю work
 | Группа | Инструменты | Разрешение в `allow` |
 |---|---|---|
 | `contacts` | `max_contacts_add`, `_remove`, `_rename`, `_block`, `_unblock` | `contacts` |
-| `polls` | `max_polls_close` | `reaction` |
+| `polls` | `max_polls_close` | `edit` |
 | `groups` | `max_chats_join`, `_leave`, `_create`, `max_chats_admins_add`, `_remove` | `groups` |
 | `profile` | `max_account_update` — имя и описание, без фото | `profile` |
 
