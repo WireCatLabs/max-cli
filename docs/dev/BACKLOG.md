@@ -132,11 +132,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **OPS-17** · P1 · 🚧 `fix/live-run-findings` · Release 0.17: npm 0.16.0 lacks what `docs/`
   describes (contacts rename/block/unblock, profile photo, `admins add --can read,link`).
 
-- **OPS-16** · P2 · Tests that time out on a slow CI runner: `src/upload.test.ts` «sends an .mp4 as
-  a video», `src/commands/bot-reads.test.ts` «lists a chat's messages…», `src/commands/bot-sends.test.ts`
-  «has no hourly limit» — each just over vitest's 5 s on run 36351058448 (#210), green on the rerun
-  with no code change. Find what is slow in them (a real timer, a retry wait) rather than raise the limit.
-
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
   a program holding the token of a personal account. oclif's `plugin-plugins` is the model.

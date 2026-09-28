@@ -234,6 +234,7 @@ export const sendCommands = (messages: Command): void => {
           const answer = (await whenAttachmentReady(
             () => client.call(send, { query: target.query, ...(body ? { body } : {}) }),
             context.signal,
+            context.sleep,
           )) as { message?: unknown } | null
           const message = answer?.message ? { ...client.decodeMessage(answer.message), outgoing: true } : undefined
           return { result: message ?? plainJson(answer), ...(message ? { messageId: message.id } : {}) }

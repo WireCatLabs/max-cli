@@ -64,6 +64,7 @@ const max = async (argv: string[], timeoutMs?: number) => {
     tty: false,
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
+    sleep: async () => {},
   })
   const stderr = streams.stderr.join("\n")
   return { code, out: streams.stdout.join("\n") + stderr, stdout: streams.stdout.join("\n"), stderr }

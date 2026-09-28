@@ -65,6 +65,7 @@ const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
       return store
     },
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+    sleep: async () => {},
   })
   const sends = max.sent.filter((call) => call.opcode === Opcode.MSG_SEND).map((call) => call.payload)
   const slots = max.sent.filter((call) => call.opcode === Opcode.VIDEO_UPLOAD).map((call) => call.payload)

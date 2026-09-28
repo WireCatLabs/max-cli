@@ -105,6 +105,7 @@ const max = async (argv: string[], ask?: () => Promise<string>) => {
     tty: false,
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
+    sleep: async () => {},
     ...(ask ? { ask } : {}),
   })
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }

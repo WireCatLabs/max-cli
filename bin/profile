@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+# Runs one `max` command under Node's CPU profiler, the same way as bin/max (config, state and
+# cache inside the worktree), and says where the profile went. Open it in Chrome DevTools →
+# Performance → Load profile, or in VS Code.
+#
+#   pnpm build
+#   bin/profile chats list --limit 5
+set -eu
+
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+dir="$root/.max/profiles"
+mkdir -p "$dir"
+before=$(ls "$dir" 2>/dev/null | wc -l)
+NODE_OPTIONS="${NODE_OPTIONS:-} --cpu-prof --cpu-prof-dir=$dir" "$root/bin/max" "$@" || status=$?
+newest=$(ls -t "$dir"/*.cpuprofile 2>/dev/null | head -1)
+[ "$(ls "$dir" | wc -l)" -gt "$before" ] && echo "profile: $newest" >&2
+exit "${status:-0}"

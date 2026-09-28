@@ -11,6 +11,7 @@ import { botsDirectory } from "../bot/registry.js"
 import { plainJson } from "../bot/transport.js"
 import { asFirstWord } from "../profile.js"
 import { assertAllowed, botContext } from "./bot-context.js"
+import { environmentOf } from "./context.js"
 
 type Context = ReturnType<typeof botContext>
 
@@ -164,7 +165,7 @@ export const updatesCommand = (): Command => {
           failures += 1
           const ms = Math.min(LONGEST_WAIT_MS, FIRST_WAIT_MS * 2 ** (failures - 1))
           context.streams.diagnostic(`${reason} — trying again in ${Math.round(ms / 1000)} s`)
-          await pause(ms, stop.signal)
+          await (environmentOf(this).sleep ?? pause)(ms, stop.signal)
         }
 
         while (!stop.signal.aborted) {
