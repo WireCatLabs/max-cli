@@ -86,6 +86,7 @@ max config show --json     # то же одним объектом
 | `keepRunsForDays` | сколько дней хранятся записи запусков | `30` |
 | `readOnly` | профиль только для чтения: `max messages send` отказывает с кодом `5` | `false` |
 | `sendsPerHour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями и добавленными в группы людьми; сверх — отказ с кодом `8`. **Боту** лимит задаётся только в разделе `bot`; без него бот не ограничен | `30`, у бота — нет |
+| `mcpTools` | какие изменения аккаунта агент может делать через `max mcp`: `contacts`, `polls`, `groups`, `profile`. Включается только здесь, флагом нельзя; см. [mcp.md](mcp.md). Только для личного аккаунта | ничего |
 | `updateCheck` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | `true` |
 | `transcribeModel` | какой моделью `max messages transcribe` распознаёт речь. **Только в `defaults`** | `gigaam-v3` |
 
@@ -134,7 +135,7 @@ max config set defaultProfile work      # какой профиль без пе�
 Неизвестное поле отвергается с именем поля и кодом `configuration_error` (возврат `3`):
 
 ```json
-{"error":{"code":"configuration_error","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve"}}
+{"error":{"code":"configuration_error","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools"}}
 ```
 
 Значение не того вида называет поле и то, что допустимо: `profiles.default.limit: has to be a
