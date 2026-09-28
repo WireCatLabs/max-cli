@@ -114,6 +114,21 @@ describe("max chats rules", () => {
     expect(new ModerationRules(moderationPathFor("ru-cmd")).read("-70000000000001")?.title).toBe("Team")
   })
 
+  it("`unset` puts one rule back to its default and keeps the others", async () => {
+    const env = environment()
+    await rules(["ru-unset", "chats", "rules", "set", "Team", "newAccount.days", "3", "--json"], env)
+    await rules(["ru-unset", "chats", "rules", "set", "Team", "links", "delete", "--json"], env)
+
+    const unset = await rules(["ru-unset", "chats", "rules", "unset", "Team", "newAccount.days", "--json"], env)
+
+    expect(unset.code).toBe(0)
+    expect(unset.json.rules.newAccount.days).toBe(defaultRules("Team").newAccount.days)
+    expect(new ModerationRules(moderationPathFor("ru-unset")).read("-70000000000001")).toMatchObject({
+      newAccount: { days: defaultRules("Team").newAccount.days },
+      links: "delete",
+    })
+  })
+
   it("refuses a bad value with the values it takes", async () => {
     const { code, stderr } = await rules(
       ["ru-bad", "chats", "rules", "set", "Team", "links", "ban", "--json"],

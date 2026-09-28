@@ -48,6 +48,15 @@ describe("answering and reacting", () => {
     expect(message.elements).toEqual([])
   })
 
+  it("`messages send --cid` sends the client id it was given, so MAX can collapse a repeat", async () => {
+    const { code, max } = await runAgainst(["messages", "send", "0", "yes", "--cid", "4242"])
+
+    expect(code).toBe(0)
+    expect(max.sent.filter((call) => call.opcode === Opcode.MSG_SEND).map((call) => call.payload.message)).toEqual([
+      expect.objectContaining({ cid: 4242, text: "yes" }),
+    ])
+  })
+
   it("`--md` is `--markdown`: the marks go out as markup", async () => {
     const { code, max } = await runAgainst(["messages", "send", "0", "**yes**", "--md"])
 

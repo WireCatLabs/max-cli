@@ -312,3 +312,33 @@ describe("max session start without a person at the terminal", () => {
     expect(await start("sms-chrome")).not.toBe(0)
   })
 })
+
+describe("max session end", () => {
+  it("forgets the stored token without contacting MAX, and says it was not revoked there", async () => {
+    const keyring = memoryKeyring()
+    const store = (profile: string) => new SessionStore({ profile, keyring })
+    store("s-end").writeToken("a-token")
+    let connections = 0
+    const environment: Environment = {
+      tty: false,
+      store,
+      connection: () => {
+        connections++
+        throw new Error("`session end` must not connect")
+      },
+    }
+    const end = async () => {
+      const streams = captureStreams()
+      const code = await run(["s-end", "session", "end", "--json"], { ...environment, streams })
+      return { code, json: JSON.parse(streams.stdout.join("")) }
+    }
+
+    const first = await end()
+    const again = await end()
+
+    expect(first).toEqual({ code: 0, json: { profile: "s-end", forgotten: true, revokedOnServer: false } })
+    expect(store("s-end").readToken()).toBeUndefined()
+    expect(again.json.forgotten).toBe(false)
+    expect(connections).toBe(0)
+  })
+})

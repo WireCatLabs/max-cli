@@ -182,6 +182,19 @@ describe("max export messages", () => {
     expect(connected()).toBe(false)
   })
 
+  it("`--since` leaves out what came before it", async () => {
+    const { environment, connected } = await prepared("x-since")
+
+    const { code, stdout } = await runWith(
+      ["x-since", "--jsonl", "export", "messages", "111", "--format", "jsonl", "--since", "2026-09-02T00:00:00Z"],
+      environment,
+    )
+
+    expect(code).toBe(0)
+    expect(stdout.split("\n").map((line) => JSON.parse(line).id)).toEqual(["2"])
+    expect(connected()).toBe(false)
+  })
+
   it("says on stderr what the cache never read, and keeps stdout for the export itself", async () => {
     const { environment } = await prepared("x-export-md")
 
