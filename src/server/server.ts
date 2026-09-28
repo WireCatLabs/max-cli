@@ -512,6 +512,8 @@ export class MaxServer {
       // Nor a chat we changed: the answer carries it whole, as a 135 push would. Without this the
       // owner's own rename showed the old title until something else touched the chat.
       if (answer.chat) this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
+      // The same for a contact we renamed: every command writes the login's contacts to its cache.
+      if (objectOf(answer.contact).id !== undefined) client.live.contact(objectOf(answer.contact))
       // Nor does it push our own deletion back; the chat's last message may be the one deleted.
       if (opcode === Opcode.MSG_DELETE) this.#goneStale()
       return { payload: answer }
