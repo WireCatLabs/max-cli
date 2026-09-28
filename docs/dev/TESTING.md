@@ -108,6 +108,21 @@ pnpm build && bin/profile chats list --limit 5   # a CPU profile of one command,
 `--cpu-prof`; open the file in Chrome DevTools → Performance, or in VS Code. `--trace` already gives
 each request's duration.
 
+## Coverage has a floor
+
+```sh
+pnpm test:coverage              # CI runs this; the report is in coverage/index.html
+```
+
+`vitest.config.ts` holds the floor: lines 90 %, statements 88 %, functions 86 %, branches 77 % over
+the whole of `src/`, and **every file at least 50 % of its lines**. A change that drops below fails
+CI. The numbers sit just under what the suite reached on 2026-09-28; raise them when coverage rises,
+never lower them to let a change through — write the test instead.
+
+Left out, each for a reason written beside it in the config: generated code, types-only files, the
+entry point, the Bun driver (`pnpm smoke:bun` runs it), and the commands that start a process that
+runs until stopped or download a model — those are the live scenarios' job.
+
 ## The live checks, and why they are not tests
 
 There is no automated suite against the real MAX, and there should not be: it needs a real account,
