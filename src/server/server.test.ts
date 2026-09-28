@@ -616,6 +616,30 @@ describe("a command through max serve", () => {
     expect(chat).toMatchObject({ id: "111", title: "Renamed" })
   })
 
+  it("shows the owner's own name for a contact to the next command: MAX does not push a rename back", async () => {
+    const dialog = { id: 222, type: "DIALOG", participants: { [ME]: 0, 10000002: 0 }, lastEventTime: 1789776000000 }
+    const renamed = { id: 10000002, names: [{ name: "Neighbour", type: "CUSTOM" }] }
+    const max = scripted({
+      [Opcode.LOGIN]: {
+        profile: { contact: { id: ME, names: [{ name: "Test Person", type: "FULL_NAME" }] } },
+        chats: [dialog],
+        contacts: [{ id: 10000002, names: [{ name: "Someone Else", type: "FULL_NAME" }] }],
+      },
+      [Opcode.CONTACT_UPDATE]: { contact: renamed },
+    })
+    const { store } = await serve("c-rename-contact", max)
+    await settle()
+    const first = commandClient(store)
+    await first.client.contacts.rename("10000002", "Neighbour")
+    await first.client.close()
+    const second = commandClient(store)
+
+    const [chat] = (await second.client.chats.list()).items
+    await second.client.close()
+
+    expect(chat).toMatchObject({ id: "222", title: "Neighbour" })
+  })
+
   it("follows a chat read on another device: the unread count becomes what MAX says", async () => {
     const { store, max } = await serve("c-read-elsewhere")
     max.push(

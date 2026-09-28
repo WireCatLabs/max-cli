@@ -1891,6 +1891,16 @@ export class MaxClient {
       return !CHANGES_CHATS.has(opcode)
     },
 
+    /** A contact MAX answered with after our own change to it replaces the login's copy. */
+    contact: (changed: Payload): void => {
+      const id = asId(changed.id)
+      const contacts = asArray(this.#session().contacts)
+      const at = contacts.findIndex((candidate) => asId(candidate.id) === id)
+      if (id === undefined || at < 0) return
+      contacts[at] = changed
+      this.#session().contacts = contacts
+    },
+
     /** One request from a command, on this connection. The server decides which ones may pass. */
     forward: async (opcode: number, payload: Payload): Promise<Payload> => {
       await this.#connectOnce()
