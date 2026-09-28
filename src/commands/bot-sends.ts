@@ -103,6 +103,7 @@ export const uploaded = async (
     type,
     endpoint: endpointOf(answer),
     fetch: context.uploadFetch(),
+    ...(context.events ? { events: context.events } : {}),
     ...(context.signal ? { signal: context.signal } : {}),
     ...(context.settings.timeoutMs === undefined ? {} : { timeoutMs: context.settings.timeoutMs }),
   })
