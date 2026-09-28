@@ -108,6 +108,12 @@ describe("max bot updates watch", () => {
     expect(kept).toMatchObject([{ id: "mid.1" }])
   })
 
+  it("asks MAX only for the --types given", async () => {
+    const { code } = await max(["bot", "updates", "watch", "--types", "message_created,bot_added", "--jsonl"])
+    expect(code).toBe(0)
+    expect(new URL(polls[0] ?? "", "http://stub").searchParams.get("types")).toBe("message_created,bot_added")
+  })
+
   it("starts where the last watch stopped", async () => {
     new BotTokenStore({ profile: "again", keyring }).write(TOKEN)
     script = [BATCH]
