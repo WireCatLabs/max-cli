@@ -237,7 +237,6 @@ SDK's stdio transport, which real clients keep open (`CLI-55`).
 
 ```sh
 pnpm build
-bin/max session start            # once per worktree; asks for the token, echoes nothing
 bin/max chats list --json --limit 5
 ```
 
@@ -249,8 +248,13 @@ branch must never open the owner's real one.
 ⚠ **Each worktree therefore has its own session.** The directory variables also move the keyring
 entry — `cli-core` makes the service `max-cli:<config dir>` when any of them is set
 ([`ARCHITECTURE.md`](ARCHITECTURE.md) §14) — so a login in one worktree, or in the installed `max`,
-is invisible to another, and every command warns about it on stderr. The token is typed at the
-prompt; never on a command line or in a file.
+is invisible to another, and every command warns about it on stderr. ~~The token is typed at the
+prompt; never on a command line or in a file.~~ **Correction 2026-09-28 (`OPS-18`):** `bin/max
+session start` once per worktree is gone — each was a new device login on the real account. The first
+`bin/max` in a worktree copies the installed `max`'s sessions (`scripts/seed-worktree.ts`): state and
+`config.json`, and each token keyring to keyring in-process, never printed. Sockets, serve logs,
+`runs/` and the cache are not copied. After a new login in the installed `max`, `pnpm seed:worktree`
+copies again. With no installed `max`, `bin/max session start` is still the way in.
 
 **The check no assertion replaces**: record a real run and read the directory.
 
