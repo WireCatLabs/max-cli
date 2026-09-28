@@ -14,6 +14,7 @@ import { mockMax } from "./testing/mock-max.js"
 
 const OWNER = 10000001
 const MESSAGE = "116762160362694583"
+const ANONYMOUS = 1
 const MULTIPLE = 2
 const REVOTE = 4
 const CLOSED = 8
@@ -205,5 +206,16 @@ describe("closing and creating", () => {
       },
     })
     expect(journalOf("p-create")).toMatchObject([{ chatId: "111", kind: "message", outcome: "sent" }])
+  })
+
+  it("`--anonymous` sets the anonymous bit, and `--silent` sends the poll without a notification", async () => {
+    const { environment, sentWith } = messenger()
+    const argv = ["p-quiet", "polls", "create", "111", "Lunch?", "Yes", "No", "--anonymous", "--silent"]
+    expect((await runWith(argv, environment)).code).toBe(0)
+
+    expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({
+      notify: false,
+      message: { attaches: [{ _type: "POLL", settings: ANONYMOUS }] },
+    })
   })
 })

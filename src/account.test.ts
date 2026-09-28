@@ -70,6 +70,27 @@ const account = (answers: Record<number, unknown> = {}) => {
   return { max, environment, sent, stores }
 }
 
+/** Three people with a one-to-one chat each, newest conversation first: Carol, Alice, Bob. */
+const acquaintances = () => {
+  const person = (id: number, name: string) => ({ id, names: [{ name, type: "FULL_NAME" }] })
+  const dialog = (id: number, person: number, lastEventTime: number) => ({
+    id,
+    type: "DIALOG",
+    lastEventTime,
+    participants: { 10000001: 1, [person]: 1 },
+  })
+  return account({
+    [Opcode.LOGIN]: {
+      time: 1789776000000,
+      profile: { contact: { id: 10000001, names: [{ name: "Test Person", type: "ONEME" }] } },
+      chats: [dialog(1, 31, 300), dialog(2, 32, 200), dialog(3, 33, 100)],
+      contacts: [person(31, "Carol Crane"), person(32, "Alice Avery"), person(33, "Bob Brook")],
+    },
+  })
+}
+
+const idsOf = (stdout: string): string[] => JSON.parse(stdout).items.map((person: { id: string }) => person.id)
+
 const runWith = async (argv: string[], environment: Environment = {}) => {
   const streams = captureStreams()
   const code = await run([...argv, "--json"], { ...environment, streams, tty: false })
@@ -89,6 +110,43 @@ const expectNowhereOnDisk = (text: string) => {
 }
 
 describe("contacts", () => {
+  it("`list` pages the people with a dialog, newest conversation first", async () => {
+    const { environment } = acquaintances()
+    const first = await runWith(["a-list", "contacts", "list", "--limit", "2"], environment)
+    const second = await runWith(["a-list", "contacts", "list", "--limit", "2", "--page", "2"], environment)
+    const all = await runWith(["a-list", "contacts", "list", "--limit", "1", "--all"], environment)
+
+    expect(idsOf(first.stdout)).toEqual(["31", "32"])
+    expect(JSON.parse(first.stdout).hasMore).toBe(true)
+    expect(idsOf(second.stdout)).toEqual(["33"])
+    expect(JSON.parse(second.stdout).hasMore).toBe(false)
+    expect(idsOf(all.stdout)).toEqual(["31", "32", "33"])
+  })
+
+  it("`list --order name` sorts by name, and `--search` keeps only the names that match", async () => {
+    const { environment } = acquaintances()
+    const byName = await runWith(["a-order", "contacts", "list", "--order", "name"], environment)
+    const found = await runWith(["a-order", "contacts", "list", "--search", "rook"], environment)
+    const short = await runWith(["a-order", "contacts", "list", "--search", "ro"], environment)
+
+    expect(idsOf(byName.stdout)).toEqual(["32", "33", "31"])
+    expect(JSON.parse(found.stdout).items).toMatchObject([{ id: "33", name: "Bob Brook" }])
+    expect(JSON.parse(short.stderr).error.code).toBe("validation_error")
+  })
+
+  it("`sync` forgets where the last login left off, and answers counts with no name in them", async () => {
+    const { environment, sent } = acquaintances()
+    await runWith(["a-sync", "contacts", "list"], environment)
+    await runWith(["a-sync", "contacts", "list"], environment)
+    const synced = await runWith(["a-sync", "contacts", "sync"], environment)
+
+    expect(synced.code).toBe(0)
+    expect(sent(Opcode.LOGIN).map((login) => login.contactsSync)).toEqual([0, 1789776000000, 0])
+    expect(Object.keys(JSON.parse(synced.stdout)).sort()).toEqual(["added", "changed", "full", "known"])
+    expect(JSON.parse(synced.stdout)).toMatchObject({ full: true })
+    for (const name of ["Carol", "Alice", "Bob"]) expect(synced.stdout + synced.stderr).not.toContain(name)
+  })
+
   it("`lookup` asks for the number and never lets it reach stderr, the send journal or the run log", async () => {
     const { environment, sent } = account()
     const found = await runWith(["a-lookup", "contacts", "lookup", "--record", "--trace"], environment)
@@ -203,6 +261,16 @@ describe("the profile", () => {
   })
 })
 
+describe("the profile's last name", () => {
+  it("`account update --last-name` keeps the first name the login carried", async () => {
+    const { environment, sent } = account()
+    const updated = await runWith(["account", "update", "--last-name", "Newname"], environment)
+
+    expect(updated.code).toBe(0)
+    expect(sent(Opcode.PROFILE)).toEqual([{ firstName: "Test", lastName: "Newname" }])
+  })
+})
+
 describe("the phone number", () => {
   it("`account show` prints only its last four digits, and `--show-phone` the whole of it", async () => {
     const { environment } = account()
@@ -216,6 +284,19 @@ describe("the phone number", () => {
 })
 
 describe("folders", () => {
+  it("`list` reads the folders and changes none", async () => {
+    const { environment, sent } = account()
+    const listed = await runWith(["chats", "folders", "list"], environment)
+
+    expect(listed.code).toBe(0)
+    expect(sent(Opcode.FOLDERS_GET)).toHaveLength(1)
+    expect(sent(Opcode.FOLDERS_UPDATE)).toEqual([])
+    expect(JSON.parse(listed.stdout)).toMatchObject({
+      items: [{ id: "folder.personal", title: "Personal" }],
+      hasMore: false,
+    })
+  })
+
   it("`update` sends the folder back whole, changing only the title, without what MAX keeps for itself", async () => {
     const { environment, sent } = account()
     const updated = await runWith(["chats", "folders", "update", "Personal", "--title", "Renamed"], environment)
@@ -266,6 +347,23 @@ describe("folders", () => {
 })
 
 describe("sessions", () => {
+  it("`list` shows every session and ends none", async () => {
+    const { environment, sent } = account()
+    const listed = await runWith(["account", "sessions", "list"], environment)
+
+    expect(listed.code).toBe(0)
+    expect(sent(Opcode.SESSIONS_INFO)).toHaveLength(1)
+    expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([])
+    expect(JSON.parse(listed.stdout)).toEqual({
+      items: [
+        { current: true, client: "WEB", device: "Chrome", location: null, lastActiveAt: "2026-09-19T00:00:00.000Z" },
+      ],
+      page: 1,
+      limit: 1,
+      hasMore: false,
+    })
+  })
+
   it("`end-others` without --yes sends nothing", async () => {
     const { environment, sent } = account()
     const refused = await runWith(["account", "sessions", "end-others"], environment)
