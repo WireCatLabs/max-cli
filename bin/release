@@ -4,7 +4,8 @@
 #   bin/release           # publishes from GitHub Actions (.github/workflows/release.yml)
 #   bin/release --local   # publishes from this machine with the npm token from the keyring
 #
-# Steps 3–7 of docs_ai/releasing.md. Run on a clean, up-to-date `main`. The npm token is never
+# Steps 3–7 of docs_ai/releasing.md. Run on a clean, up-to-date `main`, after the release skill has
+# written and the owner signed docs_ai/releases/<version>.md for this commit. The npm token is never
 # printed — not on success, not in an error.
 set -eu
 
@@ -39,6 +40,18 @@ if published; then
   exit 1
 fi
 
+# The judgement half of the release — changelog, docs, requirements, live scenarios — is the release
+# skill's, and its report is the only record that it ran for this exact commit.
+report="docs_ai/releases/$version.md"
+[ -f "$report" ] || { echo "no release report $report — run the release skill first" >&2; exit 1; }
+grep -qx "Commit: $(git rev-parse HEAD)" "$report" || { echo "$report is for another commit than HEAD" >&2; exit 1; }
+# A date, not the template's placeholder, so a report copied from the template does not pass as signed.
+grep -Eq '^Signed off: [0-9]{4}-[0-9]{2}-[0-9]{2}' "$report" || { echo "$report is not signed off by the owner" >&2; exit 1; }
+
+echo "== checks for $version =="
+pnpm install --frozen-lockfile
+pnpm release:check
+
 install() {
   echo "== installing =="
   pnpm add -g "@leemour/max-cli@$version"
@@ -66,13 +79,6 @@ if [ "$mode" = ci ]; then
   install
   exit 0
 fi
-
-echo "== checks for $version =="
-pnpm install --frozen-lockfile
-pnpm lint && pnpm typecheck && pnpm test
-pnpm build && pnpm smoke:bun
-pnpm generate && git diff --exit-code
-pnpm version:check
 
 token=$(secret-tool lookup service npm account leemour) || { echo "no npm token in the keyring (service=npm account=leemour)" >&2; exit 1; }
 [ -n "$token" ] || { echo "the keyring entry is empty" >&2; exit 1; }

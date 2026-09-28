@@ -38,6 +38,8 @@
     "test:slow": "vitest run --reporter=json --outputFile=coverage/tests.json >/dev/null; node --experimental-strip-types scripts/slow-tests.ts",
     "smoke:bun": "bun run scripts/smoke.ts",
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
+    "release:check": "pnpm build && node --experimental-strip-types scripts/release-check.ts",
+    "docs:check": "node --experimental-strip-types scripts/docs-check.ts",
     "version:check": "node --experimental-strip-types scripts/version.ts",
     "version:sync": "node --experimental-strip-types scripts/version.ts --sync",
     "seed:worktree": "node --experimental-strip-types scripts/seed-worktree.ts --force",
