@@ -33,6 +33,7 @@ jobs:
       # this run's argv log, so the diff below also catches a stale test-matrix.md.
       - run: node --experimental-strip-types scripts/test-matrix.ts --check
       - run: git diff --exit-code
+      - run: pnpm docs:check
 
   bun:
     runs-on: ubuntu-latest
