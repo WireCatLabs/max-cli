@@ -115,6 +115,15 @@ describe("max bot people show", () => {
     expect(card.chats.map((chat: { id: string }) => chat.id).toSorted()).toEqual(["-100", "-200", "-300", "500"])
   })
 
+  it("does not show one bot a person only another bot has seen, unless asked with --all-bots", async () => {
+    const alone = await max(["second", "bot", "people", "show", "44", "--json"])
+    expect(alone.code).not.toBe(0)
+    expect(alone.stdout).toBe("")
+
+    const everywhere = await json(["second", "bot", "people", "show", "44", "--all-bots"])
+    expect(everywhere).toMatchObject({ id: "44", name: "Anna" })
+  })
+
   it("prints for a person without letting a message's escape codes reach the terminal", async () => {
     const streams = captureStreams()
     const code = await run(["first", "bot", "people", "show", "42", "--all-bots"], {

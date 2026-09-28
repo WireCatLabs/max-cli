@@ -62,7 +62,7 @@ export const keep = async (
   if (byChat.size === 0) return true
   return quietly((store) => {
     for (const [chatId, chatMessages] of byChat) store.saveMessages(accountOf(botId), chatId, chatMessages, { via })
-    store.savePeople(PROVIDER, [...senders])
+    store.savePeople(accountOf(botId), [...senders])
   }, warn)
 }
 
