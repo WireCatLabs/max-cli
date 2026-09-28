@@ -67,11 +67,18 @@ describe("changelogProblems", () => {
 })
 
 describe("packProblems", () => {
-  it("allows dist and the three files, and names anything else", () => {
+  it("allows dist, the three files and the agent skill, and names anything else", () => {
     expect(
-      packProblems(["dist/bin/max.js", "package.json", "README.md", "LICENSE", "src/testing/fixtures/a.json"]),
+      packProblems([
+        "dist/bin/max.js",
+        "package.json",
+        "README.md",
+        "LICENSE",
+        "skills/max-cli/SKILL.md",
+        "src/testing/fixtures/a.json",
+      ]),
     ).toEqual([
-      "npm pack: src/testing/fixtures/a.json would ship — only dist/, package.json, README.md and LICENSE may",
+      "npm pack: src/testing/fixtures/a.json would ship — only dist/, package.json, README.md, LICENSE and the agent skill may",
     ])
   })
 })

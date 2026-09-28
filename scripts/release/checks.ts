@@ -68,12 +68,15 @@ export const changelogProblems = (text: string, { version, release }: { version:
   return problems
 }
 
-const PACKED = new Set(["package.json", "README.md", "LICENSE"])
+// The agent skill ships because `max skill show` reads it from the package (`src/commands/skill.ts`).
+const PACKED = new Set(["package.json", "README.md", "LICENSE", "skills/max-cli/SKILL.md"])
 
 export const packProblems = (paths: string[]) =>
   paths
     .filter((path) => !path.startsWith("dist/") && !PACKED.has(path))
-    .map((path) => `npm pack: ${path} would ship — only dist/, package.json, README.md and LICENSE may`)
+    .map(
+      (path) => `npm pack: ${path} would ship — only dist/, package.json, README.md, LICENSE and the agent skill may`,
+    )
 
 const MAX_AGE_DAYS = 30
 
