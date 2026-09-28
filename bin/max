@@ -17,4 +17,6 @@ root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
 [ -d "$root/.max/state" ] || node --experimental-strip-types "$root/scripts/seed-worktree.ts"
 
 export MAX_CONFIG_DIR="$root/.max/config" MAX_STATE_DIR="$root/.max/state" MAX_CACHE_DIR="$root/.max/cache"
+# The bots' shared message store, also tg-cli's, lives outside all three; a branch never writes the real one.
+export MESSAGING_STORE="$root/.max/messages.db"
 exec node "$root/dist/bin/max.js" "$@"
