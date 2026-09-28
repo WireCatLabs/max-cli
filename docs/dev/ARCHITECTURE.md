@@ -2,7 +2,9 @@
 
 How this repository is put together, and which seams you may not cross.
 
-**Status 2026-09-20: this describes working code, not a plan.** Seven operations run against MAX;
+**Status 2026-09-20: this describes working code, not a plan.** ~~Seven operations run against MAX;~~
+**Correction 2026-09-28:** 44 operations are declared in `src/spec/operations/`, the official Bot API
+has its own half (§18), and the diagram below shows only the first commands;
 `max cache` and `max runs` answer from this machine. Both runtimes pass. Everything here was
 verified against the real service unless it says otherwise. Round trip re-verified live 2026-09-20:
 `max chats list --limit 3 --verbose --record` made three requests, stdout was one JSON value, stderr

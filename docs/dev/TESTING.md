@@ -175,7 +175,7 @@ cannot be put back exactly); `contacts block|remove|import` and `chats read|leav
 **Results.** 2026-09-28 on 0.16.0: every set worked, and the run found five defects, fixed in
 0.17.0 — the owner's own rename shown late (`MAX-63`), a false «before 1970» gap in exports
 (`CLI-53`), error texts (`CLI-54`), three shapes of JSON list (`CLI-56`), and `--limit abc` still
-«NaN» outside the paged lists (fixed after 0.17.0). Then on 0.17.0: the rename and the dead invite
+«NaN» outside the paged lists (fixed in 0.17.1). Then on 0.17.0: the rename and the dead invite
 link checked live. An MCP call in flight when stdin closes gets no answer — by design of the MCP
 SDK's stdio transport, which real clients keep open (`CLI-55`).
 

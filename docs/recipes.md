@@ -133,6 +133,9 @@ Claude Desktop и других клиентах MCP это команда `/revi
 
 ## Кому вы не ответили
 
+Короче всего — `max review --since 7d --unanswered --json`: вопросы к вам, на которые никто не
+ответил. Рецепт ниже шире: он ловит и просьбы без вопросительного знака.
+
 Пишет в MAX: **нет**. Разрешить: `Bash(max chats list:*)`, `Bash(max messages list:*)`.
 
 > Выполни `max chats list --kind dialog --limit 30 --json`. Для каждого чата, где последнее
