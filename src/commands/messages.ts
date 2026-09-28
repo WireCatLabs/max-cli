@@ -222,6 +222,7 @@ export const messagesCommand = (): Command => {
         try {
           const chatId = await client.chats.resolve(chat)
           const transcript = await transcribe(client, chatId, messageId.trim(), {
+            ...context.hearing,
             model,
             directory,
             cache,
