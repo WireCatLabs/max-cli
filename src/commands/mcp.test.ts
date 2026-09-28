@@ -64,6 +64,18 @@ describe("the config commands, through the CLI", () => {
     expect(json.mcpServers["max-work"].args.slice(-6)).toEqual(["mcp", ...flags])
   })
 
+  it("`mcp config --confirm-send` needs something to confirm: a write flag or mcpTools", async () => {
+    const refused = captureStreams()
+    expect(
+      await run(["mcp-confirm", "mcp", "config", "--confirm-send", "--json"], { streams: refused, tty: false }),
+    ).toBe(2)
+
+    await run(["mcp-confirm", "config", "set", "mcpTools", "contacts"], { streams: captureStreams(), tty: false })
+    const { code, json } = await cli(["mcp-confirm", "mcp", "config", "--confirm-send", "--json"])
+    expect(code).toBe(0)
+    expect(json.mcpServers["max-mcp-confirm"].args.slice(-2)).toEqual(["mcp", "--confirm-send"])
+  })
+
   it("`bot mcp config` names the bot's server and carries its flags", async () => {
     const flags = ["--allow-send", "--confirm-send", "--allow-delete", "--allow-moderate"]
     const { code, json } = await cli(["shop", "bot", "mcp", "config", ...flags, "--json"])

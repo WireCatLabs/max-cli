@@ -17,7 +17,7 @@ const withFlags = (command: Command): Command =>
     .option("--allow-send", "offer the send tool; without it the server can only read")
     .option(
       "--confirm-send",
-      "show the owner every send, edit, forward, pin, mark-read and delete in a form from the server first",
+      "show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first",
     )
     .option("--allow-mark-read", "offer the tool that marks a chat read; the other person sees it")
     .option("--allow-delete", "offer the tool that deletes messages for you only; it cannot be undone")
@@ -26,11 +26,13 @@ const withFlags = (command: Command): Command =>
       "let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it",
     )
 
-const checked = (flags: Flags): Flags => {
-  if (flags.confirmSend && !flags.allowSend && !flags.allowMarkRead && !flags.allowDelete && !flags.allowModerate) {
+const checked = (flags: Flags, mcpTools: readonly string[]): Flags => {
+  const writes =
+    flags.allowSend || flags.allowMarkRead || flags.allowDelete || flags.allowModerate || mcpTools.length > 0
+  if (flags.confirmSend && !writes) {
     throw new CliError(
       "validation_error",
-      "`--confirm-send` confirms writes, and without `--allow-send`, `--allow-mark-read`, `--allow-delete` or `--allow-moderate` there are none",
+      "`--confirm-send` confirms writes, and without `--allow-send`, `--allow-mark-read`, `--allow-delete`, `--allow-moderate` or `mcpTools` in the settings there are none",
     )
   }
   return flags
@@ -42,10 +44,14 @@ export const mcpCommand = (): Command => {
       "serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max mcp`",
     ),
   ).action(async function (this: Command) {
-    const { allowSend, confirmSend, allowMarkRead, allowDelete, allowModerate } = checked(this.opts<Flags>())
+    const context = forCommand(this)
+    const { allowSend, confirmSend, allowMarkRead, allowDelete, allowModerate } = checked(
+      this.opts<Flags>(),
+      context.settings.mcpTools,
+    )
     // Loaded here, not at the top: every other command would otherwise pay for the SDK and zod.
     const { serveOverStdio } = await import("../mcp/server.js")
-    await serveOverStdio(forCommand(this), {
+    await serveOverStdio(context, {
       allowSend: allowSend === true,
       confirmSend: confirmSend === true,
       allowMarkRead: allowMarkRead === true,
@@ -60,8 +66,8 @@ export const mcpCommand = (): Command => {
         "print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes nothing",
       ),
     ).action(async function (this: Command) {
-      const flags = checked(this.optsWithGlobals<Flags>())
       const { renderer, settings, format, streams, run } = forCommand(this)
+      const flags = checked(this.optsWithGlobals<Flags>(), settings.mcpTools)
       await run("mcp config", async () => {
         const entry = serverEntry({
           profile: settings.profile,
