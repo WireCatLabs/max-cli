@@ -37,6 +37,7 @@
     "test:matrix": "vitest run >/dev/null && pnpm build >/dev/null && node --experimental-strip-types scripts/test-matrix.ts --check",
     "test:slow": "vitest run --reporter=json --outputFile=coverage/tests.json >/dev/null; node --experimental-strip-types scripts/slow-tests.ts",
     "smoke:bun": "bun run scripts/smoke.ts",
+    "mcp:tools": "node --experimental-strip-types scripts/mcp-tools.ts",
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
     "release:check": "pnpm build && node --experimental-strip-types scripts/release-check.ts",
     "docs:check": "node --experimental-strip-types scripts/docs-check.ts",
