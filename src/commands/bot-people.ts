@@ -141,7 +141,7 @@ export const searchMessages = (
   context: Context,
   text: string | undefined,
   from: string[] = [],
-): Promise<StoredHit[]> => {
+): Promise<{ items: StoredHit[]; hasMore: boolean }> => {
   const { filter, account } = scopeOf(context, false)
   return fromStore((store) => {
     const senders = resolve(store, from, account).map(({ id }) => id)
@@ -150,7 +150,7 @@ export const searchMessages = (
       ...(text === undefined ? {} : { text }),
       ...(senders.length ? { senders } : {}),
       limit: context.settings.limit,
-    }).items
+    })
   })
 }
 

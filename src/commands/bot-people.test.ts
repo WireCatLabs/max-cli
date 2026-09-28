@@ -157,9 +157,10 @@ describe("max bot messages search --from", () => {
     expect(some.map((message: { id: string }) => message.id)).toEqual(["mid.b1", "mid.a1"])
   })
 
-  it("stops at --limit", async () => {
+  it("stops at --limit and says there is more", async () => {
     const found = await json(["first", "bot", "messages", "search", "--from", "@ann", "--limit", "1"])
     expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a1"])
+    expect(found).toMatchObject({ limit: 1, hasMore: true })
   })
 })
 
