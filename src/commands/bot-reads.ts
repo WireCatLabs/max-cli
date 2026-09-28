@@ -10,7 +10,7 @@ import { botCheckCommand, botRulesCommand } from "./bot-check.js"
 import { botContext } from "./bot-context.js"
 import { addBetween, searchMessages } from "./bot-people.js"
 import { guardedCall, sendCommands } from "./bot-sends.js"
-import { renderList } from "./paging.js"
+import { renderList, wholeNumber } from "./paging.js"
 
 type Context = ReturnType<typeof botContext>
 
@@ -36,7 +36,7 @@ export const messagesCommand = (): Command => {
 
   command
     .command("list <chat>")
-    .option("--limit <n>", "how many, up to 100", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .description(
       "the latest messages in a chat (--limit, up to 100) — its id, or the title of a chat this bot has seen; " +
         "--offline answers from the local copy",
@@ -90,7 +90,7 @@ export const messagesCommand = (): Command => {
 
   command
     .command("search [text]")
-    .option("--limit <n>", "how many", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many", wholeNumber("--limit"))
     .option(
       "--from <who>",
       "only what this person wrote — an id, @username or part of a name; repeat it for any of several",

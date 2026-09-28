@@ -5,6 +5,7 @@ import { openProfileCache, profileCacheFile } from "../cache/index.js"
 import { BACKUP_PAGE } from "../client.js"
 import { asFirstWord } from "../profile.js"
 import { forCommand } from "./context.js"
+import { wholeNumber } from "./paging.js"
 
 const MAX_PAGES = 40
 /** web.max.ru sets no pause; a person scrolling the owner's chat paged every 5.3–5.4 s (`RES-9`, `NEED-216` A). */
@@ -23,9 +24,9 @@ export const backupCommand = (): Command => {
     .argument("<chat>", "chat id, or part of a chat name")
     .description("what a chat's history back to --since or --last costs; with --run, fetch it")
     .option("--since <id-or-time>", "back to this message id, ISO 8601 time, or 2h / 1d ago")
-    .option("--last <n>", "the newest n messages", (value) => Number.parseInt(value, 10))
+    .option("--last <n>", "the newest n messages", wholeNumber("--last"))
     .option("--run", "fetch what is missing; without it nothing is sent")
-    .option("--max-pages <n>", `pages of ${BACKUP_PAGE} per run`, (value) => Number.parseInt(value, 10), MAX_PAGES)
+    .option("--max-pages <n>", `pages of ${BACKUP_PAGE} per run`, wholeNumber("--max-pages"), MAX_PAGES)
     .option("--pause <seconds>", "the least wait between pages; each is up to twice that", Number, PAUSE_SECONDS)
     .action(async function (this: Command, chat: string) {
       const options = this.opts<{ since?: string; last?: number; run?: boolean; maxPages: number; pause: number }>()

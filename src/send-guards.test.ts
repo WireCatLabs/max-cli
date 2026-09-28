@@ -148,6 +148,9 @@ describe("sending", () => {
       "refused",
       "sent",
     ])
+    const cut = JSON.parse((await runWith(["g-keep", "sends", "list", "--limit", "1", "--json"])).stdout)
+    expect(cut).toMatchObject({ limit: 1, hasMore: true })
+    expect(cut.items).toHaveLength(1)
   })
 })
 

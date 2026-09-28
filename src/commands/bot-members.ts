@@ -6,7 +6,7 @@ import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { chatIdOf } from "./bot-reads.js"
 import { guardedCall, operation } from "./bot-sends.js"
-import { renderList } from "./paging.js"
+import { renderList, wholeNumber } from "./paging.js"
 
 const USER_ID = /^\d+$/
 
@@ -42,7 +42,7 @@ export const membersCommand = (): Command => {
   command
     .command("list <chat>")
     .description("members of a chat, a page at a time — --marker takes the `marker` the last page gave")
-    .option("--limit <n>", "how many, up to 100", (value) => Number.parseInt(value, 10))
+    .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .option("--marker <marker>", "continue from here")
     .action(async function (this: Command, chat: string) {
       const context = botContext(this)
