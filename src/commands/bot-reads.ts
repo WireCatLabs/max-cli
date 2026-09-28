@@ -103,7 +103,8 @@ export const messagesCommand = (): Command => {
     .action(async function (this: Command, text: string | undefined, options: { from?: string[] }) {
       const context = botContext(this, { offline: true })
       storedBotId(context)
-      show(context, await searchMessages(context, text, options.from))
+      const found = await searchMessages(context, text, options.from)
+      show(context, found.items, false, { hasMore: found.hasMore, limit: context.settings.limit })
     })
 
   addBetween(command)
@@ -121,13 +122,18 @@ const storedBotId = (context: Context): string => {
   )
 }
 
-const show = (context: Context, messages: Message[], one = false): void => {
+const show = (
+  context: Context,
+  messages: Message[],
+  one = false,
+  page: { hasMore?: boolean; limit?: number } = {},
+): void => {
   if (one && context.format === "json") {
     context.renderer.result(messages[0])
     return
   }
   if (context.format !== "pretty") {
-    renderList(context.renderer, context.format, messages)
+    renderList(context.renderer, context.format, messages, page)
     return
   }
   context.streams.data(

@@ -86,6 +86,17 @@ describe("max bot auth", () => {
     expect(missing.code).not.toBe(0)
     expect(missing.stdout + missing.stderr).toContain("max bot auth set")
   })
+
+  it("forgets the profile's token on remove, without asking MAX, and leaves other profiles' tokens", async () => {
+    store().write(GOOD)
+    store("staging").write(GOOD)
+    const { code, stdout } = await max(["bot", "auth", "remove", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toEqual({ profile: "default", removed: ["keyring"] })
+    expect(store().read()).toBeUndefined()
+    expect(store("staging").read()?.token).toBe(GOOD)
+    expect(requests).toHaveLength(0)
+  })
 })
 
 describe("max bot me", () => {

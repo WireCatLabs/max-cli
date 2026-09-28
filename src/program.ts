@@ -1,3 +1,4 @@
+import { appendFileSync } from "node:fs"
 import {
   CliError,
   type CliErrorDetails,
@@ -162,6 +163,8 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
   // Commands print through this rather than the process's own streams, so a test sees their output
   // and not only help and errors.
   provide(program, { ...options, streams })
+  const argvLog = process.env.MAX_TEST_ARGV_LOG
+  if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
 
   // Commander calls process.exit for --help and --version. A library that kills the process cannot
   // be tested and cannot be embedded, so it throws instead and `run` decides the exit code.
@@ -204,6 +207,10 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     }
 
     if (error instanceof CommanderError) {
+      // --version exits before any action, so the preAction log never sees it.
+      if (argvLog && error.code === "commander.version") {
+        appendFileSync(argvLog, `${JSON.stringify({ command: "", options: ["--version"] })}\n`)
+      }
       // `max chat list` — one letter short of `chats` — now reports an unknown command `list`,
       // which is baffling on its own. This is the everyday cost of the first word being a profile.
       const first = rest[0]
@@ -309,4 +316,22 @@ interface ReportedError {
 const report = (streams: Streams, options: RunOptions, error: ReportedError): void => {
   const interactive = options.tty ?? process.stdout.isTTY === true
   streams.diagnostic(interactive ? `\u2717 ${visibleControls(error.message)}` : JSON.stringify({ error }))
+}
+
+/**
+ * Under vitest only (`src/testing/sandbox.ts`): which command ran and which options were typed, for
+ * `pnpm test:matrix`. Words and option names — never an argument's value.
+ */
+const logParsed = (file: string, action: Command): void => {
+  const words: string[] = []
+  const options: string[] = []
+  for (let at: Command | null = action; at; at = at.parent) {
+    if (at.parent) words.unshift(at.name())
+    for (const option of at.options) {
+      const key = option.attributeName()
+      if (at.getOptionValueSource(key) !== "cli" || !option.long) continue
+      if (option.negate === (at.getOptionValue(key) === false)) options.push(option.long)
+    }
+  }
+  appendFileSync(file, `${JSON.stringify({ command: words.join(" "), options })}\n`)
 }

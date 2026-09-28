@@ -137,6 +137,12 @@ describe("max bot people show", () => {
     expect(stderr).toContain("44")
   })
 
+  it("keeps only the latest --limit messages of the private chat", async () => {
+    const card = await json(["first", "bot", "people", "show", "@ann", "--limit", "1"])
+    expect(card.messages.map((message: { text: string }) => message.text)).toEqual(["hello Ann \u001b[2J"])
+    expect(requests).toEqual([])
+  })
+
   it("re-reads the private chat from MAX with --refresh, in exactly one request", async () => {
     await json(["first", "bot", "people", "show", "@ann", "--refresh"])
     expect(requests).toEqual(["GET /messages?chat_id=500&count=20"])
@@ -149,6 +155,12 @@ describe("max bot messages search --from", () => {
     expect(all.map((message: { id: string }) => message.id)).toEqual(["mid.a1", "mid.d1"])
     const some = (await json(["first", "bot", "messages", "search", "team", "--from", "@ann", "--from", "Bob"])).items
     expect(some.map((message: { id: string }) => message.id)).toEqual(["mid.b1", "mid.a1"])
+  })
+
+  it("stops at --limit and says there is more", async () => {
+    const found = await json(["first", "bot", "messages", "search", "--from", "@ann", "--limit", "1"])
+    expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a1"])
+    expect(found).toMatchObject({ limit: 1, hasMore: true })
   })
 })
 

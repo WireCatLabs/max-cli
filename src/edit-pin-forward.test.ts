@@ -128,6 +128,17 @@ describe("forwarding", () => {
     expect(journalOf("e-forward")).toMatchObject([{ chatId: "222", kind: "forward", outcome: "sent" }])
   })
 
+  it("`--cid` reuses the client id given, and `--silent` delivers without a notification", async () => {
+    const { environment, sentWith } = messenger()
+    const argv = ["e-fwd-cid", "messages", "forward", "111", MESSAGE, "--to", "222", "--cid", "4242", "--silent"]
+    expect((await runWith(argv, environment)).code).toBe(0)
+
+    expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
+      expect.objectContaining({ notify: false, message: expect.objectContaining({ cid: 4242 }) }),
+    ])
+    expect(journalOf("e-fwd-cid")).toMatchObject([{ kind: "forward", outcome: "sent", cid: 4242 }])
+  })
+
   it("repeats a lost forward once with the same cid, then answers outcome_unknown with the command to repeat", async () => {
     const { environment, sentWith } = messenger({ send: () => undefined })
     const lost = await runWith(["e-lost", "messages", "forward", "111", MESSAGE, "--to", "222"], environment)

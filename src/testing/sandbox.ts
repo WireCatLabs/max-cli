@@ -2,6 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterAll } from "vitest"
+import { ARGV_LOG } from "./argv-log.js"
 
 /**
  * **Moves the whole installation into a temporary directory, for every test file.**
@@ -37,6 +38,7 @@ process.env.TMPDIR = sandbox
 delete process.env.MAX_TOKEN
 delete process.env.MAX_PROFILE_LOCK
 process.env.MAX_TEST_SANDBOX = "1"
+process.env.MAX_TEST_ARGV_LOG = ARGV_LOG
 // A terminal running the suite must not make it ask npm; the tests that want the check pass their own env.
 process.env.MAX_NO_UPDATE_CHECK = "1"
 

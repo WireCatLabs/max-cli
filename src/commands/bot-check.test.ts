@@ -124,6 +124,38 @@ describe("max bot chats check", () => {
     expect(deletes()).toEqual(["DELETE /messages?message_id=mid.2"])
   })
 
+  it("acts no more than --max-actions times, and skips the rest with the reason", async () => {
+    new ModerationRules(moderationPathFor("bc-cap")).set("-100", null, "invites", "delete")
+
+    const { code, stdout } = await bot("bc-cap", [
+      "chats",
+      "check",
+      "-100",
+      "--allow-dangerous",
+      "--max-actions",
+      "0",
+      "--json",
+    ])
+
+    expect(code).toBe(0)
+    expect(rows(stdout)).toEqual([
+      expect.objectContaining({
+        action: "delete",
+        outcome: "skipped",
+        reason: "over the limit of 0 actions per check",
+      }),
+    ])
+    expect(deletes()).toEqual([])
+  })
+
+  it("refuses a --max-actions that is not a whole number, before asking MAX", async () => {
+    const { code, stderr } = await bot("bc-cap-bad", ["chats", "check", "-100", "--max-actions", "two", "--json"])
+
+    expect(code).toBe(2)
+    expect(stderr).toContain("--max-actions")
+    expect(calls).toEqual([])
+  })
+
   it("judges joins kept by updates watch", async () => {
     new ModerationRules(moderationPathFor("bc-joins")).set("-100", null, "blocked", "55")
     JoinLog.for("bc-joins").add([{ chatId: "-100", userId: "55", name: "Blocked One", event: "add", at: now - 60_000 }])
@@ -142,5 +174,18 @@ describe("max bot chats rules", () => {
 
     expect(set.code).toBe(0)
     expect(JSON.parse(shown.stdout)).toMatchObject({ chatId: "-100", saved: true, rules: { links: "delete" } })
+  })
+
+  it("puts one rule back to its default with unset, leaving the others", async () => {
+    await bot("br-unset", ["chats", "rules", "set", "-100", "links", "delete", "--json"])
+    await bot("br-unset", ["chats", "rules", "set", "-100", "invites", "remove", "--json"])
+    const defaults = JSON.parse((await bot("br-fresh", ["chats", "rules", "show", "-100", "--json"])).stdout).rules
+
+    const unset = await bot("br-unset", ["chats", "rules", "unset", "-100", "links", "--json"])
+
+    expect(unset.code).toBe(0)
+    expect(JSON.parse(unset.stdout).rules).toMatchObject({ links: defaults.links, invites: "remove" })
+    expect(defaults.links).not.toBe("delete")
+    expect(calls).toEqual([])
   })
 })

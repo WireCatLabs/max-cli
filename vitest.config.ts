@@ -7,6 +7,7 @@ export default defineConfig({
     // Every test file runs with config, state and cache pointed at a temporary directory. See the
     // file for why this is not optional.
     setupFiles: ["src/testing/sandbox.ts", "src/testing/unscripted.ts"],
+    globalSetup: ["src/testing/argv-log.ts"],
     coverage: {
       provider: "v8",
       include: ["src/**/*.ts"],
@@ -29,10 +30,10 @@ export default defineConfig({
       reporter: ["text-summary", "json-summary", "html"],
       // A little under what the suite reaches (2026-09-28), so coverage can rise and not fall.
       thresholds: {
-        lines: 90,
-        statements: 88,
-        functions: 86,
-        branches: 77,
+        lines: 92,
+        statements: 90,
+        functions: 88,
+        branches: 79,
         perFile: { lines: 50 },
       },
     },

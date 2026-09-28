@@ -1,4 +1,6 @@
+import { captureStreams } from "@leemour/cli-core"
 import { describe, expect, it } from "vitest"
+import { run } from "../program.js"
 import { serverEntry } from "./mcp.js"
 
 const SCRIPT = "C:\\Users\\x\\AppData\\Roaming\\npm\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js"
@@ -45,5 +47,35 @@ describe("max mcp config", () => {
     const npx = "/home/x/.npm/_npx/1a2b/node_modules/@leemour/max-cli/dist/bin/max.js"
 
     expect(() => entry({ scriptPath: npx })).toThrow(/npx/)
+  })
+})
+
+describe("the config commands, through the CLI", () => {
+  const cli = async (argv: string[]) => {
+    const streams = captureStreams()
+    const code = await run(argv, { streams, tty: false })
+    return { code, json: JSON.parse(streams.stdout.join("")) }
+  }
+
+  it("`mcp config` carries every write flag into the server's arguments", async () => {
+    const flags = ["--allow-send", "--confirm-send", "--allow-mark-read", "--allow-delete", "--allow-moderate"]
+    const { code, json } = await cli(["work", "mcp", "config", ...flags, "--json"])
+    expect(code).toBe(0)
+    expect(json.mcpServers["max-work"].args.slice(-6)).toEqual(["mcp", ...flags])
+  })
+
+  it("`bot mcp config` names the bot's server and carries its flags", async () => {
+    const flags = ["--allow-send", "--confirm-send", "--allow-delete", "--allow-moderate"]
+    const { code, json } = await cli(["shop", "bot", "mcp", "config", ...flags, "--json"])
+    expect(code).toBe(0)
+    const [name, server] = Object.entries(json.mcpServers)[0] as [string, { args: string[] }]
+    expect(name).toBe("max-bot-shop")
+    expect(server.args.slice(-7)).toEqual(["shop", "bot", "mcp", ...flags])
+  })
+
+  it("`models audio list` names every model and marks the default, with none downloaded here", async () => {
+    const { code, json } = await cli(["models", "audio", "list", "--json"])
+    expect(code).toBe(0)
+    expect(json.items).toContainEqual(expect.objectContaining({ id: "gigaam-v3", default: true, downloaded: false }))
   })
 })

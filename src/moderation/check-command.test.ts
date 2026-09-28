@@ -96,4 +96,51 @@ describe("max chats check", () => {
     expect(again.json[0]).toMatchObject({ outcome: "done" })
     expect(deletes()).toHaveLength(1)
   })
+
+  const deleting = (profile: string) => {
+    const rules = new ModerationRules(moderationPathFor(profile))
+    rules.set(String(GROUP.id), "Team", "invites", "delete")
+    rules.set(String(GROUP.id), "Team", "consent.delete", "allow")
+  }
+
+  it("`--dry-run` plans what it would delete, deletes nothing, and leaves the next check where it was", async () => {
+    const { environment, deletes } = group()
+    deleting("ck-dry")
+
+    const dry = await check(["ck-dry", "chats", "check", "Team", "--dry-run", "--json"], environment)
+    const real = await check(["ck-dry", "chats", "check", "Team", "--json"], environment)
+
+    expect(dry.json).toEqual([
+      expect.objectContaining({ messageId: "1", action: "delete", outcome: "planned", reason: "--dry-run" }),
+    ])
+    expect(real.json).toEqual([expect.objectContaining({ messageId: "1", outcome: "done" })])
+    expect(deletes()).toHaveLength(1)
+  })
+
+  it("`--max-actions` stops acting at the limit and skips the rest, naming why", async () => {
+    const { environment, deletes } = group()
+    deleting("ck-cap")
+
+    const capped = await check(["ck-cap", "chats", "check", "Team", "--max-actions", "0", "--json"], environment)
+    const refused = await check(["ck-cap", "chats", "check", "Team", "--max-actions", "-1", "--json"], environment)
+
+    expect(capped.json).toEqual([
+      expect.objectContaining({ messageId: "1", outcome: "skipped", reason: "over the limit of 0 actions per check" }),
+    ])
+    expect(deletes()).toEqual([])
+    expect(refused.code).toBe(2)
+  })
+
+  it("`--since` judges only what came after it, and does not move the saved point", async () => {
+    const { environment } = group()
+
+    const later = await check(
+      ["ck-since", "chats", "check", "Team", "--since", new Date(at(25)).toISOString(), "--json"],
+      environment,
+    )
+    const saved = await check(["ck-since", "chats", "check", "Team", "--json"], environment)
+
+    expect(later.json).toEqual([])
+    expect(saved.json).toEqual([expect.objectContaining({ messageId: "1", rule: "invites" })])
+  })
 })

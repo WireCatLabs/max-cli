@@ -229,6 +229,15 @@ describe("changing a group", () => {
     ])
   })
 
+  it("`members add --history` lets the people added see the messages from before", async () => {
+    const { environment, sent } = messenger()
+    await runWith(["gr-history", "chats", "members", "add", "Team", "20000002", "--history"], environment)
+
+    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toMatchObject([
+      { userIds: [20000002], operation: "add", showHistory: true },
+    ])
+  })
+
   it("makes an admin with the rights summed as MAX takes them, and refuses a right it does not know", async () => {
     const { environment, sent } = messenger()
     const made = await runWith(
@@ -273,6 +282,32 @@ describe("changing a group", () => {
     expect((await runWith(["gr-update", "chats", "update", "Team", "--title", "Crew"], environment)).code).toBe(0)
     expect((await runWith(["gr-update", "chats", "update", "Team"], environment)).code).toBe(2)
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: -70000000000001, theme: "Crew" }])
+  })
+
+  it("`update --description` sends the description alone, leaving the title as it is", async () => {
+    const { environment, sent } = messenger()
+    expect(
+      (await runWith(["gr-describe", "chats", "update", "Team", "--description", "Our team"], environment)).code,
+    ).toBe(0)
+    expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: -70000000000001, description: "Our team" }])
+  })
+
+  it("`settings` sends each flag given under the name MAX has for it", async () => {
+    const { environment, sent } = messenger()
+    const argv = ["gr-flags", "chats", "settings", "Team", "--only-admins-add", "on", "--only-admins-call", "off"]
+    await runWith([...argv, "--only-owner-edits-info", "on", "--members-see-link", "off"], environment)
+
+    expect(sent(Opcode.CHAT_UPDATE)).toEqual([
+      {
+        chatId: -70000000000001,
+        options: {
+          ONLY_ADMIN_CAN_ADD_MEMBER: true,
+          ONLY_ADMIN_CAN_CALL: false,
+          ONLY_OWNER_CAN_CHANGE_ICON_TITLE: true,
+          MEMBERS_CAN_SEE_PRIVATE_LINK: false,
+        },
+      },
+    ])
   })
 
   it("`settings` reads without sending, and changes only the flags given", async () => {

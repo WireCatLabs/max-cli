@@ -114,7 +114,7 @@ each request's duration.
 pnpm test:coverage              # CI runs this; the report is in coverage/index.html
 ```
 
-`vitest.config.ts` holds the floor: lines 90 %, statements 88 %, functions 86 %, branches 77 % over
+`vitest.config.ts` holds the floor: lines 92 %, statements 90 %, functions 88 %, branches 79 % over
 the whole of `src/`, and **every file at least 50 % of its lines**. A change that drops below fails
 CI. The numbers sit just under what the suite reached on 2026-09-28; raise them when coverage rises,
 never lower them to let a change through — write the test instead.
@@ -122,6 +122,60 @@ never lower them to let a change through — write the test instead.
 Left out, each for a reason written beside it in the config: generated code, types-only files, the
 entry point, the Bun driver (`pnpm smoke:bun` runs it), and the commands that start a process that
 runs until stopped or download a model — those are the live scenarios' job.
+
+## Every command and option has a test, or a reason
+
+```sh
+pnpm test:matrix       # the suite, then docs/dev/test-matrix.md; fails on any ❌
+```
+
+[`test-matrix.md`](test-matrix.md) lists every command and option of `max` and marks each ✅ (a test
+drove it through `run()`), ⛔ (not testable offline — the reason and where it is checked instead) or
+❌ (nothing). CI fails on a ❌ and on a stale ⛔ (`NEED-360`: no baseline, no exceptions).
+
+It is **measured, not searched for** (`NEED-359`): under vitest, `run()` appends each parsed command
+path and the option names given to `coverage/argv.jsonl` — words and names, never a value
+(`src/program.ts`, `logParsed`). So a flag a test only *mentions* does not count, and a flag declared
+but never passed anywhere shows up. A test that calls a function directly does not count either:
+the matrix is about what a person types.
+
+The ⛔ list is `scripts/test-matrix-untested.ts`, each entry with its reason. Adding a command or an
+option means adding the test that passes it — or, when it truly cannot run offline, an entry there
+naming the live scenario that covers it.
+
+## Cross-cutting checks
+
+What holds for every command, how to produce it, and the test that pins it.
+
+| Behaviour | How to produce it | Expect | Pinned by |
+|---|---|---|---|
+| Machine output | `--json` / `--jsonl`, or stdout not a terminal | stdout: one JSON value (or one per line), nothing else; diagnostics on stderr | `src/output.test.ts`, `src/commands/commands.test.ts` |
+| An error | any refusal with `--json` | exit code from the table in [`../commands.md`](../commands.md); stderr one `{"error":{code,message}}` | `src/program.test.ts` |
+| Trace and record | `--trace`, `--record`, then `max runs list\|show` | events on stderr, never content; a run directory | `src/runs/recording.test.ts`, `src/commands/bot.test.ts` |
+| A failed run is kept | any failure, no flag | `max runs list` shows it with `keptBecauseFailed` | `src/runs/run-log.test.ts`, `src/report.test.ts` |
+| `--quiet` | any command | notes gone, data and errors kept | `src/inbox.test.ts`, `src/client.test.ts` |
+| No session | a profile never logged in | exit 4, names `max <p> session start` | `src/runs/recording.test.ts`, `src/client.test.ts` |
+| A bot-only profile | a personal command on it | exit 4, names `max <p> bot …` | `src/client.test.ts` |
+| Read-only | `config set readOnly true` | every write refused, exit 5, nothing sent | `src/send-guards.test.ts`, `src/permissions.test.ts` |
+| `allow` | `config set allow send` | other writes refused with the `config set` that allows them | `src/permissions.test.ts`, `src/commands/bot.test.ts` |
+| Locked profile | `MAX_PROFILE_LOCK=a max b …` | refused, exit 5 | `src/config.test.ts`, `src/send-guards.test.ts` |
+| Login paused | MAX refused logins for too many attempts | no login until the time given, exit 8 | `src/login-limit.test.ts` |
+| A cache from a newer `max` | schema above what this build speaks | still works, the copy ignored, `doctor` says so | `src/cache/schema.test.ts`, `src/cache/profile.test.ts` |
+| `--offline` | a read with it | no connection at all; refused for writes | `src/client.test.ts`, `src/export.test.ts` |
+| `--timeout` | `--timeout 1s` against no answer | exit on time; a write in flight is `outcome_unknown` | `src/deadline.test.ts`, `src/commands/bot.test.ts` |
+| Outcome unknown | a send with no answer | `outcome_unknown` with the `cid` to repeat, never "failed" | `src/client.test.ts`, `src/edit-pin-forward.test.ts`, `src/mcp.test.ts` |
+| A config typo | an unknown key in `config.json` | exit 3, names the key and the known ones | `src/config.test.ts` |
+| Content never logged | a run with titles, names and texts in play | none of them in the events; the ids are | `src/client.test.ts` |
+
+## Profiles for the live checks
+
+The live scenarios below run on four profiles, named here by role; the real names and chat ids stay
+private (`docs_ai/plans/2026-09-28-live-scenarios.md`):
+
+- **personal A** — the owner; **personal B** — a second account that agreed to be acted on;
+- **bot T** — admin of the test group; **bot T2** — a second bot, for the cases a bot sees another.
+
+`max config show` lists them with their kind, `max <p> doctor` checks each; start there.
 
 ## The live checks, and why they are not tests
 

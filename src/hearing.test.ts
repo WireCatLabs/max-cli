@@ -207,3 +207,51 @@ describe("max review --transcribe", () => {
     expect(events).toContain("recognized")
   })
 })
+
+describe("--model and max messages transcribe", () => {
+  it("messages list and inbox take --model for the downloaded model", async () => {
+    installModel()
+    const voice = wire(10, THEM, "", true)
+    const { environment } = setup([voice])
+
+    const listed = await max(
+      ["h-model", "messages", "list", "111", "--transcribe", "--model", "gigaam-v3", "--json"],
+      environment,
+    )
+    expect(JSON.parse(listed.stdout[0] as string).items[0].transcript).toBe("перезвоню вечером")
+
+    const since = new Date(now - 60 * 60 * 1000).toISOString()
+    const inbox = await max(
+      ["h-model-inbox", "inbox", "--since", since, "--transcribe", "--model", "gigaam-v3", "--json"],
+      environment,
+    )
+    expect(JSON.parse(inbox.stdout[0] as string).chats[0].messages[0].transcript).toBe("перезвоню вечером")
+  })
+
+  it("refuses a model that is not one of the known ones, before hearing anything", async () => {
+    const { environment, events } = setup([wire(10, THEM, "", true)])
+    const { code, stderr } = await max(
+      ["h-model-bad", "messages", "list", "111", "--transcribe", "--model", "no-such-model", "--json"],
+      environment,
+    )
+    expect(code).not.toBe(0)
+    expect(stderr).toContain("no-such-model")
+    expect(events).not.toContain("recognized")
+  })
+
+  it("messages transcribe hears one voice message with the model named", async () => {
+    installModel()
+    const voice = wire(10, THEM, "", true)
+    const { environment, events } = setup([voice])
+
+    const { code, stdout, stderr } = await max(
+      ["h-one", "messages", "transcribe", "111", String(voice.id), "--model", "gigaam-v3", "--json"],
+      environment,
+    )
+
+    expect(stderr).toContain("transcribing with gigaam-v3 on this machine")
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout[0] as string)).toMatchObject({ text: "перезвоню вечером", model: "gigaam-v3" })
+    expect(events).toContain("recognized")
+  })
+})

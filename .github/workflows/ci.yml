@@ -29,6 +29,9 @@ jobs:
       # Generated files are committed, so a specification change that was not regenerated is a
       # stale tree rather than a surprise at runtime (OPS-3).
       - run: pnpm generate
+      # Every command and option has a test or a written reason (NEED-360); the page is rebuilt from
+      # this run's argv log, so the diff below also catches a stale test-matrix.md.
+      - run: node --experimental-strip-types scripts/test-matrix.ts --check
       - run: git diff --exit-code
 
   bun:
