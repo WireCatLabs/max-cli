@@ -216,6 +216,20 @@ describe("namesFrom", () => {
     expect(names.size).toBe(2)
   })
 
+  it("names a person as the owner renamed them, over their own name (CUSTOM beats ONEME)", () => {
+    const names = namesFrom([
+      {
+        id: 3,
+        names: [
+          { name: "Their Own", type: "ONEME" },
+          { name: "My Name For Them", type: "CUSTOM" },
+        ],
+      },
+    ])
+
+    expect(names.get("3")).toBe("My Name For Them")
+  })
+
   it("is empty rather than broken when there are no contacts", () => {
     expect(namesFrom(undefined).size).toBe(0)
   })

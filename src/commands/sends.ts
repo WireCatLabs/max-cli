@@ -16,7 +16,7 @@ export const sendsCommand = (): Command => {
       const { settings, renderer, format, run } = forCommand(this)
       await run("sends list", async () => {
         const entries = new SendJournal(sendsPathFor(settings.profile)).entries().reverse()
-        renderList(renderer, format, entries.slice(0, limit))
+        renderList(renderer, format, entries.slice(0, limit), { limit, hasMore: entries.length > limit })
         if (entries.length === 0) renderer.note(`profile ${settings.profile} has not tried to send anything`)
       })
     })

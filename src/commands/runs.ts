@@ -22,7 +22,10 @@ export const runsCommand = (): Command => {
       const { renderer, format } = outputFor(this)
       const runs = listRuns(runsDirFor())
 
-      renderList(renderer, format, runs.slice(0, options.limit))
+      renderList(renderer, format, runs.slice(0, options.limit), {
+        limit: options.limit,
+        hasMore: runs.length > options.limit,
+      })
 
       // An empty list reads as broken otherwise, and the reason is that nothing asked for a
       // record — recording is off unless it is asked for (`NEED-52`). The explanation is a

@@ -219,12 +219,15 @@ const chatKind = (value: unknown): ChatKind => {
   }
 }
 
-/** `names` is a list of `{name, type}`; the full name wins, and any name beats none. */
+/**
+ * `names` is a list of `{name, type}`. The name the owner gave them (`CUSTOM`, measured 2026-09-27)
+ * wins, as in the app; then the full name; any name beats none.
+ */
 const displayName = (value: unknown): string | null => {
   if (!Array.isArray(value)) return null
   const entries = value.map(asRecord).filter((entry): entry is Payload => entry !== undefined)
-  const full = entries.find((entry) => entry.type === "FULL_NAME")
-  return text(full?.name) ?? text(entries[0]?.name)
+  const named = (type: string) => text(entries.find((entry) => entry.type === type)?.name)
+  return named("CUSTOM") ?? named("FULL_NAME") ?? text(entries[0]?.name)
 }
 
 const digits = (value: unknown): string | null =>
