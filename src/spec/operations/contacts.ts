@@ -58,7 +58,8 @@ export const contactsUpdate = defineOperation({
       contactId: id(),
       action: v.literal("UPDATE"),
       firstName: v.pipe(v.string(), v.minLength(1)),
-      lastName: v.optional(v.string()),
+      /** Always present, `null` when there is none: without it MAX answers and changes nothing. */
+      lastName: v.nullable(v.string()),
     }),
   ]),
   response: v.looseObject({ contact: v.optional(v.looseObject({})) }),
@@ -72,6 +73,7 @@ export const contactsUpdate = defineOperation({
     sources: [
       "measured 2026-09-27: `max contacts add` then `remove` on a person the owner named; the owner saw the contact appear in the app",
       "measured 2026-09-27 (`pnpm probe:profile`), on a person who agreed: `UPDATE` answers `{contact}` and keeps the name as a `CUSTOM` entry beside theirs; `BLOCK` and `UNBLOCK` answer `{}`, and CONTACT_INFO shows `status: BLOCKED` in between",
+      'captured 2026-09-28 from web.max.ru renaming a contact: `{contactId: <wrapped id>, action: "UPDATE", firstName, lastName: null}`. Measured the same day: without `lastName` MAX answers `{contact}` with the old `CUSTOM` name and changes nothing; with `lastName: null` the rename holds on a separate CONTACT_INFO read',
       webClient,
       "PyMax 53103f0 `add_contact`, `remove_contact`",
     ],

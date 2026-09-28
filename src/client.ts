@@ -680,11 +680,7 @@ export class MaxClient {
 
     /** A name of your own for them, kept beside the one they chose; they do not see it. */
     rename: (reference: string, firstName: string, lastName?: string): Promise<Contact> =>
-      this.#contactAction(
-        "contact-rename",
-        { action: "UPDATE", firstName, ...(lastName === undefined ? {} : { lastName }) },
-        reference,
-      ),
+      this.#contactAction("contact-rename", { action: "UPDATE", firstName, lastName: lastName ?? null }, reference),
 
     /** Uploads phone numbers to MAX — other people's — under the names they were saved with. */
     import: (entries: PhoneBookEntry[]): Promise<ContactImport> =>
@@ -3032,7 +3028,7 @@ export const refuseWhilePaused = (state: SessionState): void => {
 
 type ContactWire =
   | { action: "ADD" | "REMOVE" | "BLOCK" | "UNBLOCK" }
-  | { action: "UPDATE"; firstName: string; lastName?: string }
+  | { action: "UPDATE"; firstName: string; lastName: string | null }
 
 export interface ProfileChange {
   firstName?: string

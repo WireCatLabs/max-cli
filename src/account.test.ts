@@ -126,6 +126,7 @@ describe("contacts", () => {
       ["contacts", "block", "20000002"],
       ["contacts", "unblock", "20000002"],
       ["contacts", "rename", "20000002", "Neighbour", "Ana"],
+      ["contacts", "rename", "20000002", "Neighbour"],
     ])
       expect((await runWith(argv, environment)).code).toBe(0)
 
@@ -133,6 +134,7 @@ describe("contacts", () => {
       { contactId: "20000002", action: "BLOCK" },
       { contactId: "20000002", action: "UNBLOCK" },
       { contactId: "20000002", action: "UPDATE", firstName: "Neighbour", lastName: "Ana" },
+      { contactId: "20000002", action: "UPDATE", firstName: "Neighbour", lastName: null },
     ])
   })
 
