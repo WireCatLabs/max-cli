@@ -65,7 +65,7 @@ describe("ChromiumSession over the DevTools pipe", () => {
     const browser = spawn(process.execPath, ["-e", FAKE_CHROME], {
       stdio: ["ignore", "ignore", "inherit", "pipe", "pipe"],
     })
-    const session = new ChromiumSession(browser, profile, 2_000)
+    const session = new ChromiumSession(browser, profile, 2_000, 10)
 
     expect(await session.waitForToken(10_000)).toBe("piped-token")
     await session.close()

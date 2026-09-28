@@ -62,6 +62,7 @@ const bot = async (profile: string, argv: string[]) => {
     tty: false,
     botStore: (name) => new BotTokenStore({ profile: name, keyring }),
     botUrl,
+    sleep: async () => {},
   })
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }

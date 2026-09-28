@@ -71,6 +71,7 @@ const max = async (argv: string[], tty = false) => {
     tty,
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
+    sleep: async () => {},
   })
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }

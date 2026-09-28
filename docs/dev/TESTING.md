@@ -84,6 +84,30 @@ The keyring is one injected function from `cli-core`, replaced by `memoryKeyring
 Setting a config directory would be necessary but not sufficient — one test that forgets it writes
 to the developer's actual keychain. The seam makes it impossible rather than discouraged.
 
+## No test waits for real
+
+A unit test takes milliseconds. One that takes a round second is sleeping in the code under test —
+a retry pause, a poll interval — and on a slow CI runner five of those cross vitest's 5 s limit
+(`OPS-16`: three tests failed that way, green on the rerun). The waits are injected instead:
+
+- `Environment.sleep` (`src/commands/context.ts`) reaches the personal client's
+  `attachment.not.ready` retry, the bot transport's retries, the bot upload's not-ready retry and
+  `bot updates watch`'s back-off. A test harness passes `sleep: async () => {}`.
+- `ChromiumSession`'s fourth argument is its poll interval.
+
+A new wait in the code gets the same seam, never a longer timeout in the test.
+
+**Where time goes:**
+
+```sh
+pnpm test:slow                  # the 20 slowest tests and the 10 slowest files
+pnpm build && bin/profile chats list --limit 5   # a CPU profile of one command, in .max/profiles/
+```
+
+`bin/profile` runs like `bin/max` (config, state and cache in the worktree) under Node's
+`--cpu-prof`; open the file in Chrome DevTools → Performance, or in VS Code. `--trace` already gives
+each request's duration.
+
 ## The live checks, and why they are not tests
 
 There is no automated suite against the real MAX, and there should not be: it needs a real account,

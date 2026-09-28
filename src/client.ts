@@ -1,4 +1,4 @@
-import { CliError } from "@leemour/cli-core"
+import { CliError, realSleep, type SleepLike } from "@leemour/cli-core"
 import type { CacheStore, PersonOrder, SyncSummary } from "./cache/store.js"
 import { delayMs } from "./config.js"
 import {
@@ -120,6 +120,8 @@ export interface MaxClientOptions {
   events?: (event: DiagnosticEvent) => void
   /** Asked before every send and told its outcome. Absent in tests that are not about it. */
   sends?: SendGuard
+  /** The wait between retries; a test passes one that returns at once. */
+  sleep?: SleepLike
 }
 
 /**
@@ -143,6 +145,7 @@ export class MaxClient {
   readonly #cache: CacheStore | undefined
   readonly #offline: boolean
   readonly #events: (event: DiagnosticEvent) => void
+  readonly #sleep: SleepLike
   readonly #sends: SendGuard | undefined
   readonly #invoke = ((operation, request) => this.#send(operation, request)) as Invoke
   readonly #wire = wireClient(this.#invoke)
@@ -160,6 +163,7 @@ export class MaxClient {
     cache,
     offline = false,
     events,
+    sleep,
     sends,
     fullLogin = false,
     resume,
@@ -172,6 +176,7 @@ export class MaxClient {
     this.#cache = cache
     this.#offline = offline
     this.#events = events ?? (() => {})
+    this.#sleep = sleep ?? realSleep
     this.#sends = sends
   }
 
@@ -2473,7 +2478,7 @@ export class MaxClient {
         return await send()
       } catch (error) {
         if (attempt >= 30 || !asCliError(error).message.includes("attachment.not.ready")) throw error
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await this.#sleep(1000, undefined, "retry")
       }
     }
   }

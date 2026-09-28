@@ -76,6 +76,7 @@ const max = async (argv: string[]) => {
     tty: false,
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
+    sleep: async () => {},
   })
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
@@ -121,6 +122,7 @@ describe("max bot people show", () => {
       tty: true,
       botStore: (profile) => new BotTokenStore({ profile, keyring }),
       botUrl,
+      sleep: async () => {},
     })
     const stdout = streams.stdout.join("\n")
     expect(code).toBe(0)

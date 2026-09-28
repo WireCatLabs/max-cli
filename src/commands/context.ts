@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import type { Renderer, RenderFormat, RetryConfig, Streams } from "@leemour/cli-core"
+import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@leemour/cli-core"
 import type { FetchLike } from "@leemour/cli-core/http"
 import type { Command } from "commander"
 import type { BotTokenStore } from "../bot/auth.js"
@@ -46,6 +46,8 @@ export interface Environment {
   botUrl?: string
   botRetry?: RetryConfig
   botRegistry?: (profile: string) => ChatRegistry
+  /** Every wait between retries or polls; tests pass one that returns at once. */
+  sleep?: SleepLike
 }
 
 /** One line from the person at the terminal; `secret` keeps it off the screen. */
@@ -173,6 +175,7 @@ export const contextFor = (
         warn: renderer.note,
         offline: flags.offline === true,
         sends: sharedJournal(guardFor(settings, renderer.warn), wire),
+        ...(environment.sleep ? { sleep: environment.sleep } : {}),
         ...(environment.connection ? { connection: environment.connection() } : wire ? { connection: wire } : {}),
         ...extra,
       })

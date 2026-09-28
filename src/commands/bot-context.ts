@@ -70,6 +70,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
       ...(environment.botUrl ? { baseUrl: environment.botUrl } : {}),
       ...(settings.timeoutMs === undefined ? {} : { timeoutMs: settings.timeoutMs }),
       ...(environment.botRetry ? { retry: environment.botRetry } : {}),
+      ...(environment.sleep ? { sleep: environment.sleep } : {}),
       ...(signal ? { signal } : {}),
       ...(recording ? { events: recording.events } : {}),
     })
@@ -89,6 +90,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
   const uploadFetch = () => environment.botFetch ?? botFetch()
   return {
+    sleep: environment.sleep,
     /** The run's sink, for the requests that do not go through the transport — the upload. */
     events: recording?.events,
     settings,

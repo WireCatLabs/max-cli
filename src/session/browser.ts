@@ -198,13 +198,15 @@ export class ChromiumSession implements Closeable {
   readonly #devtools: DevToolsPipe
   readonly #exited: Promise<void>
   readonly #graceMs: number
+  readonly #pollMs: number
   #page: { targetId: string; sessionId: string } | undefined
   #closing: Promise<void> | undefined
 
-  constructor(child: ChildProcess, profile: string, graceMs = 5_000) {
+  constructor(child: ChildProcess, profile: string, graceMs = 5_000, pollMs = 1_000) {
     this.#child = child
     this.#profile = profile
     this.#graceMs = graceMs
+    this.#pollMs = pollMs
     this.#devtools = new DevToolsPipe(child)
     this.#exited = new Promise((resolve) => {
       child.once("exit", () => resolve())
@@ -223,7 +225,7 @@ export class ChromiumSession implements Closeable {
       if (!running) throw new CliError("cancelled", "the browser was closed before the login finished")
       const token = await this.#storedToken().catch(() => undefined)
       if (token) return token
-      await delay(1_000)
+      await delay(this.#pollMs)
     }
     throw new CliError("timeout", `nobody logged in within ${Math.round(waitMs / 60_000)} minutes`)
   }
