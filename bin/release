@@ -45,7 +45,8 @@ fi
 report="docs_ai/releases/$version.md"
 [ -f "$report" ] || { echo "no release report $report — run the release skill first" >&2; exit 1; }
 grep -qx "Commit: $(git rev-parse HEAD)" "$report" || { echo "$report is for another commit than HEAD" >&2; exit 1; }
-grep -q '^Signed off:' "$report" || { echo "$report is not signed off by the owner" >&2; exit 1; }
+# A date, not the template's placeholder, so a report copied from the template does not pass as signed.
+grep -Eq '^Signed off: [0-9]{4}-[0-9]{2}-[0-9]{2}' "$report" || { echo "$report is not signed off by the owner" >&2; exit 1; }
 
 echo "== checks for $version =="
 pnpm install --frozen-lockfile

@@ -111,7 +111,7 @@ Write `docs_ai/releases/<version>.md` (the template is in `docs_ai/releases/READ
 - one row per step above: result and evidence — the `release:check` output, the changelog as
   accepted, the doc findings and where they were fixed, the requirements verdicts, the live
   scenario rows and the smoke result;
-- leave `Signed off:` for the owner. **Never write it yourself.**
+- no `Signed off:` line — the owner adds it, with the date (`Signed off: YYYY-MM-DD — owner`). **Never write it yourself.**
 
 Commit and push `docs_ai/`. Then tell the owner: the report path, and that `bin/release` on `main`
 publishes once they have signed it. Run `bin/release` only when they say so.
