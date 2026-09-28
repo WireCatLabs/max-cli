@@ -107,6 +107,23 @@ describe("max bot messages send", () => {
     expect(refusedRow).toMatchObject({ chatId: "-200", outcome: "refused" })
   })
 
+  it("sends --format as the markup and --reply-to as a reply link", async () => {
+    const argv = ["bot", "messages", "send", "-100", "**hi**", "--format", "markdown", "--reply-to", "mid.1", "--json"]
+    expect((await max(argv)).code).toBe(0)
+    expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({
+      text: "**hi**",
+      format: "markdown",
+      link: { type: "reply", mid: "mid.1" },
+    })
+  })
+
+  it("refuses a --format MAX does not know before sending anything", async () => {
+    const { code, stderr } = await max(["bot", "messages", "send", "-100", "hi", "--format", "bbcode", "--json"])
+    expect(code).not.toBe(0)
+    expect(stderr).toContain("bbcode")
+    expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
+  })
+
   it("has no hourly limit", async () => {
     for (let index = 0; index < 35; index++) {
       expect((await max(["quiet", "bot", "messages", "send", "-100", "x", "--json"])).code).toBe(0)
@@ -127,6 +144,9 @@ describe("max bot messages edit and delete", () => {
     await max(["bot", "messages", "send", "-100", "hello there", "--json"])
     expect((await max(["bot", "messages", "edit", "mid.9", "new text", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "PUT", url: "/messages?message_id=mid.9" })
+    expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "new text" })
+    expect((await max(["bot", "messages", "edit", "mid.9", "<b>new</b>", "--format", "html", "--json"])).code).toBe(0)
+    expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "<b>new</b>", format: "html" })
     expect((await max(["bot", "messages", "delete", "mid.9", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/messages?message_id=mid.9" })
     expect(JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items).toEqual([])

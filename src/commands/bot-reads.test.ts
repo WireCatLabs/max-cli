@@ -41,7 +41,7 @@ beforeAll(async () => {
       const answer =
         url === "/me"
           ? BOT
-          : url.startsWith("/chats/-100/pin")
+          : request.method !== "GET" && url.startsWith("/chats/-100/")
             ? `{"success": true}`
             : url.startsWith("/chats/-100")
               ? CHAT
@@ -187,6 +187,31 @@ describe("max bot chats", () => {
     expect((await max(["bot", "chats", "pin", "-100", "mid.1", "--json"])).code).not.toBe(0)
     expect(requests).toHaveLength(0)
     await max(["config", "set", "readOnly", "false"])
+  })
+
+  it("unpins, leaves and shows an action with the request each one names", async () => {
+    expect((await max(["bot", "chats", "unpin", "-100", "--json"])).code).toBe(0)
+    expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/pin", body: "" })
+    const action = await max(["bot", "chats", "action", "-100", "typing_on", "--json"])
+    expect(action.code).toBe(0)
+    expect(JSON.parse(action.stdout)).toEqual({ success: true })
+    expect(requests.at(-1)).toMatchObject({
+      method: "POST",
+      url: "/chats/-100/actions",
+      body: `{"action":"typing_on"}`,
+    })
+    expect((await max(["bot", "chats", "leave", "-100", "--json"])).code).toBe(0)
+    expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/members/me" })
+  })
+
+  it("refuses to leave a chat off the recipient list, asking MAX nothing", async () => {
+    new BotTokenStore({ profile: "listed", keyring }).write(TOKEN)
+    await max(["listed", "bot", "recipients", "add", "-200"])
+    requests.length = 0
+    const { code, stdout } = await max(["listed", "bot", "chats", "leave", "-100", "--json"])
+    expect(code).toBe(7)
+    expect(stdout).toBe("")
+    expect(requests.filter((request) => request.method !== "GET")).toHaveLength(0)
   })
 })
 

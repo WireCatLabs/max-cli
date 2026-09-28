@@ -46,13 +46,16 @@ const answer = (method: string, url: string, body: string): [number, string] => 
     return [200, sent(url.includes("user_id") ? "777" : "-100")]
   }
   if (url === "/messages/mid.9") return [200, POST]
+  if (url === "/messages/mid.9/comments/c1" && method === "GET") return [200, `{"id": "c1", "text": "first"}`]
   if (url.startsWith("/messages/mid.9/comments")) {
     return method === "GET" ? [200, `{"messages": [{"id": "c1", "text": "first"}]}`] : [200, `{"success": true}`]
   }
   if (url.startsWith("/chats/-100/members?count=")) {
     return [200, `{"members": [{"user_id": ${BIG}, "name": "Big"}], "marker": 7}`]
   }
-  if (url === "/chats/-100/members/admins" && method === "GET") return [200, `{"members": []}`]
+  if (url === "/chats/-100/members/admins" && method === "GET") {
+    return [200, `{"members": [{"user_id": ${BIG}, "name": "Big", "permissions": ["write"]}]}`]
+  }
   if (url.startsWith("/chats/-100/members")) return [200, `{"success": true}`]
   if (url.startsWith("/answers?")) return [200, `{"success": true}`]
   if (url === "/subscriptions" && method === "GET") {
@@ -208,6 +211,25 @@ describe("max bot messages send --file", () => {
     expect(writes()).toHaveLength(0)
   })
 
+  it("uploads as the --type given, whatever the file's extension", async () => {
+    const { code } = await max([
+      "bot",
+      "messages",
+      "send",
+      "-100",
+      "--file",
+      file("scan.bin"),
+      "--type",
+      "image",
+      "--json",
+    ])
+    expect(code).toBe(0)
+    expect(requests.find((request) => request.url?.startsWith("/uploads?"))?.url).toBe("/uploads?type=image")
+    expect(JSON.parse(writes().at(-1)?.body ?? "{}").attachments).toEqual([
+      { type: "image", payload: { photos: { a: { token: "photo-token" } } } },
+    ])
+  })
+
   it("never shows the upload URL, whatever goes wrong", async () => {
     const { code, stderr } = await max(["bot", "messages", "send", "-100", "--file", "/no/such/file.png", "--json"])
     expect(code).not.toBe(0)
@@ -225,6 +247,25 @@ describe("max bot uploads put", () => {
     expect(stdout).not.toContain("secret-signature")
     expect((await journal()).at(-1)).toMatchObject({ kind: "account", chatId: null, outcome: "sent" })
   })
+
+  it("uploads as the --type given instead of guessing from the extension", async () => {
+    const { code, stdout } = await max(["bot", "uploads", "put", file("notes.txt"), "--type", "image", "--json"])
+    expect(code).toBe(0)
+    expect(requests.find((request) => request.url?.startsWith("/uploads?"))?.url).toBe("/uploads?type=image")
+    expect(JSON.parse(stdout)).toEqual({ type: "image", payload: { photos: { a: { token: "photo-token" } } } })
+  })
+})
+
+describe("max bot recipients list", () => {
+  it("prints nothing while there is no list, then the chats added to it", async () => {
+    new BotTokenStore({ profile: "lister", keyring }).write(TOKEN)
+    expect(JSON.parse((await max(["lister", "bot", "recipients", "list", "--json"])).stdout).items).toEqual([])
+    await max(["lister", "bot", "recipients", "add", "-200"])
+    await max(["lister", "bot", "recipients", "add", "user:777"])
+    const items = JSON.parse((await max(["lister", "bot", "recipients", "list", "--json"])).stdout).items
+    expect(items.map((row: { id: string }) => row.id)).toEqual(["-200", "user:777"])
+    expect(requests).toHaveLength(0)
+  })
 })
 
 describe("max bot members and admins", () => {
@@ -238,6 +279,33 @@ describe("max bot members and admins", () => {
       marker: 7,
     })
     expect(requests.at(-1)?.url).toBe("/chats/-100/members?count=5")
+  })
+
+  it("continues a member list from --marker", async () => {
+    expect((await max(["bot", "members", "list", "-100", "--limit", "5", "--marker", "7", "--json"])).code).toBe(0)
+    expect(requests.at(-1)?.url).toBe("/chats/-100/members?count=5&marker=7")
+  })
+
+  it("removes a person without a ban by default, and with one on --block", async () => {
+    expect((await max(["bot", "members", "remove", "-100", "42", "--json"])).code).toBe(0)
+    expect(writes().at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/members?user_id=42" })
+    expect((await max(["bot", "members", "remove", "-100", "42", "--block", "--json"])).code).toBe(0)
+    expect(writes().at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/members?user_id=42&block=true" })
+  })
+
+  it("lists admins with ids above 2^53 as their digits", async () => {
+    const { code, stdout } = await max(["bot", "admins", "list", "-100", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).items).toEqual([{ user_id: BIG, name: "Big", permissions: ["write"] }])
+    expect(requests.at(-1)).toMatchObject({ method: "GET", url: "/chats/-100/members/admins" })
+  })
+
+  it("gives a new admin the title from --alias", async () => {
+    const argv = ["bot", "admins", "add", "-100", "5", "--permissions", "write", "--alias", "Модератор", "--json"]
+    expect((await max(argv)).code).toBe(0)
+    expect(JSON.parse(writes().at(-1)?.body ?? "{}")).toEqual({
+      admins: [{ user_id: 5, permissions: ["write"], alias: "Модератор" }],
+    })
   })
 
   it("adds people with their ids unquoted and exact, through the recipient list", async () => {
@@ -270,6 +338,47 @@ describe("max bot comments and callbacks", () => {
     expect(JSON.stringify(row)).not.toContain("secret comment")
     await max(["team", "bot", "recipients", "add", "-200"])
     expect((await max(["team", "bot", "comments", "delete", "mid.9", "c1", "--json"])).code).toBe(7)
+  })
+
+  it("asks for --limit comments, and refuses more than MAX gives at once", async () => {
+    expect((await max(["bot", "comments", "list", "mid.9", "--limit", "5", "--json"])).code).toBe(0)
+    expect(requests.at(-1)?.url).toBe("/messages/mid.9/comments?count=5")
+    requests.length = 0
+    expect((await max(["bot", "comments", "list", "mid.9", "--limit", "101", "--json"])).code).toBe(2)
+    expect(requests).toHaveLength(0)
+  })
+
+  it("gets one comment by its id", async () => {
+    const { code, stdout } = await max(["bot", "comments", "get", "mid.9", "c1", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toEqual({ id: "c1", text: "first" })
+    expect(requests.at(-1)).toMatchObject({ method: "GET", url: "/messages/mid.9/comments/c1" })
+  })
+
+  it("sends and edits a comment with its --format", async () => {
+    expect((await max(["bot", "comments", "send", "mid.9", "**hi**", "--format", "markdown", "--json"])).code).toBe(0)
+    expect(JSON.parse(writes().at(-1)?.body ?? "{}")).toEqual({ text: "**hi**", format: "markdown" })
+    expect((await max(["bot", "comments", "edit", "mid.9", "c1", "plain", "--json"])).code).toBe(0)
+    expect(writes().at(-1)).toMatchObject({ method: "PUT", url: "/messages/mid.9/comments?comment_id=c1" })
+    expect(JSON.parse(writes().at(-1)?.body ?? "{}")).toEqual({ text: "plain" })
+    expect((await max(["bot", "comments", "edit", "mid.9", "c1", "<b>x</b>", "--format", "html", "--json"])).code).toBe(
+      0,
+    )
+    expect(JSON.parse(writes().at(-1)?.body ?? "{}")).toEqual({ text: "<b>x</b>", format: "html" })
+    expect((await journal()).at(-1)).toMatchObject({ chatId: "-100", outcome: "sent" })
+  })
+
+  it("refuses to edit a comment in a chat off the recipient list", async () => {
+    await max(["team", "bot", "recipients", "add", "-200"])
+    requests.length = 0
+    expect((await max(["team", "bot", "comments", "edit", "mid.9", "c1", "x", "--json"])).code).toBe(7)
+    expect(writes()).toHaveLength(0)
+  })
+
+  it("answers a button by replacing its message with --text", async () => {
+    expect((await max(["bot", "callbacks", "answer", "cb.1", "--text", "Принято", "--json"])).code).toBe(0)
+    expect(writes().at(-1)).toMatchObject({ method: "POST", url: "/answers?callback_id=cb.1" })
+    expect(JSON.parse(writes().at(-1)?.body ?? "{}")).toEqual({ message: { text: "Принято" } })
   })
 
   it("answers a button with a notification", async () => {
@@ -322,6 +431,15 @@ describe("max bot webhooks", () => {
     expect(JSON.parse(left.stdout).items).toEqual([{ url: "https://example.org/other", time: 1 }])
     const rows = await journal()
     expect(JSON.stringify(rows)).not.toContain("very-secret-1")
+  })
+
+  it("lists the webhooks MAX has for the bot", async () => {
+    expect(JSON.parse((await max(["bot", "webhooks", "list", "--json"])).stdout).items).toEqual([])
+    subscriptions = ["https://example.org/hook"]
+    const { code, stdout } = await max(["bot", "webhooks", "list", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).items).toEqual([{ url: "https://example.org/hook", time: 1 }])
+    expect(requests.at(-1)).toMatchObject({ method: "GET", url: "/subscriptions" })
   })
 
   it("refuses a profile that may not set one before asking for the secret", async () => {
