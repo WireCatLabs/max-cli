@@ -245,7 +245,8 @@ max review --chat "Соседи" --unanswered 4    # в одной группе,
 
 ### Страницы
 
-У `chats list` и `contacts list` — три опции страниц; у остальных списков — только `--limit`:
+У `chats list` и `contacts list` — три опции страниц; у `messages list`, `inbox`, `sends list`, `runs list` —
+только `--limit`, у `chats members list` и `chats events` — ни одной:
 
 ```sh
 max contacts list --limit 5             # по пять в странице
