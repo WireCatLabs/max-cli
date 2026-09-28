@@ -138,3 +138,33 @@ rule as the fixtures — §24. Redact, or use an obviously synthetic value and s
 already exist in English stay English and are not translated: `ARCHITECTURE.md`, this file,
 `DECISIONS.md`, `REQUIREMENTS.md`, `TESTING.md`, `BACKLOG.md`. A new section added to one of them
 follows the language of the file it lands in. Do not mix languages inside one file.
+
+## The changelog
+
+`CHANGELOG.md` is read by someone deciding whether to upgrade, and by the GitHub release built from
+it. **A line that only names the change is not an entry.** «`bot messages search --limit` говорил
+`hasMore: false`» leaves the reader asking what that broke, whether it touched them, and what to do.
+
+Every entry answers, in plain Russian, in this order:
+
+1. **What changed, as the user sees it** — the bold lead, a whole sentence: the command, what it does
+   now, and what it did before.
+2. **Why** — one or two sentences, unless it is obvious (a new command needs no reason; a changed
+   permission does).
+3. **What to watch for** — who is affected, what can break or behave differently, and what to do
+   about it. Skip it only when nothing changes for anyone who does not use the new thing.
+
+```md
+- **Агент через `max mcp` закрывает опрос, только если профилю разрешено `edit`.** Раньше хватало
+  `reaction`.
+  Почему: закрытие правит сообщение с опросом, и команда `max polls close` всегда требовала `edit` —
+  агент и человек получали на одно действие разные права.
+  Что учесть: если в `allow` есть `reaction`, но нет `edit`, агент больше не видит `max_polls_close`;
+  добавьте `edit`. Без `allow` ничего не меняется.
+```
+
+Headings, only these, each at most once: `Что нового`, `Изменено — может сломать скрипты`,
+`Исправлено`, `Безопасность`, `Удалено`. Anything that changes a command's output, an exit code, an
+option, a permission or a config key goes under `Изменено — может сломать скрипты`. No backlog,
+journal or decision ids, no file paths, no internal names; a link to the doc page that describes it.
+`pnpm release:check` checks the shape; the content is the release skill's job and the owner's.

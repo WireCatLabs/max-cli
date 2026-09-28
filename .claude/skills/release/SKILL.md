@@ -42,16 +42,12 @@ here on your own judgement** — report each failure and what it means, then fix
 
 ## 2. The changelog
 
-Draft the top section of `CHANGELOG.md` from the merged PRs:
-
-- heading exactly `## <version> — DD.MM.YYYY`, and until the release is dated `## Не выпущено`;
-- subheadings only from: `Что нового`, `Изменено — может сломать скрипты`, `Исправлено`,
-  `Безопасность`, `Удалено` — each at most once;
-- Russian, for a person who uses `max`: what appeared, what broke, what still is not there. One bullet
-  per change, the bold lead says it, a link to the doc page where it is described;
-- no backlog, journal or decision ids, no file paths, no internal names;
-- anything that changes a command's output, an exit code, an option or a config key goes under
-  `Изменено — может сломать скрипты`.
+Draft the top section of `CHANGELOG.md` from the merged PRs, **by the rules in
+`docs/dev/CONVENTIONS.md`, "The changelog"**: heading exactly `## <version> — DD.MM.YYYY` (until then
+`## Не выпущено`), the five headings only, and every entry says **what changed as the user sees it,
+why (unless obvious), and what to watch for** — who is affected, what can break, what to do. Read
+each PR's body and diff for the why and the effect; a PR title is not enough, and a fix can hide in
+a PR titled as something else.
 
 Show the draft to the owner. **They accept or edit it** before it goes in.
 
