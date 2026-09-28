@@ -146,6 +146,31 @@ describe("max bot api get-updates", () => {
 })
 
 describe("max bot messages send --file", () => {
+  it("traces the upload as one request and one response, without its address or the file's name", async () => {
+    const { code, stderr } = await max([
+      "bot",
+      "messages",
+      "send",
+      "-100",
+      "look",
+      "--file",
+      file("cat.png"),
+      "--trace",
+      "--json",
+    ])
+    expect(code).toBe(0)
+    const events = stderr
+      .split("\n")
+      .filter(Boolean)
+      .map((line) => JSON.parse(line))
+    expect(events.filter((event) => event.operation === "upload.image")).toEqual([
+      expect.objectContaining({ event: "request", bytes: expect.any(Number) }),
+      expect.objectContaining({ event: "response", status: 200, outcome: "ok" }),
+    ])
+    expect(stderr).not.toContain("upload-host")
+    expect(stderr).not.toContain("cat.png")
+  })
+
   it("uploads an image without the bot token and sends it with the photo tokens", async () => {
     const { code } = await max(["bot", "messages", "send", "-100", "look", "--file", file("cat.png"), "--json"])
     expect(code).toBe(0)

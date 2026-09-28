@@ -89,6 +89,8 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
   const uploadFetch = () => environment.botFetch ?? botFetch()
   return {
+    /** The run's sink, for the requests that do not go through the transport — the upload. */
+    events: recording?.events,
     settings,
     renderer,
     streams,

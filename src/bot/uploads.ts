@@ -3,6 +3,7 @@ import { basename, extname } from "node:path"
 import { CliError, type ErrorCode, realSleep, type SleepLike } from "@leemour/cli-core"
 import { type FetchLike, statusToCode } from "@leemour/cli-core/http"
 import { parse } from "lossless-json"
+import type { DiagnosticEvent } from "../runs/events.js"
 import { plainJson } from "./transport.js"
 
 export const UPLOAD_TYPES = ["image", "video", "audio", "file"] as const
@@ -67,6 +68,8 @@ export const uploadFile = async (options: {
   fetch: FetchLike
   signal?: AbortSignal
   timeoutMs?: number
+  /** One request and one response; never the URL, which is a credential, nor the file's name. */
+  events?: (event: DiagnosticEvent) => void
 }): Promise<Attachment> => {
   const { path, type, endpoint } = options
   const name = basename(path)
@@ -84,15 +87,35 @@ export const uploadFile = async (options: {
     AbortSignal.timeout(options.timeoutMs ?? UPLOAD_TIMEOUT_MS),
     ...(options.signal ? [options.signal] : []),
   ]
+  const operation = `upload.${type}`
+  const emit = options.events ?? (() => {})
+  const started = Date.now()
+  emit({ event: "request", operation, bytes: stat.size })
   let response: Response
   try {
     response = await options.fetch(endpoint.url, { method: "POST", body: form, signal: AbortSignal.any(signals) })
   } catch {
+    emit({
+      event: "response",
+      operation,
+      durationMs: Date.now() - started,
+      outcome: "error",
+      errorCode: "network_error",
+    })
     throw new CliError("network_error", `the upload of ${name} did not finish; nothing was sent to the chat`, {
       retryable: false,
     })
   }
   const text = await response.text()
+  emit({
+    event: "response",
+    operation,
+    status: response.status,
+    bytes: Buffer.byteLength(text),
+    durationMs: Date.now() - started,
+    outcome: response.ok ? "ok" : "error",
+    ...(response.ok ? {} : { errorCode: statusToCode(response.status) }),
+  })
   if (!response.ok) {
     throw new CliError(
       statusToCode(response.status),
