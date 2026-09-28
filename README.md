@@ -15,6 +15,13 @@ max sales bot messages send "Команда продаж" "Сборка гото
 max messages send "Иван Петров" "Опаздываю на 15 минут"         # от вашего имени
 ```
 
+[![npm](https://img.shields.io/npm/v/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
+[![CI](https://github.com/leemour/max-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/leemour/max-cli/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/node/v/@leemour/max-cli)](https://nodejs.org/)
+[![Bun](https://img.shields.io/badge/bun-1.3%2B-f9f1e1)](https://bun.sh/)
+[![npm downloads](https://img.shields.io/npm/dm/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
+[![License: MIT](https://img.shields.io/npm/l/@leemour/max-cli)](LICENSE)
+
 ## Бот
 
 `max bot` работает с ботом через **официальный** [Bot API MAX](https://dev.max.ru/docs-api) по токену
@@ -148,14 +155,7 @@ max chats check "Поход" --allow-dangerous         # проверить гр
   готовую запись для их настроек печатает `max mcp config`. Там же есть команды `/catch-up` (что
   нового), `/review` (кто кому должен), `/reply` (черновик ответа) и `/find` (поиск). По умолчанию
   агент только читает. Отправку можно разрешить, в том числе с вашим подтверждением каждого
-  сообщения.
-
-[![npm](https://img.shields.io/npm/v/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
-[![CI](https://github.com/leemour/max-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/leemour/max-cli/actions/workflows/ci.yml)
-[![Node](https://img.shields.io/node/v/@leemour/max-cli)](https://nodejs.org/)
-[![Bun](https://img.shields.io/badge/bun-1.3%2B-f9f1e1)](https://bun.sh/)
-[![npm downloads](https://img.shields.io/npm/dm/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
-[![License: MIT](https://img.shields.io/npm/l/@leemour/max-cli)](LICENSE)
+  сообщения, а изменения аккаунта — контакты, группы, профиль — только в файле настроек.
 
 ## Что умеет
 
@@ -378,7 +378,7 @@ mkdir -p ~/.agents/skills/max-cli && max skill show > ~/.agents/skills/max-cli/S
 ### MCP-сервер для агентов без терминала
 
 Claude Desktop, Cursor и другие клиенты MCP подключаются к `max mcp` и работают с тем же
-аккаунтом. Без `--allow-send` агент только читает. С `--confirm-send` перед каждой отправкой вы
+аккаунтом. Без `--allow-send` и без `mcpTools` в настройках агент только читает. С `--confirm-send` перед каждой отправкой вы
 видите чат и текст и отвечаете «да» или «нет». Подробно — [docs/mcp.md](docs/mcp.md).
 
 ```sh

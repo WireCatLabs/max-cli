@@ -154,7 +154,7 @@ max shop bot messages list -100
 ## «is not a valid config»
 
 ```json
-{"error":{"code":"configuration_error","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, senderColors, record, keepRunsForDays, readOnly, allow, sendsPerHour, serve, updateCheck, transcribeModel"}}
+{"error":{"code":"configuration_error","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools"}}
 ```
 
 Код `3`. В файле настроек поле, которого нет в схеме — почти всегда опечатка, и сообщение
@@ -170,14 +170,14 @@ max shop bot messages list -100
 Код `2`. Переданы оба. Отказ, а не выбор одного из них: какой бы ни победил, узнать об этом
 можно было бы только по неверному ответу.
 
-## «no message … in this profile's record»
+## «--before takes a message id, an ISO 8601 time or 30m, 2h, 1d ago»
 
-Код `6`. `--before` получил id сообщения, которого нет в локальной копии — обычно потому, что
-этот чат ещё не читали, либо сообщение удалено и его нет уже и в истории, которую отдаёт MAX.
-Прочитайте чат один раз, либо передайте `--before` время в ISO 8601:
+Код `2`. `--before` не понял значение. Он принимает id сообщения — время берётся из самого id, читать
+чат раньше не нужно, — время в ISO 8601 или «сколько назад»:
 
 ```sh
 max messages list 0 --before 2026-09-20T01:00:00Z
+max messages list 0 --before 2h
 ```
 
 Голое число `--before` всегда читает как id сообщения, никогда как миллисекунды.
@@ -208,11 +208,13 @@ max chats list --timeout 30s     # на команду целиком, вклю�
 ## «matches N chats»
 
 ```text
-"Иван" matches 2 chats: Иван Петров (123), Иван и друзья (456)
+"Иван" matches 2 chats — name one by its id:
+  123  Иван Петров
+  456  Иван и друзья
 ```
 
 Код `2`. Часть названия подошла к нескольким чатам, и программа отказывается угадывать: отправить
-не в тот разговор нельзя отменить. Назовите точнее или используйте идентификатор из скобок.
+не в тот разговор нельзя отменить. Назовите точнее или используйте идентификатор из списка.
 
 ## «no chat matches»
 
@@ -283,4 +285,4 @@ max doctor report create   # записать отчёт в файл и пока
 
 Задачи на GitHub видны всем, и приложенный файл тоже.
 
-⚠ Не прикладывайте содержимое `~/.cache/max-cli/` — там лежат тексты сообщений.
+⚠ Не прикладывайте содержимое `~/.cache/max-cli/` и `~/.local/share/cli-messaging/` — там лежат тексты сообщений.

@@ -1,7 +1,8 @@
 # Установка
 
 `max` — одна команда. Ставится как обычный пакет npm, работает под Node и под Bun, ничего не
-компилирует при установке и не поднимает никаких фоновых процессов.
+компилирует при установке и сама ничего не запускает. Фоновый `max serve` появляется позже, когда
+его запустит первая команда (`serve` в [configuration.md](configuration.md)).
 
 ## Что нужно
 
@@ -82,7 +83,7 @@ max --help              # список команд
 | Что | Linux | macOS | Windows | Что внутри |
 |---|---|---|---|---|
 | настройки | `~/.config/max-cli/` | `~/Library/Preferences/max-cli/` | `%APPDATA%\max-cli\Config\` | `config.json`, и файл с токеном, если ключницы нет |
-| состояние | `~/.local/share/max-cli/` | `~/Library/Application Support/max-cli/` | `%LOCALAPPDATA%\max-cli\Data\` | `profiles/<имя>.json`, каталог `runs/` с записями запусков |
+| состояние | `~/.local/share/max-cli/` | `~/Library/Application Support/max-cli/` | `%LOCALAPPDATA%\max-cli\Data\` | `profiles/<имя>.json`, `bots/` — чаты, которые видели боты, и их журнал отправок, каталог `runs/` с записями запусков |
 | кэш | `~/.cache/max-cli/` | `~/Library/Caches/max-cli/` | `%LOCALAPPDATA%\max-cli\Cache\` | `<профиль>.db` — локальная копия чатов и сообщений |
 
 Точные пути на этой машине показывает `max doctor`.
@@ -133,11 +134,12 @@ max update --check    # только сказать, есть ли новее; �
 
 ```sh
 max session end                        # забыть токен ДО удаления команды
+max <бот> bot auth remove              # и токен каждого бота
 npm uninstall -g @leemour/max-cli
 rm -rf ~/.config/max-cli ~/.local/share/max-cli ~/.cache/max-cli ~/.local/share/cli-messaging
 ```
 
-`max session end` стирает токен из ключницы. Если сначала удалить команду, запись в ключнице
+`max session end` и `bot auth remove` стирают токены из ключницы. Если сначала удалить команду, запись в ключнице
 останется — безвредно, но лежать будет.
 
 ## Дальше

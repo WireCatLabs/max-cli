@@ -110,6 +110,8 @@ Run `max --help` for the commands, or `max nonsense account show` if "nonsense" 
 | Что | Где |
 |---|---|
 | токен | ключница ОС, служба `max-cli`, запись — имя профиля |
+| токен бота | ключница ОС, служба `max-cli`, запись `bot:<профиль>`; или `MAX_BOT_TOKEN` |
+| чаты, которые видел бот | `~/.local/share/max-cli/bots/` |
 | устройство, счётчик входов, `viewerId` | `~/.local/share/max-cli/profiles/<профиль>.json`, режим `0600` |
 | настройки | `~/.config/max-cli/config.json` |
 

@@ -245,7 +245,8 @@ max review --chat "Соседи" --unanswered 4    # в одной группе,
 
 ### Страницы
 
-У каждой команды со списком — одни и те же три опции:
+У `chats list` и `contacts list` — три опции страниц; у `messages list`, `inbox`, `sends list`, `runs list` —
+только `--limit`, у `chats members list` и `chats events` — ни одной:
 
 ```sh
 max contacts list --limit 5             # по пять в странице
@@ -467,7 +468,7 @@ web.max.ru опросы не показывает: вместо опроса т�
 же проверки, что отправка: голос — как реакция, закрытие — как правка, новый опрос — как сообщение.
 В `sendsPerHour` считаются новый опрос и закрытие; голос, как и реакция, — нет. Голос не
 повторяется сам. Для агентов: `max_polls_vote` и `max_polls_create` в `max mcp` — только с
-`--allow-send`.
+`--allow-send`, `max_polls_close` — только с `polls` в настройке `mcpTools` ([mcp.md](mcp.md)).
 
 ### Контакты, профиль, папки
 
@@ -756,7 +757,8 @@ max watch --events --jsonl  # ещё правки, удаления и реак�
   чат изменился — всё это он учитывает. Если MAX сообщил о том, чего он учесть не может (удалены
   сообщения), сервер в фоне входит заново — не чаще раза в минуту.
 - **С `--events` строки другие:** `{"event": "message", "message": …}`, `{"event": "edit", "message": …}`,
-  `{"event": "delete", "chatId", "messageId"}`, `{"event": "reaction", "chatId", "messageId", "reactions"}`.
+  `{"event": "delete", "chatId", "chatTitle", "messageId"}`,
+  `{"event": "reaction", "chatId", "chatTitle", "messageId", "reactions"}`.
   Без флага вывод прежний — одно сообщение на строку. Кто печатает сообщение, `max watch` не
   показывает: MAX присылает это только клиенту, который держит чат открытым.
 - **`max watch` видит только то, что пришло, пока он и сервер подключены.** Пока связь с MAX
@@ -867,7 +869,9 @@ max export messages 111 --format jsonl --since 2026-09-01 > чат.jsonl
 ```
 
 Порядок, в котором решается любая настройка: **флаг → переменная окружения → файл → встроенное
-значение**. Опечатка в имени поля — ошибка с именем поля, а не молчаливое значение по умолчанию.
+значение**. В файле профиль сильнее общих `defaults`, а разделы `personal` и `bot` задают значения
+отдельно для личного аккаунта и для ботов (`max config set --personal …`, `--bot …`). Все поля,
+`defaultProfile` и `mcpTools` в том числе, — [configuration.md](configuration.md). Опечатка в имени поля — ошибка с именем поля, а не молчаливое значение по умолчанию.
 
 **Секрета в этом файле быть не может**: в схеме нет поля, куда его положить.
 
@@ -893,4 +897,5 @@ max config set --defaults allow send          # для всех профилей
 ## Дальше
 
 - [commands.md](commands.md) — полный справочник, собранный из программы
+- [configuration.md](configuration.md) — файл настроек целиком
 - [installation.md](installation.md) — установка, обновление, куда что ложится

@@ -39,6 +39,8 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   answer, then `AUTH_LOGIN_CHECK_PASSWORD` 115 `{trackId, password}`), and set or remove one
   (112 → 107 → 111). PyMax 2.4.1, code; a user logged in with it on the mobile client (PyMax #106).
   The password is typed at a prompt, never an argument.
+  Correction 2026-09-28: logging in with a password shipped with `session start` (PR #66,
+  `src/session/login.ts:51`). Left: setting and removing one (112 → 107 → 111).
 - **MAX-45** · P2 · Real migrations for the cache instead of "drop and refill". `MAX-44` keeps
   `messages` and `ranges` by copying shared columns; any change beyond adding a nullable column
   (a rename, a type change, a split table) still has no path. Owner, 2026-09-24: migrations, maybe
@@ -60,15 +62,15 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   unchanged. Left: typing — MAX pushes 129 only after `75 {chatId, subscribe: true}`, which the tab
   sends for the chat it has open and repeats every 60 s; `max serve` subscribes to nothing.
 - **MAX-4** · 🟡 P3 · Chat addressing. Done: an id, or a title matched exactly then as a fragment,
-  an ambiguous one refused (`src/client.ts:149`). Left: `@username`, a phone number, a chat the
+  an ambiguous one refused (`resolve`, `src/client.ts:325`; `pickChat`, `src/resolve.ts:13`). Left: `@username`, a phone number, a chat the
   account is not in.
 - **CLI-36** · P3 · The local copy made optional: a setting under which `max` writes no chats or
   messages to disk and answers everything from MAX (`--offline` and `messages search` then refuse).
   Owner, 2026-09-24: «я бы сделал хранение опциональным в P3». Starts at `openProfileCache`
-  (`src/commands/chats.ts:22` and every command that opens it).
+  (`src/cache/index.ts:32` and every command that opens it).
 - **CLI-5** · P3 · `max raw <operation>` — a debug escape hatch, validated against the spec, never
   arbitrary frames (REQUIREMENTS §22).
-- **MAX-52** · 🟡 P2 · 🚧 `feat/max-52-recorder-ids` (the recorder names which ids; the code waits on a recording) · The requests a real tab sends right after LOGIN: 21 on a fresh start
+- **MAX-52** · 🟡 P2 · The requests a real tab sends right after LOGIN: 21 on a fresh start
   (`48 48 272 35 32 302 163 208 27×4 209 28 22 48 28 35 53 209 35`) and 9 after a re-login. `max`
   sends none, which shows on every login — a stronger difference than telemetry. Decide per
   request: the read-only ones (272 folders, 302 banners, 163 call history, 27) could be copied; 22
@@ -100,9 +102,9 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **PROTO-2** · P2 · How long MAX remembers a `cid`. The send retry rests on deduplication measured
   seconds apart; minutes apart is unproven (`ARCHITECTURE.md` §6).
 - **PROTO-3** · P3 · The upper bound on `chatsCount` in `LOGIN`: 100 works, 200 is refused. The spec
-  caps it at 100 (`src/spec/operations/session.ts:52`).
+  caps it at 100 (`src/spec/operations/session.ts:109`).
 - **PROTO-6** · P3 · What the `messages` object in the `LOGIN` answer holds. Nothing reads it
-  (`src/spec/operations/session.ts:89`); `pnpm probe:ids` prints its type and key count.
+  (`src/spec/operations/session.ts:156`); `pnpm probe:ids` prints its type and key count.
 - **SPEC-3** · 🟡 P3 · Sanitized protocol fixtures, synthetic values only (REQUIREMENTS §24). Done:
   the web client's frames, headers and payload structure without values
   (`src/testing/fixtures/web-capture-2026-09-25.json`, `MAX-40`), and the recorder for more
@@ -126,11 +128,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   `type`), then offer `max chats members unban`.
 
 ## Foundation and risks
-
-**From the live run of 2026-09-28** (`docs_ai/plans/2026-09-28-live-scenarios.md`).
-
-- **OPS-17** · P1 · 🚧 `fix/live-run-findings` · Release 0.17: npm 0.16.0 lacks what `docs/`
-  describes (contacts rename/block/unblock, profile photo, `admins add --can read,link`).
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
