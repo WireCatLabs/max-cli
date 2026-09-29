@@ -1266,7 +1266,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, updateCheck, transcribeModel, defaultProfile |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, transcribeModel, defaultProfile |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction |
 
 | Опция | Что делает |
@@ -1285,7 +1285,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, updateCheck, transcribeModel, defaultProfile |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, transcribeModel, defaultProfile |
 
 | Опция | Что делает |
 |---|---|
@@ -1536,6 +1536,8 @@ max bot messages search [text] [options]
 
 | Опция | Что делает |
 |---|---|
+| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows |
+| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots |
 | `--limit <n>` | how many |
 | `--from <who>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several |
 
@@ -1553,8 +1555,9 @@ max bot messages between <people> [options]
 
 | Опция | Что делает |
 |---|---|
+| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows |
+| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots |
 | `--limit <n>` | how many of the latest messages from each chat |
-| `--all-bots` | look through every bot's local copy on this machine, not only this one's |
 
 #### `max bot messages send`
 
@@ -1777,8 +1780,9 @@ max bot people show <who> [options]
 
 | Опция | Что делает |
 |---|---|
+| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows |
+| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots |
 | `--limit <n>` | how many messages from the private chat |
-| `--all-bots` | look through every bot's local copy on this machine, not only this one's |
 | `--refresh` | read the private chat with them from MAX first — one request |
 
 ### `max bot recipients`

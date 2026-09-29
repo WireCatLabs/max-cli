@@ -11,6 +11,8 @@ import type { MessageStore, StoredHit } from "@leemour/cli-messaging/store"
 import { Command } from "commander"
 import { accountOf, fromStore, keep, PROVIDER } from "../bot/keep.js"
 import { KINDS } from "../bot/map.js"
+import { ChatRegistry, registryProfiles } from "../bot/registry.js"
+import { asFirstWord } from "../profile.js"
 import { botContext } from "./bot-context.js"
 import { wholeNumber } from "./paging.js"
 
@@ -19,21 +21,78 @@ type Context = ReturnType<typeof botContext>
 /** What "common chats" rests on: who has written where in this copy, not who is a member. */
 const BASIS = "messages seen"
 
-/** This bot's messages, or every bot's on this machine — identities are per provider, so a person is the same in both. */
-const scopeOf = (context: Context, allBots: boolean) => {
-  if (allBots) return { filter: { provider: PROVIDER }, account: undefined }
-  const botId = context.registry.botId()
-  if (!botId) {
-    throw new CliError(
-      "not_found",
-      "nothing is recorded for this bot on this machine — run `bot messages list <chat>` once",
-    )
-  }
-  return { filter: { account: accountOf(botId) }, account: botId }
+/** What a read may reach beyond this bot: `--all-bots`, or `--bots` naming some (owner, 2026-09-29). */
+export interface Across {
+  allBots?: boolean
+  bots?: string[]
 }
 
-const resolve = (store: MessageStore, references: string[], account: string | undefined): Contact[] => {
-  const people = store.people(PROVIDER, account ? { account } : {})
+type PeopleScope = { account: string } | { accounts: string[] }
+
+/**
+ * This bot's copy, or — when the command asks and `readOtherBots` allows — other bots' copies too.
+ * Identities are per provider, so a person is the same in all of them.
+ */
+const scopeOf = (context: Context, across: Across = {}) => {
+  const own = context.registry.botId()
+  const asked = across.allBots === true || (across.bots?.length ?? 0) > 0
+  if (!asked) {
+    if (!own) {
+      throw new CliError(
+        "not_found",
+        "nothing is recorded for this bot on this machine — run `bot messages list <chat>` once",
+      )
+    }
+    return { filter: { account: accountOf(own) }, people: { account: own } as PeopleScope }
+  }
+  const profile = context.settings.profile
+  const allowed = context.settings.readOtherBots
+  const fix = `max ${asFirstWord(profile)}config set --bot readOtherBots true, or a list of bots`
+  if (allowed === false) {
+    throw new CliError(
+      "permission_error",
+      `profile ${profile} may not read other bots' copies (readOtherBots is off, from the ` +
+        `${context.settings.sources.readOtherBots}) — to allow it: ${fix}`,
+    )
+  }
+  const named = across.allBots ? (allowed === true ? registryProfiles() : [...allowed]) : (across.bots ?? [])
+  if (allowed !== true) {
+    const refused = named.filter((name) => !allowed.includes(name))
+    if (refused.length > 0) {
+      throw new CliError(
+        "permission_error",
+        `profile ${profile} may read only ${allowed.join(", ") || "no other bot"} (readOtherBots) — not ${refused.join(", ")}`,
+      )
+    }
+  }
+  const ids = named
+    .filter((name) => name !== profile)
+    .flatMap((name) => {
+      const id = new ChatRegistry(name).botId()
+      if (id) return [id]
+      if (across.allBots) return []
+      throw new CliError("not_found", `nothing is recorded for bot ${name} on this machine`)
+    })
+  const accounts = [...new Set([...(own ? [own] : []), ...ids])]
+  return { filter: { provider: PROVIDER, accounts }, people: { accounts } as PeopleScope }
+}
+
+/** `--all-bots` and `--bots`, on every command that reads the copy by person or text. */
+export const acrossOptions = (command: Command): Command =>
+  command
+    .option("--all-bots", "also read every other bot's copy on this machine that readOtherBots allows")
+    .option(
+      "--bots <profiles>",
+      "also read these bots' copies, comma separated — each allowed by readOtherBots",
+      (value) =>
+        value
+          .split(",")
+          .map((name) => name.trim())
+          .filter(Boolean),
+    )
+
+const resolve = (store: MessageStore, references: string[], scope: PeopleScope): Contact[] => {
+  const people = store.people(PROVIDER, scope)
   return references.map((reference) => pickPerson(reference, people))
 }
 
@@ -63,9 +122,9 @@ const nameLine = (person: Contact) =>
     [person.name ?? "(no name)", person.username && `@${person.username}`, person.id].filter(Boolean).join("  "),
   )
 
-const cardOf = (store: MessageStore, context: Context, who: string, allBots: boolean, limit: number) => {
-  const { filter, account } = scopeOf(context, allBots)
-  const [person] = resolve(store, [who], account) as [Contact]
+const cardOf = (store: MessageStore, context: Context, who: string, across: Across, limit: number) => {
+  const { filter, people } = scopeOf(context, across)
+  const [person] = resolve(store, [who], people) as [Contact]
   const rows = store.find({ ...filter, senders: [person.id], perChat: true, limit: 1 }).items
   const latest = rows.filter((hit, index) => rows.findIndex((other) => other.chatId === hit.chatId) === index)
   const kindOf = (hit: StoredHit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown"
@@ -94,22 +153,20 @@ export const peopleCommand = (): Command => {
     "people this bot has seen write — from the local copy on this machine, never asking MAX unless told to",
   )
 
-  command
-    .command("show <who>")
+  acrossOptions(command.command("show <who>"))
     .option("--limit <n>", "how many messages from the private chat", wholeNumber("--limit"))
-    .option("--all-bots", "look through every bot's local copy on this machine, not only this one's")
     .option("--refresh", "read the private chat with them from MAX first — one request")
     .description(
       "one person — an id, @username or part of a name: the chats they wrote in (with their last message " +
         "there) and the latest messages of their private chat with the bot",
     )
-    .action(async function (this: Command, who: string, options: { allBots?: boolean; refresh?: boolean }) {
+    .action(async function (this: Command, who: string, options: Across & { refresh?: boolean }) {
       const context = botContext(this, { offline: true })
       if (options.refresh && context.offline)
         throw new CliError("validation_error", "--refresh asks MAX; drop --offline")
-      const allBots = options.allBots === true
+      const across = { allBots: options.allBots === true, bots: options.bots ?? [] }
       const limit = context.settings.limit
-      const first = await fromStore((store) => cardOf(store, context, who, allBots, limit))
+      const first = await fromStore((store) => cardOf(store, context, who, across, limit))
       let card = first.card
       if (options.refresh) {
         const self = context.registry.botId()
@@ -120,7 +177,7 @@ export const peopleCommand = (): Command => {
           const client = context.authenticated()
           const fresh = await client.messages(ours.chatId, Math.min(limit, 100), self)
           await keep(self, fresh, "history", context.streams.diagnostic, client.takeSenders())
-          card = (await fromStore((store) => cardOf(store, context, who, allBots, limit))).card
+          card = (await fromStore((store) => cardOf(store, context, who, across, limit))).card
         }
       }
       if (context.format !== "pretty") {
@@ -141,10 +198,11 @@ export const searchMessages = (
   context: Context,
   text: string | undefined,
   from: string[] = [],
+  across: Across = {},
 ): Promise<{ items: StoredHit[]; hasMore: boolean }> => {
-  const { filter, account } = scopeOf(context, false)
+  const { filter, people } = scopeOf(context, across)
   return fromStore((store) => {
-    const senders = resolve(store, from, account).map(({ id }) => id)
+    const senders = resolve(store, from, people).map(({ id }) => id)
     return store.find({
       ...filter,
       ...(text === undefined ? {} : { text }),
@@ -155,21 +213,19 @@ export const searchMessages = (
 }
 
 export const addBetween = (messages: Command): void => {
-  messages
-    .command("between <people...>")
+  acrossOptions(messages.command("between <people...>"))
     .option("--limit <n>", "how many of the latest messages from each chat", wholeNumber("--limit"))
-    .option("--all-bots", "look through every bot's local copy on this machine, not only this one's")
     .description(
       "what two or more people wrote in the chats they have all written in — from the local copy, grouped by " +
         "chat, oldest first; --limit counts per chat. Common chats are the ones this copy saw each of them " +
         "write in, not a member list from MAX",
     )
-    .action(async function (this: Command, references: string[], options: { allBots?: boolean }) {
+    .action(async function (this: Command, references: string[], options: Across) {
       const context = botContext(this, { offline: true })
       if (references.length < 2) throw new CliError("validation_error", "name at least two people")
-      const { filter, account } = scopeOf(context, options.allBots === true)
+      const { filter, people } = scopeOf(context, options)
       const page = await fromStore((store) => {
-        const senders = resolve(store, references, account).map(({ id }) => id)
+        const senders = resolve(store, references, people).map(({ id }) => id)
         return store.find({ ...filter, senders, together: true, perChat: true, limit: context.settings.limit })
       })
       const chats = new Map<string, { id: string; title: string | null; messages: StoredHit[] }>()

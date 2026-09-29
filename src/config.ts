@@ -70,6 +70,19 @@ const personalEntries = {
   /** Only the file turns these on — no `max mcp` flag does (`NEED-350`). */
   mcpTools: v.optional(mcpToolList),
 }
+/**
+ * Whether this bot may read other bots' local copies, when a command asks with `--all-bots` or
+ * `--bots` (owner, 2026-09-29): `false`, `true` for every bot, or the profiles it may read.
+ */
+const botEntries = {
+  ...sharedEntries,
+  readOtherBots: v.optional(
+    v.union(
+      [flag, v.array(v.string(plain("has to be a profile name")))],
+      "has to be true, false, or a list of bot profiles",
+    ),
+  ),
+}
 const strict = <T extends v.ObjectEntries>(entries: T) => v.strictObject(entries, objectMessage(Object.keys(entries)))
 const profileSettings = strict(personalEntries)
 const botSettings = strict(sharedEntries)
@@ -105,7 +118,7 @@ const configEntries = {
   defaults: v.optional(defaultsSettings),
   profiles: v.optional(profilesOf(profileSettings), {}),
   personal: v.optional(kindSection(personalEntries)),
-  bot: v.optional(kindSection(sharedEntries)),
+  bot: v.optional(kindSection(botEntries)),
 }
 export const configSchema = v.strictObject(configEntries, objectMessage(Object.keys(configEntries)))
 
@@ -120,7 +133,13 @@ export const PERSONAL_ONLY_SETTINGS = Object.keys(personalEntries).filter(
   (key) => !(key in botSettings.entries),
 ) as ProfileSetting[]
 export const DEFAULTS_ONLY_SETTINGS = ["updateCheck", "transcribeModel"] as const
-export const ALL_SETTINGS: string[] = [...PROFILE_SETTINGS, ...DEFAULTS_ONLY_SETTINGS, "defaultProfile"]
+export const BOT_ONLY_SETTINGS = ["readOtherBots"] as const
+export const ALL_SETTINGS: string[] = [
+  ...PROFILE_SETTINGS,
+  ...BOT_ONLY_SETTINGS,
+  ...DEFAULTS_ONLY_SETTINGS,
+  "defaultProfile",
+]
 
 /** Whatever the command line carried. Everything is optional: absent means "not given here". */
 export interface GlobalFlags {
@@ -182,6 +201,8 @@ export interface Settings {
   allow: readonly Permission[] | undefined
   sendsPerHour: number
   mcpTools: readonly McpToolGroup[]
+  /** For a bot command: which other bots' copies it may read when asked (`--all-bots`, `--bots`). */
+  readOtherBots: boolean | readonly string[]
   /** Whether a person at a terminal hears, once a day, that a newer version exists. */
   updateCheck: boolean
   /** Which speech model `max messages transcribe` uses unless `--model` says otherwise. */
@@ -219,6 +240,7 @@ export type SourcedSetting =
   | "allow"
   | "sendsPerHour"
   | "mcpTools"
+  | "readOtherBots"
   | "updateCheck"
   | "transcribeModel"
 
@@ -315,6 +337,18 @@ export const resolveSettings = (
       : first(fromFile("sendsPerHour"), DEFAULT_SENDS_PER_HOUR)
 
   const mcpTools = first<readonly McpToolGroup[]>(fromFile("mcpTools"), [])
+  const readOtherBots = first<boolean | readonly string[]>(
+    kind === "bot"
+      ? [
+          [
+            `config file: bot.profiles.${usableProfileName(profile.value)}`,
+            config.bot?.profiles?.[profile.value]?.readOtherBots,
+          ],
+          ["config file: bot.defaults", config.bot?.defaults?.readOtherBots],
+        ]
+      : [],
+    false,
+  )
   const shared = config.defaults ?? {}
   const updateCheck = first([["config file: defaults", shared.updateCheck]], true)
   const transcribeModel = first<string>([["config file: defaults", shared.transcribeModel]], DEFAULT_MODEL)
@@ -354,6 +388,7 @@ export const resolveSettings = (
     allow: allow.value,
     sendsPerHour: sendsPerHour.value,
     mcpTools: mcpTools.value,
+    readOtherBots: readOtherBots.value,
     updateCheck: updateCheck.value,
     transcribeModel: transcribeModel.value,
     configPath,
@@ -374,6 +409,7 @@ export const resolveSettings = (
       allow: allow.from,
       sendsPerHour: sendsPerHour.from,
       mcpTools: mcpTools.from,
+      readOtherBots: readOtherBots.from,
       updateCheck: updateCheck.from,
       transcribeModel: transcribeModel.from,
     },
@@ -561,6 +597,9 @@ export const changeSetting = (
       `${setting} is one setting for the whole program, not per profile — use --defaults without --personal or --bot`,
     )
   }
+  if (kind !== "bot" && (BOT_ONLY_SETTINGS as readonly string[]).includes(setting)) {
+    throw new CliError("validation_error", `${setting} is for bots — add --bot`)
+  }
   if (kind === "bot" && (PERSONAL_ONLY_SETTINGS as string[]).includes(setting)) {
     throw new CliError("validation_error", `${setting} is for personal accounts; a bot has no use for it`)
   }
@@ -569,6 +608,8 @@ export const changeSetting = (
   const table = (profile === undefined ? section.defaults : section.profiles?.[profile]) as Record<string, unknown>
   const scope = { ...table }
   if (value === undefined) delete scope[setting]
+  else if (setting === "readOtherBots")
+    scope[setting] = value === "true" || value === "false" ? value === "true" : parseList(value)
   else scope[setting] = setting === "allow" || setting === "mcpTools" ? parseList(value) : parseValue(value)
   const empty = Object.keys(scope).length === 0
 

@@ -54,6 +54,7 @@ export const botMcpCommand = (): Command => {
         allowDelete: flags.allowDelete === true,
         allowModerate: flags.allowModerate === true,
         ...(context.settings.allow ? { permitted: context.settings.allow } : {}),
+        readOtherBots: context.settings.readOtherBots,
         run,
         environment: environmentOf(this),
       },

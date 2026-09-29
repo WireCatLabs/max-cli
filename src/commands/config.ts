@@ -2,6 +2,7 @@ import { CliError, pathsAreOverridden } from "@leemour/cli-core"
 import { Command } from "commander"
 import {
   ALL_SETTINGS,
+  BOT_ONLY_SETTINGS,
   changeSetting,
   type GlobalFlags,
   PERSONAL_ONLY_SETTINGS,
@@ -26,6 +27,7 @@ const SHOWN: SourcedSetting[] = [
   "allow",
   "sendsPerHour",
   "mcpTools",
+  "readOtherBots",
   "updateCheck",
   "transcribeModel",
 ]
@@ -57,8 +59,10 @@ export const configCommand = (): Command => {
         configFile: settings.configPath,
         configFound: settings.configFound,
         pathsOverridden: overridden,
-        settings: SHOWN.filter(
-          (setting) => settings.kind === "personal" || !(PERSONAL_ONLY_SETTINGS as string[]).includes(setting),
+        settings: SHOWN.filter((setting) =>
+          settings.kind === "personal"
+            ? !(BOT_ONLY_SETTINGS as readonly string[]).includes(setting)
+            : !(PERSONAL_ONLY_SETTINGS as string[]).includes(setting),
         ).map((setting) => ({
           setting,
           // No list is every action, and `null` would read as none.

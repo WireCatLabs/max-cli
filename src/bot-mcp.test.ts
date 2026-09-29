@@ -128,6 +128,19 @@ describe("max bot mcp", () => {
     expect(JSON.stringify(body)).not.toContain("bot-token")
   })
 
+  it("offers all_bots and bots on the three copy readers only when readOtherBots allows it", async () => {
+    const schema = async (options: Partial<BotServerOptions>) => {
+      const { client } = await connect(options)
+      const { tools } = await client.listTools()
+      return tools.find((tool) => tool.name === "max_bot_people_show")?.inputSchema.properties ?? {}
+    }
+    expect(Object.keys(await schema({}))).not.toContain("all_bots")
+    expect(Object.keys(await schema({ readOtherBots: false }))).not.toContain("bots")
+    expect(Object.keys(await schema({ readOtherBots: ["other"] }))).toEqual(
+      expect.arrayContaining(["all_bots", "bots"]),
+    )
+  })
+
   it("sends through the command, so the journal has it — and a text starting with - is text", async () => {
     const { client } = await connect({ allowSend: true })
     const { isError } = await call(client, "max_bot_messages_send", { chat: "-100", text: "-5 градусов" })

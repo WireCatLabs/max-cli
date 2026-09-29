@@ -93,6 +93,8 @@ beforeAll(async () => {
     new BotTokenStore({ profile: bot, keyring }).write(bot)
     for (const chat of Object.keys(HISTORY[bot] ?? {})) await json([bot, "bot", "messages", "list", chat])
   }
+  await max(["first", "config", "set", "--bot", "readOtherBots", "true"])
+  await max(["second", "config", "set", "--bot", "readOtherBots", "first"])
 })
 beforeEach(() => {
   requests.length = 0
@@ -122,6 +124,33 @@ describe("max bot people show", () => {
 
     const everywhere = await json(["second", "bot", "people", "show", "44", "--all-bots"])
     expect(everywhere).toMatchObject({ id: "44", name: "Anna" })
+  })
+
+  it("refuses to read another bot's copy unless readOtherBots allows it, and names the setting", async () => {
+    const { code, stderr } = await max(["third", "bot", "people", "show", "44", "--all-bots", "--json"])
+    expect(code).toBe(5)
+    expect(JSON.parse(stderr).error.message).toContain("config set --bot readOtherBots")
+  })
+
+  it("reads only the bots on the readOtherBots list, and refuses one that is not", async () => {
+    const card = await json(["second", "bot", "people", "show", "44", "--bots", "first"])
+    expect(card).toMatchObject({ id: "44", name: "Anna" })
+
+    const { code, stderr } = await max(["second", "bot", "people", "show", "44", "--bots", "third", "--json"])
+    expect(code).toBe(5)
+    expect(JSON.parse(stderr).error.message).toContain("not third")
+  })
+
+  it("searches every allowed bot's copy with --all-bots", async () => {
+    const found = await json(["first", "bot", "messages", "search", "alone", "--all-bots"])
+    expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a3"])
+  })
+
+  it("searches another bot's copy with --bots when allowed", async () => {
+    const own = await json(["first", "bot", "messages", "search", "alone"])
+    expect(own.items).toEqual([])
+    const both = await json(["first", "bot", "messages", "search", "alone", "--bots", "second"])
+    expect(both.items.map((message: { id: string }) => message.id)).toEqual(["mid.a3"])
   })
 
   it("prints for a person without letting a message's escape codes reach the terminal", async () => {
@@ -183,6 +212,15 @@ describe("max bot messages between", () => {
       ["-100", ["mid.a1", "mid.b1"]],
       ["-200", ["mid.b2", "mid.a2"]],
     ])
+  })
+
+  it("with --bots reads the named bot's copy too, and without it only this bot's", async () => {
+    const chats = async (argv: string[]) =>
+      (await json(["first", "bot", "messages", "between", "@ann", "Bob", ...argv])).chats.map(
+        (chat: { id: string }) => chat.id,
+      )
+    expect(await chats([])).toEqual(["-100"])
+    expect(await chats(["--bots", "second"])).toEqual(["-100", "-200"])
   })
 
   it("counts --limit per chat, so a busy chat does not hide the others", async () => {

@@ -375,6 +375,19 @@ describe("changing a setting", () => {
     ).toThrow(/whole program/)
   })
 
+  it("keeps readOtherBots for bots: true, false or a list, and refuses it for a personal account", () => {
+    changeSetting(path(), { profile: "shop", kind: "bot", setting: "readOtherBots", value: "true" })
+    changeSetting(path(), { profile: undefined, kind: "bot", setting: "readOtherBots", value: "shop,news" })
+    expect(file().bot).toEqual({
+      defaults: { readOtherBots: ["shop", "news"] },
+      profiles: { shop: { readOtherBots: true } },
+    })
+    expect(resolveSettings({ profile: "shop" }, { configDir, kind: "bot" }).readOtherBots).toBe(true)
+    expect(resolveSettings({ profile: "other" }, { configDir, kind: "bot" }).readOtherBots).toEqual(["shop", "news"])
+    expect(resolveSettings({ profile: "shop" }, { configDir }).readOtherBots).toBe(false)
+    expect(() => changeSetting(path(), { profile: "me", setting: "readOtherBots", value: "true" })).toThrow(/--bot/)
+  })
+
   it("sets and clears defaultProfile at the top of the file", () => {
     expect(changeSetting(path(), { profile: "mila", setting: "defaultProfile", value: "mila" })).toBe("mila")
     expect(file().defaultProfile).toBe("mila")
