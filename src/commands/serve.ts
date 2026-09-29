@@ -81,7 +81,7 @@ export const serveCommand = (): Command =>
         } finally {
           process.off("SIGINT", stop)
           process.off("SIGTERM", stop)
-          cache?.close()
+          await cache?.close()
         }
       })
     })

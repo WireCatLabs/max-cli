@@ -19,7 +19,7 @@ export interface BackupEstimate {
  * count to go on (MAX sends `messagesCount` for groups and channels only, and it is not kept), so
  * the unread stretches are priced at the density of what was read — an estimate, and marked one.
  */
-export const estimateBackup = ({
+export const estimateBackup = async ({
   ranges,
   count,
   newest,
@@ -29,13 +29,13 @@ export const estimateBackup = ({
   pauseSeconds,
 }: {
   ranges: Window[]
-  count: (since: number) => number
+  count: (since: number) => Promise<number>
   newest: number
   since?: number
   last?: number
   maxPages: number
   pauseSeconds: number
-}): BackupEstimate => {
+}): Promise<BackupEstimate> => {
   const windows = heldWindows(ranges)
   const reachedStart = windows[0]?.from === 0
   const top = windows.at(-1)
@@ -46,12 +46,12 @@ export const estimateBackup = ({
   let estimated = false
 
   if (last !== undefined) {
-    const unbroken = top && top.to >= newest ? count(top.from) : 0
+    const unbroken = top && top.to >= newest ? await count(top.from) : 0
     held = Math.min(last, unbroken)
     missing = top?.from === 0 && top.to >= newest ? 0 : last - held
   } else {
     const from = since ?? 0
-    held = count(from)
+    held = await count(from)
     unread =
       windows.length === 0
         ? [{ from: new Date(from).toISOString(), to: new Date(newest).toISOString() }]

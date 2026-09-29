@@ -84,7 +84,7 @@ export const transcribe = async (
   messageId: Id,
   { model, directory, cache, release, fetchAudio = fetchBytes, open = openInstalled }: TranscribeOptions,
 ): Promise<Transcript> => {
-  const kept = cache?.messages.transcript(chatId, messageId)
+  const kept = await cache?.messages.transcript(chatId, messageId)
   if (kept && kept.model === model.id) {
     return { chatId, messageId, text: kept.text, model: model.id, seconds: null, cached: true }
   }
@@ -96,7 +96,7 @@ export const transcribe = async (
   const recognizer = open(model, directory)
   try {
     const { text, seconds } = await hear(bytes, recognizer)
-    cache?.messages.keepTranscript(chatId, messageId, text, model.id)
+    await cache?.messages.keepTranscript(chatId, messageId, text, model.id)
     return { chatId, messageId, text, model: model.id, seconds, cached: false }
   } finally {
     recognizer.free()
@@ -146,7 +146,7 @@ export const hearAll = async (
 
   const needed: Voice[] = []
   for (const voice of voices) {
-    const kept = cache?.messages.transcript(voice.chatId, voice.messageId)
+    const kept = await cache?.messages.transcript(voice.chatId, voice.messageId)
     if (kept) transcripts.set(voiceKey(voice), kept.text)
     else needed.push(voice)
   }
@@ -171,7 +171,7 @@ export const hearAll = async (
       for (const { voice, bytes } of fetched) {
         try {
           const { text } = await hear(bytes, recognizer)
-          cache?.messages.keepTranscript(voice.chatId, voice.messageId, text, model.id)
+          await cache?.messages.keepTranscript(voice.chatId, voice.messageId, text, model.id)
           transcripts.set(voiceKey(voice), text)
         } catch (error) {
           failed(voice, error)

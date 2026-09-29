@@ -86,7 +86,7 @@ export const messagesCommand = (): Command => {
           )
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -135,7 +135,7 @@ export const messagesCommand = (): Command => {
           renderPage(context, found, feed(context), () => "more matched — raise `--limit`")
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -235,7 +235,7 @@ export const messagesCommand = (): Command => {
           else renderer.result(transcript)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -312,7 +312,7 @@ export const messagesCommand = (): Command => {
           renderer.result(sent)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -360,7 +360,7 @@ export const messagesCommand = (): Command => {
           )
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -397,7 +397,7 @@ export const messagesCommand = (): Command => {
           renderer.result(await client.messages.delete(chatId, ids, { forEveryone }))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -428,7 +428,7 @@ export const messagesCommand = (): Command => {
           renderer.result(sent)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -527,7 +527,7 @@ const readWindow = async (
       else renderList(renderer, format, found)
     } finally {
       await client.close()
-      cache?.close()
+      await cache?.close()
     }
   })
 }

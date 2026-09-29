@@ -6,16 +6,16 @@ import { Worker } from "node:worker_threads"
 import { afterEach, describe, expect, it } from "vitest"
 import type { Chat, Contact, Id, Message } from "../domain/models.js"
 import { openCache } from "./open.js"
-import { type CacheStore, openStore } from "./store.js"
+import { type CacheRecord, openRecord } from "./store.js"
 
 const open = async (now: () => number = () => 1_000_000) => {
   const database = await openCache(join(mkdtempSync(join(tmpdir(), "max-store-")), "cache.db"))
-  const store = openStore({ database, now })
+  const store = openRecord({ database, now })
   opened.push(store)
   return store
 }
 
-const opened: CacheStore[] = []
+const opened: CacheRecord[] = []
 afterEach(() => {
   for (const store of opened.splice(0)) store.close()
 })
@@ -37,7 +37,7 @@ const person = (id: string, name: string | null = `person ${id}`): Contact => ({
   lastMessagedAt: null,
 })
 
-const delta = (over: Partial<Parameters<CacheStore["mergeDelta"]>[0]> = {}) => ({
+const delta = (over: Partial<Parameters<CacheRecord["mergeDelta"]>[0]> = {}) => ({
   chats: [],
   people: [],
   members: new Map<Id, Id[]>(),
@@ -501,7 +501,7 @@ describe("the cache store", () => {
 
     it("**waits for another command's write** instead of losing the merge", async () => {
       const path = join(mkdtempSync(join(tmpdir(), "max-store-")), "cache.db")
-      const store = openStore({ database: await openCache(path), now: () => 1_000_000 })
+      const store = openRecord({ database: await openCache(path), now: () => 1_000_000 })
       opened.push(store)
 
       // node:sqlite is synchronous, so the other writer needs its own thread to commit while

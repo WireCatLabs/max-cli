@@ -67,10 +67,10 @@ const runWith = async (argv: string[], environment: Environment) => {
 describe("pricing a backup", () => {
   const hour = 3_600_000
 
-  it("counts --last against what is held unbroken from the newest message down", () => {
-    const estimate = estimateBackup({
+  it("counts --last against what is held unbroken from the newest message down", async () => {
+    const estimate = await estimateBackup({
       ranges: [{ from: 10 * hour, to: 20 * hour }],
-      count: () => 40,
+      count: async () => 40,
       newest: 20 * hour,
       last: 100,
       maxPages: 40,
@@ -80,10 +80,10 @@ describe("pricing a backup", () => {
     expect(estimate).toMatchObject({ held: 40, missing: 60, estimated: false, pages: 3, runs: 1 })
   })
 
-  it("prices --since at the density of what was read, and says it is an estimate", () => {
-    const estimate = estimateBackup({
+  it("prices --since at the density of what was read, and says it is an estimate", async () => {
+    const estimate = await estimateBackup({
       ranges: [{ from: 10 * hour, to: 20 * hour }],
-      count: () => 50,
+      count: async () => 50,
       newest: 20 * hour,
       since: 0,
       maxPages: 40,
@@ -98,10 +98,10 @@ describe("pricing a backup", () => {
     })
   })
 
-  it("does not guess from nothing", () => {
-    const estimate = estimateBackup({
+  it("does not guess from nothing", async () => {
+    const estimate = await estimateBackup({
       ranges: [],
-      count: () => 0,
+      count: async () => 0,
       newest: hour,
       since: 0,
       maxPages: 40,
@@ -187,8 +187,8 @@ describe("max backup messages", () => {
     expect(requests()).toHaveLength(2)
     expect(stderr).toContain("what was read stays here")
     const cache = await openProfileCache("b-error")
-    expect(cache?.messages.count("111", 0)).toBe(30)
-    cache?.close()
+    expect(await cache?.messages.count("111", 0)).toBe(30)
+    await cache?.close()
   })
 
   it("stops at --since in the middle of a chat, without claiming its start", async () => {
@@ -212,8 +212,8 @@ describe("max backup messages", () => {
     expect(JSON.parse(stdout)).toMatchObject({ pages: 2, complete: true, reachedStart: false })
     expect(requests().at(-1)?.from).toBe(START + 70 * MINUTE)
     const cache = await openProfileCache("b-since")
-    expect(cache?.messages.ranges("111").some(({ from }) => from === 0)).toBe(false)
-    cache?.close()
+    expect((await cache?.messages.ranges("111"))?.some(({ from }) => from === 0)).toBe(false)
+    await cache?.close()
   })
 
   it("refuses an id that is none of the account's chats, and records nothing", async () => {
@@ -225,8 +225,8 @@ describe("max backup messages", () => {
     expect(stderr).toContain("no chat 999")
     expect(requests()).toEqual([])
     const cache = await openProfileCache("b-gone")
-    expect(cache?.messages.ranges("999")).toEqual([])
-    cache?.close()
+    expect(await cache?.messages.ranges("999")).toEqual([])
+    await cache?.close()
   })
 
   it("wants to know how far back", async () => {

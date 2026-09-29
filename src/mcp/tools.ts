@@ -118,7 +118,7 @@ const heardIn = async (
       release,
     })
   } finally {
-    cache?.close()
+    await cache?.close()
   }
 }
 
@@ -239,7 +239,7 @@ const READ_TOOLS = {
           release,
         })
       } finally {
-        cache?.close()
+        await cache?.close()
       }
     },
   }),
@@ -459,7 +459,7 @@ const READ_TOOLS = {
       try {
         return await transcribe(client, chatId, args.message, { model, directory, cache, release })
       } finally {
-        cache?.close()
+        await cache?.close()
       }
     },
   }),

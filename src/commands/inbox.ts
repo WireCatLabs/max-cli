@@ -103,7 +103,7 @@ export const inboxCommand = (): Command =>
           }
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })

@@ -130,7 +130,7 @@ describe("max export messages", () => {
   const prepared = async (profile: string) => {
     const cache = await openProfileCache(profile)
     if (!cache) throw new Error("no cache in the test sandbox")
-    cache.chats.write([
+    await cache.chats.write([
       {
         id: "111",
         title: "Друзья",
@@ -140,9 +140,9 @@ describe("max export messages", () => {
         participantsCount: 3,
       },
     ])
-    cache.messages.write("111", [message("1", "2026-09-01T10:00:00.000Z", "раз")])
-    cache.messages.write("111", [message("2", "2026-09-03T10:00:00.000Z", "два")])
-    cache.close()
+    await cache.messages.write("111", [message("1", "2026-09-01T10:00:00.000Z", "раз")])
+    await cache.messages.write("111", [message("2", "2026-09-03T10:00:00.000Z", "два")])
+    await cache.close()
 
     let connected = false
     const environment: Environment = {

@@ -38,7 +38,7 @@ export const chatsCommand = (): Command => {
           )
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -58,7 +58,7 @@ export const chatsCommand = (): Command => {
           renderer.result(await client.chats.show(chat))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -109,7 +109,7 @@ export const chatsCommand = (): Command => {
           if (kept.more) renderer.note(`more history than one run reads — run again with --since after the last one`)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -280,7 +280,7 @@ const withClient = async (command: Command, label: string, act: (client: MaxClie
       renderer.result(await act(client))
     } finally {
       await client.close()
-      cache?.close()
+      await cache?.close()
     }
   })
 }

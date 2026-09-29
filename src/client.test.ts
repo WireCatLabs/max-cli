@@ -906,8 +906,8 @@ describe("the token MAX answers with", () => {
 
 describe("with a cache", () => {
   const caches: CacheStore[] = []
-  afterEach(() => {
-    for (const cache of caches.splice(0)) cache.close()
+  afterEach(async () => {
+    for (const cache of caches.splice(0)) await cache.close()
   })
 
   const cacheStore = async () => {
@@ -1056,7 +1056,7 @@ describe("with a cache", () => {
   it("**offline, `before` and `after` read the record either side of the moment**, not its newest page", async () => {
     const cache = await cacheStore()
     const at = (minute: number) => new Date(Date.UTC(2026, 8, 20, 0, minute)).toISOString()
-    cache.messages.write(
+    await cache.messages.write(
       "111",
       [1, 2, 3, 4].map((minute) => ({
         id: String(minute),
@@ -1160,8 +1160,8 @@ describe("with a cache", () => {
       await second.chats.list()
       await second.close()
 
-      expect(cache.people.page({ order: "name", limit: 20, offset: 0 })).toHaveLength(1)
-      expect(cache.chats.read(Number.POSITIVE_INFINITY)).toHaveLength(2)
+      expect(await cache.people.page({ order: "name", limit: 20, offset: 0 })).toHaveLength(1)
+      expect(await cache.chats.read(Number.POSITIVE_INFINITY)).toHaveLength(2)
     })
 
     it("**stores everyone in a group, and none of them as a contact**", async () => {
@@ -1188,12 +1188,14 @@ describe("with a cache", () => {
       await client.close()
 
       // 10000001 is us and is never a member of anything; the other two are.
-      expect(cache.people.chatsWith("10000002").sort()).toEqual(["111", "222"])
-      expect(cache.people.chatsWith("10000003")).toEqual(["111"])
+      expect((await cache.people.chatsWith("10000002")).sort()).toEqual(["111", "222"])
+      expect(await cache.people.chatsWith("10000003")).toEqual(["111"])
 
-      const everyone = cache.people.page({ order: "name", limit: 20, offset: 0 })
+      const everyone = await cache.people.page({ order: "name", limit: 20, offset: 0 })
       expect(everyone.map((p) => p.name)).toContain("Group Only")
-      expect(cache.people.contacts({ order: "recent", limit: 20, offset: 0 }).map((p) => p.id)).toEqual(["10000002"])
+      expect((await cache.people.contacts({ order: "recent", limit: 20, offset: 0 })).map((p) => p.id)).toEqual([
+        "10000002",
+      ])
     })
 
     it("asks for the ids the login left unnamed **in one request, not one per chat**", async () => {
@@ -1240,7 +1242,7 @@ describe("with a cache", () => {
       await client.chats.list()
       await client.close()
 
-      expect(cache.people.chatsWith("9")).toEqual([])
+      expect(await cache.people.chatsWith("9")).toEqual([])
     })
 
     it("**answers from the store, not from the delta**, which after the first login is empty", async () => {
@@ -1307,7 +1309,7 @@ describe("with a cache", () => {
       const warm = clientSharing(cache, first)
       await warm.chats.list()
       await warm.close()
-      expect(cache.syncMarker()).toBe(1_789_776_000_000)
+      expect(await cache.syncMarker()).toBe(1_789_776_000_000)
 
       const max = mockMax({
         answers: { [Opcode.SESSION_INIT]: {}, [Opcode.CONTACT_INFO]: { contacts: [] }, [Opcode.LOGIN]: syncing() },
@@ -1395,7 +1397,7 @@ describe("with a cache", () => {
       await second.close()
 
       expect(again.items.map((person) => person.id)).toEqual(["10000002"])
-      expect(cache.people.chatsWith("10000002")).toEqual(["222"])
+      expect(await cache.people.chatsWith("10000002")).toEqual(["222"])
     })
 
     it("**`--offline` answers the contacts it recorded**, not everyone it can name", async () => {
@@ -1508,7 +1510,7 @@ describe("with a cache", () => {
       expect((await client.chats.list()).items).toHaveLength(2)
       await client.close()
 
-      expect(cache.syncMarker()).toBeUndefined()
+      expect(await cache.syncMarker()).toBeUndefined()
       expect(notes.join(" ")).toContain("did not take this login")
     })
 
@@ -1558,10 +1560,10 @@ describe("with a cache", () => {
     const client = clientSharing(cache, max)
 
     await client.messages.list("111", { limit: 5 })
-    expect(cache.messages.read("111", 5, 60_000), "cached after the first read").toBeDefined()
+    expect(await cache.messages.read("111", 5, 60_000), "cached after the first read").toBeDefined()
 
     await client.messages.send("111", "hello")
-    expect(cache.messages.read("111", 5, 60_000), "forgotten after the send").toBeUndefined()
+    expect(await cache.messages.read("111", 5, 60_000), "forgotten after the send").toBeUndefined()
 
     await client.close()
   })

@@ -15,21 +15,21 @@ const values = (lines: string[]) => lines.filter((line) => !line.startsWith(":")
 
 beforeAll(async () => {
   const store = await openProfileCache("tabbed")
-  store?.chats.write([
+  await store?.chats.write([
     { id: "101", title: "Family", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 3 },
     { id: "102", title: "Work chat", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 5 },
     { id: "103", title: "Evil\u001b[2K", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
     { id: "104", title: "$(touch x)", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
     { id: "105", title: "ok\n$(touch y)", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
   ])
-  store?.people.upsert(
+  await store?.people.upsert(
     [
       { id: "7", name: "Иван Петров", username: "ivan", description: null, lastMessagedAt: null },
       { id: "8", name: "Eve\n$(touch z)", username: "$(touch w)", description: null, lastMessagedAt: null },
     ],
     "login",
   )
-  store?.close()
+  await store?.close()
 })
 
 describe("max complete", () => {

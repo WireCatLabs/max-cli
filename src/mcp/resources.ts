@@ -20,7 +20,7 @@ export const registerResources = (
       list: async () => {
         const cache = await openProfileCache(profile)
         try {
-          const chats = cache?.chats.page({ limit: LISTED, offset: 0 }) ?? []
+          const chats = (await cache?.chats.page({ limit: LISTED, offset: 0 })) ?? []
           return {
             resources: chats.map(({ id, title }) => ({
               uri: `max://chat/${id}`,
@@ -29,7 +29,7 @@ export const registerResources = (
             })),
           }
         } finally {
-          cache?.close()
+          await cache?.close()
         }
       },
     }),

@@ -36,7 +36,7 @@ export const exportCommand = (): Command => {
         try {
           const chatId = await client.chats.resolve(chat)
           const since = options.since === undefined ? undefined : client.messages.moment(options.since, "--since")
-          const messages = cache.messages.all(chatId, since)
+          const messages = await cache.messages.all(chatId, since)
           const oldest = messages[0]
           const newest = messages.at(-1)
           if (!oldest || !newest) {
@@ -47,9 +47,9 @@ export const exportCommand = (): Command => {
             )
           }
 
-          const known = cache.chats.read(Number.POSITIVE_INFINITY)?.find((one) => one.id === chatId)
+          const known = (await cache.chats.read(Number.POSITIVE_INFINITY))?.find((one) => one.id === chatId)
           const last = known?.lastMessageAt ? Date.parse(known.lastMessageAt) : undefined
-          const unread = unreadStretches(cache.messages.ranges(chatId), { since, last })
+          const unread = unreadStretches(await cache.messages.ranges(chatId), { since, last })
 
           const body =
             options.format === "md"
@@ -79,7 +79,7 @@ export const exportCommand = (): Command => {
           })
         } finally {
           await client.close()
-          cache.close()
+          await cache.close()
         }
       })
     })

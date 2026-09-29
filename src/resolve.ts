@@ -28,16 +28,16 @@ export const pickChat = (reference: string, chats: Chat[]): Chat => {
  * As `pickChat`, over names and @usernames. Matched here rather than in SQL because SQLite's
  * `lower()` folds ASCII only, and most of these names are Cyrillic.
  */
-export const pickPerson = (reference: string, cache: CacheStore): Contact => {
+export const pickPerson = async (reference: string, cache: CacheStore): Promise<Contact> => {
   const trimmed = reference.trim()
   if (isId(trimmed)) {
-    const known = cache.people.get(trimmed)
+    const known = await cache.people.get(trimmed)
     if (!known) throw new CliError("not_found", `no person ${trimmed} in what this account has seen`)
     return known
   }
 
   const wanted = trimmed.replace(/^@/, "").toLowerCase()
-  const everyone = cache.people.page({ order: "name", limit: Number.MAX_SAFE_INTEGER, offset: 0 })
+  const everyone = await cache.people.page({ order: "name", limit: Number.MAX_SAFE_INTEGER, offset: 0 })
   const fields = (person: Contact) => [person.name, person.username].filter(isPresent).map((one) => one.toLowerCase())
 
   const exact = everyone.filter((person) => fields(person).includes(wanted))
