@@ -43,7 +43,7 @@ export const contactsCommand = (): Command => {
           )
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -63,7 +63,7 @@ export const contactsCommand = (): Command => {
           renderer.result(await client.contacts.show(person))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -92,7 +92,7 @@ export const contactsCommand = (): Command => {
           renderer.success(`${summary.added} new, ${summary.changed} changed, ${summary.known} people known`)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -116,7 +116,7 @@ export const contactsCommand = (): Command => {
           renderer.result(await client.contacts.lookup(phone))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -141,7 +141,7 @@ export const contactsCommand = (): Command => {
             renderer.result(await client.contacts[name](person))
           } finally {
             await client.close()
-            cache?.close()
+            await cache?.close()
           }
         })
       })
@@ -163,7 +163,7 @@ export const contactsCommand = (): Command => {
           renderer.result(await client.contacts.rename(person, firstName, lastName))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -190,7 +190,7 @@ export const contactsCommand = (): Command => {
           renderer.success(`${imported.sent} sent, ${imported.recognised.length} recognised by MAX`)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })

@@ -18,7 +18,7 @@ describe("opening a profile's record", () => {
 
     expect(store, "the record must open on a machine that has never run this").toBeDefined()
     expect(existsSync(join(env.MAX_CACHE_DIR, "default.db"))).toBe(true)
-    store?.close()
+    await store?.close()
   })
 
   // Windows has no owner-only mode bits.
@@ -31,7 +31,7 @@ describe("opening a profile's record", () => {
     expect(statSync(`${file}-wal`).mode & 0o777).toBe(0o600)
     expect(statSync(`${file}-shm`).mode & 0o777).toBe(0o600)
     expect(statSync(env.MAX_CACHE_DIR).mode & 0o777).toBe(0o700)
-    store?.close()
+    await store?.close()
   })
 
   it.skipIf(process.platform === "win32")(
@@ -47,7 +47,7 @@ describe("opening a profile's record", () => {
 
       expect(statSync(file).mode & 0o777).toBe(0o600)
       expect(statSync(env.MAX_CACHE_DIR).mode & 0o777).toBe(0o700)
-      store?.close()
+      await store?.close()
     },
   )
 

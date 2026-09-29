@@ -74,7 +74,7 @@ const withRules = async (
       })
     } finally {
       await client.close()
-      cache?.close()
+      await cache?.close()
     }
   })
 }

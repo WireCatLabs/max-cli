@@ -53,11 +53,11 @@ export const completeCommand = (): Command =>
           commands: describeProgram(root),
           globalOptions: describeOptions(root),
           words: rest.length > 0 ? rest : [""],
-          sources: bot ? botSourcesFrom(named, profile === undefined) : sourcesFrom(cache, profile === undefined),
+          sources: bot ? botSourcesFrom(named, profile === undefined) : await sourcesFrom(cache, profile === undefined),
         })
         streams.data(formatSuggestions(suggestions))
       } finally {
-        cache?.close()
+        await cache?.close()
       }
     })
 
@@ -73,10 +73,12 @@ const readableCache = async (profile: string): Promise<CacheStore | undefined> =
   return existsSync(profileCacheFile(profile)) ? openProfileCache(profile) : undefined
 }
 
-const sourcesFrom = (cache: CacheStore | undefined, atTheStart: boolean): CompletionSources => {
-  const chats = () => (cache ? chatSuggestions(cache) : [])
+const sourcesFrom = async (cache: CacheStore | undefined, atTheStart: boolean): Promise<CompletionSources> => {
+  const chatList = cache ? await chatSuggestions(cache) : []
+  const personList = cache ? await personSuggestions(cache) : []
+  const chats = () => chatList
   return {
-    arguments: { chat: chats, person: () => (cache ? personSuggestions(cache) : []) },
+    arguments: { chat: chats, person: () => personList },
     options: { chat: chats },
     ...(atTheStart ? { firstWord: profileNames } : {}),
   }
@@ -107,15 +109,17 @@ const botSourcesFrom = (profile: string, atTheStart: boolean): CompletionSources
  * title rides along as a description, on one line: bash splits the answer on newlines, so a
  * newline in a title would become a word of its own.
  */
-const chatSuggestions = (cache: CacheStore): Suggestion[] =>
-  cache.chats
-    .page({ limit: 500, offset: 0 })
-    .map((chat) => ({ value: chat.id, description: singleLine(chat.title ?? "") }))
+const chatSuggestions = async (cache: CacheStore): Promise<Suggestion[]> =>
+  (await cache.chats.page({ limit: 500, offset: 0 })).map((chat) => ({
+    value: chat.id,
+    description: singleLine(chat.title ?? ""),
+  }))
 
-const personSuggestions = (cache: CacheStore): Suggestion[] =>
-  cache.people
-    .page({ order: "name", limit: 500, offset: 0 })
-    .map((person) => ({ value: person.id, description: singleLine(person.name ?? "") }))
+const personSuggestions = async (cache: CacheStore): Promise<Suggestion[]> =>
+  (await cache.people.page({ order: "name", limit: 500, offset: 0 })).map((person) => ({
+    value: person.id,
+    description: singleLine(person.name ?? ""),
+  }))
 
 const profileNames = (): string[] => {
   try {

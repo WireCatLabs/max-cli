@@ -105,7 +105,7 @@ export class MaxSession {
     try {
       await held.client.close()
     } finally {
-      held.cache?.close()
+      await held.cache?.close()
     }
   }
 }

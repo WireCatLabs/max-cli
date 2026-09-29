@@ -71,7 +71,7 @@ export interface CacheOptions {
 }
 
 /** Nothing here ever throws on missing data: absent is a cache miss, not an error. */
-export interface CacheStore {
+export interface CacheRecord {
   chats: {
     read(freshForMs: number): Chat[] | undefined
     write(chats: Chat[]): void
@@ -165,7 +165,7 @@ export interface CacheStore {
   close(): void
 }
 
-export const openStore = ({ database, now = () => Date.now() }: CacheOptions): CacheStore => {
+export const openRecord = ({ database, now = () => Date.now() }: CacheOptions): CacheRecord => {
   migrate(database)
 
   /**
@@ -715,3 +715,23 @@ export const openStore = ({ database, now = () => Date.now() }: CacheOptions): C
     close: () => database.close(),
   }
 }
+
+type Promised<T> = {
+  [K in keyof T]: T[K] extends (...args: infer A) => infer R ? (...args: A) => Promise<Awaited<R>> : Promised<T[K]>
+}
+
+/**
+ * The cache as callers see it: every method answers a `Promise`, as cli-messaging's `MessageStore`
+ * does, so the SQLite underneath can be swapped for the shared store without touching a caller.
+ */
+export type CacheStore = Promised<CacheRecord>
+
+const promised = <T extends object>(target: T): Promised<T> =>
+  Object.fromEntries(
+    Object.entries(target).map(([key, value]) => [
+      key,
+      typeof value === "function" ? async (...args: unknown[]) => value(...args) : promised(value),
+    ]),
+  ) as Promised<T>
+
+export const openStore = (options: CacheOptions): CacheStore => promised(openRecord(options))

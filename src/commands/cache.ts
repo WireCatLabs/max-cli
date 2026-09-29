@@ -28,11 +28,11 @@ export const cacheCommand = (): Command => {
       }
 
       try {
-        cache.clear()
+        await cache.clear()
         renderer.result({ profile: profile, cleared: true })
         renderer.success(`forgot everything cached for "${profile}"`)
       } finally {
-        cache.close()
+        await cache.close()
       }
     })
 

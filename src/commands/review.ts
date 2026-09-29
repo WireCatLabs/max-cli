@@ -73,7 +73,7 @@ export const reviewCommand = (): Command =>
           notes(found, renderer.note.bind(renderer))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })

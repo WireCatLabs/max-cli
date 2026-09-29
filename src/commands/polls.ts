@@ -41,7 +41,7 @@ export const pollsCommand = (): Command => {
           show(context, await client.polls.vote(chatId, messageId.trim(), ids))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -63,7 +63,7 @@ export const pollsCommand = (): Command => {
           show(context, await client.polls.close(chatId, messageId.trim()))
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
@@ -100,7 +100,7 @@ export const pollsCommand = (): Command => {
           context.renderer.result(sent)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })

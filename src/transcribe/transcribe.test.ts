@@ -98,7 +98,7 @@ describe("transcribing a voice message", () => {
     mkdirSync(join(directory, "tiny"))
     writeFileSync(join(directory, "tiny", "model.onnx"), "weights")
     const store = openStore({ database: await openCache(join(directory, "cache.db")) })
-    store.messages.write("1", [voice])
+    await store.messages.write("1", [voice])
     const calls: string[] = []
     const client = {
       messages: {
@@ -139,7 +139,7 @@ describe("transcribing a voice message", () => {
     expect(transcript).toMatchObject({ text: "привет", model: "tiny", seconds: 1, cached: false })
     expect(calls).toEqual(["links", "release", "recognize", "free"])
     expect(heard[0]?.length).toBeGreaterThan(SAMPLE_RATE)
-    store.close()
+    await store.close()
   })
 
   it("**answers a second time from the cache**, without MAX and without the model", async () => {
@@ -151,17 +151,17 @@ describe("transcribing a voice message", () => {
 
     expect(again).toMatchObject({ text: "привет", cached: true })
     expect(calls).toEqual([])
-    store.close()
+    await store.close()
   })
 
   it("keeps the transcript when the same message is read again", async () => {
     const { store, client, options } = await setup()
     await transcribe(client, "1", "2", options)
 
-    store.messages.write("1", [voice])
+    await store.messages.write("1", [voice])
 
-    expect(store.messages.transcript("1", "2")).toEqual({ text: "привет", model: "tiny" })
-    store.close()
+    expect(await store.messages.transcript("1", "2")).toEqual({ text: "привет", model: "tiny" })
+    await store.close()
   })
 
   it("**does not download a model on its own** — it names the command that does", async () => {
@@ -173,7 +173,7 @@ describe("transcribing a voice message", () => {
     )
     expect(calls).toEqual([])
     expect(existsSync(join(options.directory, "absent"))).toBe(false)
-    store.close()
+    await store.close()
   })
 
   it("refuses a message with no voice recording", async () => {
@@ -181,6 +181,6 @@ describe("transcribing a voice message", () => {
     const client = { messages: { links: async () => ({ links: [], skipped: [] }) } } as unknown as MaxClient
 
     await expect(transcribe(client, "1", "2", options)).rejects.toThrow(/no voice recording/)
-    store.close()
+    await store.close()
   })
 })

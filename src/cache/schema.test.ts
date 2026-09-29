@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import type { Message } from "../domain/models.js"
 import { openCache } from "./open.js"
 import { migrate, SCHEMA_VERSION } from "./schema.js"
-import { openStore } from "./store.js"
+import { openRecord } from "./store.js"
 
 const file = () => join(mkdtempSync(join(tmpdir(), "max-schema-")), "cache.db")
 
@@ -36,12 +36,12 @@ const message = (id: string, at: number, text: string): Message => ({
   reactions: null,
 })
 
-const search = (store: ReturnType<typeof openStore>, query: string) =>
+const search = (store: ReturnType<typeof openRecord>, query: string) =>
   store.messages.search({ query, limit: 20, offset: 0 }).map((hit) => hit.id)
 
 /** A file this version wrote, then marked one version older — every trigger, index and FTS table in place. */
 const previousVersionWith = async (path: string, messages: Message[]) => {
-  const store = openStore({ database: await openCache(path) })
+  const store = openRecord({ database: await openCache(path) })
   store.people.upsert(
     [{ id: "alice", name: "Alice", username: null, description: null, lastMessagedAt: null }],
     "login",
@@ -60,7 +60,7 @@ describe("the schema", () => {
     ;(await asVersion1(path)).close()
 
     const database = await openCache(path)
-    const store = openStore({ database })
+    const store = openRecord({ database })
 
     expect(store.people.page({ order: "name", limit: 20, offset: 0 })).toEqual([])
     expect(store.syncMarker()).toBeUndefined()
@@ -72,7 +72,7 @@ describe("the schema", () => {
     ;(await asVersion1(path)).close()
 
     const database = await openCache(path)
-    const store = openStore({ database })
+    const store = openRecord({ database })
 
     // The v1 `fetched` row said the contacts were complete. Surviving the rebuild, it would claim
     // a sweep whose rows are gone — which is a lie the offline path would believe.
@@ -85,7 +85,7 @@ describe("the schema", () => {
     const path = file()
     await previousVersionWith(path, [message("a", 100, "договорились на четверг"), message("b", 200, "ok")])
 
-    const store = openStore({ database: await openCache(path) })
+    const store = openRecord({ database: await openCache(path) })
 
     expect(store.messages.window("5", 200, 5, 0).map((m) => m.id)).toEqual(["a", "b"])
     expect(search(store, "четверг")).toEqual(["a"])
@@ -97,7 +97,7 @@ describe("the schema", () => {
     const path = file()
     await previousVersionWith(path, [message("a", 100, "old words")])
 
-    const store = openStore({ database: await openCache(path) })
+    const store = openRecord({ database: await openCache(path) })
     store.messages.write("5", [message("c", 300, "fresh words")])
     store.messages.write("5", [message("a", 100, "edited words")])
 
@@ -120,7 +120,7 @@ describe("the schema", () => {
     database.exec("INSERT INTO ranges VALUES ('5', 100, 100)")
     database.close()
 
-    const store = openStore({ database: await openCache(path) })
+    const store = openRecord({ database: await openCache(path) })
 
     expect(store.messages.window("5", 100, 1, 0).map((m) => m.text)).toEqual(["hello there"])
     expect(search(store, "hello")).toEqual(["a"])
@@ -139,7 +139,7 @@ describe("the schema", () => {
   it("leaves a current file alone, rows and all", async () => {
     const path = file()
     const first = await openCache(path)
-    const store = openStore({ database: first })
+    const store = openRecord({ database: first })
     store.people.upsert(
       [{ id: "alice", name: "Alice", username: null, description: null, lastMessagedAt: null }],
       "login",
@@ -147,7 +147,7 @@ describe("the schema", () => {
     store.close()
 
     const second = await openCache(path)
-    const reopened = openStore({ database: second })
+    const reopened = openRecord({ database: second })
 
     expect(reopened.people.page({ order: "name", limit: 20, offset: 0 }).map((p) => p.id)).toEqual(["alice"])
     reopened.close()

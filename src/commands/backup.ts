@@ -54,9 +54,9 @@ export const backupCommand = (): Command => {
           }
 
           if (options.run !== true) {
-            const known = cache.chats.read(Number.POSITIVE_INFINITY)?.find((one) => one.id === chatId)
-            const estimate = estimateBackup({
-              ranges: cache.messages.ranges(chatId),
+            const known = (await cache.chats.read(Number.POSITIVE_INFINITY))?.find((one) => one.id === chatId)
+            const estimate = await estimateBackup({
+              ranges: await cache.messages.ranges(chatId),
               count: (from) => cache.messages.count(chatId, from),
               newest: known?.lastMessageAt ? Date.parse(known.lastMessageAt) : Date.now(),
               ...window,
@@ -73,7 +73,7 @@ export const backupCommand = (): Command => {
             throw new CliError("not_found", `no chat ${chatId} among this account's chats`)
           }
 
-          const before = cache.messages.count(chatId, since ?? 0)
+          const before = await cache.messages.count(chatId, since ?? 0)
           let outcome: Awaited<ReturnType<typeof client.messages.backup>>
           try {
             outcome = await client.messages.backup(chatId, {
@@ -88,7 +88,7 @@ export const backupCommand = (): Command => {
             throw error
           }
 
-          const held = cache.messages.count(chatId, since ?? 0)
+          const held = await cache.messages.count(chatId, since ?? 0)
           if (!outcome.complete) {
             renderer.note(`stopped after ${outcome.pages} pages, the limit of one run — the same command continues`)
           }
@@ -100,7 +100,7 @@ export const backupCommand = (): Command => {
           renderer.result({ chatId, run: true, ...outcome, fetched: held - before, held, export: exportCommand })
         } finally {
           await client.close()
-          cache.close()
+          await cache.close()
         }
       })
     })

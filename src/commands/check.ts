@@ -53,7 +53,7 @@ export const checkCommand = (): Command =>
           for (const note of notes) renderer.note(note)
         } finally {
           await client.close()
-          cache?.close()
+          await cache?.close()
         }
       })
     })
