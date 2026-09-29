@@ -110,7 +110,9 @@ change: `git diff --stat v<prev>..HEAD -- <the paths that step exercises>`.
 Write `docs_ai/releases/<version>.md` (the template is in `docs_ai/releases/README.md`):
 
 - `Commit: <sha>` — the full SHA of `main` **after** the release PR merged; `bin/release` compares
-  it with `HEAD`. Merging anything else afterwards means running step 1 again and a new SHA;
+  it with `HEAD`. Merging anything else afterwards means running step 1 again and a new SHA. If npm
+  has the version by the time it runs, `bin/release` merges the next free number itself and carries
+  the signed report to it — only when that pull request changes nothing but the number;
 - one row per step above: result and evidence — the `release:check` output, the changelog as
   accepted, the doc findings and where they were fixed, the requirements verdicts, the live
   scenario rows and the smoke result;
