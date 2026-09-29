@@ -46,6 +46,12 @@ grep -qx "Commit: $(git rev-parse HEAD)" "$report" || { echo "$report is for ano
 # A date, not the template's placeholder, so a report copied from the template does not pass as signed.
 grep -Eq '^Signed off: [0-9]{4}-[0-9]{2}-[0-9]{2}' "$report" || { echo "$report is not signed off by the owner" >&2; exit 1; }
 
+# Released already: the renumbering below would relabel that version's notes and publish the same code again.
+if [ -n "$(git tag -l "v$version")" ] && [ "$(git rev-list -n 1 "v$version")" = "$(git rev-parse HEAD)" ]; then
+  echo "v$version is this very commit — nothing new to release" >&2
+  exit 1
+fi
+
 # Two sessions preparing the same number is normal; the second takes the next free one (2026-09-29).
 # The report stays the owner's: it is checked above for the commit they signed, and carried to the
 # new number only when the bump commit changes nothing else.
