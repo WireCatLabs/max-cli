@@ -17,7 +17,7 @@ import type { GroupRules } from "../moderation/rules.js"
 import type { Permission } from "../sends/permissions.js"
 import { VERSION } from "../version.js"
 import { instructions } from "./instructions.js"
-import { type BotTool, CHECK_INPUT, type Gate, type Invocation, TOOLS } from "./tools.js"
+import { type BotTool, CHECK_INPUT, type Gate, type Invocation, TOOLS, withAcross } from "./tools.js"
 
 export interface BotServerOptions {
   profile: string
@@ -27,6 +27,8 @@ export interface BotServerOptions {
   allowModerate?: boolean
   /** What the profile allows; `undefined` is everything. The command refuses anyway — this only hides. */
   permitted?: readonly Permission[]
+  /** The profile's `readOtherBots`; the across arguments are offered only when it is not `false`. */
+  readOtherBots?: boolean | readonly string[]
   /** The program to run a command in; `run` from `program.ts`, passed in so this module does not import it. */
   run: (argv: string[], environment: Environment) => Promise<number>
   environment: Environment
@@ -119,7 +121,9 @@ export const createBotServer = (options: BotServerOptions) => {
   const open: Record<Gate, boolean> = { read: true, send: allowSend, delete: allowDelete, moderate: allowModerate }
   const allowed = (tool: Pick<BotTool, "permissions">) =>
     !permitted || (tool.permissions ?? []).every((permission) => permitted.includes(permission))
-  const offered = Object.entries(TOOLS).filter(([, tool]) => open[tool.gate] && allowed(tool))
+  const offered = Object.entries(TOOLS)
+    .filter(([, tool]) => open[tool.gate] && allowed(tool))
+    .map(([name, tool]): [string, BotTool] => [name, tool.across && options.readOtherBots ? withAcross(tool) : tool])
   const checks = allowModerate && allowed({ permissions: ["delete", "groups"] })
 
   const resolveChat: ResolveChat = async (reference) => {

@@ -2,7 +2,7 @@ import type { Command } from "commander"
 import * as v from "valibot"
 import { describe, expect, it } from "vitest"
 import { createProgram } from "../program.js"
-import { TOOLS } from "./tools.js"
+import { TOOLS, withAcross } from "./tools.js"
 
 /** One valid value per argument name, so every tool's invocation can be built. */
 const SAMPLE: Record<string, unknown> = {
@@ -25,6 +25,8 @@ const SAMPLE: Record<string, unknown> = {
   users: ["1", "2"],
   user: "1",
   block: true,
+  all_bots: true,
+  bots: ["other"],
 }
 
 const commandAt = (root: Command, words: string[]): Command | undefined =>
@@ -39,6 +41,19 @@ const optionNames = (command: Command): string[] => {
 
 describe("the bot MCP tools", () => {
   const bot = commandAt(createProgram(), ["bot"])
+
+  it.each(
+    Object.entries(TOOLS)
+      .filter(([, tool]) => tool.across)
+      .map(([name, tool]) => [name, withAcross(tool)] as const),
+  )("%s with all_bots and bots runs options the command has", (_name, tool) => {
+    const args = Object.fromEntries(Object.keys(tool.input.entries).map((key) => [key, SAMPLE[key]]))
+    expect(v.safeParse(tool.input, args).issues).toBeUndefined()
+    const { words, options = [] } = tool.invocation(args)
+    const known = optionNames(commandAt(bot as Command, words) as Command)
+    expect(options).toEqual(expect.arrayContaining(["--all-bots", "--bots=other"]))
+    for (const token of options) expect(known, token).toContain(token.split("=")[0])
+  })
 
   it.each(Object.entries(TOOLS))("%s runs a `max bot` command that exists, with options it has", (_name, tool) => {
     const args = Object.fromEntries(Object.keys(tool.input.entries).map((key) => [key, SAMPLE[key]]))

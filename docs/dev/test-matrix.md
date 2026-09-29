@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**404 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 252 options.
+**408 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 256 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -231,11 +231,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot messages list` | `--limit` | ✅ |  |
 | `bot messages get` |  | ✅ |  |
 | `bot messages search` |  | ✅ |  |
+| `bot messages search` | `--all-bots` | ✅ |  |
+| `bot messages search` | `--bots` | ✅ |  |
 | `bot messages search` | `--limit` | ✅ |  |
 | `bot messages search` | `--from` | ✅ |  |
 | `bot messages between` |  | ✅ |  |
-| `bot messages between` | `--limit` | ✅ |  |
 | `bot messages between` | `--all-bots` | ✅ |  |
+| `bot messages between` | `--bots` | ✅ |  |
+| `bot messages between` | `--limit` | ✅ |  |
 | `bot messages send` |  | ✅ |  |
 | `bot messages send` | `--format` | ✅ |  |
 | `bot messages send` | `--reply-to` | ✅ |  |
@@ -261,8 +264,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot chats leave` |  | ✅ |  |
 | `bot chats action` |  | ✅ |  |
 | `bot people show` |  | ✅ |  |
-| `bot people show` | `--limit` | ✅ |  |
 | `bot people show` | `--all-bots` | ✅ |  |
+| `bot people show` | `--bots` | ✅ |  |
+| `bot people show` | `--limit` | ✅ |  |
 | `bot people show` | `--refresh` | ✅ |  |
 | `bot recipients list` |  | ✅ |  |
 | `bot recipients add` |  | ✅ |  |

@@ -18,8 +18,30 @@ export interface BotTool {
   gate: Gate
   /** The profile's `allow` names that must all be there for the tool to be offered. */
   permissions?: Permission[]
+  /** Reads the local copy by person or text, so it may reach other bots when `readOtherBots` allows. */
+  across?: boolean
   invocation: (args: Record<string, unknown>) => Invocation
 }
+
+/** `all_bots` and `bots`, added to an `across` tool only when this bot may read others (owner, 2026-09-29). */
+export const withAcross = (tool: BotTool): BotTool => ({
+  ...tool,
+  input: v.object({
+    ...tool.input.entries,
+    all_bots: v.optional(v.pipe(v.boolean(), v.description("also read every other bot's copy this bot may read"))),
+    bots: v.optional(
+      v.pipe(v.array(v.pipe(v.string(), v.minLength(1))), v.description("also read these bots' copies, by profile")),
+    ),
+  }),
+  invocation: (args) => {
+    const inner = tool.invocation(args)
+    const bots = args.bots as string[] | undefined
+    return {
+      ...inner,
+      options: [...(inner.options ?? []), ...flag("all-bots", args.all_bots), ...option("bots", bots?.join(","))],
+    }
+  },
+})
 
 /** A value never reaches commander as its own token, so no argument can become a flag (plan Q-2). */
 const option = (name: string, value: unknown): string[] => (value === undefined ? [] : [`--${name}=${String(value)}`])
@@ -93,6 +115,7 @@ export const TOOLS: Record<string, BotTool> = {
     }),
   }),
   max_bot_messages_search: read({
+    across: true,
     title: "Search the bot's messages",
     description: "Search the messages this machine has kept for the bot; from narrows to what one person wrote.",
     input: v.object({ text: v.optional(v.pipe(v.string(), v.minLength(1))), from: v.optional(person), limit }),
@@ -103,6 +126,7 @@ export const TOOLS: Record<string, BotTool> = {
     }),
   }),
   max_bot_messages_between: read({
+    across: true,
     title: "Messages between people",
     description: "What these people wrote in the chats this bot shares with them, from the copy on this machine.",
     input: v.object({ people: v.pipe(v.array(person), v.minLength(1)), limit }),
@@ -113,6 +137,7 @@ export const TOOLS: Record<string, BotTool> = {
     }),
   }),
   max_bot_people_show: read({
+    across: true,
     title: "One person",
     description: "A person this bot has seen write: who they are, where, and the private chat with them.",
     input: v.object({ who: person, limit }),

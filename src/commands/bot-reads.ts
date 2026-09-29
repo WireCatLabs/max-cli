@@ -8,7 +8,7 @@ import type { ChatRegistry } from "../bot/registry.js"
 import { asFirstWord } from "../profile.js"
 import { botCheckCommand, botRulesCommand } from "./bot-check.js"
 import { botContext } from "./bot-context.js"
-import { addBetween, searchMessages } from "./bot-people.js"
+import { type Across, acrossOptions, addBetween, searchMessages } from "./bot-people.js"
 import { guardedCall, sendCommands } from "./bot-sends.js"
 import { renderList, wholeNumber } from "./paging.js"
 
@@ -88,8 +88,7 @@ export const messagesCommand = (): Command => {
       show(context, [found], true)
     })
 
-  command
-    .command("search [text]")
+  acrossOptions(command.command("search [text]"))
     .option("--limit <n>", "how many", wholeNumber("--limit"))
     .option(
       "--from <who>",
@@ -100,10 +99,10 @@ export const messagesCommand = (): Command => {
       "search the messages this bot has read, sent or received on this machine — the local copy only, newest " +
         "first; by text, by --from, or both",
     )
-    .action(async function (this: Command, text: string | undefined, options: { from?: string[] }) {
+    .action(async function (this: Command, text: string | undefined, options: Across & { from?: string[] }) {
       const context = botContext(this, { offline: true })
       storedBotId(context)
-      const found = await searchMessages(context, text, options.from)
+      const found = await searchMessages(context, text, options.from, options)
       show(context, found.items, false, { hasMore: found.hasMore, limit: context.settings.limit })
     })
 

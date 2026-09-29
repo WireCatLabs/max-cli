@@ -185,8 +185,21 @@ max sales bot messages between @ann Борис --limit 20
 
 `between` показывает только чаты, где писал каждый из названных, по 20 последних сообщений из
 каждого, старые сверху. «Общий чат» здесь — тот, где бот видел сообщения от каждого, а не список
-участников из MAX. `--all-bots` у `people show` и `between` смотрит копии всех ботов на этом
-компьютере.
+участников из MAX.
+
+**Каждый бот видит только свою копию.** Заглянуть в копию другого бота можно, только если это
+разрешено в настройках и попрошено в команде:
+
+```sh
+max shop config set --bot readOtherBots true          # боту shop можно читать всех ботов
+max shop config set --bot readOtherBots news,support  # или только этих
+max shop bot messages search заказ --bots news        # и тогда — явно, в команде
+max shop bot people show @ann --all-bots              # все, кого разрешено
+```
+
+`--all-bots` и `--bots` есть у `messages search`, `people show` и `messages between`. Без
+`readOtherBots` оба отказывают с кодом `5` и называют команду, которая разрешает. Агенту через
+`max <имя> bot mcp` те же поля (`all_bots`, `bots`) предлагаются, только когда это разрешено.
 
 ## Обновления
 
