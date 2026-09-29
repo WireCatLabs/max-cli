@@ -199,7 +199,8 @@ two bots. **A bot with a live webhook is read-only**: its updates go to real ope
 only: Saved messages (chat `0`), the dialog between the two accounts, a test group and a test
 channel with the second account and one bot as admin. Never a real person's chat.
 
-**How to run.** The published build, `max`, since that is what a reader installs. Each command with
+**How to run.** A change before it ships: the `test-live` skill (`.claude/skills/test-live/SKILL.md`),
+through `bin/max`. A release: the published build, `max`, since that is what a reader installs. Each command with
 `--json --timeout 60s` inside a wall-clock `timeout 90`, and the check is: exit code, stdout one JSON
 value, stderr empty or one diagnostic, and the shape (keys, item count) — never the values, which
 are other people's messages. A command that does not exit is a failure. Snapshot before a change,

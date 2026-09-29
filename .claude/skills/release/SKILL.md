@@ -90,6 +90,7 @@ change: `git diff --stat v<prev>..HEAD -- <the paths that step exercises>`.
 ## 5. Live scenarios
 
 `docs_ai/plans/2026-09-28-live-scenarios.md` holds the scenarios, the cast and the rules for running.
+How to run one — `bin/max`, the shape-only helper, snapshot and restore — is the `test-live` skill.
 
 1. Map each changed command to the scenarios that exercise it (P, G, C, T, X ids). The ⛔ rows of
    `docs/dev/test-matrix.md` name commands that only a live run checks — include every changed one.
