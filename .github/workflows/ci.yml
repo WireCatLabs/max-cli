@@ -51,6 +51,28 @@ jobs:
       - run: pnpm build
       - run: pnpm smoke:bun
 
+  version:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # A warning, never a failure: bin/release takes the next free version itself (2026-09-29).
+      - name: version above main and npm
+        continue-on-error: true
+        run: |
+          pr=$(node -p 'require("./package.json").version')
+          git fetch -q --depth=1 origin main
+          main=$(git show FETCH_HEAD:package.json | node -p 'JSON.parse(require("fs").readFileSync(0)).version')
+          [ "$pr" != "$main" ] || exit 0
+          name=$(node -p 'require("./package.json").name')
+          latest=$(npm view "$name" version 2>/dev/null || true)
+          floor=$(printf '%s\n%s\n' "$main" "$latest" | sort -V | tail -1)
+          versions=$(npm view "$name" versions --json 2>/dev/null || true)
+          next=$(node scripts/next-version.mjs "$pr" "$floor" "$versions")
+          [ "$next" != "$pr" ] || exit 0
+          echo "::warning file=package.json::version $pr is not above both main ($main) and npm's latest ($latest)" \
+            "— bin/release will publish it as $next"
+
   secrets:
     runs-on: ubuntu-latest
     steps:
