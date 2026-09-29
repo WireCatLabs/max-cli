@@ -15,8 +15,8 @@ importers:
         specifier: 0.8.0
         version: 0.8.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: 0.28.0
-        version: 0.28.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.29.0
+        version: 0.29.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -350,15 +350,6 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@leemour/cli-core@0.7.0':
-    resolution: {integrity: sha512-u9AC2FwSWLmnyPBu8iPT3FksPmuCkCgWeATTelskeg3imAzM/GvDU9KJcIz5Ra3hRthxL3X2OCEFw6weIhx1JQ==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      commander: '>=15'
-    peerDependenciesMeta:
-      commander:
-        optional: true
-
   '@leemour/cli-core@0.8.0':
     resolution: {integrity: sha512-r70UNQTTGd3jeKNCOvAUtufVVKLkG5t+ownKE4epOA6UFR4I691b5ZWQe/OByB+2jEE6Q2WfNho7OU7T5qPFDA==}
     engines: {node: '>=22'}
@@ -368,8 +359,8 @@ packages:
       commander:
         optional: true
 
-  '@leemour/cli-messaging@0.28.0':
-    resolution: {integrity: sha512-1PXAAeYromaWhEPsoGfx2lbTy2MSnwd55khmspDgwMICovyr571DuD23t725EXy3+lAmtnXNzt6f3/ieWtxsSg==}
+  '@leemour/cli-messaging@0.29.0':
+    resolution: {integrity: sha512-763PMzbQ0VBhEmgXQU7jk9EyrwH8IQi1O/4qsJNCPhrqBkGrLwv7CMjVPZ8HaaBZL9vr0v1zgWH2qTvy6CBDUQ==}
     engines: {node: '>=22'}
     peerDependencies:
       commander: '>=15'
@@ -1393,19 +1384,6 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@leemour/cli-core@0.7.0(commander@15.0.0)(typescript@7.0.2)':
-    dependencies:
-      cli-table3: 0.6.5
-      env-paths: 4.0.0
-      picocolors: 1.1.1
-      pino: 10.3.1
-      valibot: 1.5.0(typescript@7.0.2)
-    optionalDependencies:
-      '@napi-rs/keyring': 2.1.0
-      commander: 15.0.0
-    transitivePeerDependencies:
-      - typescript
-
   '@leemour/cli-core@0.8.0(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       cli-table3: 0.6.5
@@ -1419,10 +1397,10 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@leemour/cli-messaging@0.28.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-messaging@0.29.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
-      '@leemour/cli-core': 0.7.0(commander@15.0.0)(typescript@7.0.2)
+      '@leemour/cli-core': 0.8.0(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server': 2.1.0
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       commander: 15.0.0
