@@ -20,6 +20,20 @@
 
 ### Изменено — может сломать скрипты
 
+- **`max messages unpin <чат> <сообщение>`** — теперь нужен номер сообщения, как у `pin` и в tg.
+  В чате MAX закреплено одно сообщение, и открепляется оно, какой бы номер ни был указан. Инструмент
+  MCP `max_messages_unpin` тоже просит `message`.
+- **Ответы `--json` у реакций, закрепления и отметки прочитанным — общие с tg**, и в каждом есть
+  `operationId`, номер этого действия, как в журнале отправок:
+  - `reactions add|remove`: `{operationId, chatId, messageId, reaction}` — ваша реакция или `null`,
+    без счётчиков реакций на сообщении (их показывает `messages list`);
+  - `messages pin|unpin`: `{operationId, chatId, messageId, pinned}`, где `pinned` — `true` или `false`;
+  - `chats mark-read`: `{operationId, chatId, until}` — до какого сообщения, или `null`, если до
+    последнего.
+
+  Так же отвечают инструменты MCP `max_reactions_add`, `max_reactions_remove`, `max_messages_pin`,
+  `max_messages_unpin`, `max_chats_mark_read`.
+
 - **`max sends list --json`: поле `cid` → `sendId`, и это строка, а не число** — то же имя, что в
   ошибке `outcome_unknown` и у `--send-id`. Строки, записанные раньше, показываются так же.
 - **Записи запусков (`--trace`, `--record`, `max runs show`) — в общем формате tg и max.** Номер

@@ -177,15 +177,25 @@ describe("forwarding", () => {
 })
 
 describe("pinning", () => {
-  it("pins without notifying unless asked, and unpins with message 0", async () => {
+  it("pins without notifying unless asked, and unpins with message 0 whichever message is named", async () => {
     const { environment, sentWith } = messenger()
 
     const pinned = await runWith(["e-pin", "messages", "pin", "111", MESSAGE], environment)
     await runWith(["e-pin", "messages", "pin", "111", MESSAGE, "--notify"], environment)
-    const unpinned = await runWith(["e-pin", "messages", "unpin", "111"], environment)
+    const unpinned = await runWith(["e-pin", "messages", "unpin", "111", MESSAGE], environment)
 
-    expect(JSON.parse(pinned.stdout)).toEqual({ chatId: "111", pinned: MESSAGE })
-    expect(JSON.parse(unpinned.stdout)).toEqual({ chatId: "111", pinned: null })
+    expect(JSON.parse(pinned.stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: "111",
+      messageId: MESSAGE,
+      pinned: true,
+    })
+    expect(JSON.parse(unpinned.stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: "111",
+      messageId: MESSAGE,
+      pinned: false,
+    })
     const requests = sentWith(Opcode.CHAT_UPDATE).map(({ payload }) => ({
       notifyPin: payload?.notifyPin,
       pinMessageId: String(payload?.pinMessageId),
@@ -216,7 +226,7 @@ describe("a read-only profile", () => {
       ["messages", "edit", "111", MESSAGE, "new"],
       ["messages", "forward", "111", MESSAGE, "--to", "222"],
       ["messages", "pin", "111", MESSAGE],
-      ["messages", "unpin", "111"],
+      ["messages", "unpin", "111", MESSAGE],
     ]) {
       expect((await runWith(["e-read", ...argv], environment)).code).toBe(5)
     }

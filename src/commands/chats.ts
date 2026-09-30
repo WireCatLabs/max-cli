@@ -1,9 +1,11 @@
 import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
+import { markReadCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import { ADMIN_RIGHTS, type AdminRight, EVENTS_DAYS, type MaxClient } from "../client.js"
 import type { ChatKind, GroupSettings } from "../domain/models.js"
+import { maxMessenger } from "../messenger.js"
 import { checkCommand } from "./check.js"
 import { forCommand } from "./context.js"
 import { foldersCommand } from "./folders.js"
@@ -129,16 +131,7 @@ export const chatsCommand = (): Command => {
       await withClient(this, "chats join", (client) => client.chats.join(link))
     })
 
-  annotate(command.command("mark-read"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("mark a chat read; the other person sees that you read it")
-    .option("--until <message>", "only up to this message id, inclusive; the newest by default")
-    .action(async function (this: Command, chat: string) {
-      const until = this.opts().until
-      await withClient(this, "chats mark-read", async (client) =>
-        client.chats.markRead(await client.chats.resolve(chat), until === undefined ? undefined : String(until).trim()),
-      )
-    })
+  command.addCommand(markReadCommand(maxMessenger))
 
   annotate(command.command("leave"), { mutates: true })
     .argument("<chat>", "chat id, or part of a chat name")

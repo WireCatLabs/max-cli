@@ -66,23 +66,33 @@ describe("answering and reacting", () => {
     })
   })
 
-  it("`reactions remove` takes the reaction off and answers what is left", async () => {
+  it("`reactions remove` takes the reaction off and answers that it is off", async () => {
     const { code, max, stdout } = await runAgainst(["reactions", "remove", "0", "116762160362694583"])
 
     expect(code).toBe(0)
     expect(String(max.sent.find((call) => call.opcode === Opcode.MSG_CANCEL_REACTION)?.payload.messageId)).toBe(
       "116762160362694583",
     )
-    expect(JSON.parse(stdout)).toEqual({ counts: [], mine: null, total: 0 })
+    expect(JSON.parse(stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: "0",
+      messageId: "116762160362694583",
+      reaction: null,
+    })
   })
 
-  it("`reactions add` sends one emoji reaction and answers the counts", async () => {
+  it("`reactions add` sends one emoji reaction and answers with it", async () => {
     const { code, max, stdout } = await runAgainst(["reactions", "add", "0", "116762160362694583", "👍"])
 
     expect(code).toBe(0)
     expect(max.sent.find((call) => call.opcode === Opcode.MSG_REACTION)?.payload).toMatchObject({
       reaction: { reactionType: "EMOJI", id: "👍" },
     })
-    expect(JSON.parse(stdout)).toEqual({ counts: [{ reaction: "👍", count: 1 }], mine: "👍", total: 1 })
+    expect(JSON.parse(stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: "0",
+      messageId: "116762160362694583",
+      reaction: "👍",
+    })
   })
 })
