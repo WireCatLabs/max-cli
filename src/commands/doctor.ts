@@ -1,7 +1,9 @@
 import { resolve } from "node:path"
 import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@leemour/cli-core"
+import { runsDirFor } from "@leemour/cli-messaging/cli"
 import { SendJournal } from "@leemour/cli-messaging/sends"
 import { Command } from "commander"
+import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { BotApiClient } from "../bot/client.js"
 import { type Diagnosis, diagnose } from "../diagnose.js"
@@ -9,7 +11,6 @@ import { ownScript } from "../install.js"
 import { type Check, checkOnline, mcpHandshake } from "../online.js"
 import { asFirstWord } from "../profile.js"
 import { buildReport, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
-import { runsDirFor } from "../runs/run.js"
 import { sendsPathFor } from "../sends.js"
 import { SessionStore } from "../session/store.js"
 import { environmentOf, forCommand } from "./context.js"
@@ -208,7 +209,7 @@ const reportCommand = (): Command => {
         const built = buildReport({
           profile: settings.profile,
           doctor: await diagnoseProfile(settings, store, botStoreFor(this), sessionStoreFor(this)),
-          runsDir: runsDirFor(),
+          runsDir: runsDirFor(MAX_APP),
           ...(options.run === undefined ? {} : { runId: options.run }),
           sends: new SendJournal(sendsPathFor(settings.profile)).entries(),
           now,

@@ -10,7 +10,9 @@ import {
   type Streams,
   visibleControls,
 } from "@leemour/cli-core"
+import { recorded, wasSettled } from "@leemour/cli-messaging/cli"
 import { Command, CommanderError } from "commander"
+import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
 import { botCommand } from "./commands/bot.js"
 import { botRecordingOf } from "./commands/bot-context.js"
@@ -41,7 +43,6 @@ import { upgradeCommand } from "./commands/upgrade.js"
 import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
 import { commandWords, liftProfile } from "./profile.js"
-import { recorded, wasSettled } from "./runs/recording.js"
 import { updateNotice } from "./update.js"
 import { VERSION } from "./version.js"
 
@@ -273,9 +274,12 @@ const keepFailure = async (
   }
   await recorded(
     {
+      app: MAX_APP,
       command: commandPath(program, rest) || "max",
       profile: settings?.profile ?? profile ?? "default",
-      options: { keepFailed: settings?.keepFailedRuns ?? !rest.includes("--no-record") },
+      record: false,
+      keepFailed: settings?.keepFailedRuns ?? !rest.includes("--no-record"),
+      trace: false,
       format: "json",
       streams,
       ...(settings ? { keepDays: settings.keepRunsForDays } : {}),

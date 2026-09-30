@@ -10,8 +10,8 @@ import {
 } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { type FetchLike, providerWaitMs, statusToCode } from "@leemour/cli-core/http"
+import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@leemour/cli-messaging/cli"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
-import { type DiagnosticEvent, maxErrorKey, type RequestEvent } from "../runs/events.js"
 import { VERSION } from "../version.js"
 import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"
 
@@ -291,14 +291,14 @@ const idsIn = (input: CallInput): Record<string, string> | undefined => {
 }
 
 /** The code and MAX's own key, never the message: MAX's refusal can quote what we sent. */
-const failureOf = (error: unknown): Pick<RequestEvent, "outcome" | "errorCode" | "status" | "maxError"> => {
+const failureOf = (error: unknown): Pick<RequestEvent, "outcome" | "errorCode" | "status" | "providerError"> => {
   if (!(error instanceof CliError)) return { outcome: "error", errorCode: "generic_failure" }
   const status = typeof error.details.status === "number" ? error.details.status : undefined
-  const maxError = maxErrorKey(error.details.maxCode)
+  const providerError = providerErrorKey(error.details.maxCode)
   return {
     outcome: "error",
     errorCode: error.code,
     ...(status === undefined ? {} : { status }),
-    ...(maxError ? { maxError } : {}),
+    ...(providerError ? { providerError } : {}),
   }
 }

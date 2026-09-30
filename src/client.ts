@@ -1,4 +1,5 @@
 import { CliError, realSleep, type SleepLike } from "@leemour/cli-core"
+import { type DiagnosticEvent, providerErrorKey } from "@leemour/cli-messaging/cli"
 import type { AccountAction, ChatAction, GuardRequest, SendGuard } from "@leemour/cli-messaging/sends"
 import type { CacheStore, PersonOrder, SyncSummary } from "./cache/store.js"
 import { delayMs } from "./config.js"
@@ -59,7 +60,6 @@ import { asFirstWord } from "./profile.js"
 import { Connection, ProtocolError, type Wire } from "./protocol/connection.js"
 import { asId, type Payload } from "./protocol/frame.js"
 import { isId, pickChat, pickPerson } from "./resolve.js"
-import { countsIn, type DiagnosticEvent, idsOf, maxErrorKey, type WarningCode } from "./runs/events.js"
 import { LOGIN_CHATS, type Resume, startSession } from "./session/handshake.js"
 import { type QrLogin, tokenByQr } from "./session/login.js"
 import {
@@ -75,6 +75,7 @@ import { ASSET_TYPES } from "./spec/operations/assets.js"
 import type { chatsUpdateMembers } from "./spec/operations/chats.js"
 import { isImage, isVideo, readUpload, uploadFile, uploadMedia, uploadPhoto } from "./upload.js"
 import { voiceOf } from "./voice.js"
+import { countsIn, idsOf, type WarningCode } from "./wire-events.js"
 
 /** One file on its way into a message; `voice` is what a voice message carries besides the bytes. */
 interface Upload {
@@ -2402,7 +2403,7 @@ export class MaxClient {
         durationMs: Math.round(performance.now() - started),
         outcome: "error",
         errorCode: failure.code,
-        ...(typeof failure.details.maxError === "string" ? { maxError: failure.details.maxError } : {}),
+        ...(typeof failure.details.providerError === "string" ? { providerError: failure.details.providerError } : {}),
       })
       throw failure
     }
@@ -3015,11 +3016,11 @@ const asCliError = (error: unknown): CliError => {
   if (error instanceof CliError) return error
 
   if (error instanceof ProtocolError) {
-    const key = maxErrorKey(record(error.payload)?.error)
+    const key = providerErrorKey(record(error.payload)?.error)
     const refused = asRefusal(error)
     return key === undefined
       ? refused
-      : new CliError(refused.code, refused.message, { ...refused.details, maxError: key })
+      : new CliError(refused.code, refused.message, { ...refused.details, providerError: key })
   }
 
   const message = error instanceof Error ? error.message : String(error)
@@ -3048,7 +3049,7 @@ const deadLink =
   (link: string) =>
   (error: unknown): never => {
     const failure = asCliError(error)
-    if (failure.details.maxError !== "not.found") throw failure
+    if (failure.details.providerError !== "not.found") throw failure
     throw new CliError("not_found", `${link.trim()} leads nowhere — the link was reset, or never worked`)
   }
 

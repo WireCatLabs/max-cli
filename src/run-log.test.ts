@@ -2,15 +2,22 @@ import { mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { CliError, captureStreams, memoryKeyring } from "@leemour/cli-core"
+import {
+  crashOf,
+  type DiagnosticEvent,
+  listRuns,
+  providerErrorKey,
+  readEvents,
+  recorded,
+  renderEvent,
+} from "@leemour/cli-messaging/cli"
 import { describe, expect, it } from "vitest"
-import { MaxClient } from "../client.js"
-import { Opcode } from "../generated/opcodes.generated.js"
-import { Connection } from "../protocol/connection.js"
-import { SessionStore } from "../session/store.js"
-import { mockMax } from "../testing/mock-max.js"
-import { type DiagnosticEvent, maxErrorKey, renderEvent } from "./events.js"
-import { crashOf, recorded } from "./recording.js"
-import { listRuns, readEvents } from "./run.js"
+import { MAX_APP } from "./app.js"
+import { MaxClient } from "./client.js"
+import { Opcode } from "./generated/opcodes.generated.js"
+import { Connection } from "./protocol/connection.js"
+import { SessionStore } from "./session/store.js"
+import { mockMax } from "./testing/mock-max.js"
 
 const REQUEST: DiagnosticEvent = { event: "request", operation: "chats.history", opcode: 49, seq: 3 }
 
@@ -20,7 +27,17 @@ const recordRun = async (
 ) => {
   const runsDir = join(mkdtempSync(join(tmpdir(), "max-run-log-")), "runs")
   const failure = await recorded(
-    { command: "chats list", profile: "default", options, format: "json", streams: captureStreams(), runsDir },
+    {
+      app: MAX_APP,
+      command: "chats list",
+      profile: "default",
+      record: options.record === true,
+      keepFailed: options.keepFailed === true,
+      trace: false,
+      format: "json",
+      streams: captureStreams(),
+      runsDir,
+    },
     body,
   ).catch((error: unknown) => error)
   const runs = listRuns(runsDir)
@@ -35,11 +52,11 @@ const recordRun = async (
 
 describe("MAX's refusal, as a key", () => {
   it("keeps a dotted key and drops anything that reads as a sentence", () => {
-    expect(maxErrorKey("login.token")).toBe("login.token")
-    expect(maxErrorKey("folder.validation.title.too-long")).toBe("folder.validation.title.too-long")
-    expect(maxErrorKey("chat 111: Привет")).toBeUndefined()
-    expect(maxErrorKey("Слишком много попыток")).toBeUndefined()
-    expect(maxErrorKey(42)).toBeUndefined()
+    expect(providerErrorKey("login.token")).toBe("login.token")
+    expect(providerErrorKey("folder.validation.title.too-long")).toBe("folder.validation.title.too-long")
+    expect(providerErrorKey("chat 111: Привет")).toBeUndefined()
+    expect(providerErrorKey("Слишком много попыток")).toBeUndefined()
+    expect(providerErrorKey(42)).toBeUndefined()
   })
 
   it("reaches the response event, and not when MAX answered with a sentence", async () => {
@@ -64,9 +81,9 @@ describe("MAX's refusal, as a key", () => {
     const keyed = await run("proto.payload")
     const worded = await run("you sent: Привет, как дела")
 
-    expect(keyed.response).toMatchObject({ errorCode: "provider_error", maxError: "proto.payload" })
-    expect((keyed.error as CliError).details.maxError).toBe("proto.payload")
-    expect(worded.response).not.toHaveProperty("maxError")
+    expect(keyed.response).toMatchObject({ errorCode: "provider_error", providerError: "proto.payload" })
+    expect((keyed.error as CliError).details.providerError).toBe("proto.payload")
+    expect(worded.response).not.toHaveProperty("providerError")
   })
 })
 
@@ -74,11 +91,11 @@ describe("a failed run", () => {
   it("is kept without --record, with every event before the failure and the key MAX gave", async () => {
     const { runs, events } = await recordRun({ keepFailed: true }, async (emit) => {
       emit(REQUEST)
-      throw new CliError("provider_error", "MAX refused opcode 49: proto.payload", { maxError: "proto.payload" })
+      throw new CliError("provider_error", "MAX refused opcode 49: proto.payload", { providerError: "proto.payload" })
     })
 
     expect(runs).toMatchObject([
-      { status: "failed", errorCode: "provider_error", maxError: "proto.payload", keptBecauseFailed: true },
+      { status: "failed", errorCode: "provider_error", providerError: "proto.payload", keptBecauseFailed: true },
     ])
     expect(runs[0]).toMatchObject({ runtime: expect.stringMatching(/^(node|bun) /), platform: process.platform })
     expect(events).toMatchObject([{ event: "request", operation: "chats.history" }])

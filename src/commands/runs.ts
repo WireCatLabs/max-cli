@@ -1,6 +1,7 @@
 import { CliError } from "@leemour/cli-core"
+import { findRun, listRuns, readEvents, runsDirFor } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
-import { findRun, listRuns, readEvents, runsDirFor } from "../runs/run.js"
+import { MAX_APP } from "../app.js"
 import { outputFor } from "./context.js"
 import { renderList, wholeNumber } from "./paging.js"
 
@@ -20,7 +21,7 @@ export const runsCommand = (): Command => {
     .action(function (this: Command) {
       const options = this.optsWithGlobals()
       const { renderer, format } = outputFor(this)
-      const runs = listRuns(runsDirFor())
+      const runs = listRuns(runsDirFor(MAX_APP))
 
       renderList(renderer, format, runs.slice(0, options.limit), {
         limit: options.limit,
@@ -72,7 +73,7 @@ export const runsCommand = (): Command => {
 const readable = ({ level, runId, command, profile, ...event }: Record<string, unknown>) => event
 
 const runOrRefuse = (id: string) => {
-  const found = findRun(runsDirFor(), id)
+  const found = findRun(runsDirFor(MAX_APP), id)
   if (!found) throw new CliError("not_found", `no recorded run "${id}" — \`max runs list\` shows what there is`)
   return found
 }

@@ -1,6 +1,8 @@
 import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
+import { type Recording, startRecording } from "@leemour/cli-messaging/cli"
 import type { Command } from "commander"
+import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { BotApiClient } from "../bot/client.js"
 import { BOT_PERMISSIONS } from "../bot/permissions.js"
@@ -9,7 +11,6 @@ import { botFetch } from "../bot/transport.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { resolveOutput } from "../output.js"
 import { asFirstWord, rootOf } from "../profile.js"
-import { type Recording, startRecording } from "../runs/recording.js"
 import { readSecret } from "../session/prompt.js"
 import { environmentOf } from "./context.js"
 
@@ -33,9 +34,12 @@ export const startBotRecording = (command: Command): void => {
   recordings.set(
     rootOf(command),
     startRecording({
+      app: MAX_APP,
       command: words.join(" "),
       profile: settings.profile,
-      options: { record: settings.record, keepFailed: settings.keepFailedRuns, trace: settings.trace },
+      record: settings.record,
+      keepFailed: settings.keepFailedRuns,
+      trace: settings.trace,
       format,
       streams,
       keepDays: settings.keepRunsForDays,

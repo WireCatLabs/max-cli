@@ -2,13 +2,13 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@leemour/cli-core"
+import type { DiagnosticEvent } from "@leemour/cli-messaging/cli"
 import { afterEach, describe, expect, it } from "vitest"
 import { openCache } from "./cache/open.js"
 import { type CacheStore, openStore } from "./cache/store.js"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { Connection } from "./protocol/connection.js"
-import type { DiagnosticEvent } from "./runs/events.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
 
@@ -1637,7 +1637,7 @@ describe("one event per request", () => {
       expect(recorded).not.toContain(secret)
     }
     // And the one identifier that is allowed, so this cannot pass by recording nothing at all.
-    expect(recorded).toContain('"cid":"4242"')
+    expect(recorded).toContain('"send":"4242"')
   })
 
   it("records the request that never came back, with the code and not the reason", async () => {

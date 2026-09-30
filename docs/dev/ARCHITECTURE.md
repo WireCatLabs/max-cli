@@ -35,7 +35,8 @@ only the event lines.
                                          ▲
                         src/session/   handshake (INIT → LOGIN) · keyring · state
                         src/cache/     the record, behind a driver seam per runtime
-                        src/runs/      one event per request · the run directory
+                        src/wire-events.ts  which ids and counts a MAX event carries
+                        (the run directory and the event format: cli-messaging's, T6 item 3c)
 ```
 
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
@@ -342,7 +343,8 @@ file. Either, both, or (default) neither. What it looks like and how to use it:
 - **Never in an event: a chat title, a person's name, a message body, a phone number, a token** —
   not truncated, not hashed (brief §14, §24). Ids are in: opaque, only the session holder can
   correlate them, and every real complaint is about one conversation.
-- ⚠ This holds because `idsOf` in `src/runs/events.ts` **builds the event from named fields instead
+- ⚠ This holds because `idsOf` in `src/wire-events.ts` (**correction 2026-09-30:** it was
+  `src/runs/events.ts`, and it names the send identity `send`, not `cid`) **builds the event from named fields instead
   of filtering the payload** (a filter lets an unseen field through). No branch reaches
   `session.login`'s `token`. Pino's redaction is the second line of defence.
 - `MaxClient` takes an injected event sink, like `warn` — it reports, never decides where. The hook
@@ -376,8 +378,8 @@ starts, whole days by directory name. Rules not stated there:
   one. The run is named by the command's words only (`commandPath`), never the arguments.
 - **Beyond requests**: `warning` events carry a code from a closed list (`WarningCode`), never
   the sentence; a crash adds a `crash` event with the class and up to ten `function file:line`
-  frames, never the message; `maxError` is MAX's refusal key when it is shaped like one
-  (`maxErrorKey`, `src/runs/events.ts`). `run.json` carries `runtime`, `platform`, `arch`.
+  frames, never the message; `providerError` is MAX's refusal key when it is shaped like one
+  (`providerErrorKey`, cli-messaging's — **correction 2026-09-30:** it was `maxError`, `src/runs/events.ts`). `run.json` carries `runtime`, `platform`, `arch`.
 - `run.json` is written atomically. `finish` runs on every path and **awaits the logger**: Pino
   appends via a plain stream, and a process that exits first loses the tail — the part somebody
   wanted.
