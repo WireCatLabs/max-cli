@@ -830,8 +830,8 @@ max messages delete <chat> <messages> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `messages` | обязательный | ids of the messages, at most 10 |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `messages` | обязательный | the message ids, at most 10 |
 
 | Опция | Что делает |
 |---|---|

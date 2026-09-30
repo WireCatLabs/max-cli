@@ -10,6 +10,7 @@ import type {
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
 import type { Markup } from "../markdown.js"
+import { isId } from "../resolve.js"
 import type { SessionStore } from "../session/store.js"
 
 export type MaxAdapter = MessengerAdapter & MessageEditing & MessagePins & MessageReactions & ReadState
@@ -48,10 +49,11 @@ export const maxAdapter = (client: MaxClient, store: SessionStore): MaxAdapter =
       return { ...page, items: page.items.map(toMessage) }
     },
 
+    // An id is taken as it is, without connecting: a write the guard refuses must not have logged in first.
     resolve: async (reference): Promise<Chat> => {
-      const { items } = await client.chats.list()
+      if (isId(reference)) return unknownChat(reference.trim())
       const id = await chatId(reference)
-      return items.find((chat) => chat.id === id) ?? unknownChat(id)
+      return (await client.chats.list()).items.find((chat) => chat.id === id) ?? unknownChat(id)
     },
 
     chat: (reference) => client.chats.show(reference),

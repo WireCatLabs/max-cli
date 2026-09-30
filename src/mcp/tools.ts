@@ -1,5 +1,6 @@
 import { CliError, isCliError } from "@leemour/cli-core"
 import type { Permission } from "@leemour/cli-messaging/sends"
+import { onlineDeps, servicesFor } from "@leemour/cli-messaging/services"
 import {
   type CallToolResult,
   isInputRequiredResult,
@@ -9,6 +10,7 @@ import {
 } from "@modelcontextprotocol/server"
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
+import { maxAdapter } from "../adapter/max-adapter.js"
 import { openProfileCache } from "../cache/index.js"
 import { ADMIN_RIGHTS, type AdminRight, DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
 import { hearingFields } from "../commands/hearing.js"
@@ -17,6 +19,7 @@ import { type McpToolGroup, sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Message, Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
+import { maxMessenger } from "../messenger.js"
 import {
   describe,
   type Finding,
@@ -98,7 +101,16 @@ interface Defaults {
   profile: string
   transcribeModel: string
   release: () => Promise<void>
+  store: SessionStore
 }
+
+/**
+ * A moved tool answers through cli-messaging's service over this session's client, which guards
+ * each write itself; the service's guard lets everything through, and the client's journal line
+ * takes the service's operation id. Until max serves the shared MCP tools.
+ */
+const shared = (client: MaxClient, store: SessionStore) =>
+  servicesFor(onlineDeps(maxMessenger, maxAdapter(client, store), { check: () => {}, record: () => {} }))
 
 /** Kept transcripts always; with `transcribe`, the rest heard after the connection is released. */
 const heardIn = async (
@@ -744,7 +756,8 @@ const DELETE_TOOLS = {
     input: v.object({ chat, messages: v.pipe(v.array(message), v.minLength(1), v.maxLength(DELETE_AT_ONCE)) }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) => client.messages.delete(await client.chats.resolve(args.chat), args.messages),
+    answer: (client, args, { store }) =>
+      shared(client, store).messages.delete({ chat: args.chat, messages: args.messages, forEveryone: false }),
   }),
 }
 
@@ -954,7 +967,7 @@ export const registerTools = (
       async (args: Record<string, unknown>, ctx: ServerContext) => {
         try {
           const result = await session.use(name.replace(/^max_/, "mcp ").replaceAll("_", " "), (client, release) => {
-            const defaults = { limit: defaultLimit, profile, transcribeModel, release }
+            const defaults = { limit: defaultLimit, profile, transcribeModel, release, store }
             return confirmed && name in offered
               ? confirmed(
                   { name, title: definition.title },

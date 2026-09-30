@@ -70,9 +70,15 @@ describe("deleting messages", () => {
 
     expect(code).toBe(0)
     expect(deletes()).toEqual([{ chatId: "111", messageIds: [FIRST, SECOND], forMe: true }])
-    expect(JSON.parse(stdout)).toEqual({ chatId: "111", deleted: [FIRST, SECOND], forEveryone: false })
+    const answer = JSON.parse(stdout)
+    expect(answer).toEqual({
+      operationId: expect.any(String),
+      chatId: "111",
+      deleted: [FIRST, SECOND],
+      forEveryone: false,
+    })
     expect(journalOf("d-me")).toMatchObject([
-      { chatId: "111", kind: "delete", outcome: "sent", count: 2, forEveryone: false },
+      { chatId: "111", kind: "delete", outcome: "sent", count: 2, forEveryone: false, operationId: answer.operationId },
     ])
   })
 

@@ -1,4 +1,5 @@
 import {
+  currentOperation,
   newOperationId,
   RecipientList,
   type SendGuard,
@@ -21,14 +22,14 @@ export const recipientListFor = (profile: string, env: NodeJS.ProcessEnv = proce
 
 /**
  * Every line one write leaves in the journal carries the same `operationId`, minted at its check;
- * a send's is its send id. `MaxClient` checks before each write and records after it, one at a
+ * a send's is its send id. A write a shared service started keeps the service's. `MaxClient` checks before each write and records after it, one at a
  * time, and the server builds a guard per request, so one guard never holds two writes at once.
  */
 export const operating = (guard: SendGuard): SendGuard => {
   let current: string | undefined
   return {
     check: (request, options) => {
-      current = request.operationId ?? request.sendId ?? newOperationId()
+      current = request.operationId ?? currentOperation() ?? request.sendId ?? newOperationId()
       guard.check({ ...request, operationId: current }, options)
     },
     record: (entry) => {
