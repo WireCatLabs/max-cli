@@ -91,8 +91,8 @@ export const acrossOptions = (command: Command): Command =>
           .filter(Boolean),
     )
 
-const resolve = (store: MessageStore, references: string[], scope: PeopleScope): Contact[] => {
-  const people = store.people(PROVIDER, scope)
+const resolve = async (store: MessageStore, references: string[], scope: PeopleScope): Promise<Contact[]> => {
+  const people = await store.people(PROVIDER, scope)
   return references.map((reference) => pickPerson(reference, people))
 }
 
@@ -122,19 +122,20 @@ const nameLine = (person: Contact) =>
     [person.name ?? "(no name)", person.username && `@${person.username}`, person.id].filter(Boolean).join("  "),
   )
 
-const cardOf = (store: MessageStore, context: Context, who: string, across: Across, limit: number) => {
+const cardOf = async (store: MessageStore, context: Context, who: string, across: Across, limit: number) => {
   const { filter, people } = scopeOf(context, across)
-  const [person] = resolve(store, [who], people) as [Contact]
-  const rows = store.find({ ...filter, senders: [person.id], perChat: true, limit: 1 }).items
+  const [person] = (await resolve(store, [who], people)) as [Contact]
+  const rows = (await store.find({ ...filter, senders: [person.id], perChat: true, limit: 1 })).items
   const latest = rows.filter((hit, index) => rows.findIndex((other) => other.chatId === hit.chatId) === index)
   const kindOf = (hit: StoredHit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown"
   const dialogs = latest.filter((hit) => kindOf(hit) === "dialog")
-  const messages = dialogs
-    .flatMap((hit) => {
+  const pages = await Promise.all(
+    dialogs.map((hit) => {
       const { account: bot } = parseLocator(hit.locator)
-      return store.messages({ provider: PROVIDER, account: bot }, hit.chatId, { limit }).items
-    })
-    .toSorted(byTime)
+      return store.messages({ provider: PROVIDER, account: bot }, hit.chatId, { limit })
+    }),
+  )
+  const messages = pages.flatMap((page) => page.items).toSorted(byTime)
   const card: PersonCard & { messages: Message[] } = {
     ...person,
     chats: latest.map((hit) => ({
@@ -201,8 +202,8 @@ export const searchMessages = (
   across: Across = {},
 ): Promise<{ items: StoredHit[]; hasMore: boolean }> => {
   const { filter, people } = scopeOf(context, across)
-  return fromStore((store) => {
-    const senders = resolve(store, from, people).map(({ id }) => id)
+  return fromStore(async (store) => {
+    const senders = (await resolve(store, from, people)).map(({ id }) => id)
     return store.find({
       ...filter,
       ...(text === undefined ? {} : { text }),
@@ -224,8 +225,8 @@ export const addBetween = (messages: Command): void => {
       const context = botContext(this, { offline: true })
       if (references.length < 2) throw new CliError("validation_error", "name at least two people")
       const { filter, people } = scopeOf(context, options)
-      const page = await fromStore((store) => {
-        const senders = resolve(store, references, people).map(({ id }) => id)
+      const page = await fromStore(async (store) => {
+        const senders = (await resolve(store, references, people)).map(({ id }) => id)
         return store.find({ ...filter, senders, together: true, perChat: true, limit: context.settings.limit })
       })
       const chats = new Map<string, { id: string; title: string | null; messages: StoredHit[] }>()
