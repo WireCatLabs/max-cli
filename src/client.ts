@@ -351,7 +351,6 @@ export class MaxClient {
         members,
         description: card?.description ?? null,
         access: card?.access ?? null,
-        link: card?.link ?? null,
         settings: card?.settings ?? null,
       }
     },

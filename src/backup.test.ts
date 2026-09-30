@@ -80,6 +80,27 @@ describe("pricing a backup", () => {
     expect(estimate).toMatchObject({ held: 40, missing: 60, estimated: false, pages: 3, runs: 1 })
   })
 
+  it("does not price the way back to a chat's start it has never reached", async () => {
+    const empty = await estimateBackup({
+      ranges: [],
+      count: async () => 0,
+      newest: hour,
+      maxPages: 40,
+      pauseSeconds: 5,
+    })
+    const partial = await estimateBackup({
+      ranges: [{ from: 10 * hour, to: 20 * hour }],
+      count: async () => 50,
+      newest: 20 * hour,
+      maxPages: 40,
+      pauseSeconds: 5,
+    })
+
+    expect(empty).toMatchObject({ missing: null, pages: null, unread: [{ from: null }] })
+    expect(partial).toMatchObject({ held: 50, missing: null, pages: null, runs: null, estimated: true })
+    expect(partial.unread).toEqual([{ from: null, to: new Date(10 * hour).toISOString() }])
+  })
+
   it("prices --since at the density of what was read, and says it is an estimate", async () => {
     const estimate = await estimateBackup({
       ranges: [{ from: 10 * hour, to: 20 * hour }],
@@ -131,7 +152,7 @@ describe("max store fetch", () => {
     )
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ chatId: "111", estimate: true, held: 0, missing: 100, pages: 4 })
+    expect(JSON.parse(stdout)).toMatchObject({ chatId: "111", run: false, held: 0, missing: 100, pages: 4 })
     expect(stderr).toContain("nothing was sent")
     expect(connected).toBe(false)
   })
@@ -146,7 +167,7 @@ describe("max store fetch", () => {
 
     expect(code).toBe(0)
     expect(JSON.parse(stdout)).toMatchObject({
-      estimate: false,
+      run: true,
       pages: 3,
       complete: true,
       reachedStart: true,

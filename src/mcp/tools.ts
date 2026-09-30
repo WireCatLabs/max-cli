@@ -280,7 +280,7 @@ const READ_TOOLS = {
 
   max_chats_show: tool({
     title: "Show a chat",
-    description: "One chat: its kind, unread count, last message time and who is in it.",
+    description: "One chat: its kind, unread count, last message time, who is in it, and a group's settings.",
     input: v.object({ chat }),
     annotations: READ,
     answer: (client, args) => client.chats.show(args.chat),

@@ -83,7 +83,7 @@ const fetchCommand = (): Command =>
               pauseSeconds: pauseMs / 1000,
             })
             renderer.note("an estimate from this machine's copy; nothing was sent — leave off --estimate to fetch")
-            renderer.result({ chatId, estimate: true, maxPages: options.maxPages, ...estimate })
+            renderer.result({ chatId, run: false, maxPages: options.maxPages, ...estimate })
             return
           }
 
@@ -116,7 +116,7 @@ const fetchCommand = (): Command =>
           renderer.note(
             `kept in this machine's copy, ${profileCacheFile(settings.profile)} — \`${exportCommand}\` writes it to a file`,
           )
-          renderer.result({ chatId, estimate: false, ...outcome, fetched: held - before, held, export: exportCommand })
+          renderer.result({ chatId, run: true, ...outcome, fetched: held - before, held, export: exportCommand })
         } finally {
           await client.close()
           await cache.close()

@@ -155,7 +155,7 @@ max work config set mcpTools groups         # профилю work
 | `max_account_show` | `max account show` | под кем вход |
 | `max_status` | `max doctor` | за какой профиль говорит сервер, есть ли токен, был ли вход и какие пишущие инструменты включены; в MAX не входит |
 | `max_chats_list` | `max chats list` | чаты, с поиском по имени, видом и непрочитанными |
-| `max_chats_show` | `max chats show` | один чат и кто в нём |
+| `max_chats_show` | `max chats show` | один чат, кто в нём, и настройки группы |
 | `max_chats_events` | `max chats events` | кто вступил, вышел, кого добавили и удалили — по служебным сообщениям; без `since` — за 7 дней |
 | `max_chats_members` | `max chats members list` | все участники группы или канала от MAX: когда заведён аккаунт, когда был в сети |
 | `max_chats_rules` | `max chats rules show` | правила модерации группы; менять их может только владелец, командой |

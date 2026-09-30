@@ -232,7 +232,6 @@ export interface GroupMembers {
 export interface ChatCard extends SharedChatCard {
   description: string | null
   access: string | null
-  link: string | null
   /** `null` for a dialog, offline, or a group the login did not carry. */
   settings: GroupSettings | null
 }

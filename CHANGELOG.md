@@ -15,7 +15,7 @@
   посчитать — `--estimate` (раньше наоборот: без `--run` только считала). Каждый запуск по-прежнему
   не больше `--max-pages` страниц (40) с той же паузой. `--pause` принимает длительность: `5s`,
   `500ms` — число без единицы теперь отказ. `--since` и `--last` необязательны: без них запуски идут
-  до начала чата, каждый — с места, где остановился прошлый. В ответе `run` → `estimate`.
+  до начала чата, каждый — с места, где остановился прошлый.
 - **`max export messages` → `max store export`.**
 - **`--cid` → `--send-id`** у `messages send` и `messages forward`. В ошибке `outcome_unknown`
   номер теперь в поле `sendId`; у инструментов MCP `max_messages_send` и `max_messages_forward`
@@ -23,7 +23,7 @@
 - **`max chats read` → `max chats mark-read`**; инструмент MCP `max_chats_read` →
   `max_chats_mark_read`.
 - **`max chats settings` больше нет.** Настройки группы показывает `max chats show` (поля
-  `settings`, `description`, `access`, `link`), меняет `max chats update <чат> --all-can-pin on|off`
+  `settings`, `description`, `access`; ссылку-приглашение — по-прежнему `max chats link show`), меняет `max chats update <чат> --all-can-pin on|off`
   и остальные флаги настроек.
 - **`max update` → `max upgrade`**, и строка о новой версии называет `max upgrade`.
 - **`max recipients off` → `max recipients clear`**, в ответе `off` → `cleared`;
