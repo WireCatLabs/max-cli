@@ -55,7 +55,7 @@ import type {
 } from "./domain/models.js"
 import { heldWindows } from "./export.js"
 import { type Invoke, wireClient } from "./generated/client.generated.js"
-import { parseMarkdown } from "./markdown.js"
+import { type Markup, parseMarkdown } from "./markdown.js"
 import { asFirstWord } from "./profile.js"
 import { Connection, ProtocolError, type Wire } from "./protocol/connection.js"
 import { asId, type Payload } from "./protocol/frame.js"
@@ -1067,6 +1067,10 @@ export class MaxClient {
         voice?: string
         anyFile?: boolean
         at?: number
+        /** Files already read and checked by the caller — the shared services read their own. */
+        uploads?: { name: string; bytes: Uint8Array; kind: "photo" | "file" }[]
+        /** Marks already taken out of `text`, in MAX's names. */
+        markup?: Markup[]
       } = {},
     ): Promise<Message> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot send")
@@ -1096,6 +1100,8 @@ export class MaxClient {
           kind: isImage(path) ? "photo" : isVideo(path) && options.asFile !== true ? "video" : "file",
         })),
       )
+      for (const { name, bytes, kind } of options.uploads ?? [])
+        files.push({ path: name, bytes: Buffer.from(bytes), kind })
       if (options.voice !== undefined) {
         const bytes = await readUpload(options.voice, { anyFile: options.anyFile === true })
         files.push({ path: options.voice, bytes, kind: "voice", voice: await voiceOf(options.voice, bytes) })
@@ -1732,6 +1738,7 @@ export class MaxClient {
       replyTo?: Id
       forward?: { chatId: Id; messageId: Id }
       markdown?: boolean
+      markup?: Markup[]
       files?: Upload[]
       /** Attachments that need no upload — a poll. */
       attaches?: Payload[]
@@ -1744,7 +1751,7 @@ export class MaxClient {
     const session = this.#session()
     const attaches: unknown[] = [...(options.attaches ?? [])]
     for (const file of options.files ?? []) attaches.push(await this.#upload(file))
-    const { text: plain, markup } = options.markdown ? parseMarkdown(text) : { text, markup: [] }
+    const { text: plain, markup } = options.markdown ? parseMarkdown(text) : { text, markup: options.markup ?? [] }
     // A forward carries no text or markup of its own — the web client leaves both out, and so was it measured.
     const content = options.forward
       ? { link: { type: "FORWARD" as const, ...options.forward } }
@@ -2596,6 +2603,11 @@ export class MaxClient {
         isId(reference) ? reference.trim() : (await pickPerson(reference, cache)).id,
       ),
     )
+  }
+
+  /** A send id as MAX's own client makes one: the moment, in milliseconds, never repeated. */
+  newSendId(): string {
+    return String(this.#nextCid())
   }
 
   #nextCid(): number {
