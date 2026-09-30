@@ -2,9 +2,9 @@ import { createHash, randomBytes } from "node:crypto"
 import { homedir } from "node:os"
 import { basename, join } from "node:path"
 import { CliError } from "@leemour/cli-core"
+import type { SendEntry } from "@leemour/cli-messaging/sends"
 import type { Diagnosis } from "./diagnose.js"
 import { findRun, listRuns, type RunMetadata, readEvents, runtime } from "./runs/run.js"
-import type { SendEntry } from "./sends/journal.js"
 import { VERSION } from "./version.js"
 
 /** Where problem reports go (`NEED-267`, changed by the owner to issues). Anybody can read them there. */

@@ -1,4 +1,5 @@
 import { CliError, captureStreams, isCliError } from "@leemour/cli-core"
+import type { Permission } from "@leemour/cli-messaging/sends"
 import {
   type CallToolResult,
   isInputRequiredResult,
@@ -14,7 +15,6 @@ import { listed } from "../commands/paging.js"
 import { confirmer, type ResolveChat } from "../mcp/confirm.js"
 import { type CheckRow, describe, needsConfirm } from "../moderation/check.js"
 import type { GroupRules } from "../moderation/rules.js"
-import type { Permission } from "../sends/permissions.js"
 import { VERSION } from "../version.js"
 import { instructions } from "./instructions.js"
 import { type BotTool, CHECK_INPUT, type Gate, type Invocation, TOOLS, withAcross } from "./tools.js"

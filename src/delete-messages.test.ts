@@ -1,10 +1,11 @@
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { SendJournal } from "@leemour/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
-import { SendJournal, sendsPathFor } from "./sends/journal.js"
+import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
 

@@ -1,8 +1,8 @@
 import { existsSync } from "node:fs"
 import { CliError, configFilePath, loadConfigFile, resolvePaths, saveConfigFile } from "@leemour/cli-core"
+import { PERMISSIONS, type Permission } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
 import { DEFAULT_PROFILE, usableProfileName } from "./profile.js"
-import { PERMISSIONS, type Permission } from "./sends/permissions.js"
 import { DEFAULT_MODEL, MODELS } from "./transcribe/models.js"
 
 const APP = "max-cli"

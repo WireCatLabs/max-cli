@@ -1,16 +1,23 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import {
+  type AccountAction,
+  type ChatAction,
+  type Permission,
+  permissionFor,
+  RecipientList,
+  SendJournal,
+  type SendKind,
+  sendGuard,
+} from "@leemour/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
-import { sendGuard } from "./sends/guard.js"
-import { type AccountAction, type ChatAction, SendJournal, type SendKind, sendsPathFor } from "./sends/journal.js"
-import { type Permission, permissionFor } from "./sends/permissions.js"
-import { RecipientList, recipientsPathFor } from "./sends/recipients.js"
+import { guardFor as profileGuard, recipientsPathFor, sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
 
@@ -149,20 +156,12 @@ describe("a profile with an allow list", () => {
     expect((await runWith(["p-cmd", "reactions", "add", "111", "116762160362694583", "👍"], environment)).code).toBe(0)
   })
 
-  it("points at --defaults when the list came from there", () => {
-    const guard = sendGuard({
-      profile: "p-def",
-      readOnly: false,
-      readOnlyFrom: "default",
-      allow: ["send"],
-      allowFrom: "config file: defaults",
-      sendsPerHour: 10,
-      journal: new SendJournal(sendsPathFor("p-def")),
-      recipients: new RecipientList(recipientsPathFor("p-def")),
-      warn: () => {},
-    })
+  it("points at --defaults when the list came from there", async () => {
+    await runWith(["config", "set", "--defaults", "allow", "send"])
+    const guard = profileGuard(resolveSettings({ profile: "p-def" }), () => {})
     expect(() => guard.check({ chatId: null, kind: "account", action: "sessions-end" })).toThrow(
       "to allow it: max config set --defaults allow send,sessions",
     )
+    await runWith(["config", "unset", "--defaults", "allow"])
   })
 })

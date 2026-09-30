@@ -1,11 +1,12 @@
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { SendJournal } from "@leemour/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import type { Payload } from "./protocol/frame.js"
-import { SendJournal, sendsPathFor } from "./sends/journal.js"
+import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
 
@@ -136,7 +137,7 @@ describe("forwarding", () => {
     expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
       expect.objectContaining({ notify: false, message: expect.objectContaining({ cid: 4242 }) }),
     ])
-    expect(journalOf("e-fwd-cid")).toMatchObject([{ kind: "forward", outcome: "sent", cid: 4242 }])
+    expect(journalOf("e-fwd-cid")).toMatchObject([{ kind: "forward", outcome: "sent", sendId: "4242" }])
   })
 
   it("repeats a lost forward once with the same cid, then answers outcome_unknown with the command to repeat", async () => {
@@ -150,7 +151,9 @@ describe("forwarding", () => {
     expect(error.code).toBe("outcome_unknown")
     expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --send-id ${cids[0]}`)
     expect(error.sendId).toBe(cids[0])
-    expect(journalOf("e-lost")).toMatchObject([{ kind: "forward", outcome: "outcome_unknown", cid: cids[0] }])
+    expect(journalOf("e-lost")).toMatchObject([
+      { kind: "forward", outcome: "outcome_unknown", sendId: String(cids[0]) },
+    ])
   })
 
   it("counts against the hourly limit, and so does an edit; a quiet pin does not", async () => {

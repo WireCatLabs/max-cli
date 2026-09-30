@@ -1,5 +1,5 @@
+import type { Permission } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
-import type { Permission } from "../sends/permissions.js"
 
 /** Which server flag offers a tool; `read` is always on. */
 export type Gate = "read" | "send" | "delete" | "moderate"

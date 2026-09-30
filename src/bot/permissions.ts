@@ -1,5 +1,4 @@
-import type { SendKind } from "@leemour/cli-messaging/sends"
-import type { Permission } from "../sends/permissions.js"
+import type { Permission, SendKind } from "@leemour/cli-messaging/sends"
 
 /**
  * Which of the personal account's permission names (`CLI-37`) a bot write falls under, so one
