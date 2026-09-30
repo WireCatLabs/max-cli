@@ -457,7 +457,7 @@ describe("the MCP server", () => {
     const { isError, body } = await call(client, "max_chats_mark_read", { chat: "111", message: "116762160362694583" })
 
     expect(isError).toBe(false)
-    expect(body).toEqual({ chatId: "111", messageId: "116762160362694583", unread: 0 })
+    expect(body).toEqual({ operationId: expect.any(String), chatId: "111", until: "116762160362694583" })
     const marks = max.sent.filter(({ opcode }) => opcode === Opcode.CHAT_MARK)
     expect(marks.map(({ payload }) => String(payload.messageId))).toEqual(["116762160362694583"])
   })
@@ -738,7 +738,12 @@ describe("what the MCP server offers beyond the basics", () => {
     })
 
     expect(isError).toBe(false)
-    expect(body).toEqual({ counts: [{ reaction: "👍", count: 1 }], mine: "👍", total: 1 })
+    expect(body).toEqual({
+      operationId: expect.any(String),
+      chatId: "111",
+      messageId: "116762160362694583",
+      reaction: "👍",
+    })
     expect(max.sent.find(({ opcode }) => opcode === Opcode.MSG_REACTION)?.payload).toMatchObject({
       reaction: { reactionType: "EMOJI", id: "👍" },
     })

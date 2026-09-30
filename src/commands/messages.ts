@@ -1,6 +1,6 @@
 import { CliError, singleLine } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
-import { deleteCommand } from "@leemour/cli-messaging/cli"
+import { deleteCommand, pinCommand, unpinCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import { sendTime } from "../config.js"
@@ -399,37 +399,10 @@ export const messagesCommand = (): Command => {
       })
     })
 
-  annotate(command.command("pin"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<message>", "message id")
-    .description("pin a message in a chat; it replaces what was pinned")
-    .option("--notify", "tell the chat's members about the pin")
-    .action(async function (this: Command, chat: string, messageId: string) {
-      const options = this.optsWithGlobals()
-      await pinWith(this, chat, messageId.trim(), options.notify === true)
-    })
-
-  annotate(command.command("unpin"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("unpin whatever message is pinned in a chat")
-    .action(async function (this: Command, chat: string) {
-      await pinWith(this, chat, null, false)
-    })
+  command.addCommand(pinCommand(maxMessenger))
+  command.addCommand(unpinCommand(maxMessenger))
 
   return command
-}
-
-const pinWith = async (command: Command, chat: string, messageId: string | null, notify: boolean): Promise<void> => {
-  const { renderer, createClient, run } = forCommand(command)
-  await run(messageId ? "messages pin" : "messages unpin", async (events) => {
-    const client = createClient({ events })
-    try {
-      const chatId = await client.chats.resolve(chat)
-      renderer.result(await client.messages.pin(chatId, messageId, { notify }))
-    } finally {
-      await client.close()
-    }
-  })
 }
 
 const feed =

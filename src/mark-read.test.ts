@@ -83,7 +83,7 @@ describe("marking a chat read", () => {
     const given = await runWith(["r-chat", "chats", "mark-read", "Friends", "--until", OLDER], environment)
 
     expect(newest.code).toBe(0)
-    expect(JSON.parse(newest.stdout)).toEqual({ chatId: "111", messageId: NEWER, unread: 0 })
+    expect(JSON.parse(newest.stdout)).toEqual({ operationId: expect.any(String), chatId: "111", until: null })
     expect(given.code).toBe(0)
     expect(marks().map(({ messageId }) => messageId)).toEqual([NEWER, OLDER])
   })

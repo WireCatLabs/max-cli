@@ -199,7 +199,7 @@ max chats join <link>
 
 ### `max chats mark-read`
 
-mark a chat read; the other person sees that you read it
+mark a chat read; the other side sees that you read it
 
 **Меняет что-то в MAX.**
 
@@ -209,11 +209,11 @@ max chats mark-read <chat> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
+| `chat` | обязательный | a chat: its id, or part of its title |
 
 | Опция | Что делает |
 |---|---|
-| `--until <message>` | only up to this message id, inclusive; the newest by default |
+| `--until <message>` | only up to this message id; the newest by default |
 
 ### `max chats leave`
 
@@ -861,7 +861,7 @@ max messages forward <chat> <message> [options]
 
 ### `max messages pin`
 
-pin a message in a chat; it replaces what was pinned
+pin a message in a chat, quietly unless --notify
 
 **Меняет что-то в MAX.**
 
@@ -871,8 +871,8 @@ max messages pin <chat> <message> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `message` | обязательный | message id |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the message id |
 
 | Опция | Что делает |
 |---|---|
@@ -880,17 +880,18 @@ max messages pin <chat> <message> [options]
 
 ### `max messages unpin`
 
-unpin whatever message is pinned in a chat
+unpin a message in a chat
 
 **Меняет что-то в MAX.**
 
 ```sh
-max messages unpin <chat>
+max messages unpin <chat> <message>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the message id |
 
 ## `max store`
 
@@ -1040,8 +1041,8 @@ max reactions add <chat> <message> <emoji>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `message` | обязательный | message id |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the message id |
 | `emoji` | обязательный | one emoji, for example 👍 |
 
 ### `max reactions remove`
@@ -1056,8 +1057,8 @@ max reactions remove <chat> <message>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `message` | обязательный | message id |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the message id |
 
 ## `max recipients`
 

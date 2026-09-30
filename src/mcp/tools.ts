@@ -629,16 +629,17 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) =>
-      client.messages.pin(await client.chats.resolve(args.chat), args.message, { notify: args.notify === true }),
+    answer: (client, args, { store }) =>
+      shared(client, store).messages.pin({ chat: args.chat, message: args.message, notify: args.notify === true }),
   }),
   max_messages_unpin: tool({
     title: "Unpin a message",
-    description: "Unpin whatever message is pinned in a chat.",
-    input: v.object({ chat }),
+    description: "Unpin the pinned message in a chat; MAX holds one per chat. Only when the owner asked for it.",
+    input: v.object({ chat, message }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) => client.messages.pin(await client.chats.resolve(args.chat), null),
+    answer: (client, args, { store }) =>
+      shared(client, store).messages.unpin({ chat: args.chat, message: args.message }),
   }),
   max_reactions_add: tool({
     title: "React to a message",
@@ -652,8 +653,8 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) =>
-      client.messages.react(await client.chats.resolve(args.chat), args.message, args.emoji),
+    answer: (client, args, { store }) =>
+      shared(client, store).messages.react({ chat: args.chat, message: args.message, emoji: args.emoji }),
   }),
   max_reactions_remove: tool({
     title: "Take a reaction off",
@@ -661,7 +662,8 @@ const SEND_TOOLS = {
     input: v.object({ chat, message }),
     annotations: { ...WRITE, idempotentHint: true },
     _meta: APPROVE,
-    answer: async (client, args) => client.messages.unreact(await client.chats.resolve(args.chat), args.message),
+    answer: (client, args, { store }) =>
+      shared(client, store).messages.react({ chat: args.chat, message: args.message, emoji: null }),
   }),
   max_polls_vote: tool({
     title: "Vote in a poll",
@@ -739,7 +741,11 @@ const MARK_READ_TOOLS = {
     input: v.object({ chat, message: v.optional(message) }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) => client.chats.markRead(await client.chats.resolve(args.chat), args.message),
+    answer: (client, args, { store }) =>
+      shared(client, store).chats.markRead({
+        chat: args.chat,
+        ...(args.message === undefined ? {} : { until: args.message }),
+      }),
   }),
 }
 
