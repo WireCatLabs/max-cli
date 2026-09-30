@@ -254,7 +254,7 @@ export const messagesCommand = (): Command => {
     .argument("<chat>", "chat id, or part of a chat name")
     .argument("[text]", "what to say; leave it off to read it from stdin, or to send only a file")
     .description("send one text message")
-    .option("--cid <n>", "reuse a client id from an earlier ambiguous send; MAX collapses the duplicate", (value) =>
+    .option("--send-id <n>", "reuse the id of an earlier ambiguous send; MAX collapses the duplicate", (value) =>
       Number.parseInt(value, 10),
     )
     // `notify` is part of MSG_SEND and has always been sent as `true`. It is the one send option
@@ -294,7 +294,7 @@ export const messagesCommand = (): Command => {
         try {
           const chatId = await client.chats.resolve(chat)
           const sent = await client.messages.send(chatId, body, {
-            ...(options.cid === undefined ? {} : { cid: options.cid }),
+            ...(options.sendId === undefined ? {} : { cid: options.sendId }),
             ...(options.silent === true ? { notify: false } : {}),
             ...(options.replyTo === undefined ? {} : { replyTo: String(options.replyTo).trim() }),
             ...(options.markdown === true ? { markdown: true } : {}),
@@ -407,7 +407,7 @@ export const messagesCommand = (): Command => {
     .argument("<message>", "message id")
     .requiredOption("--to <chat>", "the chat to forward it to: an id, or part of a chat name")
     .description("forward one message to another chat")
-    .option("--cid <n>", "reuse a client id from an earlier ambiguous forward; MAX collapses the duplicate", (value) =>
+    .option("--send-id <n>", "reuse the id of an earlier ambiguous forward; MAX collapses the duplicate", (value) =>
       Number.parseInt(value, 10),
     )
     .option("--silent", "deliver without a notification")
@@ -422,7 +422,7 @@ export const messagesCommand = (): Command => {
           const from = await client.chats.resolve(chat)
           const to = await client.chats.resolve(String(options.to))
           const sent = await client.messages.forward(from, messageId.trim(), to, {
-            ...(options.cid === undefined ? {} : { cid: options.cid }),
+            ...(options.sendId === undefined ? {} : { cid: options.sendId }),
             ...(options.silent === true ? { notify: false } : {}),
           })
           renderer.result(sent)

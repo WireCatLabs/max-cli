@@ -323,7 +323,7 @@ export const recipientsCommand = (): Command => {
       context.renderer.result({ removed: recipientsOf(context).remove(chat) ?? null })
     })
   command
-    .command("off")
+    .command("clear")
     .description("remove the list: the bot may write to any chat again")
     .action(function (this: Command) {
       const context = botContext(this)

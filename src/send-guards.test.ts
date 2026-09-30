@@ -104,7 +104,7 @@ describe("sending", () => {
     expect(allowed.code).toBe(0)
     expect(sends()).toHaveLength(1)
 
-    await runWith(["g-list", "recipients", "off"])
+    await runWith(["g-list", "recipients", "clear"])
     const reopened = await runWith(["g-list", "messages", "send", "222", TEXT, "--json"], environment)
     expect(reopened.code).toBe(0)
   })

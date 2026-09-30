@@ -125,7 +125,7 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
 `CHAT_HISTORY` (49) and `CHAT_MARK` (50) are separate. Nothing that reads sends 50;
 `src/client.test.ts` asserts opcode 50 is absent from everything sent. **Correction 2026-09-24:**
 this said "we never send 50". Since `CLI-33` it goes out from `client.chats.markRead` only —
-`max chats read`, `messages list --mark-read`, and the MCP tool behind `--allow-mark-read` — through
+`max chats mark-read`, `messages list --mark-read`, and the MCP tool behind `--allow-mark-read` — through
 the send guard as kind `read`. Its request is PyMax's shape, not measured (`src/spec/operations/chats.ts`).
 
 ⚠ Until the spec landed (2026-09-19) that assertion compared against a missing `Opcode.CHAT_MARK`,
@@ -141,7 +141,7 @@ deduplicates by it.** Measured 2026-09-19 in Saved messages: the same `cid` twic
 message id** and **one** copy, also across two connections and logins — the case a retry faces.
 
 - A lost send is retried **once, with the same `cid`**. If that fails too, the result is
-  `outcome_unknown` (neither failed nor sent) and names the `cid`; `max messages send --cid <n>`
+  `outcome_unknown` (neither failed nor sent) and names the `cid` as `sendId`; `max messages send --send-id <n>`
   repeats it without risking a second copy.
 - ⚠ Unmeasured: how long MAX remembers a `cid`. Both probes were seconds apart.
 - `cid` is monotonic per process. `Date.now()` alone gave two sends in one millisecond the same

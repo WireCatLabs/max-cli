@@ -106,18 +106,19 @@ every device and browser logged in to this account
 max account sessions list
 ```
 
-#### `max account sessions end-others`
+#### `max account sessions end`
 
 log out every other device, your phone included; this one stays
 
 **Меняет что-то в MAX.**
 
 ```sh
-max account sessions end-others [options]
+max account sessions end [options]
 ```
 
 | Опция | Что делает |
 |---|---|
+| `--others` | every session but this one — the only choice MAX offers |
 | `--yes` | yes, log the other devices out |
 
 ## `max chats`
@@ -143,7 +144,7 @@ max chats list [options]
 
 ### `max chats show`
 
-one chat: its kind, unread count, last message time and who is in it
+one chat: its kind, unread count, last message time, who is in it, and a group's settings
 
 ```sh
 max chats show <chat>
@@ -196,14 +197,14 @@ max chats join <link>
 |---|---|---|
 | `link` | обязательный | an invite link, https://max.ru/join/…, or a public one, https://max.ru/<name> |
 
-### `max chats read`
+### `max chats mark-read`
 
 mark a chat read; the other person sees that you read it
 
 **Меняет что-то в MAX.**
 
 ```sh
-max chats read <chat> [options]
+max chats mark-read <chat> [options]
 ```
 
 | Аргумент | | Что это |
@@ -337,7 +338,7 @@ max chats admins remove <chat> <person>
 
 ### `max chats update`
 
-rename a group or channel, or change its description
+rename a group or channel, change its description, or turn one of its settings on or off
 
 **Меняет что-то в MAX.**
 
@@ -353,23 +354,6 @@ max chats update <chat> [options]
 |---|---|
 | `--title <title>` | the new name |
 | `--description <text>` | the new description |
-
-### `max chats settings`
-
-a group's settings; with an option, change that one
-
-**Меняет что-то в MAX.**
-
-```sh
-max chats settings <chat> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-
-| Опция | Что делает |
-|---|---|
 | `--all-can-pin <on\|off>` | every member may pin messages |
 | `--only-admins-add <on\|off>` | only admins may add members |
 | `--only-admins-call <on\|off>` | only admins may start a call |
@@ -792,7 +776,7 @@ max messages send <chat> [text] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--cid <n>` | reuse a client id from an earlier ambiguous send; MAX collapses the duplicate |
+| `--send-id <n>` | reuse the id of an earlier ambiguous send; MAX collapses the duplicate |
 | `--silent` | deliver without a notification |
 | `--reply-to <message>` | answer this message id in the same chat |
 | `--file <path>` | attach a file; .jpg .png .webp .gif go as a photo, .mp4 .mov .webm .mkv as a video. Repeat it for more than one |
@@ -872,7 +856,7 @@ max messages forward <chat> <message> [options]
 | Опция | Что делает |
 |---|---|
 | `--to <chat>` | the chat to forward it to: an id, or part of a chat name |
-| `--cid <n>` | reuse a client id from an earlier ambiguous forward; MAX collapses the duplicate |
+| `--send-id <n>` | reuse the id of an earlier ambiguous forward; MAX collapses the duplicate |
 | `--silent` | deliver without a notification |
 
 ### `max messages pin`
@@ -908,16 +892,16 @@ max messages unpin <chat>
 |---|---|---|
 | `chat` | обязательный | chat id, or part of a chat name |
 
-## `max backup`
+## `max store`
 
-bring a chat's history into this machine's copy, within limits
+this machine's copy of a chat's messages: fetch it from MAX, export it to a file
 
-### `max backup messages`
+### `max store fetch`
 
-what a chat's history back to --since or --last costs; with --run, fetch it
+fetch a chat's history from MAX into this machine's copy, newest first, at most --max-pages a run; without --since or --last, back to the chat's start over as many runs as it takes
 
 ```sh
-max backup messages <chat> [options]
+max store fetch <chat> [options]
 ```
 
 | Аргумент | | Что это |
@@ -928,20 +912,16 @@ max backup messages <chat> [options]
 |---|---|
 | `--since <id-or-time>` | back to this message id, ISO 8601 time, or 2h / 1d ago |
 | `--last <n>` | the newest n messages |
-| `--run` | fetch what is missing; without it nothing is sent |
+| `--estimate` | only say what the fetch would cost, from this machine's copy; nothing is sent |
 | `--max-pages <n>` | pages of 30 per run По умолчанию: `40`. |
-| `--pause <seconds>` | the least wait between pages; each is up to twice that По умолчанию: `5`. |
+| `--pause <duration>` | the least wait between pages, 5s or 500ms; each is up to twice that По умолчанию: `5s`. |
 
-## `max export`
+### `max store export`
 
-write what this machine holds to a file; never connects
-
-### `max export messages`
-
-a chat's messages from the local copy, oldest first, as JSON lines or Markdown
+a chat's messages from this machine's copy to a file, oldest first, as JSON lines or Markdown; never connects
 
 ```sh
-max export messages <chat> [options]
+max store export <chat> [options]
 ```
 
 | Аргумент | | Что это |
@@ -1115,12 +1095,12 @@ max recipients remove <chat>
 |---|---|---|
 | `chat` | обязательный | chat id, or the title as the list shows it |
 
-### `max recipients off`
+### `max recipients clear`
 
-turn the list off: this profile may send to any chat again
+empty the list and turn it off: this profile may send to any chat again
 
 ```sh
-max recipients off
+max recipients clear
 ```
 
 ## `max sends`
@@ -1394,17 +1374,29 @@ every command, option and exit code as JSON — what an agent reads instead of -
 max commands
 ```
 
-## `max update`
+## `max upgrade`
 
-update max with the package manager that installed it; --check only looks
+upgrade max with the package manager that installed it; --check only looks
 
 ```sh
-max update [options]
+max upgrade [options]
 ```
 
 | Опция | Что делает |
 |---|---|
 | `--check` | say whether a newer version exists, and install nothing |
+
+## `max complete`
+
+shell completion: `max complete zsh` prints the script to source
+
+```sh
+max complete [words]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `words` | необязательный |  |
 
 ## `max mcp`
 
@@ -1821,12 +1813,12 @@ max bot recipients remove <chat>
 |---|---|---|
 | `chat` | обязательный |  |
 
-#### `max bot recipients off`
+#### `max bot recipients clear`
 
 remove the list: the bot may write to any chat again
 
 ```sh
-max bot recipients off
+max bot recipients clear
 ```
 
 ### `max bot sends`
@@ -2716,4 +2708,4 @@ max bot api get-updates [options]
 
 `0` и только `0` означает, что операция выполнена. `14` — `outcome_unknown` — означает, что
 сообщение **могло** уйти: не отправлено и не провалено, и повторять его можно только с тем же
-`--cid`.
+`--send-id`.

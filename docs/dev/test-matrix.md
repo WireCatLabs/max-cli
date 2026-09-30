@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**408 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 256 options.
+**408 ✅ · 23 ⛔ · 0 ❌** — 174 commands, 257 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -21,8 +21,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `account update` | `--description` | ✅ |  |
 | `account update` | `--photo` | ✅ |  |
 | `account sessions list` |  | ✅ |  |
-| `account sessions end-others` |  | ✅ |  |
-| `account sessions end-others` | `--yes` | ✅ |  |
+| `account sessions end` |  | ✅ |  |
+| `account sessions end` | `--others` | ✅ |  |
+| `account sessions end` | `--yes` | ✅ |  |
 | `chats list` |  | ✅ |  |
 | `chats list` | `--limit` | ✅ |  |
 | `chats list` | `--page` | ✅ |  |
@@ -36,8 +37,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats events` | `--event` | ✅ |  |
 | `chats inspect` |  | ✅ |  |
 | `chats join` |  | ✅ |  |
-| `chats read` |  | ✅ |  |
-| `chats read` | `--until` | ✅ |  |
+| `chats mark-read` |  | ✅ |  |
+| `chats mark-read` | `--until` | ✅ |  |
 | `chats leave` |  | ✅ |  |
 | `chats create` |  | ✅ |  |
 | `chats create` | `--channel` | ✅ |  |
@@ -51,12 +52,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats update` |  | ✅ |  |
 | `chats update` | `--title` | ✅ |  |
 | `chats update` | `--description` | ✅ |  |
-| `chats settings` |  | ✅ |  |
-| `chats settings` | `--all-can-pin` | ✅ |  |
-| `chats settings` | `--only-admins-add` | ✅ |  |
-| `chats settings` | `--only-admins-call` | ✅ |  |
-| `chats settings` | `--only-owner-edits-info` | ✅ |  |
-| `chats settings` | `--members-see-link` | ✅ |  |
+| `chats update` | `--all-can-pin` | ✅ |  |
+| `chats update` | `--only-admins-add` | ✅ |  |
+| `chats update` | `--only-admins-call` | ✅ |  |
+| `chats update` | `--only-owner-edits-info` | ✅ |  |
+| `chats update` | `--members-see-link` | ✅ |  |
 | `chats link show` |  | ✅ |  |
 | `chats link reset` |  | ✅ |  |
 | `chats folders list` |  | ✅ |  |
@@ -109,7 +109,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages transcribe` |  | ✅ |  |
 | `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
-| `messages send` | `--cid` | ✅ |  |
+| `messages send` | `--send-id` | ✅ |  |
 | `messages send` | `--silent` | ✅ |  |
 | `messages send` | `--reply-to` | ✅ |  |
 | `messages send` | `--file` | ✅ |  |
@@ -126,21 +126,21 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages delete` | `--allow-dangerous` | ✅ |  |
 | `messages forward` |  | ✅ |  |
 | `messages forward` | `--to` | ✅ |  |
-| `messages forward` | `--cid` | ✅ |  |
+| `messages forward` | `--send-id` | ✅ |  |
 | `messages forward` | `--silent` | ✅ |  |
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |
 | `messages unpin` |  | ✅ |  |
-| `backup messages` |  | ✅ |  |
-| `backup messages` | `--since` | ✅ |  |
-| `backup messages` | `--last` | ✅ |  |
-| `backup messages` | `--run` | ✅ |  |
-| `backup messages` | `--max-pages` | ✅ |  |
-| `backup messages` | `--pause` | ✅ |  |
-| `export messages` |  | ✅ |  |
-| `export messages` | `--format` | ✅ |  |
-| `export messages` | `--since` | ✅ |  |
-| `export messages` | `--output` | ✅ |  |
+| `store fetch` |  | ✅ |  |
+| `store fetch` | `--since` | ✅ |  |
+| `store fetch` | `--last` | ✅ |  |
+| `store fetch` | `--estimate` | ✅ |  |
+| `store fetch` | `--max-pages` | ✅ |  |
+| `store fetch` | `--pause` | ✅ |  |
+| `store export` |  | ✅ |  |
+| `store export` | `--format` | ✅ |  |
+| `store export` | `--since` | ✅ |  |
+| `store export` | `--output` | ✅ |  |
 | `models audio list` |  | ✅ |  |
 | `models audio download` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
@@ -156,7 +156,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `recipients list` |  | ✅ |  |
 | `recipients add` |  | ✅ |  |
 | `recipients remove` |  | ✅ |  |
-| `recipients off` |  | ✅ |  |
+| `recipients clear` |  | ✅ |  |
 | `sends list` |  | ✅ |  |
 | `sends list` | `--limit` | ✅ |  |
 | `inbox` |  | ✅ |  |
@@ -206,8 +206,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `runs path` |  | ✅ |  |
 | `skill show` |  | ✅ |  |
 | `commands` |  | ✅ |  |
-| `update` |  | ✅ |  |
-| `update` | `--check` | ✅ |  |
+| `upgrade` |  | ✅ |  |
+| `upgrade` | `--check` | ✅ |  |
 | `complete` |  | ✅ |  |
 | `mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
 | `mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
@@ -271,7 +271,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot recipients list` |  | ✅ |  |
 | `bot recipients add` |  | ✅ |  |
 | `bot recipients remove` |  | ✅ |  |
-| `bot recipients off` |  | ✅ |  |
+| `bot recipients clear` |  | ✅ |  |
 | `bot sends list` |  | ✅ |  |
 | `bot members list` |  | ✅ |  |
 | `bot members list` | `--limit` | ✅ |  |

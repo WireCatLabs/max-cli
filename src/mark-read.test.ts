@@ -76,10 +76,10 @@ describe("marking a chat read", () => {
     expect(journalOf("r-list")).toMatchObject([{ chatId: "111", kind: "read", outcome: "sent", messageId: NEWER }])
   })
 
-  it("`chats read` marks up to the newest message, or to the one given", async () => {
+  it("`chats mark-read` marks up to the newest message, or to the one given", async () => {
     const { environment, marks } = messenger()
-    const newest = await runWith(["r-chat", "chats", "read", "111"], environment)
-    const given = await runWith(["r-chat", "chats", "read", "Friends", "--until", OLDER], environment)
+    const newest = await runWith(["r-chat", "chats", "mark-read", "111"], environment)
+    const given = await runWith(["r-chat", "chats", "mark-read", "Friends", "--until", OLDER], environment)
 
     expect(newest.code).toBe(0)
     expect(JSON.parse(newest.stdout)).toEqual({ chatId: "111", messageId: NEWER, unread: 0 })
@@ -89,8 +89,8 @@ describe("marking a chat read", () => {
 
   it("marks with the read message's own time, as the web client does, so nothing newer is marked", async () => {
     const { max, environment } = messenger()
-    await runWith(["r-time", "chats", "read", "111", "--until", OLDER], environment)
-    await runWith(["r-time", "chats", "read", "111"], environment)
+    await runWith(["r-time", "chats", "mark-read", "111", "--until", OLDER], environment)
+    await runWith(["r-time", "chats", "mark-read", "111"], environment)
 
     const marks = max.sent.filter(({ opcode }) => opcode === Opcode.CHAT_MARK).map(({ payload }) => payload.mark)
     expect(marks).toEqual([timeOfMessageId(OLDER), timeOfMessageId(NEWER)])
@@ -100,7 +100,7 @@ describe("marking a chat read", () => {
     const { max, environment } = messenger()
     await runWith(["r-ro", "config", "set", "readOnly", "true"])
 
-    expect((await runWith(["r-ro", "chats", "read", "111"], environment)).code).toBe(5)
+    expect((await runWith(["r-ro", "chats", "mark-read", "111"], environment)).code).toBe(5)
     expect(max.sent).toEqual([])
 
     const listed = await runWith(["r-ro", "messages", "list", "111", "--mark-read"], environment)
@@ -113,13 +113,13 @@ describe("marking a chat read", () => {
     const { environment, marks } = messenger()
     await runWith(["r-list-off", "recipients", "add", "222"], environment)
 
-    expect((await runWith(["r-list-off", "chats", "read", "111"], environment)).code).toBe(7)
+    expect((await runWith(["r-list-off", "chats", "mark-read", "111"], environment)).code).toBe(7)
     expect(marks()).toEqual([])
   })
 
   it("`--offline` refuses: marking is a change on MAX", async () => {
     const { environment, marks } = messenger()
-    const { code } = await runWith(["r-off", "chats", "read", "111", "--offline"], environment)
+    const { code } = await runWith(["r-off", "chats", "mark-read", "111", "--offline"], environment)
     expect(code).toBe(2)
     expect(marks()).toEqual([])
   })

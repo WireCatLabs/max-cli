@@ -280,7 +280,7 @@ const READ_TOOLS = {
 
   max_chats_show: tool({
     title: "Show a chat",
-    description: "One chat: its kind, unread count, last message time and who is in it.",
+    description: "One chat: its kind, unread count, last message time, who is in it, and a group's settings.",
     input: v.object({ chat }),
     annotations: READ,
     answer: (client, args) => client.chats.show(args.chat),
@@ -542,7 +542,7 @@ const SEND_TOOLS = {
     description:
       "Send one text message as the owner. Only when the owner asked for this exact text to this exact chat. " +
       "A name that matches several chats is refused with the candidates — pick an id, never guess. " +
-      "On outcome_unknown, retry with the cid it returns and MAX drops the duplicate. " +
+      "On outcome_unknown, retry with send_id set to the sendId it returns and MAX drops the duplicate. " +
       "With `at`, MAX sends it later and the answer carries `scheduledFor`; never retry a scheduled send — " +
       "read max_messages_scheduled instead.",
     input: v.object({
@@ -551,7 +551,7 @@ const SEND_TOOLS = {
       reply_to: v.optional(v.pipe(message, v.description("the message this answers; MAX shows it quoted"))),
       markdown,
       silent: v.optional(v.pipe(v.boolean(), v.description("deliver without a notification"))),
-      cid: v.optional(v.pipe(v.number(), v.integer(), v.description("from an earlier outcome_unknown"))),
+      send_id: v.optional(v.pipe(v.number(), v.integer(), v.description("the sendId of an earlier outcome_unknown"))),
       at: v.optional(
         v.pipe(
           v.string(),
@@ -584,13 +584,13 @@ const SEND_TOOLS = {
     title: "Forward a message",
     description:
       "Forward one message to another chat as the owner. Only when the owner asked for this message to this chat. " +
-      "On outcome_unknown, retry with the cid it returns and MAX drops the duplicate.",
+      "On outcome_unknown, retry with send_id set to the sendId it returns and MAX drops the duplicate.",
     input: v.object({
       chat: v.pipe(chat, v.description("the chat the message is in")),
       message,
       to: v.pipe(chat, v.description("the chat to forward it to")),
       silent: v.optional(v.pipe(v.boolean(), v.description("deliver without a notification"))),
-      cid: v.optional(v.pipe(v.number(), v.integer(), v.description("from an earlier outcome_unknown"))),
+      send_id: v.optional(v.pipe(v.number(), v.integer(), v.description("the sendId of an earlier outcome_unknown"))),
     }),
     annotations: WRITE,
     _meta: APPROVE,
@@ -600,7 +600,7 @@ const SEND_TOOLS = {
         args.message,
         await client.chats.resolve(args.to),
         {
-          ...(args.cid === undefined ? {} : { cid: args.cid }),
+          ...(args.send_id === undefined ? {} : { cid: args.send_id }),
           ...(args.silent === true ? { notify: false } : {}),
         },
       ),
@@ -702,7 +702,7 @@ const TOOL_PERMISSION: Record<string, Permission> = {
   max_reactions_remove: "reaction",
   max_polls_vote: "reaction",
   max_polls_create: "send",
-  max_chats_read: "read",
+  max_chats_mark_read: "read",
   max_messages_delete: "delete",
   max_contacts_add: "contacts",
   max_contacts_remove: "contacts",
@@ -720,7 +720,7 @@ const TOOL_PERMISSION: Record<string, Permission> = {
 
 /** Registered only with `--allow-mark-read`: the other person sees it, and `--allow-send` does not imply it. */
 const MARK_READ_TOOLS = {
-  max_chats_read: tool({
+  max_chats_mark_read: tool({
     title: "Mark a chat read",
     description:
       "Mark a chat read up to a message, or up to its newest message. The other person sees that it was read. Only when the owner asked for it.",

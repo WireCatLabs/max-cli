@@ -35,8 +35,8 @@ describe("every failure is kept as a run", () => {
   })
 
   it("a check a command makes before it opens its run", async () => {
-    expect(await runWith(["f-check", "backup", "messages", "111"])).toBe(2)
-    expect(runsOf("f-check")).toMatchObject([{ command: "backup messages", errorCode: "validation_error" }])
+    expect(await runWith(["f-check", "store", "fetch", "111", "--since", "1d", "--last", "5"])).toBe(2)
+    expect(runsOf("f-check")).toMatchObject([{ command: "store fetch", errorCode: "validation_error" }])
   })
 
   it("a failure inside a run, once, with nothing it was given", async () => {
@@ -62,7 +62,7 @@ describe("every failure is kept as a run", () => {
   })
 
   it("but nothing when recording was turned off by name, or when nothing failed", async () => {
-    expect(await runWith(["f-off", "backup", "messages", "111", "--no-record"])).toBe(2)
+    expect(await runWith(["f-off", "store", "fetch", "111", "--since", "1d", "--last", "5", "--no-record"])).toBe(2)
     expect(await runWith(["f-help", "messages", "--help"])).toBe(0)
     expect(await runWith(["f-help", "doctor", "report"])).toBe(0)
 

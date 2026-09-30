@@ -15,7 +15,7 @@ import { VERSION } from "./version.js"
 
 export const PACKAGE = "@leemour/max-cli"
 
-/** npm, the clock, the terminal and the package manager as `max update` sees them — faked in a test. */
+/** npm, the clock, the terminal and the package manager as `max upgrade` sees them — faked in a test. */
 export interface UpdateEnvironment {
   fetch?: FetchLike
   now?: () => number
@@ -51,7 +51,9 @@ export const updateNotice = (
   }: { tty?: boolean; environment?: UpdateEnvironment; env?: NodeJS.ProcessEnv },
 ): Promise<string | undefined> => {
   try {
+    if (argv.includes("upgrade")) return Promise.resolve(undefined)
     const pretty = !argv.includes("--json") && !argv.includes("--jsonl") && (tty ?? process.stdout.isTTY === true)
+    // cli-core names the command `update`; it is `upgrade` here (CONVENTIONS, "Command names").
     return sharedNotice({
       argv,
       packageName: PACKAGE,
@@ -67,7 +69,7 @@ export const updateNotice = (
       installer: installer(environment),
       env,
       offVariables: ["MAX_NO_UPDATE_CHECK"],
-    })
+    }).then((line) => line?.replace("`max update`", "`max upgrade`"))
   } catch {
     return Promise.resolve(undefined)
   }

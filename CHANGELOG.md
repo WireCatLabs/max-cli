@@ -4,6 +4,37 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Изменено — может сломать скрипты
+
+Команды названы по одному правилу: сначала предмет, потом действие. Старые имена больше не
+работают — `max` отвечает «unknown command» или «unknown option» с кодом `1` и ничего не делает.
+
+- **`max backup messages` → `max store fetch`.** Теперь команда **скачивает сразу**; только
+  посчитать — `--estimate` (раньше наоборот: без `--run` только считала). Каждый запуск по-прежнему
+  не больше `--max-pages` страниц (40) с той же паузой. `--pause` принимает длительность: `5s`,
+  `500ms` — число без единицы теперь отказ. `--since` и `--last` необязательны: без них запуски идут
+  до начала чата, каждый — с места, где остановился прошлый.
+- **`max export messages` → `max store export`.**
+- **`--cid` → `--send-id`** у `messages send` и `messages forward`. В ошибке `outcome_unknown`
+  номер теперь в поле `sendId`; у инструментов MCP `max_messages_send` и `max_messages_forward`
+  аргумент `cid` → `send_id`.
+- **`max chats read` → `max chats mark-read`**; инструмент MCP `max_chats_read` →
+  `max_chats_mark_read`.
+- **`max chats settings` больше нет.** Настройки группы показывает `max chats show` (поля
+  `settings`, `description`, `access`; ссылку-приглашение — по-прежнему `max chats link show`), меняет `max chats update <чат> --all-can-pin on|off`
+  и остальные флаги настроек.
+- **`max update` → `max upgrade`**, и строка о новой версии называет `max upgrade`.
+- **`max recipients off` → `max recipients clear`**, в ответе `off` → `cleared`;
+  **`max bot recipients off` → `max bot recipients clear`**.
+- **`max account sessions end-others` → `max account sessions end --others`**; без `--others` —
+  отказ.
+
+### Что нового
+
+- **`max complete` виден в `max --help`** — чтобы найти, как включить дополнение по Tab.
+
 ## 0.20.0 — 30.09.2026
 
 ### Изменено — может сломать скрипты
@@ -494,7 +525,7 @@
   копию.**
   Что учесть: без `--run` команда только показывает расчёт и ничего не отправляет. С `--run` она
   листает назад по 30 сообщений с паузами, не больше 40 страниц за запуск, и при повторе продолжает с
-  места ([usage.md](docs/usage.md#бэкап-истории)).
+  места ([usage.md](docs/usage.md#скачать-историю)).
 - **`max doctor` показывает, какой версией веб-клиента MAX представляется `max`**, и предупреждает,
   если её прочитали больше 60 дней назад.
   Почему: MAX может перестать принимать старую версию клиента
@@ -597,7 +628,7 @@
 - **`max export messages <чат> --format jsonl|md` выгружает переписку из локальной копии** в JSONL или
   Markdown, с `--since` и `--output`. В MAX не ходит.
   Что учесть: чего в копии нет, команда называет в stderr. Файл из `--output` доступен только вам
-  ([usage.md](docs/usage.md#выгрузка)).
+  ([usage.md](docs/usage.md#выгрузить-в-файл)).
 - **`max messages delete <чат> <id…> --allow-dangerous` удаляет сообщения**, до 10 за раз. По умолчанию
   только у вас; с `--for-everyone` — у всех в чате. Для MCP — `max mcp --allow-delete`, только
   «у меня».

@@ -314,7 +314,7 @@ max sales bot webhooks delete https://bot.example.ru/max
 max sales bot recipients add "Команда продаж"
 max sales bot recipients list
 max sales bot recipients remove "Команда продаж"
-max sales bot recipients off              # писать можно снова в любой чат
+max sales bot recipients clear            # писать можно снова в любой чат
 ```
 
 Без списка боту можно писать куда угодно. Со списком отправка в другой чат получает отказ с кодом

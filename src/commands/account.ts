@@ -80,13 +80,18 @@ export const accountCommand = (): Command => {
   /**
    * ⚠ **`--yes` is required** and nothing asks instead: this logs the owner out of the MAX app on
    * the phone, and a prompt is one Enter away from that. MAX gives a session no id, so there is no
-   * way to end only one (measured 2026-09-24).
+   * way to end only one (measured 2026-09-24), which is why `--others` is required for now.
    */
-  annotate(sessions.command("end-others"), { mutates: true })
+  annotate(sessions.command("end"), { mutates: true })
     .description("log out every other device, your phone included; this one stays")
+    .option("--others", "every session but this one — the only choice MAX offers")
     .option("--yes", "yes, log the other devices out")
     .action(async function (this: Command) {
-      if (this.opts<{ yes?: boolean }>().yes !== true) {
+      const { others, yes } = this.opts<{ others?: boolean; yes?: boolean }>()
+      if (others !== true) {
+        throw new CliError("validation_error", "MAX ends only every other session at once — add --others")
+      }
+      if (yes !== true) {
         throw new CliError(
           "confirmation_required",
           "this logs out every other device, the MAX app on your phone included — add --yes to go ahead",
@@ -94,7 +99,7 @@ export const accountCommand = (): Command => {
       }
       const { renderer, createClient, run } = forCommand(this)
 
-      await run("account sessions end-others", async (events) => {
+      await run("account sessions end", async (events) => {
         const client = createClient({ events })
 
         try {

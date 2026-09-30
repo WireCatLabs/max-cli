@@ -96,7 +96,7 @@ max chats rules set "Поход" consent.delete confirm    # но перед у�
 | `max chats check <чат>` | проверка по правилам; делает то, что правила разрешают |
 | `max chats members add\|remove`, `admins add\|remove` | участники и админы |
 | `max chats link show\|reset <чат>` | ссылка-приглашение; `reset` — новая, старая перестаёт работать |
-| `max chats settings`, `update` | настройки, название, описание |
+| `max chats update` | настройки, название, описание; прочитать настройки — `max chats show` |
 | `max messages delete --for-everyone`, `pin`, `unpin` | удалить у всех, закрепить |
 
 Агенту без терминала то же самое дают инструменты MCP: `max_review` с `unanswered_after_hours`,

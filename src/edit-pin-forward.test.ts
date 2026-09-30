@@ -128,9 +128,9 @@ describe("forwarding", () => {
     expect(journalOf("e-forward")).toMatchObject([{ chatId: "222", kind: "forward", outcome: "sent" }])
   })
 
-  it("`--cid` reuses the client id given, and `--silent` delivers without a notification", async () => {
+  it("`--send-id` reuses the id given, and `--silent` delivers without a notification", async () => {
     const { environment, sentWith } = messenger()
-    const argv = ["e-fwd-cid", "messages", "forward", "111", MESSAGE, "--to", "222", "--cid", "4242", "--silent"]
+    const argv = ["e-fwd-cid", "messages", "forward", "111", MESSAGE, "--to", "222", "--send-id", "4242", "--silent"]
     expect((await runWith(argv, environment)).code).toBe(0)
 
     expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
@@ -148,7 +148,8 @@ describe("forwarding", () => {
     expect(cids[0]).toBe(cids[1])
     const { error } = JSON.parse(lost.stderr)
     expect(error.code).toBe("outcome_unknown")
-    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --cid ${cids[0]}`)
+    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --send-id ${cids[0]}`)
+    expect(error.sendId).toBe(cids[0])
     expect(journalOf("e-lost")).toMatchObject([{ kind: "forward", outcome: "outcome_unknown", cid: cids[0] }])
   })
 

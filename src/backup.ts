@@ -54,8 +54,8 @@ export const estimateBackup = async ({
     held = await count(from)
     unread =
       windows.length === 0
-        ? [{ from: new Date(from).toISOString(), to: new Date(newest).toISOString() }]
-        : unreadStretches(ranges, { since: from, last: newest })
+        ? [{ from: since === undefined ? null : new Date(from).toISOString(), to: new Date(newest).toISOString() }]
+        : unreadStretches(ranges, { since, last: newest })
     const gap = unread.reduce(
       (sum, { from: start, to }) => sum + Date.parse(to) - (start ? Date.parse(start) : from),
       0,
@@ -65,7 +65,9 @@ export const estimateBackup = async ({
       0,
     )
     estimated = gap > 0
-    missing = gap === 0 ? 0 : held > 0 && covered > 0 ? Math.round((held / covered) * gap) : null
+    // With no --since the chat's start is the bound, and when it was never reached its time is unknown.
+    const unbounded = since === undefined && !reachedStart
+    missing = gap === 0 ? 0 : !unbounded && held > 0 && covered > 0 ? Math.round((held / covered) * gap) : null
   }
 
   const pages = missing === null ? null : Math.max(1, Math.ceil(missing / (BACKUP_PAGE - 1)))

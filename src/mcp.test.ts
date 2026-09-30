@@ -263,13 +263,13 @@ describe("the MCP server", () => {
     expect(max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload).toMatchObject({ chatId: 111 })
   })
 
-  it("hands back the cid when it cannot tell whether a send went out", async () => {
+  it("hands back the send id when it cannot tell whether a send went out", async () => {
     const { client } = await connect({ allowSend: true }, { answers: { [Opcode.MSG_SEND]: () => undefined } })
 
     const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "hello" })
 
     expect(isError).toBe(true)
-    expect(body.error).toMatchObject({ code: "outcome_unknown", cid: expect.any(Number) })
+    expect(body.error).toMatchObject({ code: "outcome_unknown", sendId: expect.any(Number) })
   })
 
   it("schedules with `at` the way `--at` does, and answers scheduledFor", async () => {
@@ -305,7 +305,7 @@ describe("the MCP server", () => {
   it("refuses an `at` that `--at` refuses, before sending anything", async () => {
     const { client, max } = await connect({ allowSend: true })
 
-    for (const args of [{ at: "30s" }, { at: "1h", silent: true }, { at: "1h", cid: 5 }]) {
+    for (const args of [{ at: "30s" }, { at: "1h", silent: true }, { at: "1h", send_id: 5 }]) {
       const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "x", ...args })
       expect(isError).toBe(true)
       expect(body.error).toMatchObject({ code: "validation_error" })
@@ -340,8 +340,8 @@ describe("the MCP server", () => {
     const names = async (options: Partial<ServerOptions>) =>
       (await (await connect(options)).client.listTools()).tools.map(({ name }) => name)
 
-    expect(await names({ allowSend: true })).not.toContain("max_chats_read")
-    expect(await names({ allowMarkRead: true })).toContain("max_chats_read")
+    expect(await names({ allowSend: true })).not.toContain("max_chats_mark_read")
+    expect(await names({ allowMarkRead: true })).toContain("max_chats_mark_read")
   })
 
   it("does not offer a tool the profile's allow list leaves out, whatever the flags", async () => {
@@ -355,7 +355,7 @@ describe("the MCP server", () => {
     expect(names).not.toContain("max_messages_edit")
     expect(names).not.toContain("max_messages_forward")
     expect(names).not.toContain("max_messages_delete")
-    expect(names).not.toContain("max_chats_read")
+    expect(names).not.toContain("max_chats_mark_read")
     expect(names).toContain("max_messages_list")
   })
 
@@ -454,7 +454,7 @@ describe("the MCP server", () => {
       { answers: { [Opcode.CHAT_MARK]: { unread: 0, mark: 1789776100000 } } },
     )
 
-    const { isError, body } = await call(client, "max_chats_read", { chat: "111", message: "116762160362694583" })
+    const { isError, body } = await call(client, "max_chats_mark_read", { chat: "111", message: "116762160362694583" })
 
     expect(isError).toBe(false)
     expect(body).toEqual({ chatId: "111", messageId: "116762160362694583", unread: 0 })

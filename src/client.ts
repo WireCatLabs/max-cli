@@ -339,7 +339,20 @@ export class MaxClient {
       if (!chat) throw new CliError("not_found", `no chat ${reference.trim()} among this account's chats`)
 
       const cache = this.#cache
-      return { ...chat, members: chat.kind === "channel" || !cache ? null : await cache.chats.members(chat.id) }
+      const members = chat.kind === "channel" || !cache ? null : await cache.chats.members(chat.id)
+      // The login carries only the chats that changed lately; the settings of the rest are not known here.
+      const raw =
+        this.#offline || chat.kind === "dialog"
+          ? undefined
+          : asArray(this.#session().chats).find((one) => asId(one.id) === chat.id)
+      const card = raw ? toGroupCard(raw) : undefined
+      return {
+        ...chat,
+        members,
+        description: card?.description ?? null,
+        access: card?.access ?? null,
+        settings: card?.settings ?? null,
+      }
     },
 
     /** The other person in a one-to-one chat, by the chat's participants; `undefined` for anything else. */
@@ -1033,7 +1046,7 @@ export class MaxClient {
      * So one retry, same `cid`, and nothing beyond that. What is still unmeasured is how long the
      * server remembers a `cid`; the two probes were seconds apart. If the retry also fails the
      * answer is `outcome_unknown` — never failed, never sent — and it names the `cid`, because
-     * `max messages send … --cid <n>` can then repeat the attempt without risking a second message.
+     * `max messages send … --send-id <n>` can then repeat the attempt without risking a second message.
      *
      * **`at` queues it on MAX** (epoch ms), which sends it then even with this machine off. That is
      * never retried: deduplication by `cid` was measured for ordinary messages only, and a second
@@ -1071,7 +1084,7 @@ export class MaxClient {
       if (options.at !== undefined && options.cid !== undefined) {
         throw new CliError(
           "validation_error",
-          `--cid repeats an ambiguous send, which is not safe for a scheduled one — \`max messages scheduled ${chatId}\` shows whether it is queued`,
+          `--send-id repeats an ambiguous send, which is not safe for a scheduled one — \`max messages scheduled ${chatId}\` shows whether it is queued`,
         )
       }
 
@@ -1751,7 +1764,7 @@ export class MaxClient {
           "outcome_unknown",
           `the message may or may not have been scheduled (${failure.message}) — ` +
             `\`max messages scheduled ${chatId}\` shows the queue; sending it again could queue a second copy`,
-          { cid },
+          { sendId: cid },
         )
       }
 
@@ -1763,8 +1776,8 @@ export class MaxClient {
         throw new CliError(
           "outcome_unknown",
           `the message may or may not have been sent (${failure.message}) — ` +
-            `\`${options.repeat ?? "max messages send <chat> <text>"} --cid ${cid}\` repeats the attempt without risking a second copy`,
-          { cid },
+            `\`${options.repeat ?? "max messages send <chat> <text>"} --send-id ${cid}\` repeats the attempt without risking a second copy`,
+          { sendId: cid },
         )
       }
     }

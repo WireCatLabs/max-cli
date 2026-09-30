@@ -5,7 +5,7 @@
  *
  * One login, then one `CHAT_HISTORY` (49) with `interactive: false` on the smallest chat that
  * claims a count, to see whether the claim matches what history returns. Reads only; nothing is
- * marked read. Decides whether `max backup messages` estimates exactly or by density (`CLI-34`).
+ * marked read. Decides whether `max store fetch` estimates exactly or by density (`CLI-34`).
  *
  * Printed: field names, chat types and numbers — never a title, a text, a name or an id.
  */

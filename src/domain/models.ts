@@ -4,7 +4,7 @@
  * Everything above the adapter speaks these types.
  */
 
-import type { Chat, Contact, Id, Member, Reactions } from "@leemour/cli-messaging"
+import type { Chat, Contact, Id, Member, Reactions, ChatCard as SharedChatCard } from "@leemour/cli-messaging"
 
 /**
  * The shared model where MAX says the same thing; below, only what MAX says differently or alone.
@@ -20,7 +20,6 @@ export type {
   AccountSession,
   AttachmentLink,
   Chat,
-  ChatCard,
   ChatEvent,
   ChatEvents,
   ChatKind,
@@ -227,6 +226,14 @@ export interface GroupMembers {
   complete: boolean
   /** Whether `role` is filled in: the login names a group's owner and admins only for chats that changed lately. */
   rolesKnown: boolean
+}
+
+/** The shared card, plus what MAX tells about a group. */
+export interface ChatCard extends SharedChatCard {
+  description: string | null
+  access: string | null
+  /** `null` for a dialog, offline, or a group the login did not carry. */
+  settings: GroupSettings | null
 }
 
 /** The settings MAX lets a group's owner change, under our names. */

@@ -65,12 +65,12 @@ export const recipientsCommand = (): Command => {
     })
 
   command
-    .command("off")
-    .description("turn the list off: this profile may send to any chat again")
+    .command("clear")
+    .description("empty the list and turn it off: this profile may send to any chat again")
     .action(async function (this: Command) {
       const { settings, renderer, run } = forCommand(this)
-      await run("recipients off", async () => {
-        renderer.result({ off: true, wasOn: listFor(settings.profile).off() })
+      await run("recipients clear", async () => {
+        renderer.result({ cleared: true, wasOn: listFor(settings.profile).off() })
       })
     })
 

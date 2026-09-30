@@ -12,7 +12,6 @@ import {
 } from "@leemour/cli-core"
 import { Command, CommanderError } from "commander"
 import { accountCommand } from "./commands/account.js"
-import { backupCommand } from "./commands/backup.js"
 import { botCommand } from "./commands/bot.js"
 import { botRecordingOf } from "./commands/bot-context.js"
 import { cacheCommand } from "./commands/cache.js"
@@ -23,7 +22,6 @@ import { configCommand } from "./commands/config.js"
 import { contactsCommand } from "./commands/contacts.js"
 import { type Environment, provide } from "./commands/context.js"
 import { doctorCommand } from "./commands/doctor.js"
-import { exportCommand } from "./commands/export.js"
 import { inboxCommand } from "./commands/inbox.js"
 import { mcpCommand } from "./commands/mcp.js"
 import { messagesCommand } from "./commands/messages.js"
@@ -38,7 +36,8 @@ import { serveCommand } from "./commands/serve.js"
 import { serverCommand } from "./commands/server.js"
 import { sessionCommand } from "./commands/session.js"
 import { skillCommand } from "./commands/skill.js"
-import { selfUpdateCommand } from "./commands/update.js"
+import { storeCommand } from "./commands/store.js"
+import { upgradeCommand } from "./commands/upgrade.js"
 import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
 import { commandWords, liftProfile } from "./profile.js"
@@ -103,8 +102,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(chatsCommand())
   program.addCommand(contactsCommand())
   program.addCommand(messagesCommand())
-  program.addCommand(backupCommand())
-  program.addCommand(exportCommand())
+  program.addCommand(storeCommand())
   program.addCommand(modelsCommand())
   program.addCommand(pollsCommand())
   program.addCommand(reactionsCommand())
@@ -121,8 +119,8 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(runsCommand())
   program.addCommand(skillCommand())
   program.addCommand(commandsCommand())
-  program.addCommand(selfUpdateCommand())
-  program.addCommand(completeCommand(), { hidden: true })
+  program.addCommand(upgradeCommand())
+  program.addCommand(completeCommand())
   program.addCommand(mcpCommand())
   program.addCommand(botCommand())
 
