@@ -49,6 +49,9 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   The plan weighs it against the smaller option: numbered `.sql` files and a ~30-line runner on
   the `user_version` we already keep. Either way: the FTS5 tables and triggers are hand-written
   SQL, and the migration files have to ship inside the npm package. Starts at `src/cache/schema.ts`.
+  **Correction 2026-09-30 (`NEED-383`):** superseded. max-cli's own cache is not moved to Drizzle;
+  it is replaced by cli-messaging's shared store, which Drizzle manages (cli-messaging storage phase
+  1). Step A — the cache async — shipped in #244; the rest follows phase 1 (the one-store plan).
 - **MAX-34** · 🟡 P3 · Live events: a long-running `max listen` that prints new messages, edits,
   reactions and typing as they arrive (PyMax's `on_message`, `on_message_edit`,
   `on_reaction_update`…). Conflicts with one-shot commands (`CLAUDE.md` constraint 4), so it needs
