@@ -1,4 +1,5 @@
 import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
+import type { SendGuard } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
 import { maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
@@ -12,6 +13,18 @@ import { guardFor } from "./sends.js"
 /** The client each command connected, so its guard can tell whether `max serve` journals for it. */
 const clients = new WeakMap<Command, MaxClient>()
 
+/**
+ * Over `max serve` the server reserves and journals each write it forwards, with the outcome it saw;
+ * the command checks too, and records only what it refused itself (`NEED-269`).
+ */
+export const overServer = (guard: SendGuard, server: () => { readonly journals: boolean } | undefined): SendGuard => ({
+  check: (request) => guard.check(request, server() ? { reserve: false } : {}),
+  record: (entry) => {
+    const through = server()
+    if (!through || entry.outcome === "refused" || !through.journals) guard.record(entry)
+  },
+})
+
 /** What cli-messaging's shared commands and services need from max, for the personal account. */
 export const maxMessenger: Messenger = {
   app: MAX_APP,
@@ -19,19 +32,8 @@ export const maxMessenger: Messenger = {
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
 
-  // Over `max serve` the server reserves and journals each write it forwards, with the outcome it saw;
-  // the command checks too, and records only what it refused itself (`NEED-269`).
-  guard: (command, { profile }, warn) => {
-    const own = guardFor(resolveSettings({ profile }), warn)
-    const server = () => clients.get(rootOf(command))?.server
-    return {
-      check: (request) => own.check(request, server() ? { reserve: false } : {}),
-      record: (entry) => {
-        const through = server()
-        if (!through || entry.outcome === "refused" || !through.journals) own.record(entry)
-      },
-    }
-  },
+  guard: (command, { profile }, warn) =>
+    overServer(guardFor(resolveSettings({ profile }), warn), () => clients.get(rootOf(command))?.server),
 
   resolveSettings: (flags: GlobalFlags, options: ResolveOptions = {}): Settings => {
     const { profile, offline, ...rest } = flags
