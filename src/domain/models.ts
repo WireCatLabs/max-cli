@@ -4,21 +4,37 @@
  * Everything above the adapter speaks these types.
  */
 
-/** Every id is a string, never a number: MAX ids are 64-bit and an id is an identifier, not arithmetic. */
-export type Id = string
+import type { Chat, Contact, Id, Member, Reactions } from "@leemour/cli-messaging"
 
-export type ChatKind = "dialog" | "group" | "channel" | "unknown"
-
-export interface Chat {
-  id: Id
-  title: string | null
-  kind: ChatKind
-  /** `null` means MAX did not say, which is not the same as zero. */
-  unreadCount: number | null
-  /** ISO 8601, or `null` when the chat has never had a message. */
-  lastMessageAt: string | null
-  participantsCount: number | null
-}
+/**
+ * The shared model where MAX says the same thing; below, only what MAX says differently or alone.
+ * What MAX does with the shared ones, measured:
+ *
+ * - `Id` — MAX ids are 64-bit, so a string, never a number.
+ * - `AttachmentLink` — no token and no cookie needed to fetch it (2026-09-23).
+ * - `ChatEvent.event` — `new`, `add`, `remove`, `pin` seen; anything else passes through.
+ * - `Contact.lastMessagedAt` — MAX does not send it on a contact: it comes from the chat.
+ * - `AccountSession` — MAX gives a session no id, so none can be ended alone.
+ */
+export type {
+  AccountSession,
+  AttachmentLink,
+  Chat,
+  ChatCard,
+  ChatEvent,
+  ChatEvents,
+  ChatKind,
+  Contact,
+  Deletion,
+  Id,
+  Member,
+  Page,
+  PersonCard,
+  Pin,
+  Profile,
+  Reactions,
+  ReadMark,
+} from "@leemour/cli-messaging"
 
 export interface Attachment {
   /** Lower-cased MAX type: `photo`, `video`, `file`, `share`, `call`, `control`, `sticker`… */
@@ -74,43 +90,6 @@ export interface PollMessage {
   chatId: Id
   messageId: Id
   poll: Poll
-}
-
-/** Where one attachment's bytes can be fetched. Measured 2026-09-23: no token and no cookie needed. */
-export interface AttachmentLink {
-  kind: string
-  url: string
-  name?: string
-  /** MAX flags the file as possibly harmful. */
-  unsafe?: boolean
-}
-
-/** The reactions on one message, as MAX counts them. */
-/** What a chat has pinned after `messages pin` or `unpin`; `null` is nothing. */
-export interface Pin {
-  chatId: Id
-  pinned: Id | null
-}
-
-/** What `messages delete` asked MAX to remove, and for whom. */
-export interface Deletion {
-  chatId: Id
-  deleted: Id[]
-  forEveryone: boolean
-}
-
-/** A chat marked read up to `messageId`, inclusive. `unread` is what MAX says is left, or `null`. */
-export interface ReadMark {
-  chatId: Id
-  messageId: Id
-  unread: number | null
-}
-
-export interface Reactions {
-  counts: { reaction: string; count: number }[]
-  /** This account's own reaction, or `null`. */
-  mine: string | null
-  total: number
 }
 
 /** The message a reply answers or a forward carries — MAX sends it whole, inside the one that links to it. */
@@ -231,25 +210,6 @@ export interface Review {
   unanswered?: { olderThanHours: number }
 }
 
-export interface Contact {
-  id: Id
-  name: string | null
-  /** The @link MAX shows for a person, when they have one. */
-  username: string | null
-  /** Whatever they wrote about themselves. */
-  description: string | null
-  /**
-   * The newest message in a one-to-one chat with them, ISO 8601, and `null` for somebody we have
-   * only ever met in a group. It is what `--order recent` sorts on.
-   *
-   * MAX does not send this on a contact: it comes from the chat, and only the store has both.
-   */
-  lastMessagedAt: string | null
-}
-
-/** Somebody in a chat, as much of them as a chat card shows. */
-export type Member = Pick<Contact, "id" | "name" | "username">
-
 /** A group's member as MAX lists them (`max chats members list`). */
 export interface GroupMember extends Member {
   /** ISO 8601, when the MAX account was created — a days-old account is worth a look. */
@@ -269,11 +229,6 @@ export interface GroupMembers {
   rolesKnown: boolean
 }
 
-/** One chat and who is in it. `members` is `null` where nobody recorded that — a channel, always. */
-export interface ChatCard extends Chat {
-  members: Member[] | null
-}
-
 /** The settings MAX lets a group's owner change, under our names. */
 export interface GroupSettings {
   allCanPin: boolean | null
@@ -281,27 +236,6 @@ export interface GroupSettings {
   onlyAdminsCall: boolean | null
   onlyOwnerEditsInfo: boolean | null
   membersSeeLink: boolean | null
-}
-
-/** Somebody joined, left, was added or removed, or the chat changed — one service message. */
-export interface ChatEvent {
-  messageId: Id
-  /** ISO 8601. */
-  timestamp: string
-  /** As MAX names it: `new`, `add`, `remove`, `pin` measured; anything else passes through. */
-  event: string
-  by: { id: Id | null; name: string | null }
-  people: { id: Id; name: string | null }[]
-  /** `new` carries the chat's title. */
-  title?: string
-}
-
-export interface ChatEvents {
-  chatId: Id
-  since: string
-  events: ChatEvent[]
-  /** More history than one run reads; the oldest are here. */
-  more: boolean
 }
 
 /** A group or channel as the group commands answer it. */
@@ -314,47 +248,12 @@ export interface GroupCard extends Chat {
   settings: GroupSettings
 }
 
-/** One person and the chats this account shares with them, newest first. */
-export interface PersonCard extends Contact {
-  chats: Pick<Chat, "id" | "title" | "kind" | "lastMessageAt">[]
-}
-
-/**
- * One page of a listing, and **the same shape whether it came from MAX or from the store** — where
- * rows come from is the exit code's business and the diagnostics', never the answer's.
- *
- * `hasMore` rather than a total: a pager asks whether to offer the next page, and counting rows
- * MAX has not sent is a second question with a second cost.
- */
-export interface Page<T> {
-  items: T[]
-  hasMore: boolean
-}
-
-export interface Profile {
-  id: Id
-  name: string | null
-  phone: string | null
-  description: string | null
-}
-
 /** A chat folder. MAX's own filters and options are kept inside the client and sent back untouched. */
 export interface Folder {
   id: string
   title: string
   /** Chats added to it by hand. A folder that selects by filter lists none. */
   chatIds: Id[]
-}
-
-/** Somewhere this account is logged in. MAX gives a session no id, so none can be ended alone. */
-export interface AccountSession {
-  current: boolean
-  /** `WEB`, `ANDROID`… as MAX names the client. */
-  client: string | null
-  /** MAX's own description of the device and app. */
-  device: string | null
-  location: string | null
-  lastActiveAt: string | null
 }
 
 export interface ContactImport {
