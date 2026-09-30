@@ -111,8 +111,8 @@ what the command does; a name an agent reads should be guessable from the others
 4. **One action, one command.** A variant is an option, never a sibling command, and no command
    both shows and changes.
 5. **Options are plain words, never a wire field** (`--send-id`, not `--cid`). One meaning, one
-   name, in every command of both tools. **A length of time is a `<duration>`** (`30s`, `2m`,
-   `1h`), parsed as `--timeout` is; `--since` takes a duration or a time.
+   name, in every command of both tools. **A length of time is a `<duration>`** (`500ms`,
+   `30s`, `2m`), parsed as `--timeout` is; `--since` takes a duration or a time.
 6. **Arguments have fixed names:** `<chat>`, `<message>`, `<person>`, `<text>`, `<link>`,
    `<file>`, `<job>`.
 7. **One word per idea** in help, docs and errors. The **local store** («локальное хранилище») is
