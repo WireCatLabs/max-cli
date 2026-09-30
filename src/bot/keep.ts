@@ -34,17 +34,20 @@ const reasonOf = (error: unknown): string => {
  * way; the reason goes to stderr. Returns whether it was saved, for `updates watch`, which must not
  * move its marker past what it failed to keep.
  */
-const quietly = async (write: (store: MessageStore) => void, warn: (message: string) => void): Promise<boolean> => {
+const quietly = async (
+  write: (store: MessageStore) => Promise<unknown>,
+  warn: (message: string) => void,
+): Promise<boolean> => {
   let store: MessageStore | undefined
   try {
     store = await openStore()
-    write(store)
+    await write(store)
     return true
   } catch (error) {
     warn(`the local copy was not updated: ${reasonOf(error)}`)
     return false
   } finally {
-    store?.close()
+    await store?.close()
   }
 }
 
@@ -60,9 +63,11 @@ export const keep = async (
     byChat.set(message.chatId, [...(byChat.get(message.chatId) ?? []), message])
   }
   if (byChat.size === 0) return true
-  return quietly((store) => {
-    for (const [chatId, chatMessages] of byChat) store.saveMessages(accountOf(botId), chatId, chatMessages, { via })
-    store.savePeople(accountOf(botId), [...senders])
+  return quietly(async (store) => {
+    for (const [chatId, chatMessages] of byChat) {
+      await store.saveMessages(accountOf(botId), chatId, chatMessages, { via })
+    }
+    await store.savePeople(accountOf(botId), [...senders])
   }, warn)
 }
 
@@ -85,8 +90,8 @@ export const forget = async (
 ): Promise<boolean> => {
   const known = removals.filter((removal) => CHAT_ID.test(removal.chatId))
   if (known.length === 0) return true
-  return quietly((store) => {
-    for (const { chatId, messageId } of known) store.markDeleted(accountOf(botId), [messageId], { chatId })
+  return quietly(async (store) => {
+    for (const { chatId, messageId } of known) await store.markDeleted(accountOf(botId), [messageId], { chatId })
   }, warn)
 }
 
@@ -99,7 +104,7 @@ export const keepSent = async (registry: ChatRegistry, sent: unknown, warn: (mes
 }
 
 /** For `--offline` and `search`: here the store is the answer, so a failure is the command's failure. */
-export const fromStore = async <T>(read: (store: MessageStore) => T): Promise<T> => {
+export const fromStore = async <T>(read: (store: MessageStore) => Promise<T>): Promise<T> => {
   let store: MessageStore
   try {
     store = await openStore()
@@ -107,8 +112,8 @@ export const fromStore = async <T>(read: (store: MessageStore) => T): Promise<T>
     throw new CliError("configuration_error", `the local copy cannot be opened: ${reasonOf(error)}`)
   }
   try {
-    return read(store)
+    return await read(store)
   } finally {
-    store.close()
+    await store.close()
   }
 }
