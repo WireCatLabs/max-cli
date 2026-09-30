@@ -103,7 +103,7 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 - Без `--allow-send`, `--allow-mark-read`, `--allow-delete`, `--allow-moderate` и без `mcpTools` в настройках флаг —
   ошибка запуска: подтверждать нечего.
 
-`--allow-mark-read` даёт агенту инструмент `max_chats_read` — отметить чат прочитанным. Собеседник
+`--allow-mark-read` даёт агенту инструмент `max_chats_mark_read` — отметить чат прочитанным. Собеседник
 это видит, поэтому флаг отдельный и `--allow-send` его не включает. Отметка проходит те же проверки,
 что отправка.
 
@@ -176,7 +176,7 @@ max work config set mcpTools groups         # профилю work
 | `max_reactions_remove` | `max reactions remove` | снять свою реакцию, так же |
 | `max_polls_vote` | `max polls vote` | проголосовать или снять голос, только с `--allow-send` |
 | `max_polls_create` | `max polls create` | создать опрос, только с `--allow-send` |
-| `max_chats_read` | `max chats read` | отметить чат прочитанным, только с `--allow-mark-read` |
+| `max_chats_mark_read` | `max chats mark-read` | отметить чат прочитанным, только с `--allow-mark-read` |
 | `max_messages_delete` | `max messages delete` | удалить у владельца, только с `--allow-delete` |
 | `max_chats_check` | `max chats check` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |
 | `max_contacts_*`, `max_polls_close`, `max_chats_join` и другие | `max contacts …`, `max polls close`, `max chats …`, `max account update` | только если группа названа в `mcpTools` (выше) |
@@ -186,7 +186,7 @@ max work config set mcpTools groups         # профилю work
 отвечает списком `candidates` и ничего не отправляет.
 
 `at` у `max_messages_send` — те же правила, что у `--at`: `2026-09-25T09:00` (местное время) или
-`30m`, `2h`, `1d`, от минуты до года, с округлением вниз до минуты. С `silent` и с `cid` — отказ.
+`30m`, `2h`, `1d`, от минуты до года, с округлением вниз до минуты. С `silent` и с `send_id` — отказ.
 В часовой лимит сообщение идёт в тот час, когда уйдёт. С `--confirm-send` форма показывает время
 отправки.
 Если ответа нет, повтора не будет: проверьте очередь через `max_messages_scheduled`.
