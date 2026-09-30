@@ -93,11 +93,12 @@ describe("the MAX adapter", () => {
     expect(page.items[0]?.attachments[0]).not.toHaveProperty("providerRef")
   })
 
-  it("resolves a title to its chat, and an id nobody listed to a chat of unknown kind", async () => {
-    const { adapter } = connected()
+  it("resolves a title to its chat, and an id as it is, without connecting", async () => {
+    const { adapter, sent } = connected()
 
-    expect(await adapter.resolve("Friends")).toMatchObject({ id: "111", title: "Friends", kind: "group" })
     expect(await adapter.resolve("999")).toMatchObject({ id: "999", title: null, kind: "unknown" })
+    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(await adapter.resolve("Friends")).toMatchObject({ id: "111", title: "Friends", kind: "group" })
   })
 
   it("deletes, reacts and takes the reaction off, pins and unpins, and marks read", async () => {

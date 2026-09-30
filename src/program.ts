@@ -10,7 +10,7 @@ import {
   type Streams,
   visibleControls,
 } from "@leemour/cli-core"
-import { recorded, wasSettled } from "@leemour/cli-messaging/cli"
+import { provide as provideShared, recorded, wasSettled } from "@leemour/cli-messaging/cli"
 import { Command, CommanderError } from "commander"
 import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
@@ -162,6 +162,7 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
   // Commands print through this rather than the process's own streams, so a test sees their output
   // and not only help and errors.
   provide(program, { ...options, streams })
+  provideShared(program, { streams, app: MAX_APP, ...(options.tty === undefined ? {} : { tty: options.tty }) })
   const argvLog = process.env.MAX_TEST_ARGV_LOG
   if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
 
