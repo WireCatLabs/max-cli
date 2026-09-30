@@ -1,4 +1,5 @@
 import { CliError, isCliError } from "@leemour/cli-core"
+import type { Permission } from "@leemour/cli-messaging/sends"
 import {
   type CallToolResult,
   isInputRequiredResult,
@@ -28,7 +29,6 @@ import {
 } from "../moderation/check.js"
 import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
 import { REVIEW_DAYS, review, reviewStart } from "../review.js"
-import type { Permission } from "../sends/permissions.js"
 import type { SessionStore } from "../session/store.js"
 import { type Heard, hearAll, isVoice, transcribe, withTranscript } from "../transcribe/index.js"
 import { modelsDirectory } from "../transcribe/install.js"

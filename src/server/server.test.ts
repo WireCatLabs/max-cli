@@ -2,6 +2,7 @@ import { chmodSync, existsSync, mkdirSync, statSync, writeFileSync } from "node:
 import { createServer, type Server } from "node:net"
 import { dirname } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
 import { decode, ExtData } from "@msgpack/msgpack"
 import { afterEach, describe, expect, it } from "vitest"
 import { MaxClient } from "../client.js"
@@ -11,8 +12,7 @@ import { run } from "../program.js"
 import { Connection } from "../protocol/connection.js"
 import { decodeHeader, HEADER_BYTES } from "../protocol/frame.js"
 import { decompressBlock } from "../protocol/lz4.js"
-import { SendJournal, sendsPathFor } from "../sends/journal.js"
-import { RecipientList, recipientsPathFor } from "../sends/recipients.js"
+import { recipientsPathFor, sendsPathFor } from "../sends.js"
 import { SessionStore } from "../session/store.js"
 import { mockMax } from "../testing/mock-max.js"
 import { VERSION } from "../version.js"
@@ -840,7 +840,7 @@ describe("the send guard, in the server", () => {
 
     const [unknown, sent] = journal("g-retry")
     expect(unknown).toMatchObject({ outcome: "outcome_unknown" })
-    expect(sent).toMatchObject({ outcome: "sent", cid: unknown?.cid })
+    expect(sent).toMatchObject({ outcome: "sent", sendId: unknown?.sendId })
     expect(sends).toBe(3)
   })
 
@@ -851,7 +851,7 @@ describe("the send guard, in the server", () => {
     const client = context.createClient()
     await client.messages.send("111", "sent")
     await client.close()
-    const cid = journal("g-reuse")[0]?.cid
+    const cid = Number(journal("g-reuse")[0]?.sendId)
     const reuse = (chatId: bigint) =>
       ask(store, {
         id: 1,

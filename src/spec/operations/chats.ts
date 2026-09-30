@@ -1,5 +1,5 @@
+import type { ChatAction } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
-import type { ChatAction } from "../../sends/journal.js"
 import { defineOperation, reserveOpcode } from "../define.js"
 import { ambiguous, chatOf, countOf, messageOf, peopleOf } from "../guards.js"
 import { id } from "../scalars.js"

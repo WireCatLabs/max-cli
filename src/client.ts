@@ -1,4 +1,5 @@
 import { CliError, realSleep, type SleepLike } from "@leemour/cli-core"
+import type { AccountAction, ChatAction, GuardRequest, SendGuard } from "@leemour/cli-messaging/sends"
 import type { CacheStore, PersonOrder, SyncSummary } from "./cache/store.js"
 import { delayMs } from "./config.js"
 import {
@@ -59,8 +60,6 @@ import { Connection, ProtocolError, type Wire } from "./protocol/connection.js"
 import { asId, type Payload } from "./protocol/frame.js"
 import { isId, pickChat, pickPerson } from "./resolve.js"
 import { countsIn, type DiagnosticEvent, idsOf, maxErrorKey, type WarningCode } from "./runs/events.js"
-import type { GuardRequest, SendGuard } from "./sends/guard.js"
-import type { AccountAction, ChatAction } from "./sends/journal.js"
 import { LOGIN_CHATS, type Resume, startSession } from "./session/handshake.js"
 import { type QrLogin, tokenByQr } from "./session/login.js"
 import {
@@ -1110,20 +1109,21 @@ export class MaxClient {
         )
       }
 
+      const cid = options.cid ?? this.#nextCid()
+      const sendId = String(cid)
       // Before connecting: a refused send never opens a socket when the chat was given as an id.
       try {
         this.#sends?.check({
           chatId,
           kind: "message",
-          ...(options.cid === undefined ? {} : { cid: options.cid }),
+          sendId,
           ...(options.at === undefined ? {} : { scheduledFor: new Date(options.at).toISOString() }),
         })
       } catch (error) {
-        this.#sends?.record({ chatId, outcome: "refused", errorCode: asCliError(error).code })
+        this.#sends?.record({ chatId, outcome: "refused", sendId, errorCode: asCliError(error).code })
         throw error
       }
 
-      const cid = options.cid ?? this.#nextCid()
       const attachments = files.map(({ bytes, kind }) => ({ kind, bytes: bytes.length }))
       const summary = {
         ...(attachments.length > 0 ? { attachments } : {}),
@@ -1131,14 +1131,14 @@ export class MaxClient {
       }
       try {
         const sent = await this.#deliver(chatId, text, cid, { ...options, files })
-        this.#sends?.record({ chatId, outcome: "sent", messageId: sent.id, cid, length: text.length, ...summary })
+        this.#sends?.record({ chatId, outcome: "sent", messageId: sent.id, sendId, length: text.length, ...summary })
         return sent
       } catch (error) {
         const failure = asCliError(error)
         this.#sends?.record({
           chatId,
           outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          cid,
+          sendId,
           length: text.length,
           ...summary,
           errorCode: failure.code,
@@ -1220,16 +1220,17 @@ export class MaxClient {
     ): Promise<Message> => {
       if (this.#offline)
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot forward")
-      this.#guard({ chatId: toChatId, kind: "forward" })
-
       const cid = options.cid ?? this.#nextCid()
+      const sendId = String(cid)
+      this.#guard({ chatId: toChatId, kind: "forward", sendId })
+
       try {
         const sent = await this.#deliver(toChatId, "", cid, {
           ...options,
           forward: { chatId: fromChatId, messageId },
           repeat: `max messages forward ${fromChatId} ${messageId} --to ${toChatId}`,
         })
-        this.#sends?.record({ chatId: toChatId, kind: "forward", outcome: "sent", messageId: sent.id, cid })
+        this.#sends?.record({ chatId: toChatId, kind: "forward", outcome: "sent", messageId: sent.id, sendId })
         return sent
       } catch (error) {
         const failure = asCliError(error)
@@ -1237,7 +1238,7 @@ export class MaxClient {
           chatId: toChatId,
           kind: "forward",
           outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          cid,
+          sendId,
           errorCode: failure.code,
         })
         throw error
@@ -1425,14 +1426,15 @@ export class MaxClient {
         throw new CliError("validation_error", "a poll needs at least two answers, none of them empty")
       }
 
+      const cid = options.cid ?? this.#nextCid()
+      const sendId = String(cid)
       try {
-        this.#sends?.check({ chatId, kind: "message", ...(options.cid === undefined ? {} : { cid: options.cid }) })
+        this.#sends?.check({ chatId, kind: "message", sendId })
       } catch (error) {
-        this.#sends?.record({ chatId, kind: "message", outcome: "refused", errorCode: asCliError(error).code })
+        this.#sends?.record({ chatId, kind: "message", outcome: "refused", sendId, errorCode: asCliError(error).code })
         throw error
       }
 
-      const cid = options.cid ?? this.#nextCid()
       const attach = {
         _type: "POLL",
         title: question,
@@ -1450,7 +1452,7 @@ export class MaxClient {
           kind: "message",
           outcome: "sent",
           messageId: sent.id,
-          cid,
+          sendId,
           length: question.length,
         })
         return sent
@@ -1460,7 +1462,7 @@ export class MaxClient {
           chatId,
           kind: "message",
           outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          cid,
+          sendId,
           errorCode: failure.code,
         })
         throw error

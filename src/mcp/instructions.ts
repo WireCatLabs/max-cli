@@ -1,5 +1,5 @@
+import type { Permission } from "@leemour/cli-messaging/sends"
 import type { McpToolGroup } from "../config.js"
-import type { Permission } from "../sends/permissions.js"
 
 /**
  * What a client keeps in context when it defers the tools — Claude Code shows the model this and

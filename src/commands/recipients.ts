@@ -1,6 +1,6 @@
 import { CliError } from "@leemour/cli-core"
 import { Command } from "commander"
-import { RecipientList, recipientsPathFor } from "../sends/recipients.js"
+import { recipientListFor } from "../sends.js"
 import { forCommand } from "./context.js"
 import { renderList } from "./paging.js"
 
@@ -19,7 +19,7 @@ export const recipientsCommand = (): Command => {
     .action(async function (this: Command) {
       const { settings, renderer, format, run } = forCommand(this)
       await run("recipients list", async () => {
-        const chats = listFor(settings.profile).read()
+        const chats = recipientListFor(settings.profile).read()
         renderList(renderer, format, chats ?? [])
         if (!chats) renderer.note("the recipient list is off — this profile may send to any chat")
         else if (chats.length === 0) renderer.note("the recipient list is on and empty — this profile may send nowhere")
@@ -38,7 +38,7 @@ export const recipientsCommand = (): Command => {
         try {
           const found = await client.chats.show(chat)
           const partnerId = found.kind === "dialog" ? await client.chats.partner(found.id) : undefined
-          const added = listFor(settings.profile).add({
+          const added = recipientListFor(settings.profile).add({
             id: found.id,
             title: found.title,
             ...(partnerId ? { partnerId } : {}),
@@ -58,7 +58,7 @@ export const recipientsCommand = (): Command => {
     .action(async function (this: Command, chat: string) {
       const { settings, renderer, run } = forCommand(this)
       await run("recipients remove", async () => {
-        const gone = listFor(settings.profile).remove(chat)
+        const gone = recipientListFor(settings.profile).remove(chat)
         if (!gone) throw new CliError("not_found", `${chat.trim()} is not on the recipient list of ${settings.profile}`)
         renderer.result({ id: gone.id, title: gone.title, removed: true })
       })
@@ -70,11 +70,9 @@ export const recipientsCommand = (): Command => {
     .action(async function (this: Command) {
       const { settings, renderer, run } = forCommand(this)
       await run("recipients clear", async () => {
-        renderer.result({ cleared: true, wasOn: listFor(settings.profile).off() })
+        renderer.result({ cleared: true, wasOn: recipientListFor(settings.profile).off() })
       })
     })
 
   return command
 }
-
-const listFor = (profile: string) => new RecipientList(recipientsPathFor(profile))

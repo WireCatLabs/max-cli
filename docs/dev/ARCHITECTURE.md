@@ -149,7 +149,9 @@ message id** and **one** copy, also across two connections and logins — the ca
 - `--silent` sends `notify: false` (normally `true`). ⚠ **Only `true` is measured**; what MAX does
   with `false` has never been observed (that means messaging somebody), so it may be ignored. The
   first use against a real chat settles it.
-- **Every send passes a guard first** (`src/sends/guard.ts`, handed to `MaxClient` by
+- **Every send passes a guard first** (cli-messaging's `sendGuard` since T6 item 3b, 2026-09-30 —
+  **correction:** it was `src/sends/guard.ts`; `src/sends.ts` now builds it for a profile and stamps
+  each journal line with the write's `operationId`; handed to `MaxClient` by
   `createClient`): a read-only profile (code 5), an optional recipient list (7), an hourly limit
   (8) — all before the socket when the chat is an id. Every outcome, refusals included, goes to
   `<state>/sends/<profile>.jsonl` without the text; the limit counts that file. **Correction

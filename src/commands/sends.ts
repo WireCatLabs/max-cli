@@ -1,5 +1,6 @@
+import { SendJournal } from "@leemour/cli-messaging/sends"
 import { Command } from "commander"
-import { SendJournal, sendsPathFor } from "../sends/journal.js"
+import { sendsPathFor } from "../sends.js"
 import { forCommand } from "./context.js"
 import { renderList, wholeNumber } from "./paging.js"
 

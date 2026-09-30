@@ -1,7 +1,7 @@
 import { CliError } from "@leemour/cli-core"
+import type { SendEntry } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
 import type { Payload } from "../protocol/frame.js"
-import type { SendEntry } from "../sends/journal.js"
 
 /**
  * How much we actually know about a shape.
