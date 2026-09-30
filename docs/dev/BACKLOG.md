@@ -31,7 +31,7 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   locks after a few tries), the same read-only default and send guards as stdio. Shared with `tg`,
   so it belongs in cli-messaging. Until then `docs/remote.md` names an external tool. Plan:
   `docs_ai/plans/2026-09-30-tg-alignment.md` §5.
-- **CLI-59** · P1 · Rename commands to the naming standard ([CONVENTIONS](CONVENTIONS.md#command-names)):
+- **CLI-59** · P1 · 🚧 feat/cli-59-renames · Rename commands to the naming standard ([CONVENTIONS](CONVENTIONS.md#command-names)):
   `store fetch|export`, `chats mark-read`, `upgrade`, `recipients clear`, `--send-id`,
   `account sessions end --others`, settings into `chats show|update`, `complete` shown. Breaking,
   no aliases. Plan: `docs_ai/plans/2026-09-30-tg-alignment.md` §3a.
