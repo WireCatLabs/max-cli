@@ -292,9 +292,9 @@ describe("changing a group", () => {
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: -70000000000001, description: "Our team" }])
   })
 
-  it("`settings` sends each flag given under the name MAX has for it", async () => {
+  it("`update` sends each setting given under the name MAX has for it", async () => {
     const { environment, sent } = messenger()
-    const argv = ["gr-flags", "chats", "settings", "Team", "--only-admins-add", "on", "--only-admins-call", "off"]
+    const argv = ["gr-flags", "chats", "update", "Team", "--only-admins-add", "on", "--only-admins-call", "off"]
     await runWith([...argv, "--only-owner-edits-info", "on", "--members-see-link", "off"], environment)
 
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([
@@ -310,17 +310,34 @@ describe("changing a group", () => {
     ])
   })
 
-  it("`settings` reads without sending, and changes only the flags given", async () => {
+  it("`show` reads the settings without sending, and `update` changes only the flags given", async () => {
     const { environment, sent } = messenger()
-    const read = await runWith(["gr-settings", "chats", "settings", "Team", "--json"], environment)
+    const read = await runWith(["gr-settings", "chats", "show", "Team", "--json"], environment)
     expect(JSON.parse(read.stdout).settings).toMatchObject({ allCanPin: true, onlyAdminsAdd: false })
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([])
 
-    await runWith(["gr-settings", "chats", "settings", "Team", "--all-can-pin", "off"], environment)
+    await runWith(["gr-settings", "chats", "update", "Team", "--all-can-pin", "off"], environment)
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: -70000000000001, options: { ALL_CAN_PIN_MESSAGE: false } }])
-    expect(
-      (await runWith(["gr-settings", "chats", "settings", "Team", "--all-can-pin", "yes"], environment)).code,
-    ).toBe(2)
+    expect((await runWith(["gr-settings", "chats", "update", "Team", "--all-can-pin", "yes"], environment)).code).toBe(
+      2,
+    )
+  })
+
+  it("`update` with a title and a setting sends them as two requests, and with neither sends nothing", async () => {
+    const { environment, sent } = messenger()
+    const both = await runWith(
+      ["gr-both", "chats", "update", "Team", "--title", "Crew", "--all-can-pin", "on"],
+      environment,
+    )
+    const neither = await runWith(["gr-both", "chats", "update", "Team"], environment)
+
+    expect(both.code).toBe(0)
+    expect(sent(Opcode.CHAT_UPDATE)).toEqual([
+      { chatId: -70000000000001, theme: "Crew" },
+      { chatId: -70000000000001, options: { ALL_CAN_PIN_MESSAGE: true } },
+    ])
+    expect(neither.code).toBe(2)
+    expect(neither.stderr).toContain("--all-can-pin")
   })
 
   it("replaces the invite link", async () => {

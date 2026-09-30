@@ -126,7 +126,7 @@ describe("the Markdown export of text other people wrote", () => {
   })
 })
 
-describe("max export messages", () => {
+describe("max store export", () => {
   const prepared = async (profile: string) => {
     const cache = await openProfileCache(profile)
     if (!cache) throw new Error("no cache in the test sandbox")
@@ -169,7 +169,7 @@ describe("max export messages", () => {
     const file = join(process.env.TMPDIR ?? "", "export", "chat.jsonl")
 
     const exported = await runWith(
-      ["x-export", "--json", "export", "messages", "Друзья", "--format", "jsonl", "--output", file],
+      ["x-export", "--json", "store", "export", "Друзья", "--format", "jsonl", "--output", file],
       environment,
     )
     const listed = await runWith(["x-export", "--offline", "--jsonl", "messages", "list", "111"], environment)
@@ -186,7 +186,7 @@ describe("max export messages", () => {
     const { environment, connected } = await prepared("x-since")
 
     const { code, stdout } = await runWith(
-      ["x-since", "--jsonl", "export", "messages", "111", "--format", "jsonl", "--since", "2026-09-02T00:00:00Z"],
+      ["x-since", "--jsonl", "store", "export", "111", "--format", "jsonl", "--since", "2026-09-02T00:00:00Z"],
       environment,
     )
 
@@ -199,7 +199,7 @@ describe("max export messages", () => {
     const { environment } = await prepared("x-export-md")
 
     const { code, stdout, stderr } = await runWith(
-      ["x-export-md", "export", "messages", "111", "--format", "md"],
+      ["x-export-md", "store", "export", "111", "--format", "md"],
       environment,
     )
 

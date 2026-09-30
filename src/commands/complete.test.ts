@@ -33,11 +33,11 @@ beforeAll(async () => {
 })
 
 describe("max complete", () => {
-  it("offers the commands, not the hidden one, and ends with the directive", async () => {
+  it("offers the commands, itself included, and ends with the directive", async () => {
     const { code, lines, stderr } = await complete("")
     expect(code).toBe(0)
     expect(values(lines)).toContain("chats")
-    expect(values(lines)).not.toContain("complete")
+    expect(values(lines)).toContain("complete")
     expect(lines.at(-1)).toBe(":4")
     expect(stderr).toEqual([])
   })

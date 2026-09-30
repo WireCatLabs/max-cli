@@ -111,8 +111,8 @@ describe("pricing a backup", () => {
   })
 })
 
-describe("max backup messages", () => {
-  it("without --run prices the work from the local copy and never connects", async () => {
+describe("max store fetch", () => {
+  it("--estimate prices the work from the local copy and never connects", async () => {
     let connected = false
     const environment: Environment = {
       store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
@@ -126,37 +126,43 @@ describe("max backup messages", () => {
     }
 
     const { code, stdout, stderr } = await runWith(
-      ["b-estimate", "backup", "messages", "111", "--last", "100"],
+      ["b-estimate", "store", "fetch", "111", "--last", "100", "--estimate"],
       environment,
     )
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ chatId: "111", run: false, held: 0, missing: 100, pages: 4 })
+    expect(JSON.parse(stdout)).toMatchObject({ chatId: "111", estimate: true, held: 0, missing: 100, pages: 4 })
     expect(stderr).toContain("nothing was sent")
     expect(connected).toBe(false)
   })
 
-  it("--run pages back 30 at a time from the oldest message loaded, to the chat's start, marking nothing read", async () => {
+  it("pages back 30 at a time from the oldest message loaded, to the chat's start, marking nothing read", async () => {
     const { max, environment, requests } = messenger(70)
 
     const { code, stdout } = await runWith(
-      ["b-run", "backup", "messages", "Friends", "--since", "2026-08-01T00:00:00Z", "--run", "--pause", "0"],
+      ["b-run", "store", "fetch", "Friends", "--since", "2026-08-01T00:00:00Z", "--pause", "1ms"],
       environment,
     )
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ run: true, pages: 3, complete: true, reachedStart: true, fetched: 70 })
+    expect(JSON.parse(stdout)).toMatchObject({
+      estimate: false,
+      pages: 3,
+      complete: true,
+      reachedStart: true,
+      fetched: 70,
+    })
     expect(requests().map(({ from, backward, forward }) => ({ from, backward, forward }))).toEqual([
       { from: expect.any(Number), backward: 30, forward: 0 },
       { from: START + 40 * MINUTE, backward: 30, forward: 0 },
       { from: START + 11 * MINUTE, backward: 30, forward: 0 },
     ])
-    expect(JSON.parse(stdout).export).toBe("max b-run export messages 111 --format md --output chat-111.md")
+    expect(JSON.parse(stdout).export).toBe("max b-run store export 111 --format md --output chat-111.md")
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_GET_REACTIONS)
 
     const again = await runWith(
-      ["b-run", "backup", "messages", "Friends", "--since", "2026-08-01T00:00:00Z"],
+      ["b-run", "store", "fetch", "Friends", "--since", "2026-08-01T00:00:00Z", "--estimate"],
       environment,
     )
     expect(JSON.parse(again.stdout)).toMatchObject({ reachedStart: true, missing: 0, unread: [] })
@@ -164,7 +170,7 @@ describe("max backup messages", () => {
 
   it("stops at --max-pages, and the same command continues where it stopped", async () => {
     const { environment, requests } = messenger(100)
-    const argv = ["b-limit", "backup", "messages", "111", "--last", "80", "--run", "--pause", "0", "--max-pages", "2"]
+    const argv = ["b-limit", "store", "fetch", "111", "--last", "80", "--pause", "1ms", "--max-pages", "2"]
 
     const first = await runWith(argv, environment)
     const second = await runWith(argv, environment)
@@ -179,7 +185,7 @@ describe("max backup messages", () => {
     const { environment, requests } = messenger(100, { failOnPage: 2 })
 
     const { code, stderr } = await runWith(
-      ["b-error", "backup", "messages", "111", "--last", "80", "--run", "--pause", "0"],
+      ["b-error", "store", "fetch", "111", "--last", "80", "--pause", "1ms"],
       environment,
     )
 
@@ -197,14 +203,13 @@ describe("max backup messages", () => {
     const { stdout } = await runWith(
       [
         "b-since",
-        "backup",
-        "messages",
+        "store",
+        "fetch",
         "Friends",
         "--since",
         new Date(START + 50 * MINUTE).toISOString(),
-        "--run",
         "--pause",
-        "0",
+        "1ms",
       ],
       environment,
     )
@@ -219,7 +224,7 @@ describe("max backup messages", () => {
   it("refuses an id that is none of the account's chats, and records nothing", async () => {
     const { environment, requests } = messenger(10)
 
-    const { code, stderr } = await runWith(["b-gone", "backup", "messages", "999", "--last", "5", "--run"], environment)
+    const { code, stderr } = await runWith(["b-gone", "store", "fetch", "999", "--last", "5"], environment)
 
     expect(code).toBe(6)
     expect(stderr).toContain("no chat 999")
@@ -229,10 +234,29 @@ describe("max backup messages", () => {
     await cache?.close()
   })
 
-  it("wants to know how far back", async () => {
-    const { environment } = messenger(1)
-    const { code, stderr } = await runWith(["b-none", "backup", "messages", "111"], environment)
-    expect(code).not.toBe(0)
-    expect(stderr).toContain("give --since or --last")
+  it("without --since or --last, each run goes on from where the last stopped, to the chat's start", async () => {
+    const { environment, requests } = messenger(100)
+    const argv = ["b-whole", "store", "fetch", "111", "--pause", "1ms", "--max-pages", "2"]
+
+    const first = await runWith(argv, environment)
+    const second = await runWith(argv, environment)
+    const third = await runWith(argv, environment)
+
+    expect(JSON.parse(first.stdout)).toMatchObject({ pages: 2, complete: false })
+    expect(JSON.parse(second.stdout)).toMatchObject({ pages: 2, complete: false, held: 88 })
+    expect(JSON.parse(third.stdout)).toMatchObject({ complete: true, reachedStart: true, held: 100 })
+    expect(requests()[3]?.from).toBe(START + 41 * MINUTE)
+  })
+
+  it("refuses --since and --last together, and a pause with no unit", async () => {
+    const { environment, requests } = messenger(1)
+    const both = await runWith(["b-both", "store", "fetch", "111", "--since", "1d", "--last", "5"], environment)
+    const bare = await runWith(["b-bare", "store", "fetch", "111", "--pause", "5"], environment)
+
+    expect(both.code).toBe(2)
+    expect(both.stderr).toContain("not both")
+    expect(bare.code).toBe(2)
+    expect(bare.stderr).toContain("--pause takes a duration")
+    expect(requests()).toEqual([])
   })
 })

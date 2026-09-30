@@ -60,7 +60,7 @@ export const chatsMark = defineOperation({
   opcode: 50,
   auth: true,
   /**
-   * Sent only by `max chats read` and `messages list --mark-read`: reading never sends it, and the
+   * Sent only by `max chats mark-read` and `messages list --mark-read`: reading never sends it, and the
    * tests that assert so stay (REQUIREMENTS §19).
    */
   request: v.strictObject({

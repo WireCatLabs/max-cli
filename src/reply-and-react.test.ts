@@ -48,8 +48,8 @@ describe("answering and reacting", () => {
     expect(message.elements).toEqual([])
   })
 
-  it("`messages send --cid` sends the client id it was given, so MAX can collapse a repeat", async () => {
-    const { code, max } = await runAgainst(["messages", "send", "0", "yes", "--cid", "4242"])
+  it("`messages send --send-id` sends the id it was given, so MAX can collapse a repeat", async () => {
+    const { code, max } = await runAgainst(["messages", "send", "0", "yes", "--send-id", "4242"])
 
     expect(code).toBe(0)
     expect(max.sent.filter((call) => call.opcode === Opcode.MSG_SEND).map((call) => call.payload.message)).toEqual([

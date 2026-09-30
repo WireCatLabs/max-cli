@@ -25,7 +25,9 @@ describe("the skill an agent is given", () => {
       program.commands.flatMap((command) => command.commands.map((sub) => `${command.name()} ${sub.name()}`)),
     )
     const named = [
-      ...skill.matchAll(/max (?:[a-z]+ )?((?:session|account|chats|contacts|messages|cache|runs|skill) [a-z]+)/g),
+      ...skill.matchAll(
+        /max (?:[a-z]+ )?((?:session|account|chats|contacts|messages|store|cache|runs|skill) [a-z][a-z-]*)/g,
+      ),
     ].map((match) => match[1] ?? "")
 
     expect(named.length).toBeGreaterThan(5)

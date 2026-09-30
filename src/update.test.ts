@@ -34,7 +34,7 @@ const setup = (latest: string | Error = "99.0.0") => {
 
 describe("the daily line about a newer version", () => {
   it("tells a person at a terminal that a newer version exists", async () => {
-    expect(await setup().notice()).toMatch(/max 99\.0\.0 is out — you have .+ `max update` installs it/)
+    expect(await setup().notice()).toMatch(/max 99\.0\.0 is out — you have .+ `max upgrade` installs it/)
   })
 
   it("tells nobody reading JSON, a pipe, --quiet or CI — and then does not ask npm at all", async () => {
@@ -77,11 +77,11 @@ describe("the daily line about a newer version", () => {
     expect(asked()).toBe(0)
   })
 
-  it("never runs for a Tab or for max update itself", async () => {
+  it("never runs for a Tab or for max upgrade itself", async () => {
     const { notice, asked } = setup()
     expect(await notice(["complete", "--", "ch"])).toBeUndefined()
-    expect(await notice(["update"])).toBeUndefined()
-    expect(await notice(["--timeout", "30s", "update"])).toBeUndefined()
+    expect(await notice(["upgrade"])).toBeUndefined()
+    expect(await notice(["--timeout", "30s", "upgrade"])).toBeUndefined()
     expect(asked()).toBe(0)
   })
 })

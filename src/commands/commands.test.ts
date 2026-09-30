@@ -48,9 +48,9 @@ describe("max commands", () => {
       .map((command) => command.path.join(" "))
     expect(writing).toEqual([
       "account update",
-      "account sessions end-others",
+      "account sessions end",
       "chats join",
-      "chats read",
+      "chats mark-read",
       "chats leave",
       "chats create",
       "chats members add",
@@ -58,7 +58,6 @@ describe("max commands", () => {
       "chats admins add",
       "chats admins remove",
       "chats update",
-      "chats settings",
       "chats link reset",
       "chats folders create",
       "chats folders update",

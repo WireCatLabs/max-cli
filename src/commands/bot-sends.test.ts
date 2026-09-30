@@ -150,7 +150,7 @@ describe("max bot messages edit and delete", () => {
     expect((await max(["bot", "messages", "delete", "mid.9", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/messages?message_id=mid.9" })
     expect(JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items).toEqual([])
-    await max(["team", "bot", "recipients", "off"])
+    await max(["team", "bot", "recipients", "clear"])
     await max(["team", "bot", "recipients", "add", "-200"])
     expect((await max(["team", "bot", "messages", "delete", "mid.9", "--json"])).code).not.toBe(0)
   })
@@ -169,7 +169,7 @@ describe("the bot's files", () => {
 
 describe("every bot write, whichever command sends it", () => {
   it("meets the recipient list and the journal through max bot api and chats pin too", async () => {
-    await max(["team", "bot", "recipients", "off"])
+    await max(["team", "bot", "recipients", "clear"])
     await max(["team", "bot", "recipients", "add", "-100"])
     requests.length = 0
     const raw = await max([

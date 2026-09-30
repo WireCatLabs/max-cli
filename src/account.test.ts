@@ -364,17 +364,20 @@ describe("sessions", () => {
     })
   })
 
-  it("`end-others` without --yes sends nothing", async () => {
+  it("`end --others` without --yes sends nothing, and `end` without --others neither", async () => {
     const { environment, sent } = account()
-    const refused = await runWith(["account", "sessions", "end-others"], environment)
+    const refused = await runWith(["account", "sessions", "end", "--others"], environment)
+    const unnamed = await runWith(["account", "sessions", "end", "--yes"], environment)
 
     expect(JSON.parse(refused.stderr).error.code).toBe("confirmation_required")
+    expect(JSON.parse(unnamed.stderr).error).toMatchObject({ code: "validation_error" })
+    expect(unnamed.stderr).toContain("--others")
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([])
   })
 
-  it("`end-others --yes` keeps a token MAX hands back, prints none, and lists what is left", async () => {
+  it("`end --others --yes` keeps a token MAX hands back, prints none, and lists what is left", async () => {
     const { environment, sent, stores } = account({ [Opcode.SESSIONS_CLOSE]: { token: "a-new-token" } })
-    const ended = await runWith(["account", "sessions", "end-others", "--yes"], environment)
+    const ended = await runWith(["account", "sessions", "end", "--others", "--yes"], environment)
 
     expect(ended.code).toBe(0)
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([{}])
@@ -385,13 +388,13 @@ describe("sessions", () => {
     ])
   })
 
-  it("`end-others --yes` says so plainly when MAX ended this session too", async () => {
+  it("`end --others --yes` says so plainly when MAX ended this session too", async () => {
     const max = account()
     const refusing = mockMax({
       answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: {}, [Opcode.SESSIONS_CLOSE]: {} },
       refuse: { [Opcode.SESSIONS_INFO]: "login.token" },
     })
-    const ended = await runWith(["account", "sessions", "end-others", "--yes"], {
+    const ended = await runWith(["account", "sessions", "end", "--others", "--yes"], {
       ...max.environment,
       connection: () => new Connection({ createSocket: refusing.createSocket, timeoutMs: 50 }),
     })

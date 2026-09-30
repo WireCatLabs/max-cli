@@ -668,7 +668,7 @@ describe("MaxClient", () => {
     await client.close()
 
     expect(failure).toMatchObject({ code: "outcome_unknown" })
-    expect(String(failure)).toContain("--cid")
+    expect(String(failure)).toContain("--send-id")
     expect(max.sent.map((call) => call.opcode)).toContain(Opcode.MSG_SEND)
   })
 

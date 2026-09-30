@@ -46,7 +46,7 @@ export const chatsCommand = (): Command => {
   command
     .command("show")
     .argument("<chat>", "chat id, or part of a chat name")
-    .description("one chat: its kind, unread count, last message time and who is in it")
+    .description("one chat: its kind, unread count, last message time, who is in it, and a group's settings")
     .action(async function (this: Command, chat: string) {
       const { renderer, settings, createClient, run } = forCommand(this)
       const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
@@ -129,13 +129,13 @@ export const chatsCommand = (): Command => {
       await withClient(this, "chats join", (client) => client.chats.join(link))
     })
 
-  annotate(command.command("read"), { mutates: true })
+  annotate(command.command("mark-read"), { mutates: true })
     .argument("<chat>", "chat id, or part of a chat name")
     .description("mark a chat read; the other person sees that you read it")
     .option("--until <message>", "only up to this message id, inclusive; the newest by default")
     .action(async function (this: Command, chat: string) {
       const until = this.opts().until
-      await withClient(this, "chats read", async (client) =>
+      await withClient(this, "chats mark-read", async (client) =>
         client.chats.markRead(await client.chats.resolve(chat), until === undefined ? undefined : String(until).trim()),
       )
     })
@@ -216,28 +216,32 @@ export const chatsCommand = (): Command => {
       await withClient(this, "chats admins remove", (client) => client.chats.admins.remove(chat, person))
     })
 
-  annotate(command.command("update"), { mutates: true })
+  const update = annotate(command.command("update"), { mutates: true })
     .argument("<chat>", "chat id, or part of a chat name")
     .option("--title <title>", "the new name")
     .option("--description <text>", "the new description")
-    .description("rename a group or channel, or change its description")
-    .action(async function (this: Command, chat: string) {
-      const { title, description } = this.opts() as { title?: string; description?: string }
-      await withClient(this, "chats update", (client) =>
-        client.chats.update(chat, {
-          ...(title === undefined ? {} : { title }),
-          ...(description === undefined ? {} : { description }),
-        }),
+    .description("rename a group or channel, change its description, or turn one of its settings on or off")
+  for (const [flag, , help] of SETTINGS) update.option(`--${flag} <on|off>`, help)
+  update.action(async function (this: Command, chat: string) {
+    const { title, description, ...rest } = this.opts() as { title?: string; description?: string }
+    const changes = settingChanges(rest)
+    const renaming = title !== undefined || description !== undefined
+    if (!renaming && Object.keys(changes).length === 0) {
+      throw new CliError(
+        "validation_error",
+        `nothing to change — give --title, --description or a setting: ${SETTINGS.map(([flag]) => `--${flag}`).join(", ")}`,
       )
+    }
+    await withClient(this, "chats update", async (client) => {
+      // Two requests, not one: a title and settings together in one CHAT_UPDATE was never measured.
+      const renamed = renaming
+        ? await client.chats.update(chat, {
+            ...(title === undefined ? {} : { title }),
+            ...(description === undefined ? {} : { description }),
+          })
+        : undefined
+      return Object.keys(changes).length === 0 ? renamed : client.chats.settings(chat, changes)
     })
-
-  const settingsCommand = annotate(command.command("settings"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("a group's settings; with an option, change that one")
-  for (const [flag, , help] of SETTINGS) settingsCommand.option(`--${flag} <on|off>`, help)
-  settingsCommand.action(async function (this: Command, chat: string) {
-    const changes = settingChanges(this.opts())
-    await withClient(this, "chats settings", (client) => client.chats.settings(chat, changes))
   })
 
   const link = command.command("link").description("a group's invite link")

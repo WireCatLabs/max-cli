@@ -191,6 +191,29 @@ describe("the program", () => {
     expect(gone.code).not.toBe(0)
   })
 
+  it("keeps no alias for a renamed command: the old name fails and sends nothing", async () => {
+    const { max, ...environment } = scriptedMax()
+    const renamed = [
+      ["backup", "messages", "111", "--last", "5", "--run"],
+      ["export", "messages", "111", "--format", "md"],
+      ["update", "--check"],
+      ["chats", "read", "111"],
+      ["chats", "settings", "111"],
+      ["recipients", "off"],
+      ["account", "sessions", "end-others", "--yes"],
+      ["messages", "send", "111", "hello", "--cid", "5"],
+      ["messages", "forward", "111", "116762160362694583", "--to", "111", "--cid", "5"],
+      ["bot", "recipients", "off"],
+    ]
+
+    for (const argv of renamed) {
+      const { code, stdout, stderr } = await runWith([...argv, "--json"], environment)
+      expect({ argv, code, stdout }).toEqual({ argv, code: 1, stdout: "" })
+      expect(stderr).toMatch(/unknown (command|option)/)
+    }
+    expect(max.sent).toEqual([])
+  })
+
   it("keeps a subcommand from killing the process on a bad option", async () => {
     const { stdout, stderr, code } = await runWith(["chats", "list", "--nonsense"])
     expect(stdout).toBe("")
@@ -631,7 +654,7 @@ describe("the program", () => {
       const silent = acquaintedMax()
       const offline = await runWith(["t-offline", "chats", "show", "First", "--offline", "--json"], silent.environment)
       expect(offline.code).toBe(0)
-      expect(JSON.parse(offline.stdout)).toMatchObject({ id: "111" })
+      expect(JSON.parse(offline.stdout)).toMatchObject({ id: "111", settings: null })
 
       const send = await runWith(["t-offline", "messages", "send", "111", "hi", "--offline"], silent.environment)
       expect(send.code).not.toBe(0)
