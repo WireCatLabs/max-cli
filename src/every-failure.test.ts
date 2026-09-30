@@ -1,11 +1,12 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { listRuns, runsDirFor } from "@leemour/cli-messaging/cli"
 import { describe, expect, it } from "vitest"
-import type { Environment } from "../commands/context.js"
-import { run } from "../program.js"
-import { SessionStore } from "../session/store.js"
-import { listRuns, runsDirFor } from "./run.js"
+import { MAX_APP } from "./app.js"
+import type { Environment } from "./commands/context.js"
+import { run } from "./program.js"
+import { SessionStore } from "./session/store.js"
 
 const environment: Environment = { store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }) }
 
@@ -14,12 +15,12 @@ const runWith = async (argv: string[]) => {
   return run(argv, { ...environment, streams, tty: false })
 }
 
-const runsOf = (profile: string) => listRuns(runsDirFor()).filter((one) => one.profile === profile)
+const runsOf = (profile: string) => listRuns(runsDirFor(MAX_APP)).filter((one) => one.profile === profile)
 
 const everythingKeptFor = (profile: string): string =>
   runsOf(profile)
     .map((one) => {
-      const dir = join(runsDirFor(), one.startedAt.slice(0, 10), one.runId)
+      const dir = join(runsDirFor(MAX_APP), one.startedAt.slice(0, 10), one.runId)
       return readFileSync(join(dir, "run.json"), "utf8") + readFileSync(join(dir, "events.jsonl"), "utf8")
     })
     .join("\n")

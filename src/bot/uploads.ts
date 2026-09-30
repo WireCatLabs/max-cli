@@ -2,8 +2,8 @@ import { openAsBlob, statSync } from "node:fs"
 import { basename, extname } from "node:path"
 import { CliError, type ErrorCode, realSleep, type SleepLike } from "@leemour/cli-core"
 import { type FetchLike, statusToCode } from "@leemour/cli-core/http"
+import type { DiagnosticEvent } from "@leemour/cli-messaging/cli"
 import { parse } from "lossless-json"
-import type { DiagnosticEvent } from "../runs/events.js"
 import { plainJson } from "./transport.js"
 
 export const UPLOAD_TYPES = ["image", "video", "audio", "file"] as const

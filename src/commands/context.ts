@@ -1,8 +1,10 @@
 import { existsSync } from "node:fs"
 import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@leemour/cli-core"
 import type { FetchLike } from "@leemour/cli-core/http"
+import { recorded } from "@leemour/cli-messaging/cli"
 import { sharedJournal } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
+import { MAX_APP } from "../app.js"
 import type { BotTokenStore } from "../bot/auth.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
@@ -11,7 +13,6 @@ import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, publicOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
 import { rootOf } from "../profile.js"
-import { recorded } from "../runs/recording.js"
 import { guardFor } from "../sends.js"
 import { ServerConnection, stopServer } from "../server/server-connection.js"
 import { ensureServer } from "../server/start.js"
@@ -199,9 +200,12 @@ export const contextFor = (
       withDeadline(settings.commandTimeoutMs, clients, () =>
         recorded(
           {
+            app: MAX_APP,
             command,
             profile: settings.profile,
-            options: { record: settings.record, keepFailed: settings.keepFailedRuns, trace: settings.trace },
+            record: settings.record,
+            keepFailed: settings.keepFailedRuns,
+            trace: settings.trace,
             format,
             streams,
             keepDays: settings.keepRunsForDays,

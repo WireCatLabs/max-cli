@@ -73,7 +73,9 @@ describe("the new issue", () => {
       runtime: "node 24.1.0",
       platform: "linux",
       arch: "x64",
-      run: { metadata: { runId: "r1", command: "chats list", errorCode: "provider_error", maxError: "proto.payload" } },
+      run: {
+        metadata: { runId: "r1", command: "chats list", errorCode: "provider_error", providerError: "proto.payload" },
+      },
     } as unknown as Report
 
     const link = decodeURIComponent(issueUrlFor(report, "/home/someone/r.json"))

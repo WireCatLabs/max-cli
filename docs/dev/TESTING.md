@@ -151,10 +151,10 @@ What holds for every command, how to produce it, and the test that pins it.
 |---|---|---|---|
 | Machine output | `--json` / `--jsonl`, or stdout not a terminal | stdout: one JSON value (or one per line), nothing else; diagnostics on stderr | `src/output.test.ts`, `src/commands/commands.test.ts` |
 | An error | any refusal with `--json` | exit code from the table in [`../commands.md`](../commands.md); stderr one `{"error":{code,message}}` | `src/program.test.ts` |
-| Trace and record | `--trace`, `--record`, then `max runs list\|show` | events on stderr, never content; a run directory | `src/runs/recording.test.ts`, `src/commands/bot.test.ts` |
-| A failed run is kept | any failure, no flag | `max runs list` shows it with `keptBecauseFailed` | `src/runs/run-log.test.ts`, `src/report.test.ts` |
+| Trace and record | `--trace`, `--record`, then `max runs list\|show` | events on stderr, never content; a run directory | cli-messaging `src/cli/runs/recording.test.ts`, `src/commands/bot.test.ts` |
+| A failed run is kept | any failure, no flag | `max runs list` shows it with `keptBecauseFailed` | `src/run-log.test.ts`, `src/every-failure.test.ts`, `src/report.test.ts` |
 | `--quiet` | any command | notes gone, data and errors kept | `src/inbox.test.ts`, `src/client.test.ts` |
-| No session | a profile never logged in | exit 4, names `max <p> session start` | `src/runs/recording.test.ts`, `src/client.test.ts` |
+| No session | a profile never logged in | exit 4, names `max <p> session start` | `src/every-failure.test.ts`, `src/client.test.ts` |
 | A bot-only profile | a personal command on it | exit 4, names `max <p> bot …` | `src/client.test.ts` |
 | Read-only | `config set readOnly true` | every write refused, exit 5, nothing sent | `src/send-guards.test.ts`, `src/permissions.test.ts` |
 | `allow` | `config set allow send` | other writes refused with the `config set` that allows them | `src/permissions.test.ts`, `src/commands/bot.test.ts` |
