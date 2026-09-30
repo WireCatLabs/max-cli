@@ -432,13 +432,14 @@ export class MaxServer {
         ),
       )
     } else if (typeof request.opcode === "number") {
-      socket.write(toLine({ id, ...(await this.#forward(request.opcode, request.payload)) }))
+      const operationId = typeof request.operationId === "string" ? request.operationId : undefined
+      socket.write(toLine({ id, ...(await this.#forward(request.opcode, request.payload, operationId)) }))
     } else {
       socket.write(toLine({ id, error: { code: "bad_request", message: "subscribe, status, login or an opcode" } }))
     }
   }
 
-  async #forward(opcode: number, payload: unknown): Promise<Record<string, unknown>> {
+  async #forward(opcode: number, payload: unknown, operationId?: string): Promise<Record<string, unknown>> {
     await this.#up
     const client = this.#client
     const operation = forwardedOperation(opcode)
@@ -457,7 +458,7 @@ export class MaxServer {
     let entry: Guarded
     let guard: SendGuard
     try {
-      entry = operation.guard(request)
+      entry = { ...operation.guard(request), ...(operationId === undefined ? {} : { operationId }) }
       // Read again for every write, so `config set readOnly true` needs no restart.
       guard =
         this.#options.guard?.() ??

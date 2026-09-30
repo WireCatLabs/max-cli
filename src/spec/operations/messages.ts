@@ -63,7 +63,7 @@ export const messagesSend = defineOperation({
   response: v.looseObject({ message: v.optional(v.looseObject({})), chat: v.optional(v.looseObject({})) }),
   guard: (request) => {
     const message = objectOf(request.message)
-    const cid = typeof message.cid === "number" ? { cid: message.cid } : {}
+    const cid = typeof message.cid === "number" ? { sendId: String(message.cid) } : {}
     const [control] = Array.isArray(message.attaches) ? message.attaches.map(objectOf) : []
     if (request.chatId === undefined && control?._type === "CONTROL" && control.event === "new") {
       return {

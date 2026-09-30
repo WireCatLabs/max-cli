@@ -2605,6 +2605,11 @@ export class MaxClient {
     )
   }
 
+  /** The `max serve` this client talks through, when it does — the server then journals each write. */
+  get server(): { readonly journals: boolean } | undefined {
+    return "journals" in this.#connection ? (this.#connection as { readonly journals: boolean }) : undefined
+  }
+
   /** A send id as MAX's own client makes one: the moment, in milliseconds, never repeated. */
   newSendId(): string {
     return String(this.#nextCid())

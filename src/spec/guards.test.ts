@@ -14,7 +14,7 @@ describe("the guard each write declares", () => {
     expect(send({ chatId: 1n, message: { cid: 5, text: "hi", attaches: [] } })).toMatchObject({
       chatId: "1",
       kind: "message",
-      cid: 5,
+      sendId: "5",
       length: 2,
     })
     expect(

@@ -2,7 +2,7 @@ import { chmodSync, existsSync, mkdirSync, statSync, writeFileSync } from "node:
 import { createServer, type Server } from "node:net"
 import { dirname } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
-import { RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
+import { guardedWrite, RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
 import { decode, ExtData } from "@msgpack/msgpack"
 import { afterEach, describe, expect, it } from "vitest"
 import { MaxClient } from "../client.js"
@@ -816,6 +816,26 @@ describe("the send guard, in the server", () => {
 
     await expect(client.messages.send("111", "two")).rejects.toMatchObject({ code: "rate_limited" })
     await client.close()
+  })
+
+  it("journals a forwarded write under the operation id of the command that made it, and a send by its send id", async () => {
+    const { store } = await serve("g-operation", scripted())
+    const context = contextFor({ profile: "g-operation" }, { store: () => store, streams: captureStreams() })
+    const client = context.createClient({ sends: undefined })
+    const passing = { check: () => {}, record: () => {} }
+
+    await guardedWrite(passing, { operationId: "op-42", chatId: "111", kind: "delete", count: 1 }, () =>
+      client.messages.delete("111", ["116762160362694583"]),
+    )
+    const sent = await client.messages.send("111", "hi")
+    await client.close()
+
+    expect(journal("g-operation")).toMatchObject([
+      { kind: "delete", outcome: "sent", operationId: "op-42" },
+      { outcome: "sent", sendId: expect.stringMatching(/^\d+$/), messageId: sent.id },
+    ])
+    const [, message] = journal("g-operation")
+    expect(message?.operationId).toBe(message?.sendId)
   })
 
   it("a send retried with the same cid after no answer is one message: counted once toward the limit", async () => {
