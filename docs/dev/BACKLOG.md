@@ -25,6 +25,17 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+- **CLI-58** · P2 · `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
+  third-party proxy. Streamable HTTP on `127.0.0.1` behind a tunnel, with its own OAuth for exactly
+  one owner (dynamic client registration, PKCE, a one-time code from the terminal that expires and
+  locks after a few tries), the same read-only default and send guards as stdio. Shared with `tg`,
+  so it belongs in cli-messaging. Until then `docs/remote.md` names an external tool. Plan:
+  `docs_ai/plans/2026-09-30-tg-alignment.md` §5.
+- **CLI-59** · P1 · Rename commands to the naming standard ([CONVENTIONS](CONVENTIONS.md#command-names)):
+  `store fetch|export`, `chats mark-read`, `upgrade`, `recipients clear`, `--send-id`,
+  `account sessions end --others`, settings into `chats show|update`, `complete` shown. Breaking,
+  no aliases. Plan: `docs_ai/plans/2026-09-30-tg-alignment.md` §3a.
+
 **From the PyMax comparison (2026-09-24, `NEED-175`).** Each is what PyMax's source declares
 (`MaxApiTeam/PyMax`, `src/pymax/api/`, commit `53103f0`) — a claim until measured. Every writing
 operation is measured first in Saved messages (chat 0), as replies and reactions were (`NEED-150`),

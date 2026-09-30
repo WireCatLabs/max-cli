@@ -80,6 +80,51 @@ and shape is somebody's observation. Record whether ours is confirmed by several
 implementations, seen in one, inferred, or a guess — §10. An unsourced constant is the thing that
 will be impossible to re-derive when MAX changes.
 
+## Command names
+
+One standard for `max` and `tg` (`NEED-425`, 2026-09-30). A name a person reads once should say
+what the command does; a name an agent reads should be guessable from the others.
+
+1. **`<tool> [profile] <resource> <verb> [arguments]`.** The resource is a noun: **plural** for a
+   collection (`chats`, `contacts`, `messages`, `polls`, `reactions`, `recipients`, `sends`,
+   `runs`, `topics`, `models`), **singular** for what a profile has exactly one of (`session`,
+   `account`, `config`, `server`, `store`, `skill`, `cache`). A group is never named with a verb.
+2. **Top-level words** only for what spans every chat or is the tool itself: `inbox`, `review`,
+   `watch`, `serve`, `doctor`, `upgrade`, `commands`, `complete`, `mcp`. A new one needs a reason
+   in its pull request.
+3. **Verbs come from this list, each with one meaning.** A verb not on it is added here first.
+   - `list` many · `show` one · `search` find by text — the description says where it looks
+   - `create` / `delete` make or destroy a thing · `add` / `remove` put an existing thing into or
+     out of a set (members, admins, contacts, recipients, reactions) · `clear` empty a set
+   - `update` change a thing's fields · `set` / `unset` one named key · `rename` its name only
+   - `start` / `stop` / `restart` / `status` a running process · `start` / `end` a login session
+     · `install` / `uninstall` a system unit · `cancel` a job
+   - `fetch` from the messenger into the store · `export` from the store to a file · `import` ·
+     `download` · `transcribe` · `sync` take a whole list again
+   - `lookup` ask the messenger who is behind a phone number · `inspect` look at a link without
+     joining it
+   - the messenger's plain verbs: `send`, `edit`, `forward`, `pin`, `unpin`, `vote`, `close`,
+     `join`, `leave`, `block`, `unblock`, `mark-read`, `reset` (replace; the old one stops
+     working), `check` (apply a chat's rules)
+   - A **noun as the last word** names a view and shows it: `server logs`, `chats events`,
+     `messages scheduled`, `messages context`, `runs path`, `mcp config`.
+4. **One action, one command.** A variant is an option, never a sibling command, and no command
+   both shows and changes.
+5. **Options are plain words, never a wire field** (`--send-id`, not `--cid`). One meaning, one
+   name, in every command of both tools. **A length of time is a `<duration>`** (`30s`, `2m`,
+   `1h`), parsed as `--timeout` is; `--since` takes a duration or a time.
+6. **Arguments have fixed names:** `<chat>`, `<message>`, `<person>`, `<text>`, `<link>`,
+   `<file>`, `<job>`.
+7. **One word per idea** in help, docs and errors. The **local store** («локальное хранилище») is
+   the message database both tools share; max's per-profile **cache** is a different thing until it
+   is replaced, and keeps its name until then. `session` is this tool's login; `account sessions`
+   are the other devices.
+8. **An MCP tool is named after its command:** `<tool>_<resource>_<verb>`, e.g. `max_store_export`.
+9. **No aliases.** A renamed command's old name stops working, and the release notes say so under
+   "may break scripts".
+
+`bot api` is exempt: its names mirror the official Bot API's operations.
+
 ## Documents
 
 The point is that six weeks from now, a person or an agent with no memory of the work can open a
