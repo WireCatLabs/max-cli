@@ -41,6 +41,7 @@
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
     "release:check": "pnpm build && node --experimental-strip-types scripts/release-check.ts",
     "docs:check": "node --experimental-strip-types scripts/docs-check.ts",
+    "parity:check": "node dist/bin/max.js commands --json | cli-messaging-parity max",
     "version:check": "node --experimental-strip-types scripts/version.ts",
     "version:sync": "node --experimental-strip-types scripts/version.ts --sync",
     "seed:worktree": "node --experimental-strip-types scripts/seed-worktree.ts --force",
