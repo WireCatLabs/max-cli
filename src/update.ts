@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { resolvePaths } from "@leemour/cli-core"
 import type { FetchLike } from "@leemour/cli-core/http"
+import { skillHint as sharedSkillHint } from "@leemour/cli-core/skill"
 import {
   type Installer,
   installerOf,
@@ -11,6 +12,7 @@ import {
   updateNotice as sharedNotice,
 } from "@leemour/cli-core/update"
 import { resolveSettings } from "./config.js"
+import { SKILL_APP } from "./skill.js"
 import { VERSION } from "./version.js"
 
 export const PACKAGE = "@leemour/max-cli"
@@ -72,5 +74,25 @@ export const updateNotice = (
     }).then((line) => line?.replace("`max update`", "`max upgrade`"))
   } catch {
     return Promise.resolve(undefined)
+  }
+}
+
+/** The daily line telling an agent that `max skill install` gives it this tool's guide, or `undefined`. */
+export const skillHint = (
+  argv: readonly string[],
+  { env = process.env, now }: { env?: NodeJS.ProcessEnv; now?: () => number } = {},
+): string | undefined => {
+  try {
+    if (argv.includes("--quiet")) return undefined
+    return sharedSkillHint({
+      app: SKILL_APP,
+      argv,
+      env,
+      statePath: statePath(env),
+      enabled: resolveSettings({}, { env }).skillHint,
+      ...(now ? { now } : {}),
+    })
+  } catch {
+    return undefined
   }
 }

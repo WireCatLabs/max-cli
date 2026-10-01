@@ -12,6 +12,14 @@
   systemd (Linux) или launchd (macOS) для профиля и ничего не запускает; дальше `max server start`
   и `stop` идут через неё. Если MAX не принял вход, служба сервер не перезапускает: каждый повтор
   был бы новым входом в аккаунт. `max server start --idle` и `restart --idle` остаются.
+- **`max skill install`** ставит навык для агентов одной командой: в `~/.claude/skills/max-cli/`
+  для Claude Code и в `~/.agents/skills/max-cli/` для Codex и Gemini CLI, с номером версии `max`.
+  `--for claude` или `--for agents` — только в одну папку. `max skill show` печатает то же, что раньше.
+- **Агент узнаёт о навыке сам.** Если задана переменная `AI_AGENT` или `CLAUDECODE`, а навыка нет
+  или он старше `max`, раз в сутки в stderr выходит одна строка про `max skill install`. В stdout
+  ничего не добавляется. Выключается `max config set skillHint false --defaults`.
+- **`max mcp` и `max bot mcp` отдают навык ресурсом `max://skill`** и называют его в своих
+  инструкциях для агента.
 - **`max cache clear --left`** стирает из локальной копии только чаты, из которых вы вышли, вместе с
   их сообщениями. Остальная копия не трогается.
 - **`max polls show <чат> <сообщение>`** — опрос с id вариантов и числом голосов, ничего не меняя.

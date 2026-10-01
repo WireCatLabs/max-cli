@@ -1289,7 +1289,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -1308,7 +1308,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
 
 | Опция | Что делает |
 |---|---|
@@ -1407,11 +1407,23 @@ the instructions an agent is given for this tool
 
 ### `max skill show`
 
-print SKILL.md — redirect it into \~/.claude/skills/max-cli/SKILL.md for Claude Code, or \~/.agents/skills/max-cli/SKILL.md for Codex and Gemini CLI
+print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look for it
 
 ```sh
 max skill show
 ```
+
+### `max skill install`
+
+write SKILL.md to \~/.claude/skills/max-cli/ (Claude Code) and \~/.agents/skills/max-cli/ (Codex, Gemini CLI)
+
+```sh
+max skill install [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--for <agents>` | which agents to install for. Одно из: `claude`, `agents`, `all`. По умолчанию: `all`. |
 
 ## `max commands`
 

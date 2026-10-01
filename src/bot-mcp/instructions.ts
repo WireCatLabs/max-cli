@@ -1,3 +1,5 @@
+import { SKILL_RESOURCE } from "../skill.js"
+
 /** What a client keeps in context when it defers the tools; the first lines are the ones that must survive. */
 export const instructions = ({
   profile,
@@ -31,4 +33,5 @@ export const instructions = ({
         ]
       : []),
     "- The bot's recipient list, token, webhooks and command menu are the owner's to change, with the max command — never from here.",
+    SKILL_RESOURCE.instruction,
   ].join("\n")

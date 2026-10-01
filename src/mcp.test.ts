@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
@@ -11,6 +12,7 @@ import { type GroupRules, ModerationRules, moderationPathFor } from "./moderatio
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
+import { SKILL } from "./skill.js"
 import { type MockMaxOptions, mockMax } from "./testing/mock-max.js"
 
 const scriptedMax = (extra: MockMaxOptions["answers"] = {}) =>
@@ -830,6 +832,7 @@ describe("what the MCP server offers beyond the basics", () => {
     })
 
     expect(text.length).toBeLessThanOrEqual(2048)
+    expect(text).toMatch(/max:\/\/skill; `max skill install` installs it as an agent skill\.$/)
   })
 })
 
@@ -887,14 +890,28 @@ describe("MCP prompts and resources", () => {
     const after = await client.listResources()
     const read = await client.readResource({ uri: "max://chat/111" })
 
-    expect(before.resources).toEqual([])
+    expect(before.resources.map(({ uri }) => uri)).toEqual(["max://skill"])
     expect(after.resources.map(({ uri, name }) => [uri, name])).toEqual([
+      ["max://skill", "skill"],
       ["max://chat/111", "Team Alpha"],
       ["max://chat/222", "Team Beta"],
     ])
     const body = JSON.parse(String((read.contents[0] as { text: string }).text))
     expect(body).toMatchObject({ chat: { id: "111", title: "Team Alpha" }, messages: [{ id: "116762160362694583" }] })
     expect(logins()).toBe(1)
+  })
+})
+
+describe("the skill as an MCP resource", () => {
+  it("serves SKILL.md as max://skill without logging in", async () => {
+    const { client, logins } = await connect()
+
+    const read = await client.readResource({ uri: "max://skill" })
+
+    expect(read.contents).toEqual([
+      { uri: "max://skill", mimeType: "text/markdown", text: readFileSync(SKILL, "utf8") },
+    ])
+    expect(logins()).toBe(0)
   })
 })
 

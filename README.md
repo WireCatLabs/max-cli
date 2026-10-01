@@ -368,11 +368,13 @@ max store export "Проект Альфа" --format md --output alfa.md
 той же версии, что и `max`:
 
 ```sh
-# Claude Code
-mkdir -p ~/.claude/skills/max-cli && max skill show > ~/.claude/skills/max-cli/SKILL.md
-# Codex и Gemini CLI — общая папка ~/.agents/skills
-mkdir -p ~/.agents/skills/max-cli && max skill show > ~/.agents/skills/max-cli/SKILL.md
+max skill install
 ```
+
+Команда кладёт навык в `~/.claude/skills/max-cli/` для Claude Code и в `~/.agents/skills/max-cli/`
+для Codex и Gemini CLI; `--for claude` или `--for agents` — только в одну из папок. После
+обновления `max` запустите её ещё раз. Если навыка нет или он старше `max`, агент раз в сутки
+увидит об этом строку в stderr; выключается `max config set skillHint false --defaults`.
 
 Как эти агенты находят навыки: [Codex](https://learn.chatgpt.com/docs/build-skills),
 [Gemini CLI](https://geminicli.com/docs/cli/skills/).

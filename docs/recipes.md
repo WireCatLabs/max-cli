@@ -10,11 +10,10 @@
 2. Агент знает, как работать с `max`, — поставьте ему навык:
 
    ```sh
-   # Claude Code
-   mkdir -p ~/.claude/skills/max-cli && max skill show > ~/.claude/skills/max-cli/SKILL.md
-   # Codex и Gemini CLI
-   mkdir -p ~/.agents/skills/max-cli && max skill show > ~/.agents/skills/max-cli/SKILL.md
+   max skill install
    ```
+
+   Навык ляжет в папки Claude Code, Codex и Gemini CLI.
 
 3. Сохраните запросы из рецептов в файлы, например в `~/max-recipes/`. Команды расписания ниже
    читают запрос из файла.

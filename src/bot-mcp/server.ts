@@ -15,6 +15,7 @@ import { listed } from "../commands/paging.js"
 import { confirmer, type ResolveChat } from "../mcp/confirm.js"
 import { type CheckRow, describe, needsConfirm } from "../moderation/check.js"
 import type { GroupRules } from "../moderation/rules.js"
+import { SKILL_RESOURCE } from "../skill.js"
 import { VERSION } from "../version.js"
 import { instructions } from "./instructions.js"
 import { type BotTool, CHECK_INPUT, type Gate, type Invocation, TOOLS, withAcross } from "./tools.js"
@@ -149,6 +150,8 @@ export const createBotServer = (options: BotServerOptions) => {
         }),
       },
     )
+    const { name: skill, uri, title, description, mimeType, read } = SKILL_RESOURCE
+    server.registerResource(skill, uri, { title, description, mimeType }, read)
     const confirmed = confirmSend ? confirmer() : undefined
 
     for (const [name, tool] of offered) {
