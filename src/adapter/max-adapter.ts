@@ -47,8 +47,9 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
 
     // MAX answers up to and including the message it pages from; the port's `before` is "older than".
     history: async (chat, { limit, before, reactions }) => {
+      const fromMessage = before !== undefined && isId(before)
       const page = await client.messages.list(await chatId(chat), {
-        limit: before === undefined ? limit : limit + 1,
+        limit: fromMessage ? limit + 1 : limit,
         ...(before === undefined ? {} : { before: client.messages.moment(before) }),
         ...(reactions === false ? { reactions: false } : {}),
       })
@@ -59,7 +60,7 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
     historyAfter: async (chat, { limit, after }) => {
       const page = await client.messages.list(await chatId(chat), {
         limit,
-        after: "id" in after ? client.messages.moment(after.id) : after.time,
+        after: "id" in after ? client.messages.moment(after.id, "--after") : after.time,
       })
       return { ...page, items: page.items.map(toMessage) }
     },
