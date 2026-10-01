@@ -39,6 +39,8 @@
     stderr, если были старше; с `--offline` — во всех сохранённых;
   - `chats show --offline` отвечает без `description`, `access` и `settings`: их знает только MAX;
   - неверный `--kind` отвергается другими словами: `--kind is one of dialog, group, channel, saved`.
+  - `cache clear` забывает и то, что этот аккаунт хранит в общей копии, а `contacts sync` забирает
+    всё и туда.
 
 - **`max polls` — общие команды tg и max.** `polls vote|close --json` отвечают `{operationId, poll}`, где `poll` —
   `{chatId, messageId, question, answers: [{id, text, voters, chosen}], closed, multiple, anonymous,

@@ -6,6 +6,7 @@ import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import { type PhoneBookEntry, wirePhone } from "../client.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
+import { maxRecord } from "../record.js"
 import { forCommand } from "./context.js"
 
 /**
@@ -34,11 +35,12 @@ export const contactsCommand = (): Command => {
     .command("sync")
     .description("forget where the last sync left off and take the whole list again")
     .action(async function (this: Command) {
-      const { renderer, settings, createClient, run } = forCommand(this)
+      const { renderer, settings, createClient, run, store } = forCommand(this)
       const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const record = maxRecord({ account: () => store.readState().viewerId })
 
       await run("contacts sync", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const client = createClient({ events, record, ...(cache ? { cache } : {}) })
 
         try {
           const summary = await client.contacts.sync()
@@ -47,6 +49,7 @@ export const contactsCommand = (): Command => {
         } finally {
           await client.close()
           await cache?.close()
+          await record.close()
         }
       })
     })
