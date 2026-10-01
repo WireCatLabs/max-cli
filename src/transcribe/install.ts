@@ -9,8 +9,9 @@ import { STALL_MS, type Watchdog, watchdog } from "../download.js"
 import { type ModelFile, type SpeechModel, VAD } from "./models.js"
 
 /** Beside the profile caches, so `max cache clear` — which empties a database — leaves them alone. */
+/** Where cli-messaging's speech code looks, so one download serves tg and max — and the shared `messages list`. */
 export const modelsDirectory = (env: NodeJS.ProcessEnv = process.env): string =>
-  join(resolvePaths({ appName: "max-cli", prefix: "MAX", env }).cache, "models", "audio")
+  join(resolvePaths({ appName: "cli-common", prefix: "CLI_COMMON", env }).cache, "models", "audio")
 
 export const modelPath = (directory: string, model: SpeechModel) => (name: string) => join(directory, model.id, name)
 

@@ -90,7 +90,9 @@ const acquaintedMax = () => {
   const environment: Environment = {
     store: (profile: string) => {
       const store = new SessionStore({ profile, keyring })
+      // As `session start` leaves a profile: the token, and the account it logged in as.
       store.writeToken("a-token")
+      if (!store.readState().viewerId) store.writeState({ ...store.readState(), viewerId: "10000001" })
       return store
     },
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
@@ -274,13 +276,36 @@ describe("the program", () => {
 
     const search = await runWith(["messages", "search", "--help"])
     expect(search.stdout).toContain("--chat")
-    expect(search.stdout).toContain("already read")
+    expect(search.stdout).toContain("local store")
   })
 
-  it("**refuses a chat name on a search**, because resolving one would need a login", async () => {
-    const { code, stderr } = await runWith(["messages", "search", "hello", "--chat", "Иван"])
-    expect(code).not.toBe(0)
-    expect(stderr).toContain("chat id")
+  it("`messages search --regex` tests one pattern against what the store holds", async () => {
+    const { environment } = acquaintedMax()
+    await runWith(["t-regex", "messages", "list", "111", "--json"], environment)
+
+    const found = await runWith(["t-regex", "messages", "search", "^lat", "--regex", "--json"], environment)
+
+    expect(found.code).toBe(0)
+    expect(
+      JSON.parse(found.stdout)
+        .items.map((hit: { text: string }) => hit.text)
+        .sort(),
+    ).toEqual(["later", "latest"])
+  })
+
+  it("**finds a chat for a search by its stored name**, without connecting", async () => {
+    const { max, environment } = acquaintedMax()
+    await runWith(["t-search-name", "messages", "list", "111", "--json"], environment)
+    const sent = max.sent.length
+
+    const found = await runWith(
+      ["t-search-name", "messages", "search", "latest", "--chat", "First", "--json"],
+      environment,
+    )
+
+    expect(found.code).toBe(0)
+    expect(JSON.parse(found.stdout).items.map((hit: { chatId: string }) => hit.chatId)).toEqual(["111"])
+    expect(max.sent).toHaveLength(sent)
   })
 
   it("**refuses `--timeout` without a unit**, because the neighbouring setting is milliseconds", async () => {
@@ -586,6 +611,20 @@ describe("the program", () => {
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
     })
 
+    it("`messages list --before` leaves out the message it pages from, which MAX's answer includes", async () => {
+      const { environment } = acquaintedMax()
+      const { stdout, code } = await runWith(
+        ["t-before", "messages", "list", "111", "--before", "116762160362694585", "--limit", "2", "--json"],
+        environment,
+      )
+
+      expect(code).toBe(0)
+      expect(JSON.parse(stdout).items.map((message: { id: string }) => message.id)).toEqual([
+        "116762160362694583",
+        "116762160362694584",
+      ])
+    })
+
     it("**refuses `--after` with `--before`** before connecting to anything", async () => {
       const { max, environment } = acquaintedMax()
       const { code, stderr } = await runWith(
@@ -603,7 +642,7 @@ describe("the program", () => {
       const { code, stderr } = await runWith(["t-bad", "messages", "list", "111", "--after", "tuesday"], environment)
 
       expect(code).toBe(2)
-      expect(stderr).toContain("--after takes a message id")
+      expect(stderr).toContain("--after takes")
     })
 
     it("`chats show` answers one chat with its members, and refuses an id that is not a chat", async () => {
@@ -649,9 +688,6 @@ describe("the program", () => {
 
     it("**`--offline` reaches the command**: it answers from the record and never connects", async () => {
       const { environment } = acquaintedMax()
-      // A profile that has logged in knows its account before it connects; the shared store is keyed by it.
-      const session = environment.store?.("t-offline")
-      session?.writeState({ ...session.readState(), viewerId: "10000001" })
       await runWith(["t-offline", "chats", "list", "--json"], environment)
 
       const silent = acquaintedMax()

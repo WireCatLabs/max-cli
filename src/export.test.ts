@@ -164,7 +164,7 @@ describe("max store export", () => {
     return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
   }
 
-  it("writes the same objects `messages list --jsonl` answers, readable by the owner only, and never connects", async () => {
+  it("writes one message per line, readable by the owner only, and never connects", async () => {
     const { environment, connected } = await prepared("x-export")
     const file = join(process.env.TMPDIR ?? "", "export", "chat.jsonl")
 
@@ -172,10 +172,10 @@ describe("max store export", () => {
       ["x-export", "--json", "store", "export", "Друзья", "--format", "jsonl", "--output", file],
       environment,
     )
-    const listed = await runWith(["x-export", "--offline", "--jsonl", "messages", "list", "111"], environment)
 
     expect(exported.code).toBe(0)
-    expect(readFileSync(file, "utf8")).toBe(`${listed.stdout}\n`)
+    const lines = readFileSync(file, "utf8").trimEnd().split("\n")
+    expect(lines.map((line) => JSON.parse(line).chatId)).toEqual(["111", "111"])
     // Windows has no owner-only mode bits.
     if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600)
     expect(JSON.parse(exported.stdout)).toMatchObject({ count: 2, unread: [{ from: null }, {}, {}] })

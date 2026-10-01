@@ -869,10 +869,10 @@ export class MaxClient {
      */
     list: async (
       chatId: Id,
-      options: { limit?: number; before?: number; after?: number } = {},
+      options: { limit?: number; before?: number; after?: number; reactions?: boolean } = {},
     ): Promise<Page<Message>> => {
       const limit = options.limit ?? 20
-      const { before, after } = options
+      const { before, after, reactions = true } = options
 
       if (after !== undefined) {
         const found = this.#offline
@@ -892,7 +892,11 @@ export class MaxClient {
         return { items, hasMore: items.length >= limit }
       }
 
-      const messages = await this.#history(chatId, { from: before ?? Date.now(), backward: limit, forward: 0 })
+      const messages = await this.#history(
+        chatId,
+        { from: before ?? Date.now(), backward: limit, forward: 0 },
+        { reactions },
+      )
       return { items: messages, hasMore: messages.length >= limit }
     },
 

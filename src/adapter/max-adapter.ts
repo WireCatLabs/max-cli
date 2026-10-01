@@ -11,6 +11,7 @@ import type {
 import type { Upload } from "@leemour/cli-messaging/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
+import { fetchBytes, publicOnly, type Reach } from "../download.js"
 import type { Markup } from "../markdown.js"
 import { isId } from "../resolve.js"
 import type { SessionStore } from "../session/store.js"
@@ -30,7 +31,7 @@ const MARKUP: Record<string, string> = {
  * shared services guard every write, and a second guard would count each one twice. The resend
  * rule, the name filling and the cache writes stay in `MaxClient` (`NEED-34`).
  */
-export const maxAdapter = (client: MaxClient, store: SessionStore): MaxAdapter => {
+export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach = publicOnly): MaxAdapter => {
   const chatId = (reference: string) => client.chats.resolve(reference)
 
   return {
@@ -44,12 +45,38 @@ export const maxAdapter = (client: MaxClient, store: SessionStore): MaxAdapter =
 
     chats: ({ limit, offset }) => client.chats.list({ offset, ...(limit === undefined ? {} : { limit }) }),
 
-    history: async (chat, { limit, before }) => {
+    // MAX answers up to and including the message it pages from; the port's `before` is "older than".
+    history: async (chat, { limit, before, reactions }) => {
+      const page = await client.messages.list(await chatId(chat), {
+        limit: before === undefined ? limit : limit + 1,
+        ...(before === undefined ? {} : { before: client.messages.moment(before) }),
+        ...(reactions === false ? { reactions: false } : {}),
+      })
+      const items = page.items.filter((message) => message.id !== before).slice(-limit)
+      return { ...page, items: items.map(toMessage) }
+    },
+
+    historyAfter: async (chat, { limit, after }) => {
       const page = await client.messages.list(await chatId(chat), {
         limit,
-        ...(before === undefined ? {} : { before: client.messages.moment(before) }),
+        after: "id" in after ? client.messages.moment(after.id) : after.time,
       })
       return { ...page, items: page.items.map(toMessage) }
+    },
+
+    // Only voice messages are heard through it for now, so a file past a voice message's size is not read.
+    download: async (chat, messageId) => {
+      const { links, skipped } = await client.messages.links(await chatId(chat), messageId)
+      return {
+        files: links.map((link) => ({
+          kind: kindOf(link.kind),
+          ...(link.name ? { name: link.name } : {}),
+          bytes: async function* () {
+            yield await fetchBytes(link, reach)
+          },
+        })),
+        skipped,
+      }
     },
 
     // An id is taken as it is, without connecting: a write the guard refuses must not have logged in first.
@@ -192,7 +219,10 @@ const toQuoted = ({ attachments, ...quoted }: Max.QuotedMessage): QuotedMessage 
 })
 
 /** What only MAX has — its file and video ids, a control event, a poll — goes where the store keeps a provider's own. */
-const toAttachment = ({ fileId, videoId, event, userIds, poll, ...shared }: Max.Attachment): Attachment => {
+/** MAX's `audio` is a recorded voice message; music goes as a file. */
+const kindOf = (kind: string) => (kind === "audio" ? "voice" : kind)
+
+const toAttachment = ({ fileId, videoId, event, userIds, poll, kind, ...shared }: Max.Attachment): Attachment => {
   const own = {
     ...(fileId === undefined ? {} : { fileId }),
     ...(videoId === undefined ? {} : { videoId }),
@@ -200,5 +230,6 @@ const toAttachment = ({ fileId, videoId, event, userIds, poll, ...shared }: Max.
     ...(userIds === undefined ? {} : { userIds }),
     ...(poll === undefined ? {} : { poll }),
   }
-  return Object.keys(own).length === 0 ? shared : { ...shared, providerRef: own }
+  const typed = { ...shared, kind: kindOf(kind) }
+  return Object.keys(own).length === 0 ? typed : { ...typed, providerRef: own }
 }

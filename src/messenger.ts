@@ -11,6 +11,7 @@ import { resolveSettings } from "./config.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
+import { SPEECH_MODELS } from "./transcribe/models.js"
 
 /** The client each command connected, so its guard can tell whether `max serve` journals for it. */
 const clients = new WeakMap<Command, MaxClient>()
@@ -54,6 +55,7 @@ export const maxMessenger: Messenger = {
   provider: "max",
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
+  speechModels: SPEECH_MODELS,
 
   guard: (command, { profile }, warn) => ({
     ...overServer(guardFor(resolveSettings({ profile }), warn), () => clients.get(rootOf(command))?.server),
@@ -74,7 +76,8 @@ export const maxMessenger: Messenger = {
       ...own,
       offline: offline === true,
       configured: {},
-      shared: {},
+      // The shared hearing reads its model as `speechModel`; max's setting is `transcribeModel`.
+      shared: { speechModel: own.transcribeModel },
       permissions: fromOldSettings(own.readOnly, own.allow),
       permissionSources: {},
     }
@@ -84,7 +87,7 @@ export const maxMessenger: Messenger = {
   // refuses — and without the send guard, which the shared services hold. The record keeps what the
   // login brings in `messages.db`, where the shared reads look.
   connect: async (command, context, { events } = {}) => {
-    const { settings, renderer, createClient, store } = forCommand(command)
+    const { settings, renderer, createClient, store, reach } = forCommand(command)
     const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
     try {
       const cache = await openProfileCache(settings.profile, { onProblem: renderer.note })
@@ -95,7 +98,7 @@ export const maxMessenger: Messenger = {
         ...(events ? { events } : {}),
       })
       clients.set(rootOf(command), client)
-      const adapter = maxAdapter(client, store)
+      const adapter = maxAdapter(client, store, reach)
       return {
         ...adapter,
         close: async () => {
