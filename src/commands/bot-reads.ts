@@ -145,20 +145,10 @@ const show = (
   )
 }
 
-export const chatsCommand = (): Command => {
-  const command = new Command("chats").description(
-    "the chats this bot is in — MAX gives a bot no list of them, so `list` shows the ones it has seen",
-  )
+/** max's own `bot chats` commands, added to the shared group, which has `list`. */
+export const chatsCommand = (command: Command): Command => {
   command.addCommand(botCheckCommand())
   command.addCommand(botRulesCommand())
-
-  command
-    .command("list")
-    .description("chats this bot has seen on this machine — not a complete list from MAX")
-    .action(function (this: Command) {
-      const { renderer, format, registry } = botContext(this, { offline: true })
-      renderList(renderer, format, registry.list())
-    })
 
   command
     .command("get <chat>")

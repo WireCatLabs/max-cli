@@ -1,24 +1,21 @@
 import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { annotate } from "@leemour/cli-core/commands"
+import { botCommand as sharedBotCommand } from "@leemour/cli-messaging/cli"
 import { Command, Option } from "commander"
-import { BotTokenStore } from "../bot/auth.js"
 import { botOperations } from "../bot/client.js"
 import { checkBody, checkParameter, flagOf, optionKey, readBody } from "../bot/input.js"
-import { registryProfiles } from "../bot/registry.js"
 import { type CallInput, plainJson } from "../bot/transport.js"
-import { configuredProfiles } from "../config.js"
 import { callbacksCommand, commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext, botRecordingOf, startBotRecording } from "./bot-context.js"
 import { botMcpCommand } from "./bot-mcp.js"
 import { adminsCommand, membersCommand } from "./bot-members.js"
+import { maxBot } from "./bot-messenger.js"
 import { peopleCommand } from "./bot-people.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
-import { guardedCall, recipientsCommand, sendsCommand } from "./bot-sends.js"
+import { guardedCall } from "./bot-sends.js"
 import { menuCommand, uploadsCommand, webhooksCommand } from "./bot-setup.js"
 import { updatesCommand } from "./bot-updates.js"
-import { environmentOf } from "./context.js"
-import { renderList } from "./paging.js"
 
 const apiCommand = (operation: ManifestOperation): Command => {
   const binding =
@@ -58,61 +55,18 @@ const apiCommand = (operation: ManifestOperation): Command => {
   })
 }
 
+/** Every command under `node`, itself included. */
+const allOf = (node: Command): Command[] => [node, ...node.commands.flatMap(allOf)]
+
 export const botCommand = (): Command => {
-  const command = new Command("bot").description(
-    "a MAX bot, through the official Bot API and a bot token — not your personal account",
-  )
+  const command = sharedBotCommand(maxBot)
+  // The shared commands record their own run; max's hooks record the ones still its own.
+  const shared = new Set(allOf(command))
   command
-    .hook("preAction", (_group, action) => startBotRecording(action))
+    .hook("preAction", (_group, action) => {
+      if (!shared.has(action)) startBotRecording(action)
+    })
     .hook("postAction", async (_group, action) => botRecordingOf(action)?.succeed())
-
-  const auth = new Command("auth").description("the bot token this profile uses")
-
-  annotate(auth.command("set"), { mutates: true, local: true })
-    .description("check a bot token with MAX, then keep it — typed at a hidden prompt or piped on stdin")
-    .action(async function (this: Command) {
-      const { store, client, ask, renderer, settings, streams } = botContext(this)
-      const token = (await ask("Bot token: ", { secret: true })).trim()
-      if (!token) throw new CliError("validation_error", "no token given")
-      const bot = await client(token).me()
-      const source = store.write(token)
-      botContext(this).registry.touch()
-      if (process.env.MAX_BOT_TOKEN) {
-        streams.diagnostic("MAX_BOT_TOKEN is set, and it wins over the token just kept until it is unset")
-      }
-      renderer.result({
-        profile: settings.profile,
-        stored: source,
-        bot: bot.first_name,
-        id: bot.user_id,
-        username: bot.username,
-      })
-    })
-
-  auth
-    .command("show")
-    .description("where this profile's bot token comes from, and which bot it is")
-    .action(async function (this: Command) {
-      const { store, authenticated, renderer, settings } = botContext(this)
-      const source = store.read()?.source
-      const bot = await authenticated().me()
-      renderer.result({
-        profile: settings.profile,
-        source,
-        bot: bot.first_name,
-        id: bot.user_id,
-        username: bot.username,
-      })
-    })
-
-  annotate(auth.command("remove"), { mutates: true, local: true })
-    .description("forget this profile's bot token")
-    .action(function (this: Command) {
-      const { store, renderer, settings } = botContext(this)
-      renderer.result({ profile: settings.profile, removed: store.remove() })
-    })
-
-  command.addCommand(auth)
 
   command
     .command("me")
@@ -122,40 +76,11 @@ export const botCommand = (): Command => {
       renderer.result(await authenticated().me())
     })
 
-  command
-    .command("list")
-    .description("every name on this machine that has a bot token; --check asks MAX which bot each is")
-    .option("--check", "ask MAX who each bot is")
-    .action(async function (this: Command) {
-      const { renderer, format, streams } = botContext(this)
-      const check = this.opts<{ check?: boolean }>().check === true
-      const environment = environmentOf(this)
-      const names = [...new Set(["default", ...configuredProfiles(), ...registryProfiles()])].sort()
-      if (process.env.MAX_BOT_TOKEN) streams.diagnostic("MAX_BOT_TOKEN is set, so every name uses that one token")
-      const rows = []
-      for (const name of names) {
-        const store = environment.botStore?.(name) ?? new BotTokenStore({ profile: name })
-        const stored = store.read()
-        if (!stored) continue
-        const row: Record<string, unknown> = { name, token: stored.source }
-        if (check) {
-          try {
-            const bot = await botContext(this).client(stored.token).me()
-            Object.assign(row, { bot: bot.username ?? bot.first_name, id: bot.user_id })
-          } catch (error) {
-            row.problem = (error as { code?: string }).code ?? "failed"
-          }
-        }
-        rows.push(row)
-      }
-      renderList(renderer, format, rows)
-    })
-
   command.addCommand(messagesCommand())
-  command.addCommand(chatsCommand())
+  const chats = command.commands.find((child) => child.name() === "chats")
+  if (!chats) throw new Error("the shared bot group has no chats")
+  chatsCommand(chats)
   command.addCommand(peopleCommand())
-  command.addCommand(recipientsCommand())
-  command.addCommand(sendsCommand())
   for (const more of [
     membersCommand(),
     adminsCommand(),

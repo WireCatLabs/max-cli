@@ -318,6 +318,21 @@ describe("the run log for a bot command", () => {
     ])
   })
 
+  it("**records a shared bot command once, with its request**, as max's own bot commands are", async () => {
+    const added = async (command: string, argv: string[]) => {
+      const before = new Set((await runsOf(command)).map((run) => run.runId))
+      await max(argv)
+      return (await runsOf(command)).filter((run) => !before.has(run.runId))
+    }
+
+    expect(await added("bot auth show", ["bot", "auth", "show", "--record", "--json"])).toEqual([
+      expect.objectContaining({ status: "success", requests: 1 }),
+    ])
+    expect(await added("bot me", ["bot", "me", "--record", "--json"])).toEqual([
+      expect.objectContaining({ status: "success", requests: 1 }),
+    ])
+  })
+
   it("keeps a failed run with its request, unasked, and never twice", async () => {
     const { code } = await max(["bot", "api", "get-pinned-message", "--chat-id", "404", "--json"])
     expect(code).not.toBe(0)

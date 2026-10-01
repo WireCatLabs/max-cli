@@ -23,6 +23,10 @@
   ничего не добавляется. Выключается `max config set skillHint false --defaults`.
 - **`max mcp` и `max bot mcp` отдают навык ресурсом `max://skill`** и называют его в своих
   инструкциях для агента.
+- **`max bot auth`, `max bot list`, `max bot chats list`, `max bot recipients` и `max bot sends list`
+  теперь общие с tg** (cli-messaging): ответы и подсказки те же. В `max commands --json`
+  `bot auth set|remove` и `bot recipients add|remove|clear` теперь помечены как пишущие — они меняют
+  файлы на этом компьютере. Токен, список получателей и журнал лежат там же, где лежали.
 - **`max cache clear --left`** стирает из локальной копии только чаты, из которых вы вышли, вместе с
   их сообщениями. Остальная копия не трогается.
 

@@ -5,7 +5,7 @@ import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { annotate } from "@leemour/cli-core/commands"
 import { pickChat } from "@leemour/cli-messaging"
 import { newSendId, RecipientList, SendJournal, type SendKind, sendGuard } from "@leemour/cli-messaging/sends"
-import { Command, Option } from "commander"
+import { type Command, Option } from "commander"
 import { botOperations } from "../bot/client.js"
 import { checkBody } from "../bot/input.js"
 import { forget, keepSent } from "../bot/keep.js"
@@ -22,7 +22,6 @@ import {
 } from "../bot/uploads.js"
 import { asFirstWord } from "../profile.js"
 import { assertAllowed, botContext } from "./bot-context.js"
-import { renderList } from "./paging.js"
 
 type Context = ReturnType<typeof botContext>
 
@@ -293,48 +292,3 @@ export const sendCommands = (messages: Command): void => {
       context.renderer.result(answer ?? { success: true })
     })
 }
-
-export const recipientsCommand = (): Command => {
-  const command = new Command("recipients").description(
-    "the chats this bot may write to; with no list, every chat — `off` removes the list",
-  )
-  command
-    .command("list")
-    .description("the chats on the list, or nothing when there is no list")
-    .action(function (this: Command) {
-      const context = botContext(this)
-      renderList(context.renderer, context.format, recipientsOf(context).read() ?? [])
-    })
-  annotate(command.command("add <chat>"), { mutates: true, local: true })
-    .description("allow a chat: its id, `user:<id>`, or the title of a chat this bot has seen")
-    .action(function (this: Command, chat: string) {
-      const context = botContext(this)
-      const target = targetOf(chat, context)
-      const title = context.registry.list().find((seen) => seen.id === target.key)?.title ?? null
-      recipientsOf(context).add({ id: target.key, title, addedAt: new Date().toISOString() })
-      renderList(context.renderer, context.format, recipientsOf(context).read() ?? [])
-    })
-  annotate(command.command("remove <chat>"), { mutates: true, local: true })
-    .description("take a chat off the list")
-    .action(function (this: Command, chat: string) {
-      const context = botContext(this)
-      context.renderer.result({ removed: recipientsOf(context).remove(chat) ?? null })
-    })
-  annotate(command.command("clear"), { mutates: true, local: true })
-    .description("remove the list: the bot may write to any chat again")
-    .action(function (this: Command) {
-      const context = botContext(this)
-      context.renderer.result({ removed: recipientsOf(context).off() })
-    })
-  return command
-}
-
-export const sendsCommand = (): Command =>
-  new Command("sends")
-    .description("what this bot sent, edited and deleted from this machine — ids and outcomes, never text")
-    .addCommand(
-      new Command("list").action(function (this: Command) {
-        const context = botContext(this)
-        renderList(context.renderer, context.format, new SendJournal(files(context.settings.profile).journal).entries())
-      }),
-    )
