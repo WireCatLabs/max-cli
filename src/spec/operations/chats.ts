@@ -268,6 +268,14 @@ export const chatDelete = reserveOpcode({
   constant: "CHAT_DELETE",
   opcode: 52,
   reason:
-    "Deleting a chat is left out of MAX-31 for the reason of `NEED-32`: a tool that can destroy a conversation for everyone in it is a poor trade for tidiness.",
-  provenance: { confidence: "observed", sources: ["PyMax delete_chat", "tsmax"] },
+    "Deleting a chat is left out of MAX-31 for the reason of `NEED-32`: a tool that can destroy a conversation for everyone in it is a poor trade for tidiness. " +
+    "Measured 2026-10-01: `forAll: true` does not delete it for everyone anyway — the sender leaves, a control message says so, and the chat stays for the other members.",
+  provenance: {
+    confidence: "measured",
+    sources: [
+      "PyMax delete_chat",
+      "tsmax",
+      "measured against MAX 2026-10-01 on two throwaway test chats: `{ chatId, lastEventTime, forAll: true }` answered `{}`",
+    ],
+  },
 })
