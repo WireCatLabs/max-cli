@@ -203,6 +203,14 @@ const STATEMENTS = [
    )`,
 ]
 
+/** Ours, so its message is known to hold no path and can be shown as it is. */
+export class NewerCacheError extends Error {}
+
+const KEPT = ["messages", "ranges"]
+
+const versionOf = (database: CacheDatabase): number =>
+  Number((database.prepare("PRAGMA user_version").get() as { user_version?: number })?.user_version ?? 0)
+
 /**
  * Brings a file up to date, and **refuses a file from the future** rather than writing to it.
  *
@@ -223,14 +231,6 @@ const STATEMENTS = [
  * Contacts that are in no chat would be another thing MAX cannot re-send (`RES-7`); the day they
  * arrive, their table joins `KEPT`.
  */
-/** Ours, so its message is known to hold no path and can be shown as it is. */
-export class NewerCacheError extends Error {}
-
-const KEPT = ["messages", "ranges"]
-
-const versionOf = (database: CacheDatabase): number =>
-  Number((database.prepare("PRAGMA user_version").get() as { user_version?: number })?.user_version ?? 0)
-
 export const migrate = (database: CacheDatabase): void => {
   const current = versionOf(database)
 

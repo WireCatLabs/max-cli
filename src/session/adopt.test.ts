@@ -25,6 +25,7 @@ const setup = (max: ReturnType<typeof mockMax>, existing?: string) => {
   return {
     store,
     client: new MaxClient({
+      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: () => {},

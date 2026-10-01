@@ -34,7 +34,7 @@ if (!store.readToken()) {
 }
 
 const connection = new Connection({ timeoutMs: 20_000 })
-const client = new MaxClient({ store, connection, timeoutMs: 20_000 })
+const client = new MaxClient({ store, connection, timeoutMs: 20_000, sends: "caller" })
 const created: string[] = []
 const failures: string[] = []
 

@@ -86,6 +86,7 @@ const sendDirect = async (text: string, options: Parameters<MaxClient["messages"
   const store = new SessionStore({ profile: "upload-direct", keyring: memoryKeyring() })
   store.writeToken("a-token")
   const client = new MaxClient({
+    sends: "caller",
     store,
     connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     warn: () => {},

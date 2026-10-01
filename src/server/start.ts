@@ -22,6 +22,9 @@ export const refusedPath = (store: SessionStore): string => store.serverFile(".s
 /** A start that has not listened by now crashed; the next command may try again. */
 const START_GRACE_MS = 30_000
 
+/** Where a background server writes what it would have said on a terminal. */
+export const logPath = (store: SessionStore): string => store.serverFile(".serve.log")
+
 /**
  * Starts `max serve` for this profile in the background, detached, and returns at once — the
  * command that asked goes on with its own connection and the next one finds the server.
@@ -29,9 +32,6 @@ const START_GRACE_MS = 30_000
  * Its stderr goes to `<state>/profiles/<profile>.serve.log`, mode 600: nobody is watching a
  * terminal for it, and that file is where a login that failed says so.
  */
-/** Where a background server writes what it would have said on a terminal. */
-export const logPath = (store: SessionStore): string => store.serverFile(".serve.log")
-
 export const startInBackground = (
   store: SessionStore,
   { serveArgs = ["--idle", `${IDLE_MS / 60_000}m`, "--started-by-command"], entry = process.argv[1] } = {},

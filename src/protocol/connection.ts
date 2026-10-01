@@ -62,14 +62,6 @@ export class ProtocolError extends Error {
   }
 }
 
-/**
- * One WebSocket, one command's worth of work, then closed.
- *
- * **Everything that could keep the process alive is owned here**: the socket, the per-request
- * timers and the listeners. `close()` clears all three, and a command that opens a connection
- * closes it in a `finally` — a CLI that prints its result and then hangs is a defect, not a rough
- * edge (REQUIREMENTS §18).
- */
 /** MAX's keep-alive, both directions. */
 const PING = 1
 /** A message arrived. The web client acknowledges each one. */
@@ -78,6 +70,14 @@ const NEW_MESSAGE = 128
 /** What a client needs of a connection — so one that goes through `max serve` can stand in. */
 export type Wire = Pick<Connection, "open" | "invoke" | "close">
 
+/**
+ * One WebSocket, one command's worth of work, then closed.
+ *
+ * **Everything that could keep the process alive is owned here**: the socket, the per-request
+ * timers and the listeners. `close()` clears all three, and a command that opens a connection
+ * closes it in a `finally` — a CLI that prints its result and then hangs is a defect, not a rough
+ * edge (REQUIREMENTS §18).
+ */
 export class Connection {
   readonly #url: string
   readonly #origin: string
@@ -126,18 +126,27 @@ export class Connection {
     const socket = this.#createSocket(this.#url, this.#origin)
     this.#socket = socket
 
-    await new Promise<void>((resolve, reject) => {
-      const onOpen = () => {
-        socket.off("error", onError)
-        resolve()
-      }
-      const onError = (error: Error) => {
-        socket.off("open", onOpen)
-        reject(error)
-      }
-      socket.once("open", onOpen)
-      socket.once("error", onError)
-    })
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const onOpen = () => {
+          socket.off("error", onError)
+          resolve()
+        }
+        const onError = (error: Error) => {
+          socket.off("open", onOpen)
+          reject(error)
+        }
+        socket.once("open", onOpen)
+        socket.once("error", onError)
+      })
+    } catch (error) {
+      // Left set, the next `open()` would return at once and the request after it wait out its timeout.
+      if (this.#socket === socket) this.#socket = undefined
+      socket.removeAllListeners()
+      socket.on("error", () => {})
+      if (socket.readyState === socket.OPEN || socket.readyState === socket.CONNECTING) socket.close()
+      throw error
+    }
 
     socket.on("message", (data: Buffer | ArrayBuffer | Buffer[]) => this.#receive(asBytes(data)))
     // The code and reason are all there is to tell MAX ending the session from a network drop.
@@ -169,6 +178,7 @@ export class Connection {
     const seq = this.#seq
     this.#seq = (this.#seq + 1) % SEQ_MODULO
     const socket = this.#socket
+    const sent = encodeFrame({ seq, opcode, payload })
 
     const answer = await new Promise<{ frame: InboundFrame; bytes: number }>((resolve, reject) => {
       const timer = setTimeout(() => {
@@ -177,7 +187,6 @@ export class Connection {
       }, this.#timeoutMs)
 
       this.#pending.set(seq, { resolve, reject, timer })
-      const sent = encodeFrame({ seq, opcode, payload })
       socket.send(sent)
       watch?.({ phase: "sent", seq, opcode, bytes: sent.length })
     })

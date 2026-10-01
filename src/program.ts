@@ -246,11 +246,6 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
 }
 
 /**
- * **Every failure is kept as a run** — a usage error, a check before a command opened its run, a
- * command that never opens one — through the same recorder, unless recording was turned off by
- * name (`OPS-15`). Only the command's words are named, never its arguments: those can be a message.
- */
-/**
  * cli-messaging brings its own copy of cli-core, and its `CliError` is not an `instanceof` ours —
  * a recipient-list refusal would otherwise leave with exit 1 and `generic_failure`.
  */
@@ -261,6 +256,11 @@ const ownCliError = (error: unknown): unknown => {
   return new CliError(code as ErrorCode, error.message, details ?? {})
 }
 
+/**
+ * **Every failure is kept as a run** — a usage error, a check before a command opened its run, a
+ * command that never opens one — through the same recorder, unless recording was turned off by
+ * name (`OPS-15`). Only the command's words are named, never its arguments: those can be a message.
+ */
 const keepFailure = async (
   error: unknown,
   program: Command,

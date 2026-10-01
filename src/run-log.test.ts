@@ -68,6 +68,7 @@ describe("MAX's refusal, as a key", () => {
       store.writeToken("a-token")
       const events: DiagnosticEvent[] = []
       const client = new MaxClient({
+        sends: "caller",
         store,
         connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
         warn: () => {},
@@ -156,6 +157,7 @@ describe("a warning", () => {
     store.writeToken("a-token")
     const events: DiagnosticEvent[] = []
     const client = new MaxClient({
+      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: () => {},

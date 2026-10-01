@@ -40,6 +40,7 @@ const clientWith = (max: ReturnType<typeof mockMax>, token = "a-token") => {
     notes,
     events,
     client: new MaxClient({
+      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: (note) => notes.push(note),
@@ -116,6 +117,7 @@ describe("MaxClient", () => {
       })
       const { store } = clientWith(max)
       const client = new MaxClient({
+        sends: "caller",
         store,
         connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
         resume,
@@ -243,6 +245,7 @@ describe("MaxClient", () => {
 
     const again = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer } })
     const second = new MaxClient({
+      sends: "caller",
       store,
       connection: new Connection({ createSocket: again.createSocket, timeoutMs: 50 }),
       warn: () => {},
@@ -590,6 +593,40 @@ describe("MaxClient", () => {
     expect(sent.outgoing).toBe(true)
   })
 
+  it("will not build without a decision about the send guard", () => {
+    const max = mockMax({ answers: {} })
+    const { store } = clientWith(max)
+
+    // @ts-expect-error `sends` is required: a guard, or "caller" when whoever holds the client guards.
+    expect(() => new MaxClient({ store, connection: new Connection({ createSocket: max.createSocket }) })).not.toThrow()
+  })
+
+  it("asks its guard before a send, and a refusal sends nothing", async () => {
+    const max = mockMax({
+      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer, [Opcode.MSG_SEND]: { message: { id: 1 } } },
+    })
+    const { store } = clientWith(max)
+    const recorded: unknown[] = []
+    const client = new MaxClient({
+      store,
+      connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+      warn: () => {},
+      sends: {
+        check: () => {
+          throw Object.assign(new Error("read-only profile"), { code: "permission_error" })
+        },
+        record: (entry) => recorded.push(entry),
+      },
+    })
+
+    await client.connect()
+    await expect(client.messages.send("111", "hello")).rejects.toMatchObject({ code: "permission_error" })
+    await client.close()
+
+    expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.MSG_SEND)
+    expect(recorded).toMatchObject([{ chatId: "111", outcome: "refused" }])
+  })
+
   it("**notifies by default and stays silent only when asked**", async () => {
     const max = mockMax({
       answers: {
@@ -813,6 +850,7 @@ describe("the token MAX answers with", () => {
     })
     const notes: string[] = []
     const client = new MaxClient({
+      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: (note) => notes.push(note),
@@ -865,6 +903,7 @@ describe("the token MAX answers with", () => {
       },
     })
     const second = new MaxClient({
+      sends: "caller",
       store,
       connection: new Connection({ createSocket: stranger.createSocket, timeoutMs: 50 }),
       warn: () => {},
@@ -922,6 +961,7 @@ describe("with a cache", () => {
     const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
     store.writeToken("a-token")
     return new MaxClient({
+      sends: "caller",
       store,
       cache,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
@@ -1022,6 +1062,7 @@ describe("with a cache", () => {
     })
     store.writeToken("a-token")
     const offline = new MaxClient({
+      sends: "caller",
       store,
       cache,
       offline: true,
@@ -1076,6 +1117,7 @@ describe("with a cache", () => {
     const max = mockMax({ answers: {} })
     const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
     const offline = new MaxClient({
+      sends: "caller",
       store: new SessionStore({ keyring: memoryKeyring(), configDir: dir, env: {} }),
       cache,
       offline: true,
@@ -1100,6 +1142,7 @@ describe("with a cache", () => {
     })
     store.writeToken("a-token")
     const client = new MaxClient({
+      sends: "caller",
       store,
       cache,
       offline: true,
@@ -1427,6 +1470,7 @@ describe("with a cache", () => {
       })
       store.writeToken("a-token")
       const offline = new MaxClient({
+        sends: "caller",
         store,
         cache,
         offline: true,
@@ -1454,7 +1498,7 @@ describe("with a cache", () => {
         env: {},
       })
       store.writeToken("a-token")
-      const offline = new MaxClient({ store, cache, offline: true })
+      const offline = new MaxClient({ sends: "caller", store, cache, offline: true })
 
       const failure = await offline.contacts.list().catch((error: Error) => error)
       expect(String(failure)).toContain("--offline")
@@ -1496,6 +1540,7 @@ describe("with a cache", () => {
       })
       store.writeToken("a-token")
       const client = new MaxClient({
+        sends: "caller",
         store,
         cache: {
           ...cache,
@@ -1528,6 +1573,7 @@ describe("with a cache", () => {
       })
       store.writeToken("a-token")
       const client = new MaxClient({
+        sends: "caller",
         store,
         cache: {
           ...cache,
@@ -1666,6 +1712,7 @@ describe("one event per request", () => {
     store.writeToken("a-token")
 
     const client = new MaxClient({
+      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       events: () => {

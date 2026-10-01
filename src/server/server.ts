@@ -213,6 +213,8 @@ export class MaxServer {
     const client = new MaxClient({
       store,
       connection,
+      // `#forward` guards every write a command hands this server, before this client sends it.
+      sends: "caller",
       fullLogin: true,
       ...(resume ? { resume } : {}),
       warn: this.#options.note,
@@ -548,7 +550,6 @@ const refusal = (error: unknown): Record<string, unknown> => {
   return { error: { code, message, details, guard: true } }
 }
 
-/** 1 s, 2 s, 4 s … a minute at most — a server that hammers MAX after a drop looks like nothing MAX knows. */
 /**
  * **MAX answered the login and said no** — as opposed to a network that dropped or a MAX that did
  * not answer. Only those two are retried. A refusal is not: a token MAX no longer takes will not
@@ -560,6 +561,7 @@ export const refusedLogin = (error: unknown): boolean =>
   error instanceof CliError &&
   (error.code === "authentication_error" || error.code === "rate_limited" || error.code === "provider_error")
 
+/** 1 s, 2 s, 4 s … a minute at most — a server that hammers MAX after a drop looks like nothing MAX knows. */
 const backoff = (attempt: number): number => Math.min(60_000, 1000 * 2 ** attempt)
 
 /** Present while a server is being started in the background, so two commands do not start two. */

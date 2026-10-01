@@ -43,7 +43,7 @@ const connection = new Connection({
   timeoutMs: 20_000,
   onEvent: (frame) => pushes.push({ opcode: frame.opcode, payload: record(frame.payload), at: Date.now() }),
 })
-const client = new MaxClient({ store, connection, timeoutMs: 20_000 })
+const client = new MaxClient({ store, connection, timeoutMs: 20_000, sends: "caller" })
 let sentId: string | undefined
 
 try {

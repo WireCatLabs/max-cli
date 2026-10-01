@@ -35,14 +35,6 @@ export interface MessageSearch {
 }
 
 /**
- * One login's worth of change: the chats that moved, the people that changed, who is in which
- * chat, and the `time` MAX answered with.
- *
- * `members` is keyed by chat id and holds that chat's **whole** membership minus ourselves, so a
- * chat named here has its rows replaced rather than added to. A chat absent from the map keeps
- * the members it already had.
- */
-/**
  * What a merge did, in counts and **nothing else** — no name, no username, no description. It is
  * what `max contacts sync` prints, and a summary that named anybody would be the one place the
  * sixth constraint leaks.
@@ -57,6 +49,14 @@ export interface SyncSummary {
   changed: number
 }
 
+/**
+ * One login's worth of change: the chats that moved, the people that changed, who is in which
+ * chat, and the `time` MAX answered with.
+ *
+ * `members` is keyed by chat id and holds that chat's **whole** membership minus ourselves, so a
+ * chat named here has its rows replaced rather than added to. A chat absent from the map keeps
+ * the members it already had.
+ */
 export interface SyncDelta {
   chats: Chat[]
   people: Contact[]
