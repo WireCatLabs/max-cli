@@ -10,7 +10,13 @@ import {
   type Streams,
   visibleControls,
 } from "@leemour/cli-core"
-import { provide as provideShared, reactionsCommand, recorded, wasSettled } from "@leemour/cli-messaging/cli"
+import {
+  pollsCommand,
+  provide as provideShared,
+  reactionsCommand,
+  recorded,
+  wasSettled,
+} from "@leemour/cli-messaging/cli"
 import { Command, CommanderError } from "commander"
 import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
@@ -28,7 +34,6 @@ import { inboxCommand } from "./commands/inbox.js"
 import { mcpCommand } from "./commands/mcp.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
-import { pollsCommand } from "./commands/polls.js"
 import { recipientsCommand } from "./commands/recipients.js"
 import { reviewCommand } from "./commands/review.js"
 import { runsCommand } from "./commands/runs.js"
@@ -105,7 +110,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(messagesCommand())
   program.addCommand(storeCommand())
   program.addCommand(modelsCommand())
-  program.addCommand(pollsCommand())
+  program.addCommand(pollsCommand(maxMessenger))
   program.addCommand(reactionsCommand(maxMessenger))
   program.addCommand(recipientsCommand())
   program.addCommand(sendsCommand())

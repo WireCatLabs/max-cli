@@ -1,4 +1,5 @@
 import { CliError, isCliError } from "@leemour/cli-core"
+import { guardedClose, guardedCreatePoll, guardedVote } from "@leemour/cli-messaging/cli"
 import type { Permission } from "@leemour/cli-messaging/sends"
 import { onlineDeps, servicesFor } from "@leemour/cli-messaging/services"
 import {
@@ -109,8 +110,10 @@ interface Defaults {
  * each write itself; the service's guard lets everything through, and the client's journal line
  * takes the service's operation id. Until max serves the shared MCP tools.
  */
+const PASS = { check: () => {}, record: () => {} }
+
 const shared = (client: MaxClient, store: SessionStore) =>
-  servicesFor(onlineDeps(maxMessenger, maxAdapter(client, store), { check: () => {}, record: () => {} }))
+  servicesFor(onlineDeps(maxMessenger, maxAdapter(client, store), PASS))
 
 /** Kept transcripts always; with `transcribe`, the rest heard after the connection is released. */
 const heardIn = async (
@@ -685,8 +688,8 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) =>
-      client.polls.vote(await client.chats.resolve(args.chat), args.message, args.answers),
+    answer: (client, args, { store }) =>
+      guardedVote(PASS, maxAdapter(client, store), { chat: args.chat, message: args.message, answers: args.answers }),
   }),
   max_polls_create: tool({
     title: "Create a poll",
@@ -699,16 +702,23 @@ const SEND_TOOLS = {
       answers: v.pipe(v.array(v.pipe(v.string(), v.minLength(1))), v.minLength(2)),
       multiple: v.optional(v.pipe(v.boolean(), v.description("people may pick several answers"))),
       anonymous: v.optional(v.pipe(v.boolean(), v.description("nobody sees who voted for what"))),
-      revote: v.optional(v.pipe(v.boolean(), v.description("people may change their vote"))),
+      silent: v.optional(v.pipe(v.boolean(), v.description("send without a notification"))),
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) =>
-      client.polls.create(await client.chats.resolve(args.chat), args.question, args.answers, {
-        multiple: args.multiple === true,
-        anonymous: args.anonymous === true,
-        revote: args.revote === true,
-      }),
+    answer: async (client, args, { store }) => {
+      const sent = await guardedCreatePoll(PASS, maxAdapter(client, store), {
+        chat: args.chat,
+        poll: {
+          question: args.question,
+          answers: args.answers,
+          multiple: args.multiple === true,
+          anonymous: args.anonymous === true,
+        },
+        silent: args.silent === true,
+      })
+      return { sendId: sent.sendId, operationId: sent.operationId, message: sent.message }
+    },
   }),
 }
 
@@ -813,7 +823,8 @@ const ACCOUNT_TOOLS: Record<McpToolGroup, Record<string, AnyTool>> = {
       input: v.object({ chat, message: v.pipe(message, v.description("the message that carries the poll")) }),
       annotations: WRITE,
       _meta: APPROVE,
-      answer: async (client, args) => client.polls.close(await client.chats.resolve(args.chat), args.message),
+      answer: (client, args, { store }) =>
+        guardedClose(PASS, maxAdapter(client, store), { chat: args.chat, message: args.message }),
     }),
   },
   groups: {

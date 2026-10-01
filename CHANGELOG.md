@@ -8,6 +8,10 @@
 
 ### Что нового
 
+- **`max polls show <чат> <сообщение>`** — опрос с id вариантов и числом голосов, ничего не меняя.
+- **`max polls create --send-id`** — повторить создание опроса, ответ на которое не пришёл, без
+  второго опроса.
+
 - **`max messages send --photo <путь>`** — отправить `.jpg .png .webp` фотографией, как в tg.
   `--no-preview` у `send` тоже есть, но MAX его не поддерживает, и команда откажет.
 
@@ -22,6 +26,13 @@
   видно, чем действие кончилось. У отправки сообщения это её `sendId`.
 
 ### Изменено — может сломать скрипты
+
+- **`max polls` — общие команды tg и max.** У `polls create` нет `--revote`, пока его не получат
+  общие команды. `polls vote|close --json` отвечают `{operationId, poll}`, где `poll` —
+  `{chatId, messageId, question, answers: [{id, text, voters, chosen}], closed, multiple, anonymous,
+  voters}`; `polls create` — `{sendId, operationId, message}`. Так же отвечают инструменты MCP
+  `max_polls_vote`, `max_polls_close`, `max_polls_create`; у `max_polls_create` вместо `revote`
+  теперь `silent`.
 
 - **`max messages send|edit|forward` — теперь общие команды tg и max.** Пока общие команды не
   получат того, что было только у max, этого нет:

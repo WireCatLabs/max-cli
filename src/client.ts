@@ -1324,6 +1324,12 @@ export class MaxClient {
    * checks before sending are the web client's, so what it would refuse never reaches MAX.
    */
   readonly polls = {
+    /** One poll as it stands, read from its message; changes nothing. */
+    show: async (chatId: Id, messageId: Id): Promise<PollMessage> => {
+      await this.#connectOnce()
+      return { chatId, messageId, poll: (await this.#poll(chatId, messageId)).poll }
+    },
+
     vote: async (chatId: Id, messageId: Id, answerIds: Id[]): Promise<PollMessage> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot vote")
       this.#guard({ chatId, kind: "reaction" }, messageId)
@@ -1456,6 +1462,7 @@ export class MaxClient {
           sendId,
           length: question.length,
         })
+        this.#warn("web.max.ru does not show polls: anyone reading this chat in a browser sees «Обновите MAX…»")
         return sent
       } catch (error) {
         const failure = asCliError(error)

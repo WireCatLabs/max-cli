@@ -132,7 +132,7 @@ describe("voting", () => {
     expect(sentWith(Opcode.SEND_VOTE).map(({ payload }) => payload)).toEqual([
       { chatId: 111, messageId: BigInt(MESSAGE), pollId: 900, answersIds: [1] },
     ])
-    expect(JSON.parse(voted.stdout).poll.answers[0]).toMatchObject({ votes: 3, mine: true })
+    expect(JSON.parse(voted.stdout).poll.answers[0]).toMatchObject({ voters: 3, chosen: true })
     expect(journalOf("p-vote")).toMatchObject([{ chatId: "111", kind: "reaction", outcome: "sent" }])
   })
 
@@ -192,18 +192,45 @@ describe("closing and creating", () => {
     expect(sentWith(Opcode.MSG_EDIT)).toEqual([])
   })
 
+  it("shows a poll with its answer ids and counts, and asks MAX for nothing but the message", async () => {
+    const { environment, sentWith } = messenger({ attach: pollAttach({ mine: true }) })
+    const { code, stdout } = await runWith(["p-show", "polls", "show", "111", MESSAGE], environment)
+
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toMatchObject({
+      chatId: "111",
+      messageId: MESSAGE,
+      question: "Lunch?",
+      answers: [
+        { id: "1", text: "Yes", voters: 2, chosen: true },
+        { id: "2", text: "No", voters: 1, chosen: false },
+      ],
+      voters: 3,
+    })
+    expect(sentWith(Opcode.MSG_SEND)).toEqual([])
+    expect(sentWith(Opcode.SEND_VOTE)).toEqual([])
+  })
+
+  it("creates a poll with the send id given, so a lost one can be repeated", async () => {
+    const { environment, sentWith } = messenger()
+    const argv = ["p-create-id", "polls", "create", "111", "Lunch?", "Yes", "No", "--send-id", "1790000000000"]
+    const { code, stdout } = await runWith(argv, environment)
+
+    expect(code).toBe(0)
+    expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { cid: 1790000000000 } })
+    expect(JSON.parse(stdout)).toMatchObject({ sendId: "1790000000000", operationId: "1790000000000" })
+  })
+
   it("creates a poll as a message whose one attachment is the poll", async () => {
     const { environment, sentWith } = messenger()
-    const argv = ["p-create", "polls", "create", "111", "Lunch?", "Yes", "No", "--multiple", "--revote"]
+    const argv = ["p-create", "polls", "create", "111", "Lunch?", "Yes", "No", "--multiple"]
     const { code, stdout, stderr } = await runWith(argv, environment)
     expect(code).toBe(0)
     expect(stderr).toContain("web.max.ru does not show polls")
     expect(stdout).not.toContain("web.max.ru")
     expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({
       message: {
-        attaches: [
-          { _type: "POLL", title: "Lunch?", answers: [{ text: "Yes" }, { text: "No" }], settings: MULTIPLE | REVOTE },
-        ],
+        attaches: [{ _type: "POLL", title: "Lunch?", answers: [{ text: "Yes" }, { text: "No" }], settings: MULTIPLE }],
       },
     })
     expect(journalOf("p-create")).toMatchObject([{ chatId: "111", kind: "message", outcome: "sent" }])

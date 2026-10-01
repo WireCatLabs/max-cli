@@ -1,8 +1,9 @@
 import { CliError } from "@leemour/cli-core"
-import type { Account, Attachment, Chat, Message, QuotedMessage, WindowedMessage } from "@leemour/cli-messaging"
+import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@leemour/cli-messaging"
 import type {
   MessageEditing,
   MessagePins,
+  MessagePolls,
   MessageReactions,
   MessengerAdapter,
   ReadState,
@@ -14,7 +15,7 @@ import { isId } from "../resolve.js"
 import type { SessionStore } from "../session/store.js"
 import { isImage, isVideo } from "../upload.js"
 
-export type MaxAdapter = MessengerAdapter & MessageEditing & MessagePins & MessageReactions & ReadState
+export type MaxAdapter = MessengerAdapter & MessageEditing & MessagePins & MessageReactions & ReadState & MessagePolls
 
 const MARKUP: Record<string, string> = {
   bold: "STRONG",
@@ -108,6 +109,19 @@ export const maxAdapter = (client: MaxClient, store: SessionStore): MaxAdapter =
       await client.chats.markRead(to, until)
     },
 
+    poll: async (chatId, messageId) => toPoll(await client.polls.show(chatId, messageId)),
+    vote: async (chatId, messageId, answerIds) => toPoll(await client.polls.vote(chatId, messageId, answerIds)),
+    closePoll: async (chatId, messageId) => toPoll(await client.polls.close(chatId, messageId)),
+    createPoll: async (chatId, { question, answers, multiple, anonymous }, { sendId, silent }) => {
+      const message = await client.polls.create(chatId, question, answers, {
+        multiple,
+        anonymous,
+        cid: cidOf(sendId),
+        ...(silent ? { notify: false } : {}),
+      })
+      return { message: toMessage(message), sendId }
+    },
+
     // `max session end` forgets the session on this machine and never sends LOGOUT, which would end the browser tab's too.
     logout: async () => {
       throw new CliError("validation_error", "`max session end` forgets the session on this machine")
@@ -128,6 +142,17 @@ const cidOf = (sendId: string): number => {
 /** As `max messages send --file` always sent them: a picture as a photo, a video as a video. */
 const uploadKind = ({ name, kind }: { name: string; kind: "photo" | "file" }) =>
   isImage(name) ? "photo" : isVideo(name) ? "video" : kind
+
+const toPoll = ({ chatId, messageId, poll }: Max.PollMessage): Poll => ({
+  chatId,
+  messageId,
+  question: poll.question,
+  answers: poll.answers.map(({ id, text, votes, mine }) => ({ id, text, voters: votes, chosen: mine })),
+  closed: poll.closed,
+  multiple: poll.multiple,
+  anonymous: poll.anonymous,
+  voters: poll.total,
+})
 
 const unknownChat = (id: string): Chat => ({
   id,

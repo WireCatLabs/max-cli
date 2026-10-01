@@ -960,7 +960,20 @@ max models audio download <model>
 
 ## `max polls`
 
-vote in polls, close your own, create one
+read a poll, vote in it, close your own, create one
+
+### `max polls show`
+
+a poll and its answer ids, as the message carries it now
+
+```sh
+max polls show <chat> <message>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the id of the message that carries the poll |
 
 ### `max polls vote`
 
@@ -974,17 +987,17 @@ max polls vote <chat> <message> [answers] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `message` | обязательный | id of the message that carries the poll |
-| `answers` | необязательный | answer ids, as `messages list` prints them in [brackets] |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the id of the message that carries the poll |
+| `answers` | необязательный | answer ids, as `polls show` prints them |
 
 | Опция | Что делает |
 |---|---|
-| `--retract` | take your vote back, where the poll allows it |
+| `--retract` | take your vote back |
 
 ### `max polls close`
 
-close your own poll; nobody can vote in it after that, and it cannot be reopened
+close your own poll; nobody can vote after that, and it cannot be reopened
 
 **Меняет что-то в MAX.**
 
@@ -994,12 +1007,12 @@ max polls close <chat> <message>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `message` | обязательный | id of your own message that carries the poll |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the id of your own message that carries the poll |
 
 ### `max polls create`
 
-send a poll to a chat, as a message of its own
+send a poll to a chat, as a message of its own; public unless --anonymous
 
 **Меняет что-то в MAX.**
 
@@ -1009,7 +1022,7 @@ max polls create <chat> <question> <answers> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
+| `chat` | обязательный | a chat: its id, or part of its title |
 | `question` | обязательный | the question |
 | `answers` | обязательный | two answers or more |
 
@@ -1017,8 +1030,8 @@ max polls create <chat> <question> <answers> [options]
 |---|---|
 | `--multiple` | people may pick several answers |
 | `--anonymous` | nobody sees who voted for what |
-| `--revote` | people may change their vote |
 | `--silent` | send without a notification |
+| `--send-id <id>` | repeat a create whose outcome was unknown, without risking a second poll |
 
 ## `max reactions`
 
