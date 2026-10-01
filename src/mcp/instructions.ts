@@ -1,6 +1,6 @@
 import type { Permission } from "@leemour/cli-messaging/sends"
-import { SKILL_RESOURCE } from "../commands/skill.js"
 import type { McpToolGroup } from "../config.js"
+import { SKILL_RESOURCE } from "../skill.js"
 
 /**
  * What a client keeps in context when it defers the tools — Claude Code shows the model this and

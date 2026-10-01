@@ -1,6 +1,6 @@
 import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server"
 import { openProfileCache } from "../cache/index.js"
-import { SKILL_RESOURCE } from "../commands/skill.js"
+import { SKILL_RESOURCE } from "../skill.js"
 import type { MaxSession } from "./session.js"
 
 const LISTED = 100

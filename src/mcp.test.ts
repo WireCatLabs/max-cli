@@ -5,7 +5,6 @@ import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { contextFor } from "./commands/context.js"
-import { SKILL } from "./commands/skill.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { instructions } from "./mcp/instructions.js"
 import { createMaxServer, type ServerOptions } from "./mcp/server.js"
@@ -13,6 +12,7 @@ import { type GroupRules, ModerationRules, moderationPathFor } from "./moderatio
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
+import { SKILL } from "./skill.js"
 import { type MockMaxOptions, mockMax } from "./testing/mock-max.js"
 
 const scriptedMax = (extra: MockMaxOptions["answers"] = {}) =>

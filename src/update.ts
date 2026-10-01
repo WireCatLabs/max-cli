@@ -11,8 +11,8 @@ import {
   runUpdate as runPackageManager,
   updateNotice as sharedNotice,
 } from "@leemour/cli-core/update"
-import { SKILL_APP } from "./commands/skill.js"
 import { resolveSettings } from "./config.js"
+import { SKILL_APP } from "./skill.js"
 import { VERSION } from "./version.js"
 
 export const PACKAGE = "@leemour/max-cli"
@@ -83,6 +83,7 @@ export const skillHint = (
   { env = process.env, now }: { env?: NodeJS.ProcessEnv; now?: () => number } = {},
 ): string | undefined => {
   try {
+    if (argv.includes("--quiet")) return undefined
     return sharedSkillHint({
       app: SKILL_APP,
       argv,

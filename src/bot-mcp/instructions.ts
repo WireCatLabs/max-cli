@@ -1,4 +1,4 @@
-import { SKILL_RESOURCE } from "../commands/skill.js"
+import { SKILL_RESOURCE } from "../skill.js"
 
 /** What a client keeps in context when it defers the tools; the first lines are the ones that must survive. */
 export const instructions = ({

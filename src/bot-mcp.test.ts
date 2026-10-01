@@ -8,9 +8,9 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { BotTokenStore } from "./bot/auth.js"
 import { instructions } from "./bot-mcp/instructions.js"
 import { type BotServerOptions, createBotServer } from "./bot-mcp/server.js"
-import { SKILL } from "./commands/skill.js"
 import { ModerationRules, moderationPathFor } from "./moderation/rules.js"
 import { run } from "./program.js"
+import { SKILL } from "./skill.js"
 
 const BOT = `{"user_id": 900, "first_name": "Helper", "username": "helper_bot", "is_bot": true, "last_activity_time": 1}`
 const now = Date.now()

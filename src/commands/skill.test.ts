@@ -105,6 +105,14 @@ describe("the hint to agents that the skill exists", () => {
     expect(second.stderr).not.toContain("skill install")
   })
 
+  it("says nothing under --quiet, which turns diagnostics off", async () => {
+    home()
+    vi.stubEnv("CLAUDECODE", "1")
+
+    expect((await max("config", "show", "--quiet")).stderr).not.toContain("skill install")
+    expect((await max("config", "show")).stderr).toContain("skill install")
+  })
+
   it("says nothing once the skill is installed, or to a person who is not an agent", async () => {
     home()
     expect((await max("config", "show")).stderr).not.toContain("skill install")
