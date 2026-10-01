@@ -265,7 +265,7 @@ describe("the program", () => {
   it("refuses an unknown --kind by name, rather than answering with nothing", async () => {
     const { code, stderr } = await runWith(["chats", "list", "--kind", "chanel"])
     expect(code).not.toBe(0)
-    expect(stderr).toContain("dialog, group or channel")
+    expect(stderr).toContain("dialog, group, channel")
   })
 
   it("offers searching as an action under `messages`, with the same shape as the rest", async () => {
@@ -649,12 +649,21 @@ describe("the program", () => {
 
     it("**`--offline` reaches the command**: it answers from the record and never connects", async () => {
       const { environment } = acquaintedMax()
+      // A profile that has logged in knows its account before it connects; the shared store is keyed by it.
+      const session = environment.store?.("t-offline")
+      session?.writeState({ ...session.readState(), viewerId: "10000001" })
       await runWith(["t-offline", "chats", "list", "--json"], environment)
 
       const silent = acquaintedMax()
       const offline = await runWith(["t-offline", "chats", "show", "First", "--offline", "--json"], silent.environment)
       expect(offline.code).toBe(0)
-      expect(JSON.parse(offline.stdout)).toMatchObject({ id: "111", settings: null })
+      expect(JSON.parse(offline.stdout)).toMatchObject({
+        id: "111",
+        members: [
+          { id: "10000003", name: "Another Person" },
+          { id: "10000002", name: "Someone Else" },
+        ],
+      })
 
       const send = await runWith(["t-offline", "messages", "send", "111", "hi", "--offline"], silent.environment)
       expect(send.code).not.toBe(0)

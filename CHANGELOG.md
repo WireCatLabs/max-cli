@@ -31,6 +31,15 @@
 
 ### Изменено — может сломать скрипты
 
+- **`max chats list|show` и `max contacts list|show` — общие команды tg и max.** Их `--offline`
+  отвечает из общей локальной копии, той же, что у tg. Она заполняется с первого запуска без
+  `--offline` после обновления; прежняя копия max в неё не переносится, и до того `--offline` ответит
+  `not_found`. Что ещё изменилось:
+  - `chats list --search|--kind|--unread` без `--offline` ищет в 200 самых свежих чатах и пишет в
+    stderr, если были старше; с `--offline` — во всех сохранённых;
+  - `chats show --offline` отвечает без `description`, `access` и `settings`: их знает только MAX;
+  - неверный `--kind` отвергается другими словами: `--kind is one of dialog, group, channel, saved`.
+
 - **`max polls` — общие команды tg и max.** `polls vote|close --json` отвечают `{operationId, poll}`, где `poll` —
   `{chatId, messageId, question, answers: [{id, text, voters, chosen}], closed, multiple, anonymous,
   voters}`; `polls create` — `{sendId, operationId, message}`. Так же отвечают инструменты MCP
