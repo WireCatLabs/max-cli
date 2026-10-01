@@ -1,12 +1,1 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "composite": false,
-    "declaration": false,
-    "declarationMap": false,
-    "emitDeclarationOnly": false,
-    "noEmit": true
-  },
-  "include": ["src/**/*.ts"],
-  "exclude": []
-}
+{ "extends": ["./tsconfig.json", "@leemour/cli-core/tsconfig.test.json"] }

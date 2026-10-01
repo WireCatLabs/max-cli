@@ -1,61 +1,10 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  "extends": ["@leemour/cli-core/biome"],
   "files": {
     "includes": ["**", "!**/dist", "!**/node_modules", "!pnpm-lock.yaml"]
   },
-  "formatter": {
-    "enabled": true,
-    "indentStyle": "space",
-    "indentWidth": 2,
-    "lineWidth": 120
-  },
-  "javascript": {
-    "formatter": {
-      "quoteStyle": "double",
-      "semicolons": "asNeeded",
-      "trailingCommas": "all",
-      "arrowParentheses": "always"
-    }
-  },
-  "linter": {
-    "enabled": true,
-    "rules": {
-      "preset": "recommended",
-      "style": {
-        "useConst": "error",
-        "noNonNullAssertion": "error"
-      },
-      "correctness": {
-        "noUnusedImports": "error",
-        "noUnusedVariables": "error"
-      },
-      "suspicious": {
-        "noExplicitAny": "error",
-        "noConsole": {
-          "level": "error",
-          "options": {
-            "allow": ["error"]
-          }
-        }
-      }
-    }
-  },
   "overrides": [
-    {
-      "includes": ["scripts/**"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConsole": "off"
-          }
-        }
-      }
-    },
     {
       "includes": ["src/commands/**", "src/mcp/**"],
       "linter": {
@@ -113,7 +62,7 @@
                       "../client.js",
                       "./client.js"
                     ],
-                    "message": "the messenger boundary (CLI-30): what any messenger CLI could share may not know MAX \u2014 no protocol, spec, generated wrappers, session, client or commands"
+                    "message": "the messenger boundary (CLI-30): what any messenger CLI could share may not know MAX — no protocol, spec, generated wrappers, session, client or commands"
                   }
                 ]
               }
@@ -146,7 +95,7 @@
                       "../client.js",
                       "../../client.js"
                     ],
-                    "message": "the bot slice talks to the official HTTP Bot API only; the personal account's protocol, session, spec and client stay out of it (ARCHITECTURE \u00a718)"
+                    "message": "the bot slice talks to the official HTTP Bot API only; the personal account's protocol, session, spec and client stay out of it (ARCHITECTURE §18)"
                   }
                 ]
               }
@@ -183,7 +132,7 @@
                       "../messenger.js",
                       "../../messenger.js"
                     ],
-                    "message": "the bot's MCP server talks to the official Bot API through src/bot only; the personal account's protocol, session, spec, server, cache and client stay out of it (ARCHITECTURE \u00a718)"
+                    "message": "the bot's MCP server talks to the official Bot API through src/bot only; the personal account's protocol, session, spec, server, cache and client stay out of it (ARCHITECTURE §18)"
                   }
                 ]
               }
