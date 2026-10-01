@@ -108,8 +108,8 @@
   - `cache clear` забывает и то, что этот аккаунт хранит в общей копии, а `contacts sync` забирает
     всё и туда.
 - **`max messages send|edit|forward` — общие команды tg и max.** Ответы `--json`: `send` —
-  `{sendId, operationId, message}` (с `scheduledFor`, если с `--at-time`), `edit` и `forward` —
-  `{operationId, message}`, вместо сообщения без обёртки. Так же отвечают инструменты MCP
+  `{sendId, operationId, message}` (с `scheduledFor`, если с `--at-time`), `forward` — тоже
+  `{sendId, operationId, message}`, `edit` — `{operationId, message}`, вместо сообщения без обёртки. Так же отвечают инструменты MCP
   `max_messages_send`, `max_messages_edit` и `max_messages_forward`; у `max_messages_edit` больше нет
   `markdown`, у `max_messages_forward` — `send_id`.
   Почему: те же опции и ответы, что у tg, и номер действия, как в журнале отправок.
