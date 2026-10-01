@@ -1,8 +1,7 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { CliError, type CliErrorDetails, type ErrorCode } from "@leemour/cli-core"
+import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
-import { pickChat } from "@leemour/cli-messaging"
 import { newSendId, RecipientList, SendJournal, type SendKind, sendGuard } from "@leemour/cli-messaging/sends"
 import { botOperations } from "../bot/client.js"
 import { BOT_JOURNAL_KINDS } from "../bot/permissions.js"
@@ -46,36 +45,6 @@ const guardOf = (context: Context) =>
     recipients: recipientsOf(context),
     warn: (message) => context.streams.diagnostic(message),
   })
-
-const DIGITS = /^-?\d+$/
-
-interface Target {
-  /** What the recipient list and the journal name: a chat id, or `user:<id>` for a direct message. */
-  key: string
-  query: Record<string, string>
-}
-
-const _targetOf = (reference: string, context: Context): Target => {
-  if (DIGITS.test(reference)) return { key: reference, query: { chat_id: reference } }
-  const user = /^user:(\d+)$/.exec(reference)
-  if (user?.[1]) return { key: reference, query: { user_id: user[1] } }
-  const id = pickChat(reference, context.registry.list()).id
-  return { key: id, query: { chat_id: id } }
-}
-
-/**
- * `UX-14`: a positive number is a person far more often than a chat — group chats are negative —
- * yet a dialog's chat id is positive too, so this is a hint and never a refusal.
- */
-const _withPersonHint = (error: unknown, reference: string): unknown => {
-  const failure = error as { code?: ErrorCode; message?: string; details?: CliErrorDetails & { maxCode?: string } }
-  if (!/^\d+$/.test(reference) || failure.details?.maxCode !== "chat.not.found" || !failure.code) return error
-  return new CliError(
-    failure.code,
-    `${failure.message} — a positive number is usually a person, not a chat: to write to them, use user:${reference}`,
-    failure.details,
-  )
-}
 
 /** Step one through the client, step two to the upload host; the attachment a body carries. */
 export const uploaded = async (

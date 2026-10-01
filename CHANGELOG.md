@@ -78,6 +78,11 @@
   отвечают `{ operationId, message }`, а не сообщением. Удаление спрашивает подтверждение,
   `--allow-dangerous` отвечает «да». Инструменты MCP бота переименованы так же: `max_bot_chats_show`,
   `max_bot_messages_show`, `max_bot_messages_pin`, `max_bot_messages_unpin`.
+- **`max bot members` и `max bot admins` теперь `max bot chats members` и `max bot chats admins`**,
+  как в tg. `admins add` берёт `--can` со словами `max chats admins add` (`read`, `members`, `admins`,
+  `info`, `pin`, `link`, `edit`, `delete`) вместо `--permissions`, и `--title` вместо `--alias`.
+  Прав «звонки» и «статистика» в `--can` нет. `admins list` отвечает `{ id, name, username, role,
+  rights, title }`. Инструменты MCP: `max_bot_chats_members_list|add|remove`, `max_bot_chats_admins_list`.
 
 - **`--markdown` больше нет, только `--md`** — в `messages send`, `messages edit` и везде, где
   разметка читается. Так названо во всех командах tg и max; скрипт с `--markdown` получит ошибку

@@ -1,9 +1,10 @@
 import { CliError, type SleepLike } from "@leemour/cli-core"
 import type { FetchLike } from "@leemour/cli-core/http"
-import type { Markup, Message } from "@leemour/cli-messaging"
-import type { BotAction, BotAdapter, BotChatRef, EventSink } from "@leemour/cli-messaging/cli"
+import type { AdminRight, Markup, Message } from "@leemour/cli-messaging"
+import type { BotAction, BotAdapter, BotChatAdmin, BotChatRef, EventSink } from "@leemour/cli-messaging/cli"
 import { type BotApiClient, botOperations } from "./client.js"
 import { checkBody } from "./input.js"
+import { plainJson } from "./transport.js"
 import { endpointOf, type UploadType, uploadFile, uploadTypeOf, whenAttachmentReady } from "./uploads.js"
 
 export interface MaxBotAdapterOptions {
@@ -28,6 +29,48 @@ const ACTIONS: Record<BotAction, string> = {
   video: "sending_video",
   voice: "sending_audio",
   file: "sending_file",
+}
+
+/**
+ * The shared rights in MAX's Bot API words. «Read messages» in the app sets `read_all_messages` and
+ * `write` together, and a bot without both reads nothing (measured 2026-09-27, FIND-251). `post` is
+ * not offered: which Bot API permission it is was never measured.
+ */
+const PERMISSIONS: Partial<Record<AdminRight, string[]>> = {
+  read: ["read_all_messages", "write"],
+  members: ["add_remove_members"],
+  admins: ["add_admins"],
+  info: ["change_chat_info"],
+  pin: ["pin_message"],
+  link: ["edit_link"],
+  edit: ["edit"],
+  delete: ["delete"],
+}
+
+export const BOT_ADMIN_RIGHTS = Object.keys(PERMISSIONS) as AdminRight[]
+
+interface MaxChatMember {
+  user_id: string | number
+  first_name?: string
+  last_name?: string | null
+  username?: string | null
+  is_owner?: boolean
+  permissions?: string[] | null
+  alias?: string | null
+}
+
+const toAdmin = (member: MaxChatMember): BotChatAdmin => {
+  const held = member.permissions ?? []
+  return {
+    id: String(member.user_id),
+    name: [member.first_name, member.last_name].filter(Boolean).join(" ") || null,
+    username: member.username ?? null,
+    role: member.is_owner ? "owner" : "admin",
+    rights: BOT_ADMIN_RIGHTS.filter(
+      (right) => member.is_owner || (PERMISSIONS[right] ?? []).every((name) => held.includes(name)),
+    ),
+    title: member.alias ?? null,
+  }
 }
 
 const MARKS: Record<Markup["type"], string> = { bold: "**", italic: "_", strike: "~~", code: "`" }
@@ -116,6 +159,11 @@ export const maxBotAdapter = ({
     return found
   }
   const body = (id: string, value: object) => checkBody(operation(id), JSON.stringify(value))
+  /** A person's id goes into a body as its digits: `JSON.stringify` of a number would round one above 2^53. */
+  const personOf = (person: string): string => {
+    if (!/^\d+$/.test(person)) throw new CliError("validation_error", `a user id is digits only, not ${person}`)
+    return person
+  }
   const format = (markup: readonly Markup[] | undefined, html: boolean | undefined) =>
     html ? { format: "html" } : markup && markup.length > 0 ? { format: "markdown" } : {}
 
@@ -224,6 +272,42 @@ export const maxBotAdapter = ({
     },
 
     message: (chat, messageId) => inChat(chat, messageId),
+
+    admins: async (chat) => {
+      const answer = plainJson(
+        await api.call(operation("getAdmins"), { path: { chatId: chatIdOnly(chat, "a chat's admins") } }),
+      ) as { members?: MaxChatMember[] }
+      return (answer.members ?? []).map(toAdmin)
+    },
+
+    addAdmin: async (chat, person, rights, { title }) => {
+      const permissions = rights.flatMap((right) => {
+        const names = PERMISSIONS[right]
+        if (!names) throw new CliError("validation_error", `a MAX bot cannot grant ${right}`)
+        return names
+      })
+      const admin = `{"user_id": ${personOf(person)}, "permissions": ${JSON.stringify(permissions)}${
+        title === undefined ? "" : `, "alias": ${JSON.stringify(title)}`
+      }}`
+      const text = `{"admins": [${admin}]}`
+      await api.call(operation("postAdmins"), {
+        path: { chatId: chatIdOnly(chat, "making an admin") },
+        body: checkBody(operation("postAdmins"), text) ?? text,
+      })
+    },
+
+    removeAdmin: async (chat, person) => {
+      await api.call(operation("deleteAdmins"), {
+        path: { chatId: chatIdOnly(chat, "taking admin rights back"), userId: personOf(person) },
+      })
+    },
+
+    removeMember: async (chat, person, { block }) => {
+      await api.call(operation("removeMember"), {
+        path: { chatId: chatIdOnly(chat, "removing a person") },
+        query: { user_id: personOf(person), ...(block ? { block: "true" } : {}) },
+      })
+    },
 
     senders: () => api.takeSenders(),
   }

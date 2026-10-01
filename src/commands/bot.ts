@@ -9,7 +9,7 @@ import { type CallInput, plainJson } from "../bot/transport.js"
 import { callbacksCommand, commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext, botRecordingOf, startBotRecording } from "./bot-context.js"
 import { botMcpCommand } from "./bot-mcp.js"
-import { adminsCommand, membersCommand } from "./bot-members.js"
+import { addMembersCommands } from "./bot-members.js"
 import { maxBot } from "./bot-messenger.js"
 import { peopleCommand } from "./bot-people.js"
 import { chatsCommand, messagesCommand } from "./bot-reads.js"
@@ -82,10 +82,11 @@ export const botCommand = (): Command => {
   const chats = command.commands.find((child) => child.name() === "chats")
   if (!chats) throw new Error("the shared bot group has no chats")
   chatsCommand(chats)
+  const members = chats.commands.find((child) => child.name() === "members")
+  if (!members) throw new Error("the shared bot group has no chats members")
+  addMembersCommands(members)
   command.addCommand(peopleCommand())
   for (const more of [
-    membersCommand(),
-    adminsCommand(),
     commentsCommand(),
     callbacksCommand(),
     menuCommand(),

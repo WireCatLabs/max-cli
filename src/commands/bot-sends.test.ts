@@ -31,11 +31,16 @@ beforeAll(async () => {
       requests.push({ method: request.method, url: request.url, body })
       const url = request.url ?? ""
       if (url.includes("chat_id=-555")) return
+      if (url.includes("chat_id=42")) {
+        response.writeHead(404, { "content-type": "application/json" })
+        return response.end(`{"code": "chat.not.found", "message": "Chat 42 not found"}`)
+      }
       const reply = (answer: string) => {
         response.writeHead(200, { "content-type": "application/json" })
         response.end(answer)
       }
       if (url === "/me") return reply(BOT)
+      if (url.includes("chat_id=-777")) return reply("{}")
       if (request.method === "POST" && url.startsWith("/messages?")) {
         return reply(sent(url.includes("user_id") ? "777" : "-100", (JSON.parse(body) as { text: string }).text))
       }
@@ -91,6 +96,18 @@ describe("max bot messages send", () => {
     expect(JSON.stringify(journal)).not.toContain("hello there")
     const kept = JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items
     expect(kept).toMatchObject([{ id: "mid.9", chatId: "-100", outgoing: true }])
+  })
+
+  it("**suggests user:<id> when a positive chat id is not a chat**", async () => {
+    const { code, stderr } = await max(["bot", "messages", "send", "42", "hi", "--json"])
+    expect(code).toBe(6)
+    expect(stderr).toContain("use user:42")
+  })
+
+  it("says so when MAX answers a send without the message it sent", async () => {
+    const { code, stderr } = await max(["bot", "messages", "send", "-777", "hi", "--json"])
+    expect(code).not.toBe(0)
+    expect(stderr).toContain("without the message it sent")
   })
 
   it("writes a direct message to a person by user:<id>", async () => {
@@ -150,6 +167,9 @@ describe("max bot messages edit and delete", () => {
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "new text" })
     expect((await max(["bot", "messages", "edit", "-100", "mid.9", "<b>new</b>", "--html", "--json"])).code).toBe(0)
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "<b>new</b>", format: "html" })
+    expect((await max(["bot", "messages", "edit", "-100", "mid.9", "**new**", "--md", "--json"])).code).toBe(0)
+    expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "**new**", format: "markdown" })
+    expect((await max(["bot", "messages", "edit", "user:777", "mid.9", "to a person", "--json"])).code).toBe(0)
     expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--json"])).code).toBe(7)
     expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--allow-dangerous", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/messages?message_id=mid.9" })

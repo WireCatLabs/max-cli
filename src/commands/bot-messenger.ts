@@ -1,7 +1,7 @@
 import type { BotMessenger, GlobalFlags, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
 import { fromOldSettings } from "@leemour/cli-messaging/sends"
 import { MAX_APP } from "../app.js"
-import { maxBotAdapter } from "../bot/adapter.js"
+import { BOT_ADMIN_RIGHTS, maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { PROVIDER } from "../bot/keep.js"
 import { ChatRegistry } from "../bot/registry.js"
@@ -15,6 +15,7 @@ export const maxBot: BotMessenger = {
   app: MAX_APP,
   provider: PROVIDER,
   name: "MAX",
+  adminRights: BOT_ADMIN_RIGHTS,
   resolveSettings: (flags: GlobalFlags, options: ResolveOptions = {}): Settings => {
     const { profile, offline, ...rest } = flags
     const own = resolveSettings(

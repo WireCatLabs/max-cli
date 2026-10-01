@@ -150,21 +150,21 @@ export const TOOLS: Record<string, BotTool> = {
       positionals: [String(args.who)],
     }),
   }),
-  max_bot_members_list: read({
+  max_bot_chats_members_list: read({
     title: "Members of a chat",
     description: "Members of a group chat or channel, a page at a time; pass marker from the last page to go on.",
     input: v.object({ chat, limit, marker: v.optional(v.pipe(v.string(), v.regex(/^\d+$/))) }),
     invocation: (args) => ({
-      words: ["members", "list"],
+      words: ["chats", "members", "list"],
       options: [...option("limit", args.limit), ...option("marker", args.marker)],
       positionals: [String(args.chat)],
     }),
   }),
-  max_bot_admins_list: read({
+  max_bot_chats_admins_list: read({
     title: "Admins of a chat",
     description: "The admins of a chat and what each may do.",
     input: v.object({ chat }),
-    invocation: (args) => ({ words: ["admins", "list"], positionals: [String(args.chat)] }),
+    invocation: (args) => ({ words: ["chats", "admins", "list"], positionals: [String(args.chat)] }),
   }),
   max_bot_comments_list: read({
     title: "Comments under a post",
@@ -325,25 +325,25 @@ export const TOOLS: Record<string, BotTool> = {
     }),
   },
 
-  max_bot_members_add: {
+  max_bot_chats_members_add: {
     title: "Add people to a chat",
     description: "Add people to a group chat by user id; the bot must be an admin that may add members.",
     input: v.object({ chat, users: v.pipe(v.array(user), v.minLength(1)) }),
     gate: "moderate",
     permissions: ["groups"],
     invocation: (args) => ({
-      words: ["members", "add"],
+      words: ["chats", "members", "add"],
       positionals: [String(args.chat), ...(args.users as string[]).map(String)],
     }),
   },
-  max_bot_members_remove: {
+  max_bot_chats_members_remove: {
     title: "Remove a person from a chat",
     description: "Remove a person from a group chat; block keeps them from coming back by the link.",
     input: v.object({ chat, user, block: v.optional(v.boolean()) }),
     gate: "moderate",
     permissions: ["groups"],
     invocation: (args) => ({
-      words: ["members", "remove"],
+      words: ["chats", "members", "remove"],
       options: flag("block", args.block),
       positionals: [String(args.chat), String(args.user)],
     }),

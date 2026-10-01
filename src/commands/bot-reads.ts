@@ -1,7 +1,6 @@
 import { CliError } from "@leemour/cli-core"
 import { type Message, pickChat, renderMessages } from "@leemour/cli-messaging"
 import type { Command } from "commander"
-import { botOperations } from "../bot/client.js"
 import { PROVIDER } from "../bot/keep.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { asFirstWord } from "../profile.js"
@@ -21,12 +20,6 @@ export const chatIdOf = (reference: string, registry: ChatRegistry): string => {
     throw new CliError("validation_error", "a direct chat is read by its chat id; `user:<id>` is only for sending")
   }
   return pickChat(reference, registry.list()).id
-}
-
-const _operation = (id: string) => {
-  const found = botOperations.find((candidate) => candidate.id === id)
-  if (!found) throw new CliError("configuration_error", `the generated manifest has no operation ${id}`)
-  return found
 }
 
 /** max's own `bot messages` commands — the local copy's search and `between` — added to the shared group. */

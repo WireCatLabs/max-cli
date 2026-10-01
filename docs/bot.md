@@ -153,17 +153,17 @@ max sales bot chats leave "Команда продаж"    # вернуть бо
 своим аккаунтом: `max chats admins add "Поход" <номер бота> --can read,members,delete`.
 
 ```sh
-max sales bot members list "Команда продаж" --limit 50
-max sales bot members add "Команда продаж" 4815162342 2342481516
-max sales bot members remove "Команда продаж" 4815162342 --block
-max sales bot admins list "Команда продаж"
-max sales bot admins add "Команда продаж" 4815162342 --permissions write,pin_message --alias "Дежурный"
-max sales bot admins remove "Команда продаж" 4815162342
+max sales bot chats members list "Команда продаж" --limit 50
+max sales bot chats members add "Команда продаж" 4815162342 2342481516
+max sales bot chats members remove "Команда продаж" 4815162342 --block
+max sales bot chats admins list "Команда продаж"
+max sales bot chats admins add "Команда продаж" 4815162342 --can read,pin --title "Дежурный"
+max sales bot chats admins remove "Команда продаж" 4815162342
 ```
 
 `members list` отдаёт до 100 человек и `marker`; следующая страница — `--marker` с этим числом.
-Права админа: `read_all_messages`, `add_remove_members`, `add_admins`, `change_chat_info`,
-`pin_message`, `edit_link`, `write`, `edit`, `delete`, `can_call`, `view_stats`.
+Права админа в `--can` — те же слова, что у `max chats admins add`: `read`, `members`, `admins`,
+`info`, `pin`, `link`, `edit`, `delete`. `read` — это право читать сообщения группы.
 
 ## Локальная копия
 

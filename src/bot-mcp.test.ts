@@ -175,6 +175,14 @@ describe("max bot mcp", () => {
     expect(journal.at(-1)).toMatchObject({ outcome: "sent" })
   })
 
+  it("**reaches the shared admins and members commands** under their new tool names", async () => {
+    const { client } = await connect({ allowModerate: true })
+    expect((await call(client, "max_bot_chats_admins_list", { chat: "-100" })).body).toMatchObject({ items: [] })
+    const removed = await call(client, "max_bot_chats_members_remove", { chat: "-100", user: "42", block: true })
+    expect(removed.isError).toBe(false)
+    expect(deletes().at(-1)?.url).toBe("/chats/-100/members?user_id=42&block=true")
+  })
+
   it("meets the bot's recipient list, and the refusal is the command's", async () => {
     const { client, profile } = await connect({ allowSend: true })
     await owner(profile, ["recipients", "add", "-200"])

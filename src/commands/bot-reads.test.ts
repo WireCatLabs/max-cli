@@ -195,6 +195,8 @@ describe("max bot chats", () => {
       url: "/chats/-100/pin",
       body: `{"message_id":"mid.1","notify":false}`,
     })
+    expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--notify", "--json"])).code).toBe(0)
+    expect(requests.at(-1)?.body).toBe(`{"message_id":"mid.1","notify":true}`)
     await max(["config", "set", "readOnly", "true"])
     requests.length = 0
     expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--json"])).code).not.toBe(0)
@@ -216,6 +218,17 @@ describe("max bot chats", () => {
     })
     expect((await max(["bot", "chats", "leave", "-100", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/members/me" })
+  })
+
+  it("**refuses a message named under another chat**, a person where a chat id is needed, and over 100", async () => {
+    expect((await max(["bot", "messages", "delete", "-200", "mid.1", "--allow-dangerous", "--json"])).code).toBe(6)
+    expect((await max(["bot", "messages", "pin", "user:42", "mid.1", "--json"])).code).toBe(2)
+    const shown = await max(["bot", "chats", "show", "user:42", "--json"])
+    expect(shown.code).toBe(2)
+    expect(shown.stderr).toContain("not user:<id>")
+    expect((await max(["bot", "messages", "list", "-100", "--limit", "101", "--json"])).code).toBe(2)
+    expect((await max(["bot", "chats", "members", "list", "user:42", "--json"])).code).toBe(2)
+    expect(requests.filter((request) => request.method !== "GET")).toEqual([])
   })
 
   it("refuses to leave a chat off the recipient list, asking MAX nothing", async () => {
