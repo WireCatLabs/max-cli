@@ -1,8 +1,9 @@
-import { readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { SendJournal } from "@leemour/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
+import { profileCacheFile } from "./cache/index.js"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -162,6 +163,25 @@ describe("contacts", () => {
     expect((await runWith(["a-clear", "cache", "clear"], environment)).code).toBe(0)
 
     expect(idsOf((await runWith(["a-clear", "contacts", "list", "--offline"], environment)).stdout)).toEqual([])
+  })
+
+  it("an emptied cache asks for everything, though the shared store remembers where the last login left off", async () => {
+    let time = 1789776000000
+    const login = { profile: { contact: { id: 10000001 } }, chats: [] }
+    const answer = () => {
+      time += 1000
+      return { ...login, time }
+    }
+    const { environment, sent } = account({ [Opcode.LOGIN]: answer })
+    await runWith(["a-rebuilt", "contacts", "list"], environment)
+    // What a cache upgrade leaves behind: no chats, no people, no marker — and the shared store untouched.
+    for (const suffix of ["", "-wal", "-shm"]) rmSync(`${profileCacheFile("a-rebuilt")}${suffix}`, { force: true })
+    await runWith(["a-rebuilt", "contacts", "list"], environment)
+    await runWith(["a-rebuilt", "contacts", "list"], environment)
+
+    const markers = sent(Opcode.LOGIN).map((one) => one.contactsSync)
+    expect(markers.at(-2)).toBe(0)
+    expect(markers.at(-1)).toBe(time - 1000)
   })
 
   it("`sync` forgets where the last login left off, and answers counts with no name in them", async () => {
