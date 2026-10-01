@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { Readable } from "node:stream"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
@@ -167,5 +168,67 @@ describe("max store", () => {
     })
     expect((await max(["s-jobs", "store", "jobs", "show", "nope", "--json"], environment)).code).toBe(6)
     expect((await max(["s-jobs", "store", "jobs", "cancel", "nope", "--json"], environment)).code).toBe(6)
+  })
+})
+
+describe("max conversations", () => {
+  const fetched = async (profile: string) => {
+    const { environment, sent } = setup()
+    await max([profile, "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    return { environment, logins: () => sent(Opcode.LOGIN).length }
+  }
+  const [first, second] = HISTORY.map((message) => String(message.id))
+
+  it("**builds a chat's conversations** from the stored messages, and says why a message is in one", async () => {
+    const { environment, logins } = await fetched("c-build")
+    const before = logins()
+
+    const built = await max(["c-build", "conversations", "build", "--chat", "111", "--json"], environment)
+    const listed = await max(
+      ["c-build", "conversations", "list", "--chat", "111", "--since-time", "2026-08-01", "--limit", "5", "--json"],
+      environment,
+    )
+    const [conversation] = JSON.parse(listed.stdout).items
+    const shown = await max(["c-build", "conversations", "show", conversation.id, "--json"], environment)
+    const links = await max(["c-build", "messages", "links", "111", String(second), "--json"], environment)
+
+    expect(JSON.parse(built.stdout)).toMatchObject({ chat: "111", messages: 70, conversations: 1 })
+    expect(conversation).toMatchObject({ messageCount: 70, firstMessageId: first })
+    expect(JSON.parse(shown.stdout).messages).toHaveLength(70)
+    expect(links.code).toBe(0)
+    expect(links.stdout).toContain(String(first))
+    expect(logins()).toBe(before)
+  })
+
+  it("**hands a chat to the user's agent in batches**, stores its answer from stdin, and clears it", async () => {
+    const { environment, logins } = await fetched("c-batch")
+    const before = logins()
+    await max(["c-batch", "conversations", "build", "--chat", "111", "--json"], environment)
+    const answer = JSON.stringify({ model: "m", answers: [{ message: second, parent: first, confidence: 0.9 }] })
+
+    const status = await max(
+      ["c-batch", "conversations", "batches", "status", "--chat", "111", "--size", "10", "--json"],
+      environment,
+    )
+    const next = await max(
+      ["c-batch", "conversations", "batches", "next", "--chat", "111", "--size", "10", "--json"],
+      environment,
+    )
+    const stored = await max(
+      ["c-batch", "conversations", "links", "add", "--batch", JSON.parse(next.stdout).batch, "--json"],
+      {
+        ...environment,
+        stdin: Object.assign(Readable.from([answer]), { isTTY: false }),
+      },
+    )
+    const cleared = await max(
+      ["c-batch", "conversations", "links", "clear", "--chat", "111", "--model", "m", "--json"],
+      environment,
+    )
+
+    expect(JSON.parse(status.stdout)).toMatchObject({ chat: "111", messages: 70, batches: 7 })
+    expect(JSON.parse(stored.stdout)).toEqual({ chat: "111", stored: 1 })
+    expect(JSON.parse(cleared.stdout)).toMatchObject({ chat: "111", cleared: 1 })
+    expect(logins()).toBe(before)
   })
 })

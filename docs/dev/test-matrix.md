@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**436 ✅ · 22 ⛔ · 0 ❌** — 190 commands, 268 options.
+**455 ✅ · 22 ⛔ · 0 ❌** — 198 commands, 279 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -107,6 +107,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages context` |  | ✅ |  |
 | `messages context` | `--before-n` | ✅ |  |
 | `messages context` | `--after-n` | ✅ |  |
+| `messages links` |  | ✅ |  |
 | `messages download` |  | ✅ |  |
 | `messages download` | `--output` | ✅ |  |
 | `messages transcribe` |  | ✅ |  |
@@ -161,6 +162,24 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store reindex` |  | ✅ |  |
 | `store backup` |  | ✅ |  |
 | `store restore` |  | ✅ |  |
+| `conversations build` |  | ✅ |  |
+| `conversations build` | `--chat` | ✅ |  |
+| `conversations list` |  | ✅ |  |
+| `conversations list` | `--chat` | ✅ |  |
+| `conversations list` | `--since-time` | ✅ |  |
+| `conversations list` | `--limit` | ✅ |  |
+| `conversations show` |  | ✅ |  |
+| `conversations batches status` |  | ✅ |  |
+| `conversations batches status` | `--chat` | ✅ |  |
+| `conversations batches status` | `--size` | ✅ |  |
+| `conversations batches next` |  | ✅ |  |
+| `conversations batches next` | `--chat` | ✅ |  |
+| `conversations batches next` | `--size` | ✅ |  |
+| `conversations links add` |  | ✅ |  |
+| `conversations links add` | `--batch` | ✅ |  |
+| `conversations links clear` |  | ✅ |  |
+| `conversations links clear` | `--chat` | ✅ |  |
+| `conversations links clear` | `--model` | ✅ |  |
 | `models audio list` |  | ✅ |  |
 | `models audio download` |  | ✅ |  |
 | `polls show` |  | ✅ |  |

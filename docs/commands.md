@@ -728,6 +728,19 @@ max messages context <chat> [message] [options]
 | `--before-n <n>` | how many before it. По умолчанию: `5`. |
 | `--after-n <n>` | how many after it. По умолчанию: `5`. |
 
+### `max messages links`
+
+why a message is in its conversation: each link it has, and the chain of answers back to the start
+
+```sh
+max messages links <chat> <message>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `message` | обязательный | the message id. |
+
 ### `max messages download`
 
 save a message's photos, files, videos and audio to a directory
@@ -1058,6 +1071,108 @@ max store restore <file>
 | Аргумент | | Что это |
 |---|---|---|
 | `file` | обязательный | a file `store backup` wrote. |
+
+## `max conversations`
+
+the conversations inside a chat, found in the stored messages by replies, mentions and who wrote next
+
+### `max conversations build`
+
+find a chat's conversations in what the store holds, replacing the last build; never asks the messenger
+
+```sh
+max conversations build [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+
+### `max conversations list`
+
+a chat's conversations, the newest first: when, how many messages, how many people
+
+```sh
+max conversations list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--since-time <time>` | only those that started at this ISO 8601 time, or 30m / 2h / 1d ago, or later. |
+| `--limit <n>` | how many. |
+
+### `max conversations show`
+
+one conversation's messages, oldest first — by its id, or the one a message is in
+
+```sh
+max conversations show <conversation> [message]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `conversation` | обязательный | a conversation id from `conversations list`; or a chat: its id, or part of its title, with a message. |
+| `message` | необязательный | a message id in that chat: show the conversation it is in. |
+
+### `max conversations batches`
+
+windows of a chat for your own AI agent to link: which earlier message each one answers
+
+#### `max conversations batches status`
+
+how many messages still wait for an answer, in how many batches, and how much text
+
+```sh
+max conversations batches status [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--size <n>` | messages to answer per batch, 10–200; 50 by default. |
+
+#### `max conversations batches next`
+
+the next window to answer, with the messages before it; message text goes to stdout only
+
+```sh
+max conversations batches next [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--size <n>` | messages to answer per batch, 10–200; 50 by default. |
+
+### `max conversations links`
+
+your agent's answers: which earlier message each message of a batch answers
+
+#### `max conversations links add`
+
+store your agent's answer to a batch, read as JSON from stdin: { "model", "answers": [{ "message", "parent", "confidence" }] }; all or nothing
+
+```sh
+max conversations links add [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--batch <id>` | the batch id `conversations batches next` printed. |
+
+#### `max conversations links clear`
+
+drop your agent's answers for a chat, or only one model's; messages are never touched
+
+```sh
+max conversations links clear [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--model <model>` | only the answers this model gave. |
 
 ## `max models`
 
