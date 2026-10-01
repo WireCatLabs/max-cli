@@ -119,7 +119,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages send` | `--as-file` | ✅ |  |
 | `messages send` | `--voice` | ✅ |  |
 | `messages send` | `--allow-any-file` | ✅ |  |
-| `messages send` | `--at` | ✅ |  |
+| `messages send` | `--at-time` | ✅ |  |
 | `messages scheduled` |  | ✅ |  |
 | `messages edit` |  | ✅ |  |
 | `messages edit` | `--md` | ✅ |  |

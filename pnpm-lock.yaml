@@ -4,9 +4,6 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-overrides:
-  '@leemour/cli-core': 0.10.0
-
 importers:
 
   .:
@@ -18,8 +15,8 @@ importers:
         specifier: 0.10.0
         version: 0.10.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: 0.87.0
-        version: 0.87.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.92.0
+        version: 0.92.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -362,8 +359,8 @@ packages:
       commander:
         optional: true
 
-  '@leemour/cli-messaging@0.87.0':
-    resolution: {integrity: sha512-iwH1Um4y8CpuSDaHE4qAO59m84zzElwB4EQut0BusZHqGl/24O3Gw3JuML5DvFzCGgokRK6S7Ah9TPv/MUB3wQ==}
+  '@leemour/cli-messaging@0.92.0':
+    resolution: {integrity: sha512-BZNRcIR4ojYmh5U9fjm8LSc7ZhChKmQwalv2KRa7EuEYshzABLV3rjarSHNesuYYdBRU6aW3PgjX0uBky2w4qw==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -1401,7 +1398,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@leemour/cli-messaging@0.87.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-messaging@0.92.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@leemour/cli-core': 0.10.0(commander@15.0.0)(typescript@7.0.2)

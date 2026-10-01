@@ -167,7 +167,7 @@ max work config set mcpTools groups         # профилю work
 | `max_messages_photo` | `max messages download` | фото из сообщения как картинка, до 512 КБ; файл, видео, голосовое или фото крупнее — отказ с командой, которая их сохранит. ссылку на фото этот инструмент не отдаёт |
 | `max_messages_scheduled` | `max messages scheduled` | что ждёт отправки в чате, с `scheduledFor` |
 | `max_messages_transcribe` | `max messages transcribe` | текст голосового, распознанный на этой машине |
-| `max_messages_send` | `max messages send` | отправка, только с `--allow-send`; с `at` — позже, как `--at`; `reply_to` — ответ на сообщение, `markdown` — оформление |
+| `max_messages_send` | `max messages send` | отправка, только с `--allow-send`; с `at` — позже, как `--at-time`; `reply_to` — ответ на сообщение, `markdown` — оформление |
 | `max_messages_edit` | `max messages edit` | правка своего сообщения, только с `--allow-send`; `markdown` — оформление |
 | `max_messages_forward` | `max messages forward` | пересылка в другой чат, только с `--allow-send`; `silent` — без уведомления |
 | `max_messages_pin` | `max messages pin` | закрепить в группе или канале, только с `--allow-send`; без уведомления, если не передан `notify` |
@@ -185,7 +185,7 @@ max work config set mcpTools groups         # профилю work
 Ошибка — `{ error: { code, message, … } }` с теми же кодами, что у CLI; неоднозначное имя чата
 отвечает списком `candidates` и ничего не отправляет.
 
-`at` у `max_messages_send` — те же правила, что у `--at`: `2026-09-25T09:00` (местное время) или
+`at` у `max_messages_send` — те же правила, что у `--at-time`: `2026-09-25T09:00` (местное время) или
 `30m`, `2h`, `1d`, от минуты до года, с округлением вниз до минуты. С `silent` и с `send_id` — отказ.
 В часовой лимит сообщение идёт в тот час, когда уйдёт. С `--confirm-send` форма показывает время
 отправки.
