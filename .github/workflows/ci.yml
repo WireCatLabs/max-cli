@@ -34,6 +34,7 @@ jobs:
       - run: node --experimental-strip-types scripts/test-matrix.ts --check
       - run: git diff --exit-code
       - run: pnpm docs:check
+      - run: pnpm parity:check
 
   bun:
     runs-on: ubuntu-latest
