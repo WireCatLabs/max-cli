@@ -221,6 +221,14 @@ describe("closing and creating", () => {
     expect(JSON.parse(stdout)).toMatchObject({ sendId: "1790000000000", operationId: "1790000000000" })
   })
 
+  it("`--revote` lets people change their vote", async () => {
+    const { environment, sentWith } = messenger()
+    const argv = ["p-revote", "polls", "create", "111", "Lunch?", "Yes", "No", "--revote"]
+    expect((await runWith(argv, environment)).code).toBe(0)
+
+    expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { attaches: [{ settings: REVOTE }] } })
+  })
+
   it("creates a poll as a message whose one attachment is the poll", async () => {
     const { environment, sentWith } = messenger()
     const argv = ["p-create", "polls", "create", "111", "Lunch?", "Yes", "No", "--multiple"]

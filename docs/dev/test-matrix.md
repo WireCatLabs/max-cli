@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**407 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 255 options.
+**410 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 258 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -120,12 +120,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages send` | `--at` | ✅ |  |
 | `messages scheduled` |  | ✅ |  |
 | `messages edit` |  | ✅ |  |
+| `messages edit` | `--markdown` | ✅ |  |
 | `messages delete` |  | ✅ |  |
 | `messages delete` | `--for-everyone` | ✅ |  |
 | `messages delete` | `--allow-dangerous` | ✅ |  |
 | `messages forward` |  | ✅ |  |
 | `messages forward` | `--to` | ✅ |  |
 | `messages forward` | `--silent` | ✅ |  |
+| `messages forward` | `--send-id` | ✅ |  |
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |
 | `messages unpin` |  | ✅ |  |
@@ -148,6 +150,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `polls create` |  | ✅ |  |
 | `polls create` | `--multiple` | ✅ |  |
 | `polls create` | `--anonymous` | ✅ |  |
+| `polls create` | `--revote` | ✅ |  |
 | `polls create` | `--silent` | ✅ |  |
 | `polls create` | `--send-id` | ✅ |  |
 | `reactions add` |  | ✅ |  |

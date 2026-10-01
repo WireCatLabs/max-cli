@@ -84,10 +84,18 @@ export const maxAdapter = (client: MaxClient, store: SessionStore): MaxAdapter =
       return { message: toMessage(message), sendId }
     },
 
-    edit: async (to, messageId, text) => toMessage(await client.messages.edit(to, messageId, text)),
+    edit: async (to, messageId, text, { markup = [] }) =>
+      toMessage(
+        await client.messages.edit(to, messageId, text, markup.length === 0 ? {} : { markup: markup.map(toMaxMarkup) }),
+      ),
 
-    forward: async (from, messageId, to, { silent }) =>
-      toMessage(await client.messages.forward(from, messageId, to, silent ? { notify: false } : {})),
+    forward: async (from, messageId, to, { sendId, silent }) =>
+      toMessage(
+        await client.messages.forward(from, messageId, to, {
+          cid: cidOf(sendId),
+          ...(silent ? { notify: false } : {}),
+        }),
+      ),
 
     delete: async (to, messageIds, { forEveryone }) => {
       await client.messages.delete(to, messageIds, { forEveryone })
@@ -112,10 +120,11 @@ export const maxAdapter = (client: MaxClient, store: SessionStore): MaxAdapter =
     poll: async (chatId, messageId) => toPoll(await client.polls.show(chatId, messageId)),
     vote: async (chatId, messageId, answerIds) => toPoll(await client.polls.vote(chatId, messageId, answerIds)),
     closePoll: async (chatId, messageId) => toPoll(await client.polls.close(chatId, messageId)),
-    createPoll: async (chatId, { question, answers, multiple, anonymous }, { sendId, silent }) => {
+    createPoll: async (chatId, { question, answers, multiple, anonymous, revote }, { sendId, silent }) => {
       const message = await client.polls.create(chatId, question, answers, {
         multiple,
         anonymous,
+        ...(revote ? { revote } : {}),
         cid: cidOf(sendId),
         ...(silent ? { notify: false } : {}),
       })

@@ -805,7 +805,7 @@ change the text of your own message; the other side may have read it already
 **Меняет что-то в MAX.**
 
 ```sh
-max messages edit <chat> <message> [text]
+max messages edit <chat> <message> [text] [options]
 ```
 
 | Аргумент | | Что это |
@@ -813,6 +813,10 @@ max messages edit <chat> <message> [text]
 | `chat` | обязательный | a chat: its id, or part of its title |
 | `message` | обязательный | the id of your own message |
 | `text` | необязательный | the new text; without it, read from stdin |
+
+| Опция | Что делает |
+|---|---|
+| `--md, --markdown` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
 
 ### `max messages delete`
 
@@ -832,7 +836,7 @@ max messages delete <chat> <messages> [options]
 | Опция | Что делает |
 |---|---|
 | `--for-everyone` | delete for everyone in the chat, not only for you — they cannot get it back |
-| `--allow-dangerous` | yes, delete — it cannot be undone |
+| `--allow-dangerous` | go ahead without the question an ask level puts before a deletion |
 
 ### `max messages forward`
 
@@ -853,6 +857,7 @@ max messages forward <chat> <message> [options]
 |---|---|
 | `--to <chat>` | where it goes: a chat: its id, or part of its title |
 | `--silent` | deliver it without a notification |
+| `--send-id <id>` | repeat a forward whose outcome was unknown, without risking a second copy |
 
 ### `max messages pin`
 
@@ -1030,6 +1035,7 @@ max polls create <chat> <question> <answers> [options]
 |---|---|
 | `--multiple` | people may pick several answers |
 | `--anonymous` | nobody sees who voted for what |
+| `--revote` | people may change their vote |
 | `--silent` | send without a notification |
 | `--send-id <id>` | repeat a create whose outcome was unknown, without risking a second poll |
 

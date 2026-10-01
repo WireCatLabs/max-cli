@@ -1173,7 +1173,12 @@ export class MaxClient {
      * `edit-timeout` from LOGIN, 604800 s when measured; past it MAX refuses and that is the answer.
      * Not retried, like a reaction.
      */
-    edit: async (chatId: Id, messageId: Id, text: string, { markdown = false } = {}): Promise<Message> => {
+    edit: async (
+      chatId: Id,
+      messageId: Id,
+      text: string,
+      { markdown = false, markup }: { markdown?: boolean; markup?: Markup[] } = {},
+    ): Promise<Message> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot edit")
       this.#guard({ chatId, kind: "edit" }, messageId)
 
@@ -1197,12 +1202,12 @@ export class MaxClient {
           )
         }
 
-        const { text: plain, markup } = markdown ? parseMarkdown(text) : { text, markup: [] }
+        const parsed = markup ? { text, markup } : markdown ? parseMarkdown(text) : { text, markup: [] }
         const answer = await this.#wire.messages.edit({
           chatId,
           messageId,
-          text: plain,
-          elements: markup,
+          text: parsed.text,
+          elements: parsed.markup,
           attachments: asArray(raw.attaches),
         })
         await this.#cache?.messages.invalidate(chatId)
@@ -1235,7 +1240,7 @@ export class MaxClient {
         const sent = await this.#deliver(toChatId, "", cid, {
           ...options,
           forward: { chatId: fromChatId, messageId },
-          repeat: false,
+          repeat: `max messages forward ${fromChatId} ${messageId} --to ${toChatId}`,
         })
         this.#sends?.record({ chatId: toChatId, kind: "forward", outcome: "sent", messageId: sent.id, sendId })
         return sent
@@ -1749,8 +1754,8 @@ export class MaxClient {
       files?: Upload[]
       /** Attachments that need no upload — a poll. */
       attaches?: Payload[]
-      /** The command that repeats this attempt, named in `outcome_unknown`; `false` when no command can repeat it safely. */
-      repeat?: string | false
+      /** The command that repeats this attempt, named in `outcome_unknown`. */
+      repeat?: string
       at?: number
     },
   ): Promise<Message> {
@@ -1793,9 +1798,7 @@ export class MaxClient {
         throw new CliError(
           "outcome_unknown",
           `the message may or may not have been sent (${failure.message}) — ` +
-            (options.repeat === false
-              ? `look in chat ${chatId} before trying again: a second attempt is a second copy`
-              : `\`${options.repeat ?? "max messages send <chat> <text>"} --send-id ${cid}\` repeats the attempt without risking a second copy`),
+            `\`${options.repeat ?? "max messages send <chat> <text>"} --send-id ${cid}\` repeats the attempt without risking a second copy`,
           { sendId: cid },
         )
       }
