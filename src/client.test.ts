@@ -1183,6 +1183,57 @@ describe("with a cache", () => {
       })
     })
 
+    describe("a chat the account left (NEED-488)", () => {
+      const listing = async (cache: CacheStore, chats: unknown[], extra: Record<string, unknown> = {}) => {
+        const max = mockMax({
+          answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: syncing({ chats }), ...extra },
+        })
+        const client = clientSharing(cache, max)
+        const { items } = await client.chats.list()
+        await client.close()
+        return items.map((chat) => chat.id)
+      }
+      const [first, dialog] = loginAnswer.chats
+
+      it("leaves the list once a complete login no longer carries it, and comes back on rejoining", async () => {
+        const cache = await cacheStore()
+        await listing(cache, [first, dialog])
+
+        expect(await listing(cache, [first])).toEqual(["111"])
+        expect(await cache.chats.get("222")).toBeDefined()
+
+        expect(await listing(cache, [first, dialog])).toEqual(["111", "222"])
+      })
+
+      it("stays while the list may be cut, and when a login carries no chats at all", async () => {
+        const cache = await cacheStore()
+        const fifteen = Array.from({ length: 15 }, (_, index) => ({
+          id: 500 + index,
+          type: "CHAT",
+          lastEventTime: 1_789_776_000_000 - index * 1000,
+        }))
+        await listing(cache, [...fifteen, first], { [Opcode.CHATS_LIST]: { chats: [] } })
+        const refused = () => {
+          throw Object.assign(new Error("refused"), { payload: { error: "proto.payload" } })
+        }
+
+        expect(await listing(cache, fifteen, { [Opcode.CHATS_LIST]: refused })).toContain("111")
+        expect(await listing(cache, [])).toContain("111")
+      })
+
+      it("is deleted with its messages by clearLeft, and nothing else is", async () => {
+        const cache = await cacheStore()
+        await listing(cache, [first, dialog])
+        await cache.messages.write("222", [])
+        await listing(cache, [first])
+
+        expect(await cache.chats.clearLeft()).toBe(1)
+        expect(await cache.chats.get("222")).toBeUndefined()
+        expect(await cache.chats.get("111")).toBeDefined()
+        expect(await cache.chats.clearLeft()).toBe(0)
+      })
+    })
+
     it("**keeps what an earlier login brought when a later one carries nothing**", async () => {
       const cache = await cacheStore()
 

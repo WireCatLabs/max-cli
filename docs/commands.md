@@ -1328,8 +1328,12 @@ the local copy of chats, contacts and messages
 forget everything this profile has cached
 
 ```sh
-max cache clear
+max cache clear [options]
 ```
+
+| Опция | Что делает |
+|---|---|
+| `--left` | only the chats this account has left, with their messages |
 
 ## `max runs`
 
