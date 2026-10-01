@@ -1,4 +1,5 @@
 import { CliError, pathsAreOverridden } from "@leemour/cli-core"
+import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import {
   ALL_SETTINGS,
@@ -81,8 +82,7 @@ export const configCommand = (): Command => {
     })
 
   for (const action of ["set", "unset"] as const) {
-    const sub = command
-      .command(action)
+    const sub = annotate(command.command(action), { mutates: true, local: true })
       .argument("<setting>", `one of: ${ALL_SETTINGS.join(", ")}`)
       .option("--defaults", "change what every profile gets, rather than this profile")
       .option("--personal", "only for personal accounts — the personal section of the file")

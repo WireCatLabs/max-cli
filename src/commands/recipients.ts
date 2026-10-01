@@ -1,4 +1,5 @@
 import { CliError } from "@leemour/cli-core"
+import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { recipientListFor } from "../sends.js"
 import { forCommand } from "./context.js"
@@ -26,8 +27,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  command
-    .command("add")
+  annotate(command.command("add"), { mutates: true, local: true })
     .argument("<chat>", "chat id, or part of a chat name")
     .description("allow sending to this chat; the first add turns the list on")
     .action(async function (this: Command, chat: string) {
@@ -51,8 +51,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  command
-    .command("remove")
+  annotate(command.command("remove"), { mutates: true, local: true })
     .argument("<chat>", "chat id, or the title as the list shows it")
     .description("stop allowing this chat; the list stays on")
     .action(async function (this: Command, chat: string) {
@@ -64,8 +63,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  command
-    .command("clear")
+  annotate(command.command("clear"), { mutates: true, local: true })
     .description("empty the list and turn it off: this profile may send to any chat again")
     .action(async function (this: Command) {
       const { settings, renderer, run } = forCommand(this)

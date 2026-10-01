@@ -236,16 +236,14 @@ export const botRulesCommand = (): Command => {
       const { context, chatId, rules } = target(this, chat)
       show(context, chatId, rules)
     })
-  command
-    .command("set <chat> <key> <value>")
+  annotate(command.command("set <chat> <key> <value>"), { mutates: true, local: true })
     .description(`change one rule — ${RULE_KEYS.join(", ")}`)
     .action(function (this: Command, chat: string, key: string, value: string) {
       const { context, chatId, title, rules } = target(this, chat)
       rules.set(chatId, title, key, value)
       show(context, chatId, rules)
     })
-  command
-    .command("unset <chat> <key>")
+  annotate(command.command("unset <chat> <key>"), { mutates: true, local: true })
     .description("put one rule back to its default")
     .action(function (this: Command, chat: string, key: string) {
       const { context, chatId, title, rules } = target(this, chat)
