@@ -56,6 +56,9 @@ export const maxMessenger: Messenger = {
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
   speechModels: SPEECH_MODELS,
+  // As web.max.ru pages a chat scrolled up: 30 back from the oldest shown (`RES-9`), a person's 5–10 s
+  // apart (`NEED-216` A). MAX's ids pass 2^53, so held stretches are kept by send time.
+  fetching: { page: 30, pause: "5s", jitter: true, maxPages: 40, orderBy: "time" },
 
   guard: (command, { profile }, warn) => ({
     ...overServer(guardFor(resolveSettings({ profile }), warn), () => clients.get(rootOf(command))?.server),

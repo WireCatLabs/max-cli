@@ -349,7 +349,7 @@ max chats check "Поход" --dry-run                 # спам, чужие с
 ```sh
 max messages search "договор"                     # по всему прочитанному, без сети
 max store fetch "Проект Альфа" --last 500
-max store export "Проект Альфа" --format md --output alfa.md
+max store export "Проект Альфа" --format markdown --output alfa.md
 ```
 
 Каждая команда отвечает JSON с `--json` и пишет в журнал, что отправила, — без текстов.

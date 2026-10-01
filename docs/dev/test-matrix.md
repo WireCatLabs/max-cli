@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**422 ✅ · 21 ⛔ · 0 ❌** — 179 commands, 264 options.
+**435 ✅ · 22 ⛔ · 0 ❌** — 189 commands, 268 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -136,16 +136,30 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |
 | `messages unpin` |  | ✅ |  |
+| `store status` |  | ✅ |  |
 | `store fetch` |  | ✅ |  |
-| `store fetch` | `--since` | ✅ |  |
-| `store fetch` | `--last` | ✅ |  |
-| `store fetch` | `--estimate` | ✅ |  |
-| `store fetch` | `--max-pages` | ✅ |  |
+| `store fetch` | `--limit` | ✅ |  |
+| `store fetch` | `--page-size` | ✅ |  |
 | `store fetch` | `--pause` | ✅ |  |
+| `store fetch` | `--since-time` | ✅ |  |
+| `store fetch` | `--last` | ✅ |  |
+| `store fetch` | `--background` | ⛔ | starts a detached `max` that outlives the test; cli-messaging src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6 |
+| `store fetch` | `--estimate` | ✅ |  |
+| `store jobs list` |  | ✅ |  |
+| `store jobs show` |  | ✅ |  |
+| `store jobs cancel` |  | ✅ |  |
 | `store export` |  | ✅ |  |
 | `store export` | `--format` | ✅ |  |
-| `store export` | `--since` | ✅ |  |
+| `store export` | `--since-time` | ✅ |  |
 | `store export` | `--output` | ✅ |  |
+| `store clear` |  | ✅ |  |
+| `store clear` | `--left` | ✅ |  |
+| `store clear` | `--allow-dangerous` | ✅ |  |
+| `store info` |  | ✅ |  |
+| `store check` |  | ✅ |  |
+| `store migrate` |  | ✅ |  |
+| `store backup` |  | ✅ |  |
+| `store restore` |  | ✅ |  |
 | `models audio list` |  | ✅ |  |
 | `models audio download` |  | ✅ |  |
 | `polls show` |  | ✅ |  |
