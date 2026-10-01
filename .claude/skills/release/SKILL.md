@@ -16,16 +16,14 @@ report, so stop and say so.
 
 Nothing in this skill sends, publishes, tags or merges without the owner's word in this session.
 
+The steps max and tg share are written once, in cli-messaging's
+[RELEASING.md](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
+changelog, the private scenarios and the signed report.
+
 ## 0. Scope: what changed
 
-```sh
-prev=$(git describe --tags --abbrev=0)                  # the last released tag
-git log --oneline "$prev"..origin/main
-gh pr list --state merged --base main --search "merged:>=$(git log -1 --format=%cs "$prev")" --json number,title,body
-git diff "$prev"..origin/main -- docs/commands.md       # generated: the exact commands and options that changed
-```
-
-The last diff drives steps 3–5. Work on a release branch off `main`, in a worktree; the version bump
+The commands in [RELEASING.md, "What changed"](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md#what-changed); the
+`docs/commands.md` diff drives steps 3–5. Work on a release branch off `main`, in a worktree; the version bump
 and the changelog go in one pull request, as in `docs_ai/releasing.md` steps 1–2.
 
 ## 1. The mechanical checks
@@ -53,18 +51,10 @@ Show the draft to the owner. **They accept or edit it** before it goes in.
 
 ## 3. The docs against the diff
 
-For every command and option in the `docs/commands.md` diff, the pages a person reads must describe
-it as it now is: `README.md`, `docs/*.md`, `skills/max-cli/SKILL.md` (agents read it through
-`max skill show`).
-
-- Split the pages into groups and give each group to a **read-only** subagent: the changed
-  commands, the pages, and the rule "report doc `file:line`, what it says, what is true, the source
-  `path:line`; mark CERTAIN or LIKELY".
-- **Confirm every finding with a grep or a read of the source before editing.** Drop a LIKELY
-  finding you cannot confirm. On 2026-09-28 several agent claims needed exactly this.
-- User pages get plain rewrites — no «Поправка», no struck text, no ids (`docs/dev/CONVENTIONS.md`,
-  "User pages"). Developer pages are corrected in place with a dated correction.
-- `docs/commands.md` and `docs/protocol.md` are generated: never edit them; `pnpm generate`.
+[RELEASING.md, "The docs against the diff"](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
+`docs/*.md` and `skills/max-cli/SKILL.md` (agents read it through `max skill show`). User pages get
+plain rewrites with no «Поправка» (`docs/dev/CONVENTIONS.md`, "User pages"); `docs/commands.md` and
+`docs/protocol.md` are generated — `pnpm generate`.
 
 ## 4. Requirements and focus
 
