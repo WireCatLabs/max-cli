@@ -20,7 +20,7 @@ import { join } from "node:path"
 import { MaxClient } from "../dist/client.js"
 import { Connection } from "../dist/protocol/connection.js"
 import { SessionStore } from "../dist/session/store.js"
-import { smokeReason } from "./smoke-reason.ts"
+import { accountState, smokeReason } from "./smoke-reason.ts"
 
 const SAVED = "0"
 const MULTIPLE = 2
@@ -51,6 +51,10 @@ const step = async <T>(label: string, run: () => Promise<T>): Promise<T | undefi
     console.log(`ok    ${label}`)
     return result
   } catch (error) {
+    if (accountState(error)) {
+      console.log(`SKIP  ${label}: ${smokeReason(error)}`)
+      return undefined
+    }
     console.log(`FAIL  ${label}: ${smokeReason(error)}`)
     failures.push(label)
     return undefined
