@@ -195,6 +195,25 @@ describe("max bot messages search --from", () => {
     expect(some.map((message: { id: string }) => message.id)).toEqual(["mid.b1", "mid.a1"])
   })
 
+  it("**ranks by words** and takes the query language; --newest puts the newest first", async () => {
+    const ids = async (...argv: string[]) =>
+      (await json(["first", "bot", "messages", "search", ...argv])).items.map((message: { id: string }) => message.id)
+
+    expect((await ids("team", "--newest")).length).toBeGreaterThan(0)
+    expect(await ids("team", "from:@ann")).toEqual(["mid.a1"])
+    expect(await ids("team -team")).toEqual([])
+  })
+
+  it("never reads past the bots it may read, whatever the query says", async () => {
+    for (const query of ["team in:all", "team in:max", "team in:max-bot"]) {
+      const { code, stderr } = await max(["first", "bot", "messages", "search", query, "--json"])
+      expect(code).toBe(2)
+      expect(JSON.parse(stderr).error.message).toMatch(/not with in: or --source|in: takes/)
+    }
+    const empty = await max(["first", "bot", "messages", "search", "--json"])
+    expect(JSON.parse(empty.stderr).error.message).toBe("say what to find: some text, or who wrote it with --from")
+  })
+
   it("stops at --limit and says there is more", async () => {
     const found = await json(["first", "bot", "messages", "search", "--from", "@ann", "--limit", "1"])
     expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a1"])
