@@ -194,7 +194,7 @@ describe("max bot messages send --file", () => {
     const before = (await journal()).length
     const { code, stdout } = await max(["bot", "messages", "send", "-100", "--file", file("clip.mp4"), "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout).id).toBe("mid.10")
+    expect(JSON.parse(stdout).message.id).toBe("mid.10")
     const sends = requests.filter((request) => request.method === "POST" && request.url?.startsWith("/messages?"))
     expect(sends).toHaveLength(2)
     expect(JSON.parse(sends[1]?.body ?? "{}").attachments).toEqual([
@@ -211,18 +211,8 @@ describe("max bot messages send --file", () => {
     expect(writes()).toHaveLength(0)
   })
 
-  it("uploads as the --type given, whatever the file's extension", async () => {
-    const { code } = await max([
-      "bot",
-      "messages",
-      "send",
-      "-100",
-      "--file",
-      file("scan.bin"),
-      "--type",
-      "image",
-      "--json",
-    ])
+  it("uploads a --photo as an image", async () => {
+    const { code } = await max(["bot", "messages", "send", "-100", "--photo", file("scan.png"), "--json"])
     expect(code).toBe(0)
     expect(requests.find((request) => request.url?.startsWith("/uploads?"))?.url).toBe("/uploads?type=image")
     expect(JSON.parse(writes().at(-1)?.body ?? "{}").attachments).toEqual([
@@ -233,7 +223,7 @@ describe("max bot messages send --file", () => {
   it("never shows the upload URL, whatever goes wrong", async () => {
     const { code, stderr } = await max(["bot", "messages", "send", "-100", "--file", "/no/such/file.png", "--json"])
     expect(code).not.toBe(0)
-    expect(stderr).toContain("no file at")
+    expect(stderr).toContain("no such file")
     expect(stderr).not.toContain("secret-signature")
   })
 })

@@ -62,7 +62,9 @@ const UPLOAD_TIMEOUT_MS = 10 * 60_000
  * Video and audio answer XML and are named by step one's token; image and file by the answer.
  */
 export const uploadFile = async (options: {
-  path: string
+  /** A file on disk, or one already read — `content` — as the shared commands hand it over. */
+  path?: string
+  content?: { name: string; bytes: Uint8Array }
   type: UploadType
   endpoint: UploadEndpoint
   fetch: FetchLike
@@ -71,18 +73,21 @@ export const uploadFile = async (options: {
   /** One request and one response; never the URL, which is a credential, nor the file's name. */
   events?: (event: DiagnosticEvent) => void
 }): Promise<Attachment> => {
-  const { path, type, endpoint } = options
-  const name = basename(path)
-  const stat = (() => {
-    try {
-      return statSync(path)
-    } catch {
-      return undefined
-    }
-  })()
-  if (!stat?.isFile()) throw new CliError("not_found", `no file at ${path}`)
+  const { path, content, type, endpoint } = options
+  const name = content ? content.name : basename(path ?? "")
+  const size = content
+    ? content.bytes.byteLength
+    : (() => {
+        try {
+          const stat = statSync(path ?? "")
+          return stat.isFile() ? stat.size : undefined
+        } catch {
+          return undefined
+        }
+      })()
+  if (size === undefined) throw new CliError("not_found", `no file at ${path}`)
   const form = new FormData()
-  form.append("data", await openAsBlob(path), name)
+  form.append("data", content ? new Blob([content.bytes]) : await openAsBlob(path ?? ""), name)
   const signals = [
     AbortSignal.timeout(options.timeoutMs ?? UPLOAD_TIMEOUT_MS),
     ...(options.signal ? [options.signal] : []),
@@ -90,7 +95,7 @@ export const uploadFile = async (options: {
   const operation = `upload.${type}`
   const emit = options.events ?? (() => {})
   const started = Date.now()
-  emit({ event: "request", operation, bytes: stat.size })
+  emit({ event: "request", operation, bytes: size })
   let response: Response
   try {
     response = await options.fetch(endpoint.url, { method: "POST", body: form, signal: AbortSignal.any(signals) })

@@ -70,6 +70,14 @@
 - **`max messages send --at` теперь `--at-time`** — как во всех командах tg и max, где опция
   принимает время. Скрипт с `--at` получит ошибку «неизвестный параметр» — замените на `--at-time`.
   Параметр `at` у `max_messages_send` в MCP не меняется.
+- **Команды бота — под общими с tg именами, старых имён нет.** `max bot messages get <сообщение>` →
+  `messages show <чат> <сообщение>`; `messages edit|delete` тоже берут чат первым; `bot chats get` →
+  `chats show`; `bot chats pin|unpin` → `messages pin|unpin <чат> <сообщение>`. `--format markdown|html`
+  → `--md` или `--html`; `--type` больше нет: картинку — `--photo`, голосовое — `--voice`, видео файлом
+  — `--as-file`. `chats action` берёт `typing`, `photo`, `video`, `voice`, `file`. Отправка и правка
+  отвечают `{ operationId, message }`, а не сообщением. Удаление спрашивает подтверждение,
+  `--allow-dangerous` отвечает «да». Инструменты MCP бота переименованы так же: `max_bot_chats_show`,
+  `max_bot_messages_show`, `max_bot_messages_pin`, `max_bot_messages_unpin`.
 
 - **`--markdown` больше нет, только `--md`** — в `messages send`, `messages edit` и везде, где
   разметка читается. Так названо во всех командах tg и max; скрипт с `--markdown` получит ошибку

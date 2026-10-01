@@ -76,7 +76,9 @@ export const botCommand = (): Command => {
       renderer.result(await authenticated().me())
     })
 
-  command.addCommand(messagesCommand())
+  const messages = command.commands.find((child) => child.name() === "messages")
+  if (!messages) throw new Error("the shared bot group has no messages")
+  messagesCommand(messages)
   const chats = command.commands.find((child) => child.name() === "chats")
   if (!chats) throw new Error("the shared bot group has no chats")
   chatsCommand(chats)

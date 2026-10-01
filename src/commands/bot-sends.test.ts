@@ -74,7 +74,10 @@ describe("max bot messages send", () => {
   it("sends, answers with the sent message, and journals it without its text", async () => {
     const { code, stdout } = await max(["bot", "messages", "send", "-100", "hello there", "--silent", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ id: "mid.9", chatId: "-100", text: "hello there", outgoing: true })
+    expect(JSON.parse(stdout)).toMatchObject({
+      operationId: expect.any(String),
+      message: { id: "mid.9", chatId: "-100", text: "hello there", outgoing: true },
+    })
     expect(requests.at(-1)).toMatchObject({ method: "POST", url: "/messages?chat_id=-100" })
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "hello there", notify: false })
     const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
@@ -107,8 +110,8 @@ describe("max bot messages send", () => {
     expect(refusedRow).toMatchObject({ chatId: "-200", outcome: "refused" })
   })
 
-  it("sends --format as the markup and --reply-to as a reply link", async () => {
-    const argv = ["bot", "messages", "send", "-100", "**hi**", "--format", "markdown", "--reply-to", "mid.1", "--json"]
+  it("sends --md as MAX's markdown and --reply-to as a reply link", async () => {
+    const argv = ["bot", "messages", "send", "-100", "**hi**", "--md", "--reply-to", "mid.1", "--json"]
     expect((await max(argv)).code).toBe(0)
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({
       text: "**hi**",
@@ -117,10 +120,10 @@ describe("max bot messages send", () => {
     })
   })
 
-  it("refuses a --format MAX does not know before sending anything", async () => {
-    const { code, stderr } = await max(["bot", "messages", "send", "-100", "hi", "--format", "bbcode", "--json"])
+  it("refuses --md with --html before sending anything", async () => {
+    const { code, stderr } = await max(["bot", "messages", "send", "-100", "hi", "--md", "--html", "--json"])
     expect(code).not.toBe(0)
-    expect(stderr).toContain("bbcode")
+    expect(stderr).toContain("--html")
     expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
   })
 
@@ -142,17 +145,20 @@ describe("max bot messages send", () => {
 describe("max bot messages edit and delete", () => {
   it("finds the message's chat, checks it against the list, then changes it", async () => {
     await max(["bot", "messages", "send", "-100", "hello there", "--json"])
-    expect((await max(["bot", "messages", "edit", "mid.9", "new text", "--json"])).code).toBe(0)
+    expect((await max(["bot", "messages", "edit", "-100", "mid.9", "new text", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "PUT", url: "/messages?message_id=mid.9" })
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "new text" })
-    expect((await max(["bot", "messages", "edit", "mid.9", "<b>new</b>", "--format", "html", "--json"])).code).toBe(0)
+    expect((await max(["bot", "messages", "edit", "-100", "mid.9", "<b>new</b>", "--html", "--json"])).code).toBe(0)
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "<b>new</b>", format: "html" })
-    expect((await max(["bot", "messages", "delete", "mid.9", "--json"])).code).toBe(0)
+    expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--json"])).code).toBe(7)
+    expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--allow-dangerous", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/messages?message_id=mid.9" })
     expect(JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items).toEqual([])
     await max(["team", "bot", "recipients", "clear"])
     await max(["team", "bot", "recipients", "add", "-200"])
-    expect((await max(["team", "bot", "messages", "delete", "mid.9", "--json"])).code).not.toBe(0)
+    expect(
+      (await max(["team", "bot", "messages", "delete", "-100", "mid.9", "--allow-dangerous", "--json"])).code,
+    ).toBe(7)
   })
 })
 
@@ -168,7 +174,7 @@ describe("the bot's files", () => {
 })
 
 describe("every bot write, whichever command sends it", () => {
-  it("meets the recipient list and the journal through max bot api and chats pin too", async () => {
+  it("meets the recipient list and the journal through max bot api and messages pin too", async () => {
     await max(["team", "bot", "recipients", "clear"])
     await max(["team", "bot", "recipients", "add", "-100"])
     requests.length = 0
@@ -183,7 +189,7 @@ describe("every bot write, whichever command sends it", () => {
       `{"text": "x"}`,
       "--json",
     ])
-    const pin = await max(["team", "bot", "chats", "pin", "-200", "mid.9", "--json"])
+    const pin = await max(["team", "bot", "messages", "pin", "-200", "mid.9", "--json"])
     for (const refused of [raw, pin]) {
       expect(refused.code).toBe(7)
       expect(refused.stdout).toBe("")

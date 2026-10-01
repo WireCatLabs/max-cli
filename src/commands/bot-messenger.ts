@@ -1,6 +1,7 @@
 import type { BotMessenger, GlobalFlags, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
 import { fromOldSettings } from "@leemour/cli-messaging/sends"
 import { MAX_APP } from "../app.js"
+import { maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { PROVIDER } from "../bot/keep.js"
 import { ChatRegistry } from "../bot/registry.js"
@@ -35,14 +36,15 @@ export const maxBot: BotMessenger = {
     }
   },
   connect: async (command, token, { stop, events } = {}) => {
-    const api = botContext(command).client(token, stop, events)
-    return {
-      me: async () => {
-        const bot = await api.me()
-        return { id: bot.user_id, name: bot.first_name, username: bot.username ?? null }
-      },
-      close: async () => {},
-    }
+    const context = botContext(command)
+    return maxBotAdapter({
+      api: context.client(token, stop, events),
+      uploadFetch: context.uploadFetch(),
+      ...(context.signal ? { signal: context.signal } : {}),
+      ...(context.sleep ? { sleep: context.sleep } : {}),
+      ...(events ? { events } : {}),
+      ...(context.settings.timeoutMs === undefined ? {} : { timeoutMs: context.settings.timeoutMs }),
+    })
   },
   tokenStore: (command, profile) => environmentOf(command).botStore?.(profile) ?? new BotTokenStore({ profile }),
   registry: (command, profile) => environmentOf(command).botRegistry?.(profile) ?? new ChatRegistry(profile),

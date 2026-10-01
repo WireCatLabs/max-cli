@@ -25,6 +25,13 @@ const MESSAGES = `{"messages": [
    "body": {"mid": "mid.1", "seq": 1, "text": "first"}}
 ]}`
 
+/** One message of chat -100 by its id, as `GET /messages/{id}` answers; mid.404 does not exist. */
+const oneMessage = (mid: string): string | undefined =>
+  mid === "mid.404"
+    ? undefined
+    : `{"sender": ${person}, "recipient": {"chat_id": -100, "chat_type": "chat"}, "timestamp": 1758888888000,
+       "body": {"mid": "${mid}", "seq": 1, "text": "first"}}`
+
 let server: Server
 let botUrl: string
 const requests: { method?: string; url?: string; body: string }[] = []
@@ -41,13 +48,17 @@ beforeAll(async () => {
       const answer =
         url === "/me"
           ? BOT
-          : request.method !== "GET" && url.startsWith("/chats/-100/")
-            ? `{"success": true}`
-            : url.startsWith("/chats/-100")
-              ? CHAT
-              : url.startsWith("/messages?")
-                ? MESSAGES
-                : undefined
+          : url.startsWith("/messages/mid.")
+            ? oneMessage(url.slice("/messages/".length))
+            : request.method === "GET" && url === "/chats/-100/pin"
+              ? `{"message": ${oneMessage("mid.1")}}`
+              : request.method !== "GET" && url.startsWith("/chats/-100/")
+                ? `{"success": true}`
+                : url.startsWith("/chats/-100")
+                  ? CHAT
+                  : url.startsWith("/messages?")
+                    ? MESSAGES
+                    : undefined
       response.writeHead(answer ? 200 : 404, { "content-type": "application/json" })
       response.end(answer ?? `{"code": "not.found", "message": "nothing here"}`)
     })
@@ -115,9 +126,11 @@ describe("the local copy", () => {
     expect(kept.map((message: { id: string }) => message.id)).toEqual(["mid.1", "mid.2", "mid.3"])
     expect(kept[1]).toMatchObject({ text: online[1].text, outgoing: true, replyToId: "mid.1" })
 
-    const one = JSON.parse((await max(["copy", "bot", "messages", "get", "mid.2", "--offline", "--json"])).stdout)
+    const one = JSON.parse(
+      (await max(["copy", "bot", "messages", "show", "-100", "mid.2", "--offline", "--json"])).stdout,
+    )
     expect(one).toMatchObject({ id: "mid.2", outgoing: true })
-    expect((await max(["copy", "bot", "messages", "get", "mid.404", "--offline", "--json"])).code).not.toBe(0)
+    expect((await max(["copy", "bot", "messages", "show", "-100", "mid.404", "--offline", "--json"])).code).not.toBe(0)
 
     const found = JSON.parse((await max(["copy", "bot", "messages", "search", "second", "--json"])).stdout).items
     expect(found).toMatchObject([{ id: "mid.2", locator: expect.stringContaining("max-bot") }])
@@ -160,7 +173,7 @@ describe("max bot chats", () => {
   it("remembers a chat once seen, and finds it by title afterwards", async () => {
     new BotTokenStore({ profile: "fresh", keyring }).write(TOKEN)
     expect(JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout).items).toEqual([])
-    const chat = JSON.parse((await max(["fresh", "bot", "chats", "get", "-100", "--json"])).stdout)
+    const chat = JSON.parse((await max(["fresh", "bot", "chats", "show", "-100", "--json"])).stdout)
     expect(chat).toMatchObject({ id: "-100", title: "Team", kind: "group", participantsCount: 3 })
     const seen = JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout).items
     expect(seen).toMatchObject([{ id: "-100", title: "Team", firstSeenAt: expect.any(String) }])
@@ -176,7 +189,7 @@ describe("max bot chats", () => {
   })
 
   it("pins through the same guard as every bot write", async () => {
-    expect((await max(["bot", "chats", "pin", "-100", "mid.1", "--json"])).code).toBe(0)
+    expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({
       method: "PUT",
       url: "/chats/-100/pin",
@@ -184,17 +197,18 @@ describe("max bot chats", () => {
     })
     await max(["config", "set", "readOnly", "true"])
     requests.length = 0
-    expect((await max(["bot", "chats", "pin", "-100", "mid.1", "--json"])).code).not.toBe(0)
+    expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--json"])).code).not.toBe(0)
     expect(requests).toHaveLength(0)
     await max(["config", "set", "readOnly", "false"])
   })
 
   it("unpins, leaves and shows an action with the request each one names", async () => {
-    expect((await max(["bot", "chats", "unpin", "-100", "--json"])).code).toBe(0)
+    expect((await max(["bot", "messages", "unpin", "-100", "mid.1", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/pin", body: "" })
-    const action = await max(["bot", "chats", "action", "-100", "typing_on", "--json"])
+    expect((await max(["bot", "messages", "unpin", "-100", "mid.7", "--json"])).code).toBe(6)
+    const action = await max(["bot", "chats", "action", "-100", "typing", "--json"])
     expect(action.code).toBe(0)
-    expect(JSON.parse(action.stdout)).toEqual({ success: true })
+    expect(JSON.parse(action.stdout)).toMatchObject({ chatId: "-100", action: "typing" })
     expect(requests.at(-1)).toMatchObject({
       method: "POST",
       url: "/chats/-100/actions",
@@ -218,7 +232,7 @@ describe("max bot chats", () => {
 describe("max bot list", () => {
   it("shows each name with a bot token, and which bot it is with --check", async () => {
     new BotTokenStore({ profile: "sales", keyring }).write(TOKEN)
-    await max(["sales", "bot", "chats", "get", "-100", "--json"])
+    await max(["sales", "bot", "chats", "show", "-100", "--json"])
     const rows = JSON.parse((await max(["bot", "list", "--check", "--json"])).stdout).items
     expect(rows).toEqual(
       expect.arrayContaining([

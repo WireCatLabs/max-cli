@@ -1,3 +1,4 @@
+import { BOT_ACTIONS } from "@leemour/cli-messaging/cli"
 import type { Permission } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
 
@@ -46,6 +47,8 @@ export const withAcross = (tool: BotTool): BotTool => ({
 /** A value never reaches commander as its own token, so no argument can become a flag (plan Q-2). */
 const option = (name: string, value: unknown): string[] => (value === undefined ? [] : [`--${name}=${String(value)}`])
 const flag = (name: string, on: unknown): string[] => (on === true ? [`--${name}`] : [])
+/** A message's `format`, as the shared send takes it: `--md` or `--html`. */
+const marks = (format: unknown): string[] => (format === "markdown" ? ["--md"] : format === "html" ? ["--html"] : [])
 
 const chat = v.pipe(
   v.string(),
@@ -70,7 +73,7 @@ const offline = v.optional(v.pipe(v.boolean(), v.description("answer from the co
 const time = v.pipe(v.string(), v.regex(/^\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})$/, "an ISO 8601 time"))
 const person = v.pipe(v.string(), v.minLength(1), v.description("an id, @username or part of a name"))
 
-export const ACTIONS = ["typing_on", "sending_photo", "sending_video", "sending_audio", "sending_file"] as const
+export const ACTIONS = BOT_ACTIONS
 
 const read = (definition: Omit<BotTool, "gate">): BotTool => ({ ...definition, gate: "read" })
 
@@ -88,11 +91,11 @@ export const TOOLS: Record<string, BotTool> = {
     input: v.object({}),
     invocation: () => ({ words: ["chats", "list"] }),
   }),
-  max_bot_chats_get: read({
+  max_bot_chats_show: read({
     title: "One chat",
     description: "One chat from MAX: title, type, members count; the bot remembers it.",
     input: v.object({ chat }),
-    invocation: (args) => ({ words: ["chats", "get"], positionals: [String(args.chat)] }),
+    invocation: (args) => ({ words: ["chats", "show"], positionals: [String(args.chat)] }),
   }),
   max_bot_messages_list: read({
     title: "Messages in a chat",
@@ -104,14 +107,14 @@ export const TOOLS: Record<string, BotTool> = {
       positionals: [String(args.chat)],
     }),
   }),
-  max_bot_messages_get: read({
+  max_bot_messages_show: read({
     title: "One message",
-    description: "One message by its id.",
-    input: v.object({ message, offline }),
+    description: "One message by its id, in its chat.",
+    input: v.object({ chat, message, offline }),
     invocation: (args) => ({
-      words: ["messages", "get"],
+      words: ["messages", "show"],
       options: flag("offline", args.offline),
-      positionals: [String(args.message)],
+      positionals: [String(args.chat), String(args.message)],
     }),
   }),
   max_bot_messages_search: read({
@@ -214,41 +217,41 @@ export const TOOLS: Record<string, BotTool> = {
     permissions: ["send"],
     invocation: (args) => ({
       words: ["messages", "send"],
-      options: [...option("format", args.format), ...option("reply-to", args.reply_to), ...flag("silent", args.silent)],
+      options: [...marks(args.format), ...option("reply-to", args.reply_to), ...flag("silent", args.silent)],
       positionals: [String(args.chat), String(args.text)],
     }),
   },
   max_bot_messages_edit: {
     title: "Edit the bot's message",
     description: "Replace the text of a message the bot sent.",
-    input: v.object({ message, text, format }),
+    input: v.object({ chat, message, text, format }),
     gate: "send",
     permissions: ["edit"],
     invocation: (args) => ({
       words: ["messages", "edit"],
-      options: option("format", args.format),
-      positionals: [String(args.message), String(args.text)],
+      options: marks(args.format),
+      positionals: [String(args.chat), String(args.message), String(args.text)],
     }),
   },
-  max_bot_chats_pin: {
+  max_bot_messages_pin: {
     title: "Pin a message",
-    description: "Pin a message in a chat.",
+    description: "Pin a message in a chat, quietly.",
     input: v.object({ chat, message }),
     gate: "send",
     permissions: ["pin"],
-    invocation: (args) => ({ words: ["chats", "pin"], positionals: [String(args.chat), String(args.message)] }),
+    invocation: (args) => ({ words: ["messages", "pin"], positionals: [String(args.chat), String(args.message)] }),
   },
-  max_bot_chats_unpin: {
+  max_bot_messages_unpin: {
     title: "Unpin",
-    description: "Unpin whatever is pinned in a chat.",
-    input: v.object({ chat }),
+    description: "Unpin the message pinned in a chat.",
+    input: v.object({ chat, message }),
     gate: "send",
     permissions: ["pin"],
-    invocation: (args) => ({ words: ["chats", "unpin"], positionals: [String(args.chat)] }),
+    invocation: (args) => ({ words: ["messages", "unpin"], positionals: [String(args.chat), String(args.message)] }),
   },
   max_bot_chats_action: {
     title: "Show that the bot is typing",
-    description: "Show an action in the chat, such as typing_on, while the bot prepares an answer.",
+    description: "Show an action in the chat, such as typing, while the bot prepares an answer.",
     input: v.object({ chat, action: v.picklist(ACTIONS) }),
     gate: "send",
     permissions: ["send"],
@@ -300,10 +303,15 @@ export const TOOLS: Record<string, BotTool> = {
   max_bot_messages_delete: {
     title: "Delete a message",
     description: "Delete a message in a chat where the bot may delete. It cannot be undone.",
-    input: v.object({ message }),
+    input: v.object({ chat, message }),
     gate: "delete",
     permissions: ["delete"],
-    invocation: (args) => ({ words: ["messages", "delete"], positionals: [String(args.message)] }),
+    // The server was started with --allow-delete: that is the owner's yes, so the command does not ask again.
+    invocation: (args) => ({
+      words: ["messages", "delete"],
+      options: ["--allow-dangerous"],
+      positionals: [String(args.chat), String(args.message)],
+    }),
   },
   max_bot_comments_delete: {
     title: "Delete a comment",
