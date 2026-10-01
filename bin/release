@@ -3,22 +3,39 @@
 #
 #   bin/release           # publishes from GitHub Actions (.github/workflows/release.yml)
 #   bin/release --local   # publishes from this machine with the npm token from the keyring
+#   bin/release --report <path>   # checks that signed report instead of docs_ai/releases/<version>.md
 #
 # Steps 3–7 of docs_ai/releasing.md. Run on a clean, up-to-date `main`, after the release skill has
-# written and the owner signed docs_ai/releases/<version>.md for this commit. When npm already has
+# written and the owner signed docs_ai/releases/<version>.md for this commit. docs_ai/ is a clone of
+# the private repository leemour/max-cli-private; a fork without it passes its own report. When npm already has
 # that version, or a higher one, it merges the next free version into `main` through a pull request,
 # carries the report to it and publishes that. The npm token is never printed — not on success, not
 # in an error.
 set -eu
 
-cd "$(dirname "$0")/.."
-
+usage() { echo "usage: bin/release [--local] [--report <path>]" >&2; exit 2; }
 mode=ci
-case "${1:-}" in
-  "") ;;
-  --local) mode=local ;;
-  *) echo "usage: bin/release [--local]" >&2; exit 2 ;;
+custom=""
+pending=""
+for arg; do
+  if [ -n "$pending" ]; then custom=$arg; pending=""; continue; fi
+  case "$arg" in
+    --local) mode=local ;;
+    --report) pending=1 ;;
+    *) usage ;;
+  esac
+done
+[ -z "$pending" ] || usage
+case "$custom" in
+  "" | /*) ;;
+  *) custom="$PWD/$custom" ;;
 esac
+# The re-exec below runs from the repository root, where a relative --report would point elsewhere.
+set --
+[ "$mode" = ci ] || set -- --local
+[ -z "$custom" ] || set -- "$@" --report "$custom"
+
+cd "$(dirname "$0")/.."
 
 git fetch -q origin
 [ "$(git branch --show-current)" = "main" ] || { echo "not on main" >&2; exit 1; }
@@ -27,7 +44,7 @@ before=$(git rev-parse HEAD)
 git merge -q --ff-only origin/main
 # The shell is still running the file it read before the merge. On 2026-09-23 that meant the fixed
 # check of 080a5c4 never ran: the checkout was behind, and the old script published and gave up.
-[ "$(git rev-parse HEAD)" = "$before" ] || exec "$0" "$@"
+[ "$(git rev-parse HEAD)" = "$before" ] || exec ./bin/release "$@"
 # The workflow publishes origin/main, so a local commit not pushed yet would silently not ship.
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main is ahead of origin/main — push first" >&2; exit 1; }
 
@@ -40,7 +57,15 @@ published() {
 
 # The judgement half of the release — changelog, docs, requirements, live scenarios — is the release
 # skill's, and its report is the only record that it ran for this exact commit.
-report="docs_ai/releases/$version.md"
+if [ -n "$custom" ]; then
+  report=$custom
+elif [ -d docs_ai ]; then
+  report="docs_ai/releases/$version.md"
+else
+  echo "no docs_ai/ — release reports live in the private repository leemour/max-cli-private, cloned into" \
+    "docs_ai/, as releases/$version.md. A fork passes its own signed report: bin/release --report <path>" >&2
+  exit 1
+fi
 [ -f "$report" ] || { echo "no release report $report — run the release skill first" >&2; exit 1; }
 grep -qx "Commit: $(git rev-parse HEAD)" "$report" || { echo "$report is for another commit than HEAD" >&2; exit 1; }
 # A date, not the template's placeholder, so a report copied from the template does not pass as signed.
@@ -61,7 +86,7 @@ next=$(node scripts/next-version.mjs "$version" "$latest" "$versions")
 if [ "$next" != "$version" ]; then
   if published; then why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
   echo "$why — publishing $next instead"
-  git -C docs_ai ls-files --error-unmatch "releases/$version.md" >/dev/null 2>&1 ||
+  [ -n "$custom" ] || git -C docs_ai ls-files --error-unmatch "releases/$version.md" >/dev/null 2>&1 ||
     { echo "$report is not committed in docs_ai — commit it first" >&2; exit 1; }
   signed=$(git rev-parse HEAD)
   branch="release/$next"
@@ -92,16 +117,22 @@ if [ "$next" != "$version" ]; then
   extra=$(git diff --name-only "$signed" HEAD | grep -vx -e package.json -e src/version.ts -e CHANGELOG.md || true)
   [ -z "$extra" ] || { echo "main changed more than the number since $report was signed: $extra" >&2; exit 1; }
 
-  git -C docs_ai mv "releases/$version.md" "releases/$next.md"
-  report="docs_ai/releases/$next.md"
+  if [ -z "$custom" ]; then
+    git -C docs_ai mv "releases/$version.md" "releases/$next.md"
+    report="docs_ai/releases/$next.md"
+  fi
   node -e 'const fs = require("fs"); const [file, o, n, signed, head, why] = process.argv.slice(1)
     const text = fs.readFileSync(file, "utf8").replace(`# ${o}\n`, `# ${n}\n`)
     const note = `Renumbered by bin/release: ${o} → ${n} (${why}). Signed for ${signed}; ${head} changes only the number.`
     const carried = text.replace(`Commit: ${signed}`, `Commit: ${head}`).trimEnd()
     fs.writeFileSync(file, `${carried}\n\n${note}\n`)' "$report" "$version" "$next" "$signed" "$(git rev-parse HEAD)" "$why"
-  git -C docs_ai commit -q -m "docs(releases): $version → $next, renumbered by bin/release" \
-    -- "releases/$version.md" "releases/$next.md"
-  git -C docs_ai push -q || echo "docs_ai: the renumbered report is committed but not pushed — push docs_ai" >&2
+  if [ -z "$custom" ]; then
+    git -C docs_ai commit -q -m "docs(releases): $version → $next, renumbered by bin/release" \
+      -- "releases/$version.md" "releases/$next.md"
+    git -C docs_ai push -q || echo "docs_ai: the renumbered report is committed but not pushed — push docs_ai" >&2
+  else
+    echo "$report now reports $next — commit it yourself" >&2
+  fi
   version=$next
 fi
 if published; then

@@ -12,7 +12,9 @@ are in `docs_ai/releasing.md` — follow them from there, do not restate them.
 
 `docs_ai/` is the private repository `leemour/max-cli-private`, cloned into the main checkout. A
 fresh clone of this repository does not have it: without it there are no live scenarios and no
-report, so stop and say so.
+report, so stop and say so. **Correction 2026-10-01:** `bin/release` stops there too, naming that
+repository. A fork with its own signed report passes it as `bin/release --report <path>`: the same
+checks, and on a renumber the file is rewritten in place for the caller to commit.
 
 Nothing in this skill sends, publishes, tags or merges without the owner's word in this session.
 
