@@ -97,14 +97,28 @@ describe("BotTransport", () => {
     expect(waits).toEqual([1000])
   })
 
-  it("never repeats a write, even on 503", async () => {
+  it("never repeats a write, and calls a gateway's 503 an unknown outcome rather than a refusal", async () => {
     handler = answer(503, `{"code": "service.unavailable", "message": "later"}`)
     const error = await failure(transport().call(operation("sendMessage"), { body: "{}" }))
     expect(seen).toHaveLength(1)
     expect(error).toMatchObject({
-      code: "provider_unavailable",
-      details: { status: 503, maxCode: "service.unavailable" },
+      code: "outcome_unknown",
+      details: { status: 503, maxCode: "service.unavailable", retryable: false },
     })
+  })
+
+  it.each([502, 504])("calls a write answered %i an unknown outcome", async (status) => {
+    handler = answer(status, "<html>gateway</html>")
+    const error = await failure(transport().call(operation("sendMessage"), { body: "{}" }))
+    expect(error).toMatchObject({ code: "outcome_unknown", details: { status } })
+    expect(seen).toHaveLength(1)
+  })
+
+  it("still calls a read answered 503 the provider's failure, and repeats it", async () => {
+    handler = answer(503, `{"code": "service.unavailable"}`)
+    const error = await failure(transport().call(operation("getMyInfo")))
+    expect(error).toMatchObject({ code: "provider_unavailable", details: { status: 503 } })
+    expect(seen).toHaveLength(3)
   })
 
   it("calls a write that got no answer an unknown outcome, not a failure to repeat", async () => {

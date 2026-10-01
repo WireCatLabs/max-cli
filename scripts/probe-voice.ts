@@ -59,7 +59,7 @@ const waveOf = (path: string): { wave: Uint8Array; durationMs: number } => {
 }
 
 const connection = new Connection({ timeoutMs: 20_000 })
-const client = new MaxClient({ store, connection, timeoutMs: 20_000 })
+const client = new MaxClient({ store, connection, timeoutMs: 20_000, sends: "caller" })
 let sentId: string | undefined
 
 try {

@@ -128,10 +128,6 @@ const CONSENT: Record<Exclude<Action, "report">, keyof GroupRules["consent"]> = 
   remove: "remove",
 }
 
-/**
- * Does what the findings ask, as far as consent, the per-run limit and the guard let it. Stops
- * acting at the first hourly-limit refusal: the rest is `skipped`, never tried.
- */
 /** The two things a check may do, whoever does them: the personal account, or a bot. */
 export interface Moderator {
   deleteMessage(chatId: Id, messageId: Id): Promise<void>
@@ -148,6 +144,10 @@ export const personal = (client: MaxClient): Moderator => ({
   },
 })
 
+/**
+ * Does what the findings ask, as far as consent, the per-run limit and the guard let it. Stops
+ * acting at the first hourly-limit refusal: the rest is `skipped`, never tried.
+ */
 export const act = async (moderator: Moderator, findings: Finding[], options: ActOptions): Promise<CheckRow[]> => {
   const { chatId, rules, allowDangerous, dryRun, maxActions, confirm } = options
   const rows: CheckRow[] = []

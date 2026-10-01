@@ -38,6 +38,12 @@ export interface Resume {
 }
 
 /**
+ * How many chats LOGIN is asked for — the web tab's 15, with the rest read by one `CHATS_LIST`
+ * right after (`MAX-53`, captured 2026-09-25). MAX answers the newest that many, newest first (`FIND-80`).
+ */
+export const LOGIN_CHATS = 15
+
+/**
  * INIT then LOGIN, in that order, before anything else will be answered
  * (`max-api-docs/protocol/auth.md`).
  *
@@ -53,12 +59,6 @@ export interface Resume {
  * diagnostic hook in `MaxClient` saw nothing of the two requests every single invocation makes,
  * and `max chats list` answers from the LOGIN response without sending anything else.
  */
-/**
- * How many chats LOGIN is asked for — the web tab's 15, with the rest read by one `CHATS_LIST`
- * right after (`MAX-53`, captured 2026-09-25). MAX answers the newest that many, newest first (`FIND-80`).
- */
-export const LOGIN_CHATS = 15
-
 export const startSession = async (
   invoke: Invoke,
   { token, deviceId, chatsCount = LOGIN_CHATS, sync = 0, resume }: SessionOptions,

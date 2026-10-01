@@ -416,6 +416,7 @@ describe("a command through max serve", () => {
   const commandClient = (store: SessionStore, direct = own()) => {
     let opened = 0
     const client = new MaxClient({
+      sends: "caller",
       store,
       connection: new ServerConnection({
         path: store.socketPath(),
@@ -531,6 +532,7 @@ describe("a command through max serve", () => {
     store.writeToken("a-token")
     let started = 0
     const client = new MaxClient({
+      sends: "caller",
       store,
       connection: new ServerConnection({
         path: store.socketPath(),
@@ -807,6 +809,25 @@ describe("the send guard, in the server", () => {
     ])
   })
 
+  it("a command's client handed an undefined send guard is guarded as if none was handed", async () => {
+    await cli(["g-undefined", "config", "set", "readOnly", "true"])
+    const max = mockMax({ answers: {} })
+    const store = new SessionStore({ profile: "g-undefined", keyring: memoryKeyring() })
+    const context = contextFor(
+      { profile: "g-undefined" },
+      {
+        store: () => store,
+        streams: captureStreams(),
+        connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+      },
+    )
+    const client = context.createClient({ sends: undefined })
+
+    await expect(client.messages.send("111", "hi")).rejects.toMatchObject({ code: "permission_error" })
+    await client.close()
+    expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.MSG_SEND)
+  })
+
   it("a refusal by the server reaches the command as the same error, with its exit code", async () => {
     const { store } = await serve("g-exit")
     const context = contextFor({ profile: "g-exit" }, { store: () => store, streams: captureStreams() })
@@ -821,7 +842,7 @@ describe("the send guard, in the server", () => {
   it("journals a forwarded write under the operation id of the command that made it, and a send by its send id", async () => {
     const { store } = await serve("g-operation", scripted())
     const context = contextFor({ profile: "g-operation" }, { store: () => store, streams: captureStreams() })
-    const client = context.createClient({ sends: undefined })
+    const client = context.createClient({ sends: "caller" })
     const passing = { check: () => {}, record: () => {} }
 
     await guardedWrite(passing, { operationId: "op-42", chatId: "111", kind: "delete", count: 1 }, () =>

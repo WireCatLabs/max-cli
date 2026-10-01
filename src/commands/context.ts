@@ -176,10 +176,11 @@ export const contextFor = (
         timeoutMs: settings.timeoutMs,
         warn: renderer.note,
         offline: flags.offline === true,
-        sends: sharedJournal(guardFor(settings, renderer.warn), wire),
         ...(environment.sleep ? { sleep: environment.sleep } : {}),
         ...(environment.connection ? { connection: environment.connection() } : wire ? { connection: wire } : {}),
         ...extra,
+        // After `extra`, so an `undefined` handed in falls back to the guard rather than to none.
+        sends: extra.sends ?? sharedJournal(guardFor(settings, renderer.warn), wire),
       })
       clients.push(client)
       return client

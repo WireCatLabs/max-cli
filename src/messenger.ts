@@ -89,7 +89,7 @@ export const maxMessenger: Messenger = {
     try {
       const cache = await openProfileCache(settings.profile, { onProblem: renderer.note })
       const client = createClient({
-        sends: undefined,
+        sends: "caller",
         record,
         ...(cache ? { cache } : {}),
         ...(events ? { events } : {}),

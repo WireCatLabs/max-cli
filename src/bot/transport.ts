@@ -24,8 +24,9 @@ const LONG_POLL_MARGIN_MS = 15_000
 let trusted = false
 
 /**
- * Adds the Минцифры root to this process's trusted roots, and nowhere else (`NEED-293`). Node
- * exposes a process-wide default (22.19+); Bun takes the list per request instead.
+ * Adds the Минцифры root to the trusted roots (`NEED-293`). On Node (22.19+) that changes the
+ * process-wide default, so every TLS connection this process makes from then on trusts it, not only
+ * the Bot API's: Node's `fetch` takes no per-request list. Bun does, so there only these calls do.
  */
 export const botFetch = (): FetchLike => {
   if ("Bun" in globalThis) {
@@ -74,6 +75,8 @@ const TLS_FAILURES = new Set([
   "SELF_SIGNED_CERT_IN_CHAIN",
   "CERT_HAS_EXPIRED",
 ])
+
+const GATEWAY_FAILURES = new Set([502, 503, 504])
 
 const causeCode = (error: unknown): string | undefined => {
   const cause = (error as { cause?: { code?: unknown } })?.cause
@@ -191,7 +194,7 @@ export class BotTransport {
     }
 
     const text = await response.text()
-    if (!response.ok) throw this.#refusal(operation, response, text)
+    if (!response.ok) throw this.#refusal(operation, response, text, reads)
     const answered = { status: response.status, bytes: Buffer.byteLength(text) }
     if (text.trim() === "") return { answer: null, ...answered }
     try {
@@ -246,7 +249,7 @@ export class BotTransport {
     )
   }
 
-  #refusal(operation: ManifestOperation, response: Response, text: string): CliError {
+  #refusal(operation: ManifestOperation, response: Response, text: string, reads: boolean): CliError {
     let maxCode: string | undefined
     let said: string | undefined
     try {
@@ -254,9 +257,18 @@ export class BotTransport {
       if (typeof body?.code === "string") maxCode = body.code
       said = typeof body?.message === "string" ? body.message : typeof body?.error === "string" ? body.error : undefined
     } catch {}
+    const reason = said ? `: ${singleLine(said).replaceAll(this.#token, "<token>").slice(0, 300)}` : ""
+    // A gateway answers for MAX without saying whether MAX got the write, so it is no refusal.
+    if (!reads && GATEWAY_FAILURES.has(response.status)) {
+      return new CliError(
+        "outcome_unknown",
+        `${operation.id} got ${response.status} from a gateway in front of MAX${reason}; MAX may or may not have ` +
+          "carried it out — check before repeating it",
+        { operation: operation.id, status: response.status, retryable: false, ...(maxCode ? { maxCode } : {}) },
+      )
+    }
     const retryable = response.status === 429 || response.status === 502 || response.status === 503
     const retryAfterMs = providerWaitMs(response.headers, () => new Date())
-    const reason = said ? `: ${singleLine(said).replaceAll(this.#token, "<token>").slice(0, 300)}` : ""
     return new CliError(
       statusToCode(response.status),
       `MAX refused ${operation.id} (${response.status}${maxCode ? ` ${maxCode}` : ""})${reason}`,

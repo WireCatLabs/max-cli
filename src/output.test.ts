@@ -38,6 +38,7 @@ const readingAChatThatAnswersOddly = async (options: { quiet?: boolean; json?: b
   store.writeToken("a-token")
 
   const client = new MaxClient({
+    sends: "caller",
     store,
     connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     warn: renderer.note,

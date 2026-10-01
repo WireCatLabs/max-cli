@@ -121,8 +121,12 @@ export interface MaxClientOptions {
    * client reports what it did and never decides where that goes. Absent means nothing is kept.
    */
   events?: (event: DiagnosticEvent) => void
-  /** Asked before every send and told its outcome. Absent in tests that are not about it. */
-  sends?: SendGuard
+  /**
+   * Asked before every send and told its outcome. `"caller"` when whoever holds the client guards
+   * its writes instead: the shared services, or `max serve` for each write it forwards.
+   * Required, so a client without a guard is a choice somebody wrote and never one they forgot.
+   */
+  sends: SendGuard | "caller"
   /** The wait between retries; a test passes one that returns at once. */
   sleep?: SleepLike
 }
@@ -183,7 +187,7 @@ export class MaxClient {
     this.#offline = offline
     this.#events = events ?? (() => {})
     this.#sleep = sleep ?? realSleep
-    this.#sends = sends
+    this.#sends = sends === "caller" ? undefined : sends
   }
 
   readonly account = {
@@ -666,16 +670,6 @@ export class MaxClient {
     },
 
     /**
-     * **Start again from zero**: forget the marker, so this login asks for the whole collection
-     * rather than for what changed, and name everybody it mentions.
-     *
-     * It is a repair tool, not the way contacts arrive. The delta rides on the login every command
-     * already performs, so there is nothing to schedule and no budget to spend — what this is for
-     * is a store that has drifted, or a full re-take after a schema rebuild threw the rows away.
-     * It is also the only thing that could ever prune somebody MAX has stopped returning, which is
-     * the second reason it exists.
-     */
-    /**
      * Finds whoever MAX has under a phone number. A lookup, not an add: nothing changes on the
      * account. ⚠ The number is never repeated in an error — it is the one field here the sixth
      * constraint is about.
@@ -757,6 +751,16 @@ export class MaxClient {
       return { ...person, chats }
     },
 
+    /**
+     * **Start again from zero**: forget the marker, so this login asks for the whole collection
+     * rather than for what changed, and name everybody it mentions.
+     *
+     * It is a repair tool, not the way contacts arrive. The delta rides on the login every command
+     * already performs, so there is nothing to schedule and no budget to spend — what this is for
+     * is a store that has drifted, or a full re-take after a schema rebuild threw the rows away.
+     * It is also the only thing that could ever prune somebody MAX has stopped returning, which is
+     * the second reason it exists.
+     */
     sync: async (): Promise<SyncSummary & { full: true }> => {
       if (this.#offline) {
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot sync")
@@ -1825,10 +1829,6 @@ export class MaxClient {
     },
 
     /**
-     * What a hidden web tab reports once, 20 s after it opened: the chat list, shown at `at`.
-     * `sessionId` is when the tab's connection began, and it survives the tab's reconnects.
-     */
-    /**
      * **The reads a web tab sends after every login** (`MAX-52`, recorded 2026-09-25), in its order
      * and all at once, as it sends them: folders, banners, call history, then the four asset sets.
      * Each carries the sync value its previous answer returned — 0 the first time — and the answers
@@ -1850,6 +1850,10 @@ export class MaxClient {
       }
     },
 
+    /**
+     * What a hidden web tab reports once, 20 s after it opened: the chat list, shown at `at`.
+     * `sessionId` is when the tab's connection began, and it survives the tab's reconnects.
+     */
     chatListShown: async ({ at, sessionId }: { at: number; sessionId: number }): Promise<void> => {
       const viewerId = this.#store.readState().viewerId
       if (!viewerId) return
@@ -2289,13 +2293,6 @@ export class MaxClient {
   }
 
   /**
-   * **The socket is opened only when something actually needs MAX.**
-   *
-   * This is the whole point of the cache: a read the cache can answer opens no connection, spends
-   * no login, and is over before a socket would have finished its handshake. `connect()` stays
-   * public for the one command that must reach MAX to mean anything — starting a session.
-   */
-  /**
    * Never `CHAT_MARK`: reading history must not mark anything read (§19). Without `interactive`, as
    * the web client asks — measured 2026-09-25 on a channel with 8 unread: reading moved nothing.
    */
@@ -2416,6 +2413,13 @@ export class MaxClient {
     return await flow()
   }
 
+  /**
+   * **The socket is opened only when something actually needs MAX.**
+   *
+   * This is the whole point of the cache: a read the cache can answer opens no connection, spends
+   * no login, and is over before a socket would have finished its handshake. `connect()` stays
+   * public for the one command that must reach MAX to mean anything — starting a session.
+   */
   async #connectOnce(): Promise<void> {
     if (!this.#login) await this.connect()
   }
@@ -2479,7 +2483,6 @@ export class MaxClient {
     return answer
   }
 
-  /** The sentence to the person, and only the code to the log (`WarningEvent`). */
   /** A token from `MAX_TOKEN` belongs to whoever set it: nothing MAX hands back replaces what is stored. */
   #fromEnvironment(): boolean {
     try {
@@ -2489,6 +2492,7 @@ export class MaxClient {
     }
   }
 
+  /** The sentence to the person, and only the code to the log (`WarningEvent`). */
   #warnAbout(code: WarningCode, message: string, extra: { operation?: string; detail?: string } = {}): void {
     this.#warn(message)
     this.#emit({ event: "warning", code, ...extra })
@@ -2503,18 +2507,6 @@ export class MaxClient {
     }
   }
 
-  /**
-   * A client id that never repeats within a process.
-   *
-   * `Date.now()` alone is not enough: two sends in the same millisecond get the same number, and if
-   * MAX really does deduplicate by `cid` the second message vanishes with no error anywhere. Caught
-   * by a test, not by a lost message. Across processes this is still millisecond-grained, which is
-   * safe while one invocation sends one message.
-   */
-  /**
-   * Uploads one file and answers what the message attaches (measured 2026-09-24). An upload is never
-   * retried: a failure here happens before `MSG_SEND`, so nothing was sent.
-   */
   async #profilePhoto(path: string): Promise<string> {
     if (!isImage(path)) throw new CliError("validation_error", `${path} is not an image MAX takes as a photo`)
     const bytes = await readUpload(path)
@@ -2523,6 +2515,10 @@ export class MaxClient {
     return uploadPhoto(url, path, bytes)
   }
 
+  /**
+   * Uploads one file and answers what the message attaches (measured 2026-09-24). An upload is never
+   * retried: a failure here happens before `MSG_SEND`, so nothing was sent.
+   */
   async #upload({ path, bytes, kind, voice }: Upload): Promise<Payload> {
     const request = { count: 1, type: 0, uploaderType: 0, profile: false } as const
     if (kind === "photo") {
@@ -2663,6 +2659,14 @@ export class MaxClient {
     return String(this.#nextCid())
   }
 
+  /**
+   * A client id that never repeats within a process.
+   *
+   * `Date.now()` alone is not enough: two sends in the same millisecond get the same number, and if
+   * MAX really does deduplicate by `cid` the second message vanishes with no error anywhere. Caught
+   * by a test, not by a lost message. Across processes this is still millisecond-grained, which is
+   * safe while one invocation sends one message.
+   */
   #nextCid(): number {
     const now = Date.now()
     this.#previousCid = now > this.#previousCid ? now : this.#previousCid + 1
@@ -3010,7 +3014,6 @@ const batched = <T>(items: T[], size: number): T[][] => {
   return batches
 }
 
-/** Paging over a list already in hand — the fallback for when there is no store to page in SQL. */
 /**
  * The same filter as the store's, for the path where no store opened.
  *
@@ -3041,6 +3044,7 @@ const matchingPeople = (people: Contact[], query: string | undefined): Contact[]
   return people.filter((person) => `${person.name ?? ""} ${person.username ?? ""}`.toLocaleLowerCase().includes(needle))
 }
 
+/** Paging over a list already in hand — the fallback for when there is no store to page in SQL. */
 const paged = <T>(items: T[], limit: number | undefined, offset: number): Page<T> => {
   const page = limit === undefined ? items.slice(offset) : items.slice(offset, offset + limit)
   return { items: page, hasMore: offset + page.length < items.length }
@@ -3182,7 +3186,6 @@ export const wirePhone = (typed: string): string => {
   return `+${digits}`
 }
 
-/** 21 characters were refused as too long and 15 were taken (measured 2026-09-24); MAX draws the line. */
 /** Measured 2026-09-25 (`MAX-57`, ASCII): 20 characters taken, 21 refused with `folder.validation.title.too-long`. */
 const FOLDER_TITLE_MAX = 20
 

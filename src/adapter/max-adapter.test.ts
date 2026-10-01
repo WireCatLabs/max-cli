@@ -39,6 +39,7 @@ const connected = (answers: Record<number, Payload | ((request: Payload) => Payl
   const store = new SessionStore({ profile: `adapter-${profiles++}`, keyring: memoryKeyring() })
   store.writeToken("a-token")
   const client = new MaxClient({
+    sends: "caller",
     store,
     connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     warn: () => {},

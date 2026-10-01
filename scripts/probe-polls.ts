@@ -29,14 +29,14 @@ if (!store.readToken()) {
 }
 
 let connection = new Connection({ timeoutMs: 20_000 })
-let client = new MaxClient({ store, connection, timeoutMs: 20_000 })
+let client = new MaxClient({ store, connection, timeoutMs: 20_000, sends: "caller" })
 /** MAX closes the connection after a request it cannot read; the next step logs in again. */
 let lost = false
 const live = async () => {
   if (!lost) return
   await client.close().catch(() => {})
   connection = new Connection({ timeoutMs: 20_000 })
-  client = new MaxClient({ store, connection, timeoutMs: 20_000 })
+  client = new MaxClient({ store, connection, timeoutMs: 20_000, sends: "caller" })
   await client.connect()
   lost = false
 }

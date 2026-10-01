@@ -32,7 +32,7 @@ if (!store.readToken()) {
 
 const TAB_LOGIN_CHATS = 15
 const connection = new Connection({ timeoutMs: 20_000 })
-const client = new MaxClient({ store, connection, timeoutMs: 20_000 })
+const client = new MaxClient({ store, connection, timeoutMs: 20_000, sends: "caller" })
 
 const record = (value: unknown): Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {}

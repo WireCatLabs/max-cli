@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest"
+import { EventEmitter } from "node:events"
+import { describe, expect, it, vi } from "vitest"
+import type { WebSocket } from "ws"
 import { mockMax } from "../testing/mock-max.js"
 import { Connection } from "./connection.js"
 import { encodeFrame } from "./frame.js"
@@ -38,6 +40,41 @@ describe("the connection", () => {
     // sentence. Found by running it, not by a test; the test exists so it stays found.
     await expect(connection.close()).resolves.toBeUndefined()
     expect(max.closed).toBe(true)
+  })
+
+  it("opens again after an open that failed, rather than keeping the dead socket", async () => {
+    const max = mockMax({ answers: { 6: { ok: true } } })
+    const refused = Object.assign(new EventEmitter(), { readyState: 3, OPEN: 1, CONNECTING: 0, close: () => {} })
+    let attempts = 0
+    const createSocket = () => {
+      attempts++
+      if (attempts > 1) return max.createSocket()
+      queueMicrotask(() => refused.emit("error", new Error("connect ECONNREFUSED")))
+      return refused as unknown as WebSocket
+    }
+    const connection = new Connection({ createSocket, timeoutMs: 50 })
+
+    await expect(connection.open()).rejects.toThrow("ECONNREFUSED")
+    await connection.open()
+
+    await expect(connection.invoke(6, {})).resolves.toEqual({ ok: true })
+    expect(attempts).toBe(2)
+    await connection.close()
+  })
+
+  it("leaves no timer behind when a request cannot be encoded", async () => {
+    const max = mockMax({ answers: {} })
+    const connection = new Connection({ createSocket: max.createSocket, timeoutMs: 60_000 })
+    await connection.open()
+    vi.useFakeTimers()
+    try {
+      await expect(connection.invoke(6, { bad: Symbol("unencodable") } as never)).rejects.toThrow("Unrecognized")
+      expect(vi.getTimerCount()).toBe(0)
+      expect(max.sent).toHaveLength(0)
+    } finally {
+      vi.useRealTimers()
+      await connection.close()
+    }
   })
 
   it("times out one request without waiting for the whole command", async () => {

@@ -39,6 +39,7 @@ const setUp = () => {
     const record = maxRecord({ account: () => session.readState().viewerId, env })
     const Wire = served ? Served : Connection
     const client = new MaxClient({
+      sends: "caller",
       store: session,
       record,
       connection: new Wire({ createSocket: max.createSocket, timeoutMs: 50 }),
