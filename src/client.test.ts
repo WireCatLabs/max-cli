@@ -8,6 +8,7 @@ import { openCache } from "./cache/open.js"
 import { type CacheStore, openStore } from "./cache/store.js"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
+import { maxMessenger } from "./messenger.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
@@ -292,7 +293,7 @@ describe("MaxClient", () => {
     expect(max.sent).toHaveLength(2)
   })
 
-  it("names a one-to-one chat after the other person, with one lookup for all of them", async () => {
+  it("names a one-to-one chat after the other person, with one lookup for all of them, and says who that is", async () => {
     const withDialogs = {
       ...loginAnswer,
       chats: [
@@ -319,6 +320,7 @@ describe("MaxClient", () => {
     await client.close()
 
     expect(chats.map((chat) => chat.title)).toEqual(["Ivan Petrov", "Maria S"])
+    expect(chats.map((chat) => maxMessenger.partnerOf?.(chat))).toEqual(["10000003", "10000004"])
     const lookups = max.sent.filter((call) => call.opcode === Opcode.CONTACT_INFO)
     expect(lookups).toHaveLength(1)
     expect(((lookups[0]?.payload.contactIds ?? []) as number[]).sort()).toEqual([10000003, 10000004])
