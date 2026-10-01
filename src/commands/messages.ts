@@ -1,9 +1,14 @@
 import { CliError, singleLine } from "@leemour/cli-core"
-import { annotate } from "@leemour/cli-core/commands"
-import { deleteCommand, pinCommand, unpinCommand } from "@leemour/cli-messaging/cli"
+import {
+  deleteCommand,
+  editCommand,
+  forwardCommand,
+  pinCommand,
+  sendCommand,
+  unpinCommand,
+} from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
-import { sendTime } from "../config.js"
 import type { Id, Message, WindowedMessage } from "../domain/models.js"
 import { type Saved, save } from "../download.js"
 import { maxMessenger } from "../messenger.js"
@@ -11,7 +16,6 @@ import { renderMessages } from "../rendering/messages.js"
 import { notDownloaded, spoken, transcribe, withTranscript } from "../transcribe/index.js"
 import { isInstalled, modelsDirectory } from "../transcribe/install.js"
 import { speechModel } from "../transcribe/models.js"
-import { readBody } from "./body.js"
 import { type CommandContext, forCommand } from "./context.js"
 import { hearingFields, hearingOptions, hearMessages } from "./hearing.js"
 import { renderList, renderPage, wholeNumber } from "./paging.js"
@@ -241,82 +245,7 @@ export const messagesCommand = (): Command => {
       })
     })
 
-  /**
-   * One message, one command, no retry.
-   *
-   * There is no `--dry-run` here: the target and the text are both in the line the person typed, so
-   * a preview would restate the command back at them (REQUIREMENTS §21). What this command does owe
-   * the caller is honesty about an outcome it does not know — see `MaxClient.messages.send`.
-   *
-   * **The body may come from a pipe instead**, by leaving the argument off — `readBody` says why
-   * argv is the wrong place for it and why omission is the signal rather than a flag.
-   */
-  annotate(command.command("send"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("[text]", "what to say; leave it off to read it from stdin, or to send only a file")
-    .description("send one text message")
-    .option("--send-id <n>", "reuse the id of an earlier ambiguous send; MAX collapses the duplicate", (value) =>
-      Number.parseInt(value, 10),
-    )
-    // `notify` is part of MSG_SEND and has always been sent as `true`. It is the one send option
-    // whose absence is felt at the other end rather than here: a script posting at 3am wakes
-    // somebody up, and there was no way to say otherwise.
-    .option("--silent", "deliver without a notification")
-    .option("--reply-to <message>", "answer this message id in the same chat")
-    .option(
-      "--file <path>",
-      "attach a file; .jpg .png .webp .gif go as a photo, .mp4 .mov .webm .mkv as a video. Repeat it for more than one",
-      (value: string, previous: string[] = []) => [...previous, value],
-    )
-    .option("--as-file", "send every --file as a plain file to download, a video included")
-    .option("--voice <path>", "send an Ogg Opus file as a voice message, alone, with no text")
-    .option("--allow-any-file", "send a --file even from a hidden folder, ~/.ssh or max's own folders")
-    .option("--md, --markdown", "read **bold**, _italic_, ~~struck~~ and `code` in the text; \\ keeps a mark literal")
-    .option(
-      "--at <time>",
-      "let MAX send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now",
-    )
-    .action(async function (this: Command, chat: string, text: string | undefined) {
-      const options = this.optsWithGlobals()
-      const { renderer, settings, createClient, run } = forCommand(this)
-      const at = options.at === undefined ? undefined : sendTime(String(options.at))
-
-      // Before the run directory and before the socket: a body we cannot read is a command that
-      // never attempted anything, so there is nothing to record and nothing to close.
-      const files: string[] = options.file ?? []
-      const voice = options.voice === undefined ? undefined : String(options.voice)
-      const body = text ?? (files.length > 0 || voice !== undefined ? "" : await readBody())
-
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
-
-      await run("messages send", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
-
-        try {
-          const chatId = await client.chats.resolve(chat)
-          const sent = await client.messages.send(chatId, body, {
-            ...(options.sendId === undefined ? {} : { cid: options.sendId }),
-            ...(options.silent === true ? { notify: false } : {}),
-            ...(options.replyTo === undefined ? {} : { replyTo: String(options.replyTo).trim() }),
-            ...(options.markdown === true ? { markdown: true } : {}),
-            ...(files.length > 0 ? { files } : {}),
-            ...(options.asFile === true ? { asFile: true } : {}),
-            ...(voice === undefined ? {} : { voice }),
-            ...(options.allowAnyFile === true ? { anyFile: true } : {}),
-            ...(at === undefined ? {} : { at }),
-          })
-          if (at !== undefined) {
-            renderer.note(
-              `scheduled for ${sent.scheduledFor ?? new Date(at).toISOString()} — MAX sends it under a new id`,
-            )
-          }
-          renderer.result(sent)
-        } finally {
-          await client.close()
-          await cache?.close()
-        }
-      })
-    })
+  command.addCommand(sendCommand(maxMessenger))
 
   /** Read-only: cancelling one is `MSG_DELETE`, which max does not send — that stays in the MAX app. */
   command
@@ -340,65 +269,9 @@ export const messagesCommand = (): Command => {
       })
     })
 
-  annotate(command.command("edit"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<message>", "id of your own message")
-    .argument("[text]", "the new text; leave it off to read it from stdin")
-    .description("change the text of your own message; the other person may have read it already")
-    .option("--md, --markdown", "read **bold**, _italic_, ~~struck~~ and `code` in the text; \\ keeps a mark literal")
-    .action(async function (this: Command, chat: string, messageId: string, text: string | undefined) {
-      const options = this.optsWithGlobals()
-      const { renderer, settings, createClient, run } = forCommand(this)
-      const body = text ?? (await readBody())
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
-
-      await run("messages edit", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
-        try {
-          const chatId = await client.chats.resolve(chat)
-          renderer.result(
-            await client.messages.edit(chatId, messageId.trim(), body, { markdown: options.markdown === true }),
-          )
-        } finally {
-          await client.close()
-          await cache?.close()
-        }
-      })
-    })
-
+  command.addCommand(editCommand(maxMessenger))
   command.addCommand(deleteCommand(maxMessenger))
-
-  annotate(command.command("forward"), { mutates: true })
-    .argument("<chat>", "the chat the message is in: an id, or part of a chat name")
-    .argument("<message>", "message id")
-    .requiredOption("--to <chat>", "the chat to forward it to: an id, or part of a chat name")
-    .description("forward one message to another chat")
-    .option("--send-id <n>", "reuse the id of an earlier ambiguous forward; MAX collapses the duplicate", (value) =>
-      Number.parseInt(value, 10),
-    )
-    .option("--silent", "deliver without a notification")
-    .action(async function (this: Command, chat: string, messageId: string) {
-      const options = this.optsWithGlobals()
-      const { renderer, settings, createClient, run } = forCommand(this)
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
-
-      await run("messages forward", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
-        try {
-          const from = await client.chats.resolve(chat)
-          const to = await client.chats.resolve(String(options.to))
-          const sent = await client.messages.forward(from, messageId.trim(), to, {
-            ...(options.sendId === undefined ? {} : { cid: options.sendId }),
-            ...(options.silent === true ? { notify: false } : {}),
-          })
-          renderer.result(sent)
-        } finally {
-          await client.close()
-          await cache?.close()
-        }
-      })
-    })
-
+  command.addCommand(forwardCommand(maxMessenger))
   command.addCommand(pinCommand(maxMessenger))
   command.addCommand(unpinCommand(maxMessenger))
 

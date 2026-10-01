@@ -12,6 +12,7 @@ import type * as Max from "../domain/models.js"
 import type { Markup } from "../markdown.js"
 import { isId } from "../resolve.js"
 import type { SessionStore } from "../session/store.js"
+import { isImage, isVideo } from "../upload.js"
 
 export type MaxAdapter = MessengerAdapter & MessageEditing & MessagePins & MessageReactions & ReadState
 
@@ -65,14 +66,19 @@ export const maxAdapter = (client: MaxClient, store: SessionStore): MaxAdapter =
         ...(anchor ? { anchor } : {}),
       })),
 
-    send: async (to, text, { sendId, replyTo, silent, markup = [], at, attachments = [] }) => {
+    send: async (to, text, { sendId, replyTo, silent, noPreview, markup = [], at, attachments = [] }) => {
+      if (noPreview) {
+        throw new CliError("validation_error", "MAX's own client has no way to send a link without its preview")
+      }
       const message = await client.messages.send(to, text, {
         cid: cidOf(sendId),
         ...(silent ? { notify: false } : {}),
         ...(replyTo === undefined ? {} : { replyTo }),
         ...(at === undefined ? {} : { at: Date.parse(at) }),
         ...(markup.length === 0 ? {} : { markup: markup.map(toMaxMarkup) }),
-        ...(attachments.length === 0 ? {} : { uploads: attachments }),
+        ...(attachments.length === 0
+          ? {}
+          : { uploads: attachments.map((upload) => ({ ...upload, kind: uploadKind(upload) })) }),
       })
       return { message: toMessage(message), sendId }
     },
@@ -118,6 +124,10 @@ const cidOf = (sendId: string): number => {
   }
   return cid
 }
+
+/** As `max messages send --file` always sent them: a picture as a photo, a video as a video. */
+const uploadKind = ({ name, kind }: { name: string; kind: "photo" | "file" }) =>
+  isImage(name) ? "photo" : isVideo(name) ? "video" : kind
 
 const unknownChat = (id: string): Chat => ({
   id,

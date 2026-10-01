@@ -1068,7 +1068,7 @@ export class MaxClient {
         anyFile?: boolean
         at?: number
         /** Files already read and checked by the caller — the shared services read their own. */
-        uploads?: { name: string; bytes: Uint8Array; kind: "photo" | "file" }[]
+        uploads?: { name: string; bytes: Uint8Array; kind: "photo" | "video" | "file" }[]
         /** Marks already taken out of `text`, in MAX's names. */
         markup?: Markup[]
       } = {},
@@ -1083,12 +1083,6 @@ export class MaxClient {
         throw new CliError(
           "validation_error",
           "a scheduled message cannot be silent — MAX's own client never sends one",
-        )
-      }
-      if (options.at !== undefined && options.cid !== undefined) {
-        throw new CliError(
-          "validation_error",
-          `--send-id repeats an ambiguous send, which is not safe for a scheduled one — \`max messages scheduled ${chatId}\` shows whether it is queued`,
         )
       }
 
@@ -1235,7 +1229,7 @@ export class MaxClient {
         const sent = await this.#deliver(toChatId, "", cid, {
           ...options,
           forward: { chatId: fromChatId, messageId },
-          repeat: `max messages forward ${fromChatId} ${messageId} --to ${toChatId}`,
+          repeat: false,
         })
         this.#sends?.record({ chatId: toChatId, kind: "forward", outcome: "sent", messageId: sent.id, sendId })
         return sent
@@ -1742,8 +1736,8 @@ export class MaxClient {
       files?: Upload[]
       /** Attachments that need no upload — a poll. */
       attaches?: Payload[]
-      /** The command that repeats this attempt, named in `outcome_unknown`. */
-      repeat?: string
+      /** The command that repeats this attempt, named in `outcome_unknown`; `false` when no command can repeat it safely. */
+      repeat?: string | false
       at?: number
     },
   ): Promise<Message> {
@@ -1786,7 +1780,9 @@ export class MaxClient {
         throw new CliError(
           "outcome_unknown",
           `the message may or may not have been sent (${failure.message}) — ` +
-            `\`${options.repeat ?? "max messages send <chat> <text>"} --send-id ${cid}\` repeats the attempt without risking a second copy`,
+            (options.repeat === false
+              ? `look in chat ${chatId} before trying again: a second attempt is a second copy`
+              : `\`${options.repeat ?? "max messages send <chat> <text>"} --send-id ${cid}\` repeats the attempt without risking a second copy`),
           { sendId: cid },
         )
       }

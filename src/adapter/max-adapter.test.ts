@@ -79,6 +79,17 @@ describe("the MAX adapter", () => {
     expect(sent(Opcode.MSG_SEND)).toEqual([])
   })
 
+  it("refuses a send without a link preview, which MAX's own client cannot make", async () => {
+    const { adapter, sent } = connected()
+
+    await expect(
+      adapter.send("111", "https://example.test", { sendId: "1790000000000", noPreview: true }),
+    ).rejects.toMatchObject({
+      code: "validation_error",
+    })
+    expect(sent(Opcode.MSG_SEND)).toEqual([])
+  })
+
   it("answers history as the client does, MAX's own attachment ids kept as the provider's", async () => {
     const { adapter, client } = connected()
 

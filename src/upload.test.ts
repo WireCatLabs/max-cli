@@ -5,6 +5,7 @@ import type { AddressInfo } from "node:net"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
@@ -39,9 +40,9 @@ beforeAll(async () => {
 
 afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())))
 
-const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
+const mocked = (fileUrl: string) => {
   let refusals = 1
-  const max = mockMax({
+  return mockMax({
     answers: {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, chats: [{ id: 0, type: "DIALOG" }] },
@@ -54,6 +55,15 @@ const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
     },
     refuse: { [Opcode.MSG_SEND]: () => (refusals-- > 0 ? "attachment.not.ready" : undefined) },
   })
+}
+
+const sentOf = (max: ReturnType<typeof mockMax>) => ({
+  sends: max.sent.filter((call) => call.opcode === Opcode.MSG_SEND).map((call) => call.payload),
+  slots: max.sent.filter((call) => call.opcode === Opcode.VIDEO_UPLOAD).map((call) => call.payload),
+})
+
+const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
+  const max = mocked(fileUrl)
   const keyring = memoryKeyring()
   const streams = captureStreams()
   const code = await run(["messages", "send", "0", ...argv, "--json"], {
@@ -67,9 +77,26 @@ const send = async (argv: string[], { fileUrl = "/file" } = {}) => {
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     sleep: async () => {},
   })
-  const sends = max.sent.filter((call) => call.opcode === Opcode.MSG_SEND).map((call) => call.payload)
-  const slots = max.sent.filter((call) => call.opcode === Opcode.VIDEO_UPLOAD).map((call) => call.payload)
-  return { code, sends, slots, stderr: streams.stderr.join("") }
+  return { code, ...sentOf(max), stderr: streams.stderr.join("") }
+}
+
+/** What only the client sends since `messages send` became the shared command: a voice note, a file as a file, several files. */
+const sendDirect = async (text: string, options: Parameters<MaxClient["messages"]["send"]>[2]) => {
+  const max = mocked("/file")
+  const store = new SessionStore({ profile: "upload-direct", keyring: memoryKeyring() })
+  store.writeToken("a-token")
+  const client = new MaxClient({
+    store,
+    connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+    warn: () => {},
+    sleep: async () => {},
+  })
+  const error = await client.messages
+    .send("0", text, options)
+    .then(() => undefined)
+    .catch((failure: Error) => failure)
+  await client.close()
+  return { error, ...sentOf(max) }
 }
 
 type Sent = { message: { text: string; attaches: Record<string, unknown>[] } }
@@ -130,18 +157,18 @@ describe("sending a video and a voice message", () => {
     expect(ranges["/video"]).toMatch(/^bytes 0-\d+\/\d+$/)
   })
 
-  it("sends a video as a plain file with --as-file", async () => {
-    const { code, sends, slots } = await send(["--file", join(directory, "clip.mp4"), "--as-file"])
+  it("sends a video as a plain file when asked", async () => {
+    const { error, sends, slots } = await sendDirect("", { files: [join(directory, "clip.mp4")], asFile: true })
 
-    expect(code).toBe(0)
+    expect(error).toBeUndefined()
     expect(slots).toEqual([])
     expect((sends.at(-1) as Sent).message.attaches[0]).toMatchObject({ _type: "FILE" })
   })
 
   it("sends an Ogg Opus file as a voice message with its length and waveform", async () => {
-    const { code, sends, slots } = await send(["--voice", join(directory, "note.ogg")])
+    const { error, sends, slots } = await sendDirect("", { voice: join(directory, "note.ogg") })
 
-    expect(code).toBe(0)
+    expect(error).toBeUndefined()
     expect(slots).toEqual([{ count: 1, type: 2, uploaderType: 1, profile: false }])
     const attach = (sends.at(-1) as Sent).message.attaches[0] as Record<string, unknown>
     expect(attach).toMatchObject({ _type: "AUDIO", token: "media-token" })
@@ -153,13 +180,12 @@ describe("sending a video and a voice message", () => {
   })
 
   it("**refuses a voice message that is not Ogg Opus, or has company, before sending anything**", async () => {
-    const notOgg = await send(["--voice", join(directory, "song.mp3")])
-    expect(notOgg.code).not.toBe(0)
-    expect(notOgg.stderr).toContain("ffmpeg -i")
-    const withText = await send(["hello", "--voice", join(directory, "note.ogg")])
-    expect(withText.stderr).toContain("goes alone")
-    const withPhoto = await send(["--file", join(directory, "clip.mp4"), "--file", join(directory, "picture.png")])
-    expect(withPhoto.stderr).toContain("a message of its own")
+    const notOgg = await sendDirect("", { voice: join(directory, "song.mp3") })
+    expect(notOgg.error?.message).toContain("ffmpeg -i")
+    const withText = await sendDirect("hello", { voice: join(directory, "note.ogg") })
+    expect(withText.error?.message).toContain("goes alone")
+    const withPhoto = await sendDirect("", { files: [join(directory, "clip.mp4"), join(directory, "picture.png")] })
+    expect(withPhoto.error?.message).toContain("a message of its own")
     for (const refused of [notOgg, withText, withPhoto]) expect(refused.sends).toEqual([])
   })
 })
@@ -177,11 +203,21 @@ describe("sending files", () => {
     expect(String(second?.message.attaches[0]?.fileId)).toBe("42")
   })
 
+  it("sends a --photo as a photo, and refuses --no-preview, which MAX's own client cannot send", async () => {
+    const photo = await send(["--photo", join(directory, "picture.png")])
+    expect(photo.code).toBe(0)
+    expect((photo.sends.at(-1) as Sent).message.attaches[0]).toMatchObject({ _type: "PHOTO" })
+
+    const unpreviewed = await send(["https://example.test", "--no-preview"])
+    expect(unpreviewed.code).toBe(2)
+    expect(unpreviewed.sends).toEqual([])
+  })
+
   it("sends two photos in one message", async () => {
     const photo = join(directory, "picture.png")
-    const { code, sends } = await send(["--file", photo, "--file", photo])
+    const { error, sends } = await sendDirect("", { files: [photo, photo] })
 
-    expect(code).toBe(0)
+    expect(error).toBeUndefined()
     expect((sends.at(-1) as { message: { attaches: unknown[] } }).message.attaches).toEqual([
       { _type: "PHOTO", photoToken: "photo-token" },
       { _type: "PHOTO", photoToken: "photo-token" },
@@ -189,16 +225,12 @@ describe("sending files", () => {
   })
 
   it("**refuses a file beside another attachment before uploading anything**", async () => {
-    const { code, sends, stderr } = await send([
-      "--file",
-      join(directory, "picture.png"),
-      "--file",
-      join(directory, "report.txt"),
-    ])
+    const { error, sends } = await sendDirect("", {
+      files: [join(directory, "picture.png"), join(directory, "report.txt")],
+    })
 
-    expect(code).not.toBe(0)
     expect(sends).toEqual([])
-    expect(stderr).toContain("a message of its own")
+    expect(error?.message).toContain("a message of its own")
   })
 
   it("**sends nothing when an upload fails**", async () => {

@@ -36,7 +36,7 @@ import type { SessionStore } from "../session/store.js"
 import { type Heard, hearAll, isVoice, transcribe, withTranscript } from "../transcribe/index.js"
 import { modelsDirectory } from "../transcribe/install.js"
 import { DEFAULT_MODEL, speechModel } from "../transcribe/models.js"
-import { confirmer, sendOptions } from "./confirm.js"
+import { confirmer } from "./confirm.js"
 import type { MaxSession } from "./session.js"
 
 const chat = v.pipe(v.string(), v.minLength(1), v.description("chat id, or part of a chat name"))
@@ -573,10 +573,23 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) => {
-      const at = args.at === undefined ? undefined : sendTime(args.at)
-      const chatId = await client.chats.resolve(args.chat)
-      return client.messages.send(chatId, args.text, sendOptions(args, at))
+    answer: async (client, args, { store }) => {
+      const at = args.at === undefined ? undefined : new Date(sendTime(args.at)).toISOString()
+      const sent = await shared(client, store).messages.send({
+        chat: args.chat,
+        text: args.text,
+        ...(args.reply_to === undefined ? {} : { replyTo: args.reply_to }),
+        ...(args.markdown === true ? { markdown: true } : {}),
+        ...(args.silent === true ? { silent: true } : {}),
+        ...(args.send_id === undefined ? {} : { sendId: String(args.send_id) }),
+        ...(at === undefined ? {} : { at }),
+      })
+      return {
+        sendId: sent.sendId,
+        operationId: sent.operationId,
+        message: sent.message,
+        ...(at ? { scheduledFor: at } : {}),
+      }
     },
   }),
   max_messages_edit: tool({
@@ -584,13 +597,11 @@ const SEND_TOOLS = {
     description:
       "Replace the text of one of the owner's own messages. Only when the owner asked for this exact change. " +
       "The other person may have read the old text already. Attachments stay.",
-    input: v.object({ chat, message, text: v.pipe(v.string(), v.minLength(1)), markdown }),
+    input: v.object({ chat, message, text: v.pipe(v.string(), v.minLength(1)) }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) =>
-      client.messages.edit(await client.chats.resolve(args.chat), args.message, args.text, {
-        markdown: args.markdown === true,
-      }),
+    answer: (client, args, { store }) =>
+      shared(client, store).messages.edit({ chat: args.chat, message: args.message, text: args.text }),
   }),
   max_messages_forward: tool({
     title: "Forward a message",
@@ -602,20 +613,16 @@ const SEND_TOOLS = {
       message,
       to: v.pipe(chat, v.description("the chat to forward it to")),
       silent: v.optional(v.pipe(v.boolean(), v.description("deliver without a notification"))),
-      send_id: v.optional(v.pipe(v.number(), v.integer(), v.description("the sendId of an earlier outcome_unknown"))),
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args) =>
-      client.messages.forward(
-        await client.chats.resolve(args.chat),
-        args.message,
-        await client.chats.resolve(args.to),
-        {
-          ...(args.send_id === undefined ? {} : { cid: args.send_id }),
-          ...(args.silent === true ? { notify: false } : {}),
-        },
-      ),
+    answer: (client, args, { store }) =>
+      shared(client, store).messages.forward({
+        chat: args.chat,
+        message: args.message,
+        to: args.to,
+        silent: args.silent === true,
+      }),
   }),
   max_messages_pin: tool({
     title: "Pin a message",

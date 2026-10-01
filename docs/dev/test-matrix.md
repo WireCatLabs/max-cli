@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**408 ✅ · 23 ⛔ · 0 ❌** — 174 commands, 257 options.
+**406 ✅ · 23 ⛔ · 0 ❌** — 174 commands, 255 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -109,24 +109,22 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages transcribe` |  | ✅ |  |
 | `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
+| `messages send` | `--reply-to` | ✅ |  |
 | `messages send` | `--send-id` | ✅ |  |
 | `messages send` | `--silent` | ✅ |  |
-| `messages send` | `--reply-to` | ✅ |  |
-| `messages send` | `--file` | ✅ |  |
-| `messages send` | `--as-file` | ✅ |  |
-| `messages send` | `--voice` | ✅ |  |
-| `messages send` | `--allow-any-file` | ✅ |  |
+| `messages send` | `--no-preview` | ✅ |  |
 | `messages send` | `--markdown` | ✅ |  |
+| `messages send` | `--file` | ✅ |  |
+| `messages send` | `--photo` | ✅ |  |
+| `messages send` | `--allow-any-file` | ✅ |  |
 | `messages send` | `--at` | ✅ |  |
 | `messages scheduled` |  | ✅ |  |
 | `messages edit` |  | ✅ |  |
-| `messages edit` | `--markdown` | ✅ |  |
 | `messages delete` |  | ✅ |  |
 | `messages delete` | `--for-everyone` | ✅ |  |
 | `messages delete` | `--allow-dangerous` | ✅ |  |
 | `messages forward` |  | ✅ |  |
 | `messages forward` | `--to` | ✅ |  |
-| `messages forward` | `--send-id` | ✅ |  |
 | `messages forward` | `--silent` | ✅ |  |
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |

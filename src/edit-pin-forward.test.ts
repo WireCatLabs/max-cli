@@ -80,16 +80,15 @@ const journalOf = (profile: string) => new SendJournal(sendsPathFor(profile)).en
 describe("editing", () => {
   it("sends the message's attachments back, so the photo stays, and journals the length, not the text", async () => {
     const { environment, sentWith } = messenger()
-    const edited = await runWith(["e-edit", "messages", "edit", "111", MESSAGE, "**new**", "--md"], environment)
+    const edited = await runWith(["e-edit", "messages", "edit", "111", MESSAGE, "new"], environment)
 
     expect(edited.code).toBe(0)
-    expect(sentWith(Opcode.MSG_EDIT)[0]?.payload).toMatchObject({
-      text: "new",
-      elements: [{ type: "STRONG", from: 0, length: 3 }],
-      attachments: [PHOTO],
-    })
-    expect(JSON.parse(edited.stdout)).toMatchObject({ id: MESSAGE, text: "new" })
-    expect(journalOf("e-edit")).toMatchObject([{ chatId: "111", kind: "edit", outcome: "sent", length: 7 }])
+    expect(sentWith(Opcode.MSG_EDIT)[0]?.payload).toMatchObject({ text: "new", attachments: [PHOTO] })
+    const answer = JSON.parse(edited.stdout)
+    expect(answer).toMatchObject({ operationId: expect.any(String), message: { id: MESSAGE, text: "new" } })
+    expect(journalOf("e-edit")).toMatchObject([
+      { chatId: "111", kind: "edit", outcome: "sent", length: 3, operationId: answer.operationId },
+    ])
     expect(JSON.stringify(journalOf("e-edit"))).not.toContain("new")
   })
 
@@ -129,18 +128,18 @@ describe("forwarding", () => {
     expect(journalOf("e-forward")).toMatchObject([{ chatId: "222", kind: "forward", outcome: "sent" }])
   })
 
-  it("`--send-id` reuses the id given, and `--silent` delivers without a notification", async () => {
+  it("`--silent` delivers without a notification", async () => {
     const { environment, sentWith } = messenger()
-    const argv = ["e-fwd-cid", "messages", "forward", "111", MESSAGE, "--to", "222", "--send-id", "4242", "--silent"]
+    const argv = ["e-fwd-cid", "messages", "forward", "111", MESSAGE, "--to", "222", "--silent"]
     expect((await runWith(argv, environment)).code).toBe(0)
 
     expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
-      expect.objectContaining({ notify: false, message: expect.objectContaining({ cid: 4242 }) }),
+      expect.objectContaining({ notify: false }),
     ])
-    expect(journalOf("e-fwd-cid")).toMatchObject([{ kind: "forward", outcome: "sent", sendId: "4242" }])
+    expect(journalOf("e-fwd-cid")).toMatchObject([{ kind: "forward", outcome: "sent" }])
   })
 
-  it("repeats a lost forward once with the same cid, then answers outcome_unknown with the command to repeat", async () => {
+  it("repeats a lost forward once with the same cid, then answers outcome_unknown and says to look first", async () => {
     const { environment, sentWith } = messenger({ send: () => undefined })
     const lost = await runWith(["e-lost", "messages", "forward", "111", MESSAGE, "--to", "222"], environment)
 
@@ -149,11 +148,9 @@ describe("forwarding", () => {
     expect(cids[0]).toBe(cids[1])
     const { error } = JSON.parse(lost.stderr)
     expect(error.code).toBe("outcome_unknown")
-    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --send-id ${cids[0]}`)
-    expect(error.sendId).toBe(cids[0])
-    expect(journalOf("e-lost")).toMatchObject([
-      { kind: "forward", outcome: "outcome_unknown", sendId: String(cids[0]) },
-    ])
+    expect(error.message).toContain("look in chat 222 before trying again")
+    expect(error.message).not.toContain("--send-id")
+    expect(journalOf("e-lost")).toMatchObject([{ kind: "forward", outcome: "outcome_unknown" }])
   })
 
   it("counts against the hourly limit, and so does an edit; a quiet pin does not", async () => {
