@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { run } from "../program.js"
+import { ensureSqlite } from "@leemour/cli-messaging/sqlite-runtime"
 
 // `max chats --json | head` closes the pipe while we are still writing, and an unhandled EPIPE
 // makes Node print a stack trace over the output of the command that just worked. A reader that
@@ -11,4 +11,7 @@ for (const stream of [process.stdout, process.stderr]) {
   })
 }
 
+await ensureSqlite()
+// A static import would load the whole program, and its SQLite, before ensureSqlite could swap it.
+const { run } = await import("../program.js")
 process.exitCode = await run(process.argv.slice(2))

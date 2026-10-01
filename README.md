@@ -282,7 +282,7 @@ npm install -g @leemour/max-cli
 max --version
 ```
 
-Нужен **Node 22 или новее**, либо **Bun 1.3+**. Работает на macOS, Linux и Windows. Подробности,
+Нужен **Node 22.16 или новее**, либо **Bun 1.3+**. Работает на macOS, Linux и Windows. Подробности,
 переменные окружения и то, куда ложатся файлы, — [docs/installation.md](docs/installation.md).
 
 Если после установки команда `max` не находится, `npx @leemour/max-cli doctor` скажет почему и

@@ -61,6 +61,10 @@
 
 ### Изменено — может сломать скрипты
 
+- **Нужен Node 22.16 или новее** (или Bun, как раньше). Если Node на Linux взял системный SQLite,
+  а тот слишком стар для локальной копии, `max` перезапускается на своём SQLite из
+  `@leemour/cli-messaging-sqlite` до того, как что-то прочитать или отправить. Официальные сборки
+  Node и Bun ничего не замечают.
 - **`max serve --detach` и `max serve --stop` убраны**: это `max server start` и `max server stop`.
 - **`max server status --json` отвечает теми же полями, что tg**: `byHand` стал `by` (`hand` — руками,
   `command` — его запустила команда, `server` — `max server start`, `unit` — служба); добавлены
