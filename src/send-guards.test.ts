@@ -211,7 +211,7 @@ describe("the send guard", () => {
       readOnlyFrom: "default",
       sendsPerHour,
       journal: new SendJournal(sendsPathFor(profile)),
-      recipients: new RecipientList(recipientsPathFor(profile)),
+      recipients: new RecipientList(recipientsPathFor(profile), "max"),
       warn: () => {},
       now: () => new Date(time),
     })
@@ -240,7 +240,7 @@ describe("two senders at once", () => {
       readOnlyFrom: "default",
       sendsPerHour,
       journal: new SendJournal(sendsPathFor(profile)),
-      recipients: new RecipientList(recipientsPathFor(profile)),
+      recipients: new RecipientList(recipientsPathFor(profile), "max"),
       warn: () => {},
       now: () => new Date(time),
     })
@@ -300,7 +300,7 @@ describe("a reaction", () => {
       readOnlyFrom: "config file: profiles.work",
       sendsPerHour: options.sendsPerHour ?? 1,
       journal: new SendJournal(sendsPathFor(profile)),
-      recipients: new RecipientList(recipientsPathFor(profile)),
+      recipients: new RecipientList(recipientsPathFor(profile), "max"),
       warn: () => {},
     })
 
@@ -309,7 +309,7 @@ describe("a reaction", () => {
       "cannot send, react, change chats or change the account",
     )
 
-    new RecipientList(recipientsPathFor("g-react-list")).add({
+    new RecipientList(recipientsPathFor("g-react-list"), "max").add({
       id: "111",
       title: null,
       addedAt: "2026-09-24T00:00:00Z",

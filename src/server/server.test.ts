@@ -776,7 +776,11 @@ describe("the send guard, in the server", () => {
   })
 
   it("refuses a delete to a chat that is not on the recipient list, and a send with no chat at all", async () => {
-    new RecipientList(recipientsPathFor("g-list")).add({ id: "222", title: "Other", addedAt: new Date().toISOString() })
+    new RecipientList(recipientsPathFor("g-list"), "max").add({
+      id: "222",
+      title: "Other",
+      addedAt: new Date().toISOString(),
+    })
     const { store, max } = await serve("g-list")
 
     const deleted = await ask(store, {

@@ -57,7 +57,7 @@ describe("answering and reacting", () => {
     ])
   })
 
-  it("`--md` is `--markdown`: the marks go out as markup", async () => {
+  it("`--md`: the marks go out as markup", async () => {
     const { code, max } = await runAgainst(["messages", "send", "0", "**yes**", "--md"])
 
     expect(code).toBe(0)
