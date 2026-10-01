@@ -1074,7 +1074,7 @@ export class MaxClient {
         anyFile?: boolean
         at?: number
         /** Files already read and checked by the caller — the shared services read their own. */
-        uploads?: { name: string; bytes: Uint8Array; kind: "photo" | "video" | "file" }[]
+        uploads?: { name: string; bytes: Uint8Array; kind: "photo" | "video" | "file" | "voice" }[]
         /** Marks already taken out of `text`, in MAX's names. */
         markup?: Markup[]
       } = {},
@@ -1100,8 +1100,10 @@ export class MaxClient {
           kind: isImage(path) ? "photo" : isVideo(path) && options.asFile !== true ? "video" : "file",
         })),
       )
-      for (const { name, bytes, kind } of options.uploads ?? [])
-        files.push({ path: name, bytes: Buffer.from(bytes), kind })
+      for (const { name, bytes, kind } of options.uploads ?? []) {
+        const held = Buffer.from(bytes)
+        files.push({ path: name, bytes: held, kind, ...(kind === "voice" ? { voice: await voiceOf(name, held) } : {}) })
+      }
       if (options.voice !== undefined) {
         const bytes = await readUpload(options.voice, { anyFile: options.anyFile === true })
         files.push({ path: options.voice, bytes, kind: "voice", voice: await voiceOf(options.voice, bytes) })

@@ -157,18 +157,18 @@ describe("sending a video and a voice message", () => {
     expect(ranges["/video"]).toMatch(/^bytes 0-\d+\/\d+$/)
   })
 
-  it("sends a video as a plain file when asked", async () => {
-    const { error, sends, slots } = await sendDirect("", { files: [join(directory, "clip.mp4")], asFile: true })
+  it("sends a video as a plain file with --as-file", async () => {
+    const { code, sends, slots } = await send(["--file", join(directory, "clip.mp4"), "--as-file"])
 
-    expect(error).toBeUndefined()
+    expect(code).toBe(0)
     expect(slots).toEqual([])
     expect((sends.at(-1) as Sent).message.attaches[0]).toMatchObject({ _type: "FILE" })
   })
 
   it("sends an Ogg Opus file as a voice message with its length and waveform", async () => {
-    const { error, sends, slots } = await sendDirect("", { voice: join(directory, "note.ogg") })
+    const { code, sends, slots } = await send(["--voice", join(directory, "note.ogg")])
 
-    expect(error).toBeUndefined()
+    expect(code).toBe(0)
     expect(slots).toEqual([{ count: 1, type: 2, uploaderType: 1, profile: false }])
     const attach = (sends.at(-1) as Sent).message.attaches[0] as Record<string, unknown>
     expect(attach).toMatchObject({ _type: "AUDIO", token: "media-token" })

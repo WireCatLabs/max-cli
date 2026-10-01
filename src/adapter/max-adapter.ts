@@ -8,6 +8,7 @@ import type {
   MessengerAdapter,
   ReadState,
 } from "@leemour/cli-messaging/cli"
+import type { Upload } from "@leemour/cli-messaging/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
 import type { Markup } from "../markdown.js"
@@ -148,9 +149,9 @@ const cidOf = (sendId: string): number => {
   return cid
 }
 
-/** As `max messages send --file` always sent them: a picture as a photo, a video as a video. */
-const uploadKind = ({ name, kind }: { name: string; kind: "photo" | "file" }) =>
-  isImage(name) ? "photo" : isVideo(name) ? "video" : kind
+/** As `max messages send --file` always sent them: a picture as a photo, a video as a video unless `--as-file`. */
+const uploadKind = ({ name, kind, asFile }: Upload) =>
+  kind === "voice" ? kind : isImage(name) ? "photo" : isVideo(name) && asFile !== true ? "video" : kind
 
 const toPoll = ({ chatId, messageId, poll }: Max.PollMessage): Poll => ({
   chatId,
