@@ -34,6 +34,7 @@ jobs:
       - run: node --experimental-strip-types scripts/test-matrix.ts --check
       - run: git diff --exit-code
       - run: pnpm docs:check
+      - run: node dist/bin/max.js commands --json | pnpm exec cli-messaging-parity max --pages README.md docs/*.md
       - run: pnpm parity:check
 
   bun:
