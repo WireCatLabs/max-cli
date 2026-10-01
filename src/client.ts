@@ -2226,9 +2226,13 @@ export class MaxClient {
     await this.#keep("login", (record) => record.applyLogin({ ...delta, ...(own ? { marker } : {}) }))
   }
 
-  /** The record's marker when there is one — a login without it asks for everything, which both stores can take. */
+  /**
+   * The record's marker when there is one — a login without it asks for everything, which both stores can take.
+   * A cache with no marker of its own was emptied (an upgrade, a deleted file) and takes a delta as the whole list.
+   */
   async #loginMarker(): Promise<number | undefined> {
-    if (!this.#record) return this.#cache?.syncMarker()
+    const own = await this.#cache?.syncMarker()
+    if (!this.#record || (this.#cache && own === undefined)) return own
     let marker: number | undefined
     await this.#keep("marker", async (record) => {
       marker = await record.syncMarker()
