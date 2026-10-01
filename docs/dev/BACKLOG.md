@@ -139,6 +139,30 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 ## Foundation and risks
 
+- **CLI-60** · P1 · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
+  copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
+  and contacts reads. Left: `messages list|show|context|search` (🚧 `feat/move-group-6-reads`, #282),
+  the `store` group (🚧 `feat/move-group-6-archive`), MCP tools, `serve` and transcription off the old
+  cache and `src/cache/` deleted, `inbox`/`review`, the admin commands, max's half of the permission
+  levels. Plan and handoff: `docs_ai/plans/2026-10-01-t6-group6-handoff.md`.
+- **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
+  poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
+  Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
+  shared `polls vote`. Found live 2026-10-01.
+- **CLI-62** · P3 · `chats show` notes «only 2 of 3 members could be read» when the list is complete:
+  `members` leaves out the account itself, `participantsCount` counts it. cli-messaging,
+  `chats-command.ts` `show`.
+- **CLI-63** · P3 · The shared `messages list --transcribe` fetches a voice message on a second
+  connection after the read's own closes — a second MAX login with `--no-serve`. Keep the read's
+  connection until the download is done. cli-messaging `hearing-command.ts`.
+- **CLI-64** · P2 · The shared `contacts list` falls back to dialogs with the chat id as the person's
+  id — right for Telegram, wrong for MAX (a dialog's id is not the partner's). Use
+  `Messenger.partnerOf` there; until then max's MCP contact tools stay on `MaxClient`. cli-messaging
+  `services/people.ts` `contactsIn`.
+- **CLI-65** · P3 · The shared speech-models folder (`cli-common`'s cache) is written twice: in
+  cli-messaging `src/speech/install.ts` and again in max (after #282). Export it from cli-messaging
+  and use that.
+
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
   a program holding the token of a personal account. oclif's `plugin-plugins` is the model.
