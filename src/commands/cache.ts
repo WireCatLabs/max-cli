@@ -1,7 +1,7 @@
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
-import { resolveSettings } from "../config.js"
-import { outputFor } from "./context.js"
+import { maxRecord } from "../record.js"
+import { forCommand } from "./context.js"
 
 /**
  * The way out, and it matters more than it looks.
@@ -17,22 +17,21 @@ export const cacheCommand = (): Command => {
     .command("clear")
     .description("forget everything this profile has cached")
     .action(async function (this: Command) {
-      const { profile } = resolveSettings(this.optsWithGlobals())
-      const { renderer } = outputFor(this)
+      const { settings, renderer, store } = forCommand(this)
+      const { profile } = settings
+      const record = maxRecord({ account: () => store.readState().viewerId })
       const cache = await openProfileCache(profile, { onProblem: (message) => renderer.note(message) })
-
-      if (!cache) {
-        renderer.result({ profile: profile, cleared: false })
-        renderer.note("there is no cache for this profile")
-        return
-      }
-
       try {
-        await cache.clear()
-        renderer.result({ profile: profile, cleared: true })
-        renderer.success(`forgot everything cached for "${profile}"`)
+        await cache?.clear()
+        // The shared store holds this account's rows too; a profile that never logged in has none there.
+        const purged = await record.purge()
+        const cleared = cache !== undefined || purged
+        renderer.result({ profile, cleared })
+        if (cleared) renderer.success(`forgot everything cached for "${profile}"`)
+        else renderer.note("there is no cache for this profile")
       } finally {
-        await cache.close()
+        await cache?.close()
+        await record.close()
       }
     })
 

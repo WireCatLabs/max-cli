@@ -17,6 +17,10 @@ export interface MaxRecord {
   applyLogin(delta: LoginDelta): Promise<void>
   names(ids: Id[]): Promise<Map<Id, string>>
   remember(people: Contact[]): Promise<void>
+  /** The next login asks for everything, as `contacts sync` wants. */
+  forgetMarker(): Promise<void>
+  /** Everything this account holds in `messages.db`; other accounts stay. */
+  purge(): Promise<boolean>
   close(): Promise<void>
 }
 
@@ -68,6 +72,18 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
     remember: async (people) => {
       const key = keyOf()
       if (key && people.length > 0) await (await store()).savePeople(key, people.map(factsOf))
+    },
+
+    forgetMarker: async () => {
+      const key = keyOf()
+      if (key) await (await store()).clearSyncState(key, MARKER)
+    },
+
+    purge: async () => {
+      const key = keyOf()
+      if (!key) return false
+      await (await store()).purge(key)
+      return true
     },
 
     close: async () => {

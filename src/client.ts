@@ -772,6 +772,7 @@ export class MaxClient {
 
       // Before connecting, or the login would carry the marker this is meant to discard.
       await cache.forgetSyncMarker()
+      await this.#keep("marker", (record) => record.forgetMarker())
       await this.#connectOnce()
 
       // The login names a fraction of the people in its own chats, so a full take that stopped

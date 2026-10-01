@@ -137,6 +137,33 @@ describe("contacts", () => {
     expect(JSON.parse(short.stderr).error.code).toBe("validation_error")
   })
 
+  it("`sync` takes everything into the shared store too, so the next shared read goes on from there", async () => {
+    let time = 1789776000000
+    const login = { profile: { contact: { id: 10000001 } }, chats: [] }
+    const answer = () => {
+      time += 1000
+      return { ...login, time }
+    }
+    const { environment, sent } = account({ [Opcode.LOGIN]: answer })
+    await runWith(["a-resync", "contacts", "list"], environment)
+    await runWith(["a-resync", "contacts", "sync"], environment)
+    await runWith(["a-resync", "contacts", "list"], environment)
+
+    const markers = sent(Opcode.LOGIN).map((one) => one.contactsSync)
+    expect(markers.at(-2)).toBe(0)
+    expect(markers.at(-1)).toBe(time - 1000)
+  })
+
+  it("`cache clear` forgets what the shared reads keep, too", async () => {
+    const { environment } = acquaintances()
+    await runWith(["a-clear", "contacts", "list"], environment)
+    expect(idsOf((await runWith(["a-clear", "contacts", "list", "--offline"], environment)).stdout)).toHaveLength(3)
+
+    expect((await runWith(["a-clear", "cache", "clear"], environment)).code).toBe(0)
+
+    expect(idsOf((await runWith(["a-clear", "contacts", "list", "--offline"], environment)).stdout)).toEqual([])
+  })
+
   it("`sync` forgets where the last login left off, and answers counts with no name in them", async () => {
     const { environment, sent } = acquaintances()
     await runWith(["a-sync", "contacts", "list"], environment)
