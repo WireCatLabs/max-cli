@@ -41,7 +41,8 @@ The script measures; you decide what each difference means.
   caused it (`git log -S`) and who owns the file (the parity plan, §8).
 - **MCP tools one CLI has alone** — expected while its commands are one-sided or planned; a tool
   whose command is `both` in the manifest is a finding.
-- **A page pair 🔴 by length** is a lead, not a verdict: open both and say what the shorter one lacks.
+- **A page pair 🔴 by headings** is a lead, not a verdict: open both and say what the one with fewer
+  sections lacks. Also check that STANDARD's list of one-sided pages still names real files.
 - **README sections** — compare against STANDARD Documents rule 2 and the open ruling on it in
   `DECISIONS.md` (`NEED-500` at the time of writing).
 - **Pinned versions** — a CLI more than one release behind blocks the rows the newer manifest
@@ -52,8 +53,8 @@ The script measures; you decide what each difference means.
 ## 3. Write the audit
 
 A new file `docs_ai/plans/parity/audit-<date>.md` (add `-2` for a second one that day), in the
-format the owner asked for ([report format](../../../docs_ai/plans/parity/audit-2026-10-01.md) is
-the first example):
+format the owner asked for ([the second audit of 2026-10-01](../../../docs_ai/plans/parity/audit-2026-10-01-2.md)
+is the example to copy):
 
 - **Lists, not wide tables**; statuses ✅ done · 🟡 being worked on · 🔴 open, nobody on it · ⚪
   one-sided on purpose.
