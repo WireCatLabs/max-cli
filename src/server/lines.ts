@@ -9,20 +9,38 @@ import { isInteger, isSafeNumber, parse, stringify } from "lossless-json"
  * literal would come back a `number` for any id that fits one.
  */
 export const toLine = (value: unknown): string =>
-  `${stringify(value, (_, item) => (typeof item === "bigint" ? { [BIGINT]: item.toString() } : item))}\n`
+  `${stringify(value, (_, item) =>
+    typeof item === "bigint"
+      ? { [BIGINT]: item.toString() }
+      : item instanceof Uint8Array
+        ? { [BYTES]: Buffer.from(item).toString("base64") }
+        : item,
+  )}\n`
 
+/**
+ * **Bytes cross as bytes**: a voice message's waveform is a `Uint8Array`, which `JSON` makes an
+ * object of indexes, and MAX refuses that send as `proto.payload` (measured 2026-10-01).
+ */
 export const fromLine = (line: string): Record<string, unknown> =>
-  parse(line, (_, item) => (isTagged(item) ? BigInt(item[BIGINT]) : item), {
-    parseNumber: (text) => (isInteger(text) && !isSafeNumber(text) ? BigInt(text) : Number(text)),
-  }) as Record<string, unknown>
+  parse(
+    line,
+    (_, item) =>
+      isTagged(item, BIGINT)
+        ? BigInt(item[BIGINT])
+        : isTagged(item, BYTES)
+          ? new Uint8Array(Buffer.from(item[BYTES], "base64"))
+          : item,
+    { parseNumber: (text) => (isInteger(text) && !isSafeNumber(text) ? BigInt(text) : Number(text)) },
+  ) as Record<string, unknown>
 
 const BIGINT = "$bigint"
+const BYTES = "$bytes"
 
-const isTagged = (item: unknown): item is { [BIGINT]: string } =>
+const isTagged = <K extends string>(item: unknown, tag: K): item is Record<K, string> =>
   typeof item === "object" &&
   item !== null &&
   Object.keys(item).length === 1 &&
-  typeof (item as Record<string, unknown>)[BIGINT] === "string"
+  typeof (item as Record<string, unknown>)[tag] === "string"
 
 /**
  * Calls `onLine` for each complete line `data` finishes, keeping the rest for next time. With
