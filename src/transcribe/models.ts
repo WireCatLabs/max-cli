@@ -153,6 +153,9 @@ export const VAD: ModelFile = {
 
 export const DEFAULT_MODEL = "gigaam-v3"
 
+/** Russian first: MAX is a Russian messenger. The shared hearing takes the first as its default. */
+export const SPEECH_MODELS = MODELS.map((model) => model.id)
+
 export const findModel = (id: string): SpeechModel | undefined => MODELS.find((model) => model.id === id)
 
 export const speechModel = (id: string): SpeechModel => {

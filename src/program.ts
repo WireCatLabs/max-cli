@@ -48,6 +48,8 @@ import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
 import { maxMessenger } from "./messenger.js"
 import { commandWords, liftProfile } from "./profile.js"
+import { modelsDirectory } from "./transcribe/install.js"
+import type { SpeechModel } from "./transcribe/models.js"
 import { skillHint, updateNotice } from "./update.js"
 import { VERSION } from "./version.js"
 
@@ -167,11 +169,13 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
   // Commands print through this rather than the process's own streams, so a test sees their output
   // and not only help and errors.
   provide(program, { ...options, streams })
+  const { recognizer } = options
   provideShared(program, {
     streams,
     app: MAX_APP,
     ...(options.tty === undefined ? {} : { tty: options.tty }),
     ...(options.system ? { system: options.system } : {}),
+    ...(recognizer ? { recognizer: (model: SpeechModel) => recognizer(model, modelsDirectory()) } : {}),
   })
   const argvLog = process.env.MAX_TEST_ARGV_LOG
   if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))

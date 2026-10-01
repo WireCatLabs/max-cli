@@ -658,7 +658,7 @@ read and send messages in a chat
 
 ### `max messages list`
 
-recent messages in a chat, oldest first
+a chat's messages, oldest to newest
 
 ```sh
 max messages list <chat> [options]
@@ -666,20 +666,22 @@ max messages list <chat> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 | Опция | Что делает |
 |---|---|
-| `--limit <n>` | how many to read. |
-| `--before <id-or-time>` | read what came before this message id, this ISO 8601 time, or 2h / 1d ago. |
-| `--after <id-or-time>` | read what came after this message id, this ISO 8601 time, or 2h / 1d ago; not with --before. |
+| `--limit <n>` | how many. |
+| `--before-id <id>` | only messages older than this message id. |
+| `--before-time <time>` | only messages older than this ISO 8601 time, or 2h / 1d ago. |
+| `--after-id <id>` | only messages newer than this message id. |
+| `--after-time <time>` | only messages newer than this ISO 8601 time, or 2h / 1d ago. |
+| `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
+| `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 | `--mark-read` | also mark the chat read up to the newest message shown; the other person sees it. |
-| `--transcribe` | hear voice messages not heard yet, on this machine; slow, the model must be downloaded. |
-| `--model <id>` | which downloaded speech model hears them; `max models audio list` shows them. |
 
 ### `max messages search`
 
-find messages in what this machine has already read
+search the local store — what was read, fetched or kept by serve; never asks the messenger
 
 ```sh
 max messages search <text> [options]
@@ -687,43 +689,44 @@ max messages search <text> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `text` | обязательный | what to look for; at least 3 characters. |
+| `text` | обязательный | every word must appear, as a word or the start of one: квартир finds квартира. |
 
 | Опция | Что делает |
 |---|---|
-| `--chat <id>` | only this chat; an id, because searching never connects to resolve a name. |
-| `--limit <n>` | how many to show. |
+| `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
+| `--limit <n>` | how many. |
+| `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 
 ### `max messages show`
 
-one message by its id
+one message, by its chat and id or by its msg: locator
 
 ```sh
-max messages show <chat> <message>
+max messages show <chat> [message]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
-| `message` | обязательный | message id. |
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
+| `message` | необязательный | the message id. |
 
 ### `max messages context`
 
 a message and what came either side of it, oldest first
 
 ```sh
-max messages context <chat> <message> [options]
+max messages context <chat> [message] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
-| `message` | обязательный | message id. |
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
+| `message` | необязательный | the message id. |
 
 | Опция | Что делает |
 |---|---|
-| `--before <n>` | how many before it. По умолчанию: `5`. |
-| `--after <n>` | how many after it. По умолчанию: `5`. |
+| `--before-n <n>` | how many before it. По умолчанию: `5`. |
+| `--after-n <n>` | how many after it. По умолчанию: `5`. |
 
 ### `max messages download`
 

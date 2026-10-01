@@ -1,9 +1,10 @@
-import { mkdirSync, readFileSync, truncateSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, truncateSync, writeFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -31,6 +32,12 @@ beforeAll(async () => {
   audioUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}/voice.ogg`
 })
 afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())))
+
+// Every test logs in as the same account, and the shared store is keyed by it: a transcript one
+// test kept would answer for the next.
+beforeEach(() => {
+  process.env.MESSAGING_STORE = join(mkdtempSync(join(tmpdir(), "hearing-")), "messages.db")
+})
 
 const wire = (minutesAgo: number, sender: number, text: string, voice = false) => {
   const time = now - minutesAgo * 60 * 1000
@@ -77,7 +84,9 @@ const setup = (messages: ReturnType<typeof wire>[]) => {
   const environment: Environment = {
     store: (profile) => {
       const store = new SessionStore({ profile, keyring })
+      // As `session start` leaves a profile: the token, and the account it logged in as.
       store.writeToken("a-token")
+      if (!store.readState().viewerId) store.writeState({ ...store.readState(), viewerId: String(ME) })
       return store
     },
     connection: () => {
@@ -122,7 +131,7 @@ describe("max messages list --transcribe", () => {
     expect(page.items).toHaveLength(2)
     expect(page.items[0].transcript).toBeUndefined()
     expect(page.unheard).toHaveLength(1)
-    expect(page.transcribeProblem).toMatch(/max models audio download gigaam-v3/)
+    expect(stderr).toMatch(/max models audio download gigaam-v3/)
     expect(stderr).toContain("not transcribed")
   })
 
@@ -139,8 +148,8 @@ describe("max messages list --transcribe", () => {
     expect(page.items[0]).toMatchObject({ id: String(voice.id), transcript: "перезвоню вечером" })
     expect(page.items[1].transcript).toBeUndefined()
     expect(page).toMatchObject({ unheard: [] })
-    expect(events.slice(0, 2)).toEqual(["closed", "recognized"])
-    expect(first.stderr).toContain("hearing 1 voice message with gigaam-v3")
+    // The voice is fetched on a connection of its own, and heard once every connection is closed.
+    expect(events).toEqual(["closed", "closed", "recognized"])
     expect(mock.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
 
     events.length = 0
@@ -166,7 +175,7 @@ describe("max messages list --transcribe", () => {
     )
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout[0] as string).unheard).toHaveLength(1)
+    expect(JSON.parse(stdout[0] as string).items[0].transcript).toBeUndefined()
     expect(stderr).toContain("--offline")
     expect(events).not.toContain("recognized")
   })

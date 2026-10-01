@@ -170,17 +170,17 @@ max shop bot messages list -100
 Код `2`. Переданы оба. Отказ, а не выбор одного из них: какой бы ни победил, узнать об этом
 можно было бы только по неверному ответу.
 
-## «--before takes a message id, an ISO 8601 time or 30m, 2h, 1d ago»
+## «--before-time takes an ISO 8601 time or 30m, 2h, 1d ago»
 
-Код `2`. `--before` не понял значение. Он принимает id сообщения — время берётся из самого id, читать
-чат раньше не нужно, — время в ISO 8601 или «сколько назад»:
+Код `2`. `--before-time` или `--after-time` не понял значение. Он принимает время в ISO 8601 или
+«сколько назад»:
 
 ```sh
-max messages list 0 --before 2026-09-20T01:00:00Z
-max messages list 0 --before 2h
+max messages list 0 --before-time 2026-09-20T01:00:00Z
+max messages list 0 --before-time 2h
 ```
 
-Голое число `--before` всегда читает как id сообщения, никогда как миллисекунды.
+Id сообщения — в `--before-id`: время берётся из самого id, читать чат раньше не нужно.
 
 ## Команда висит
 
