@@ -46,5 +46,8 @@ process.env.MAX_TEST_SANDBOX = "1"
 process.env.MAX_TEST_ARGV_LOG = ARGV_LOG
 // A terminal running the suite must not make it ask npm; the tests that want the check pass their own env.
 process.env.MAX_NO_UPDATE_CHECK = "1"
+// An agent running the suite would get the skill hint on stderr in whichever test came first.
+delete process.env.AI_AGENT
+delete process.env.CLAUDECODE
 
 afterAll(() => rmSync(sandbox, { recursive: true, force: true }))

@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-core"
@@ -5,7 +6,9 @@ import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
+import { instructions } from "./bot-mcp/instructions.js"
 import { type BotServerOptions, createBotServer } from "./bot-mcp/server.js"
+import { SKILL } from "./commands/skill.js"
 import { ModerationRules, moderationPathFor } from "./moderation/rules.js"
 import { run } from "./program.js"
 
@@ -118,6 +121,28 @@ describe("max bot mcp", () => {
     expect(offered).not.toContain("max_bot_chats_check")
     expect(offered.some((name) => /recipients_(add|remove|off)|webhooks|auth|api|uploads/.test(name))).toBe(false)
     expect((await call(client, "max_bot_me")).body).toMatchObject({ username: "helper_bot" })
+  })
+
+  it("serves SKILL.md as max://skill, and names it last in instructions within 2048 characters", async () => {
+    const { client } = await connect()
+    const text = instructions({
+      profile: "a-profile-name-of-some-length",
+      allowSend: true,
+      confirmSend: true,
+      allowDelete: true,
+      allowModerate: true,
+    })
+
+    const { resources } = await client.listResources()
+    const read = await client.readResource({ uri: "max://skill" })
+
+    expect(resources.map(({ uri }) => uri)).toEqual(["max://skill"])
+    expect(read.contents).toEqual([
+      { uri: "max://skill", mimeType: "text/markdown", text: readFileSync(SKILL, "utf8") },
+    ])
+    expect(text.length).toBeLessThanOrEqual(2048)
+    expect(text).toMatch(/`max skill install` installs it as an agent skill\.$/)
+    expect(calls).toEqual([])
   })
 
   it("answers max_bot_status with the token's source, the bot and the writing tools that are on", async () => {

@@ -48,7 +48,7 @@ import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
 import { maxMessenger } from "./messenger.js"
 import { commandWords, liftProfile } from "./profile.js"
-import { updateNotice } from "./update.js"
+import { skillHint, updateNotice } from "./update.js"
 import { VERSION } from "./version.js"
 
 export interface RunOptions extends Environment {
@@ -207,6 +207,8 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     await program.parseAsync(rest, { from: "user" })
     const line = await notice
     if (line) streams.diagnostic(line)
+    const hint = skillHint(rest)
+    if (hint) streams.diagnostic(hint)
     return process.exitCode === undefined ? 0 : Number(process.exitCode)
   } catch (thrown) {
     const error = ownCliError(thrown)

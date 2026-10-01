@@ -1,5 +1,6 @@
 import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server"
 import { openProfileCache } from "../cache/index.js"
+import { SKILL_RESOURCE } from "../commands/skill.js"
 import type { MaxSession } from "./session.js"
 
 const LISTED = 100
@@ -14,6 +15,8 @@ export const registerResources = (
   session: MaxSession,
   { profile, defaultLimit }: { profile: string; defaultLimit: number },
 ): void => {
+  const { name, uri, title, description, mimeType, read } = SKILL_RESOURCE
+  server.registerResource(name, uri, { title, description, mimeType }, read)
   server.registerResource(
     "chat",
     new ResourceTemplate("max://chat/{id}", {

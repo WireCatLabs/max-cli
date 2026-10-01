@@ -29,6 +29,7 @@ const SHOWN: SourcedSetting[] = [
   "mcpTools",
   "readOtherBots",
   "updateCheck",
+  "skillHint",
   "transcribeModel",
 ]
 

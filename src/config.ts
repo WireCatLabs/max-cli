@@ -94,6 +94,7 @@ const botSettings = strict(sharedEntries)
 const defaultsEntries = {
   ...personalEntries,
   updateCheck: v.optional(flag),
+  skillHint: v.optional(flag),
   transcribeModel: v.optional(
     v.picklist(
       MODELS.map((model) => model.id),
@@ -132,7 +133,7 @@ export const PROFILE_SETTINGS = Object.keys(profileSettings.entries) as ProfileS
 export const PERSONAL_ONLY_SETTINGS = Object.keys(personalEntries).filter(
   (key) => !(key in botSettings.entries),
 ) as ProfileSetting[]
-export const DEFAULTS_ONLY_SETTINGS = ["updateCheck", "transcribeModel"] as const
+export const DEFAULTS_ONLY_SETTINGS = ["updateCheck", "skillHint", "transcribeModel"] as const
 export const BOT_ONLY_SETTINGS = ["readOtherBots"] as const
 export const ALL_SETTINGS: string[] = [
   ...PROFILE_SETTINGS,
@@ -205,6 +206,8 @@ export interface Settings {
   readOtherBots: boolean | readonly string[]
   /** Whether a person at a terminal hears, once a day, that a newer version exists. */
   updateCheck: boolean
+  /** Whether an agent hears, once a day, that `max skill install` would give it this tool's guide. */
+  skillHint: boolean
   /** Which speech model `max messages transcribe` uses unless `--model` says otherwise. */
   transcribeModel: string
   /** Named in errors and in `max --help`, so a person can find the file that decided this. */
@@ -242,6 +245,7 @@ export type SourcedSetting =
   | "mcpTools"
   | "readOtherBots"
   | "updateCheck"
+  | "skillHint"
   | "transcribeModel"
 
 /**
@@ -351,6 +355,7 @@ export const resolveSettings = (
   )
   const shared = config.defaults ?? {}
   const updateCheck = first([["config file: defaults", shared.updateCheck]], true)
+  const skillHint = first([["config file: defaults", shared.skillHint]], true)
   const transcribeModel = first<string>([["config file: defaults", shared.transcribeModel]], DEFAULT_MODEL)
 
   /**
@@ -390,6 +395,7 @@ export const resolveSettings = (
     mcpTools: mcpTools.value,
     readOtherBots: readOtherBots.value,
     updateCheck: updateCheck.value,
+    skillHint: skillHint.value,
     transcribeModel: transcribeModel.value,
     configPath,
     configFound: existsSync(configPath),
@@ -411,6 +417,7 @@ export const resolveSettings = (
       mcpTools: mcpTools.from,
       readOtherBots: readOtherBots.from,
       updateCheck: updateCheck.from,
+      skillHint: skillHint.from,
       transcribeModel: transcribeModel.from,
     },
   }

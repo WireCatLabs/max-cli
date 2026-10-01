@@ -12,6 +12,7 @@ import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
 import type { Environment } from "../commands/context.js"
 import { listed } from "../commands/paging.js"
+import { SKILL_RESOURCE } from "../commands/skill.js"
 import { confirmer, type ResolveChat } from "../mcp/confirm.js"
 import { type CheckRow, describe, needsConfirm } from "../moderation/check.js"
 import type { GroupRules } from "../moderation/rules.js"
@@ -149,6 +150,8 @@ export const createBotServer = (options: BotServerOptions) => {
         }),
       },
     )
+    const { name: skill, uri, title, description, mimeType, read } = SKILL_RESOURCE
+    server.registerResource(skill, uri, { title, description, mimeType }, read)
     const confirmed = confirmSend ? confirmer() : undefined
 
     for (const [name, tool] of offered) {
