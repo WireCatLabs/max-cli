@@ -10,7 +10,7 @@
 следите за непрочитанным и сразу реагируйте на проблемы: спам, чужие ссылки, флуд, вопросы без
 ответа — по вашим правилам.
 
-Работает в Windows, macOS и Linux.
+Работает в Windows, macOS и Linux. Документация — [wirecat.dev/ru/docs/max](https://wirecat.dev/ru/docs/max).
 
 ```sh
 max sales bot messages send "Команда продаж" "Сборка готова"   # от имени бота
