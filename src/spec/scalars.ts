@@ -14,7 +14,11 @@ import * as v from "valibot"
 
 const WHOLE_NUMBER = /^-?\d+$/
 
-export const toWireId = (value: string): bigint => BigInt(value)
+/** `BigInt` also reads `0x1f`, `0b1` and `" 7 "` — each a different message than the one typed. */
+export const toWireId = (value: string): bigint => {
+  if (!WHOLE_NUMBER.test(value)) throw new TypeError("an id is a whole number written as a string")
+  return BigInt(value)
+}
 
 /**
  * An id in a request we build: a domain string in, the wire form out.

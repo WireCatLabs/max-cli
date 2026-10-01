@@ -27,6 +27,11 @@ describe("an id on the way out", () => {
     expect(back).toBe(value)
   })
 
+  it.each(["0x1F", "0b1", " 7 ", "1e3", ""])("is refused when it is not written in decimal: %j", (value) => {
+    expect(() => toWireId(value)).toThrow("whole number")
+    expect(() => v.parse(v.object({ chatId: id() }), { chatId: value })).toThrow("whole number")
+  })
+
   it("**is the digit that Number() used to lose**", () => {
     expect(String(Number("7268926000000000001"))).not.toBe("7268926000000000001")
     expect(toWireId("7268926000000000001").toString()).toBe("7268926000000000001")
