@@ -1,5 +1,6 @@
+import { CliError } from "@leemour/cli-core"
 import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
-import type { SendGuard } from "@leemour/cli-messaging/sends"
+import { fromOldSettings, type GuardRequest, type SendGuard } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
 import { maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
@@ -26,6 +27,20 @@ export const overServer = (guard: SendGuard, server: () => { readonly journals: 
   },
 })
 
+/**
+ * Since cli-messaging 0.76 the shared `messages delete` leaves its `--allow-dangerous` to the
+ * guard's permission levels, which max does not use until its half of P7 lands. Until then a
+ * deletion is refused without the flag, as before, and nothing asks instead (`NEED-238`).
+ */
+const refuseUnmeantDeletion = (command: Command, { kind, count }: GuardRequest): void => {
+  if (kind !== "delete" || command.optsWithGlobals<{ allowDangerous?: boolean }>().allowDangerous === true) return
+  throw new CliError(
+    "confirmation_required",
+    `this deletes ${count === 1 ? "a message" : `${count ?? "the"} messages`} and cannot be undone — ` +
+      "add --allow-dangerous to go ahead",
+  )
+}
+
 /** What cli-messaging's shared commands and services need from max, for the personal account. */
 export const maxMessenger: Messenger = {
   app: MAX_APP,
@@ -33,8 +48,10 @@ export const maxMessenger: Messenger = {
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
 
-  guard: (command, { profile }, warn) =>
-    overServer(guardFor(resolveSettings({ profile }), warn), () => clients.get(rootOf(command))?.server),
+  guard: (command, { profile }, warn) => ({
+    ...overServer(guardFor(resolveSettings({ profile }), warn), () => clients.get(rootOf(command))?.server),
+    ask: async (request) => refuseUnmeantDeletion(command, request),
+  }),
 
   resolveSettings: (flags: GlobalFlags, options: ResolveOptions = {}): Settings => {
     const { profile, offline, ...rest } = flags
@@ -45,7 +62,15 @@ export const maxMessenger: Messenger = {
         ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
       },
     )
-    return { ...own, offline: offline === true, configured: {}, shared: {} }
+    // max's guard decides its writes (P7 freeze); the levels here only let the shared read gate see the same profile.
+    return {
+      ...own,
+      offline: offline === true,
+      configured: {},
+      shared: {},
+      permissions: fromOldSettings(own.readOnly, own.allow),
+      permissionSources: {},
+    }
   },
 
   // Built with the profile's cache — without it `chats show` has no members and `contacts show`

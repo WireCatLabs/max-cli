@@ -92,6 +92,17 @@ describe("editing", () => {
     expect(JSON.stringify(journalOf("e-edit"))).not.toContain("new")
   })
 
+  it("`--md` sends the marks as markup, not as text", async () => {
+    const { environment, sentWith } = messenger()
+    const edited = await runWith(["e-md", "messages", "edit", "111", MESSAGE, "**new**", "--md"], environment)
+
+    expect(edited.code).toBe(0)
+    expect(sentWith(Opcode.MSG_EDIT)[0]?.payload).toMatchObject({
+      text: "new",
+      elements: [{ type: "STRONG", from: 0, length: 3 }],
+    })
+  })
+
   it("refuses somebody else's message and a forward without asking MAX to edit", async () => {
     const theirs = messenger({ sender: 20000002 })
     expect((await runWith(["e-theirs", "messages", "edit", "111", MESSAGE, "new"], theirs.environment)).code).toBe(2)
@@ -128,6 +139,16 @@ describe("forwarding", () => {
     expect(journalOf("e-forward")).toMatchObject([{ chatId: "222", kind: "forward", outcome: "sent" }])
   })
 
+  it("`--send-id` repeats a forward under the cid given, so MAX keeps one copy", async () => {
+    const { environment, sentWith } = messenger()
+    const argv = ["e-fwd-id", "messages", "forward", "111", MESSAGE, "--to", "222", "--send-id", "1790000000000"]
+    const { code, stdout } = await runWith(argv, environment)
+
+    expect(code).toBe(0)
+    expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { cid: 1790000000000 } })
+    expect(JSON.parse(stdout)).toMatchObject({ sendId: "1790000000000" })
+  })
+
   it("`--silent` delivers without a notification", async () => {
     const { environment, sentWith } = messenger()
     const argv = ["e-fwd-cid", "messages", "forward", "111", MESSAGE, "--to", "222", "--silent"]
@@ -139,7 +160,7 @@ describe("forwarding", () => {
     expect(journalOf("e-fwd-cid")).toMatchObject([{ kind: "forward", outcome: "sent" }])
   })
 
-  it("repeats a lost forward once with the same cid, then answers outcome_unknown and says to look first", async () => {
+  it("repeats a lost forward once with the same cid, then answers outcome_unknown naming the safe repeat", async () => {
     const { environment, sentWith } = messenger({ send: () => undefined })
     const lost = await runWith(["e-lost", "messages", "forward", "111", MESSAGE, "--to", "222"], environment)
 
@@ -148,8 +169,7 @@ describe("forwarding", () => {
     expect(cids[0]).toBe(cids[1])
     const { error } = JSON.parse(lost.stderr)
     expect(error.code).toBe("outcome_unknown")
-    expect(error.message).toContain("look in chat 222 before trying again")
-    expect(error.message).not.toContain("--send-id")
+    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --send-id ${cids[0]}`)
     expect(journalOf("e-lost")).toMatchObject([{ kind: "forward", outcome: "outcome_unknown" }])
   })
 

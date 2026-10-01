@@ -10,7 +10,10 @@
 
 - **`max polls show <чат> <сообщение>`** — опрос с id вариантов и числом голосов, ничего не меняя.
 - **`max polls create --send-id`** — повторить создание опроса, ответ на которое не пришёл, без
-  второго опроса.
+  второго опроса. **`--revote`** — в опросе можно переголосовать.
+- **`max messages edit --md`** — разметка в правке, как в `send`.
+- **`max messages forward --send-id`** — повторить пересылку, ответ на которую не пришёл, без второй
+  копии. Если пересылка ответила `outcome_unknown`, ошибка называет команду повтора с этим номером.
 
 - **`max messages send --photo <путь>`** — отправить `.jpg .png .webp` фотографией, как в tg.
   `--no-preview` у `send` тоже есть, но MAX его не поддерживает, и команда откажет.
@@ -27,8 +30,7 @@
 
 ### Изменено — может сломать скрипты
 
-- **`max polls` — общие команды tg и max.** У `polls create` нет `--revote`, пока его не получат
-  общие команды. `polls vote|close --json` отвечают `{operationId, poll}`, где `poll` —
+- **`max polls` — общие команды tg и max.** `polls vote|close --json` отвечают `{operationId, poll}`, где `poll` —
   `{chatId, messageId, question, answers: [{id, text, voters, chosen}], closed, multiple, anonymous,
   voters}`; `polls create` — `{sendId, operationId, message}`. Так же отвечают инструменты MCP
   `max_polls_vote`, `max_polls_close`, `max_polls_create`; у `max_polls_create` вместо `revote`
@@ -38,9 +40,6 @@
   получат того, что было только у max, этого нет:
   - у `send` — `--voice` (голосовое), `--as-file` и несколько `--file` в одном сообщении: теперь одно
     вложение из `--file` и одно из `--photo`;
-  - у `edit` — `--md`: текст правки уходит как есть;
-  - у `forward` — `--send-id`. Если пересылка ответила `outcome_unknown`, ошибка теперь советует
-    посмотреть в чат, а не повторять.
 - **Ответы `--json`**: `send` — `{sendId, operationId, message}` (с `scheduledFor`, если с `--at`),
   `edit` и `forward` — `{operationId, message}`, вместо сообщения без обёртки. Так же отвечают
   инструменты MCP `max_messages_send`, `max_messages_edit` и `max_messages_forward`; у
