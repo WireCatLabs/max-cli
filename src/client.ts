@@ -860,7 +860,8 @@ export class MaxClient {
      *
      * `after` reads the other way and **leaves the anchor out**, so the next page's hint does not
      * repeat a row. MAX puts it in — measured 2026-09-23, `forward: n` with `backward: 0` starts
-     * with the message it was given — so one more is asked for and anything not later is dropped.
+     * with the message it was given — so the window starts a millisecond later, and one more than the page is
+     * asked for to tell whether another follows. Asking from the moment itself spent that one on the anchor.
      * `before` keeps the anchor, as it always has.
      *
      * `hasMore` here is a claim about the copy we hold, never about the chat: a full page back is
@@ -875,8 +876,8 @@ export class MaxClient {
 
       if (after !== undefined) {
         const found = this.#offline
-          ? this.#recorded(await this.#cache?.messages.window(chatId, after, 0, limit + 1), "messages")
-          : await this.#history(chatId, { from: after, backward: 0, forward: limit + 1 })
+          ? this.#recorded(await this.#cache?.messages.window(chatId, after + 1, 0, limit + 1), "messages")
+          : await this.#history(chatId, { from: after + 1, backward: 0, forward: limit + 1 })
         const later = found.filter((message) => Date.parse(message.timestamp) > after)
         return { items: later.slice(0, limit), hasMore: later.length > limit }
       }

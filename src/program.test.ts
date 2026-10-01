@@ -607,7 +607,7 @@ describe("the program", () => {
       expect(stderr).toContain("--after-id 116762160362694584")
 
       const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
-      expect(history).toMatchObject({ from: Number(116762160362694583n >> 16n), forward: 2, backward: 0 })
+      expect(history).toMatchObject({ from: Number(116762160362694583n >> 16n) + 1, forward: 2, backward: 0 })
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
     })
 
@@ -625,7 +625,7 @@ describe("the program", () => {
       ])
     })
 
-    it("`messages list --before-time` reads back from that moment", async () => {
+    it("`messages list --before-time` reads back from just before that moment", async () => {
       const { max, environment } = acquaintedMax()
       const { code } = await runWith(
         ["t-before-time", "messages", "list", "111", "--before-time", "2026-09-21T00:00:00Z", "--limit", "2", "--json"],
@@ -634,7 +634,7 @@ describe("the program", () => {
 
       expect(code).toBe(0)
       const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
-      expect(history).toMatchObject({ from: Date.parse("2026-09-21T00:00:00Z"), backward: 2, forward: 0 })
+      expect(history).toMatchObject({ from: Date.parse("2026-09-21T00:00:00Z") - 1, backward: 2, forward: 0 })
     })
 
     it("**refuses `--after-time` with `--before-time`** before connecting to anything", async () => {
