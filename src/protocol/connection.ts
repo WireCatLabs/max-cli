@@ -154,6 +154,17 @@ export class Connection {
     socket.on("error", (error: Error) => this.#lost(error))
   }
 
+  // The web client's INIT goes out as seq 0; the header holds two bytes, so the count wraps, and
+  // after the wrap a request still waiting would have its answer handed to the newer one.
+  #nextSeq(): number {
+    for (let tried = 0; tried < SEQ_MODULO; tried++) {
+      const seq = this.#seq
+      this.#seq = (this.#seq + 1) % SEQ_MODULO
+      if (!this.#pending.has(seq)) return seq
+    }
+    throw new Error(`all ${SEQ_MODULO} request numbers are waiting for an answer; refusing to reuse one`)
+  }
+
   /**
    * Sends one request and waits for the response carrying the same `seq`.
    *
@@ -174,9 +185,7 @@ export class Connection {
     if (this.#closed) throw new Error("the connection is closed")
     if (!this.#socket) throw new Error("the connection is not open")
 
-    // The web client's INIT goes out as seq 0; the header holds two bytes, so the count wraps.
-    const seq = this.#seq
-    this.#seq = (this.#seq + 1) % SEQ_MODULO
+    const seq = this.#nextSeq()
     const socket = this.#socket
     const sent = encodeFrame({ seq, opcode, payload })
 

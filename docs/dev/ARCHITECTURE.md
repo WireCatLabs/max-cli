@@ -54,6 +54,14 @@ only the event lines.
   The files stay where they are; a future `cli-messenger` package is a move of exactly these, not
   an untangling. `src/domain/map.ts` is outside it on purpose — it is where MAX becomes the model.
   Verified by a forbidden import in each of the four places.
+- **The newer directories have rules too** (2026-10-01): `src/adapter/` keeps off the wire, the
+  commands, MCP, `max serve`, the cache and the bot; `src/session/` off the commands, MCP, the cache,
+  the adapter and the bot; `src/server/` off the commands, MCP, the adapter, `program.ts` and the
+  bot; `src/messenger.ts` off the wire, MCP, `max serve` and the bot; `src/bot-mcp/`, like `src/bot/`,
+  off the personal account's protocol, session, spec, server, cache and client. Test files are exempt
+  in the first three, since they wire the real pieces together. Not ruled, because code already does
+  it: `messenger.ts` → `commands/context.js`, `session/adopt.ts` → `server/start.js` and `client.js`,
+  `bot-mcp/` → `commands/` and `mcp/confirm.js`. Verified by a forbidden import in each place.
 
 ## 2. What each layer may know
 

@@ -113,7 +113,7 @@
                       "../client.js",
                       "./client.js"
                     ],
-                    "message": "the messenger boundary (CLI-30): what any messenger CLI could share may not know MAX — no protocol, spec, generated wrappers, session, client or commands"
+                    "message": "the messenger boundary (CLI-30): what any messenger CLI could share may not know MAX \u2014 no protocol, spec, generated wrappers, session, client or commands"
                   }
                 ]
               }
@@ -133,14 +133,172 @@
                 "patterns": [
                   {
                     "group": [
-                      "../protocol/*",
-                      "../session/*",
-                      "../generated/*",
-                      "../spec/*",
+                      "../protocol/**",
+                      "../../protocol/**",
+                      "../session/**",
+                      "../../session/**",
+                      "../generated/**",
+                      "../../generated/**",
+                      "../spec/**",
+                      "../../spec/**",
+                      "../commands/**",
+                      "../../commands/**",
                       "../client.js",
-                      "../commands/*"
+                      "../../client.js"
                     ],
-                    "message": "the bot slice talks to the official HTTP Bot API only; the personal account's protocol, session, spec and client stay out of it (ARCHITECTURE §18)"
+                    "message": "the bot slice talks to the official HTTP Bot API only; the personal account's protocol, session, spec and client stay out of it (ARCHITECTURE \u00a718)"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/bot-mcp/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "../protocol/**",
+                      "../../protocol/**",
+                      "../session/**",
+                      "../../session/**",
+                      "../generated/**",
+                      "../../generated/**",
+                      "../spec/**",
+                      "../../spec/**",
+                      "../server/**",
+                      "../../server/**",
+                      "../cache/**",
+                      "../../cache/**",
+                      "../client.js",
+                      "../../client.js",
+                      "../messenger.js",
+                      "../../messenger.js"
+                    ],
+                    "message": "the bot's MCP server talks to the official Bot API through src/bot only; the personal account's protocol, session, spec, server, cache and client stay out of it (ARCHITECTURE \u00a718)"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/adapter/**", "!**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "**/protocol/**",
+                      "**/spec/**",
+                      "**/generated/**",
+                      "**/commands/**",
+                      "**/mcp/**",
+                      "**/server/**",
+                      "**/cache/**",
+                      "**/bot/**",
+                      "**/bot-mcp/**",
+                      "**/messenger.js"
+                    ],
+                    "message": "the adapter maps MaxClient onto the shared messenger port; the wire stays behind src/client.ts, and commands, MCP, max serve, the cache and the bot are above or beside it"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/session/**", "!**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "**/commands/**",
+                      "**/mcp/**",
+                      "**/cache/**",
+                      "**/bot/**",
+                      "**/bot-mcp/**",
+                      "**/adapter/**",
+                      "**/messenger.js"
+                    ],
+                    "message": "the session is the handshake, the keyring and the state file; it may not know the commands, MCP, the cache, the adapter or the bot"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/server/**", "!**/*.test.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "**/commands/**",
+                      "**/mcp/**",
+                      "**/bot/**",
+                      "**/bot-mcp/**",
+                      "**/adapter/**",
+                      "**/messenger.js",
+                      "**/program.js"
+                    ],
+                    "message": "max serve forwards frames and journals sends; it may not reach into the commands, MCP, the adapter, the program or the bot"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/messenger.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": [
+                      "**/protocol/**",
+                      "**/spec/**",
+                      "**/generated/**",
+                      "**/mcp/**",
+                      "**/server/**",
+                      "**/bot/**",
+                      "**/bot-mcp/**"
+                    ],
+                    "message": "the messenger hands the shared commands a MaxClient through the adapter; it does not reach the wire, MCP, max serve or the bot"
                   }
                 ]
               }
