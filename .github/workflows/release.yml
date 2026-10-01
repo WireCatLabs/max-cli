@@ -99,11 +99,13 @@ jobs:
       - name: wait for npm to show the version
         if: ${{ !inputs.dry_run }}
         run: |
-          for _ in $(seq 60); do
-            npm view "@leemour/max-cli@$VERSION" version --prefer-online >/dev/null 2>&1 && exit 0
-            sleep 5
+          # The version's own document, not `npm view`: on 2026-10-01 the document answered while the
+          # version list `npm view` reads was still stale for minutes (cli-core 0.13.0 and 0.14.0).
+          for _ in $(seq 90); do
+            curl -sfo /dev/null "https://registry.npmjs.org/@leemour%2fmax-cli/$VERSION" && exit 0
+            sleep 10
           done
-          echo "::error::npm does not show $VERSION after five minutes — not tagging; tag v$VERSION by hand once it does"
+          echo "::error::npm does not show $VERSION after fifteen minutes — not tagging; tag v$VERSION by hand once it does"
           exit 1
 
   tag:
