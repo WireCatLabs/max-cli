@@ -26,7 +26,13 @@ pre-commit:
         fi
 
 pre-push:
-  parallel: true
+  # Both commands run tsc into the same build; side by side they race on its state file.
+  parallel: false
   commands:
     typecheck:
       run: pnpm typecheck
+    parity:
+      # What CI refuses a minute later: a command or option parity.json does not expect, or a page
+      # naming an option that does not exist.
+      glob: "{README.md,docs/*.md,src/**/*.ts,package.json}"
+      run: pnpm -s parity:check
