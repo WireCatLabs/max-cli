@@ -5,3 +5,17 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  # The shared packages, at most a day after they ship. Dependabot's list stops at pnpm 10, so CI's
+  # frozen install is what proves each lockfile it writes.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: daily
+    allow:
+      - dependency-name: "@leemour/*"
+    groups:
+      shared:
+        patterns:
+          - "@leemour/*"
+    commit-message:
+      prefix: "chore(deps)"
