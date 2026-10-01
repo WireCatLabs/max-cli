@@ -448,7 +448,8 @@ max messages delete 0 100000000000000001 --for-everyone --allow-dangerous    # �
 ### Опросы
 
 ```sh
-max polls create 0 "Обед?" "Да" "Нет" --revote       # опрос отдельным сообщением
+max polls create 0 "Обед?" "Да" "Нет" --multiple     # опрос отдельным сообщением
+max polls show 0 100000000000000001                  # варианты с id и сколько за каждый
 max polls vote 0 100000000000000001 1                # голос за вариант с id 1
 max polls vote 0 100000000000000001 --retract        # снять голос, если опрос это разрешает
 max polls close 0 100000000000000001                 # закрыть свой опрос; открыть снова нельзя
@@ -457,7 +458,10 @@ max polls close 0 100000000000000001                 # закрыть свой �
 При чтении опрос печатается под сообщением: вопрос, варианты с id в `[скобках]` — его и берёт
 `polls vote`, — число голосов и ✓ у вашего. В JSON это поле `poll` у вложения:
 `{id, question, answers: [{id, text, votes, mine}], total, multiple, anonymous, revote, closed,
-quiz}`. Опрос версии новее известной печатается одной строкой без вариантов.
+quiz}`. Опрос версии новее известной печатается одной строкой без вариантов. `polls show` и ответы
+`polls vote|close` — общий с tg вид: `{chatId, messageId, question, answers: [{id, text, voters,
+chosen}], closed, multiple, anonymous, voters}`; у `vote` и `close` он в поле `poll` рядом с
+`operationId`. Разрешить переголосовать (`--revote`) `polls create` сейчас не умеет.
 
 web.max.ru опросы не показывает: вместо опроса там надпись «Обновите MAX…». Кто читает чат в
 браузере, ваш опрос не увидит — только в приложении на телефоне или компьютере.
