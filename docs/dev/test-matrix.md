@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**419 ✅ · 21 ⛔ · 0 ❌** — 179 commands, 261 options.
+**422 ✅ · 21 ⛔ · 0 ❌** — 179 commands, 264 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -92,18 +92,21 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts import` |  | ✅ |  |
 | `messages list` |  | ✅ |  |
 | `messages list` | `--limit` | ✅ |  |
-| `messages list` | `--before` | ✅ |  |
-| `messages list` | `--after` | ✅ |  |
-| `messages list` | `--mark-read` | ✅ |  |
+| `messages list` | `--before-id` | ✅ |  |
+| `messages list` | `--before-time` | ✅ |  |
+| `messages list` | `--after-id` | ✅ |  |
+| `messages list` | `--after-time` | ✅ |  |
 | `messages list` | `--transcribe` | ✅ |  |
 | `messages list` | `--model` | ✅ |  |
+| `messages list` | `--mark-read` | ✅ |  |
 | `messages search` |  | ✅ |  |
 | `messages search` | `--chat` | ✅ |  |
 | `messages search` | `--limit` | ✅ |  |
+| `messages search` | `--regex` | ✅ |  |
 | `messages show` |  | ✅ |  |
 | `messages context` |  | ✅ |  |
-| `messages context` | `--before` | ✅ |  |
-| `messages context` | `--after` | ✅ |  |
+| `messages context` | `--before-n` | ✅ |  |
+| `messages context` | `--after-n` | ✅ |  |
 | `messages download` |  | ✅ |  |
 | `messages download` | `--output` | ✅ |  |
 | `messages transcribe` |  | ✅ |  |
