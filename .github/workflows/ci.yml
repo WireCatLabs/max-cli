@@ -46,3 +46,25 @@ jobs:
           [ "$next" != "$pr" ] || exit 0
           echo "::warning file=package.json::version $pr is not above both main ($main) and npm's latest ($latest)" \
             "— bin/release will publish it as $next"
+
+  prose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: vale
+        env:
+          VALE_VERSION: 3.23.0
+          VALE_SHA256: cc35445a45186b8f0b01e11c01359694cf941e72cf6ab0fc44774f0e54c9d5fc
+        run: |
+          curl -sSfLo vale.tar.gz "https://github.com/vale-cli/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz"
+          echo "${VALE_SHA256}  vale.tar.gz" | sha256sum -c -
+          tar -xzf vale.tar.gz vale
+          # Warnings only until the rules are tuned: each finding is an annotation on the pull
+          # request, and the job never fails.
+          ./vale --output line README.md docs/*.md | sed 's/^/::warning::/' || true

@@ -40,7 +40,7 @@
     "mcp:tools": "node --experimental-strip-types scripts/mcp-tools.ts",
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
     "release:check": "pnpm build && node --experimental-strip-types scripts/release-check.ts",
-    "docs:check": "cli-dev docs-check --rules scripts/release/checks.ts",
+    "docs:check": "cli-dev docs-check --rules scripts/release/checks.ts --pages && cspell --no-progress --no-summary README.md 'docs/*.md' && rumdl check --config node_modules/@leemour/cli-core/config/rumdl.toml README.md docs/*.md",
     "parity:check": "pnpm build && node dist/bin/max.js commands --json | cli-messaging-parity max && node dist/bin/max.js commands --json | cli-messaging-parity max --pages README.md docs/*.md",
     "version:check": "cli-dev version",
     "version:sync": "cli-dev version --sync",
@@ -81,7 +81,7 @@
   },
   "dependencies": {
     "@bomb.sh/tab": "0.0.22",
-    "@leemour/cli-core": "0.12.0",
+    "@leemour/cli-core": "0.14.0",
     "@leemour/cli-messaging": "0.95.0",
     "@modelcontextprotocol/server": "2.1.0",
     "@msgpack/msgpack": "3.1.3",
@@ -98,11 +98,15 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.14",
+    "@cspell/dict-en-gb": "^5.0.34",
+    "@cspell/dict-ru_ru": "^2.3.2",
     "@modelcontextprotocol/client": "~2.1.0",
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^5.0.2",
+    "cspell": "^10.3.6",
     "lefthook": "^2.1.8",
+    "rumdl": "^0.2.78",
     "typescript": "^7.0.2",
     "vitest": "^5.0.1",
     "yaml": "^2.9.1"
