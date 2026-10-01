@@ -16,9 +16,22 @@ export const cacheCommand = (): Command => {
   command
     .command("clear")
     .description("forget everything this profile has cached")
+    .option("--left", "only the chats this account has left, with their messages")
     .action(async function (this: Command) {
       const { settings, renderer, store } = forCommand(this)
       const { profile } = settings
+      if (this.opts<{ left?: boolean }>().left) {
+        const cache = await openProfileCache(profile, { onProblem: (message) => renderer.note(message) })
+        try {
+          const chats = (await cache?.chats.clearLeft()) ?? 0
+          renderer.result({ profile, cleared: chats > 0, chats })
+          if (chats > 0) renderer.success(`forgot ${chats} chat(s) "${profile}" has left`)
+          else renderer.note("no chats this profile has left are cached")
+        } finally {
+          await cache?.close()
+        }
+        return
+      }
       const record = maxRecord({ account: () => store.readState().viewerId })
       const cache = await openProfileCache(profile, { onProblem: (message) => renderer.note(message) })
       try {

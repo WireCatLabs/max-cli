@@ -82,6 +82,14 @@ export interface CacheRecord {
     get(chatId: Id): Chat | undefined
     /** Everyone we hold in this chat except ourselves, by name. Channels have no rows here. */
     members(chatId: Id): Member[]
+    /**
+     * Given every chat the account is in, marks the rest as left — only from a complete list: a
+     * delta or a cut list names a fraction, and absence from it says nothing (`NEED-488`).
+     * Kept, not deleted; `write` unmarks a chat MAX sends again.
+     */
+    markLeft(present: Id[]): void
+    /** Deletes the chats marked left, with their messages and members. How many went. */
+    clearLeft(): number
   }
   people: {
     /**
@@ -186,7 +194,7 @@ export const openRecord = ({ database, now = () => Date.now() }: CacheOptions): 
    * a `hasMore` that lies, and it lies quietly — the reader simply never sees the last page.
    */
   const chatWhere = ({ query, kind, unread }: ChatFilter) => {
-    const clauses: string[] = []
+    const clauses: string[] = ["c.left_at IS NULL"]
     const values: (string | number)[] = []
 
     if (query !== undefined) {
@@ -199,7 +207,7 @@ export const openRecord = ({ database, now = () => Date.now() }: CacheOptions): 
     }
     if (unread) clauses.push("c.unread_count > 0")
 
-    return { sql: clauses.length === 0 ? "" : ` WHERE ${clauses.join(" AND ")}`, values }
+    return { sql: ` WHERE ${clauses.join(" AND ")}`, values }
   }
 
   const peopleWhere = ({ query }: { query?: string }) => {
@@ -226,7 +234,7 @@ export const openRecord = ({ database, now = () => Date.now() }: CacheOptions): 
     ON CONFLICT(id) DO UPDATE SET
       title = excluded.title, kind = excluded.kind, unread_count = excluded.unread_count,
       last_message_at = excluded.last_message_at, participants_count = excluded.participants_count,
-      fetched_at = excluded.fetched_at, generation = chats.generation + 1`)
+      fetched_at = excluded.fetched_at, generation = chats.generation + 1, left_at = NULL`)
 
   /**
    * **`COALESCE`, not assignment, for the three names.** The same person arrives from several
@@ -370,7 +378,10 @@ export const openRecord = ({ database, now = () => Date.now() }: CacheOptions): 
     chats: {
       read: (freshForMs) => {
         if (!isFresh("chats", freshForMs)) return undefined
-        return database.prepare("SELECT * FROM chats ORDER BY last_message_at DESC").all().map(toChat)
+        return database
+          .prepare("SELECT * FROM chats WHERE left_at IS NULL ORDER BY last_message_at DESC")
+          .all()
+          .map(toChat)
       },
       page: ({ limit, offset, ...filter }) => {
         const where = chatWhere(filter)
@@ -419,6 +430,28 @@ export const openRecord = ({ database, now = () => Date.now() }: CacheOptions): 
         }
         markFetched.run("chats", at)
       },
+
+      markLeft: (present) => {
+        database
+          .prepare("UPDATE chats SET left_at = ? WHERE left_at IS NULL AND id NOT IN (SELECT value FROM json_each(?))")
+          .run(now(), JSON.stringify(present))
+      },
+
+      clearLeft: () => {
+        const ids = database
+          .prepare("SELECT id FROM chats WHERE left_at IS NOT NULL")
+          .all()
+          .map((row) => String(row.id))
+        inTransaction(() => {
+          for (const id of ids) {
+            for (const table of ["messages", "chat_members", "ranges", "fetch_lease"])
+              database.prepare(`DELETE FROM ${table} WHERE chat_id = ?`).run(id)
+            database.prepare("DELETE FROM fetched WHERE kind = ?").run(`messages:${id}`)
+            database.prepare("DELETE FROM chats WHERE id = ?").run(id)
+          }
+        })
+        return ids.length
+      },
     },
 
     people: {
@@ -460,7 +493,7 @@ export const openRecord = ({ database, now = () => Date.now() }: CacheOptions): 
         database
           .prepare(
             `SELECT c.* FROM chat_members m JOIN chats c ON c.id = m.chat_id
-              WHERE m.person_id = ? ORDER BY c.last_message_at DESC`,
+              WHERE m.person_id = ? AND c.left_at IS NULL ORDER BY c.last_message_at DESC`,
           )
           .all(personId)
           .map(toChat),

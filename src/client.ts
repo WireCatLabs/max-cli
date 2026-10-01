@@ -159,6 +159,8 @@ export class MaxClient {
   readonly #wire = wireClient(this.#invoke)
   #login: Payload | undefined
   #chatsCut = false
+  /** Every chat the account is in: only then may a chat absent from the list be marked as left. */
+  #chatsComplete = false
   #previousCid = 0
   #people: Map<Id, Contact> | undefined
   #merged: SyncSummary | undefined
@@ -321,6 +323,8 @@ export class MaxClient {
       // is asked to order and page over them, and the delta this login carried is only a slice of
       // what it now holds.
       await cache.chats.write(chats)
+      // An empty answer is more likely a hiccup than an account that left every chat.
+      if (this.#chatsComplete && chats.length > 0) await cache.chats.markLeft(chats.map((chat) => chat.id))
       const items = await cache.chats.page({ limit: limit ?? Number.MAX_SAFE_INTEGER, offset, query, kind, unread })
       return { items, hasMore: offset + items.length < (await cache.chats.count({ query, kind, unread })) }
     },
@@ -2118,10 +2122,15 @@ export class MaxClient {
    */
   async #readRestOfChats(): Promise<void> {
     this.#chatsCut = false
+    this.#chatsComplete = false
     const session = this.#session()
     const chats = asArray(session.chats)
     const marker = record(chats.at(-1))?.lastEventTime
-    if (chats.length < LOGIN_CHATS || (typeof marker !== "number" && typeof marker !== "bigint")) return
+    if (chats.length < LOGIN_CHATS) {
+      this.#chatsComplete = true
+      return
+    }
+    if (typeof marker !== "number" && typeof marker !== "bigint") return
 
     try {
       const answer = await this.#wire.chats.list({ marker: Number(marker) })
@@ -2129,6 +2138,7 @@ export class MaxClient {
       const rest = asArray(answer.chats).filter((chat) => !known.has(asId(record(chat)?.id)))
       session.chats = [...chats, ...rest]
       this.#chatsCut = rest.length >= CHATS_PAGE_SEEN
+      this.#chatsComplete = !this.#chatsCut
     } catch (error) {
       this.#chatsCut = true
       this.#warnAbout("chats_partial", `only the newest ${chats.length} chats were read: ${reasonOf(error)}`)

@@ -4,7 +4,7 @@ import type { CacheDatabase } from "./driver.js"
  * **Raise this on every change to the statements below.** The second schema change is the one that
  * corrupts somebody's file, because the first is always made while the only copy is your own.
  */
-export const SCHEMA_VERSION = 5
+export const SCHEMA_VERSION = 6
 
 /**
  * Everything the cache holds, and the indexes are part of it rather than an afterthought — each
@@ -25,7 +25,8 @@ const STATEMENTS = [
      last_message_at    INTEGER,
      participants_count INTEGER,
      generation         INTEGER NOT NULL DEFAULT 0,
-     fetched_at         INTEGER NOT NULL
+     fetched_at         INTEGER NOT NULL,
+     left_at            INTEGER
    )`,
   `CREATE INDEX IF NOT EXISTS chats_by_recency ON chats (last_message_at DESC)`,
 

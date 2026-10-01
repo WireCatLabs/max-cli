@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**412 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 260 options.
+**413 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 261 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -204,6 +204,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `doctor report create` | `--run` | ✅ |  |
 | `doctor report create` | `--output` | ✅ |  |
 | `cache clear` |  | ✅ |  |
+| `cache clear` | `--left` | ✅ |  |
 | `runs list` |  | ✅ |  |
 | `runs list` | `--limit` | ✅ |  |
 | `runs show` |  | ✅ |  |
