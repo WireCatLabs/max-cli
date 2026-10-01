@@ -2,10 +2,11 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync
 import { createServer, type Server } from "node:net"
 import { dirname, join } from "node:path"
 import { type CliError, captureStreams, exitCodeFor, memoryKeyring } from "@leemour/cli-core"
-import { thisMachine } from "@leemour/cli-messaging/background"
+import { thisMachine, unitScope } from "@leemour/cli-messaging/background"
 import { guardedWrite, RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
 import { decode, ExtData } from "@msgpack/msgpack"
 import { afterEach, describe, expect, it } from "vitest"
+import { MAX_APP } from "../app.js"
 import { MaxClient } from "../client.js"
 import { contextFor } from "../commands/context.js"
 import { maxServerOptions, NO_RESTART_ON } from "../commands/server.js"
@@ -1046,7 +1047,8 @@ describe("max server", () => {
       const code = await run(argv, { streams, tty: false, system: linux })
       return { code, answer: JSON.parse(streams.stdout.join("") || "null") }
     }
-    const unit = join(process.env.XDG_CONFIG_HOME ?? "", "systemd", "user", "max-serve-x-unit.service")
+    const name = `max-serve-${unitScope(MAX_APP, "x-unit", process.env)}.service`
+    const unit = join(process.env.XDG_CONFIG_HOME ?? "", "systemd", "user", name)
     expect(unit.startsWith(process.env.MAX_STATE_DIR?.replace(/state$/, "") ?? "/nowhere")).toBe(true)
 
     expect((await call(["x-unit", "server", "install", "--json"])).answer).toMatchObject({
@@ -1059,9 +1061,9 @@ describe("max server", () => {
     expect(text).not.toContain("MAX_TOKEN")
 
     expect((await call(["x-unit", "server", "logs", "--lines", "5", "--json"])).answer).toMatchObject({
-      unit: "max-serve-x-unit.service",
+      unit: name,
     })
-    expect(ran.at(-1)).toEqual(["journalctl", "--user", "-u", "max-serve-x-unit.service", "-n", "5", "--no-pager"])
+    expect(ran.at(-1)).toEqual(["journalctl", "--user", "-u", name, "-n", "5", "--no-pager"])
 
     expect((await call(["x-unit", "server", "uninstall", "--json"])).answer).toMatchObject({ removed: true })
     expect(existsSync(unit)).toBe(false)

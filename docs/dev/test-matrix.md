@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**413 ✅ · 23 ⛔ · 0 ❌** — 175 commands, 261 options.
+**417 ✅ · 21 ⛔ · 0 ❌** — 178 commands, 260 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -176,15 +176,17 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `review` | `--unanswered` | ✅ |  |
 | `serve` |  | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
-| `serve` | `--detach` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
-| `serve` | `--stop` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `server start` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server start` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server stop` |  | ✅ |  |
-| `server status` |  | ✅ |  |
 | `server restart` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server restart` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
+| `server status` |  | ✅ |  |
+| `server logs` |  | ✅ |  |
+| `server logs` | `--lines` | ✅ |  |
+| `server install` |  | ✅ |  |
+| `server uninstall` |  | ✅ |  |
 | `watch` |  | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `config show` |  | ✅ |  |
