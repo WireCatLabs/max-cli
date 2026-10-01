@@ -25,7 +25,7 @@
 
 - **`max store status`** — сколько сообщений каждого чата хранится и какие куски скачаны целиком.
   **`store fetch --background`** и **`store jobs list|show|cancel`** — скачивание в фоне.
-  **`store info|check|migrate|backup|restore`** — уход за файлом общей копии. **`store clear --left
+  **`store info|check|migrate|backup|restore|reindex`** — уход за файлом общей копии. **`store clear --left
   --allow-dangerous`** удаляет из неё чаты, из которых вы вышли, с их сообщениями.
 
 - **`max messages search --regex`** — одно регулярное выражение по всему сохранённому тексту.

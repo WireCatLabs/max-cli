@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**435 ✅ · 22 ⛔ · 0 ❌** — 189 commands, 268 options.
+**436 ✅ · 22 ⛔ · 0 ❌** — 190 commands, 268 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -158,6 +158,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store info` |  | ✅ |  |
 | `store check` |  | ✅ |  |
 | `store migrate` |  | ✅ |  |
+| `store reindex` |  | ✅ |  |
 | `store backup` |  | ✅ |  |
 | `store restore` |  | ✅ |  |
 | `models audio list` |  | ✅ |  |

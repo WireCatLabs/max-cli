@@ -1027,6 +1027,14 @@ bring the store up to this build's schema, then normalize the messages stored be
 max store migrate
 ```
 
+### `max store reindex`
+
+rebuild the word index and its typo vocabulary from the stored messages; loses no message
+
+```sh
+max store reindex
+```
+
 ### `max store backup`
 
 copy the store into a new file, while it is in use; never overwrites a file

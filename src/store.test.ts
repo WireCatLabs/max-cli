@@ -126,7 +126,7 @@ describe("max store", () => {
     expect(readFileSync(file, "utf8").split("\n")[0]).toContain('"chatId":"111"')
   })
 
-  it("looks after the store file without connecting: info, check, migrate, backup and restore", async () => {
+  it("looks after the store file without connecting: info, check, migrate, backup, restore and reindex", async () => {
     const { environment, sent } = setup()
     const backup = join(tmpdir(), "s-backup.db")
 
@@ -136,6 +136,7 @@ describe("max store", () => {
     expect((await max(["s-care", "store", "backup", backup, "--json"], environment)).code).toBe(0)
     expect(existsSync(backup)).toBe(true)
     expect((await max(["s-care", "store", "restore", backup, "--json"], environment)).code).toBe(0)
+    expect((await max(["s-care", "store", "reindex", "--json"], environment)).code).toBe(0)
     expect(sent(Opcode.LOGIN)).toEqual([])
   })
 
