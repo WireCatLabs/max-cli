@@ -24,6 +24,9 @@
   **`store fetch --background`** и **`store jobs list|show|cancel`** — скачивание в фоне.
   **`store info|check|migrate|backup|restore|reindex`** — уход за файлом общей копии. **`store clear --left
   --allow-dangerous`** удаляет из неё чаты, из которых вы вышли, с их сообщениями.
+- **`max bot auth`, `max bot list`, `max bot chats list`, `max bot recipients` и `max bot sends list`
+  теперь общие с tg** (cli-messaging): ответы и подсказки те же. Токен, список получателей и журнал
+  лежат там же, где лежали.
 - **`max cache clear --left`** стирает из локальной копии профиля только чаты, из которых вы вышли,
   вместе с их сообщениями. Остальная копия не трогается.
 - **`max messages search --regex`** — одно регулярное выражение по всему сохранённому тексту.
@@ -52,6 +55,10 @@
 
 ### Изменено — может сломать скрипты
 
+- **Нужен Node 22.16 или новее** (или Bun, как раньше). Если Node на Linux взял системный SQLite,
+  а тот слишком стар для локальной копии, `max` перезапускается на своём SQLite из
+  `@leemour/cli-messaging-sqlite` до того, как что-то прочитать или отправить. Официальные сборки
+  Node и Bun ничего не замечают.
 - **`max store` — общая группа команд tg и max.** `store fetch` пишет в общую локальную копию, ту же,
   что у tg, и листает MAX как раньше: по 30 сообщений, 5–10 с между страницами, до 40 страниц за
   запуск.
@@ -154,7 +161,19 @@
   Что учесть: скрипт, который повторял изменение после кода `12`, мог отправить его дважды. После
   кода `14` сначала проверьте, выполнилось ли оно. Чтение по-прежнему повторяется само и отвечает
   `provider_unavailable`.
-
+- **Команды бота — под общими с tg именами, старых имён нет.** `max bot messages get <сообщение>` →
+  `messages show <чат> <сообщение>`; `messages edit|delete` тоже берут чат первым; `bot chats get` →
+  `chats show`; `bot chats pin|unpin` → `messages pin|unpin <чат> <сообщение>`. `--format markdown|html`
+  → `--md` или `--html`; `--type` больше нет: картинку — `--photo`, голосовое — `--voice`, видео файлом
+  — `--as-file`. `chats action` берёт `typing`, `photo`, `video`, `voice`, `file`. Отправка и правка
+  отвечают `{ operationId, message }`, а не сообщением. Удаление спрашивает подтверждение,
+  `--allow-dangerous` отвечает «да». Инструменты MCP бота переименованы так же: `max_bot_chats_show`,
+  `max_bot_messages_show`, `max_bot_messages_pin`, `max_bot_messages_unpin`.
+- **`max bot members` и `max bot admins` теперь `max bot chats members` и `max bot chats admins`**,
+  как в tg. `admins add` берёт `--can` со словами `max chats admins add` (`read`, `members`, `admins`,
+  `info`, `pin`, `link`, `edit`, `delete`) вместо `--permissions`, и `--title` вместо `--alias`.
+  Прав «звонки» и «статистика» в `--can` нет. `admins list` отвечает `{ id, name, username, role,
+  rights, title }`. Инструменты MCP: `max_bot_chats_members_list|add|remove`, `max_bot_chats_admins_list`.
 - **Команды, которые меняют только этот компьютер, теперь отмечены как записи.** `config set` и
   `unset`, `chats rules set` и `unset`, `recipients add`, `remove` и `clear`, а у бота `auth set` и
   `remove`, `chats rules set` и `unset`, `recipients add`, `remove` и `clear` пишут файл настроек,
@@ -166,6 +185,10 @@
 
 ### Исправлено
 
+- **`max messages list --before-time` не показывает сообщение, отправленное ровно в эту миллисекунду**:
+  «до» значит «раньше».
+- **`max messages list --after-id` называет следующую страницу, когда она есть.** Раньше на ней команда
+  всегда считала, что сообщений дальше нет.
 - **`max messages send --voice` теперь уходит и через `max serve`.** Раньше через сервер MAX
   отказывал (`proto.payload`, код `11`): полоска громкости голосового терялась по дороге. Без
   сервера (`--no-serve`) голосовое уходило и раньше.
