@@ -556,6 +556,26 @@ describe("the program", () => {
       expect(JSON.parse(all.stdout).items).toHaveLength(2)
     })
 
+    it("`messages search --newest` orders hits newest first, and `--context` brings the messages around each", async () => {
+      const { environment } = acquaintedMax()
+      await runWith(["t-search-order", "messages", "list", "111", "--json"], environment)
+
+      const newest = await runWith(["t-search-order", "messages", "search", "lat", "--newest", "--json"], environment)
+      const around = await runWith(
+        ["t-search-order", "messages", "search", "lat", "--context", "1", "--limit", "1", "--json"],
+        environment,
+      )
+
+      const times = JSON.parse(newest.stdout).items.map((hit: { timestamp: string }) => hit.timestamp)
+      expect(times).toEqual([...times].sort().reverse())
+      expect(JSON.parse(around.stdout).items[0].context.length).toBeGreaterThan(0)
+      const everywhere = await runWith(
+        ["t-search-order", "messages", "search", "lat", "--source", "all", "--json"],
+        environment,
+      )
+      expect(JSON.parse(everywhere.stdout).items.length).toBeGreaterThan(0)
+    })
+
     it("`--verbose` adds the ids under each message a person reads", async () => {
       const { environment } = acquaintedMax()
       const read = async (argv: string[]) => {

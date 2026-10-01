@@ -6,6 +6,7 @@ import { join } from "node:path"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-core"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
+import { JoinLog } from "../bot/joins.js"
 import { run } from "../program.js"
 
 const TOKEN = "bot-token"
@@ -87,19 +88,18 @@ const max = async (argv: string[]) => {
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
 
-describe("max bot updates watch", () => {
+describe("max bot watch", () => {
   it("prints each update as one JSON line, keeps its message, and stops cleanly on Ctrl-C", async () => {
     script = [BATCH]
-    const { code, stdout, stderr } = await max(["bot", "updates", "watch", "--jsonl"])
-    expect(stderr).toBe("")
+    const { code, stdout } = await max(["bot", "watch", "--events", "--jsonl"])
     expect(code).toBe(0)
     const lines = stdout
       .trim()
       .split("\n")
       .map((line) => JSON.parse(line))
     expect(lines).toMatchObject([
-      { update_type: "message_created", message: { id: "mid.1", chatId: "-100", outgoing: false } },
-      { update_type: "something_new", chat_id: -100 },
+      { event: "message", message: { id: "mid.1", chatId: "-100", outgoing: false } },
+      { event: "other", type: "something_new", chatId: "-100" },
     ])
     expect(polls[0]).not.toContain("marker")
     expect(polls[1]).toContain("marker=7")
@@ -109,7 +109,7 @@ describe("max bot updates watch", () => {
   })
 
   it("asks MAX only for the --types given", async () => {
-    const { code } = await max(["bot", "updates", "watch", "--types", "message_created,bot_added", "--jsonl"])
+    const { code } = await max(["bot", "watch", "--types", "message_created,bot_added", "--jsonl"])
     expect(code).toBe(0)
     expect(new URL(polls[0] ?? "", "http://stub").searchParams.get("types")).toBe("message_created,bot_added")
   })
@@ -117,9 +117,9 @@ describe("max bot updates watch", () => {
   it("starts where the last watch stopped", async () => {
     new BotTokenStore({ profile: "again", keyring }).write(TOKEN)
     script = [BATCH]
-    await max(["again", "bot", "updates", "watch", "--jsonl"])
+    await max(["again", "bot", "watch", "--jsonl"])
     polls.length = 0
-    expect((await max(["again", "bot", "updates", "watch", "--jsonl"])).code).toBe(0)
+    expect((await max(["again", "bot", "watch", "--jsonl"])).code).toBe(0)
     expect(polls[0]).toContain("marker=7")
   })
 
@@ -136,10 +136,10 @@ describe("max bot updates watch", () => {
       if (count === 2) restore()
     }
     try {
-      const { code, stdout, stderr } = await max(["flaky", "bot", "updates", "watch", "--jsonl"])
+      const { code, stdout, stderr } = await max(["flaky", "bot", "watch", "--jsonl"])
       expect(code).toBe(0)
       expect(stderr).toContain("the updates were not kept")
-      expect(stdout.trim().split("\n")).toHaveLength(2)
+      expect(stdout.trim().split("\n")).toHaveLength(1)
       expect(polls.slice(0, 2).every((url) => !url.includes("marker"))).toBe(true)
       expect(polls[2]).toContain("marker=7")
     } finally {
@@ -152,26 +152,51 @@ describe("max bot updates watch", () => {
     const removed = `{"marker": 8, "updates": [{"update_type": "message_removed", "timestamp": 1758888890000,
       "message_id": "mid.1", "chat_id": -100, "user_id": 42}]}`
     script = [BATCH, removed]
-    const { code } = await max(["tidy", "bot", "updates", "watch", "--jsonl"])
+    const { code } = await max(["tidy", "bot", "watch", "--jsonl"])
     expect(code).toBe(0)
     expect(JSON.parse((await max(["tidy", "bot", "messages", "search", "hello bot", "--json"])).stdout).items).toEqual(
       [],
     )
   })
 
+  it("**keeps who joined and left for `bot chats check`**, at the time each happened", async () => {
+    new BotTokenStore({ profile: "doors", keyring }).write(TOKEN)
+    const joined = Date.now() - 60_000
+    script = [
+      `{"marker": 9, "updates": [
+        {"update_type": "user_added", "timestamp": ${joined}, "chat_id": -100, "user": ${person}, "is_channel": false},
+        {"update_type": "user_removed", "timestamp": ${joined + 1000}, "chat_id": -100, "user": ${person},
+         "admin_id": 7, "is_channel": false}
+      ]}`,
+    ]
+    const { code, stdout } = await max(["doors", "bot", "watch", "--events", "--jsonl"])
+
+    expect(code).toBe(0)
+    expect(
+      stdout
+        .trim()
+        .split("\n")
+        .map((line) => JSON.parse(line).event),
+    ).toEqual(["joined", "removed"])
+    expect(JoinLog.for("doors").read()).toEqual([
+      { chatId: "-100", userId: "42", name: "Ann", event: "add", at: joined },
+      { chatId: "-100", userId: "42", name: "Ann", event: "remove", at: joined + 1000 },
+    ])
+  })
+
   it("refuses while a webhook is set, before asking for any update", async () => {
     webhook = true
-    const { code, stderr } = await max(["bot", "updates", "watch", "--jsonl"])
+    const { code, stderr } = await max(["bot", "watch", "--jsonl"])
     expect(code).not.toBe(0)
     expect(stderr).toContain("webhook")
     expect(polls).toHaveLength(0)
   })
 
-  it("is refused on a read-only profile, as `bot api get-updates` is", async () => {
+  it("**watches on a read-only profile**: taking updates is a read", async () => {
     await max(["config", "set", "readOnly", "true"])
     try {
-      expect((await max(["bot", "updates", "watch", "--jsonl"])).code).not.toBe(0)
-      expect(polls).toHaveLength(0)
+      expect((await max(["bot", "watch", "--jsonl"])).code).toBe(0)
+      expect(polls).toHaveLength(1)
     } finally {
       await max(["config", "set", "readOnly", "false"])
     }

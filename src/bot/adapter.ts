@@ -1,7 +1,15 @@
 import { CliError, type SleepLike } from "@leemour/cli-core"
 import type { FetchLike } from "@leemour/cli-core/http"
 import type { AdminRight, Markup, Message } from "@leemour/cli-messaging"
-import type { BotAction, BotAdapter, BotChatAdmin, BotChatRef, EventSink } from "@leemour/cli-messaging/cli"
+import type {
+  BotAction,
+  BotAdapter,
+  BotChatAdmin,
+  BotChatRef,
+  BotEvent,
+  BotWebhook,
+  EventSink,
+} from "@leemour/cli-messaging/cli"
 import { type BotApiClient, botOperations } from "./client.js"
 import { checkBody } from "./input.js"
 import { plainJson } from "./transport.js"
@@ -71,6 +79,24 @@ const toAdmin = (member: MaxChatMember): BotChatAdmin => {
     ),
     title: member.alias ?? null,
   }
+}
+
+type Raw = Record<string, unknown>
+
+const memberOf = (user: unknown) => {
+  if (!user || typeof user !== "object") return null
+  const { user_id, first_name, last_name, username } = user as Raw
+  return {
+    id: String(user_id),
+    name: [first_name, last_name].filter((part) => typeof part === "string" && part !== "").join(" ") || null,
+    username: typeof username === "string" ? username : null,
+  }
+}
+
+/** MAX's `timestamp` is ms since 1970. */
+const isoOf = (timestamp: unknown): string | undefined => {
+  const ms = typeof timestamp === "string" ? Number(timestamp) : timestamp
+  return typeof ms === "number" && Number.isFinite(ms) ? new Date(ms).toISOString() : undefined
 }
 
 const MARKS: Record<Markup["type"], string> = { bold: "**", italic: "_", strike: "~~", code: "`" }
@@ -150,6 +176,38 @@ export const maxBotAdapter = ({
     if (!message) throw new CliError("invalid_response", "MAX answered a send without the message it sent")
     return { ...api.decodeMessage(message, self), outgoing: true }
   }
+  const eventOf = (raw: unknown): BotEvent => {
+    const update = plainJson(raw) as Raw
+    const type = String(update.update_type ?? "unknown")
+    const inner = (raw as { message?: unknown } | null)?.message
+    const message = inner ? { ...api.decodeMessage(inner, self), chatTitle: null } : undefined
+    const chatId = update.chat_id === undefined || update.chat_id === null ? null : String(update.chat_id)
+    const at = isoOf(update.timestamp)
+    if (type === "message_created" && message) return { event: "message", message }
+    if (type === "message_edited" && message) return { event: "edit", message }
+    if (type === "message_removed" && chatId && update.message_id !== undefined) {
+      return { event: "delete", chatId, chatTitle: null, messageId: String(update.message_id) }
+    }
+    if (type === "message_callback") {
+      const callback = (update.callback ?? {}) as Raw
+      return {
+        event: "callback",
+        callbackId: String(callback.callback_id ?? ""),
+        chatId: message?.chatId ?? null,
+        messageId: message?.id ?? null,
+        from: memberOf(callback.user),
+        data: String(callback.payload ?? ""),
+      }
+    }
+    if ((type === "user_added" || type === "user_removed") && chatId) {
+      const by = type === "user_added" ? update.inviter_id : update.admin_id
+      const event = type === "user_added" ? (by == null ? "joined" : "added") : by == null ? "left" : "removed"
+      return { event, chatId, person: memberOf(update.user), ...(at ? { at } : {}) }
+    }
+    if (type === "bot_started") return { event: "started", chatId, person: memberOf(update.user) }
+    return { event: "other", type, chatId: chatId ?? message?.chatId ?? null }
+  }
+
   /** The message, after checking it is in the chat the command named. */
   const inChat = async (chat: BotChatRef, messageId: string): Promise<Message> => {
     const found = await api.message(messageId, self)
@@ -310,5 +368,71 @@ export const maxBotAdapter = ({
     },
 
     senders: () => api.takeSenders(),
+
+    menu: async () =>
+      ((plainJson((await api.me()).commands ?? []) as Raw[]) ?? []).map((command) => ({
+        name: String(command.name),
+        description: typeof command.description === "string" && command.description ? command.description : null,
+      })),
+
+    setMenu: async (entries) => {
+      const commands = entries.map(({ name, description }) => (description ? { name, description } : { name }))
+      const edited = body("editMyCommands", { commands })
+      await api.call(operation("editMyCommands"), edited ? { body: edited } : {})
+    },
+
+    answer: async (callbackId, { text, notification }) => {
+      const answered = body("answerOnCallback", {
+        ...(text === undefined ? {} : { message: { text } }),
+        ...(notification === undefined ? {} : { notification }),
+      })
+      await api.call(operation("answerOnCallback"), {
+        query: { callback_id: callbackId },
+        ...(answered ? { body: answered } : {}),
+      })
+    },
+
+    webhooks: async () => {
+      const answer = plainJson(await api.call(operation("getSubscriptions"), {})) as { subscriptions?: Raw[] } | null
+      return (answer?.subscriptions ?? []).map(
+        (one): BotWebhook => ({
+          url: String(one.url),
+          types: Array.isArray(one.update_types) ? one.update_types.map(String) : null,
+        }),
+      )
+    },
+
+    setWebhook: async (url, { types, secret }) => {
+      const subscribed = body("subscribe", {
+        url,
+        ...(secret ? { secret } : {}),
+        ...(types?.length ? { update_types: types } : {}),
+      })
+      await api.call(operation("subscribe"), subscribed ? { body: subscribed } : {})
+    },
+
+    deleteWebhook: async (url) => {
+      await api.call(operation("unsubscribe"), { query: { url } })
+    },
+
+    /**
+     * An update type newer than the committed schema arrives as `other`, never failing the batch
+     * (`RISK-51`); a message inside goes through the same fallback as a read.
+     */
+    updates: async (cursor, { types, waitSeconds }) => {
+      if (self === undefined) await me()
+      const page = (await api.call(operation("getUpdates"), {
+        query: {
+          timeout: String(waitSeconds),
+          ...(cursor ? { marker: cursor } : {}),
+          ...(types?.length ? { types: types.join(",") } : {}),
+        },
+      })) as { updates?: unknown[]; marker?: unknown } | null
+      const next = (plainJson(page) as { marker?: unknown } | null)?.marker
+      return {
+        events: (page?.updates ?? []).map((raw) => eventOf(raw)),
+        cursor: next === undefined || next === null ? cursor : String(next),
+      }
+    },
   }
 }

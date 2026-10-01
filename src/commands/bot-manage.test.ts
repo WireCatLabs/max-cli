@@ -480,7 +480,7 @@ describe("max bot webhooks", () => {
     expect(JSON.parse(second.stderr).error.message).toContain("https://example.org/hook")
     expect((await max(["bot", "webhooks", "set", "https://example.org/other", "--add", "--json"])).code).toBe(0)
     const left = await max(["bot", "webhooks", "delete", "https://example.org/hook", "--json"])
-    expect(JSON.parse(left.stdout).items).toEqual([{ url: "https://example.org/other", time: 1 }])
+    expect(JSON.parse(left.stdout).items).toEqual([{ url: "https://example.org/other", types: null }])
     const rows = await journal()
     expect(JSON.stringify(rows)).not.toContain("very-secret-1")
   })
@@ -490,7 +490,7 @@ describe("max bot webhooks", () => {
     subscriptions = ["https://example.org/hook"]
     const { code, stdout } = await max(["bot", "webhooks", "list", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout).items).toEqual([{ url: "https://example.org/hook", time: 1 }])
+    expect(JSON.parse(stdout).items).toEqual([{ url: "https://example.org/hook", types: null }])
     expect(requests.at(-1)).toMatchObject({ method: "GET", url: "/subscriptions" })
   })
 

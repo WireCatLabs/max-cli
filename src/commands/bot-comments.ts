@@ -85,33 +85,3 @@ export const commentsCommand = (): Command => {
 
   return command
 }
-
-export const callbacksCommand = (): Command => {
-  const command = new Command("callbacks").description("answers to the buttons people press under the bot's messages")
-
-  annotate(command.command("answer <callback>"), { mutates: true })
-    .description(
-      "answer a pressed button by its callback id: --notification shows the person a one-time note, " +
-        "--text replaces the message the button was on",
-    )
-    .option("--text <text>", "the message's new text; - reads stdin")
-    .option("--notification <text>", "a note only the person who pressed sees")
-    .action(async function (this: Command, callback: string) {
-      const context = botContext(this)
-      const options = this.opts<{ text?: string; notification?: string }>()
-      if (options.text === undefined && options.notification === undefined) {
-        throw new CliError("validation_error", "an answer needs --text, --notification, or both")
-      }
-      const body = JSON.stringify({
-        ...(options.text === undefined ? {} : { message: { text: textOf(options.text) } }),
-        ...(options.notification === undefined ? {} : { notification: options.notification }),
-      })
-      const answer = await guardedCall(context, operation("answerOnCallback"), {
-        query: { callback_id: callback },
-        body: checked("answerOnCallback", body),
-      })
-      context.renderer.result(plainJson(answer) ?? { success: true })
-    })
-
-  return command
-}

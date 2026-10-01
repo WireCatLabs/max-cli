@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**462 ✅ · 22 ⛔ · 0 ❌** — 198 commands, 286 options.
+**466 ✅ · 22 ⛔ · 0 ❌** — 198 commands, 290 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -101,7 +101,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages list` | `--mark-read` | ✅ |  |
 | `messages search` |  | ✅ |  |
 | `messages search` | `--chat` | ✅ |  |
+| `messages search` | `--source` | ✅ |  |
 | `messages search` | `--limit` | ✅ |  |
+| `messages search` | `--newest` | ✅ |  |
+| `messages search` | `--context` | ✅ |  |
 | `messages search` | `--regex` | ✅ |  |
 | `messages show` |  | ✅ |  |
 | `messages context` |  | ✅ |  |
@@ -331,6 +334,21 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot recipients remove` |  | ✅ |  |
 | `bot recipients clear` |  | ✅ |  |
 | `bot sends list` |  | ✅ |  |
+| `bot watch` |  | ✅ |  |
+| `bot watch` | `--events` | ✅ |  |
+| `bot watch` | `--types` | ✅ |  |
+| `bot callbacks answer` |  | ✅ |  |
+| `bot callbacks answer` | `--text` | ✅ |  |
+| `bot callbacks answer` | `--notification` | ✅ |  |
+| `bot commands list` |  | ✅ |  |
+| `bot commands set` |  | ✅ |  |
+| `bot commands clear` |  | ✅ |  |
+| `bot webhooks list` |  | ✅ |  |
+| `bot webhooks set` |  | ✅ |  |
+| `bot webhooks set` | `--types` | ✅ |  |
+| `bot webhooks set` | `--secret-stdin` | ✅ |  |
+| `bot webhooks set` | `--add` | ✅ |  |
+| `bot webhooks delete` |  | ✅ |  |
 | `bot me` |  | ✅ |  |
 | `bot people show` |  | ✅ |  |
 | `bot people show` | `--all-bots` | ✅ |  |
@@ -345,22 +363,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot comments edit` |  | ✅ |  |
 | `bot comments edit` | `--format` | ✅ |  |
 | `bot comments delete` |  | ✅ |  |
-| `bot callbacks answer` |  | ✅ |  |
-| `bot callbacks answer` | `--text` | ✅ |  |
-| `bot callbacks answer` | `--notification` | ✅ |  |
-| `bot commands list` |  | ✅ |  |
-| `bot commands set` |  | ✅ |  |
-| `bot commands clear` |  | ✅ |  |
 | `bot uploads put` |  | ✅ |  |
 | `bot uploads put` | `--type` | ✅ |  |
-| `bot webhooks list` |  | ✅ |  |
-| `bot webhooks set` |  | ✅ |  |
-| `bot webhooks set` | `--types` | ✅ |  |
-| `bot webhooks set` | `--secret-stdin` | ✅ |  |
-| `bot webhooks set` | `--add` | ✅ |  |
-| `bot webhooks delete` |  | ✅ |  |
-| `bot updates watch` |  | ✅ |  |
-| `bot updates watch` | `--types` | ✅ |  |
 | `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
 | `bot mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
 | `bot mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options |
