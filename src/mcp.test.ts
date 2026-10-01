@@ -259,7 +259,8 @@ describe("the MCP server", () => {
     const { isError, body } = await call(client, "max_messages_send", { chat: "Team Alpha", text: "hello" })
 
     expect(isError).toBe(false)
-    expect(body).toMatchObject({ id: "116762160362694590" })
+    expect(body).toMatchObject({ message: { id: "116762160362694590" } })
+    expect(body.operationId).toBe(body.sendId)
     expect(max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload).toMatchObject({ chatId: 111 })
   })
 

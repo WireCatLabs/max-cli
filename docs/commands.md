@@ -761,7 +761,7 @@ max messages transcribe <chat> <message> [options]
 
 ### `max messages send`
 
-send one text message
+send a text message; without [text], the text is read from stdin
 
 **Меняет что-то в MAX.**
 
@@ -771,20 +771,20 @@ max messages send <chat> [text] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `text` | необязательный | what to say; leave it off to read it from stdin, or to send only a file |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `text` | необязательный | the message |
 
 | Опция | Что делает |
 |---|---|
-| `--send-id <n>` | reuse the id of an earlier ambiguous send; MAX collapses the duplicate |
+| `--reply-to <message>` | answer this message, by its id in the same chat |
+| `--send-id <id>` | repeat a send whose outcome was unknown, without risking a second copy |
 | `--silent` | deliver without a notification |
-| `--reply-to <message>` | answer this message id in the same chat |
-| `--file <path>` | attach a file; .jpg .png .webp .gif go as a photo, .mp4 .mov .webm .mkv as a video. Repeat it for more than one |
-| `--as-file` | send every --file as a plain file to download, a video included |
-| `--voice <path>` | send an Ogg Opus file as a voice message, alone, with no text |
-| `--allow-any-file` | send a --file even from a hidden folder, ~/.ssh or max's own folders |
+| `--no-preview` | no preview card for a link in the text |
 | `--md, --markdown` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
-| `--at <time>` | let MAX send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now |
+| `--file <path>` | attach a file; the text becomes its caption |
+| `--photo <path>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption |
+| `--allow-any-file` | send a file even from a hidden folder, ~/.ssh or this CLI's own folders |
+| `--at <time>` | let the messenger send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now |
 
 ### `max messages scheduled`
 
@@ -800,23 +800,19 @@ max messages scheduled <chat>
 
 ### `max messages edit`
 
-change the text of your own message; the other person may have read it already
+change the text of your own message; the other side may have read it already
 
 **Меняет что-то в MAX.**
 
 ```sh
-max messages edit <chat> <message> [text] [options]
+max messages edit <chat> <message> [text]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
-| `message` | обязательный | id of your own message |
-| `text` | необязательный | the new text; leave it off to read it from stdin |
-
-| Опция | Что делает |
-|---|---|
-| `--md, --markdown` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
+| `chat` | обязательный | a chat: its id, or part of its title |
+| `message` | обязательный | the id of your own message |
+| `text` | необязательный | the new text; without it, read from stdin |
 
 ### `max messages delete`
 
@@ -850,14 +846,13 @@ max messages forward <chat> <message> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | the chat the message is in: an id, or part of a chat name |
-| `message` | обязательный | message id |
+| `chat` | обязательный | the chat the message is in: a chat: its id, or part of its title |
+| `message` | обязательный | the message id |
 
 | Опция | Что делает |
 |---|---|
-| `--to <chat>` | the chat to forward it to: an id, or part of a chat name |
-| `--send-id <n>` | reuse the id of an earlier ambiguous forward; MAX collapses the duplicate |
-| `--silent` | deliver without a notification |
+| `--to <chat>` | where it goes: a chat: its id, or part of its title |
+| `--silent` | deliver it without a notification |
 
 ### `max messages pin`
 

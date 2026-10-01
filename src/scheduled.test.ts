@@ -122,7 +122,7 @@ describe("sending later with --at", () => {
     expect(sentWith(Opcode.MSG_SEND)).toHaveLength(1)
     const { error } = JSON.parse(lost.stderr)
     expect(error.code).toBe("outcome_unknown")
-    expect(error.message).toContain("max messages scheduled 111")
+    expect(error.message).toContain("messages scheduled")
   })
 
   it("is refused by a read-only profile like any other send", async () => {

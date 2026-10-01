@@ -8,25 +8,6 @@ import {
 } from "@modelcontextprotocol/server"
 import { sendTime } from "../config.js"
 
-export interface SendArgs {
-  chat: string
-  text: string
-  silent?: boolean
-  send_id?: number
-  at?: string
-  reply_to?: string
-  markdown?: boolean
-}
-
-/** The one mapping from tool arguments to a send, for both the plain tool and the confirmed one. */
-export const sendOptions = (args: SendArgs, at: number | undefined) => ({
-  ...(args.send_id === undefined ? {} : { cid: args.send_id }),
-  ...(args.silent === true ? { notify: false } : {}),
-  ...(at === undefined ? {} : { at }),
-  ...(args.reply_to === undefined ? {} : { replyTo: args.reply_to }),
-  ...(args.markdown === true ? { markdown: true } : {}),
-})
-
 /** A chat as the form shows it: the personal account asks MAX, a bot looks at the chats it has seen. */
 export type ResolveChat = (reference: string) => Promise<{ id: string; title?: string | null }>
 
