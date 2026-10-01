@@ -33,6 +33,9 @@ process.env.MAX_STATE_DIR = join(sandbox, "state")
 process.env.MAX_CACHE_DIR = join(sandbox, "cache")
 // cli-messaging's store is one file for every messenger, outside all three.
 process.env.MESSAGING_STORE = join(sandbox, "messages.db")
+// Speech models shared by every CLI, also outside the three. A test that writes a sized stand-in for
+// a model there overwrote the owner's downloaded one on 2026-10-01.
+process.env.CLI_COMMON_CACHE_DIR = join(sandbox, "common-cache")
 process.env.TMPDIR = sandbox
 // Read before the keyring, so a token exported in the shell would log the suite in to the real account.
 delete process.env.MAX_TOKEN
