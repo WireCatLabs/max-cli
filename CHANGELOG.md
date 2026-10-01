@@ -12,6 +12,7 @@
 - **`max polls create --send-id`** — повторить создание опроса, ответ на которое не пришёл, без
   второго опроса. **`--revote`** — в опросе можно переголосовать.
 - **`max messages edit --md`** — разметка в правке, как в `send`.
+- **`max messages send --voice` и `--as-file`** снова есть, теперь в общей команде tg и max.
 - **`max messages forward --send-id`** — повторить пересылку, ответ на которую не пришёл, без второй
   копии. Если пересылка ответила `outcome_unknown`, ошибка называет команду повтора с этим номером.
 
@@ -38,8 +39,8 @@
 
 - **`max messages send|edit|forward` — теперь общие команды tg и max.** Пока общие команды не
   получат того, что было только у max, этого нет:
-  - у `send` — `--voice` (голосовое), `--as-file` и несколько `--file` в одном сообщении: теперь одно
-    вложение из `--file` и одно из `--photo`;
+  - у `send` — несколько `--file` в одном сообщении: теперь одно вложение из `--file` и одно из
+    `--photo`;
 - **Ответы `--json`**: `send` — `{sendId, operationId, message}` (с `scheduledFor`, если с `--at`),
   `edit` и `forward` — `{operationId, message}`, вместо сообщения без обёртки. Так же отвечают
   инструменты MCP `max_messages_send`, `max_messages_edit` и `max_messages_forward`; у

@@ -783,6 +783,8 @@ max messages send <chat> [text] [options]
 | `--md, --markdown` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
 | `--file <path>` | attach a file; the text becomes its caption |
 | `--photo <path>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption |
+| `--as-file` | send the --file as a file to download, a video included |
+| `--voice <path>` | send an Ogg Opus file as a voice message, alone, with no text |
 | `--allow-any-file` | send a file even from a hidden folder, ~/.ssh or this CLI's own folders |
 | `--at <time>` | let the messenger send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now |
 
