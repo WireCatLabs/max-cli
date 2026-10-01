@@ -113,7 +113,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages send` | `--send-id` | ✅ |  |
 | `messages send` | `--silent` | ✅ |  |
 | `messages send` | `--no-preview` | ✅ |  |
-| `messages send` | `--markdown` | ✅ |  |
+| `messages send` | `--md` | ✅ |  |
 | `messages send` | `--file` | ✅ |  |
 | `messages send` | `--photo` | ✅ |  |
 | `messages send` | `--as-file` | ✅ |  |
@@ -122,7 +122,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages send` | `--at` | ✅ |  |
 | `messages scheduled` |  | ✅ |  |
 | `messages edit` |  | ✅ |  |
-| `messages edit` | `--markdown` | ✅ |  |
+| `messages edit` | `--md` | ✅ |  |
 | `messages delete` |  | ✅ |  |
 | `messages delete` | `--for-everyone` | ✅ |  |
 | `messages delete` | `--allow-dangerous` | ✅ |  |

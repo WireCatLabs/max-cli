@@ -191,7 +191,7 @@ describe("changing a group", () => {
     expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([])
     expect(sent(Opcode.MSG_SEND)).toEqual([])
 
-    new RecipientList(recipientsPathFor("gr-people")).add({
+    new RecipientList(recipientsPathFor("gr-people"), "max").add({
       id: "555",
       title: "Боря",
       partnerId: "20000002",
@@ -207,7 +207,7 @@ describe("changing a group", () => {
       [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, chats: [GROUP, dialog] },
       [Opcode.CONTACT_INFO]: { contacts: [{ id: 20000002, names: [{ name: "Боря", type: "FULL_NAME" }] }] },
     })
-    const list = new RecipientList(recipientsPathFor("gr-partner"))
+    const list = new RecipientList(recipientsPathFor("gr-partner"), "max")
     list.add({ id: "-70000000000001", title: "Team", addedAt: new Date().toISOString() })
     list.add({ id: "555", title: null, addedAt: new Date().toISOString() })
 

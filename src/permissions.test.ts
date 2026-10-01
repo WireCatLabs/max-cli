@@ -35,7 +35,7 @@ const guardFor = (profile: string, allow: readonly Permission[] | undefined, rea
     ...(allow ? { allow, allowFrom: "config file: profiles.p" } : {}),
     sendsPerHour: 1000,
     journal: new SendJournal(sendsPathFor(profile)),
-    recipients: new RecipientList(recipientsPathFor(profile)),
+    recipients: new RecipientList(recipientsPathFor(profile), "max"),
     warn: () => {},
   })
 

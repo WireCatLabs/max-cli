@@ -780,11 +780,11 @@ max messages send <chat> [text] [options]
 | `--send-id <id>` | repeat a send whose outcome was unknown, without risking a second copy |
 | `--silent` | deliver without a notification |
 | `--no-preview` | no preview card for a link in the text |
-| `--md, --markdown` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
-| `--file <path>` | attach a file; the text becomes its caption |
-| `--photo <path>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption |
+| `--md` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
+| `--file <file>` | attach a file; the text becomes its caption |
+| `--photo <file>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption |
 | `--as-file` | send the --file as a file to download, a video included |
-| `--voice <path>` | send an Ogg Opus file as a voice message, alone, with no text |
+| `--voice <file>` | send an Ogg Opus file as a voice message, alone, with no text |
 | `--allow-any-file` | send a file even from a hidden folder, ~/.ssh or this CLI's own folders |
 | `--at <time>` | let the messenger send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now |
 
@@ -818,7 +818,7 @@ max messages edit <chat> <message> [text] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--md, --markdown` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
+| `--md` | read **bold**, _italic_, ~~struck~~ and `code` in the text; \ keeps a mark literal |
 
 ### `max messages delete`
 
