@@ -18,7 +18,7 @@ export const CHANGELOG: ChangelogRules = {
 export const PACKED = ["dist/", "package.json", "README.md", "LICENSE", "skills/max-cli/SKILL.md"]
 export const PACKED_SAID = "dist/, package.json, README.md, LICENSE and the agent skill"
 
-const GENERATED = new Set(["docs/commands.md", "docs/protocol.md"])
+const GENERATED = new Set(["docs/commands.md", "docs/dev/protocol.md"])
 
 export const docsRules = (root: string): DocsRules => ({
   files: [

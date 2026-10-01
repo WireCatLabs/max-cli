@@ -19,90 +19,21 @@ import { execFileSync } from "node:child_process"
 import { writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { EXIT_CODES } from "@leemour/cli-core"
-import {
-  type ArgumentInfo,
-  type CommandInfo,
-  describeOptions,
-  describeProgram,
-  type OptionInfo,
-} from "@leemour/cli-core/commands"
+import { COMMANDS_PAGE_LABELS, commandsPage, describeOptions, describeProgram } from "@leemour/cli-core/commands"
 import { createProgram } from "../dist/program.js"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
+const program = createProgram()
 
-const BANNER =
-  "<!-- Сгенерировано из дерева команд скриптом scripts/commands.ts. Не редактировать; `pnpm generate`. -->"
-
-/** A cell that will not break the table it sits in. */
-const cell = (text: string | undefined): string => (text ?? "").replace(/\|/g, "\\|").replace(/\n+/g, " ").trim()
-
-const optionRows = (options: readonly OptionInfo[]): string =>
-  options
-    .map((option) => {
-      const fallback =
-        option.default === undefined || option.default === false ? "" : ` По умолчанию: \`${String(option.default)}\`.`
-      // The flags go through `cell` too: `--order <recent|name>` would otherwise split the row
-      // into three, which is the first option here with a pipe in it and will not be the last.
-      return `| \`${cell(option.flags)}\` | ${cell(option.description)}${fallback} |`
-    })
-    .join("\n")
-
-const argumentRows = (args: readonly ArgumentInfo[]): string =>
-  args
-    .map(
-      (argument) =>
-        `| \`${cell(argument.name)}\` | ${argument.required ? "обязательный" : "необязательный"} | ${cell(argument.description)} |`,
-    )
-    .join("\n")
-
-/** How one runnable command is typed, what it takes, what it accepts. */
-const body = (command: CommandInfo): string[] => {
-  const parts = [cell(command.description), ""]
-  if (command.mutates) parts.push("**Меняет что-то в MAX.**", "")
-  parts.push("```sh", command.usage, "```")
-
-  if (command.arguments.length > 0) {
-    parts.push("", "| Аргумент | | Что это |", "|---|---|---|", argumentRows(command.arguments))
-  }
-  if (command.options.length > 0) {
-    parts.push("", "| Опция | Что делает |", "|---|---|", optionRows(command.options))
-  }
-  return parts
-}
-
-/**
- * A command, and every action under it at any depth — `chats members add` is three words down.
- * A group shows its own usage only when it takes options of its own, as `doctor --online` does.
- */
-const section = (command: CommandInfo, depth: number): string => {
-  const heading = `${"#".repeat(Math.min(depth, 4))} \`max ${command.path.join(" ")}\``
-  if (command.commands.length === 0) return [heading, "", ...body(command)].join("\n")
-  const own = command.options.length > 0 ? body(command) : [cell(command.description)]
-  return [heading, "", ...own, "", command.commands.map((child) => section(child, depth + 1)).join("\n\n")]
-    .join("\n")
-    .trimEnd()
-}
-
-const resource = (command: CommandInfo): string => section(command, 2)
-
-const exitCodes = (): string =>
-  [
-    "| Код | Когда |",
-    "|---|---|",
-    "| `0` | получилось |",
-    ...Object.entries(EXIT_CODES).map(([name, code]) => `| \`${code}\` | \`${name}\` |`),
-    "| `1` | всё остальное |",
-  ].join("\n")
-
-const page = (program: ReturnType<typeof createProgram>): string => {
-  const resources = describeProgram(program)
-
-  return `${BANNER}
-
-# Команды
-
-Справочник: каждая команда, каждая опция, каждый код возврата. Страница **собирается из самой
+const page = commandsPage({
+  cli: "max",
+  commands: describeProgram(program),
+  options: describeOptions(program),
+  labels: COMMANDS_PAGE_LABELS.ru,
+  text: {
+    banner: "<!-- Сгенерировано из дерева команд скриптом scripts/commands.ts. Не редактировать; `pnpm generate`. -->",
+    title: "Команды",
+    intro: `Справочник: каждая команда, каждая опция, каждый код возврата. Страница **собирается из самой
 программы**, поэтому описать версию, которой не существует, она не может.
 
 Как устроена строка:
@@ -116,32 +47,19 @@ max [профиль] [опции] <команда> <действие> [аргу�
 переменная \`MAX_PROFILE\`; без неё профиль называется \`default\`.
 
 ⚠ Описания команд и опций ниже — ровно те, что печатает \`max --help\`, то есть по-английски. Это
-не недоработка перевода: текст живёт в программе, и второй его копии здесь быть не должно.
-
-## Общие опции
-
-Действуют на любую команду.
-
-| Опция | Что делает |
-|---|---|
-${optionRows(describeOptions(program))}
-
-${resources.map(resource).join("\n\n")}
-
-## Коды возврата
-
-Скрипт ветвится по коду, а не по тексту: текст меняется, код — нет.
-
-${exitCodes()}
-
-\`0\` и только \`0\` означает, что операция выполнена. \`14\` — \`outcome_unknown\` — означает, что
+не недоработка перевода: текст живёт в программе, и второй его копии здесь быть не должно.`,
+    globalHeading: "Общие опции",
+    globalIntro: "Действуют на любую команду.",
+    mutates: "**Меняет что-то в MAX.**",
+    exitHeading: "Коды возврата",
+    exitIntro: "Скрипт ветвится по коду, а не по тексту: текст меняется, код — нет.",
+    outro: `\`0\` и только \`0\` означает, что операция выполнена. \`14\` — \`outcome_unknown\` — означает, что
 сообщение **могло** уйти: не отправлено и не провалено, и повторять его можно только с тем же
-\`--send-id\`.
-`
-}
+\`--send-id\`.`,
+  },
+})
 
-const path = join(root, "docs/commands.md")
-writeFileSync(path, page(createProgram()))
+writeFileSync(join(root, "docs/commands.md"), page)
 
 execFileSync("pnpm", ["exec", "biome", "check", "--write", "--no-errors-on-unmatched", "docs/commands.md"], {
   cwd: root,

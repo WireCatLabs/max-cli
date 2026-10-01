@@ -56,7 +56,7 @@ Show the draft to the owner. **They accept or edit it** before it goes in.
 [RELEASING.md, "The docs against the diff"](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
 `docs/*.md` and `skills/max-cli/SKILL.md` (agents read it through `max skill show`). User pages get
 plain rewrites with no «Поправка» (`docs/dev/CONVENTIONS.md`, "User pages"); `docs/commands.md` and
-`docs/protocol.md` are generated — `pnpm generate`.
+`docs/dev/protocol.md` are generated — `pnpm generate`.
 
 ## 4. Requirements and focus
 
