@@ -59,6 +59,7 @@ import { type Markup, parseMarkdown } from "./markdown.js"
 import { asFirstWord } from "./profile.js"
 import { Connection, ProtocolError, type Wire } from "./protocol/connection.js"
 import { asId, type Payload } from "./protocol/frame.js"
+import type { MaxRecord } from "./record.js"
 import { isId, pickChat, pickPerson } from "./resolve.js"
 import { LOGIN_CHATS, type Resume, startSession } from "./session/handshake.js"
 import { type QrLogin, tokenByQr } from "./session/login.js"
@@ -104,6 +105,8 @@ export interface MaxClientOptions {
   warn?: (message: string) => void
   /** Where reads are recorded. It is a record, not a shortcut — see `offline`. */
   cache?: CacheStore
+  /** What the login brings, kept in the shared `messages.db`. Beside `cache` until the cache goes. */
+  record?: MaxRecord
   /**
    * Answer from what was recorded and **never connect**.
    *
@@ -143,6 +146,7 @@ export class MaxClient {
   readonly #resume: ResumeFrom | undefined
   readonly #warn: (message: string) => void
   readonly #cache: CacheStore | undefined
+  readonly #record: MaxRecord | undefined
   readonly #offline: boolean
   readonly #events: (event: DiagnosticEvent) => void
   readonly #sleep: SleepLike
@@ -161,6 +165,7 @@ export class MaxClient {
     connection,
     warn,
     cache,
+    record,
     offline = false,
     events,
     sleep,
@@ -174,6 +179,7 @@ export class MaxClient {
     this.#connection = connection ?? new Connection(timeoutMs === undefined ? {} : { timeoutMs })
     this.#warn = warn ?? ((message) => process.stderr.write(`${message}\n`))
     this.#cache = cache
+    this.#record = record
     this.#offline = offline
     this.#events = events ?? (() => {})
     this.#sleep = sleep ?? realSleep
@@ -2028,7 +2034,7 @@ export class MaxClient {
     const state = this.#store.readState()
     refuseWhilePaused(state)
 
-    const sync = this.#fullLogin ? undefined : await this.#cache?.syncMarker()
+    const sync = this.#fullLogin ? undefined : await this.#loginMarker()
 
     try {
       await this.#connection.open()
@@ -2179,7 +2185,7 @@ export class MaxClient {
   async #mergeLogin(viewerId: string | undefined): Promise<void> {
     const cache = this.#cache
     const marker = asMarker(this.#session().time)
-    if (!cache || marker === undefined) return
+    if ((!cache && !this.#record) || marker === undefined) return
 
     const chats = asArray(this.#session().chats)
     const members = new Map<Id, Id[]>()
@@ -2192,20 +2198,45 @@ export class MaxClient {
       if (participants !== undefined) members.set(chat.id, participants)
     }
 
+    const delta = {
+      chats: chats.map(toChat).filter((chat) => chat.id !== ""),
+      people: asArray(this.#session().contacts)
+        .map(toContact)
+        .filter((contact) => contact.id !== ""),
+      members,
+    }
+    if (cache) {
+      try {
+        this.#merged = await cache.mergeDelta({ ...delta, marker })
+      } catch (error) {
+        this.#warnAbout(
+          "cache_not_written",
+          `the local record did not take this login, so nothing was kept from it: ${reasonOf(error)}`,
+        )
+      }
+    }
+    // A login `max serve` made answered its own marker, not the record's: what changed before it is not in it.
+    const own = this.server?.journals !== true
+    await this.#keep("login", (record) => record.applyLogin({ ...delta, ...(own ? { marker } : {}) }))
+  }
+
+  /** The record's marker when there is one — a login without it asks for everything, which both stores can take. */
+  async #loginMarker(): Promise<number | undefined> {
+    if (!this.#record) return this.#cache?.syncMarker()
+    let marker: number | undefined
+    await this.#keep("marker", async (record) => {
+      marker = await record.syncMarker()
+    })
+    return marker
+  }
+
+  /** Like the cache, the record never fails the command it serves. */
+  async #keep(what: string, write: (record: MaxRecord) => Promise<void>): Promise<void> {
+    if (!this.#record) return
     try {
-      this.#merged = await cache.mergeDelta({
-        chats: chats.map(toChat).filter((chat) => chat.id !== ""),
-        people: asArray(this.#session().contacts)
-          .map(toContact)
-          .filter((contact) => contact.id !== ""),
-        members,
-        marker,
-      })
+      await write(this.#record)
     } catch (error) {
-      this.#warnAbout(
-        "cache_not_written",
-        `the local record did not take this login, so nothing was kept from it: ${reasonOf(error)}`,
-      )
+      this.#warnAbout("cache_not_written", `the local store did not take the ${what}: ${reasonOf(error)}`)
     }
   }
 
@@ -2336,6 +2367,9 @@ export class MaxClient {
   /** Names we hold first, the rest from `CONTACT_INFO`, kept for next time. A refusal costs the names only. */
   async #namesOf(ids: Id[]): Promise<Map<Id, string>> {
     const names = (await this.#cache?.people.names(ids)) ?? new Map<Id, string>()
+    await this.#keep("names", async (record) => {
+      for (const [id, name] of await record.names(ids.filter((one) => !names.has(one)))) names.set(id, name)
+    })
     const fetched: Contact[] = []
     try {
       for (const batch of batched(
@@ -2357,6 +2391,7 @@ export class MaxClient {
       )
     }
     if (fetched.length > 0) await this.#cache?.people.upsert(fetched, "info")
+    await this.#keep("names", (record) => record.remember(fetched))
     return names
   }
 
@@ -2668,6 +2703,7 @@ export class MaxClient {
     if (named.length > 0) {
       await this.#cache?.people.upsert(named, "info")
       await this.#cache?.people.refreshRecency()
+      await this.#keep("names", (record) => record.remember(named))
     }
 
     this.#people = people
@@ -2752,7 +2788,10 @@ export class MaxClient {
   }
 
   async #remember(contact: Contact): Promise<Contact> {
-    if (contact.id !== "") await this.#cache?.people.upsert([contact], "info")
+    if (contact.id !== "") {
+      await this.#cache?.people.upsert([contact], "info")
+      await this.#keep("contact", (record) => record.remember([contact]))
+    }
     return contact
   }
 
