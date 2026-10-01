@@ -1,7 +1,7 @@
 /**
  * max-cli's side of the release checks: its changelog headings, its pages, what its package may
  * ship, and the one check that belongs to MAX alone. The checks themselves are
- * `@leemour/cli-core/release`; `scripts/release-check.ts` and `scripts/docs-check.ts` run them.
+ * `@leemour/cli-core/release`; `scripts/release-check.ts` and `pnpm docs:check` (`cli-dev docs-check --rules`) run them.
  */
 import { join } from "node:path"
 import { type ChangelogRules, type DocsRules, JOURNAL_IDS, markdownFiles } from "@leemour/cli-core/release"

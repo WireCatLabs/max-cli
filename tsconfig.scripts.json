@@ -1,14 +1,1 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "composite": false,
-    "declaration": false,
-    "declarationMap": false,
-    "emitDeclarationOnly": false,
-    "noEmit": true,
-    "rootDir": ".",
-    "allowImportingTsExtensions": true
-  },
-  "include": ["scripts/**/*.ts"],
-  "exclude": []
-}
+{ "extends": ["./tsconfig.json", "@leemour/cli-core/tsconfig.scripts.json"] }

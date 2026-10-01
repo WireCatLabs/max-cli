@@ -95,7 +95,7 @@ if [ "$next" != "$version" ]; then
     const swap = (file, from, to) => fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(from, to))
     swap("package.json", `"version": "${o}"`, `"version": "${n}"`)
     swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next"
-  node --experimental-strip-types scripts/version.ts --sync >/dev/null
+  pnpm exec cli-dev version --sync >/dev/null
   git commit -q -am "chore(release): $next" -m "bin/release: $why."
   git push -q -u origin "$branch"
   git switch -q main
