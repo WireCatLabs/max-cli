@@ -10,7 +10,7 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
-  ...["", "--idle", "--detach", "--stop", "--started-by-command"].map((option) => ({
+  ...["", "--idle", "--started-by-command"].map((option) => ({
     command: "serve",
     ...(option ? { option } : {}),
     reason: "runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6",

@@ -1,13 +1,13 @@
 import { writeFileSync } from "node:fs"
-import { CliError } from "@leemour/cli-core"
+import { holdLock, lockPath, releaseLock } from "@leemour/cli-messaging/background"
 import { Command, Option } from "commander"
+import { MAX_APP } from "../app.js"
 import { openProfileCache } from "../cache/index.js"
 import { parseDuration } from "../config.js"
 import { asFirstWord } from "../profile.js"
 import { MaxServer, refusedLogin } from "../server/server.js"
-import { serverStatus, stopServer } from "../server/server-connection.js"
-import { logPath, refusedPath, startInBackground } from "../server/start.js"
-import type { SessionStore } from "../session/store.js"
+import { refusedPath } from "../server/start.js"
+import { VERSION } from "../version.js"
 import { forCommand } from "./context.js"
 
 /**
@@ -21,31 +21,11 @@ export const serveCommand = (): Command =>
   new Command("serve")
     .description("stay connected to MAX and stream new messages to `max watch`, until Ctrl-C")
     .option("--idle <duration>", "stop after this long with nobody using it — 15m, 1h is 60m")
-    .option("--detach", "run in the background instead — the same as `max server start`")
-    .option("--stop", "stop this profile's server — the same as `max server stop`")
     .addOption(new Option("--started-by-command").hideHelp())
     .action(async function (this: Command) {
-      const {
-        idle,
-        detach = false,
-        stop: stopping = false,
-        startedByCommand = false,
-      } = this.opts<{ idle?: string; detach?: boolean; stop?: boolean; startedByCommand?: boolean }>()
+      const { idle, startedByCommand = false } = this.opts<{ idle?: string; startedByCommand?: boolean }>()
       const { renderer, settings, store, run, format, streams } = forCommand(this)
       const idleMs = idle === undefined ? undefined : parseDuration(idle, "--idle")
-      if (detach && stopping)
-        throw new CliError("validation_error", "--detach starts a server and --stop ends one; give one")
-
-      if (stopping) {
-        const outcome = await stopServer(store.socketPath(), { force: true })
-        renderer.result({ profile: store.profile, stopped: outcome === "stopped" })
-        if (outcome === "none") renderer.note(`no server is running for profile "${store.profile}"`)
-        return
-      }
-      if (detach) {
-        renderer.result(await detached(store, idle))
-        return
-      }
       const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
 
       await run("serve", async (events) => {
@@ -66,8 +46,12 @@ export const serveCommand = (): Command =>
         const stop = () => void server.stop()
         process.once("SIGINT", stop)
         process.once("SIGTERM", stop)
+        // Not how max finds its server — the socket is — but what the shared store commands look for.
+        const lock = lockPath(MAX_APP, store.profile, process.env)
+        const startedAt = new Date().toISOString()
         try {
           await server.start()
+          holdLock(lock, { pid: process.pid, startedAt, listeningAt: new Date().toISOString(), version: VERSION })
           renderer.note(
             `connected — \`max ${asFirstWord(settings.profile)}watch\` in another terminal shows new messages`,
           )
@@ -79,34 +63,10 @@ export const serveCommand = (): Command =>
           }
           throw error
         } finally {
+          releaseLock(lock)
           process.off("SIGINT", stop)
           process.off("SIGTERM", stop)
           await cache?.close()
         }
       })
     })
-
-/** Logging in takes a second or two; a server that has not answered by now is not coming. */
-const START_WAIT_MS = 15_000
-
-/**
- * Starts a server by hand, in the background, and returns once it answers. A server a command
- * started is replaced by it; one already started by hand is left as it is.
- */
-export const detached = async (store: SessionStore, idle: string | undefined) => {
-  const before = await serverStatus(store.socketPath())
-  const about = { profile: store.profile, socket: store.socketPath(), log: logPath(store) }
-  if (before?.byHand === true) return { ...about, pid: before.pid, started: false }
-
-  const spawned = startInBackground(store, { serveArgs: idle === undefined ? [] : ["--idle", idle] })
-  if (spawned === undefined) {
-    throw new CliError("validation_error", "no session to start with, or a server is already being started — try again")
-  }
-  const until = Date.now() + START_WAIT_MS
-  while (Date.now() < until) {
-    const status = await serverStatus(store.socketPath())
-    if (status?.byHand === true) return { ...about, pid: status.pid, started: true }
-    await new Promise((resolve) => setTimeout(resolve, 250))
-  }
-  throw new CliError("timeout", `the server did not start within ${START_WAIT_MS / 1000}s — see ${about.log}`)
-}

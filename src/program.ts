@@ -167,7 +167,12 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
   // Commands print through this rather than the process's own streams, so a test sees their output
   // and not only help and errors.
   provide(program, { ...options, streams })
-  provideShared(program, { streams, app: MAX_APP, ...(options.tty === undefined ? {} : { tty: options.tty }) })
+  provideShared(program, {
+    streams,
+    app: MAX_APP,
+    ...(options.tty === undefined ? {} : { tty: options.tty }),
+    ...(options.system ? { system: options.system } : {}),
+  })
   const argvLog = process.env.MAX_TEST_ARGV_LOG
   if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
 

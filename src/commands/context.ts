@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs"
 import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@leemour/cli-core"
 import type { FetchLike } from "@leemour/cli-core/http"
+import type { ServerSystem } from "@leemour/cli-messaging/background"
 import { recorded } from "@leemour/cli-messaging/cli"
 import { sharedJournal } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
@@ -31,6 +32,8 @@ export interface Environment {
   tty?: boolean
   /** A store over a memory keyring, so a test never touches the owner's. */
   store?: (profile: string) => SessionStore
+  /** systemd, launchd and the pause between looks, for `max server` — a test hands in its own. */
+  system?: ServerSystem
   /** A fresh connection per client — to a scripted MAX in a test. */
   connection?: () => NonNullable<MaxClientOptions["connection"]>
   browser?: BrowserDoors
