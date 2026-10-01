@@ -2,8 +2,8 @@ import { EventEmitter } from "node:events"
 import { describe, expect, it, vi } from "vitest"
 import type { WebSocket } from "ws"
 import { mockMax } from "../testing/mock-max.js"
-import { Connection } from "./connection.js"
-import { encodeFrame } from "./frame.js"
+import { Connection, type WireEvent } from "./connection.js"
+import { encodeFrame, SEQ_MODULO } from "./frame.js"
 
 /** Scripted silence: MAX accepts the frame and never answers it. */
 const silent = () => undefined
@@ -27,6 +27,39 @@ describe("the connection", () => {
     // settle the caller's promise. A command that closes while a request is out would hang, which
     // is the one defect REQUIREMENTS §18 is about.
     expect(await outcome).toContain("closed before MAX answered")
+  })
+
+  it("skips a seq whose request is still waiting once the counter wraps, so its answer is not handed to a newer one", async () => {
+    const max = mockMax({ answers: { 6: silent, 49: { ok: true } } })
+    const connection = new Connection({ createSocket: max.createSocket, timeoutMs: 60_000 })
+    await connection.open()
+    const seqs: number[] = []
+    const sentSeq = (event: WireEvent) => {
+      if (event.phase === "sent") seqs.push(event.seq)
+    }
+
+    const waiting = connection.invoke(6, {}, sentSeq).catch((error: Error) => error.message)
+    for (let i = 1; i < SEQ_MODULO; i += 4096) {
+      const batch = Array.from({ length: Math.min(4096, SEQ_MODULO - i) }, () => connection.invoke(49, {}))
+      await Promise.all(batch)
+    }
+    await connection.invoke(49, {}, sentSeq)
+
+    expect(seqs).toEqual([0, 1])
+    await connection.close()
+    expect(await waiting).toContain("closed before MAX answered")
+  })
+
+  it("refuses to send when every seq is waiting for an answer", async () => {
+    const max = mockMax({ answers: { 6: silent } })
+    const connection = new Connection({ createSocket: max.createSocket, timeoutMs: 60_000 })
+    await connection.open()
+
+    const waiting = Array.from({ length: SEQ_MODULO }, () => connection.invoke(6, {}).catch(() => undefined))
+
+    await expect(connection.invoke(6, {})).rejects.toThrow(`all ${SEQ_MODULO} request numbers are waiting`)
+    await connection.close()
+    await Promise.all(waiting)
   })
 
   it("**survives the error `ws` emits when a socket is closed mid-connect**", async () => {
