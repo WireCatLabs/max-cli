@@ -900,11 +900,23 @@ max messages unpin <chat> <message>
 
 ## `max store`
 
-this machine's copy of a chat's messages: fetch it from MAX, export it to a file
+the local store of messages
+
+### `max store status`
+
+per chat: messages stored, the oldest and newest, and the stretches held completely
+
+```sh
+max store status [chat]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | необязательный | a chat: its id, or part of its title. |
 
 ### `max store fetch`
 
-fetch a chat's history from MAX into this machine's copy, newest first, at most --max-pages a run; without --since or --last, back to the chat's start over as many runs as it takes
+fetch a chat's history into the local store, newest first; run it again to continue
 
 ```sh
 max store fetch <chat> [options]
@@ -912,19 +924,57 @@ max store fetch <chat> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | back to this message id, ISO 8601 time, or 2h / 1d ago. |
-| `--last <n>` | the newest n messages. |
-| `--estimate` | only say what the fetch would cost, from this machine's copy; nothing is sent. |
-| `--max-pages <n>` | pages of 30 per run. По умолчанию: `40`. |
-| `--pause <duration>` | the least wait between pages, 5s or 500ms; each is up to twice that. По умолчанию: `5s`. |
+| `--limit <n>` | at most this many messages in this run; 1200 if not given. |
+| `--page-size <n>` | how many messages one request asks for; 30 if not given. |
+| `--pause <duration>` | the least pause between pages, to stay under the provider's limits; each is up to twice that. По умолчанию: `5s`. |
+| `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
+| `--last <n>` | stop once the newest n messages are held. |
+| `--background` | run as a job that outlives this command; `store jobs show` follows it. |
+| `--estimate` | only estimate how many messages, requests and minutes a full fetch would still take — from the store, no request. |
+
+### `max store jobs`
+
+background fetch jobs
+
+#### `max store jobs list`
+
+background fetch jobs, newest first
+
+```sh
+max store jobs list
+```
+
+#### `max store jobs show`
+
+one background job — the newest when none is named — and what the store now holds of its chat
+
+```sh
+max store jobs show [job]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `job` | необязательный | the job id `store fetch --background` printed. |
+
+#### `max store jobs cancel`
+
+stop a running background job after its current page; a later fetch resumes where it stopped
+
+```sh
+max store jobs cancel <job>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `job` | обязательный | the job id. |
 
 ### `max store export`
 
-a chat's messages from this machine's copy to a file, oldest first, as JSON lines or Markdown; never connects
+a chat's stored messages as JSON lines, oldest first; never asks the messenger
 
 ```sh
 max store export <chat> [options]
@@ -932,13 +982,82 @@ max store export <chat> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name this machine has listed. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 | Опция | Что делает |
 |---|---|
-| `--format <format>` | jsonl or md. Одно из: `jsonl`, `md`. |
-| `--since <id-or-time>` | only from this message id, ISO 8601 time, or 2h / 1d ago on. |
-| `--output <file>` | write to this file, readable only by you, instead of stdout. |
+| `--format <format>` | jsonl (the default): one message per line; markdown: a transcript with a heading per day, replies and forwards quoted. |
+| `--since-time <time>` | only from this ISO 8601 time, or 30m / 2h / 1d ago, on. |
+| `--output <file>` | write JSON lines, or the transcript, to this new file, readable only by you. |
+
+### `max store clear`
+
+delete from the store the chats this account has left, with their messages
+
+```sh
+max store clear [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--left` | the chats this account has left — the only thing this clears. |
+| `--allow-dangerous` | yes, delete — it cannot be undone, and a chat you left cannot be fetched again. |
+
+### `max store info`
+
+the store file: where it is, its size, its schema and how many rows it holds; changes nothing
+
+```sh
+max store info
+```
+
+### `max store check`
+
+whether the store is healthy — integrity, search indexes, disk, and which chats are behind
+
+```sh
+max store check
+```
+
+### `max store migrate`
+
+bring the store up to this build's schema, then normalize the messages stored before it
+
+```sh
+max store migrate
+```
+
+### `max store reindex`
+
+rebuild the word index and its typo vocabulary from the stored messages; loses no message
+
+```sh
+max store reindex
+```
+
+### `max store backup`
+
+copy the store into a new file, while it is in use; never overwrites a file
+
+```sh
+max store backup <file>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `file` | обязательный | the new file. |
+
+### `max store restore`
+
+put a backup in place of the store; the store it replaces is kept beside it, never deleted
+
+```sh
+max store restore <file>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `file` | обязательный | a file `store backup` wrote. |
 
 ## `max models`
 

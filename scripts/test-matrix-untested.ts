@@ -10,6 +10,12 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  {
+    command: "store fetch",
+    option: "--background",
+    reason:
+      "starts a detached `max` that outlives the test; cli-messaging src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6",
+  },
   ...["", "--idle", "--started-by-command"].map((option) => ({
     command: "serve",
     ...(option ? { option } : {}),

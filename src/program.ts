@@ -15,6 +15,7 @@ import {
   provide as provideShared,
   reactionsCommand,
   recorded,
+  storeCommand as sharedStoreCommand,
   wasSettled,
 } from "@leemour/cli-messaging/cli"
 import { Command, CommanderError } from "commander"
@@ -42,7 +43,6 @@ import { serveCommand } from "./commands/serve.js"
 import { serverCommand } from "./commands/server.js"
 import { sessionCommand } from "./commands/session.js"
 import { skillCommand } from "./commands/skill.js"
-import { storeCommand } from "./commands/store.js"
 import { upgradeCommand } from "./commands/upgrade.js"
 import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
@@ -110,7 +110,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(chatsCommand())
   program.addCommand(contactsCommand())
   program.addCommand(messagesCommand())
-  program.addCommand(storeCommand())
+  program.addCommand(sharedStoreCommand(maxMessenger))
   program.addCommand(modelsCommand())
   program.addCommand(pollsCommand(maxMessenger))
   program.addCommand(reactionsCommand(maxMessenger))
