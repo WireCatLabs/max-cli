@@ -8,6 +8,7 @@ import type { MaxClient } from "./client.js"
 import { forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { rootOf } from "./profile.js"
+import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
 
 /** The client each command connected, so its guard can tell whether `max serve` journals for it. */
@@ -48,22 +49,35 @@ export const maxMessenger: Messenger = {
   },
 
   // Built with the profile's cache — without it `chats show` has no members and `contacts show`
-  // refuses — and without the send guard, which the shared services hold.
-  connect: async (command, _context, { events } = {}) => {
+  // refuses — and without the send guard, which the shared services hold. The record keeps what the
+  // login brings in `messages.db`, where the shared reads look.
+  connect: async (command, context, { events } = {}) => {
     const { settings, renderer, createClient, store } = forCommand(command)
-    const cache = await openProfileCache(settings.profile, { onProblem: renderer.note })
-    const client = createClient({ sends: undefined, ...(cache ? { cache } : {}), ...(events ? { events } : {}) })
-    clients.set(rootOf(command), client)
-    const adapter = maxAdapter(client, store)
-    return {
-      ...adapter,
-      close: async () => {
-        try {
-          await adapter.close()
-        } finally {
-          await cache?.close()
-        }
-      },
+    const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
+    try {
+      const cache = await openProfileCache(settings.profile, { onProblem: renderer.note })
+      const client = createClient({
+        sends: undefined,
+        record,
+        ...(cache ? { cache } : {}),
+        ...(events ? { events } : {}),
+      })
+      clients.set(rootOf(command), client)
+      const adapter = maxAdapter(client, store)
+      return {
+        ...adapter,
+        close: async () => {
+          try {
+            await adapter.close()
+          } finally {
+            await cache?.close()
+            await record.close()
+          }
+        },
+      }
+    } catch (error) {
+      await record.close()
+      throw error
     }
   },
 }
