@@ -474,6 +474,8 @@ max chats rules show <chat>
 
 change one rule; the group's first change writes every rule with its default
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max chats rules set <chat> <key> <value>
 ```
@@ -487,6 +489,8 @@ max chats rules set <chat> <key> <value>
 #### `max chats rules unset`
 
 put one rule back to its default
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max chats rules unset <chat> <key>
@@ -1329,6 +1333,8 @@ max recipients list
 
 allow sending to this chat; the first add turns the list on
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max recipients add <chat>
 ```
@@ -1341,6 +1347,8 @@ max recipients add <chat>
 
 stop allowing this chat; the list stays on
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max recipients remove <chat>
 ```
@@ -1352,6 +1360,8 @@ max recipients remove <chat>
 ### `max recipients clear`
 
 empty the list and turn it off: this profile may send to any chat again
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max recipients clear
@@ -1520,6 +1530,8 @@ max config show [options]
 
 save a setting to the configuration file
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max config set <setting> <value> [options]
 ```
@@ -1538,6 +1550,8 @@ max config set <setting> <value> [options]
 ### `max config unset`
 
 remove a setting from the configuration file
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max config unset <setting> [options]
@@ -1738,6 +1752,8 @@ the bot token this profile uses
 
 check a bot token with MAX, then keep it — typed at a hidden prompt or piped on stdin
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max bot auth set
 ```
@@ -1753,6 +1769,8 @@ max bot auth show
 #### `max bot auth remove`
 
 forget this profile's bot token
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max bot auth remove
@@ -1949,6 +1967,8 @@ max bot chats rules show <chat>
 
 change one rule — trusted, blocked, blockedNames, links, invites, forwards, blockedPeople, flood.messages, flood.minutes, flood.action, newAccount.days, newAccount.action, consent.delete, consent.remove
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max bot chats rules set <chat> <key> <value>
 ```
@@ -1962,6 +1982,8 @@ max bot chats rules set <chat> <key> <value>
 #### `max bot chats rules unset`
 
 put one rule back to its default
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max bot chats rules unset <chat> <key>
@@ -2089,6 +2111,8 @@ max bot recipients list
 
 allow a chat: its id, `user:<id>`, or the title of a chat this bot has seen
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max bot recipients add <chat>
 ```
@@ -2101,6 +2125,8 @@ max bot recipients add <chat>
 
 take a chat off the list
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max bot recipients remove <chat>
 ```
@@ -2112,6 +2138,8 @@ max bot recipients remove <chat>
 #### `max bot recipients clear`
 
 remove the list: the bot may write to any chat again
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max bot recipients clear

@@ -68,8 +68,7 @@ export const botCommand = (): Command => {
 
   const auth = new Command("auth").description("the bot token this profile uses")
 
-  auth
-    .command("set")
+  annotate(auth.command("set"), { mutates: true, local: true })
     .description("check a bot token with MAX, then keep it — typed at a hidden prompt or piped on stdin")
     .action(async function (this: Command) {
       const { store, client, ask, renderer, settings, streams } = botContext(this)
@@ -106,8 +105,7 @@ export const botCommand = (): Command => {
       })
     })
 
-  auth
-    .command("remove")
+  annotate(auth.command("remove"), { mutates: true, local: true })
     .description("forget this profile's bot token")
     .action(function (this: Command) {
       const { store, renderer, settings } = botContext(this)

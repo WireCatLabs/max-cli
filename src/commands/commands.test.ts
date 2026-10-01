@@ -44,7 +44,7 @@ describe("max commands", () => {
   it("marks the commands that change something in MAX, and only those", async () => {
     const { stdout } = await commands()
     const writing = flat(JSON.parse(stdout[0] as string).commands)
-      .filter((command) => command.mutates)
+      .filter((command) => command.mutates && !command.local)
       .map((command) => command.path.join(" "))
     expect(writing).toEqual([
       "account update",
@@ -123,6 +123,29 @@ describe("max commands", () => {
       "bot api delete-comment",
       "bot api answer-on-callback",
       "bot api get-updates",
+    ])
+  })
+
+  it("marks the writes that change only this computer as local, still writes", async () => {
+    const { stdout } = await commands()
+    const local = flat(JSON.parse(stdout[0] as string).commands)
+      .filter((command) => command.local)
+      .map((command) => `${command.path.join(" ")}${command.mutates ? "" : " (not a write)"}`)
+    expect(local).toEqual([
+      "chats rules set",
+      "chats rules unset",
+      "recipients add",
+      "recipients remove",
+      "recipients clear",
+      "config set",
+      "config unset",
+      "bot auth set",
+      "bot auth remove",
+      "bot chats rules set",
+      "bot chats rules unset",
+      "bot recipients add",
+      "bot recipients remove",
+      "bot recipients clear",
     ])
   })
 

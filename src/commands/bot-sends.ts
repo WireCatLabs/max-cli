@@ -305,8 +305,7 @@ export const recipientsCommand = (): Command => {
       const context = botContext(this)
       renderList(context.renderer, context.format, recipientsOf(context).read() ?? [])
     })
-  command
-    .command("add <chat>")
+  annotate(command.command("add <chat>"), { mutates: true, local: true })
     .description("allow a chat: its id, `user:<id>`, or the title of a chat this bot has seen")
     .action(function (this: Command, chat: string) {
       const context = botContext(this)
@@ -315,15 +314,13 @@ export const recipientsCommand = (): Command => {
       recipientsOf(context).add({ id: target.key, title, addedAt: new Date().toISOString() })
       renderList(context.renderer, context.format, recipientsOf(context).read() ?? [])
     })
-  command
-    .command("remove <chat>")
+  annotate(command.command("remove <chat>"), { mutates: true, local: true })
     .description("take a chat off the list")
     .action(function (this: Command, chat: string) {
       const context = botContext(this)
       context.renderer.result({ removed: recipientsOf(context).remove(chat) ?? null })
     })
-  command
-    .command("clear")
+  annotate(command.command("clear"), { mutates: true, local: true })
     .description("remove the list: the bot may write to any chat again")
     .action(function (this: Command) {
       const context = botContext(this)

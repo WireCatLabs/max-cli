@@ -1,3 +1,4 @@
+import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import type { MaxClient } from "../client.js"
@@ -22,8 +23,7 @@ export const rulesCommand = (): Command => {
       })
     })
 
-  command
-    .command("set")
+  annotate(command.command("set"), { mutates: true, local: true })
     .argument("<chat>", "chat id, or part of a chat name")
     .argument("<key>", `one of: ${RULE_KEYS.join(", ")}`)
     .argument("<value>", "see `max chats rules show`; lists are comma-separated and replace the old one")
@@ -35,8 +35,7 @@ export const rulesCommand = (): Command => {
       }))
     })
 
-  command
-    .command("unset")
+  annotate(command.command("unset"), { mutates: true, local: true })
     .argument("<chat>", "chat id, or part of a chat name")
     .argument("<key>", `one of: ${RULE_KEYS.join(", ")}`)
     .description("put one rule back to its default")
