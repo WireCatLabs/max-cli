@@ -59,11 +59,14 @@ const runWith = async (argv: string[], environment: Environment = {}) => {
 const fireOf = (payload: unknown) =>
   (payload as { message: { delayedAttributes?: { timeToFire: number } } }).message.delayedAttributes?.timeToFire
 
-describe("sending later with --at", () => {
+describe("sending later with --at-time", () => {
   it("queues it on MAX with timeToFire rounded down to the minute, and answers scheduledFor", async () => {
     const { environment, sentWith } = messenger()
     const before = Date.now()
-    const sent = await runWith(["s-later", "messages", "send", "111", "later", "--at", "30m", "--json"], environment)
+    const sent = await runWith(
+      ["s-later", "messages", "send", "111", "later", "--at-time", "30m", "--json"],
+      environment,
+    )
 
     expect(sent.code).toBe(0)
     const [request] = sentWith(Opcode.MSG_SEND)
@@ -100,7 +103,7 @@ describe("sending later with --at", () => {
     ["neither a time nor a delay", "tomorrow"],
   ])("refuses %s before connecting", async (_, at) => {
     const { max, environment } = messenger()
-    const refused = await runWith(["s-bad", "messages", "send", "111", "later", "--at", at], environment)
+    const refused = await runWith(["s-bad", "messages", "send", "111", "later", "--at-time", at], environment)
 
     expect(refused.code).toBe(2)
     expect(max.sent).toEqual([])
@@ -108,7 +111,10 @@ describe("sending later with --at", () => {
 
   it("refuses --silent, which MAX's own client never sends with a scheduled message", async () => {
     const { environment, sentWith } = messenger()
-    const refused = await runWith(["s-silent", "messages", "send", "111", "x", "--at", "1h", "--silent"], environment)
+    const refused = await runWith(
+      ["s-silent", "messages", "send", "111", "x", "--at-time", "1h", "--silent"],
+      environment,
+    )
 
     expect(refused.code).toBe(2)
     expect(JSON.parse(refused.stderr).error.message).toContain("cannot be silent")
@@ -117,7 +123,7 @@ describe("sending later with --at", () => {
 
   it("does not repeat a lost scheduled send, and points at the queue instead", async () => {
     const { environment, sentWith } = messenger({ send: () => undefined })
-    const lost = await runWith(["s-lost", "messages", "send", "111", "later", "--at", "1h"], environment)
+    const lost = await runWith(["s-lost", "messages", "send", "111", "later", "--at-time", "1h"], environment)
 
     expect(sentWith(Opcode.MSG_SEND)).toHaveLength(1)
     const { error } = JSON.parse(lost.stderr)
@@ -129,7 +135,7 @@ describe("sending later with --at", () => {
     const { max, environment } = messenger()
     await runWith(["s-read", "config", "set", "readOnly", "true"])
 
-    expect((await runWith(["s-read", "messages", "send", "111", "x", "--at", "1h"], environment)).code).toBe(5)
+    expect((await runWith(["s-read", "messages", "send", "111", "x", "--at-time", "1h"], environment)).code).toBe(5)
     expect(max.sent).toEqual([])
   })
 })

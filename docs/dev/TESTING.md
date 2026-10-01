@@ -212,7 +212,7 @@ run in the background and are stopped by the PID taken at start.
 | P1 | the start of the day | `account show`, `account sessions list`, `chats list` (`--kind`, `--unread`), `inbox`, `review --since 1d`, `contacts list\|show` |
 | P2 | a conversation between the two accounts | `messages send`, the other side's `messages list`, `reactions add\|remove`, `--reply-to`, `messages edit`, `messages show\|context` |
 | P3 | mark read, delete for everyone | `chats mark-read`, `messages delete` without and with `--allow-dangerous` |
-| P4 | Saved messages as a notebook | `--md`, `--file` (photo, `--as-file`), `messages download`, `--at 2h`, `messages scheduled`, `messages forward` |
+| P4 | Saved messages as a notebook | `--md`, `--file` (photo, `--as-file`), `messages download`, `--at-time 2h`, `messages scheduled`, `messages forward` |
 | P5 | find and keep | `messages search`, `store fetch` (`--estimate`, then `--last 20` on one small test chat), `store export` (md, jsonl), `--offline` |
 | P6 | live stream | `max watch` while the other account writes |
 | P7 | folders and a contact's name | `chats folders create\|update\|delete`, `contacts rename` and back |

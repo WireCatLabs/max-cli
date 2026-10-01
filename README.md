@@ -329,7 +329,7 @@ max inbox                                         # непрочитанное �
 max messages list "Иван Петров" --limit 20
 max messages send "Иван Петров" "Созвонимся в 15:00?" --reply-to <id>
 max reactions add "Иван Петров" <id> 👍
-max messages send 0 "Позвонить маме" --at 2h      # напоминание себе в «Избранное» через два часа
+max messages send 0 "Позвонить маме" --at-time 2h # напоминание себе в «Избранное» через два часа
 max review --since 1d                             # вся переписка за сутки: кто кому что обещал
 ```
 
