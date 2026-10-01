@@ -169,6 +169,13 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **CORE-11** · P3 · Installers and standalone archives per platform (oclif's `pack`), after a
   single-file build (G4 §3.9: Bun only). Lowest priority.
 
+- **RES-12** · P3 · Word search at 1M messages misses the speed targets of storage phase 2 §6 (accepted
+  for phase 2 by the owner, 2026-10-02): every word with no chat or sender filter up to 124 ms (45),
+  any word over all chats up to 232 ms (130), filling the index 53 s (20) with a 1.2 s vocabulary batch
+  (500 ms). Every target holds at 100k. Starts at cli-messaging `src/store/sqlite/words.ts`
+  (`matchWords`, the ranked-first path) and `src/store/sqlite/search-index.ts` (`fillSearchIndex`);
+  measure with `bench/search/store-chain.ts` (cli-messaging `bench/search/results.md`, "Phase 2 item 8").
+
 ## Later — each reopens a ruling
 
 Added by the owner on 2026-09-24. Each one goes against REQUIREMENTS §3 or §18, and the line says
