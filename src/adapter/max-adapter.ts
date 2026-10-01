@@ -7,6 +7,7 @@ import type {
   MessageReactions,
   MessengerAdapter,
   ReadState,
+  ServerReads,
 } from "@leemour/cli-messaging/cli"
 import type { Upload } from "@leemour/cli-messaging/sends"
 import type { MaxClient } from "../client.js"
@@ -17,7 +18,13 @@ import { isId } from "../resolve.js"
 import type { SessionStore } from "../session/store.js"
 import { isImage, isVideo } from "../upload.js"
 
-export type MaxAdapter = MessengerAdapter & MessageEditing & MessagePins & MessageReactions & ReadState & MessagePolls
+export type MaxAdapter = MessengerAdapter &
+  ServerReads &
+  MessageEditing &
+  MessagePins &
+  MessageReactions &
+  ReadState &
+  MessagePolls
 
 const MARKUP: Record<string, string> = {
   bold: "STRONG",

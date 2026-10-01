@@ -15,8 +15,8 @@ importers:
         specifier: 0.15.0
         version: 0.15.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: 0.98.0
-        version: 0.98.0(@leemour/cli-core@0.15.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.99.0
+        version: 0.99.0(@leemour/cli-core@0.15.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -592,6 +592,9 @@ packages:
   '@eshaz/web-worker@1.2.2':
     resolution: {integrity: sha512-WxXiHFmD9u/owrzempiDlBB1ZYqiLnm9s6aPc8AlFQalq2tKmqdmMr9GXOupDgzXtqnBipj8Un0gkIm7Sjf8mw==}
 
+  '@huggingface/tokenizers@0.2.0':
+    resolution: {integrity: sha512-LidMHe1FpcSYH4vcSjXooda34pC0M8m1gmDOv7SQi6Iv+ib1zX7J3sHBCC9/3FPCkn2k1b55FneVqMRxrr99pg==}
+
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
     engines: {node: '>=6.0.0'}
@@ -612,11 +615,14 @@ packages:
       commander:
         optional: true
 
+  '@leemour/cli-messaging-onnx@1.0.0':
+    resolution: {integrity: sha512-3LdujLvACTZ2+XR+7cUp9ztj3YsnHDSnsyYR4N875irShozmBnpCZILCsMtNGf/DuV3SozizqZmc2ojx6+CSgQ==}
+
   '@leemour/cli-messaging-sqlite@1.0.0':
     resolution: {integrity: sha512-NFJMG+/2BWIb3JdOMgyV8SFsB7Fuv3wLtUmMt08GZ4KTpgu0WuA7qQmQE6appEgJJuF/97vHj6+AuXw2z3HMHw==}
 
-  '@leemour/cli-messaging@0.98.0':
-    resolution: {integrity: sha512-QEVGsENeXM7dVXyLv+FXRXZ+Kt4TyLqGjxSCzPPQWvsSFPe/wxJjbdjxGmDFUWFKEMNdm+F+y6kc5nLKMuoqUQ==}
+  '@leemour/cli-messaging@0.99.0':
+    resolution: {integrity: sha512-pcdrLX6VRCul2Fh5jqxOAFOgAqIhOCWFonl89AXFl1D0Ub42TKyBch9og9aG8+FmDoInHr/Dv3wxvRNNvSgbPA==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -1372,6 +1378,9 @@ packages:
     resolution: {integrity: sha512-0eJJY6hXLGf1udHwfNftBqH+g73EU4B504nZeKpz1sYRKafAghwxEJunB2O7rDZkL4PGfsMVnTXZ2EjibbqcsA==}
     engines: {node: '>=14.0.0'}
 
+  onnxruntime-common@1.30.0:
+    resolution: {integrity: sha512-7fdVWjAID1dVhH/G8qK3APARunV4VkBFoCQAP7qp4Wkab0mrorvmc+sqiT+mKXOzDqdjN5j+/Z9nb4gzNPWcyA==}
+
   opus-decoder@0.7.12:
     resolution: {integrity: sha512-6zpHFDi/MhYvMwyYiuJPqJ2lcRkfm7wHblSvT3lUtx/kLvHkunoe/rhTn1dLKxqVGLeQj3gQi7CnR0N2p3RuOg==}
 
@@ -2024,6 +2033,8 @@ snapshots:
 
   '@eshaz/web-worker@1.2.2': {}
 
+  '@huggingface/tokenizers@0.2.0': {}
+
   '@jridgewell/resolve-uri@3.1.2': {}
 
   '@jridgewell/sourcemap-codec@1.6.0': {}
@@ -2046,12 +2057,18 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
+  '@leemour/cli-messaging-onnx@1.0.0':
+    dependencies:
+      onnxruntime-common: 1.30.0
+
   '@leemour/cli-messaging-sqlite@1.0.0': {}
 
-  '@leemour/cli-messaging@0.98.0(@leemour/cli-core@0.15.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-messaging@0.99.0(@leemour/cli-core@0.15.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
+      '@huggingface/tokenizers': 0.2.0
       '@leemour/cli-core': 0.15.0(commander@15.0.0)(typescript@7.0.2)
+      '@leemour/cli-messaging-onnx': 1.0.0
       '@leemour/cli-messaging-sqlite': 1.0.0
       '@modelcontextprotocol/server': 2.1.0
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
@@ -2654,6 +2671,8 @@ snapshots:
       opus-decoder: 0.7.12
 
   on-exit-leak-free@2.1.2: {}
+
+  onnxruntime-common@1.30.0: {}
 
   opus-decoder@0.7.12:
     dependencies:

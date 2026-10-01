@@ -46,11 +46,11 @@ max bot list --check                                     # все боты на 
   названию; правка, удаление, чтение, закрепление. `chats list` — чаты, которые бот видел: списка
   чатов бота у MAX нет.
 - **Файлы, участники, комментарии, кнопки, меню команд, вебхуки.** `messages send --file`,
-  `members`, `admins`, `comments`, `callbacks answer`, `commands`, `webhooks` — у каждой записи тот
+  `chats members`, `chats admins`, `comments`, `callbacks answer`, `commands`, `webhooks` — у каждой записи тот
   же список получателей и журнал.
 - **Модерация от имени бота.** `bot chats check` сверяет новое в группе с правилами
   (`bot chats rules`) и удаляет спам и людей — с запретом вернуться по ссылке. Вступления видит
-  `bot updates watch`, который печатает всё, что происходит в чатах бота.
+  `bot watch`, который печатает всё, что происходит в чатах бота.
 - **Копия переписки на этом компьютере.** `bot people show <кто>` — где человек писал и его личный
   чат с ботом; `bot messages search --from <кто>` и `bot messages between <кто> <кто>` — без
   запросов к MAX.
@@ -316,7 +316,7 @@ export MAX_PROFILE=personal # или на всю сессию оболочки
 ```sh
 max sales bot messages send "Команда продаж" "**Сборка готова**" --md --file report.pdf
 max sales bot messages pin "Команда продаж" <mid>       # id сообщения — из ответа на send
-max sales bot updates watch                              # всё, что происходит в чатах бота, по мере прихода
+max sales bot watch --events                             # всё, что происходит в чатах бота, по мере прихода
 max sales bot chats rules set "Команда продаж" links delete
 max sales bot chats check "Команда продаж" --dry-run     # что нарушает правила — без действий
 max sales bot people show "Иван"                         # где человек писал и его личный чат с ботом

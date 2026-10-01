@@ -12,11 +12,7 @@ import { SessionStore } from "../session/store.js"
 import { maxIds, seededMax } from "../testing/seeded-max.js"
 import { maxAdapter } from "./max-adapter.js"
 
-const SKIPPED: Record<string, string> = {
-  "resolve refuses a chat that does not exist with not_found":
-    "max takes an id as a chat of kind unknown without connecting, so a refused write never logs in; " +
-    "the case accepts that from https://github.com/leemour/cli-messaging/pull/368 on",
-}
+const SKIPPED: Record<string, string> = {}
 
 const caches: CacheStore[] = []
 afterEach(async () => {

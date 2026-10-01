@@ -3,6 +3,7 @@ import { fromOldSettings } from "@leemour/cli-messaging/sends"
 import { MAX_APP } from "../app.js"
 import { BOT_ADMIN_RIGHTS, maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
+import { JoinLog } from "../bot/joins.js"
 import { PROVIDER } from "../bot/keep.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { resolveSettings } from "../config.js"
@@ -16,6 +17,26 @@ export const maxBot: BotMessenger = {
   provider: PROVIDER,
   name: "MAX",
   adminRights: BOT_ADMIN_RIGHTS,
+  manyWebhooks: true,
+  // `bot chats check` reads joins from here: MAX hands each update to one reader only.
+  keepUpdates: (_command, profile, events) => {
+    JoinLog.for(profile).add(
+      events.flatMap((event) =>
+        (event.event === "joined" || event.event === "added" || event.event === "left" || event.event === "removed") &&
+        event.person
+          ? [
+              {
+                chatId: event.chatId,
+                userId: event.person.id,
+                name: event.person.name,
+                event: event.event === "joined" || event.event === "added" ? ("add" as const) : ("remove" as const),
+                at: event.at ? Date.parse(event.at) : Date.now(),
+              },
+            ]
+          : [],
+      ),
+    )
+  },
   resolveSettings: (flags: GlobalFlags, options: ResolveOptions = {}): Settings => {
     const { profile, offline, ...rest } = flags
     const own = resolveSettings(

@@ -688,17 +688,20 @@ max messages list <chat> [options]
 search the local store — what was read, fetched or kept by serve; never asks the messenger
 
 ```sh
-max messages search <text> [options]
+max messages search <query> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `text` | обязательный | every word must appear, as a word or the start of one: квартир finds квартира. |
+| `query` | обязательный | every word must appear, best match first; "a phrase", -word, a OR b, and the filters from: chat: after: before: has: in: — a typo is corrected, and a word that matches nothing falls back to any word, then to a piece of a word. |
 
 | Опция | Что делает |
 |---|---|
-| `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
+| `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
+| `--source <messenger>` | every account of this messenger held in the store, or all of them — the same as in: in the query. |
 | `--limit <n>` | how many. |
+| `--newest` | newest first instead of best first. |
+| `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
 | `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 
 ### `max messages show`
@@ -1786,7 +1789,7 @@ max bot list [options]
 
 | Опция | Что делает |
 |---|---|
-| `--check` | ask MAX who each bot is. |
+| `--check` | ask the messenger who each bot is, with its token. |
 
 ### `max bot chats`
 
@@ -2249,6 +2252,124 @@ what this bot sent, edited and deleted from this machine — ids and outcomes, n
 max bot sends list
 ```
 
+### `max bot watch`
+
+print new messages as they arrive and keep them, until Ctrl-C or --timeout (either ends it normally)
+
+```sh
+max bot watch [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--events` | also edits, deletions, buttons pressed and people coming and going; every line names its event. |
+| `--types <types>` | only these update types, comma-separated, in the messenger's words. |
+
+### `max bot callbacks`
+
+answers to the buttons people press under the bot's messages
+
+#### `max bot callbacks answer`
+
+answer a pressed button by its callback id: --notification shows the person a one-time note, --text replaces the message the button was on
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot callbacks answer <callback> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `callback` | обязательный | the callback id `bot watch` printed. |
+
+| Опция | Что делает |
+|---|---|
+| `--text <text>` | the message's new text. |
+| `--notification <text>` | a note only the person who pressed sees. |
+
+### `max bot commands`
+
+the bot's command menu — what people see after /
+
+#### `max bot commands list`
+
+the commands in the menu now
+
+```sh
+max bot commands list
+```
+
+#### `max bot commands set`
+
+replace the whole menu: each command as name=description, e.g. start=Begin
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot commands set <commands>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `commands` | обязательный | name=description, one per command. |
+
+#### `max bot commands clear`
+
+empty the menu
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot commands clear
+```
+
+### `max bot webhooks`
+
+where the messenger pushes this bot's updates — while one is set, `bot watch` gets nothing
+
+#### `max bot webhooks list`
+
+the webhooks this bot has
+
+```sh
+max bot webhooks list
+```
+
+#### `max bot webhooks set`
+
+send this bot's updates to an HTTPS address; refused while another is set
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot webhooks set <url> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `url` | обязательный | the HTTPS address. |
+
+| Опция | Что делает |
+|---|---|
+| `--types <types>` | only these update types, comma-separated, in the messenger's words. |
+| `--secret-stdin` | a secret the messenger sends back with each update — asked for, or read from a pipe. |
+| `--add` | keep the webhooks already set and add this one beside them. |
+
+#### `max bot webhooks delete`
+
+stop sending updates to this address; with none left, `bot watch` works again
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot webhooks delete <url>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `url` | обязательный | the address. |
+
 ### `max bot me`
 
 the bot this profile's token belongs to: name, id, description, commands
@@ -2367,65 +2488,6 @@ max bot comments delete <message> <comment>
 | `message` | обязательный |  |
 | `comment` | обязательный |  |
 
-### `max bot callbacks`
-
-answers to the buttons people press under the bot's messages
-
-#### `max bot callbacks answer`
-
-answer a pressed button by its callback id: --notification shows the person a one-time note, --text replaces the message the button was on
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot callbacks answer <callback> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `callback` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--text <text>` | the message's new text; - reads stdin. |
-| `--notification <text>` | a note only the person who pressed sees. |
-
-### `max bot commands`
-
-the bot's command menu — what people see after /
-
-#### `max bot commands list`
-
-the commands in the menu now
-
-```sh
-max bot commands list
-```
-
-#### `max bot commands set`
-
-replace the whole menu: each command as name=description, e.g. start=Начать
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot commands set <commands>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `commands` | обязательный |  |
-
-#### `max bot commands clear`
-
-empty the menu
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot commands clear
-```
-
 ### `max bot uploads`
 
 files uploaded to MAX, to attach to a message
@@ -2447,70 +2509,6 @@ max bot uploads put <file> [options]
 | Опция | Что делает |
 |---|---|
 | `--type <type>` | upload as this kind instead of guessing by extension. Одно из: `image`, `video`, `audio`, `file`. |
-
-### `max bot webhooks`
-
-where MAX pushes this bot's updates — while one is set, the bot cannot read updates by polling
-
-#### `max bot webhooks list`
-
-the webhooks this bot has
-
-```sh
-max bot webhooks list
-```
-
-#### `max bot webhooks set`
-
-send this bot's updates to an HTTPS URL on port 443 — a new URL does not replace an old one, so every update would arrive twice; refused while another is set, unless --add
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot webhooks set <url> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `url` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--types <types>` | only these update types, a comma list (message_created,bot_started,…). |
-| `--secret-stdin` | a secret MAX sends back in X-Max-Bot-Api-Secret — asked for, or read from a pipe. |
-| `--add` | keep the webhooks already set and add this one beside them. |
-
-#### `max bot webhooks delete`
-
-stop sending updates to this URL; with none left, the bot can poll again
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot webhooks delete <url>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `url` | обязательный |  |
-
-### `max bot updates`
-
-what happens in this bot's chats, as MAX reports it
-
-#### `max bot updates watch`
-
-print updates as they arrive and keep their messages, until Ctrl-C — refused while a webhook is set
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot updates watch [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--types <types>` | only these, comma separated: message_created,message_edited,bot_added,…. |
 
 ### `max bot mcp`
 
