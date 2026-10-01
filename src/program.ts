@@ -11,6 +11,7 @@ import {
   visibleControls,
 } from "@leemour/cli-core"
 import {
+  conversationsCommand,
   pollsCommand,
   provide as provideShared,
   reactionsCommand,
@@ -111,6 +112,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(contactsCommand())
   program.addCommand(messagesCommand())
   program.addCommand(sharedStoreCommand(maxMessenger))
+  program.addCommand(conversationsCommand(maxMessenger))
   program.addCommand(modelsCommand())
   program.addCommand(pollsCommand(maxMessenger))
   program.addCommand(reactionsCommand(maxMessenger))
@@ -175,6 +177,7 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     app: MAX_APP,
     ...(options.tty === undefined ? {} : { tty: options.tty }),
     ...(options.system ? { system: options.system } : {}),
+    ...(options.stdin ? { stdin: options.stdin } : {}),
     ...(recognizer ? { recognizer: (model: SpeechModel) => recognizer(model, modelsDirectory()) } : {}),
   })
   const argvLog = process.env.MAX_TEST_ARGV_LOG

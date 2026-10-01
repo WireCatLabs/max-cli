@@ -8,6 +8,9 @@
 
 ### Что нового
 
+- **`max conversations build|list|show` и `max messages links`** — разговоры внутри группы, найденные в
+  локальной копии по ответам, упоминаниям и тому, кто написал следом; MAX не спрашивается. **`conversations
+  batches status|next` и `conversations links add|clear`** — пачки для вашего агента и его ответы.
 - **`max server logs`, `max server install`, `max server uninstall`** — как в tg. `install` пишет службу
   systemd (Linux) или launchd (macOS) для профиля и ничего не запускает; дальше `max server start`
   и `stop` идут через неё. Если MAX не принял вход, служба сервер не перезапускает: каждый повтор

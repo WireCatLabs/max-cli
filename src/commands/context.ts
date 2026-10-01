@@ -41,6 +41,8 @@ export interface Environment {
   reach?: Reach
   /** A stand-in speech model, so a test hears without one. */
   recognizer?: HearAllOptions["open"]
+  /** What the shared commands read as stdin; a test pipes an answer in. */
+  stdin?: NodeJS.ReadableStream & { isTTY?: boolean }
   ask?: Ask
   interactive?: boolean
   columns?: number
