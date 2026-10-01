@@ -55,21 +55,9 @@ the test channel. **Never a real person's chat**, not even to read it for a chec
 
 ## 4. Run each command
 
-```sh
-live() {
-  out=$(mktemp) err=$(mktemp)
-  timeout 90 bin/max "$@" --json --timeout 60s >"$out" 2>"$err"
-  echo "exit=$? stdout_lines=$(wc -l <"$out") stderr_lines=$(wc -l <"$err")"
-  jq -c 'if type == "object" then {keys: keys, items: (.items | length?)} else {type: type} end' "$out" 2>/dev/null
-  jq -c '.error.code?' "$err" 2>/dev/null
-  rm -f "$out" "$err"
-}
-live <profile> chats list --limit 5
-```
-
-The check: the exit code, stdout exactly one JSON value, stderr empty or one diagnostic line, an
-error as one JSON object on stderr with stdout empty, and the shape — keys and item counts. **Never
-print or record message text, names or phone numbers**; the helper prints the shape only.
+The rules and the shape-only `live` helper are in
+[RELEASING.md, "Live checks"](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md#live-checks) — use the helper with `bin/max`, and add
+`--timeout 60s`. What is max's:
 
 - **A write is proven on the other side.** A sends in the A↔B dialog → B's `messages list` shows it
   (by id, not by text). A bot write → a personal profile reads it.
