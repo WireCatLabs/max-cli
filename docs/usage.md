@@ -673,7 +673,7 @@ max messages list -1000 --jsonl | jq 'select(.senderId == "111")'
 
 `max messages list` и `max messages search` в терминале печатают ленту, а не таблицу:
 
-```
+```text
 ── 3 января 2026 ──
 
 10:05:12  Анна

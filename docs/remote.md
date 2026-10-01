@@ -12,7 +12,7 @@
 - **[Tailscale Funnel](https://tailscale.com/kb/1223/funnel)** даёт компьютеру публичный адрес
   HTTPS вида `https://laptop.tail1234.ts.net`. Покупать домен не нужно.
 
-```
+```text
 ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ mcp-auth-proxy (пароль) ──▶ max mcp ──▶ MAX
 ```
 
