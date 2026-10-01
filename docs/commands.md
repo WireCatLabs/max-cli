@@ -127,7 +127,7 @@ the chats this account is in
 
 ### `max chats list`
 
-the chats this account is in
+chats, newest first, archived ones included
 
 ```sh
 max chats list [options]
@@ -139,12 +139,12 @@ max chats list [options]
 | `--page <n>` | which page, starting at 1 |
 | `--all` | every row, no paging |
 | `--search <text>` | only chats whose name contains this; at least 3 characters |
-| `--kind <dialog\|group\|channel>` | only chats of this kind |
+| `--kind <kind>` | only chats of this kind: dialog, group, channel, saved |
 | `--unread` | only chats with unread messages |
 
 ### `max chats show`
 
-one chat: its kind, unread count, last message time, who is in it, and a group's settings
+one chat: its kind, unread count, last message time and who is in it
 
 ```sh
 max chats show <chat>
@@ -152,7 +152,7 @@ max chats show <chat>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name |
+| `chat` | обязательный | a chat: its id, or part of its title |
 
 ### `max chats events`
 
@@ -535,8 +535,8 @@ max contacts list [options]
 | `--limit <n>` | how many to show |
 | `--page <n>` | which page, starting at 1 |
 | `--all` | every row, no paging |
-| `--order <recent\|name>` | newest conversation first, or alphabetical |
-| `--search <text>` | only people whose name or @username contains this; at least 3 characters |
+| `--order <recent\|name>` | newest conversation first, or alphabetical По умолчанию: `recent`. |
+| `--search <text>` | only people whose name or @username contains this |
 
 ### `max contacts show`
 
@@ -548,7 +548,7 @@ max contacts show <person>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный | person id, @username, or part of a name |
+| `person` | обязательный | their id, @username, or part of their name |
 
 ### `max contacts sync`
 

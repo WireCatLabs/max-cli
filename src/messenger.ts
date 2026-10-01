@@ -41,6 +41,13 @@ const refuseUnmeantDeletion = (command: Command, { kind, count }: GuardRequest):
   )
 }
 
+/** One subcommand of a shared command group, to sit among max's own. */
+export const sharedSubcommand = (group: Command, name: string): Command => {
+  const found = group.commands.find((one) => one.name() === name)
+  if (!found) throw new Error(`cli-messaging's ${group.name()} has no ${name}`)
+  return found
+}
+
 /** What cli-messaging's shared commands and services need from max, for the personal account. */
 export const maxMessenger: Messenger = {
   app: MAX_APP,
