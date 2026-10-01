@@ -610,7 +610,8 @@ const SEND_TOOLS = {
     title: "Forward a message",
     description:
       "Forward one message to another chat as the owner. Only when the owner asked for this message to this chat. " +
-      "On outcome_unknown, retry with send_id set to the sendId it returns and MAX drops the duplicate.",
+      "On outcome_unknown, do not call it again: the copy may have arrived, and a second call forwards a second one. " +
+      "Tell the owner to look in the target chat.",
     input: v.object({
       chat: v.pipe(chat, v.description("the chat the message is in")),
       message,

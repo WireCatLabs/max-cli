@@ -383,7 +383,8 @@ max skill install
 
 Claude Desktop, Cursor и другие клиенты MCP подключаются к `max mcp` и работают с тем же
 аккаунтом. Без `--allow-send` и без `mcpTools` в настройках агент только читает. С `--confirm-send` перед каждой отправкой вы
-видите чат и текст и отвечаете «да» или «нет». Подробно — [docs/mcp.md](docs/mcp.md).
+видите чат и текст и отвечаете «да» или «нет». Навык для агента сервер отдаёт ресурсом `max://skill`.
+Подробно — [docs/mcp.md](docs/mcp.md).
 
 ```sh
 claude mcp add max -- max mcp       # Claude Code

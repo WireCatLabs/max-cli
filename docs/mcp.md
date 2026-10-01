@@ -167,10 +167,10 @@ max work config set mcpTools groups         # профилю work
 | `max_messages_scheduled` | `max messages scheduled` | что ждёт отправки в чате, с `scheduledFor` |
 | `max_messages_transcribe` | `max messages transcribe` | текст голосового, распознанный на этой машине |
 | `max_messages_send` | `max messages send` | отправка, только с `--allow-send`; с `at` — позже, как `--at-time`; `reply_to` — ответ на сообщение, `markdown` — оформление |
-| `max_messages_edit` | `max messages edit` | правка своего сообщения, только с `--allow-send`; `markdown` — оформление |
+| `max_messages_edit` | `max messages edit` | правка своего сообщения, только с `--allow-send` |
 | `max_messages_forward` | `max messages forward` | пересылка в другой чат, только с `--allow-send`; `silent` — без уведомления |
 | `max_messages_pin` | `max messages pin` | закрепить в группе или канале, только с `--allow-send`; без уведомления, если не передан `notify` |
-| `max_messages_unpin` | `max messages unpin` | открепить, только с `--allow-send` |
+| `max_messages_unpin` | `max messages unpin` | открепить; нужен `message`, но MAX открепляет единственное закреплённое, какой бы номер ни был; только с `--allow-send` |
 | `max_reactions_add` | `max reactions add` | поставить реакцию, только с `--allow-send` и разрешением `reaction` |
 | `max_reactions_remove` | `max reactions remove` | снять свою реакцию, так же |
 | `max_polls_vote` | `max polls vote` | проголосовать или снять голос, только с `--allow-send` |

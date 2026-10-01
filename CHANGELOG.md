@@ -4,7 +4,12 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
-## Не выпущено
+## 0.22.0 — 02.10.2026
+
+Большая часть команд личного аккаунта теперь общая с tg: те же опции, те же ответы `--json`, одна
+общая локальная копия. Поэтому многое переименовано — смотрите «Изменено — может сломать скрипты».
+Прежняя локальная копия max в общую не переносится: после обновления запустите команды без
+`--offline`, а историю скачайте заново через `max store fetch`.
 
 ### Что нового
 
@@ -15,6 +20,22 @@
   systemd (Linux) или launchd (macOS) для профиля и ничего не запускает; дальше `max server start`
   и `stop` идут через неё. Если MAX не принял вход, служба сервер не перезапускает: каждый повтор
   был бы новым входом в аккаунт. `max server start --idle` и `restart --idle` остаются.
+- **`max store status`** — сколько сообщений каждого чата хранится и какие куски скачаны целиком.
+  **`store fetch --background`** и **`store jobs list|show|cancel`** — скачивание в фоне.
+  **`store info|check|migrate|backup|restore|reindex`** — уход за файлом общей копии. **`store clear --left
+  --allow-dangerous`** удаляет из неё чаты, из которых вы вышли, с их сообщениями.
+- **`max bot auth`, `max bot list`, `max bot chats list`, `max bot recipients` и `max bot sends list`
+  теперь общие с tg** (cli-messaging): ответы и подсказки те же. Токен, список получателей и журнал
+  лежат там же, где лежали.
+- **`max cache clear --left`** стирает из локальной копии профиля только чаты, из которых вы вышли,
+  вместе с их сообщениями. Остальная копия не трогается.
+- **`max messages search --regex`** — одно регулярное выражение по всему сохранённому тексту.
+  **`messages show|context msg:…`** — сообщение по ссылке из `search`, без id отдельно.
+- **`max polls show <чат> <сообщение>`** — опрос с id вариантов и числом голосов, ничего не меняя.
+- **`max polls create --send-id`** — повторить создание опроса, ответ на которое не пришёл, без
+  второго опроса.
+- **`max messages send --photo <путь>`** — отправить `.jpg .png .webp` фотографией, как в tg.
+  `--no-preview` у `send` тоже есть, но MAX его не поддерживает, и команда откажет.
 - **`max skill install`** ставит навык для агентов одной командой: в `~/.claude/skills/max-cli/`
   для Claude Code и в `~/.agents/skills/max-cli/` для Codex и Gemini CLI, с номером версии `max`.
   `--for claude` или `--for agents` — только в одну папку. `max skill show` печатает то же, что раньше.
@@ -23,41 +44,14 @@
   ничего не добавляется. Выключается `max config set skillHint false --defaults`.
 - **`max mcp` и `max bot mcp` отдают навык ресурсом `max://skill`** и называют его в своих
   инструкциях для агента.
-- **`max bot auth`, `max bot list`, `max bot chats list`, `max bot recipients` и `max bot sends list`
-  теперь общие с tg** (cli-messaging): ответы и подсказки те же. В `max commands --json`
-  `bot auth set|remove` и `bot recipients add|remove|clear` теперь помечены как пишущие — они меняют
-  файлы на этом компьютере. Токен, список получателей и журнал лежат там же, где лежали.
-- **`max cache clear --left`** стирает из локальной копии только чаты, из которых вы вышли, вместе с
-  их сообщениями. Остальная копия не трогается.
-
-- **`max store status`** — сколько сообщений каждого чата хранится и какие куски скачаны целиком.
-  **`store fetch --background`** и **`store jobs list|show|cancel`** — скачивание в фоне.
-  **`store info|check|migrate|backup|restore|reindex`** — уход за файлом общей копии. **`store clear --left
-  --allow-dangerous`** удаляет из неё чаты, из которых вы вышли, с их сообщениями.
-
-- **`max messages search --regex`** — одно регулярное выражение по всему сохранённому тексту.
-  **`messages show|context msg:…`** — сообщение по ссылке из `search`, без id отдельно.
-
-- **`max polls show <чат> <сообщение>`** — опрос с id вариантов и числом голосов, ничего не меняя.
-- **`max polls create --send-id`** — повторить создание опроса, ответ на которое не пришёл, без
-  второго опроса. **`--revote`** — в опросе можно переголосовать.
-- **`max messages edit --md`** — разметка в правке, как в `send`.
-- **`max messages send --voice` и `--as-file`** снова есть, теперь в общей команде tg и max.
-- **`max messages forward --send-id`** — повторить пересылку, ответ на которую не пришёл, без второй
-  копии. Если пересылка ответила `outcome_unknown`, ошибка называет команду повтора с этим номером.
-
-- **`max messages send --photo <путь>`** — отправить `.jpg .png .webp` фотографией, как в tg.
-  `--no-preview` у `send` тоже есть, но MAX его не поддерживает, и команда откажет.
-
 - **`max messages delete` отвечает с `operationId`** — номером этого удаления; тот же номер стоит в
   журнале отправок (`max sends list`). Инструмент MCP `max_messages_delete` отвечает так же. Сама
-  команда и её опции не меняются: это теперь общая команда tg и max.
-
-- **Установка легче примерно на 16 МБ** (cli-messaging 0.61.0): слой базы данных теперь встроен в
-  пакет, а не ставится отдельно. Команды `max` не меняются.
+  команда и её опции не меняются.
 - **У каждой записи в журнале отправок есть `operationId`** — номер одного действия. Все строки об
   одной отправке, правке, удалении или изменении чата несут один и тот же номер, так что по нему
   видно, чем действие кончилось. У отправки сообщения это её `sendId`.
+- **Установка легче примерно на 16 МБ**: слой базы данных теперь встроен в пакет, а не ставится
+  отдельно. Команды `max` не меняются.
 
 ### Изменено — может сломать скрипты
 
@@ -65,37 +59,12 @@
   а тот слишком стар для локальной копии, `max` перезапускается на своём SQLite из
   `@leemour/cli-messaging-sqlite` до того, как что-то прочитать или отправить. Официальные сборки
   Node и Bun ничего не замечают.
-- **`max serve --detach` и `max serve --stop` убраны**: это `max server start` и `max server stop`.
-- **`max server status --json` отвечает теми же полями, что tg**: `byHand` стал `by` (`hand` — руками,
-  `command` — его запустила команда, `server` — `max server start`, `unit` — служба); добавлены
-  `log`, `unit` и `stale` (сервер упал и оставил метку). `max server start`, `stop` и `restart`
-  отвечают как в tg: `{ started, by, pid, startedAt, log }` и `{ stopped, by, pid }`; поля `socket`
-  больше нет.
-- **`max messages send --at` теперь `--at-time`** — как во всех командах tg и max, где опция
-  принимает время. Скрипт с `--at` получит ошибку «неизвестный параметр» — замените на `--at-time`.
-  Параметр `at` у `max_messages_send` в MCP не меняется.
-- **Команды бота — под общими с tg именами, старых имён нет.** `max bot messages get <сообщение>` →
-  `messages show <чат> <сообщение>`; `messages edit|delete` тоже берут чат первым; `bot chats get` →
-  `chats show`; `bot chats pin|unpin` → `messages pin|unpin <чат> <сообщение>`. `--format markdown|html`
-  → `--md` или `--html`; `--type` больше нет: картинку — `--photo`, голосовое — `--voice`, видео файлом
-  — `--as-file`. `chats action` берёт `typing`, `photo`, `video`, `voice`, `file`. Отправка и правка
-  отвечают `{ operationId, message }`, а не сообщением. Удаление спрашивает подтверждение,
-  `--allow-dangerous` отвечает «да». Инструменты MCP бота переименованы так же: `max_bot_chats_show`,
-  `max_bot_messages_show`, `max_bot_messages_pin`, `max_bot_messages_unpin`.
-- **`max bot members` и `max bot admins` теперь `max bot chats members` и `max bot chats admins`**,
-  как в tg. `admins add` берёт `--can` со словами `max chats admins add` (`read`, `members`, `admins`,
-  `info`, `pin`, `link`, `edit`, `delete`) вместо `--permissions`, и `--title` вместо `--alias`.
-  Прав «звонки» и «статистика» в `--can` нет. `admins list` отвечает `{ id, name, username, role,
-  rights, title }`. Инструменты MCP: `max_bot_chats_members_list|add|remove`, `max_bot_chats_admins_list`.
-
-- **`--markdown` больше нет, только `--md`** — в `messages send`, `messages edit` и везде, где
-  разметка читается. Так названо во всех командах tg и max; скрипт с `--markdown` получит ошибку
-  «неизвестный параметр» — замените на `--md`.
-
 - **`max store` — общая группа команд tg и max.** `store fetch` пишет в общую локальную копию, ту же,
   что у tg, и листает MAX как раньше: по 30 сообщений, 5–10 с между страницами, до 40 страниц за
-  запуск. Копия, которую max вёл раньше, не переносится — историю скачайте заново. Что ещё
-  изменилось:
+  запуск.
+  Почему: одна копия и одни команды для обоих мессенджеров; `messages`, `conversations` и `store`
+  читают одно и то же.
+  Что учесть: копия, которую max вёл раньше, не переносится — историю скачайте заново. Кроме того:
   - `store fetch --estimate` для MAX отказывает: id сообщений MAX не позволяют сосчитать, сколько
     не хватает;
   - `store fetch|export --since` теперь `--since-time`, и только время, не id сообщения;
@@ -105,11 +74,14 @@
     перечисляет в stderr куски, которых нет в копии, — их показывает `store status`; существующий
     файл она не перезаписывает;
   - `store fetch` в конце не печатает готовую команду выгрузки.
-
+  - если два сообщения отправлены в одну и ту же миллисекунду и граница страницы прошла между ними,
+    `store fetch` может пропустить более раннее из них. Это редкость.
 - **`max messages list|show|context|search` — общие команды tg и max.** `--offline` и `search`
-  отвечают из общей локальной копии, той же, что у tg; она заполняется с первого запуска без
-  `--offline` после обновления, прежняя копия max в неё не переносится — и с ней расшифровки
-  голосовых, услышанных до обновления. Что ещё изменилось:
+  отвечают из общей локальной копии, той же, что у tg.
+  Почему: те же опции и ответы, что у tg, и одна копия для чтения.
+  Что учесть: инструменты `max mcp` для чтения сообщений и чатов пока читают прежнюю копию max, так
+  что агент через MCP и команда в терминале с `--offline` могут ответить по-разному. Копия заполняется с первого запуска без `--offline` после обновления; прежняя копия max
+  в неё не переносится — и с ней расшифровки голосовых, услышанных до обновления. Кроме того:
   - голосовое — вложение `"kind": "voice"`, а не `"audio"` (в `inbox` и `review` пока `"audio"`);
   - `messages list --before` и `--after` разделились на `--before-id`, `--before-time`, `--after-id`,
     `--after-time`, а у `messages context` — `--before-n` и `--after-n`, как в tg. Скрипт со старым
@@ -123,37 +95,33 @@
     `~/.cache/max-cli/models/audio` нужно скачать заново или перенести;
   - `messages search` ищет слова и их начала (`квартир` найдёт «квартира»), а не любые три буквы
     подряд; `--chat` принимает и имя сохранённого чата.
-
 - **`max chats list|show` и `max contacts list|show` — общие команды tg и max.** Их `--offline`
-  отвечает из общей локальной копии, той же, что у tg. Она заполняется с первого запуска без
-  `--offline` после обновления; прежняя копия max в неё не переносится, и до того `--offline` ответит
-  `not_found`. Что ещё изменилось:
+  отвечает из общей локальной копии, той же, что у tg.
+  Почему: те же опции и ответы, что у tg.
+  Что учесть: копия заполняется с первого запуска без `--offline` после обновления; прежняя копия max
+  в неё не переносится, и до того `--offline` ответит `not_found`. Кроме того:
   - `chats list --search|--kind|--unread` без `--offline` ищет в 200 самых свежих чатах и пишет в
     stderr, если были старше; с `--offline` — во всех сохранённых;
   - `chats show --offline` отвечает без `description`, `access` и `settings`: их знает только MAX;
-  - неверный `--kind` отвергается другими словами: `--kind is one of dialog, group, channel, saved`.
+  - неверный `--kind` отвергается другими словами: `--kind is one of dialog, group, channel, saved`;
   - `cache clear` забывает и то, что этот аккаунт хранит в общей копии, а `contacts sync` забирает
     всё и туда.
-
-- **`max polls` — общие команды tg и max.** `polls vote|close --json` отвечают `{operationId, poll}`, где `poll` —
-  `{chatId, messageId, question, answers: [{id, text, voters, chosen}], closed, multiple, anonymous,
-  voters}`; `polls create` — `{sendId, operationId, message}`. Так же отвечают инструменты MCP
-  `max_polls_vote`, `max_polls_close`, `max_polls_create`; у `max_polls_create` вместо `revote`
-  теперь `silent`.
-
-- **`max messages send|edit|forward` — теперь общие команды tg и max.** Пока общие команды не
-  получат того, что было только у max, этого нет:
-  - у `send` — несколько `--file` в одном сообщении: теперь одно вложение из `--file` и одно из
-    `--photo`;
-- **Ответы `--json`**: `send` — `{sendId, operationId, message}` (с `scheduledFor`, если с `--at`),
-  `edit` и `forward` — `{operationId, message}`, вместо сообщения без обёртки. Так же отвечают
-  инструменты MCP `max_messages_send`, `max_messages_edit` и `max_messages_forward`; у
-  `max_messages_edit` больше нет `markdown`, у `max_messages_forward` — `send_id`.
-- **Если отправка с `--at` не получила ответа**, ошибка советует `messages scheduled`, не называя чат.
-
-- **`max messages unpin <чат> <сообщение>`** — теперь нужен номер сообщения, как у `pin` и в tg.
-  В чате MAX закреплено одно сообщение, и открепляется оно, какой бы номер ни был указан. Инструмент
-  MCP `max_messages_unpin` тоже просит `message`.
+- **`max messages send|edit|forward` — общие команды tg и max.** Ответы `--json`: `send` —
+  `{sendId, operationId, message}` (с `scheduledFor`, если с `--at-time`), `forward` — тоже
+  `{sendId, operationId, message}`, `edit` — `{operationId, message}`, вместо сообщения без обёртки. Так же отвечают инструменты MCP
+  `max_messages_send`, `max_messages_edit` и `max_messages_forward`; у `max_messages_edit` больше нет
+  `markdown`, у `max_messages_forward` — `send_id`.
+  Почему: те же опции и ответы, что у tg, и номер действия, как в журнале отправок.
+  Что учесть: скрипт, который читал сообщение из корня ответа, теперь берёт его из `message`. У
+  `send` больше нельзя приложить несколько `--file` к одному сообщению: одно вложение из `--file` и
+  одно из `--photo`. Если отправка с `--at-time` не получила ответа, ошибка советует
+  `messages scheduled`, не называя чат.
+- **`max polls` — общие команды tg и max.** `polls vote|close --json` отвечают `{operationId, poll}`,
+  где `poll` — `{chatId, messageId, question, answers: [{id, text, voters, chosen}], closed, multiple,
+  anonymous, voters}`; `polls create` — `{sendId, operationId, message}`. Так же отвечают инструменты
+  MCP `max_polls_vote`, `max_polls_close`, `max_polls_create`.
+  Почему: те же ответы, что у tg.
+  Что учесть: у `max_polls_create` вместо `revote` теперь `silent`.
 - **Ответы `--json` у реакций, закрепления и отметки прочитанным — общие с tg**, и в каждом есть
   `operationId`, номер этого действия, как в журнале отправок:
   - `reactions add|remove`: `{operationId, chatId, messageId, reaction}` — ваша реакция или `null`,
@@ -164,13 +132,30 @@
 
   Так же отвечают инструменты MCP `max_reactions_add`, `max_reactions_remove`, `max_messages_pin`,
   `max_messages_unpin`, `max_chats_mark_read`.
-
+- **`max messages unpin <чат> <сообщение>`** — теперь нужен номер сообщения, как у `pin` и в tg.
+  В чате MAX закреплено одно сообщение, и открепляется оно, какой бы номер ни был указан. Инструмент
+  MCP `max_messages_unpin` тоже просит `message`.
+  Что учесть: `messages unpin <чат>` без номера получит ошибку — добавьте любой номер сообщения этого
+  чата.
+- **`max serve --detach` и `max serve --stop` убраны**: это `max server start` и `max server stop`.
+  Почему: `serve` — только работа на переднем плане, а фоновым сервером управляет `max server`, как в tg.
+  Что учесть: замените их в скриптах и службах, написанных вручную.
+- **`max server status --json` отвечает теми же полями, что tg**: `byHand` стал `by` (`hand` — руками,
+  `command` — его запустила команда, `server` — `max server start`, `unit` — служба); добавлены
+  `log`, `unit` и `stale` (сервер упал и оставил метку). `max server start`, `stop` и `restart`
+  отвечают как в tg: `{ started, by, pid, startedAt, log }` и `{ stopped, by, pid }`; поля `socket`
+  больше нет.
+- **`max messages send --at` теперь `--at-time`** — как во всех командах tg и max, где опция
+  принимает время. Скрипт с `--at` получит ошибку «неизвестный параметр» — замените на `--at-time`.
+  Параметр `at` у `max_messages_send` в MCP не меняется.
+- **`--markdown` больше нет, только `--md`** — в `messages send`, `messages edit` и везде, где
+  разметка читается. Так названо во всех командах tg и max; скрипт с `--markdown` получит ошибку
+  «неизвестный параметр» — замените на `--md`.
 - **`max sends list --json`: поле `cid` → `sendId`, и это строка, а не число** — то же имя, что в
   ошибке `outcome_unknown` и у `--send-id`. Строки, записанные раньше, показываются так же.
 - **Записи запусков (`--trace`, `--record`, `max runs show`) — в общем формате tg и max.** Номер
   отправки в событии называется `send`, а не `cid`; ключ отказа MAX — `providerError`, а не
   `maxError`, в событиях, в `run.json` и в `details` ошибки `--json`.
-
 - **`max bot` отвечает `outcome_unknown` (код `14`), если на отправку или другое изменение пришёл
   ответ 502, 503 или 504.** Раньше это был отказ `provider_unavailable` (код `12`).
   Почему: такой ответ даёт шлюз перед MAX, и он не говорит, выполнил ли MAX запрос. Сообщение могло
@@ -178,32 +163,41 @@
   Что учесть: скрипт, который повторял изменение после кода `12`, мог отправить его дважды. После
   кода `14` сначала проверьте, выполнилось ли оно. Чтение по-прежнему повторяется само и отвечает
   `provider_unavailable`.
-
-### Исправлено
-
+- **Команды бота — под общими с tg именами, старых имён нет.** `max bot messages get <сообщение>` →
+  `messages show <чат> <сообщение>`; `messages edit|delete` тоже берут чат первым; `bot chats get` →
+  `chats show`; `bot chats pin|unpin` → `messages pin|unpin <чат> <сообщение>`. `--format markdown|html`
+  → `--md` или `--html`; `--type` больше нет: картинку — `--photo`, голосовое — `--voice`, видео файлом
+  — `--as-file`. `chats action` берёт `typing`, `photo`, `video`, `voice`, `file`. Отправка и правка
+  отвечают `{ operationId, message }`, а не сообщением. Удаление спрашивает подтверждение,
+  `--allow-dangerous` отвечает «да». Инструменты MCP бота переименованы так же: `max_bot_chats_show`,
+  `max_bot_messages_show`, `max_bot_messages_pin`, `max_bot_messages_unpin`.
+- **`max bot members` и `max bot admins` теперь `max bot chats members` и `max bot chats admins`**,
+  как в tg. `admins add` берёт `--can` со словами `max chats admins add` (`read`, `members`, `admins`,
+  `info`, `pin`, `link`, `edit`, `delete`) вместо `--permissions`, и `--title` вместо `--alias`.
+  Прав «звонки» и «статистика» в `--can` нет. `admins list` отвечает `{ id, name, username, role,
+  rights, title }`. Инструменты MCP: `max_bot_chats_members_list|add|remove`, `max_bot_chats_admins_list`.
 - **Команды, которые меняют только этот компьютер, теперь отмечены как записи.** `config set` и
   `unset`, `chats rules set` и `unset`, `recipients add`, `remove` и `clear`, а у бота `auth set` и
   `remove`, `chats rules set` и `unset`, `recipients add`, `remove` и `clear` пишут файл настроек,
   файл правил групп, списки получателей или связку ключей — и ничего в MAX. В
   [списке команд](docs/commands.md) у них строка «Меняет что-то только на этом компьютере.», а
   `max commands` показывает их в колонке `writes`. Раньше они не были отмечены вовсе.
+  Что учесть: агент или скрипт, который по `max commands --json` отбирает только чтение, теперь
+  не увидит их среди безопасных команд.
+
+### Исправлено
 
 - **`max messages list --before-time` не показывает сообщение, отправленное ровно в эту миллисекунду**:
   «до» значит «раньше».
-- **`max messages list --after-id` называет следующую страницу, когда она есть.** Раньше на ней команда
-  всегда считала, что сообщений дальше нет.
-- **`max messages send --voice` снова уходит через `max serve`.** Через сервер MAX отказывал
-  (`proto.payload`): полоска громкости голосового терялась по дороге.
-
+- **`max messages list --after-id` (в 0.21.0 — `--after <id>`) говорит, что есть следующая страница,
+  когда она есть.** Раньше при чтении вперёд от сообщения команда всегда отвечала, что дальше ничего нет.
+- **`max messages send --voice` теперь уходит и через `max serve`.** Раньше через сервер MAX
+  отказывал (`proto.payload`, код `11`): полоска громкости голосового терялась по дороге. Без
+  сервера (`--no-serve`) голосовое уходило и раньше.
 - **`max chats list` и `max chats show` больше не показывают чаты, из которых вы вышли.** Раньше
   такой чат оставался в списке навсегда, с устаревшим числом участников. Теперь он исчезает при
   следующем входе, если max получил от MAX полный список ваших чатов; сообщения остаются в копии до
   `max cache clear --left`. `max serve` узнаёт о выходе только при следующем полном входе.
-
-- **Пустая локальная копия max снова заполняется целиком.** После обновления копии или удалённого
-  файла вход спрашивал у MAX только изменения, и чаты и люди, которые не менялись, в неё не
-  возвращались: `--offline`, участники в `chats show` и `contacts show` отвечали неполно. Теперь вход
-  в таком случае забирает всё.
 - **`max serve` больше не путает ответы после долгой работы.** Номер запроса занимает два байта и
   после 65 536 запросов начинается заново. Если запрос с тем же номером ещё ждал ответа, новый
   запрос мог получить чужой ответ. Теперь такой номер пропускается.
