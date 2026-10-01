@@ -55,6 +55,10 @@ export const maxMessenger: Messenger = {
   provider: "max",
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
+  partnerOf: (chat) =>
+    chat.kind === "dialog" && typeof chat.providerMetadata?.partnerId === "string"
+      ? chat.providerMetadata.partnerId
+      : undefined,
   speechModels: SPEECH_MODELS,
   // As web.max.ru pages a chat scrolled up: 30 back from the oldest shown (`RES-9`), a person's 5–10 s
   // apart (`NEED-216` A). MAX's ids pass 2^53, so held stretches are kept by send time.

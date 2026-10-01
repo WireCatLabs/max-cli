@@ -308,11 +308,12 @@ export class MaxClient {
       // column of blanks.
       const chats = raw.map((chat) => {
         const mapped = toChat(chat)
-        if (mapped.title !== null || mapped.kind !== "dialog") return mapped
+        if (mapped.kind !== "dialog") return mapped
 
         const partner = this.#partnerOf(chat)
-        const name = partner === undefined ? null : (people.get(partner)?.name ?? null)
-        return { ...mapped, title: name }
+        const named = partner === undefined ? mapped : { ...mapped, providerMetadata: { partnerId: partner } }
+        if (mapped.title !== null) return named
+        return { ...named, title: partner === undefined ? null : (people.get(partner)?.name ?? null) }
       })
 
       const cache = this.#cache
@@ -325,7 +326,16 @@ export class MaxClient {
       // An empty answer is more likely a hiccup than an account that left every chat.
       if (this.#chatsComplete && chats.length > 0) await cache.chats.markLeft(chats.map((chat) => chat.id))
       const items = await cache.chats.page({ limit: limit ?? Number.MAX_SAFE_INTEGER, offset, query, kind, unread })
-      return { items, hasMore: offset + items.length < (await cache.chats.count({ query, kind, unread })) }
+      const partners = new Map(
+        chats.flatMap((chat) => (chat.providerMetadata ? [[chat.id, chat.providerMetadata]] : [])),
+      )
+      return {
+        items: items.map((chat) => ({
+          ...chat,
+          ...(partners.has(chat.id) ? { providerMetadata: partners.get(chat.id) } : {}),
+        })),
+        hasMore: offset + items.length < (await cache.chats.count({ query, kind, unread })),
+      }
     },
 
     /**
