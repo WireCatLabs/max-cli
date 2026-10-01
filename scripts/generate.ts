@@ -213,7 +213,7 @@ const files = [
   { path: "src/generated/opcodes.generated.ts", contents: opcodes(rows) },
   { path: "src/generated/operations.generated.ts", contents: operations(rows) },
   { path: "src/generated/client.generated.ts", contents: client(rows) },
-  { path: "docs/protocol.md", contents: reference(rows) },
+  { path: "docs/dev/protocol.md", contents: reference(rows) },
 ]
 
 for (const file of files) {

@@ -18,7 +18,7 @@ is listed in [commands.md](commands.md).
 ## Reference — generated, never hand-written
 
 - [commands.md](commands.md) — every command, option and exit code — **generated**, `pnpm generate`
-- [protocol.md](protocol.md) — every opcode and where its shape came from — **generated**
+- [dev/protocol.md](dev/protocol.md) — every opcode and where its shape came from — **generated**
 
 Neither is edited by hand. `pnpm generate` rewrites both and CI asserts the tree did not change,
 so a reference that quotes a command the program no longer has cannot reach `main`.
@@ -39,7 +39,7 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 - [diagnostics.md](diagnostics.md) — `--trace`, `--record`, `max runs` — и чего в записи нет
 - [security.md](security.md) — что попадает на диск, а что не попадает никогда
 - [troubleshooting.md](troubleshooting.md) — по симптому: что видно на экране и что делать
-- [ROADMAP.md](ROADMAP.md) — что планируется
+- [roadmap.md](roadmap.md) — что планируется
 - `docs_ai/releasing.md` — как выпускается версия, и кем
 - [../CHANGELOG.md](../CHANGELOG.md) — что изменилось между версиями
 

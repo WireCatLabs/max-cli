@@ -1,0 +1,27 @@
+{
+  "title": "max",
+  "pages": [
+    "---Начало---",
+    "index",
+    "installation",
+    "---Как пользоваться---",
+    "usage",
+    "sessions",
+    "archive",
+    "bot",
+    "groups",
+    "mcp",
+    "remote",
+    "recipes",
+    "---Справочник---",
+    "commands",
+    "configuration",
+    "---Если что-то не так---",
+    "diagnostics",
+    "troubleshooting",
+    "security",
+    "---Проект---",
+    "changelog",
+    "roadmap"
+  ]
+}

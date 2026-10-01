@@ -297,7 +297,7 @@ Every opcode and payload shape lives in `src/spec/`; its Valibot schemas **are**
 | `src/generated/opcodes.generated.ts` — the registry | the socket, `seq` correlation, timeouts |
 | `src/generated/operations.generated.ts` — the table | the INIT → LOGIN handshake |
 | `src/generated/client.generated.ts` — wire wrappers | the schemas themselves — they are the spec |
-| [`../protocol.md`](../protocol.md) — the reference page | the domain mapping, and error classification |
+| [`protocol.md`](protocol.md) — the reference page | the domain mapping, and error classification |
 
 ### Adding one
 

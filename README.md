@@ -444,11 +444,11 @@ max chats list --json
 - [docs/groups.md](docs/groups.md) — группы, которые вы ведёте: сценарии с агентом, правила, проверка
 - [docs/recipes.md](docs/recipes.md) — рецепты для агентов: сводки, отчёты, долги, напоминания, расписание
 - [docs/diagnostics.md](docs/diagnostics.md) — `--trace`, `--record`, `max runs`
-- [docs/ROADMAP.md](docs/ROADMAP.md) — что планируется
+- [docs/roadmap.md](docs/roadmap.md) — что планируется
 - [docs/security.md](docs/security.md) — что пишется на диск, а что никогда
 - [docs/troubleshooting.md](docs/troubleshooting.md) — по симптому: что делать, когда не работает
 - [docs/commands.md](docs/commands.md) — каждая команда и опция — **генерируется** из программы
-- [docs/protocol.md](docs/protocol.md) — каждый опкод и откуда известна его форма — **генерируется**
+- [docs/dev/protocol.md](docs/dev/protocol.md) — каждый опкод и откуда известна его форма — **генерируется**
 - [docs/dev/ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) — как это устроено и какие швы нельзя пересекать
 - [docs/dev/BACKLOG.md](docs/dev/BACKLOG.md) — что осталось
 
@@ -465,14 +465,14 @@ pnpm generate                         # переписать сгенериро�
 
 Протокол MAX неофициальный и разобран обратной инженерией: это не Bot API. Каждый опкод и форма
 каждого сообщения объявлены один раз в `src/spec/`, а реестр, типизированный клиент и
-[docs/protocol.md](docs/protocol.md) из них генерируются — и CI падает, если дерево устарело.
+[docs/dev/protocol.md](docs/dev/protocol.md) из них генерируются — и CI падает, если дерево устарело.
 
 Половина, не имеющая отношения к MAX — потоки вывода, рендерер, коды ошибок, хранилище паролей, часы, —
 вынесена в [`@leemour/cli-core`](https://github.com/leemour/cli-core) и общая с `braze-cli`.
 
 ## Дорожная карта
 
-[docs/ROADMAP.md](docs/ROADMAP.md).
+[docs/roadmap.md](docs/roadmap.md).
 
 ## Лицензия
 
