@@ -68,8 +68,11 @@
   `--offline` после обновления, прежняя копия max в неё не переносится — и с ней расшифровки
   голосовых, услышанных до обновления. Что ещё изменилось:
   - голосовое — вложение `"kind": "voice"`, а не `"audio"` (в `inbox` и `review` пока `"audio"`);
-  - `messages list --before <id>` не включает само это сообщение; с `--offline` `--before` — только
-    id сообщения из локальной копии;
+  - `messages list --before` и `--after` разделились на `--before-id`, `--before-time`, `--after-id`,
+    `--after-time`, а у `messages context` — `--before-n` и `--after-n`, как в tg. Скрипт со старым
+    именем получит ошибку «неизвестный параметр»;
+  - `messages list --before-id` не включает само это сообщение; с `--offline` годится только
+    `--before-id`, и только с id сообщения из локальной копии;
   - `messages list --transcribe --json` больше не отвечает полем `transcribeProblem`: причина — в
     stderr; с `--offline` `unheard` пуст. Голосовое скачивается на отдельном соединении — с
     `--no-serve` это второй вход в MAX;

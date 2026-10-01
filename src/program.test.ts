@@ -517,7 +517,7 @@ describe("the program", () => {
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
     })
 
-    it("`messages context` asks for `--before` and `--after` around the message and marks which one it is", async () => {
+    it("`messages context` asks for `--before-n` and `--after-n` around the message and marks which one it is", async () => {
       const { max, environment } = acquaintedMax()
       const { stdout, code } = await runWith(
         [
@@ -526,9 +526,9 @@ describe("the program", () => {
           "context",
           "111",
           "116762160362694583",
-          "--before",
+          "--before-n",
           "0",
-          "--after",
+          "--after-n",
           "2",
           "--json",
         ],
@@ -594,27 +594,27 @@ describe("the program", () => {
       expect(missing.code).not.toBe(0)
     })
 
-    it("`messages list --after` reads forward from the message, leaves it out, and names the next page", async () => {
+    it("`messages list --after-id` reads forward from the message, leaves it out, and names the next page", async () => {
       const { max, environment } = acquaintedMax()
       const { stdout, stderr, code } = await runWith(
-        ["t-after", "messages", "list", "111", "--after", "116762160362694583", "--limit", "1", "--jsonl"],
+        ["t-after", "messages", "list", "111", "--after-id", "116762160362694583", "--limit", "1", "--jsonl"],
         environment,
       )
 
       expect(max.unexpected).toEqual([])
       expect(code).toBe(0)
       expect(JSON.parse(stdout).id).toBe("116762160362694584")
-      expect(stderr).toContain("--after 116762160362694584")
+      expect(stderr).toContain("--after-id 116762160362694584")
 
       const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
       expect(history).toMatchObject({ from: Number(116762160362694583n >> 16n), forward: 2, backward: 0 })
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
     })
 
-    it("`messages list --before` leaves out the message it pages from, which MAX's answer includes", async () => {
+    it("`messages list --before-id` leaves out the message it pages from, which MAX's answer includes", async () => {
       const { environment } = acquaintedMax()
       const { stdout, code } = await runWith(
-        ["t-before", "messages", "list", "111", "--before", "116762160362694585", "--limit", "2", "--json"],
+        ["t-before", "messages", "list", "111", "--before-id", "116762160362694585", "--limit", "2", "--json"],
         environment,
       )
 
@@ -625,24 +625,48 @@ describe("the program", () => {
       ])
     })
 
-    it("**refuses `--after` with `--before`** before connecting to anything", async () => {
+    it("`messages list --before-time` reads back from that moment", async () => {
+      const { max, environment } = acquaintedMax()
+      const { code } = await runWith(
+        ["t-before-time", "messages", "list", "111", "--before-time", "2026-09-21T00:00:00Z", "--limit", "2", "--json"],
+        environment,
+      )
+
+      expect(code).toBe(0)
+      const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
+      expect(history).toMatchObject({ from: Date.parse("2026-09-21T00:00:00Z"), backward: 2, forward: 0 })
+    })
+
+    it("**refuses `--after-time` with `--before-time`** before connecting to anything", async () => {
       const { max, environment } = acquaintedMax()
       const { code, stderr } = await runWith(
-        ["t-both", "messages", "list", "111", "--after", "2026-09-20T00:00:00Z", "--before", "2026-09-21T00:00:00Z"],
+        [
+          "t-both",
+          "messages",
+          "list",
+          "111",
+          "--after-time",
+          "2026-09-20T00:00:00Z",
+          "--before-time",
+          "2026-09-21T00:00:00Z",
+        ],
         environment,
       )
 
       expect(code).toBe(2)
-      expect(stderr).toContain("two directions")
+      expect(stderr).toContain("two starting points")
       expect(max.sent).toEqual([])
     })
 
-    it("blames `--after` for a value that is neither an id nor a time", async () => {
+    it("blames `--after-time` for a value that is not a time", async () => {
       const { environment } = acquaintedMax()
-      const { code, stderr } = await runWith(["t-bad", "messages", "list", "111", "--after", "tuesday"], environment)
+      const { code, stderr } = await runWith(
+        ["t-bad", "messages", "list", "111", "--after-time", "tuesday"],
+        environment,
+      )
 
       expect(code).toBe(2)
-      expect(stderr).toContain("--after takes")
+      expect(stderr).toContain("--after-time takes")
     })
 
     it("`chats show` answers one chat with its members, and refuses an id that is not a chat", async () => {

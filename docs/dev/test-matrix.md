@@ -94,13 +94,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages list` | `--limit` | ✅ |  |
 | `messages list` | `--before` | ✅ |  |
 | `messages list` | `--after` | ✅ |  |
+| `messages list` | `--mark-read` | ✅ |  |
 | `messages list` | `--transcribe` | ✅ |  |
 | `messages list` | `--model` | ✅ |  |
-| `messages list` | `--mark-read` | ✅ |  |
 | `messages search` |  | ✅ |  |
 | `messages search` | `--chat` | ✅ |  |
 | `messages search` | `--limit` | ✅ |  |
-| `messages search` | `--regex` | ✅ |  |
 | `messages show` |  | ✅ |  |
 | `messages context` |  | ✅ |  |
 | `messages context` | `--before` | ✅ |  |

@@ -57,6 +57,11 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
       return { ...page, items: items.map(toMessage) }
     },
 
+    historyBefore: async (chat, { limit, time }) => {
+      const page = await client.messages.list(await chatId(chat), { limit, before: time })
+      return { ...page, items: page.items.map(toMessage) }
+    },
+
     historyAfter: async (chat, { limit, after }) => {
       const page = await client.messages.list(await chatId(chat), {
         limit,
