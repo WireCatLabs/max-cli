@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@leemour/cli-core': 0.12.0
+
 importers:
 
   .:
@@ -12,8 +15,8 @@ importers:
         specifier: 0.0.22
         version: 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@leemour/cli-core':
-        specifier: 0.10.0
-        version: 0.10.0(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.12.0
+        version: 0.12.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
         specifier: 0.92.0
         version: 0.92.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
@@ -350,9 +353,10 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@leemour/cli-core@0.10.0':
-    resolution: {integrity: sha512-lg8IHs4Fi/rbFoO3m0KO+CW2fvfET+q3pyy8orZSP0Y/ArLBt0ke3wv9QJGI/l7TjEmH8MW3U3RbTDIMvG1wJA==}
+  '@leemour/cli-core@0.12.0':
+    resolution: {integrity: sha512-8mIv/AeRBKW6aJtNmGEk8kCA5yH8tNP0injPPy8V7NPop2NiTB+XdEY/LRbrKW6lfhikAqfTaX3WZc2rVaxFgQ==}
     engines: {node: '>=22'}
+    hasBin: true
     peerDependencies:
       commander: '>=15'
     peerDependenciesMeta:
@@ -1385,7 +1389,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@leemour/cli-core@0.10.0(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-core@0.12.0(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       cli-table3: 0.6.5
       env-paths: 4.0.0
@@ -1401,7 +1405,7 @@ snapshots:
   '@leemour/cli-messaging@0.92.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
-      '@leemour/cli-core': 0.10.0(commander@15.0.0)(typescript@7.0.2)
+      '@leemour/cli-core': 0.12.0(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server': 2.1.0
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       commander: 15.0.0
