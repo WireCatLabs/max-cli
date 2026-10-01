@@ -141,10 +141,10 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 - **CLI-60** · P1 · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
   copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
-  and contacts reads. Left: `messages list|show|context|search` (🚧 `feat/move-group-6-reads`, #282),
-  the `store` group (🚧 `feat/move-group-6-archive`), MCP tools, `serve` and transcription off the old
-  cache and `src/cache/` deleted, `inbox`/`review`, the admin commands, max's half of the permission
-  levels. Plan and handoff: `docs_ai/plans/2026-10-01-t6-group6-handoff.md`.
+  and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
+  `conversations` (#308). Left: a live check of `messages list --transcribe`, MCP tools, `serve` and
+  transcription off the old cache and `src/cache/` deleted, `inbox`/`review`, the admin commands, max's
+  half of the permission levels. Plan and handoff: `docs_ai/plans/2026-10-01-t6-group6-handoff.md`.
 - **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
   poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
   Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
