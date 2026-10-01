@@ -1178,16 +1178,14 @@ max serve [options]
 | Опция | Что делает |
 |---|---|
 | `--idle <duration>` | stop after this long with nobody using it — 15m, 1h is 60m. |
-| `--detach` | run in the background instead — the same as `max server start`. |
-| `--stop` | stop this profile's server — the same as `max server stop`. |
 
 ## `max server`
 
-this profile's background server: start, stop, status, restart
+`max serve` in the background: start, stop, restart, status, logs; install adds a systemd or launchd unit
 
 ### `max server start`
 
-start it in the background; answers once it is connected
+start serve in the background — through the unit if one is installed — and answer once it connects
 
 ```sh
 max server start [options]
@@ -1195,27 +1193,19 @@ max server start [options]
 
 | Опция | Что делает |
 |---|---|
-| `--idle <duration>` | stop after this long with nobody using it — 15m, 1h is 60m. |
+| `--idle <duration>` | stop after this long with nobody using it — 15m, 1h. |
 
 ### `max server stop`
 
-stop it, however it was started
+stop this profile's serve — through the unit if it runs under one
 
 ```sh
 max server stop
 ```
 
-### `max server status`
-
-whether it runs, since when, which version, and whether it is connected to MAX
-
-```sh
-max server status
-```
-
 ### `max server restart`
 
-stop it and start it again, in the background — one login
+stop it and start it again
 
 ```sh
 max server restart [options]
@@ -1223,7 +1213,43 @@ max server restart [options]
 
 | Опция | Что делает |
 |---|---|
-| `--idle <duration>` | stop after this long with nobody using it — 15m, 1h is 60m. |
+| `--idle <duration>` | stop after this long with nobody using it — 15m, 1h. |
+
+### `max server status`
+
+whether serve runs for this profile, since when, who started it, and the unit if there is one
+
+```sh
+max server status
+```
+
+### `max server logs`
+
+serve's latest log lines — from the journal under systemd, else its log file
+
+```sh
+max server logs [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `-n, --lines <n>` | how many lines. По умолчанию: `50`. |
+
+### `max server install`
+
+write a systemd user unit or a launchd agent for this profile; starts nothing
+
+```sh
+max server install
+```
+
+### `max server uninstall`
+
+remove this profile's unit; stop it first
+
+```sh
+max server uninstall
+```
 
 ## `max watch`
 

@@ -1,88 +1,59 @@
-import { Command } from "commander"
-import { parseDuration } from "../config.js"
+import { CliError, exitCodeFor } from "@leemour/cli-core"
+import { type ServerOptions, serverCommand as sharedServerCommand } from "@leemour/cli-messaging/cli"
+import type { Command } from "commander"
+import { maxMessenger } from "../messenger.js"
 import { serverStatus, stopServer } from "../server/server-connection.js"
-import { logPath } from "../server/start.js"
-import { VERSION } from "../version.js"
-import { forCommand } from "./context.js"
-import { detached } from "./serve.js"
+import { logPath, startInBackground } from "../server/start.js"
+import { SessionStore } from "../session/store.js"
 
 /**
- * `max server` — the background server as a thing you act on, the way `max session` is (`CLI-38`).
- * `max serve` stays the foreground form, for systemd and Ctrl-C.
+ * The exit codes of a login MAX refused (`refusedLogin`). A unit that restarted on them would log in
+ * again every 30 s, each one counted against the account.
  */
-export const serverCommand = (): Command => {
-  const command = new Command("server").description("this profile's background server: start, stop, status, restart")
+export const NO_RESTART_ON = (["authentication_error", "rate_limited", "provider_error"] as const).map(exitCodeFor)
 
-  command
-    .command("start")
-    .description("start it in the background; answers once it is connected")
-    .option("--idle <duration>", "stop after this long with nobody using it — 15m, 1h is 60m")
-    .action(async function (this: Command) {
-      const { idle } = this.opts<{ idle?: string }>()
-      const { renderer, store, run } = forCommand(this)
-      await run("server start", async () => {
-        if (idle !== undefined) parseDuration(idle, "--idle")
-        renderer.result(await detached(store, idle))
-      })
-    })
-
-  command
-    .command("stop")
-    .description("stop it, however it was started")
-    .action(async function (this: Command) {
-      const { renderer, store, run } = forCommand(this)
-      await run("server stop", async () => {
-        const outcome = await stopServer(store.socketPath(), { force: true })
-        renderer.result({ profile: store.profile, stopped: outcome === "stopped" })
-        if (outcome === "none") renderer.note(`no server is running for profile "${store.profile}"`)
-      })
-    })
-
-  command
-    .command("status")
-    .description("whether it runs, since when, which version, and whether it is connected to MAX")
-    .action(async function (this: Command) {
-      const { renderer, store, run } = forCommand(this)
-      await run("server status", async () => {
+/**
+ * max's server is found and stopped through its socket, not a lock file: whoever binds the socket is
+ * the profile's one server, and it says itself whether a command started it.
+ */
+export const maxServerOptions = (
+  storeFor: (profile: string, env: NodeJS.ProcessEnv) => SessionStore = (profile, env) =>
+    new SessionStore({ profile, env }),
+): ServerOptions => ({
+  process: ({ profile, env }) => {
+    const store = storeFor(profile, env)
+    return {
+      probe: async () => {
         const status = await serverStatus(store.socketPath())
-        if (!status) {
-          renderer.result({ profile: store.profile, running: false })
-          return
-        }
-        const version = typeof status.version === "string" ? status.version : null
-        renderer.result({
-          profile: store.profile,
-          running: true,
+        if (typeof status?.pid !== "number") return undefined
+        return {
+          pid: status.pid,
+          startedAt: typeof status.startedAt === "string" ? status.startedAt : new Date().toISOString(),
           connected: status.connected === true,
-          pid: status.pid ?? null,
-          startedAt: status.startedAt ?? null,
-          byHand: status.byHand === true,
-          version,
-          cliVersion: VERSION,
-          log: logPath(store),
-        })
-        // A server from before an upgrade still speaks to MAX with the old code.
-        if (version !== VERSION) {
-          renderer.note(
-            `the server runs ${version ?? "an older version"} and max is ${VERSION} — \`max server restart\``,
+          ...(typeof status.version === "string" ? { version: status.version } : {}),
+          byCommand: status.byHand !== true,
+        }
+      },
+      launch: (args, extra) => {
+        const pid = startInBackground(store, { serveArgs: args, env: extra })
+        if (pid === undefined) {
+          throw new CliError(
+            "validation_error",
+            "no session to start with, or a server is already being started — try again",
           )
         }
-      })
-    })
-
-  command
-    .command("restart")
-    .description("stop it and start it again, in the background — one login")
-    .option("--idle <duration>", "stop after this long with nobody using it — 15m, 1h is 60m")
-    .action(async function (this: Command) {
-      const { idle } = this.opts<{ idle?: string }>()
-      const { renderer, store, run } = forCommand(this)
-      await run("server restart", async () => {
-        if (idle !== undefined) parseDuration(idle, "--idle")
+        return pid
+      },
+      stop: async () => {
         await stopServer(store.socketPath(), { force: true })
-        renderer.result(await detached(store, idle))
-      })
-    })
+      },
+    }
+  },
+  logPath: ({ profile, env }) => logPath(storeFor(profile, env)),
+  serveArgv: ["--no-record", "serve"],
+  idle: true,
+  unit: { purpose: "hold this profile's one connection to MAX", noRestartOn: NO_RESTART_ON },
+})
 
-  return command
-}
+/** `max server` — the shared group; `max serve` stays the foreground form a unit runs (`CLI-38`). */
+export const serverCommand = (): Command => sharedServerCommand(maxMessenger, maxServerOptions())

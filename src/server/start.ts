@@ -34,7 +34,11 @@ export const logPath = (store: SessionStore): string => store.serverFile(".serve
  */
 export const startInBackground = (
   store: SessionStore,
-  { serveArgs = ["--idle", `${IDLE_MS / 60_000}m`, "--started-by-command"], entry = process.argv[1] } = {},
+  {
+    serveArgs = ["--idle", `${IDLE_MS / 60_000}m`, "--started-by-command"],
+    entry = process.argv[1],
+    env = {},
+  }: { serveArgs?: string[]; entry?: string; env?: Record<string, string> } = {},
 ): number | undefined => {
   if (!entry || store.readToken() === undefined) return undefined
   const refusedAt = statSync(refusedPath(store), { throwIfNoEntry: false })?.mtimeMs
@@ -55,7 +59,7 @@ export const startInBackground = (
   const child = spawn(process.execPath, [entry, "--no-record", "serve", ...serveArgs], {
     detached: true,
     stdio: ["ignore", "ignore", log],
-    env: serverEnvironment(process.env, store.profile),
+    env: { ...serverEnvironment(process.env, store.profile), ...env },
   })
   child.unref()
   closeSync(log)

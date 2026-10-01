@@ -8,6 +8,10 @@
 
 ### Что нового
 
+- **`max server logs`, `max server install`, `max server uninstall`** — как в tg. `install` пишет службу
+  systemd (Linux) или launchd (macOS) для профиля и ничего не запускает; дальше `max server start`
+  и `stop` идут через неё. Если MAX не принял вход, служба сервер не перезапускает: каждый повтор
+  был бы новым входом в аккаунт. `max server start --idle` и `restart --idle` остаются.
 - **`max cache clear --left`** стирает из локальной копии только чаты, из которых вы вышли, вместе с
   их сообщениями. Остальная копия не трогается.
 - **`max polls show <чат> <сообщение>`** — опрос с id вариантов и числом голосов, ничего не меняя.
@@ -33,6 +37,12 @@
 
 ### Изменено — может сломать скрипты
 
+- **`max serve --detach` и `max serve --stop` убраны**: это `max server start` и `max server stop`.
+- **`max server status --json` отвечает теми же полями, что tg**: `byHand` стал `by` (`hand` — руками,
+  `command` — его запустила команда, `server` — `max server start`, `unit` — служба); добавлены
+  `log`, `unit` и `stale` (сервер упал и оставил метку). `max server start`, `stop` и `restart`
+  отвечают как в tg: `{ started, by, pid, startedAt, log }` и `{ stopped, by, pid }`; поля `socket`
+  больше нет.
 - **`max messages send --at` теперь `--at-time`** — как во всех командах tg и max, где опция
   принимает время. Скрипт с `--at` получит ошибку «неизвестный параметр» — замените на `--at-time`.
   Параметр `at` у `max_messages_send` в MCP не меняется.

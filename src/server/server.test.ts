@@ -1,12 +1,15 @@
-import { chmodSync, existsSync, mkdirSync, statSync, writeFileSync } from "node:fs"
+import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { createServer, type Server } from "node:net"
-import { dirname } from "node:path"
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { dirname, join } from "node:path"
+import { type CliError, captureStreams, exitCodeFor, memoryKeyring } from "@leemour/cli-core"
+import { thisMachine, unitScope } from "@leemour/cli-messaging/background"
 import { guardedWrite, RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
 import { decode, ExtData } from "@msgpack/msgpack"
 import { afterEach, describe, expect, it } from "vitest"
+import { MAX_APP } from "../app.js"
 import { MaxClient } from "../client.js"
 import { contextFor } from "../commands/context.js"
+import { maxServerOptions, NO_RESTART_ON } from "../commands/server.js"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { run } from "../program.js"
 import { Connection } from "../protocol/connection.js"
@@ -283,12 +286,15 @@ describe("max serve", () => {
       scripted({}, { [Opcode.LOGIN]: refusedAfterFirst(refusal) }),
     )
     const stopped = expect(server.done).rejects.toThrow(refusal)
+    const failure = server.done.catch((error: CliError) => error)
 
     max.drop()
     await settle(60)
 
     await stopped
     expect(max.sent.filter((call) => call.opcode === Opcode.LOGIN)).toHaveLength(2)
+    // What `max serve` exits with — a unit restarts on anything else, and logs in again (RISK-96).
+    expect(NO_RESTART_ON).toContain(exitCodeFor(((await failure) as CliError).code))
   })
 
   it("stops when its background login is refused, instead of trying again every minute", async () => {
@@ -966,16 +972,18 @@ describe("the background server's environment", () => {
 })
 
 describe("max server", () => {
+  // The server runs in this process, so waiting for its PID to go would wait out every look.
+  const system = { ...thisMachine(), pause: async () => {} }
   const max = async (argv: string[]) => {
     const streams = captureStreams()
-    const code = await run(argv, { streams, tty: false })
+    const code = await run(argv, { streams, tty: false, system })
     return { code, out: streams.stdout.join(""), err: streams.stderr.join("") }
   }
 
   it("status: says nothing runs, as a result a script can read, and exits 0", async () => {
     const { code, out } = await max(["x-none", "server", "status", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toEqual({ profile: "x-none", running: false })
+    expect(JSON.parse(out)).toMatchObject({ profile: "x-none", running: false, cliVersion: VERSION })
   })
 
   it("status: pid, start time, version and whether MAX is connected", async () => {
@@ -988,7 +996,7 @@ describe("max server", () => {
       running: true,
       connected: true,
       pid: process.pid,
-      byHand: true,
+      by: "hand",
       version: VERSION,
       cliVersion: VERSION,
     })
@@ -1001,7 +1009,9 @@ describe("max server", () => {
     const old = createServer((socket) =>
       socket.on(
         "data",
-        lineReader(() => socket.write(toLine({ event: "status", connected: true, byHand: false, version: "0.8.0" }))),
+        lineReader(() =>
+          socket.write(toLine({ event: "status", connected: true, byHand: false, version: "0.8.0", pid: 4242 })),
+        ),
       ),
     )
     await new Promise<void>((resolve) => old.listen(store.socketPath(), resolve))
@@ -1018,14 +1028,51 @@ describe("max server", () => {
     const { code, out } = await max(["x-stop", "server", "stop", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toEqual({ profile: "x-stop", stopped: true })
+    expect(JSON.parse(out)).toMatchObject({ profile: "x-stop", stopped: true, by: "hand" })
     await expect(server.done).resolves.toBeUndefined()
   })
 
-  it("stop: with nothing running, stopped is false and a note says why", async () => {
-    const { out, err } = await max(["x-idle", "server", "stop", "--json"])
+  it("install writes a unit that runs serve by hand and does not restart after a refused login; logs and uninstall", async () => {
+    const ran: string[][] = []
+    const linux = {
+      ...system,
+      platform: "linux" as const,
+      run: async (argv: string[]) => {
+        ran.push(argv)
+        return { code: 0, stdout: "LoadState=loaded\nActiveState=inactive\nSubState=dead\nMainPID=0\n", stderr: "" }
+      },
+    }
+    const call = async (argv: string[]) => {
+      const streams = captureStreams()
+      const code = await run(argv, { streams, tty: false, system: linux })
+      return { code, answer: JSON.parse(streams.stdout.join("") || "null") }
+    }
+    const name = `max-serve-${unitScope(MAX_APP, "x-unit", process.env)}.service`
+    const unit = join(process.env.XDG_CONFIG_HOME ?? "", "systemd", "user", name)
+    expect(unit.startsWith(process.env.MAX_STATE_DIR?.replace(/state$/, "") ?? "/nowhere")).toBe(true)
+
+    expect((await call(["x-unit", "server", "install", "--json"])).answer).toMatchObject({
+      path: unit,
+      replaced: false,
+    })
+    const text = readFileSync(unit, "utf8")
+    expect(text).toContain('"--no-record" "serve"')
+    expect(text).toContain("RestartPreventExitStatus=4 8 11")
+    expect(text).not.toContain("MAX_TOKEN")
+
+    expect((await call(["x-unit", "server", "logs", "--lines", "5", "--json"])).answer).toMatchObject({
+      unit: name,
+    })
+    expect(ran.at(-1)).toEqual(["journalctl", "--user", "-u", name, "-n", "5", "--no-pager"])
+
+    expect((await call(["x-unit", "server", "uninstall", "--json"])).answer).toMatchObject({ removed: true })
+    expect(existsSync(unit)).toBe(false)
+    expect(ran.some((argv) => argv[0] === "systemctl" && argv.includes("start"))).toBe(false)
+  })
+
+  it("stop: with nothing running, stopped is false", async () => {
+    const { out } = await max(["x-idle", "server", "stop", "--json"])
     expect(JSON.parse(out)).toEqual({ profile: "x-idle", stopped: false })
-    expect(err).toContain("no server is running")
   })
 })
 
@@ -1128,5 +1175,30 @@ describe("starting a server in the background", () => {
 
     expect(startInBackground(store, { entry: "/nonexistent/max.js" })).toBeUndefined()
     expect(existsSync(store.serverFile(".sock.starting"))).toBe(false)
+  })
+})
+
+describe("max server on the shared commands", () => {
+  const hook = (store: SessionStore) =>
+    // biome-ignore lint/style/noNonNullAssertion: max's options always carry a process
+    maxServerOptions(() => store).process!({ profile: store.profile, env: process.env } as never, {} as never, "")
+
+  it("finds a server through its socket and tells one a command started from one started by hand", async () => {
+    const byHand = await serve("s-hook-hand")
+    expect(await hook(byHand.store).probe()).toMatchObject({ pid: process.pid, connected: true, byCommand: false })
+
+    const byCommand = await serve("s-hook-command", scripted(), { startedByCommand: true })
+    expect(await hook(byCommand.store).probe()).toMatchObject({ byCommand: true, version: VERSION })
+
+    expect(await hook(new SessionStore({ profile: "s-hook-none", keyring: memoryKeyring() })).probe()).toBeUndefined()
+  })
+
+  it("stops a server started by hand too, as `max server stop` always has", async () => {
+    const { server, store } = await serve("s-hook-stop")
+    const running = await hook(store).probe()
+    // biome-ignore lint/style/noNonNullAssertion: probed just above
+    await hook(store).stop(running!)
+    await server.done
+    expect(await answers(store.socketPath())).toBe(false)
   })
 })

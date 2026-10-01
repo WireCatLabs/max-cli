@@ -18,8 +18,8 @@ importers:
         specifier: 0.12.0
         version: 0.12.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: 0.92.0
-        version: 0.92.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.93.0
+        version: 0.93.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -363,8 +363,8 @@ packages:
       commander:
         optional: true
 
-  '@leemour/cli-messaging@0.92.0':
-    resolution: {integrity: sha512-BZNRcIR4ojYmh5U9fjm8LSc7ZhChKmQwalv2KRa7EuEYshzABLV3rjarSHNesuYYdBRU6aW3PgjX0uBky2w4qw==}
+  '@leemour/cli-messaging@0.93.0':
+    resolution: {integrity: sha512-6/rDKDkHiVYHxtDnMn9QMJoTvGVf1ciVkaQyDBLrWFXBKALnpv+rNe+fXPEbxqA38ZJcO+Cdvze/D880kfvoHA==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -1402,7 +1402,7 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@leemour/cli-messaging@0.92.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-messaging@0.93.0(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@leemour/cli-core': 0.12.0(commander@15.0.0)(typescript@7.0.2)
