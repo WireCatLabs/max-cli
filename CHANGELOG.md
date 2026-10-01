@@ -23,6 +23,10 @@
   ничего не добавляется. Выключается `max config set skillHint false --defaults`.
 - **`max mcp` и `max bot mcp` отдают навык ресурсом `max://skill`** и называют его в своих
   инструкциях для агента.
+- **`max bot auth`, `max bot list`, `max bot chats list`, `max bot recipients` и `max bot sends list`
+  теперь общие с tg** (cli-messaging): ответы и подсказки те же. В `max commands --json`
+  `bot auth set|remove` и `bot recipients add|remove|clear` теперь помечены как пишущие — они меняют
+  файлы на этом компьютере. Токен, список получателей и журнал лежат там же, где лежали.
 - **`max cache clear --left`** стирает из локальной копии только чаты, из которых вы вышли, вместе с
   их сообщениями. Остальная копия не трогается.
 
@@ -66,6 +70,19 @@
 - **`max messages send --at` теперь `--at-time`** — как во всех командах tg и max, где опция
   принимает время. Скрипт с `--at` получит ошибку «неизвестный параметр» — замените на `--at-time`.
   Параметр `at` у `max_messages_send` в MCP не меняется.
+- **Команды бота — под общими с tg именами, старых имён нет.** `max bot messages get <сообщение>` →
+  `messages show <чат> <сообщение>`; `messages edit|delete` тоже берут чат первым; `bot chats get` →
+  `chats show`; `bot chats pin|unpin` → `messages pin|unpin <чат> <сообщение>`. `--format markdown|html`
+  → `--md` или `--html`; `--type` больше нет: картинку — `--photo`, голосовое — `--voice`, видео файлом
+  — `--as-file`. `chats action` берёт `typing`, `photo`, `video`, `voice`, `file`. Отправка и правка
+  отвечают `{ operationId, message }`, а не сообщением. Удаление спрашивает подтверждение,
+  `--allow-dangerous` отвечает «да». Инструменты MCP бота переименованы так же: `max_bot_chats_show`,
+  `max_bot_messages_show`, `max_bot_messages_pin`, `max_bot_messages_unpin`.
+- **`max bot members` и `max bot admins` теперь `max bot chats members` и `max bot chats admins`**,
+  как в tg. `admins add` берёт `--can` со словами `max chats admins add` (`read`, `members`, `admins`,
+  `info`, `pin`, `link`, `edit`, `delete`) вместо `--permissions`, и `--title` вместо `--alias`.
+  Прав «звонки» и «статистика» в `--can` нет. `admins list` отвечает `{ id, name, username, role,
+  rights, title }`. Инструменты MCP: `max_bot_chats_members_list|add|remove`, `max_bot_chats_admins_list`.
 
 - **`--markdown` больше нет, только `--md`** — в `messages send`, `messages edit` и везде, где
   разметка читается. Так названо во всех командах tg и max; скрипт с `--markdown` получит ошибку

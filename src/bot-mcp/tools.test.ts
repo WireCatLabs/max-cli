@@ -19,7 +19,7 @@ const SAMPLE: Record<string, unknown> = {
   format: "markdown",
   reply_to: "mid.def",
   silent: true,
-  action: "typing_on",
+  action: "typing",
   callback: "cb.1",
   notification: "done",
   users: ["1", "2"],

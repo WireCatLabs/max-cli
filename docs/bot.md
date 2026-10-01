@@ -35,7 +35,7 @@ max sales bot me                                        # какой это бо
   не ждать. Полученные так
   обновления MAX второй раз не отдаёт. Пока у бота задан вебхук, эта команда не работает.
 
-Откройте чат командой `max sales bot chats get` с этим номером: после этого бот знает его название,
+Откройте чат командой `max sales bot chats show` с этим номером: после этого бот знает его название,
 и в командах ниже чат можно называть по названию. `chats list` показывает все чаты, которые бот уже
 видел.
 
@@ -78,7 +78,7 @@ max sales bot auth remove     # забыть токен
 ```sh
 max sales bot messages send "Команда продаж" "Сборка готова"
 max sales bot messages send user:4815162342 "Здравствуйте"
-max sales bot messages send "Команда продаж" "**Итоги недели** в закрепе" --format markdown
+max sales bot messages send "Команда продаж" "**Итоги недели** в закрепе" --md
 max sales bot messages send "Команда продаж" "Принято" --reply-to mid.0000019a7f3c21de
 echo "Текст из трубы" | max sales bot messages send "Команда продаж" -
 ```
@@ -89,7 +89,9 @@ echo "Текст из трубы" | max sales bot messages send "Команда 
 ### Файлы
 
 `--file` прикладывает файл с диска. Картинка, видео и звук узнаются по расширению, всё остальное
-уходит файлом; `--type image|video|audio|file` задаёт вид явно. Текст с файлом можно не писать:
+уходит файлом. `--photo` отправляет картинку фотографией, `--voice` — файл Ogg Opus голосовым,
+`--as-file` — видео файлом. Файл из скрытой папки и из папок самого `max` не уходит без
+`--allow-any-file`. Текст с файлом можно не писать:
 
 ```sh
 max sales bot messages send "Команда продаж" "Отчёт за неделю" --file report.pdf
@@ -109,10 +111,18 @@ max sales bot uploads put report.pdf
 
 ```sh
 max sales bot messages list "Команда продаж" --limit 20
-max sales bot messages get mid.0000019a7f3c21de
-max sales bot messages edit mid.0000019a7f3c21de "Исправленный текст"
-max sales bot messages delete mid.0000019a7f3c21de
+max sales bot messages show "Команда продаж" mid.0000019a7f3c21de
+max sales bot messages edit "Команда продаж" mid.0000019a7f3c21de "Исправленный текст"
+max sales bot messages delete "Команда продаж" mid.0000019a7f3c21de --allow-dangerous
+max sales bot messages pin "Команда продаж" mid.0000019a7f3c21de --notify
+max sales bot messages unpin "Команда продаж" mid.0000019a7f3c21de
 ```
+
+Сообщение всегда называют вместе с чатом: так команды одинаковы у `max` и `tg`, где номер сообщения
+есть только внутри чата. Сообщение из другого чата `max` не трогает. `--html` — текст в HTML,
+`--md` и `--html` вместе нельзя. Удаление спрашивает подтверждение; `--allow-dangerous` отвечает
+«да». Закрепление по умолчанию тихое, `--notify` сообщит участникам. В ответе на отправку — само
+сообщение и `operationId`, номер этой записи в журнале.
 
 Если связь оборвалась во время отправки, `max` не повторяет её сам: он говорит, что не знает,
 дошло ли сообщение (код `14`). Проверьте чат, прежде чем отправить снова.
@@ -120,15 +130,13 @@ max sales bot messages delete mid.0000019a7f3c21de
 ## Чаты
 
 У MAX нет запроса «все чаты бота». Поэтому `chats list` показывает **чаты, которые этот бот видел
-на этом компьютере**: те, что вы открыли через `chats get`, куда он писал и откуда читал. Это не
+на этом компьютере**: те, что вы открыли через `chats show`, куда он писал и откуда читал. Это не
 полный список.
 
 ```sh
 max sales bot chats list
-max sales bot chats get "Команда продаж"
-max sales bot chats pin "Команда продаж" mid.0000019a7f3c21de
-max sales bot chats unpin "Команда продаж"
-max sales bot chats action "Команда продаж" typing_on
+max sales bot chats show "Команда продаж"
+max sales bot chats action "Команда продаж" typing    # typing, photo, video, voice, file
 max sales bot chats leave "Команда продаж"    # вернуть бота может только админ чата
 ```
 
@@ -145,17 +153,17 @@ max sales bot chats leave "Команда продаж"    # вернуть бо
 своим аккаунтом: `max chats admins add "Поход" <номер бота> --can read,members,delete`.
 
 ```sh
-max sales bot members list "Команда продаж" --limit 50
-max sales bot members add "Команда продаж" 4815162342 2342481516
-max sales bot members remove "Команда продаж" 4815162342 --block
-max sales bot admins list "Команда продаж"
-max sales bot admins add "Команда продаж" 4815162342 --permissions write,pin_message --alias "Дежурный"
-max sales bot admins remove "Команда продаж" 4815162342
+max sales bot chats members list "Команда продаж" --limit 50
+max sales bot chats members add "Команда продаж" 4815162342 2342481516
+max sales bot chats members remove "Команда продаж" 4815162342 --block
+max sales bot chats admins list "Команда продаж"
+max sales bot chats admins add "Команда продаж" 4815162342 --can read,pin --title "Дежурный"
+max sales bot chats admins remove "Команда продаж" 4815162342
 ```
 
 `members list` отдаёт до 100 человек и `marker`; следующая страница — `--marker` с этим числом.
-Права админа: `read_all_messages`, `add_remove_members`, `add_admins`, `change_chat_info`,
-`pin_message`, `edit_link`, `write`, `edit`, `delete`, `can_call`, `view_stats`.
+Права админа в `--can` — те же слова, что у `max chats admins add`: `read`, `members`, `admins`,
+`info`, `pin`, `link`, `edit`, `delete`. `read` — это право читать сообщения группы.
 
 ## Локальная копия
 
@@ -164,7 +172,7 @@ max sales bot admins remove "Команда продаж" 4815162342
 
 ```sh
 max sales bot messages list "Команда продаж" --offline
-max sales bot messages get mid.0000019a7f3c21de --offline
+max sales bot messages show "Команда продаж" mid.0000019a7f3c21de --offline
 max sales bot messages search "итоги недели"
 ```
 

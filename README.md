@@ -314,8 +314,8 @@ export MAX_PROFILE=personal # или на всю сессию оболочки
 **Бот пишет в группу, закрепляет объявление и следит за порядком:**
 
 ```sh
-max sales bot messages send "Команда продаж" "**Сборка готова**" --format markdown --file report.pdf
-max sales bot chats pin "Команда продаж" <mid>          # id сообщения — из ответа на send
+max sales bot messages send "Команда продаж" "**Сборка готова**" --md --file report.pdf
+max sales bot messages pin "Команда продаж" <mid>       # id сообщения — из ответа на send
 max sales bot updates watch                              # всё, что происходит в чатах бота, по мере прихода
 max sales bot chats rules set "Команда продаж" links delete
 max sales bot chats check "Команда продаж" --dry-run     # что нарушает правила — без действий

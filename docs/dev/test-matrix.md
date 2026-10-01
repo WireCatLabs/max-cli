@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**455 ✅ · 22 ⛔ · 0 ❌** — 198 commands, 279 options.
+**462 ✅ · 22 ⛔ · 0 ❌** — 198 commands, 286 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -270,30 +270,23 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot auth set` |  | ✅ |  |
 | `bot auth show` |  | ✅ |  |
 | `bot auth remove` |  | ✅ |  |
-| `bot me` |  | ✅ |  |
 | `bot list` |  | ✅ |  |
 | `bot list` | `--check` | ✅ |  |
-| `bot messages list` |  | ✅ |  |
-| `bot messages list` | `--limit` | ✅ |  |
-| `bot messages get` |  | ✅ |  |
-| `bot messages search` |  | ✅ |  |
-| `bot messages search` | `--all-bots` | ✅ |  |
-| `bot messages search` | `--bots` | ✅ |  |
-| `bot messages search` | `--limit` | ✅ |  |
-| `bot messages search` | `--from` | ✅ |  |
-| `bot messages between` |  | ✅ |  |
-| `bot messages between` | `--all-bots` | ✅ |  |
-| `bot messages between` | `--bots` | ✅ |  |
-| `bot messages between` | `--limit` | ✅ |  |
-| `bot messages send` |  | ✅ |  |
-| `bot messages send` | `--format` | ✅ |  |
-| `bot messages send` | `--reply-to` | ✅ |  |
-| `bot messages send` | `--silent` | ✅ |  |
-| `bot messages send` | `--file` | ✅ |  |
-| `bot messages send` | `--type` | ✅ |  |
-| `bot messages edit` |  | ✅ |  |
-| `bot messages edit` | `--format` | ✅ |  |
-| `bot messages delete` |  | ✅ |  |
+| `bot chats list` |  | ✅ |  |
+| `bot chats show` |  | ✅ |  |
+| `bot chats leave` |  | ✅ |  |
+| `bot chats action` |  | ✅ |  |
+| `bot chats admins list` |  | ✅ |  |
+| `bot chats admins add` |  | ✅ |  |
+| `bot chats admins add` | `--can` | ✅ |  |
+| `bot chats admins add` | `--title` | ✅ |  |
+| `bot chats admins remove` |  | ✅ |  |
+| `bot chats members remove` |  | ✅ |  |
+| `bot chats members remove` | `--block` | ✅ |  |
+| `bot chats members list` |  | ✅ |  |
+| `bot chats members list` | `--limit` | ✅ |  |
+| `bot chats members list` | `--marker` | ✅ |  |
+| `bot chats members add` |  | ✅ |  |
 | `bot chats check` |  | ✅ |  |
 | `bot chats check` | `--since` | ✅ |  |
 | `bot chats check` | `--dry-run` | ✅ |  |
@@ -303,33 +296,47 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot chats rules show` |  | ✅ |  |
 | `bot chats rules set` |  | ✅ |  |
 | `bot chats rules unset` |  | ✅ |  |
-| `bot chats list` |  | ✅ |  |
-| `bot chats get` |  | ✅ |  |
-| `bot chats pin` |  | ✅ |  |
-| `bot chats unpin` |  | ✅ |  |
-| `bot chats leave` |  | ✅ |  |
-| `bot chats action` |  | ✅ |  |
-| `bot people show` |  | ✅ |  |
-| `bot people show` | `--all-bots` | ✅ |  |
-| `bot people show` | `--bots` | ✅ |  |
-| `bot people show` | `--limit` | ✅ |  |
-| `bot people show` | `--refresh` | ✅ |  |
+| `bot messages send` |  | ✅ |  |
+| `bot messages send` | `--reply-to` | ✅ |  |
+| `bot messages send` | `--silent` | ✅ |  |
+| `bot messages send` | `--md` | ✅ |  |
+| `bot messages send` | `--html` | ✅ |  |
+| `bot messages send` | `--file` | ✅ |  |
+| `bot messages send` | `--photo` | ✅ |  |
+| `bot messages send` | `--as-file` | ✅ |  |
+| `bot messages send` | `--voice` | ✅ |  |
+| `bot messages send` | `--allow-any-file` | ✅ |  |
+| `bot messages list` |  | ✅ |  |
+| `bot messages list` | `--limit` | ✅ |  |
+| `bot messages show` |  | ✅ |  |
+| `bot messages edit` |  | ✅ |  |
+| `bot messages edit` | `--md` | ✅ |  |
+| `bot messages edit` | `--html` | ✅ |  |
+| `bot messages delete` |  | ✅ |  |
+| `bot messages delete` | `--allow-dangerous` | ✅ |  |
+| `bot messages pin` |  | ✅ |  |
+| `bot messages pin` | `--notify` | ✅ |  |
+| `bot messages unpin` |  | ✅ |  |
+| `bot messages search` |  | ✅ |  |
+| `bot messages search` | `--all-bots` | ✅ |  |
+| `bot messages search` | `--bots` | ✅ |  |
+| `bot messages search` | `--limit` | ✅ |  |
+| `bot messages search` | `--from` | ✅ |  |
+| `bot messages between` |  | ✅ |  |
+| `bot messages between` | `--all-bots` | ✅ |  |
+| `bot messages between` | `--bots` | ✅ |  |
+| `bot messages between` | `--limit` | ✅ |  |
 | `bot recipients list` |  | ✅ |  |
 | `bot recipients add` |  | ✅ |  |
 | `bot recipients remove` |  | ✅ |  |
 | `bot recipients clear` |  | ✅ |  |
 | `bot sends list` |  | ✅ |  |
-| `bot members list` |  | ✅ |  |
-| `bot members list` | `--limit` | ✅ |  |
-| `bot members list` | `--marker` | ✅ |  |
-| `bot members add` |  | ✅ |  |
-| `bot members remove` |  | ✅ |  |
-| `bot members remove` | `--block` | ✅ |  |
-| `bot admins list` |  | ✅ |  |
-| `bot admins add` |  | ✅ |  |
-| `bot admins add` | `--permissions` | ✅ |  |
-| `bot admins add` | `--alias` | ✅ |  |
-| `bot admins remove` |  | ✅ |  |
+| `bot me` |  | ✅ |  |
+| `bot people show` |  | ✅ |  |
+| `bot people show` | `--all-bots` | ✅ |  |
+| `bot people show` | `--bots` | ✅ |  |
+| `bot people show` | `--limit` | ✅ |  |
+| `bot people show` | `--refresh` | ✅ |  |
 | `bot comments list` |  | ✅ |  |
 | `bot comments list` | `--limit` | ✅ |  |
 | `bot comments get` |  | ✅ |  |

@@ -1776,14 +1776,6 @@ forget this profile's bot token
 max bot auth remove
 ```
 
-### `max bot me`
-
-the bot this profile's token belongs to: name, id, description, commands
-
-```sh
-max bot me
-```
-
 ### `max bot list`
 
 every name on this machine that has a bot token; --check asks MAX which bot each is
@@ -1796,16 +1788,139 @@ max bot list [options]
 |---|---|
 | `--check` | ask MAX who each bot is. |
 
-### `max bot messages`
+### `max bot chats`
 
-messages in the chats this bot is in
+the chats this bot is in — MAX gives a bot no list of them, so `list` shows the ones it has seen
 
-#### `max bot messages list`
+#### `max bot chats list`
 
-the latest messages in a chat (--limit, up to 100) — its id, or the title of a chat this bot has seen; --offline answers from the local copy
+chats this bot has seen on this machine — not a complete list from MAX
 
 ```sh
-max bot messages list <chat> [options]
+max bot chats list
+```
+
+#### `max bot chats show`
+
+one chat from MAX, and remember it
+
+```sh
+max bot chats show <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+
+#### `max bot chats leave`
+
+take the bot out of a chat; only an admin of the chat can bring it back
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot chats leave <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+
+#### `max bot chats action`
+
+show what the bot is doing in a chat — typing, sending a photo — for a few seconds
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot chats action <chat> <action>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `action` | обязательный | what the chat sees. Одно из: `typing`, `photo`, `video`, `voice`, `file`. |
+
+#### `max bot chats admins`
+
+the admins of a chat the bot is an admin in
+
+#### `max bot chats admins list`
+
+the chat's admins and what each may do
+
+```sh
+max bot chats admins list <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+
+#### `max bot chats admins add`
+
+make a member an admin with these rights
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot chats admins add <chat> <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+| `person` | обязательный | the person's user id. |
+
+| Опция | Что делает |
+|---|---|
+| `--can <rights>` | what they may do, comma-separated: read, members, admins, info, pin, link, edit, delete. |
+| `--title <title>` | the title shown beside their name. |
+
+#### `max bot chats admins remove`
+
+take an admin's rights back; they stay a member
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot chats admins remove <chat> <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+| `person` | обязательный | the person's user id. |
+
+#### `max bot chats members`
+
+the people in a chat the bot is an admin in
+
+#### `max bot chats members remove`
+
+take a person out of a chat; their messages stay
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot chats members remove <chat> <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+| `person` | обязательный | the person's user id. |
+
+| Опция | Что делает |
+|---|---|
+| `--block` | also keep them from coming back by the chat's link. |
+
+#### `max bot chats members list`
+
+members of a chat, a page at a time — --marker takes the `marker` the last page gave
+
+```sh
+max bot chats members list <chat> [options]
 ```
 
 | Аргумент | | Что это |
@@ -1815,115 +1930,22 @@ max bot messages list <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many, up to 100. |
+| `--marker <marker>` | continue from here. |
 
-#### `max bot messages get`
+#### `max bot chats members add`
 
-one message by its id (mid.…)
-
-```sh
-max bot messages get <message>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `message` | обязательный |  |
-
-#### `max bot messages search`
-
-search the messages this bot has read, sent or received on this machine — the local copy only, newest first; by text, by --from, or both
-
-```sh
-max bot messages search [text] [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `text` | необязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
-| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
-| `--limit <n>` | how many. |
-| `--from <who>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several. |
-
-#### `max bot messages between`
-
-what two or more people wrote in the chats they have all written in — from the local copy, grouped by chat, oldest first; --limit counts per chat. Common chats are the ones this copy saw each of them write in, not a member list from MAX
-
-```sh
-max bot messages between <people> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `people` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
-| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
-| `--limit <n>` | how many of the latest messages from each chat. |
-
-#### `max bot messages send`
-
-send a message as the bot — to a chat id, `user:<id>`, or the title of a chat it has seen; - reads stdin
+add people to a chat by user id; the bot must be an admin that may add members
 
 **Меняет что-то в MAX.**
 
 ```sh
-max bot messages send <chat> [text] [options]
+max bot chats members add <chat> <users>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный |  |
-| `text` | необязательный | may be left out with --file. |
-
-| Опция | Что делает |
-|---|---|
-| `--format <format>` | how the text is marked up. Одно из: `markdown`, `html`. |
-| `--reply-to <message>` | answer this message. |
-| `--silent` | no notification for the people in the chat. |
-| `--file <path>` | attach a file from disk: an image, video or audio by its extension, else a file. |
-| `--type <type>` | send --file as this kind instead of guessing. Одно из: `image`, `video`, `audio`, `file`. |
-
-#### `max bot messages edit`
-
-replace the text of a message the bot sent; - reads stdin
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot messages edit <message> <text> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `message` | обязательный |  |
-| `text` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--format <format>` | how the text is marked up. Одно из: `markdown`, `html`. |
-
-#### `max bot messages delete`
-
-delete a message in a chat the bot can delete in
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot messages delete <message>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `message` | обязательный |  |
-
-### `max bot chats`
-
-the chats this bot is in — MAX gives a bot no list of them, so `list` shows the ones it has seen
+| `users` | обязательный |  |
 
 #### `max bot chats check`
 
@@ -1994,110 +2016,180 @@ max bot chats rules unset <chat> <key>
 | `chat` | обязательный |  |
 | `key` | обязательный |  |
 
-#### `max bot chats list`
+### `max bot messages`
 
-chats this bot has seen on this machine — not a complete list from MAX
+the messages in the chats this bot is in
 
-```sh
-max bot chats list
-```
+#### `max bot messages send`
 
-#### `max bot chats get`
-
-one chat from MAX, and remember it
-
-```sh
-max bot chats get <chat>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный |  |
-
-#### `max bot chats pin`
-
-pin a message in a chat
+send a message as the bot; without [text], the text is read from stdin
 
 **Меняет что-то в MAX.**
 
 ```sh
-max bot chats pin <chat> <message>
+max bot messages send <chat> [text] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
-| `message` | обязательный |  |
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `text` | необязательный | the message. |
 
-#### `max bot chats unpin`
+| Опция | Что делает |
+|---|---|
+| `--reply-to <message>` | answer this message, by its id in the same chat. |
+| `--silent` | deliver without a notification. |
+| `--md` | read **bold**, _italic_, \~\~struck\~\~ and `code` in the text; \ keeps a mark literal. |
+| `--html` | the text is HTML: <b>, <i>, <a href>, <code>. |
+| `--file <file>` | attach a file; the text becomes its caption. |
+| `--photo <file>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption. |
+| `--as-file` | send the --file as a file to download, a video included. |
+| `--voice <file>` | send an Ogg Opus file as a voice message, alone, with no text. |
+| `--allow-any-file` | send a file even from a hidden folder, \~/.ssh or this CLI's own folders. |
 
-unpin whatever is pinned in a chat
+#### `max bot messages list`
+
+the latest messages in a chat; where MAX gives a bot no history, and with --offline, the ones this bot has seen on this machine
+
+```sh
+max bot messages list <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many, the newest. |
+
+#### `max bot messages show`
+
+one message by its id in a chat
+
+```sh
+max bot messages show <chat> <message>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `message` | обязательный | message id. |
+
+#### `max bot messages edit`
+
+replace the text of a message the bot sent
 
 **Меняет что-то в MAX.**
 
 ```sh
-max bot chats unpin <chat>
+max bot messages edit <chat> <message> <text> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `message` | обязательный | message id. |
+| `text` | обязательный | the new text. |
 
-#### `max bot chats leave`
+| Опция | Что делает |
+|---|---|
+| `--md` | read **bold**, _italic_, \~\~struck\~\~ and `code` in the text; \ keeps a mark literal. |
+| `--html` | the text is HTML: <b>, <i>, <a href>, <code>. |
 
-the bot leaves the chat; only an admin can bring it back
+#### `max bot messages delete`
+
+delete messages in a chat the bot can delete in; it cannot be undone
 
 **Меняет что-то в MAX.**
 
 ```sh
-max bot chats leave <chat>
+max bot messages delete <chat> <messages> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `messages` | обязательный | message ids. |
 
-#### `max bot chats action`
+| Опция | Что делает |
+|---|---|
+| `--allow-dangerous` | delete without asking. |
 
-show an action to the chat: typing_on, sending_photo, sending_video, sending_audio, sending_file, mark_seen
+#### `max bot messages pin`
+
+pin a message in a chat; quietly unless --notify
 
 **Меняет что-то в MAX.**
 
 ```sh
-max bot chats action <chat> <action>
+max bot messages pin <chat> <message> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
-| `action` | обязательный |  |
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `message` | обязательный | message id. |
 
-### `max bot people`
+| Опция | Что делает |
+|---|---|
+| `--notify` | tell the chat's members. |
 
-people this bot has seen write — from the local copy on this machine, never asking MAX unless told to
+#### `max bot messages unpin`
 
-#### `max bot people show`
+unpin a message in a chat
 
-one person — an id, @username or part of a name: the chats they wrote in (with their last message there) and the latest messages of their private chat with the bot
+**Меняет что-то в MAX.**
 
 ```sh
-max bot people show <who> [options]
+max bot messages unpin <chat> <message>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `who` | обязательный |  |
+| `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `message` | обязательный | message id. |
+
+#### `max bot messages search`
+
+search the messages this bot has read, sent or received on this machine — the local copy only, newest first; by text, by --from, or both
+
+```sh
+max bot messages search [text] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `text` | необязательный |  |
 
 | Опция | Что делает |
 |---|---|
 | `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
 | `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
-| `--limit <n>` | how many messages from the private chat. |
-| `--refresh` | read the private chat with them from MAX first — one request. |
+| `--limit <n>` | how many. |
+| `--from <who>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several. |
+
+#### `max bot messages between`
+
+what two or more people wrote in the chats they have all written in — from the local copy, grouped by chat, oldest first; --limit counts per chat. Common chats are the ones this copy saw each of them write in, not a member list from MAX
+
+```sh
+max bot messages between <people> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `people` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
+| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
+| `--limit <n>` | how many of the latest messages from each chat. |
 
 ### `max bot recipients`
 
-the chats this bot may write to; with no list, every chat — `off` removes the list
+the chats this bot may write to; with no list, every chat — `clear` removes the list
 
 #### `max bot recipients list`
 
@@ -2157,111 +2249,36 @@ what this bot sent, edited and deleted from this machine — ids and outcomes, n
 max bot sends list
 ```
 
-### `max bot members`
+### `max bot me`
 
-the people in a group chat or channel the bot is in
-
-#### `max bot members list`
-
-members of a chat, a page at a time — --marker takes the `marker` the last page gave
+the bot this profile's token belongs to: name, id, description, commands
 
 ```sh
-max bot members list <chat> [options]
+max bot me
+```
+
+### `max bot people`
+
+people this bot has seen write — from the local copy on this machine, never asking MAX unless told to
+
+#### `max bot people show`
+
+one person — an id, @username or part of a name: the chats they wrote in (with their last message there) and the latest messages of their private chat with the bot
+
+```sh
+max bot people show <who> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
+| `who` | обязательный |  |
 
 | Опция | Что делает |
 |---|---|
-| `--limit <n>` | how many, up to 100. |
-| `--marker <marker>` | continue from here. |
-
-#### `max bot members add`
-
-add people to a chat by user id; the bot must be an admin that may add members
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot members add <chat> <users>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный |  |
-| `users` | обязательный |  |
-
-#### `max bot members remove`
-
-remove a person from a chat
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot members remove <chat> <user> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный |  |
-| `user` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--block` | also block them from coming back by the chat's link. |
-
-### `max bot admins`
-
-the admins of a group chat or channel the bot is an admin in
-
-#### `max bot admins list`
-
-the admins of a chat and what each may do
-
-```sh
-max bot admins list <chat>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный |  |
-
-#### `max bot admins add`
-
-make a person an admin with the permissions named
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot admins add <chat> <user> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный |  |
-| `user` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--permissions <list>` | a comma list: read_all_messages, add_remove_members, add_admins, change_chat_info, pin_message, edit_link, write, edit, delete, can_call, view_stats. |
-| `--alias <title>` | the title shown beside their name. |
-
-#### `max bot admins remove`
-
-take a person's admin rights away; they stay in the chat
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot admins remove <chat> <user>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный |  |
-| `user` | обязательный |  |
+| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
+| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
+| `--limit <n>` | how many messages from the private chat. |
+| `--refresh` | read the private chat with them from MAX first — one request. |
 
 ### `max bot comments`
 

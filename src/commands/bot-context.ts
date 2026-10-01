@@ -1,6 +1,6 @@
 import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
-import { type Recording, startRecording } from "@leemour/cli-messaging/cli"
+import { type EventSink, type Recording, startRecording } from "@leemour/cli-messaging/cli"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
@@ -66,7 +66,8 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile })
   const recording = botRecordingOf(command)
   const deadline = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
-  const client = (token: string, stop?: AbortSignal) => {
+  /** `events` is a shared command's own run, which max's group hooks do not start. */
+  const client = (token: string, stop?: AbortSignal, events?: EventSink) => {
     const signal = deadline && stop ? AbortSignal.any([deadline, stop]) : (deadline ?? stop)
     return new BotApiClient({
       token,
@@ -76,7 +77,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
       ...(environment.botRetry ? { retry: environment.botRetry } : {}),
       ...(environment.sleep ? { sleep: environment.sleep } : {}),
       ...(signal ? { signal } : {}),
-      ...(recording ? { events: recording.events } : {}),
+      ...(events ? { events } : recording ? { events: recording.events } : {}),
     })
   }
   const ask = environment.ask ?? ((prompt: string) => readSecret(prompt, { echo: false }))
