@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**472 ✅ · 46 ⛔ · 0 ❌** — 202 commands, 316 options.
+**474 ✅ · 49 ⛔ · 0 ❌** — 206 commands, 317 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -215,6 +215,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations embed clear` | `--dims` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
 | `models audio list` |  | ✅ |  |
 | `models audio download` |  | ✅ |  |
+| `models text list` |  | ✅ |  |
+| `models text download` |  | ✅ |  |
+| `models text download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-messaging's src/cli/messenger/models-command.test.ts drives it offline |
+| `models text key set` |  | ⛔ | writes a provider key into the real keyring; cli-messaging's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
+| `models text key remove` |  | ⛔ | removes a provider key from the real keyring; cli-messaging's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
 | `polls show` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
 | `polls vote` | `--retract` | ✅ |  |

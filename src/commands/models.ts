@@ -1,4 +1,6 @@
+import { modelsCommand as sharedModelsCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
+import { maxMessenger } from "../messenger.js"
 import {
   install,
   installedBytes,
@@ -74,5 +76,9 @@ export const modelsCommand = (): Command => {
       })
     })
 
+  // `text` is the shared one: the embedding models `conversations embed` and `search` use, in the folder tg shares.
+  const text = sharedModelsCommand(maxMessenger).commands.find((child) => child.name() === "text")
+  if (!text) throw new Error("cli-messaging's models group has no text")
+  models.addCommand(text)
   return models
 }

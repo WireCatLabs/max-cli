@@ -1283,6 +1283,62 @@ max models audio download <model>
 |---|---|---|
 | `model` | обязательный | a model id from `max models audio list`. |
 
+### `max models text`
+
+embedding models for searching conversations by meaning
+
+#### `max models text list`
+
+the embedding models, most suitable first, which are downloaded, and which one is the default
+
+```sh
+max models text list
+```
+
+#### `max models text download`
+
+download an embedding model once, checked against the sha256 this version expects
+
+```sh
+max models text download <model> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `model` | обязательный | a model id from `models text list`. |
+
+| Опция | Что делает |
+|---|---|
+| `--accept-terms` | accept the model's licence terms, for a model that has its own. |
+
+#### `max models text key`
+
+the API key of an embedding service, for `conversations embed --provider`
+
+#### `max models text key set`
+
+store a key, typed at a hidden prompt or piped on stdin — never as an argument
+
+```sh
+max models text key set <provider>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `provider` | обязательный | openai, or the host of a --base-url server that wants a key. |
+
+#### `max models text key remove`
+
+forget a stored key
+
+```sh
+max models text key remove <provider>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `provider` | обязательный | openai, or a server's host. |
+
 ## `max polls`
 
 read a poll, vote in it, close your own, create one

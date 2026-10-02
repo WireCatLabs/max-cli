@@ -188,4 +188,20 @@ export const UNTESTED: Untested[] = [
     reason:
       "names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in",
   },
+  {
+    command: "models text download",
+    option: "--accept-terms",
+    reason:
+      "downloads a model over the network after the licence is accepted; cli-messaging's src/cli/messenger/models-command.test.ts drives it offline",
+  },
+  {
+    command: "models text key set",
+    reason:
+      "writes a provider key into the real keyring; cli-messaging's src/cli/messenger/models-command.test.ts drives it with a memory keyring",
+  },
+  {
+    command: "models text key remove",
+    reason:
+      "removes a provider key from the real keyring; cli-messaging's src/cli/messenger/models-command.test.ts drives it with a memory keyring",
+  },
 ]
