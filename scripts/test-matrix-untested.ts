@@ -52,4 +52,140 @@ export const UNTESTED: Untested[] = [
     option: "--online",
     reason: "logs in to MAX and starts `max mcp` as a child; src/online.test.ts covers both steps, live X3",
   },
+  {
+    command: "conversations search",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations search",
+    option: "--model",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations search",
+    option: "--provider",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations search",
+    option: "--base-url",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations search",
+    option: "--dims",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations search",
+    option: "--chat",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations search",
+    option: "--since-time",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations search",
+    option: "--limit",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--chat",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--model",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--provider",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--base-url",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--dims",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--workers",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--threads",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed",
+    option: "--max-tokens",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "conversations embed status",
+    option: "--provider",
+    reason:
+      "names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in",
+  },
+  {
+    command: "conversations embed status",
+    option: "--base-url",
+    reason:
+      "names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in",
+  },
+  {
+    command: "conversations embed status",
+    option: "--dims",
+    reason:
+      "names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in",
+  },
+  {
+    command: "conversations embed clear",
+    option: "--provider",
+    reason:
+      "names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in",
+  },
+  {
+    command: "conversations embed clear",
+    option: "--base-url",
+    reason:
+      "names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in",
+  },
+  {
+    command: "conversations embed clear",
+    option: "--dims",
+    reason:
+      "names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in",
+  },
 ]
