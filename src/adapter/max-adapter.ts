@@ -7,6 +7,7 @@ import type {
   MessageReactions,
   MessengerAdapter,
   ReadState,
+  SendOptions,
   ServerReads,
 } from "@leemour/cli-messaging/cli"
 import type { Upload } from "@leemour/cli-messaging/sends"
@@ -111,7 +112,9 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
         ...(anchor ? { anchor } : {}),
       })),
 
-    send: async (to, text, { sendId, replyTo, silent, noPreview, markup = [], at, attachments = [] }) => {
+    send: async (to, text, options: SendOptions & { threadId?: string }) => {
+      const { sendId, replyTo, silent, noPreview, markup = [], at, attachments = [], threadId } = options
+      if (threadId !== undefined) throw new CliError("validation_error", "MAX does not support forum topic addressing")
       if (noPreview) {
         throw new CliError("validation_error", "MAX's own client has no way to send a link without its preview")
       }
@@ -164,7 +167,13 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
     poll: async (chatId, messageId) => toPoll(await client.polls.show(chatId, messageId)),
     vote: async (chatId, messageId, answerIds) => toPoll(await client.polls.vote(chatId, messageId, answerIds)),
     closePoll: async (chatId, messageId) => toPoll(await client.polls.close(chatId, messageId)),
-    createPoll: async (chatId, { question, answers, multiple, anonymous, revote }, { sendId, silent }) => {
+    createPoll: async (
+      chatId,
+      { question, answers, multiple, anonymous, revote },
+      options: { sendId: string; silent?: boolean; threadId?: string },
+    ) => {
+      const { sendId, silent, threadId } = options
+      if (threadId !== undefined) throw new CliError("validation_error", "MAX does not support forum topic addressing")
       const message = await client.polls.create(chatId, question, answers, {
         multiple,
         anonymous,
