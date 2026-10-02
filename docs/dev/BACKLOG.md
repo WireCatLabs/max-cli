@@ -139,7 +139,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 ## Foundation and risks
 
-- **CLI-60** · P1 · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
+- **CLI-60** · P1 · 🚧 `feat/t6-transcripts-store` (transcripts, approved item 5 step 2) · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
   copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
   and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
   `conversations` (#308). Left: a live check of `messages list --transcribe`, MCP tools, `serve` and
