@@ -24,6 +24,11 @@ export interface MaxBotAdapterOptions {
   timeoutMs?: number
 }
 
+const PAGE = 100
+
+const oldestFirst = (read: Map<string, Message>): Message[] =>
+  [...read.values()].sort((a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp))
+
 const operation = (id: string) => {
   const found = botOperations.find((candidate) => candidate.id === id)
   if (!found) throw new CliError("configuration_error", `the generated manifest has no operation ${id}`)
@@ -330,6 +335,32 @@ export const maxBotAdapter = ({
     },
 
     message: (chat, messageId) => inChat(chat, messageId),
+
+    // MAX answers newest first (`BUG-59`), so this walks back with `before` until a page comes short.
+    historySince: async (chat, since, limit) => {
+      const chatId = chatIdOnly(chat, "a history")
+      if (self === undefined) await me()
+      const read = new Map<string, Message>()
+      let before: number | undefined
+      while (read.size < limit) {
+        const answer = plainJson(
+          await api.call(operation("getMessages"), {
+            query: {
+              chat_id: chatId,
+              count: String(PAGE),
+              after: String(since),
+              ...(before === undefined ? {} : { before: String(before) }),
+            },
+          }),
+        ) as { messages?: unknown[] } | null
+        const page = (answer?.messages ?? []).map((raw) => api.decodeMessage(raw, self))
+        for (const message of page) read.set(message.id, message)
+        const oldest = page.at(-1)
+        if (page.length < PAGE || !oldest) return { messages: oldestFirst(read), more: false }
+        before = Date.parse(oldest.timestamp)
+      }
+      return { messages: oldestFirst(read), more: true }
+    },
 
     admins: async (chat) => {
       const answer = plainJson(

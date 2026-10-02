@@ -58,6 +58,8 @@ export interface RunOptions extends Environment {
   streams?: Streams
   /** Whether a person is looking. Defaults to whether stdout is a terminal. */
   tty?: boolean
+  /** The answer to a shared command's question, in place of a terminal: the bot MCP server's form. */
+  answer?: (question: string) => string | null
 }
 
 export interface ProgramOptions {
@@ -179,6 +181,7 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
     ...(options.tty === undefined ? {} : { tty: options.tty }),
     ...(options.system ? { system: options.system } : {}),
     ...(options.stdin ? { stdin: options.stdin } : {}),
+    ...(options.answer ? { answer: options.answer } : {}),
     ...(recognizer ? { recognizer: (model: SpeechModel) => recognizer(model, modelsDirectory()) } : {}),
   })
   const argvLog = process.env.MAX_TEST_ARGV_LOG

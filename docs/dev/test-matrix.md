@@ -324,15 +324,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot chats members list` | `--limit` | ✅ |  |
 | `bot chats members list` | `--marker` | ✅ |  |
 | `bot chats members add` |  | ✅ |  |
-| `bot chats check` |  | ✅ |  |
-| `bot chats check` | `--since` | ✅ |  |
-| `bot chats check` | `--dry-run` | ✅ |  |
-| `bot chats check` | `--allow-dangerous` | ✅ |  |
-| `bot chats check` | `--no-ban` | ✅ |  |
-| `bot chats check` | `--max-actions` | ✅ |  |
 | `bot chats rules show` |  | ✅ |  |
 | `bot chats rules set` |  | ✅ |  |
 | `bot chats rules unset` |  | ✅ |  |
+| `bot chats moderate` |  | ✅ |  |
+| `bot chats moderate` | `--since-time` | ✅ |  |
+| `bot chats moderate` | `--dry-run` | ✅ |  |
+| `bot chats moderate` | `--allow-dangerous` | ✅ |  |
+| `bot chats moderate` | `--no-ban` | ✅ |  |
+| `bot chats moderate` | `--max-actions` | ✅ |  |
 | `bot messages send` |  | ✅ |  |
 | `bot messages send` | `--reply-to` | ✅ |  |
 | `bot messages send` | `--silent` | ✅ |  |

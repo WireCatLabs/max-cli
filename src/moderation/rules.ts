@@ -9,7 +9,19 @@ export const CONSENT_LEVELS = ["forbid", "flag", "confirm", "allow"] as const
 /** What a rule does with what it finds; nothing but `report` acts until consent lets it. */
 export const RULE_ACTIONS = ["report", "delete", "remove"] as const
 
-const level = v.picklist(CONSENT_LEVELS)
+/**
+ * A bot's rules share this file with the personal profile of its name, and cli-messaging writes
+ * the levels' words (`NEED-462` B), so they are read here as the nearest of max's own.
+ */
+const SHARED_LEVELS: Record<string, (typeof CONSENT_LEVELS)[number]> = {
+  deny: "forbid",
+  readonly: "forbid",
+  ask: "confirm",
+}
+const level = v.pipe(
+  v.picklist([...CONSENT_LEVELS, ...Object.keys(SHARED_LEVELS)]),
+  v.transform((typed) => SHARED_LEVELS[typed] ?? (typed as (typeof CONSENT_LEVELS)[number])),
+)
 const action = v.picklist(RULE_ACTIONS)
 const personIds = v.array(v.pipe(v.string(), v.regex(/^\d+$/, "a person id is digits")))
 const atLeast = (min: number) => v.pipe(v.number(), v.integer(), v.minValue(min))

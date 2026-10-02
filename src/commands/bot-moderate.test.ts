@@ -66,17 +66,17 @@ const bot = async (profile: string, argv: string[]) => {
   })
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
-const rows = (stdout: string) => JSON.parse(stdout).items as { rule: string; action: string; outcome: string }[]
+const rows = (stdout: string) => JSON.parse(stdout).rows as { rule: string; action: string; outcome: string }[]
 const deletes = () => calls.filter((call) => call.startsWith("DELETE"))
 
-describe("max bot chats check", () => {
+describe("max bot chats moderate", () => {
   it("with no rules, only reports, leaves admins alone, and says where joins come from", async () => {
-    const { code, stdout, stderr } = await bot("bc-none", ["chats", "check", "-100", "--json"])
+    const { code, stdout, stderr } = await bot("bc-none", ["chats", "moderate", "-100", "--json"])
 
     expect(code).toBe(0)
     expect(rows(stdout)).toEqual([expect.objectContaining({ rule: "invites", action: "report", outcome: "reported" })])
     expect(stderr).toContain("no rules yet")
-    expect(stderr).toContain("bot updates watch")
+    expect(stderr).toContain("bot watch` to have them judged")
     expect(deletes()).toEqual([])
   })
 
@@ -87,17 +87,17 @@ describe("max bot chats check", () => {
 
     const banned = await bot("bc-act", [
       "chats",
-      "check",
+      "moderate",
       "-100",
-      "--since",
+      "--since-time",
       new Date(now - 3_600_000).toISOString(),
       "--json",
     ])
     const kept = await bot("bc-act", [
       "chats",
-      "check",
+      "moderate",
       "-100",
-      "--since",
+      "--since-time",
       new Date(now - 3_600_000).toISOString(),
       "--no-ban",
       "--json",
@@ -112,12 +112,12 @@ describe("max bot chats check", () => {
     expect(removals[1]).not.toContain("block")
   })
 
-  it("deletes a message at level flag only with --allow-dangerous", async () => {
+  it("deletes a message at level ask only with --allow-dangerous", async () => {
     const rules = new ModerationRules(moderationPathFor("bc-flag"))
     rules.set("-100", null, "invites", "delete")
 
-    const planned = await bot("bc-flag", ["chats", "check", "-100", "--json"])
-    const done = await bot("bc-flag", ["chats", "check", "-100", "--allow-dangerous", "--json"])
+    const planned = await bot("bc-flag", ["chats", "moderate", "-100", "--json"])
+    const done = await bot("bc-flag", ["chats", "moderate", "-100", "--allow-dangerous", "--json"])
 
     expect(rows(planned.stdout)[0]).toMatchObject({ outcome: "planned" })
     expect(rows(done.stdout)[0]).toMatchObject({ outcome: "done" })
@@ -129,7 +129,7 @@ describe("max bot chats check", () => {
 
     const { code, stdout } = await bot("bc-cap", [
       "chats",
-      "check",
+      "moderate",
       "-100",
       "--allow-dangerous",
       "--max-actions",
@@ -149,7 +149,7 @@ describe("max bot chats check", () => {
   })
 
   it("refuses a --max-actions that is not a whole number, before asking MAX", async () => {
-    const { code, stderr } = await bot("bc-cap-bad", ["chats", "check", "-100", "--max-actions", "two", "--json"])
+    const { code, stderr } = await bot("bc-cap-bad", ["chats", "moderate", "-100", "--max-actions", "two", "--json"])
 
     expect(code).toBe(2)
     expect(stderr).toContain("--max-actions")
@@ -160,7 +160,7 @@ describe("max bot chats check", () => {
     new ModerationRules(moderationPathFor("bc-joins")).set("-100", null, "blocked", "55")
     JoinLog.for("bc-joins").add([{ chatId: "-100", userId: "55", name: "Blocked One", event: "add", at: now - 60_000 }])
 
-    const { stdout, stderr } = await bot("bc-joins", ["chats", "check", "-100", "--json"])
+    const { stdout, stderr } = await bot("bc-joins", ["chats", "moderate", "-100", "--json"])
 
     expect(rows(stdout)).toContainEqual(expect.objectContaining({ kind: "member", rule: "blocked", personId: "55" }))
     expect(stderr).not.toContain("no joins kept")

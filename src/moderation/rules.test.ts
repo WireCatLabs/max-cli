@@ -27,6 +27,14 @@ describe("ModerationRules", () => {
     expect(saved.newAccount).toEqual({ days: 7, action: "report" })
   })
 
+  it("reads the levels cli-messaging writes when a bot of the same name changes its rules", () => {
+    const rules = fresh()
+    const consent = { delete: "ask", remove: "deny" }
+    writeFileSync(rules.path, JSON.stringify({ groups: { "-1": { ...defaultRules("Team"), consent } } }))
+
+    expect(rules.read("-1")?.consent).toEqual({ delete: "confirm", remove: "forbid" })
+  })
+
   it("loads a file written when join requests had rules, and drops them on the next write", () => {
     const rules = fresh()
     const old = {

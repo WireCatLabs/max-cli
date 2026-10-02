@@ -4,7 +4,6 @@ import type { Command } from "commander"
 import { PROVIDER } from "../bot/keep.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { asFirstWord } from "../profile.js"
-import { botCheckCommand, botRulesCommand } from "./bot-check.js"
 import { botContext } from "./bot-context.js"
 import { type Across, acrossOptions, addBetween, searchMessages } from "./bot-people.js"
 import { renderList, wholeNumber } from "./paging.js"
@@ -89,8 +88,5 @@ const show = (
 
 /** max's own `bot chats` commands, added to the shared group, which has `list`. */
 export const chatsCommand = (command: Command): Command => {
-  command.addCommand(botCheckCommand())
-  command.addCommand(botRulesCommand())
-
   return command
 }
