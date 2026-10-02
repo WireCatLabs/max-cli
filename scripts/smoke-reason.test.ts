@@ -14,6 +14,12 @@ describe("smokeReason", () => {
     expect(accountState({ payload: { error: "chat.denied" } })).toBe(false)
   })
 
+  it("finds the refusal inside the error MAX's answer is wrapped in", () => {
+    const refused = new Error("MAX refused opcode 16: validate.first_name.invalid_chars")
+    expect(accountState(refused)).toBe(true)
+    expect(smokeReason(refused)).toMatch(/first name.*change it in the MAX app/)
+  })
+
   it("passes any other refusal through", () => {
     expect(smokeReason({ payload: { error: "chat.denied" } })).toBe("chat.denied")
     expect(smokeReason(new Error("timeout"))).toBe("timeout")

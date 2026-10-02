@@ -1,5 +1,5 @@
 /** MAX once took this name from the app and now refuses it back unchanged: the account, not the build. */
-const NAME_REFUSED = /^validate\.(first|last)_name\./
+const NAME_REFUSED = /validate\.(first|last)_name\./
 
 const codeOf = (error: unknown): string => {
   const payload = (error as { payload?: { error?: unknown } }).payload
