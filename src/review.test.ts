@@ -240,6 +240,27 @@ describe("max review", () => {
 })
 
 describe("legacy MCP review while its command moves to shared services", () => {
+  it("restricts legacy MCP review to the requested chat and releases before hearing", async () => {
+    const { environment } = reviewMax({ 111: [message(120, THEM, "selected?")], 222: [message(100, THEM, "other?")] })
+    const session = new MaxSession(contextFor({ profile: "r-legacy-chat" }, environment))
+    try {
+      const result = await session.use("review", (client, release) =>
+        legacyReview(client, {
+          since: now - 200 * 60_000,
+          record: undefined,
+          chatId: "111",
+          transcribeWith: "gigaam-v3",
+          release,
+          progress: () => {},
+        }),
+      )
+      expect(result.chats.map((chat) => chat.id)).toEqual(["111"])
+      expect(result.complete).toBe(true)
+    } finally {
+      await session.close()
+    }
+  })
+
   it("keeps open questions and counts known admins' answers before the boundary", async () => {
     const question = message(100, THEM, "cost?")
     const { environment } = reviewMax(
@@ -249,6 +270,8 @@ describe("legacy MCP review while its command moves to shared services", () => {
           message(170, OTHER, "not sure"),
           question,
           replyTo(question, 90, ADMIN, "free"),
+          replyTo(message(195, ME, "owner post"), 80, THEM, "that clashes"),
+          message(70, OTHER, "not sure"),
           message(30, THEM, "fresh?"),
         ],
         222: [
@@ -271,7 +294,7 @@ describe("legacy MCP review while its command moves to shared services", () => {
         }),
       )
       expect(result.chats.map((chat) => chat.messages.map((message) => message.text))).toEqual([
-        ["open?"],
+        ["open?", "that clashes"],
         ["still open?"],
       ])
       expect(result.chats.map((chat) => chat.answeredBy)).toEqual(["owner-and-admins", "owner"])
