@@ -131,6 +131,23 @@ const file = (name: string, content = "bytes") => {
 }
 
 describe("max bot messages send to a positive number", () => {
+  it("names accepted bot config commands for readOnly and allow, preserving the old allow list", async () => {
+    new BotTokenStore({ profile: "hintbot", keyring }).write(TOKEN)
+    await max(["hintbot", "config", "set", "--bot", "readOnly", "true"])
+    const readonly = await max(["hintbot", "bot", "messages", "edit", "-100", "mid.9", "synthetic", "--json"])
+    expect(readonly.code).toBe(5)
+    const firstHint = JSON.parse(readonly.stderr).error.message.split("to allow it: ")[1] as string
+    expect(firstHint).toBe("max hintbot config set --bot readOnly false")
+    expect((await max(firstHint.split(" ").slice(1))).code).toBe(0)
+    await max(["hintbot", "config", "set", "--bot", "allow", "send,pin"])
+    const denied = await max(["hintbot", "bot", "messages", "edit", "-100", "mid.9", "synthetic", "--json"])
+    expect(denied.code).toBe(5)
+    const hint = JSON.parse(denied.stderr).error.message.split("to allow it: ")[1] as string
+    expect(hint).toBe("max hintbot config set --bot allow send,pin,edit")
+    expect((await max(hint.split(" ").slice(1))).code).toBe(0)
+    expect(writes()).toEqual([])
+  })
+
   it("says the number is probably a person, and keeps MAX's code and exit", async () => {
     const { code, stdout, stderr } = await max(["bot", "messages", "send", "34871122", "hi", "--json"])
     expect(code).toBe(6)

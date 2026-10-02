@@ -1,5 +1,6 @@
 import type { BotMessenger, GlobalFlags, ResolveOptions, RunBotCommand, Settings } from "@leemour/cli-messaging/cli"
-import { fromOldSettings } from "@leemour/cli-messaging/sends"
+import { asFirstWord } from "@leemour/cli-messaging/cli"
+import { fromOldSettings, permissionFor } from "@leemour/cli-messaging/sends"
 import { MAX_APP } from "../app.js"
 import { BOT_ADMIN_RIGHTS, maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
@@ -52,6 +53,12 @@ export const maxBot: BotMessenger = {
   },
   // MAX's message ids do not order a chat; its Bot API pages back by time.
   fetching: { page: 100, pause: "1s", maxPages: 10, orderBy: "time" },
+  permissionFix: (settings, request) => {
+    const config = `max ${asFirstWord(settings.profile)}config set --bot`
+    if (settings.readOnly) return `${config} readOnly false`
+    const permission = permissionFor(request.kind ?? "message", request.action)
+    return `${config} allow ${[...new Set([...(settings.allow ?? []), permission])].join(",")}`
+  },
   chatKindOf: (hit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown",
   joinsSince: (_command, profile, chatId, since) => {
     const log = JoinLog.for(profile)
