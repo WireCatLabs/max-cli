@@ -85,9 +85,8 @@ export const accountCommand = (): Command => {
   annotate(sessions.command("end"), { mutates: true })
     .description("log out every other device, your phone included; this one stays")
     .option("--others", "every session but this one — the only choice MAX offers")
-    .option("--yes", "yes, log the other devices out")
     .action(async function (this: Command) {
-      const { others, yes } = this.opts<{ others?: boolean; yes?: boolean }>()
+      const { others, yes } = this.optsWithGlobals<{ others?: boolean; yes?: boolean }>()
       if (others !== true) {
         throw new CliError("validation_error", "MAX ends only every other session at once — add --others")
       }

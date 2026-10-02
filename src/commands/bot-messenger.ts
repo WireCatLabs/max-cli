@@ -1,15 +1,33 @@
-import type { BotMessenger, GlobalFlags, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
+import type { BotMessenger, GlobalFlags, ResolveOptions, RunBotCommand, Settings } from "@leemour/cli-messaging/cli"
 import { fromOldSettings } from "@leemour/cli-messaging/sends"
 import { MAX_APP } from "../app.js"
 import { BOT_ADMIN_RIGHTS, maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { JoinLog } from "../bot/joins.js"
 import { PROVIDER } from "../bot/keep.js"
+import { MAX_BOT_TOOLS } from "../bot/mcp-tools.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { resolveSettings } from "../config.js"
 import { readSecret } from "../session/prompt.js"
+import { SKILL } from "../skill.js"
 import { botContext } from "./bot-context.js"
-import { environmentOf } from "./context.js"
+import { type Environment, environmentOf } from "./context.js"
+
+/**
+ * max's `run` as the shared bot MCP server calls it; `answer` becomes max's own question. A test
+ * adds its keyring and Bot API stand-in as `extra`.
+ */
+export const botMcpRun = async (extra: Environment = {}): Promise<RunBotCommand> => {
+  // Loaded when the server starts: the program imports this file.
+  const { run } = await import("../program.js")
+  return (argv, { streams, tty, answer }) =>
+    run(argv, {
+      ...extra,
+      streams,
+      tty,
+      ...(answer ? { interactive: true, ask: async (question: string) => answer(question) ?? "n" } : {}),
+    })
+}
 
 /** What the shared `bot` commands need from max: its settings, its Bot API client and its test seams. */
 export const maxBot: BotMessenger = {
@@ -72,4 +90,10 @@ export const maxBot: BotMessenger = {
   registry: (command, profile) => environmentOf(command).botRegistry?.(profile) ?? new ChatRegistry(profile),
   readSecret: (command, prompt) =>
     (environmentOf(command).ask ?? ((text: string) => readSecret(text, { echo: false })))(prompt, { secret: true }),
+  mcp: {
+    // Loaded when the server starts: the program imports this file.
+    program: () => botMcpRun(),
+    tools: MAX_BOT_TOOLS,
+    skill: SKILL,
+  },
 }

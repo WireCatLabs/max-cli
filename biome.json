@@ -105,43 +105,6 @@
       }
     },
     {
-      "includes": ["src/bot-mcp/**"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "patterns": [
-                  {
-                    "group": [
-                      "../protocol/**",
-                      "../../protocol/**",
-                      "../session/**",
-                      "../../session/**",
-                      "../generated/**",
-                      "../../generated/**",
-                      "../spec/**",
-                      "../../spec/**",
-                      "../server/**",
-                      "../../server/**",
-                      "../cache/**",
-                      "../../cache/**",
-                      "../client.js",
-                      "../../client.js",
-                      "../messenger.js",
-                      "../../messenger.js"
-                    ],
-                    "message": "the bot's MCP server talks to the official Bot API through src/bot only; the personal account's protocol, session, spec, server, cache and client stay out of it (ARCHITECTURE §18)"
-                  }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    {
       "includes": ["src/adapter/**", "!**/*.test.ts"],
       "linter": {
         "rules": {
@@ -160,7 +123,6 @@
                       "**/server/**",
                       "**/cache/**",
                       "**/bot/**",
-                      "**/bot-mcp/**",
                       "**/messenger.js"
                     ],
                     "message": "the adapter maps MaxClient onto the shared messenger port; the wire stays behind src/client.ts, and commands, MCP, max serve, the cache and the bot are above or beside it"
@@ -187,7 +149,6 @@
                       "**/mcp/**",
                       "**/cache/**",
                       "**/bot/**",
-                      "**/bot-mcp/**",
                       "**/adapter/**",
                       "**/messenger.js"
                     ],
@@ -214,7 +175,6 @@
                       "**/commands/**",
                       "**/mcp/**",
                       "**/bot/**",
-                      "**/bot-mcp/**",
                       "**/adapter/**",
                       "**/messenger.js",
                       "**/program.js"
@@ -244,8 +204,7 @@
                       "**/generated/**",
                       "**/mcp/**",
                       "**/server/**",
-                      "**/bot/**",
-                      "**/bot-mcp/**"
+                      "**/bot/**"
                     ],
                     "message": "the messenger hands the shared commands a MaxClient through the adapter; it does not reach the wire, MCP, max serve or the bot"
                   }

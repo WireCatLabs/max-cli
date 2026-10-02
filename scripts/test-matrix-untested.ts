@@ -41,12 +41,14 @@ export const UNTESTED: Untested[] = [
         "serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options",
     }),
   ),
-  ...["", "--allow-send", "--confirm-send", "--allow-delete", "--allow-moderate"].map((option) => ({
-    command: "bot mcp",
-    ...(option ? { option } : {}),
-    reason:
-      "serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives createBotServer with the same options",
-  })),
+  ...["", "--allow-send", "--confirm-send", "--allow-dangerous", "--allow-delete", "--allow-moderate"].map(
+    (option) => ({
+      command: "bot mcp",
+      ...(option ? { option } : {}),
+      reason:
+        "serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools",
+    }),
+  ),
   {
     command: "doctor",
     option: "--online",

@@ -29,6 +29,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--json` | machine-readable output: one JSON value on stdout, nothing else. |
 | `--jsonl` | machine-readable output: one JSON object per line, for streaming and jq. |
 | `--quiet` | diagnostics off. |
+| `--yes` | go ahead without the question an ask level puts before a write. |
 | `--trace` | one line per request on stderr: ids and timings, never message content. |
 | `--timeout <duration>` | give up on the whole command after this — 30s, 2m, 500ms. |
 | `--offline` | answer from what was recorded and never connect; fails if nothing was. |
@@ -119,7 +120,6 @@ max account sessions end [options]
 | Опция | Что делает |
 |---|---|
 | `--others` | every session but this one — the only choice MAX offers. |
-| `--yes` | yes, log the other devices out. |
 
 ## `max chats`
 
@@ -1124,7 +1124,7 @@ max conversations show <conversation> [message]
 
 ### `max conversations search`
 
-the conversations nearest in meaning to a query, in one chat or every embedded one — after `conversations embed`; runs on this machine
+the conversations nearest to a query in meaning and in words, best first, in one chat or every one — meaning after `conversations embed`; runs on this machine
 
 ```sh
 max conversations search <query> [options]
@@ -2501,6 +2501,38 @@ max bot webhooks delete <url>
 |---|---|---|
 | `url` | обязательный | the address. |
 
+### `max bot mcp`
+
+serve this bot to an agent over MCP, on stdin and stdout — `claude mcp add sales-bot -- max sales bot mcp`
+
+```sh
+max bot mcp [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--confirm-send` | show the owner every write in a form from the server first. |
+| `--allow-dangerous` | no form before a deletion whose permission level is ask. |
+| `--allow-send` | no longer used — the profile's permissions decide; kept so an old setup still starts. |
+| `--allow-delete` | no longer used — the profile's permissions decide. |
+| `--allow-moderate` | no longer used — the profile's permissions decide. |
+
+#### `max bot mcp config`
+
+print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes nothing
+
+```sh
+max bot mcp config [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--confirm-send` | show the owner every write in a form from the server first. |
+| `--allow-dangerous` | no form before a deletion whose permission level is ask. |
+| `--allow-send` | no longer used — the profile's permissions decide; kept so an old setup still starts. |
+| `--allow-delete` | no longer used — the profile's permissions decide. |
+| `--allow-moderate` | no longer used — the profile's permissions decide. |
+
 ### `max bot me`
 
 the bot this profile's token belongs to: name, id, description, commands
@@ -2640,36 +2672,6 @@ max bot uploads put <file> [options]
 | Опция | Что делает |
 |---|---|
 | `--type <type>` | upload as this kind instead of guessing by extension. Одно из: `image`, `video`, `audio`, `file`. |
-
-### `max bot mcp`
-
-serve this bot to an agent over MCP, on stdin and stdout — `claude mcp add sales-bot -- max sales bot mcp`
-
-```sh
-max bot mcp [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--allow-send` | offer the tools that write as the bot; without it the server can only read. |
-| `--confirm-send` | show the owner every write in a form from the server first. |
-| `--allow-delete` | offer the tools that delete messages and comments; it cannot be undone. |
-| `--allow-moderate` | offer max_bot_chats_check and adding and removing members — the bot acts on a group's rules. |
-
-#### `max bot mcp config`
-
-print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes nothing
-
-```sh
-max bot mcp config [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--allow-send` | offer the tools that write as the bot; without it the server can only read. |
-| `--confirm-send` | show the owner every write in a form from the server first. |
-| `--allow-delete` | offer the tools that delete messages and comments; it cannot be undone. |
-| `--allow-moderate` | offer max_bot_chats_check and adding and removing members — the bot acts on a group's rules. |
 
 ### `max bot api`
 
