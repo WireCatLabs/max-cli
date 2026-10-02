@@ -12,11 +12,11 @@ importers:
         specifier: 0.0.22
         version: 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@leemour/cli-core':
-        specifier: 0.15.0
-        version: 0.15.0(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.16.0
+        version: 0.16.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: 0.111.0
-        version: 0.111.0(@leemour/cli-core@0.15.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.113.0
+        version: 0.113.0(@leemour/cli-core@0.16.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -605,8 +605,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@leemour/cli-core@0.15.0':
-    resolution: {integrity: sha512-rPNvr1NsKQBrGnvOz5q7qjXlDtF70UP8JFSsaThqnC+UpcORIsy1MFV0Xr6lby1MFSyK5UYsQFaAvScfZhEcNA==}
+  '@leemour/cli-core@0.16.0':
+    resolution: {integrity: sha512-MRabtQqZ1UlKXUGP6KM0JDKbP7md2Lbnu9zYil0InMdWxYaPHyByzs0bhn4yCn0AsqfBqCGqmlVqVXRC1QV2Iw==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -621,12 +621,12 @@ packages:
   '@leemour/cli-messaging-sqlite@1.0.0':
     resolution: {integrity: sha512-NFJMG+/2BWIb3JdOMgyV8SFsB7Fuv3wLtUmMt08GZ4KTpgu0WuA7qQmQE6appEgJJuF/97vHj6+AuXw2z3HMHw==}
 
-  '@leemour/cli-messaging@0.111.0':
-    resolution: {integrity: sha512-Qn0hXTke9LcMvp0lNMVovw4+EWgt+ZXrjGLXHvxEATilK+4dyytYTtVDFA9XmQ0weqzKxpnU/Q2YZGnNzAhrlw==}
+  '@leemour/cli-messaging@0.113.0':
+    resolution: {integrity: sha512-NuKuXRXAcSG42WgPcb69orbXWpgPNdgNh7LS4s9ocyhPdMN2naC1COwvZZa3bxyRIDQcqWCV8Uf+p5OY8kNFzA==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
-      '@leemour/cli-core': '>=0.13.0 <0.16.0'
+      '@leemour/cli-core': '>=0.16.0 <0.17.0'
       commander: '>=15'
 
   '@modelcontextprotocol/client@2.1.0':
@@ -2044,9 +2044,10 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@leemour/cli-core@0.15.0(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-core@0.16.0(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       cli-table3: 0.6.5
+      cross-spawn: 7.0.6
       env-paths: 4.0.0
       picocolors: 1.1.1
       pino: 10.3.1
@@ -2063,11 +2064,11 @@ snapshots:
 
   '@leemour/cli-messaging-sqlite@1.0.0': {}
 
-  '@leemour/cli-messaging@0.111.0(@leemour/cli-core@0.15.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-messaging@0.113.0(@leemour/cli-core@0.16.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@huggingface/tokenizers': 0.2.0
-      '@leemour/cli-core': 0.15.0(commander@15.0.0)(typescript@7.0.2)
+      '@leemour/cli-core': 0.16.0(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging-onnx': 1.0.0
       '@leemour/cli-messaging-sqlite': 1.0.0
       '@modelcontextprotocol/server': 2.1.0

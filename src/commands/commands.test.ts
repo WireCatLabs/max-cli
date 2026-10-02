@@ -138,6 +138,7 @@ describe("max commands", () => {
       "recipients clear",
       "config set",
       "config unset",
+      "mcp setup",
       "bot auth set",
       "bot auth remove",
       "bot chats rules set",

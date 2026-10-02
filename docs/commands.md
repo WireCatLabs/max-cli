@@ -1873,6 +1873,45 @@ max mcp config [options]
 | `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone. |
 | `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it. |
 
+### `max mcp setup`
+
+add this profile's local MCP server to Codex or Claude Code
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max mcp setup <client> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `client` | обязательный | codex or claude-code. |
+
+| Опция | Что делает |
+|---|---|
+| `--allow-writes` | acknowledge that this profile offers writing tools. |
+| `--allow-send` | offer the send tool; without it the server can only read. |
+| `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
+| `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it. |
+| `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone. |
+| `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it. |
+
+### `max mcp doctor`
+
+check this profile's local MCP handshake and tool list
+
+```sh
+max mcp doctor [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--allow-send` | offer the send tool; without it the server can only read. |
+| `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
+| `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it. |
+| `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone. |
+| `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it. |
+
 ## `max bot`
 
 a MAX bot, through the official Bot API and a bot token — not your personal account
