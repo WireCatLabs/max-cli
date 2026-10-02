@@ -67,7 +67,7 @@ export const inboxCommand = (): Command =>
             context,
             client,
             read.chats.flatMap((chat) => chat.messages),
-            { transcribe, model, offline: false, cache },
+            { transcribe, model, offline: false },
           )
           const inbox = {
             ...read,

@@ -2,6 +2,7 @@ import { CliError } from "@leemour/cli-core"
 import { Command } from "commander"
 import { openProfileCache } from "../cache/index.js"
 import type { MessageHit, Review } from "../domain/models.js"
+import { maxRecord } from "../record.js"
 import { renderMessages } from "../rendering/messages.js"
 import { REVIEW_DAYS, review, reviewStart, UNANSWERED_HOURS, unansweredHours } from "../review.js"
 import { hearingLine, spoken } from "../transcribe/index.js"
@@ -37,6 +38,7 @@ export const reviewCommand = (): Command =>
 
       await run("review", async (events) => {
         const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const record = maxRecord({ account: () => context.store.readState().viewerId })
         try {
           const since =
             options.since === undefined ? reviewStart() : client.messages.moment(String(options.since), "--since")
@@ -44,7 +46,7 @@ export const reviewCommand = (): Command =>
           const hours = options.unanswered === undefined ? undefined : unansweredHours(options.unanswered)
           const found = await review(client, {
             since,
-            cache,
+            record,
             ...(chatId === undefined ? {} : { chatId }),
             ...(hours === undefined ? {} : { unansweredAfterHours: hours }),
             ...(options.transcribe === true ? { transcribeWith: settings.transcribeModel } : {}),
@@ -72,8 +74,12 @@ export const reviewCommand = (): Command =>
           }
           notes(found, renderer.note.bind(renderer))
         } finally {
-          await client.close()
-          await cache?.close()
+          try {
+            await client.close()
+          } finally {
+            await record.close()
+            await cache?.close()
+          }
         }
       })
     })

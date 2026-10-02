@@ -1,9 +1,10 @@
-import { mkdirSync, mkdtempSync, readFileSync, truncateSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, truncateSync, writeFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { openStore } from "@leemour/cli-messaging/store"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -262,5 +263,41 @@ describe("--model and max messages transcribe", () => {
     expect(code).toBe(0)
     expect(JSON.parse(stdout[0] as string)).toMatchObject({ text: "перезвоню вечером", model: "gigaam-v3" })
     expect(events).toContain("recognized")
+    const store = await openStore()
+    expect(await store.transcript({ provider: "max", account: String(ME) }, "111", String(voice.id))).toEqual({
+      text: "перезвоню вечером",
+      source: "gigaam-v3",
+    })
+    await store.close()
+    expect(existsSync(join(process.env.MAX_CACHE_DIR ?? "", "h-one.db"))).toBe(false)
+
+    const reused = await max(["h-one-list", "messages", "list", "111", "--json"], environment)
+    expect(reused.code).toBe(0)
+    expect(JSON.parse(reused.stdout[0] as string).items[0].transcript).toBe("перезвоню вечером")
+    expect(events.filter((event) => event === "recognized")).toHaveLength(1)
+  })
+
+  it("answers a saved direct transcript without an installed model or MAX login", async () => {
+    const voice = wire(10, THEM, "", true)
+    const { environment, events, max: mock } = setup([voice])
+    const store = await openStore()
+    await store.keepTranscript(
+      { provider: "max", account: String(ME) },
+      "111",
+      String(voice.id),
+      "kept words",
+      "parakeet-v3",
+    )
+    await store.close()
+
+    const answer = await max(
+      ["h-one-kept", "messages", "transcribe", "111", String(voice.id), "--model", "parakeet-v3", "--json"],
+      environment,
+    )
+
+    expect(answer.code).toBe(0)
+    expect(JSON.parse(answer.stdout[0] as string)).toMatchObject({ text: "kept words", cached: true })
+    expect(mock.sent).toEqual([])
+    expect(events).not.toContain("recognized")
   })
 })

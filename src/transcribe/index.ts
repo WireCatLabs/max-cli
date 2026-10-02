@@ -1,8 +1,8 @@
 import { CliError } from "@leemour/cli-core"
-import type { CacheStore } from "../cache/index.js"
 import type { MaxClient } from "../client.js"
 import type { AttachmentLink, Id, Message } from "../domain/models.js"
 import { fetchBytes, LARGEST_VOICE } from "../download.js"
+import type { MaxRecord } from "../record.js"
 import { installedBytes, isInstalled, megabytes, modelPath, vadPath } from "./install.js"
 import { MODELS, type SpeechModel, VAD } from "./models.js"
 import { decodeOgg, openRecognizer, type Recognizer, toModelRate } from "./speech.js"
@@ -20,7 +20,7 @@ export interface Transcript {
 export interface TranscribeOptions {
   model: SpeechModel
   directory: string
-  cache?: CacheStore | undefined
+  record?: Pick<MaxRecord, "transcript" | "keepTranscript"> | undefined
   /** Called once the audio is in hand, so the connection closes before the long part begins. */
   release?: () => Promise<void>
   fetchAudio?: (link: AttachmentLink) => Promise<Uint8Array>
@@ -73,7 +73,7 @@ const hear = async (bytes: Uint8Array, recognizer: Recognizer): Promise<{ text: 
 
 /**
  * One voice message to text, on this machine. A text already heard by the same model comes from
- * the cache, with no connection and no model loaded.
+ * the shared store, with no connection and no model loaded.
  *
  * ⚠ **The model is never downloaded from here** (`NEED-231`): an agent calling this through MCP must
  * not start a 230–670 MB download. The refusal names the command that does it.
@@ -82,10 +82,10 @@ export const transcribe = async (
   client: MaxClient,
   chatId: Id,
   messageId: Id,
-  { model, directory, cache, release, fetchAudio = fetchBytes, open = openInstalled }: TranscribeOptions,
+  { model, directory, record, release, fetchAudio = fetchBytes, open = openInstalled }: TranscribeOptions,
 ): Promise<Transcript> => {
-  const kept = await cache?.messages.transcript(chatId, messageId)
-  if (kept && kept.model === model.id) {
+  const kept = await record?.transcript(chatId, messageId)
+  if (kept && kept.source === model.id) {
     return { chatId, messageId, text: kept.text, model: model.id, seconds: null, cached: true }
   }
 
@@ -96,7 +96,7 @@ export const transcribe = async (
   const recognizer = open(model, directory)
   try {
     const { text, seconds } = await hear(bytes, recognizer)
-    await cache?.messages.keepTranscript(chatId, messageId, text, model.id)
+    await record?.keepTranscript(chatId, messageId, text, model.id)
     return { chatId, messageId, text, model: model.id, seconds, cached: false }
   } finally {
     recognizer.free()
@@ -134,7 +134,7 @@ export interface HearAllOptions extends Omit<TranscribeOptions, "model"> {
 export const hearAll = async (
   client: MaxClient,
   voices: readonly Voice[],
-  { model, directory, cache, release, fetchAudio = fetchBytes, open = openInstalled, progress }: HearAllOptions,
+  { model, directory, record, release, fetchAudio = fetchBytes, open = openInstalled, progress }: HearAllOptions,
 ): Promise<Heard> => {
   const transcripts = new Map<string, string>()
   const unheard: Voice[] = []
@@ -146,7 +146,7 @@ export const hearAll = async (
 
   const needed: Voice[] = []
   for (const voice of voices) {
-    const kept = await cache?.messages.transcript(voice.chatId, voice.messageId)
+    const kept = await record?.transcript(voice.chatId, voice.messageId)
     if (kept) transcripts.set(voiceKey(voice), kept.text)
     else needed.push(voice)
   }
@@ -171,7 +171,7 @@ export const hearAll = async (
       for (const { voice, bytes } of fetched) {
         try {
           const { text } = await hear(bytes, recognizer)
-          await cache?.messages.keepTranscript(voice.chatId, voice.messageId, text, model.id)
+          await record?.keepTranscript(voice.chatId, voice.messageId, text, model.id)
           transcripts.set(voiceKey(voice), text)
         } catch (error) {
           failed(voice, error)

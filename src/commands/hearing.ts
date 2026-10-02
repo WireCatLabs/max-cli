@@ -1,6 +1,6 @@
-import type { CacheStore } from "../cache/index.js"
 import type { MaxClient } from "../client.js"
 import type { Message } from "../domain/models.js"
+import { maxRecord } from "../record.js"
 import { type Heard, hearAll, hearingLine, isVoice } from "../transcribe/index.js"
 import { modelsDirectory } from "../transcribe/install.js"
 import { speechModel } from "../transcribe/models.js"
@@ -10,7 +10,6 @@ export interface HearingRequest {
   transcribe: boolean
   model: string
   offline: boolean
-  cache: CacheStore | undefined
 }
 
 /** `--transcribe` and `--model`, spelled once for every command that shows messages. */
@@ -31,26 +30,31 @@ export const hearMessages = async (
   context: CommandContext,
   client: MaxClient,
   messages: readonly Message[],
-  { transcribe, model, offline, cache }: HearingRequest,
+  { transcribe, model, offline }: HearingRequest,
 ): Promise<Heard> => {
   const note = (line: string) => context.renderer.note(line)
   if (transcribe && offline) note("--offline: only voice messages heard before show their text")
-  const heard = await hearAll(
-    client,
-    messages.filter(isVoice).map((message) => ({ chatId: message.chatId, messageId: message.id })),
-    {
-      model: transcribe && !offline ? speechModel(model) : undefined,
-      directory: modelsDirectory(),
-      cache,
-      release: () => client.close(),
-      progress: (count) => note(hearingLine(count, model)),
-      ...context.hearing,
-    },
-  )
-  if (!transcribe) return heard
-  if (heard.problem) note(`not transcribed: ${heard.problem}`)
-  else if (heard.unheard.length > 0) note(`${heard.unheard.length} voice message(s) not heard`)
-  return heard
+  const record = maxRecord({ account: () => context.store.readState().viewerId })
+  try {
+    const heard = await hearAll(
+      client,
+      messages.filter(isVoice).map((message) => ({ chatId: message.chatId, messageId: message.id })),
+      {
+        model: transcribe && !offline ? speechModel(model) : undefined,
+        directory: modelsDirectory(),
+        record,
+        release: () => client.close(),
+        progress: (count) => note(hearingLine(count, model)),
+        ...context.hearing,
+      },
+    )
+    if (!transcribe) return heard
+    if (heard.problem) note(`not transcribed: ${heard.problem}`)
+    else if (heard.unheard.length > 0) note(`${heard.unheard.length} voice message(s) not heard`)
+    return heard
+  } finally {
+    await record.close()
+  }
 }
 
 /** What `--json` adds when `--transcribe` was asked for. */

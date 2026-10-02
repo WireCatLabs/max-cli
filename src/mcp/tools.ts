@@ -12,7 +12,6 @@ import {
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
 import { maxAdapter } from "../adapter/max-adapter.js"
-import { openProfileCache } from "../cache/index.js"
 import { ADMIN_RIGHTS, type AdminRight, DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
 import { hearingFields } from "../commands/hearing.js"
 import { listed } from "../commands/paging.js"
@@ -32,6 +31,7 @@ import {
   sessionPoints,
 } from "../moderation/check.js"
 import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
+import { maxRecord } from "../record.js"
 import { REVIEW_DAYS, review, reviewStart } from "../review.js"
 import type { SessionStore } from "../session/store.js"
 import { type Heard, hearAll, isVoice, transcribe, withTranscript } from "../transcribe/index.js"
@@ -120,20 +120,20 @@ const heardIn = async (
   client: MaxClient,
   messages: readonly Message[],
   transcribe: boolean,
-  { profile, transcribeModel, release }: Defaults,
+  { store, transcribeModel, release }: Defaults,
 ): Promise<Heard> => {
   const voices = messages.filter(isVoice).map((message) => ({ chatId: message.chatId, messageId: message.id }))
   if (voices.length === 0) return { transcripts: new Map(), unheard: [] }
-  const cache = await openProfileCache(profile)
+  const record = maxRecord({ account: () => store.readState().viewerId })
   try {
     return await hearAll(client, voices, {
       model: transcribe ? speechModel(transcribeModel) : undefined,
       directory: modelsDirectory(),
-      cache,
+      record,
       release,
     })
   } finally {
-    await cache?.close()
+    await record.close()
   }
 }
 
@@ -240,21 +240,21 @@ const READ_TOOLS = {
       ),
     }),
     annotations: READ,
-    answer: async (client, args, { profile, transcribeModel, release }) => {
+    answer: async (client, args, { store, transcribeModel, release }) => {
       const since = args.since === undefined ? reviewStart() : client.messages.moment(args.since, "since")
       const chatId = args.chat === undefined ? undefined : await client.chats.resolve(args.chat)
-      const cache = await openProfileCache(profile)
+      const record = maxRecord({ account: () => store.readState().viewerId })
       try {
         return await review(client, {
           since,
-          cache,
+          record,
           ...(chatId === undefined ? {} : { chatId }),
           ...(args.unanswered_after_hours === undefined ? {} : { unansweredAfterHours: args.unanswered_after_hours }),
           ...(args.transcribe === true ? { transcribeWith: transcribeModel } : {}),
           release,
         })
       } finally {
-        await cache?.close()
+        await record.close()
       }
     },
   }),
@@ -465,16 +465,16 @@ const READ_TOOLS = {
       "the model is not downloaded: the owner runs `max models audio download <id>` in a terminal.",
     input: v.object({ chat, message }),
     annotations: READ,
-    answer: async (client, args, { profile, transcribeModel, release }) => {
+    answer: async (client, args, { store, transcribeModel, release }) => {
       const model = speechModel(transcribeModel)
       const directory = modelsDirectory()
       const chatId = await client.chats.resolve(args.chat)
       // Its own handle: `release` closes the session's, and the text is saved after that.
-      const cache = await openProfileCache(profile)
+      const record = maxRecord({ account: () => store.readState().viewerId })
       try {
-        return await transcribe(client, chatId, args.message, { model, directory, cache, release })
+        return await transcribe(client, chatId, args.message, { model, directory, record, release })
       } finally {
-        await cache?.close()
+        await record.close()
       }
     },
   }),

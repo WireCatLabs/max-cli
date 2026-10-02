@@ -1,4 +1,4 @@
-import { mkdtempSync } from "node:fs"
+import { existsSync, mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@leemour/cli-core"
@@ -54,6 +54,20 @@ const setUp = () => {
 }
 
 describe("the record", () => {
+  it("opens transcript storage only once the account is known, and keeps it after login", async () => {
+    const { env } = setUp()
+    let account: string | undefined
+    const record = maxRecord({ account: () => account, env })
+
+    expect(await record.transcript("111", "2")).toBeUndefined()
+    expect(existsSync(env.MESSAGING_STORE)).toBe(false)
+    await expect(record.keepTranscript("111", "2", "words", "tiny")).rejects.toThrow(/account is known/)
+    account = ME
+    await record.keepTranscript("111", "2", "words", "tiny")
+    expect(await record.transcript("111", "2")).toEqual({ text: "words", source: "tiny" })
+    await record.close()
+  })
+
   it("keeps the login's chats, people, members and marker in messages.db, under this account only", async () => {
     const { env, loginOnce } = setUp()
 
