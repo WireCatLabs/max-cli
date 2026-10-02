@@ -13,6 +13,9 @@
 
 ### Изменено — может сломать скрипты
 
+- **`max <бот> bot people show` теперь `max <бот> bot contacts show`**, инструмент MCP —
+  `max_bot_contacts_show`. Вместе с `bot messages search|between` команды общие с `tg`; опции и ответы
+  прежние.
 - **`max <бот> bot chats check` теперь `max <бот> bot chats moderate`** — имя и команда общие с
   `tg`. `--since` теперь `--since-time` (ещё принимает `2h`, `1d`); ответ `--json` — `{ chatId, rows }`
   вместо списка; инструмент MCP — `max_bot_chats_moderate`. Правила и точка прошлой проверки остались в

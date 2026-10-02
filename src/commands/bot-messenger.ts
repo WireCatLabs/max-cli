@@ -5,6 +5,7 @@ import { BOT_ADMIN_RIGHTS, maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { JoinLog } from "../bot/joins.js"
 import { PROVIDER } from "../bot/keep.js"
+import { KINDS } from "../bot/map.js"
 import { MAX_BOT_TOOLS } from "../bot/mcp-tools.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { resolveSettings } from "../config.js"
@@ -49,6 +50,7 @@ export const maxBot: BotMessenger = {
       ),
     )
   },
+  chatKindOf: (hit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown",
   joinsSince: (_command, profile, chatId, since) => {
     const log = JoinLog.for(profile)
     if (!log.kept()) return undefined

@@ -384,6 +384,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot webhooks set` | `--secret-stdin` | ✅ |  |
 | `bot webhooks set` | `--add` | ✅ |  |
 | `bot webhooks delete` |  | ✅ |  |
+| `bot contacts show` |  | ✅ |  |
+| `bot contacts show` | `--all-bots` | ✅ |  |
+| `bot contacts show` | `--bots` | ✅ |  |
+| `bot contacts show` | `--limit` | ✅ |  |
+| `bot contacts show` | `--refresh` | ✅ |  |
 | `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
 | `bot mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
 | `bot mcp` | `--allow-dangerous` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
@@ -397,11 +402,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot mcp config` | `--allow-delete` | ✅ |  |
 | `bot mcp config` | `--allow-moderate` | ✅ |  |
 | `bot me` |  | ✅ |  |
-| `bot people show` |  | ✅ |  |
-| `bot people show` | `--all-bots` | ✅ |  |
-| `bot people show` | `--bots` | ✅ |  |
-| `bot people show` | `--limit` | ✅ |  |
-| `bot people show` | `--refresh` | ✅ |  |
 | `bot comments list` |  | ✅ |  |
 | `bot comments list` | `--limit` | ✅ |  |
 | `bot comments get` |  | ✅ |  |

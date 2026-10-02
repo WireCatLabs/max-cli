@@ -100,9 +100,9 @@ beforeEach(() => {
   requests.length = 0
 })
 
-describe("max bot people show", () => {
+describe("max bot contacts show", () => {
   it("shows a person by @username: the chats they wrote in and their private chat, from the local copy", async () => {
-    const card = await json(["first", "bot", "people", "show", "@ann"])
+    const card = await json(["first", "bot", "contacts", "show", "@ann"])
     expect(card).toMatchObject({ id: "42", name: "Ann", username: "ann" })
     expect(card.chats.map((chat: { id: string; kind: string }) => [chat.id, chat.kind])).toEqual([
       ["-100", "group"],
@@ -113,30 +113,30 @@ describe("max bot people show", () => {
   })
 
   it("looks through every bot on this machine with --all-bots", async () => {
-    const card = await json(["first", "bot", "people", "show", "42", "--all-bots"])
+    const card = await json(["first", "bot", "contacts", "show", "42", "--all-bots"])
     expect(card.chats.map((chat: { id: string }) => chat.id).toSorted()).toEqual(["-100", "-200", "-300", "500"])
   })
 
   it("does not show one bot a person only another bot has seen, unless asked with --all-bots", async () => {
-    const alone = await max(["second", "bot", "people", "show", "44", "--json"])
+    const alone = await max(["second", "bot", "contacts", "show", "44", "--json"])
     expect(alone.code).not.toBe(0)
     expect(alone.stdout).toBe("")
 
-    const everywhere = await json(["second", "bot", "people", "show", "44", "--all-bots"])
+    const everywhere = await json(["second", "bot", "contacts", "show", "44", "--all-bots"])
     expect(everywhere).toMatchObject({ id: "44", name: "Anna" })
   })
 
   it("refuses to read another bot's copy unless readOtherBots allows it, and names the setting", async () => {
-    const { code, stderr } = await max(["third", "bot", "people", "show", "44", "--all-bots", "--json"])
+    const { code, stderr } = await max(["third", "bot", "contacts", "show", "44", "--all-bots", "--json"])
     expect(code).toBe(5)
     expect(JSON.parse(stderr).error.message).toContain("config set --bot readOtherBots")
   })
 
   it("reads only the bots on the readOtherBots list, and refuses one that is not", async () => {
-    const card = await json(["second", "bot", "people", "show", "44", "--bots", "first"])
+    const card = await json(["second", "bot", "contacts", "show", "44", "--bots", "first"])
     expect(card).toMatchObject({ id: "44", name: "Anna" })
 
-    const { code, stderr } = await max(["second", "bot", "people", "show", "44", "--bots", "third", "--json"])
+    const { code, stderr } = await max(["second", "bot", "contacts", "show", "44", "--bots", "third", "--json"])
     expect(code).toBe(5)
     expect(JSON.parse(stderr).error.message).toContain("not third")
   })
@@ -155,7 +155,7 @@ describe("max bot people show", () => {
 
   it("prints for a person without letting a message's escape codes reach the terminal", async () => {
     const streams = captureStreams()
-    const code = await run(["first", "bot", "people", "show", "42", "--all-bots"], {
+    const code = await run(["first", "bot", "contacts", "show", "42", "--all-bots"], {
       streams,
       tty: true,
       botStore: (profile) => new BotTokenStore({ profile, keyring }),
@@ -169,20 +169,20 @@ describe("max bot people show", () => {
   })
 
   it("refuses a name that matches two people, and lists them", async () => {
-    const { code, stderr } = await max(["first", "bot", "people", "show", "An", "--json"])
+    const { code, stderr } = await max(["first", "bot", "contacts", "show", "An", "--json"])
     expect(code).not.toBe(0)
     expect(stderr).toContain("42")
     expect(stderr).toContain("44")
   })
 
   it("keeps only the latest --limit messages of the private chat", async () => {
-    const card = await json(["first", "bot", "people", "show", "@ann", "--limit", "1"])
+    const card = await json(["first", "bot", "contacts", "show", "@ann", "--limit", "1"])
     expect(card.messages.map((message: { text: string }) => message.text)).toEqual(["hello Ann \u001b[2J"])
     expect(requests).toEqual([])
   })
 
   it("re-reads the private chat from MAX with --refresh, in exactly one request", async () => {
-    await json(["first", "bot", "people", "show", "@ann", "--refresh"])
+    await json(["first", "bot", "contacts", "show", "@ann", "--refresh"])
     expect(requests).toEqual(["GET /messages?chat_id=500&count=20"])
   })
 })

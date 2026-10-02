@@ -188,8 +188,8 @@ max sales bot messages search "итоги недели"
 подходят двое, `max` покажет обоих и попросит номер.
 
 ```sh
-max sales bot people show @ann                   # где писала, и её личный чат с ботом
-max sales bot people show @ann --refresh         # сначала перечитать личный чат у MAX
+max sales bot contacts show @ann                 # где писала, и её личный чат с ботом
+max sales bot contacts show @ann --refresh       # сначала перечитать личный чат у MAX
 max sales bot messages search --from @ann        # всё, что она написала
 max sales bot messages search "счёт" --from @ann --from Борис
 max sales bot messages between @ann Борис --limit 20
@@ -206,10 +206,10 @@ max sales bot messages between @ann Борис --limit 20
 max shop config set --bot readOtherBots true          # боту shop можно читать всех ботов
 max shop config set --bot readOtherBots news,support  # или только этих
 max shop bot messages search заказ --bots news        # и тогда — явно, в команде
-max shop bot people show @ann --all-bots              # все, кого разрешено
+max shop bot contacts show @ann --all-bots            # все, кого разрешено
 ```
 
-`--all-bots` и `--bots` есть у `messages search`, `people show` и `messages between`. Без
+`--all-bots` и `--bots` есть у `messages search`, `contacts show` и `messages between`. Без
 `readOtherBots` оба отказывают с кодом `5` и называют команду, которая разрешает. Агенту через
 `max <имя> bot mcp` те же поля (`all_bots`, `bots`) предлагаются, только когда это разрешено.
 
