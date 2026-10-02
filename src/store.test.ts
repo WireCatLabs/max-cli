@@ -229,6 +229,16 @@ describe("max conversations", () => {
     expect(JSON.parse(status.stdout)).toMatchObject({ chat: "111", messages: 70, batches: 7 })
     expect(JSON.parse(stored.stdout)).toEqual({ chat: "111", stored: 1 })
     expect(JSON.parse(cleared.stdout)).toMatchObject({ chat: "111", cleared: 1 })
+    const embedded = await max(
+      ["c-batch", "conversations", "embed", "status", "--chat", "111", "--model", "e5-small", "--json"],
+      environment,
+    )
+    const dropped = await max(
+      ["c-batch", "conversations", "embed", "clear", "--chat", "111", "--model", "e5-small", "--json"],
+      environment,
+    )
+    expect(JSON.parse(embedded.stdout)).toMatchObject({ embedded: 0 })
+    expect(JSON.parse(dropped.stdout)).toMatchObject({ cleared: 0 })
     expect(logins()).toBe(before)
   })
 })

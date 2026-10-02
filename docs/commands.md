@@ -698,7 +698,7 @@ max messages search <query> [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
-| `--source <messenger>` | every account of this messenger held in the store, or all of them — the same as in: in the query. |
+| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many. |
 | `--newest` | newest first instead of best first. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
@@ -1122,6 +1122,28 @@ max conversations show <conversation> [message]
 | `conversation` | обязательный | a conversation id from `conversations list`; or a chat: its id, or part of its title, with a message. |
 | `message` | необязательный | a message id in that chat: show the conversation it is in. |
 
+### `max conversations search`
+
+the conversations nearest in meaning to a query, in one chat or every embedded one — after `conversations embed`; runs on this machine
+
+```sh
+max conversations search <query> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | обязательный | what to look for, in your own words, in any language the model reads. |
+
+| Опция | Что делает |
+|---|---|
+| `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
+| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
+| `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+| `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
+| `--since-time <time>` | only those still going at this ISO 8601 time, or 30m / 2h / 1d ago, or later. |
+| `--limit <n>` | how many. |
+
 ### `max conversations batches`
 
 windows of a chat for your own AI agent to link: which earlier message each one answers
@@ -1180,6 +1202,58 @@ max conversations links clear [options]
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--model <model>` | only the answers this model gave. |
+
+### `max conversations embed`
+
+compute a vector for each chunk of a chat's conversations for search by meaning — on this machine, or with --provider through a service and your key; resumes where it stopped
+
+```sh
+max conversations embed [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
+| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
+| `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+| `--workers <n>` | local: sessions in parallel, each with its own copy of the model (\~0.7 GB each). |
+| `--threads <n>` | local: threads in all (default: min(8, cores)). |
+| `--concurrency <n>` | remote: requests at once (default: 4). |
+| `--max-tokens <n>` | remote: stop before a run that could send more tokens than this. |
+
+#### `max conversations embed status`
+
+how many chunks of a chat have a vector of the model, how many are left, and what is left costs
+
+```sh
+max conversations embed status [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
+| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
+| `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+
+#### `max conversations embed clear`
+
+drop a chat's vectors, or only one model's; messages and conversations are never touched
+
+```sh
+max conversations embed clear [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
+| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
+| `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 
 ## `max models`
 
