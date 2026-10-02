@@ -144,8 +144,9 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
   `conversations` (#308). Left: a live check of `messages list --transcribe`, MCP tools, `serve` and
   transcription off the old cache and `src/cache/` deleted, `inbox`/`review`, the admin commands, max's
-  half of the permission levels, and the `models` group: max mounts its own, with `audio` only, so
-  `conversations embed` tells the user to run `max models text download`, which max does not have. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
+  half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
+  `conversations embed` tells the user to run `max models text download`, which max does not have~~.
+  **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
 - **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
   poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
   Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
