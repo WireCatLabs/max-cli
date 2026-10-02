@@ -139,7 +139,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 ## Foundation and risks
 
-- **CLI-60** · P1 · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
+- **CLI-60** · P1 · 🚧 `feat/t6-store-doctor` · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
   copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
   and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
   `conversations` (#308), transcripts into the shared store (item 5 step 2), `inbox`/`review` (step 3), MCP reads (step 4). Left: a live check of
