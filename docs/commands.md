@@ -2522,7 +2522,31 @@ max bot contacts show <who> [options]
 | `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
 | `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
 | `--limit <n>` | how many messages from the private chat. |
-| `--refresh` | read the private chat with them from MAX first — one request. |
+| `--refresh` | read the private chat with them again from the messenger first — one request. |
+
+### `max bot store`
+
+the bot's local copy on this machine
+
+#### `max bot store fetch`
+
+fetch a chat's history into the bot's local copy, newest first; run it again to continue
+
+```sh
+max bot store fetch <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | at most this many messages in this run; 1000 if not given. |
+| `--page-size <n>` | how many messages one request asks for; 100 if not given. |
+| `--pause <duration>` | pause between pages, to stay under the messenger's limits. По умолчанию: `1s`. |
+| `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
+| `--last <n>` | stop once the newest n messages are held. |
 
 ### `max bot mcp`
 

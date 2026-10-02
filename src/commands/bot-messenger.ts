@@ -50,6 +50,8 @@ export const maxBot: BotMessenger = {
       ),
     )
   },
+  // MAX's message ids do not order a chat; its Bot API pages back by time.
+  fetching: { page: 100, pause: "1s", maxPages: 10, orderBy: "time" },
   chatKindOf: (hit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown",
   joinsSince: (_command, profile, chatId, since) => {
     const log = JoinLog.for(profile)
