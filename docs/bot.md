@@ -240,8 +240,8 @@ max sales bot watch --types message_created,message_edited
 ```sh
 max sales bot chats rules set -72894839451 invites remove        # приглашения в чужие чаты — удалять автора
 max sales bot chats rules set -72894839451 consent.remove allow  # без вопросов
-max sales bot chats check -72894839451                           # проверить, что нового
-max sales bot chats check -72894839451 --dry-run                 # только показать
+max sales bot chats moderate -72894839451                        # проверить, что нового
+max sales bot chats moderate -72894839451 --dry-run              # только показать
 ```
 
 Проверка смотрит сообщения с прошлой проверки (в первый раз — за сутки) и тех, кто вступил, и
@@ -403,7 +403,7 @@ max sales bot mcp config          # запись для Claude Desktop, Cursor �
 люди, участники и админы, комментарии, меню команд, журнал и список получателей — и, если профиль
 не только для чтения, запись от имени бота: отправка, правка, закрепление, «печатает», комментарии,
 ответы на кнопки, удаление, добавление и удаление участников, проверка чата по правилам
-(`max_bot_chats_check`). `max_bot_status` показывает, за какой профиль говорит сервер, откуда токен,
+(`max_bot_chats_moderate`). `max_bot_status` показывает, за какой профиль говорит сервер, откуда токен,
 чей это бот и какие пишущие инструменты включены.
 
 - `readOnly: true` у профиля бота — агент только читает;

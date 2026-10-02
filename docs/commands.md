@@ -2080,28 +2080,6 @@ max bot chats members add <chat> <users>
 | `chat` | обязательный |  |
 | `users` | обязательный |  |
 
-#### `max bot chats check`
-
-judge a group's new messages and joins by its rules, and act as they allow — as the bot
-
-**Меняет что-то в MAX.**
-
-```sh
-max bot chats check <chat> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный | chat id, or the title of a chat this bot has seen. |
-
-| Опция | Что делает |
-|---|---|
-| `--since <time>` | judge what came after this ISO 8601 time; the saved point stays. |
-| `--dry-run` | judge and plan; do nothing. |
-| `--allow-dangerous` | do what a rule at consent level flag asks: delete messages, remove people. |
-| `--no-ban` | remove without banning; by default a removed person cannot come back by the link. |
-| `--max-actions <n>` | at most this many actions in one check; 10 if not given. |
-
 #### `max bot chats rules`
 
 a chat's moderation rules for this bot, kept on this machine
@@ -2116,7 +2094,7 @@ max bot chats rules show <chat>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
+| `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
 
 #### `max bot chats rules set`
 
@@ -2130,9 +2108,9 @@ max bot chats rules set <chat> <key> <value>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
-| `key` | обязательный |  |
-| `value` | обязательный |  |
+| `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
+| `key` | обязательный | the rule. |
+| `value` | обязательный | its new value. |
 
 #### `max bot chats rules unset`
 
@@ -2146,8 +2124,30 @@ max bot chats rules unset <chat> <key>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный |  |
-| `key` | обязательный |  |
+| `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
+| `key` | обязательный | the rule. |
+
+#### `max bot chats moderate`
+
+judge a group's new messages and joins by its rules, and act as they allow — as the bot
+
+**Меняет что-то в MAX.**
+
+```sh
+max bot chats moderate <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
+
+| Опция | Что делает |
+|---|---|
+| `--since-time <time>` | judge what came after this ISO 8601 time, or 2h / 1d ago; the saved point stays. |
+| `--dry-run` | judge and plan; do nothing. |
+| `--allow-dangerous` | yes to every action whose level in the group's rules is ask. |
+| `--no-ban` | remove without banning; by default a removed person cannot come back by the link. |
+| `--max-actions <n>` | at most this many actions in one run; 10 if not given. |
 
 ### `max bot messages`
 

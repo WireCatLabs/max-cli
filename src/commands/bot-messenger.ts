@@ -14,19 +14,13 @@ import { botContext } from "./bot-context.js"
 import { type Environment, environmentOf } from "./context.js"
 
 /**
- * max's `run` as the shared bot MCP server calls it; `answer` becomes max's own question. A test
- * adds its keyring and Bot API stand-in as `extra`.
+ * max's `run` as the shared bot MCP server calls it. A test adds its keyring and Bot API stand-in as
+ * `extra`.
  */
 export const botMcpRun = async (extra: Environment = {}): Promise<RunBotCommand> => {
   // Loaded when the server starts: the program imports this file.
   const { run } = await import("../program.js")
-  return (argv, { streams, tty, answer }) =>
-    run(argv, {
-      ...extra,
-      streams,
-      tty,
-      ...(answer ? { interactive: true, ask: async (question: string) => answer(question) ?? "n" } : {}),
-    })
+  return (argv, { streams, tty, answer }) => run(argv, { ...extra, streams, tty, ...(answer ? { answer } : {}) })
 }
 
 /** What the shared `bot` commands need from max: its settings, its Bot API client and its test seams. */
@@ -54,6 +48,14 @@ export const maxBot: BotMessenger = {
           : [],
       ),
     )
+  },
+  joinsSince: (_command, profile, chatId, since) => {
+    const log = JoinLog.for(profile)
+    if (!log.kept()) return undefined
+    return log
+      .read()
+      .filter((entry) => entry.chatId === chatId && entry.event === "add" && entry.at >= since)
+      .map((entry) => ({ id: entry.userId, name: entry.name, username: null, registeredAt: null, lastSeenAt: null }))
   },
   resolveSettings: (flags: GlobalFlags, options: ResolveOptions = {}): Settings => {
     const { profile, offline, ...rest } = flags

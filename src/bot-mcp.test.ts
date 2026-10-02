@@ -157,7 +157,7 @@ describe("max bot mcp", () => {
     const all = await names((await connect()).client)
     expect(all).toHaveLength(29)
     expect(all).toEqual(
-      expect.arrayContaining(["max_bot_messages_send", "max_bot_chats_check", "max_bot_comments_delete"]),
+      expect.arrayContaining(["max_bot_messages_send", "max_bot_chats_moderate", "max_bot_comments_delete"]),
     )
     expect(all.some((name) => /recipients_(add|remove|clear)|webhooks|auth|api|uploads|_mcp/.test(name))).toBe(false)
   })
@@ -280,7 +280,7 @@ describe("max bot mcp", () => {
     })
   })
 
-  describe("max_bot_chats_check", () => {
+  describe("max_bot_chats_moderate", () => {
     const confirmDeletes = (profile: string) => {
       const rules = new ModerationRules(moderationPathFor(profile))
       rules.set("-100", null, "invites", "delete")
@@ -291,18 +291,18 @@ describe("max bot mcp", () => {
     it("shows the actions the rules want confirmed in one form, and does exactly those", async () => {
       const { client, profile, forms } = await connect({}, { form: () => ({ action: "accept", content: {} }) })
       confirmDeletes(profile)
-      const { isError, body } = await call(client, "max_bot_chats_check", { chat: "-100", since })
+      const { isError, body } = await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since })
       expect(isError).toBe(false)
       expect(forms).toHaveLength(1)
       expect(forms[0]).toContain("delete message mid.2")
-      expect(body.items).toEqual([expect.objectContaining({ action: "delete", outcome: "done" })])
+      expect(body.rows).toEqual([expect.objectContaining({ action: "delete", outcome: "done" })])
       expect(deletes().map((one) => one.url)).toEqual(["/messages?message_id=mid.2"])
     })
 
     it("deletes nothing when the client cannot show the form", async () => {
       const { client, profile } = await connect()
       confirmDeletes(profile)
-      expect((await call(client, "max_bot_chats_check", { chat: "-100", since })).isError).toBe(true)
+      expect((await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since })).isError).toBe(true)
       expect(deletes()).toHaveLength(0)
     })
   })
