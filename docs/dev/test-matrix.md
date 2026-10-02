@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**476 ✅ · 50 ⛔ · 0 ❌** — 206 commands, 320 options.
+**482 ✅ · 50 ⛔ · 0 ❌** — 207 commands, 325 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -389,6 +389,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot contacts show` | `--bots` | ✅ |  |
 | `bot contacts show` | `--limit` | ✅ |  |
 | `bot contacts show` | `--refresh` | ✅ |  |
+| `bot store fetch` |  | ✅ |  |
+| `bot store fetch` | `--limit` | ✅ |  |
+| `bot store fetch` | `--page-size` | ✅ |  |
+| `bot store fetch` | `--pause` | ✅ |  |
+| `bot store fetch` | `--since-time` | ✅ |  |
+| `bot store fetch` | `--last` | ✅ |  |
 | `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
 | `bot mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
 | `bot mcp` | `--allow-dangerous` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |

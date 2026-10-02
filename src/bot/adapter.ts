@@ -336,6 +336,22 @@ export const maxBotAdapter = ({
 
     message: (chat, messageId) => inChat(chat, messageId),
 
+    historyBefore: async (chat, { limit, before }) => {
+      const chatId = chatIdOnly(chat, "a history")
+      if (self === undefined) await me()
+      const answer = plainJson(
+        await api.call(operation("getMessages"), {
+          query: {
+            chat_id: chatId,
+            count: String(Math.min(limit, PAGE)),
+            ...(before === undefined ? {} : { before: String(Date.parse(before)) }),
+          },
+        }),
+      ) as { messages?: unknown[] } | null
+      const items = (answer?.messages ?? []).map((raw) => api.decodeMessage(raw, self))
+      return { items, hasMore: items.length === Math.min(limit, PAGE) }
+    },
+
     // MAX answers newest first (`BUG-59`), so this walks back with `before` until a page comes short.
     historySince: async (chat, since, limit) => {
       const chatId = chatIdOnly(chat, "a history")
