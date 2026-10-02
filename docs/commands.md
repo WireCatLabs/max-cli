@@ -2285,21 +2285,22 @@ max bot messages unpin <chat> <message>
 
 #### `max bot messages search`
 
-search the messages this bot has read, sent or received on this machine — the local copy only, newest first; by text, by --from, or both
+search the messages this bot has read, sent or received on this machine — the local copy only, best match first; every word must appear; "a phrase", -word, a OR b, from: chat: after: before: has:; by text, by --from, or both
 
 ```sh
-max bot messages search [text] [options]
+max bot messages search [query] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `text` | необязательный |  |
+| `query` | необязательный |  |
 
 | Опция | Что делает |
 |---|---|
 | `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
 | `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
 | `--limit <n>` | how many. |
+| `--newest` | newest first instead of best first. |
 | `--from <who>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several. |
 
 #### `max bot messages between`

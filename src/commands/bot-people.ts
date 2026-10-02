@@ -7,7 +7,8 @@ import {
   pickPerson,
   renderMessages,
 } from "@leemour/cli-messaging"
-import type { MessageStore, StoredHit } from "@leemour/cli-messaging/store"
+import { type SearchFound, searchStore } from "@leemour/cli-messaging/services"
+import type { AccountKey, MessageStore, StoredHit } from "@leemour/cli-messaging/store"
 import { Command } from "commander"
 import { accountOf, fromStore, keep, PROVIDER } from "../bot/keep.js"
 import { KINDS } from "../bot/map.js"
@@ -194,21 +195,29 @@ export const peopleCommand = (): Command => {
   return command
 }
 
-/** `bot messages search --from`: every message from any of them, with or without text. */
+/**
+ * `bot messages search`: the word search of `messages search`, best first, over this bot's copy — or the
+ * other bots' copies `readOtherBots` allows. `--from` keeps any of several people.
+ */
 export const searchMessages = (
   context: Context,
   text: string | undefined,
   from: string[] = [],
-  across: Across = {},
-): Promise<{ items: StoredHit[]; hasMore: boolean }> => {
-  const { filter, people } = scopeOf(context, across)
+  across: Across & { newest?: boolean } = {},
+): Promise<SearchFound> => {
+  if ((text ?? "").trim() === "" && from.length === 0) {
+    throw new CliError("validation_error", "say what to find: some text, or who wrote it with --from")
+  }
+  const { people } = scopeOf(context, across)
+  const accounts = ("account" in people ? [people.account] : people.accounts).map(accountOf)
   return fromStore(async (store) => {
-    const senders = (await resolve(store, from, people)).map(({ id }) => id)
-    return store.find({
-      ...filter,
-      ...(text === undefined ? {} : { text }),
-      ...(senders.length ? { senders } : {}),
+    const senders = (await resolve(store, from, people)).map(({ id }) => ({ provider: PROVIDER, id }))
+    return searchStore(store, accounts[0] as AccountKey, {
+      text: text ?? "",
+      accounts,
+      ...(senders.length > 0 ? { senders } : {}),
       limit: context.settings.limit,
+      newest: across.newest === true,
     })
   })
 }

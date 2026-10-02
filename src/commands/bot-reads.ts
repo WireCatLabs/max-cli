@@ -24,21 +24,29 @@ export const chatIdOf = (reference: string, registry: ChatRegistry): string => {
 
 /** max's own `bot messages` commands — the local copy's search and `between` — added to the shared group. */
 export const messagesCommand = (command: Command): Command => {
-  acrossOptions(command.command("search [text]"))
+  acrossOptions(command.command("search [query...]"))
     .option("--limit <n>", "how many", wholeNumber("--limit"))
+    .option("--newest", "newest first instead of best first")
     .option(
       "--from <who>",
       "only what this person wrote — an id, @username or part of a name; repeat it for any of several",
       (value: string, previous: string[] = []) => [...previous, value],
     )
     .description(
-      "search the messages this bot has read, sent or received on this machine — the local copy only, newest " +
-        "first; by text, by --from, or both",
+      "search the messages this bot has read, sent or received on this machine — the local copy only, best " +
+        'match first; every word must appear; "a phrase", -word, a OR b, from: chat: after: before: has:; ' +
+        "by text, by --from, or both",
     )
-    .action(async function (this: Command, text: string | undefined, options: Across & { from?: string[] }) {
+    .action(async function (this: Command, query: string[], options: Across & { from?: string[]; newest?: boolean }) {
       const context = botContext(this, { offline: true })
       storedBotId(context)
-      const found = await searchMessages(context, text, options.from, options)
+      const found = await searchMessages(context, query.join(" "), options.from, options)
+      for (const { from, to } of found.corrections) context.renderer.note(`${from} → ${to.join(", ")}`)
+      if (!found.wordsReady) {
+        context.renderer.note(
+          "the word index is still being built, so this searched pieces of words — `max store migrate` finishes it",
+        )
+      }
       show(context, found.items, false, { hasMore: found.hasMore, limit: context.settings.limit })
     })
 
