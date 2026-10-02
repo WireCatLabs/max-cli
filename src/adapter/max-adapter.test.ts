@@ -50,6 +50,21 @@ const connected = (answers: Record<number, Payload | ((request: Payload) => Payl
 }
 
 describe("the MAX adapter", () => {
+  it("refuses explicit topics for direct send and poll calls without connecting", async () => {
+    const { adapter, sent } = connected()
+    const options = { sendId: "42", threadId: "12" }
+    await expect(adapter.send("111", "hi", options)).rejects.toThrow("does not support forum topic addressing")
+    await expect(
+      adapter.createPoll(
+        "111",
+        { question: "Friday?", answers: ["yes", "no"], multiple: false, anonymous: true, revote: false },
+        options,
+      ),
+    ).rejects.toThrow("does not support forum topic addressing")
+    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(sent(Opcode.MSG_SEND)).toEqual([])
+  })
+
   it("sends with the send id as MAX's cid, quietly when asked, with the marks in MAX's names", async () => {
     const { adapter, sent } = connected()
     const sendId = adapter.newSendId?.() ?? ""
