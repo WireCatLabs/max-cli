@@ -156,59 +156,6 @@ export type MessageChange =
   | { event: "delete"; chatId: Id; chatTitle: string | null; messageId: Id }
   | { event: "reaction"; chatId: Id; chatTitle: string | null; messageId: Id; reactions: Reactions }
 
-/** One chat's share of `max inbox`: other people's messages since the last check, oldest first. */
-export interface InboxChat extends Pick<Chat, "id" | "title" | "kind" | "unreadCount"> {
-  messages: Message[]
-  /** There are more than `--limit`; these are the newest of them. */
-  more: boolean
-}
-
-export interface Inbox {
-  /** `unread` — what MAX counts unread; `new` — what arrived since the last check. */
-  mode: "unread" | "new"
-  /** ISO 8601, `new` only. `until` is where the next check starts. */
-  since?: string
-  until?: string
-  chats: InboxChat[]
-  /** Past the per-run cap on history requests, so not read. */
-  skipped: Pick<Chat, "id" | "title" | "lastMessageAt">[]
-  /** Only the 40 chats the login named were looked at, and there may be more. */
-  partial: boolean
-}
-
-/** A message in a review: a voice message carries its text when it has been heard. */
-export type ReviewMessage = Message & { transcript?: string }
-
-export interface ReviewChat extends Pick<Chat, "id" | "title" | "kind"> {
-  /** Both sides, oldest first, from `since` to `until`. */
-  messages: ReviewMessage[]
-  /** The chat had more in the window than one review reads; the oldest are here. */
-  more: boolean
-  /**
-   * `--unanswered` only: whose words count as an answer. `owner` when the login did not say who
-   * the group's admins are.
-   */
-  answeredBy?: "owner" | "owner-and-admins"
-}
-
-/** `max review`: everything said since a point, for someone sorting out who owes what. */
-export interface Review {
-  /** ISO 8601. `until` is where the next review starts. */
-  since: string
-  until: string
-  /** Nothing skipped, cut short or left unheard: the review may move its boundary to `until`. */
-  complete: boolean
-  chats: ReviewChat[]
-  skipped: Pick<Chat, "id" | "title" | "lastMessageAt">[]
-  /** Voice messages with no text yet. */
-  unheard: { chatId: Id; messageId: Id }[]
-  /** Why `--transcribe` could not run, when it could not. */
-  transcribeProblem?: string
-  partial: boolean
-  /** `--unanswered`: only questions still open after this many hours are in `chats`. */
-  unanswered?: { olderThanHours: number }
-}
-
 /** A group's member as MAX lists them (`max chats members list`). */
 export interface GroupMember extends Member {
   /** ISO 8601, when the MAX account was created — a days-old account is worth a look. */
