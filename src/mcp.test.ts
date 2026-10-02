@@ -1,5 +1,6 @@
-import { readFileSync } from "node:fs"
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { existsSync, readFileSync } from "node:fs"
+import { dirname, join } from "node:path"
+import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { openStore } from "@leemour/cli-messaging/store"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
@@ -166,6 +167,163 @@ describe("the MCP server", () => {
     expect(logins()).toBe(1)
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
     expect(streams.stdout).toEqual([])
+  })
+
+  it("archives MCP history for local search without opening the old profile cache", async () => {
+    const profile = "mcp-shared-search"
+    const { client, session, max, logins } = await connect(
+      {},
+      {
+        profile,
+        answers: {
+          [Opcode.CONTACT_INFO]: { contacts: [] },
+          [Opcode.CHAT_HISTORY]: {
+            messages: [
+              {
+                id: 116762160362694583n,
+                time: 1789776000000,
+                sender: 10000002,
+                text: "searchable history",
+                attaches: [],
+              },
+            ],
+          },
+        },
+      },
+    )
+    await call(client, "max_messages_list", { chat: "111" })
+    await session.close()
+    const before = max.sent.length
+    // A fresh server answers the archived search without logging in.
+    const reopened = await connect({}, { profile })
+    const result = await call(reopened.client, "max_messages_search", { text: "searchable" })
+    expect(result.isError).toBe(false)
+    expect(result.body).toMatchObject({ items: [{ id: "116762160362694583", text: "searchable history" }] })
+    expect(reopened.logins()).toBe(0)
+    expect(max.sent).toHaveLength(before)
+    expect(logins()).toBe(1)
+    expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, `${profile}.db`))).toBe(false)
+  })
+
+  it("reads message context through shared services and keeps it searchable", async () => {
+    const id = "116762160362694555"
+    const { client } = await connect(
+      {},
+      {
+        answers: {
+          [Opcode.CHAT_HISTORY]: {
+            messages: [
+              { id: BigInt(id), time: 1789776000000, sender: 10000001, text: "context archive", attaches: [] },
+            ],
+          },
+        },
+      },
+    )
+    const context = await call(client, "max_messages_context", { chat: "111", message: id, before: 0, after: 0 })
+    expect(context.isError).toBe(false)
+    expect(context.body).toMatchObject({ items: [{ id, anchor: true, text: "context archive" }] })
+    const search = await call(client, "max_messages_search", { text: "context", chat: "111" })
+    expect(search.isError).toBe(false)
+    expect(search.body).toMatchObject({ items: [{ id, text: "context archive" }] })
+  })
+
+  it("keeps MCP edits and deletions reflected in the shared search index", async () => {
+    const id = "116762160362694888"
+    const original = { id: BigInt(id), time: 1789776000000, sender: 10000001, text: "original archived", attaches: [] }
+    const { client } = await connect(
+      { allowSend: true, allowDelete: true },
+      {
+        answers: {
+          [Opcode.CHAT_HISTORY]: { messages: [original] },
+          [Opcode.MSG_EDIT]: { message: { ...original, text: "updated archived" } },
+          [Opcode.MSG_DELETE]: {},
+        },
+      },
+    )
+    await call(client, "max_messages_list", { chat: "111" })
+    expect(
+      (await call(client, "max_messages_edit", { chat: "111", message: id, text: "updated archived" })).isError,
+    ).toBe(false)
+    expect((await call(client, "max_messages_search", { text: "updated", chat: "111" })).body).toMatchObject({
+      items: [{ id, text: "updated archived" }],
+    })
+    expect((await call(client, "max_messages_search", { text: "original", chat: "111" })).body.items).toEqual([])
+    expect((await call(client, "max_messages_delete", { chat: "111", messages: [id] })).isError).toBe(false)
+    expect((await call(client, "max_messages_search", { text: "updated", chat: "111" })).body.items).toEqual([])
+  })
+
+  it("keeps another account's stored messages and resources out of this profile", async () => {
+    const { client } = await connect()
+    await call(client, "max_messages_list", { chat: "111" })
+    const store = await openStore()
+    try {
+      const owner = { provider: "max" as const, account: "10000001" }
+      const foreign = { provider: "max" as const, account: "99999999" }
+      const chat = (await store.chats(owner, {})).items.find((chat) => chat.id === "111")
+      const message = (await store.messages(owner, "111", { limit: 1 })).items[0]
+      if (!chat || !message) throw new Error("scripted history was not kept")
+      await store.saveChats(foreign, [{ ...chat, id: "333", title: "Other account" }])
+      await store.saveMessages(foreign, "333", [{ ...message, chatId: "333", text: "foreign account words" }], {
+        via: "history",
+        seenAt: Date.now(),
+      })
+    } finally {
+      await store.close()
+    }
+    const search = await call(client, "max_messages_search", { text: "foreign" })
+    expect(search.isError).toBe(false)
+    expect(search.body.items).toEqual([])
+    expect((await client.listResources()).resources.map(({ uri }) => uri)).not.toContain("max://chat/333")
+  })
+
+  it("answers online history and warns when the shared store cannot open", async () => {
+    const saved = process.env.MESSAGING_STORE
+    process.env.MESSAGING_STORE = dirname(saved as string)
+    try {
+      const { client, streams } = await connect()
+      const result = await call(client, "max_messages_list", { chat: "111" })
+      expect(result.isError).toBe(false)
+      expect(result.body).toMatchObject({ items: [{ text: "hi" }] })
+      expect(streams.stderr.join("")).toContain("not saved to the local store")
+    } finally {
+      process.env.MESSAGING_STORE = saved
+    }
+  })
+
+  it("refuses a local search for an unknown account without logging in", async () => {
+    const { client, logins } = await connect()
+    const result = await call(client, "max_messages_search", { text: "searchable" })
+    expect(result.isError).toBe(true)
+    expect(logins()).toBe(0)
+  })
+
+  it("uses partner IDs and shared membership when looking up a person", async () => {
+    const { client } = await connect(
+      {},
+      {
+        answers: {
+          [Opcode.LOGIN]: {
+            profile: { contact: { id: 10000001, names: [{ name: "Owner", type: "FULL_NAME" }] } },
+            contacts: [{ id: 20000002, names: [{ name: "Partner", type: "FULL_NAME" }] }],
+            chats: [
+              {
+                id: 777,
+                type: "DIALOG",
+                title: "Partner",
+                participants: { "10000001": 0, "20000002": 0 },
+                lastEventTime: 1789776000000,
+              },
+            ],
+          },
+        },
+      },
+    )
+    const listed = await call(client, "max_contacts_list")
+    const shown = await call(client, "max_contacts_show", { person: "Partner" })
+    expect(listed.isError).toBe(false)
+    expect(listed.body).toMatchObject({ items: [{ id: "20000002", name: "Partner" }] })
+    expect(shown.isError).toBe(false)
+    expect(shown.body).toMatchObject({ id: "20000002", name: "Partner", chats: [{ id: "777" }] })
   })
 
   it("reads shared transcripts in list, inbox, review and direct transcription without a model", async () => {

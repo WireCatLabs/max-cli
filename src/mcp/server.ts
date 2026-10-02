@@ -62,9 +62,15 @@ export const createMaxServer = (
       transcribeModel: context.settings.transcribeModel,
       permitted,
       toolGroups: context.settings.mcpTools,
+      warn: context.renderer.note,
     })
     registerPrompts(server)
-    registerResources(server, session, { profile: context.settings.profile, defaultLimit: context.settings.limit })
+    registerResources(server, session, {
+      profile: context.settings.profile,
+      defaultLimit: context.settings.limit,
+      store: context.store,
+      warn: context.renderer.note,
+    })
     return server
   }
   return { session, build }

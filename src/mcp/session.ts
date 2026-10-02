@@ -1,8 +1,7 @@
 import { isCliError } from "@leemour/cli-core"
-import { openProfileCache } from "../cache/index.js"
-import type { CacheStore } from "../cache/store.js"
 import type { MaxClient, MaxClientOptions } from "../client.js"
 import type { CommandContext } from "../commands/context.js"
+import { type MaxRecord, maxRecord } from "../record.js"
 
 type Events = NonNullable<MaxClientOptions["events"]>
 
@@ -19,7 +18,7 @@ const HARMLESS = new Set(["validation_error", "not_found", "permission_error", "
 
 interface Held {
   client: MaxClient
-  cache: CacheStore | undefined
+  record: MaxRecord
   openedAt: number
 }
 
@@ -90,10 +89,10 @@ export class MaxSession {
     if (this.#held && this.#now() - this.#held.openedAt >= this.#maxAgeMs) await this.#release()
     if (this.#held) return this.#held.client
 
-    const { settings, renderer, createClient } = this.#context
-    const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
-    const client = createClient({ events: (event) => this.#events(event), ...(cache ? { cache } : {}) })
-    this.#held = { client, cache, openedAt: this.#now() }
+    const { store, createClient } = this.#context
+    const record = maxRecord({ account: () => store.readState().viewerId })
+    const client = createClient({ events: (event) => this.#events(event), record })
+    this.#held = { client, record, openedAt: this.#now() }
     return client
   }
 
@@ -105,7 +104,7 @@ export class MaxSession {
     try {
       await held.client.close()
     } finally {
-      await held.cache?.close()
+      await held.record.close()
     }
   }
 }

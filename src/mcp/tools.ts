@@ -1,7 +1,7 @@
 import { CliError, isCliError } from "@leemour/cli-core"
+import type { Message as SharedMessage } from "@leemour/cli-messaging"
 import { guardedClose, guardedCreatePoll, guardedVote } from "@leemour/cli-messaging/cli"
 import type { Permission } from "@leemour/cli-messaging/sends"
-import { onlineDeps, servicesFor } from "@leemour/cli-messaging/services"
 import {
   type CallToolResult,
   isInputRequiredResult,
@@ -13,13 +13,11 @@ import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
 import { maxAdapter } from "../adapter/max-adapter.js"
 import { ADMIN_RIGHTS, type AdminRight, DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
-import { hearingFields } from "../commands/hearing.js"
 import { listed } from "../commands/paging.js"
 import { type McpToolGroup, sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
-import type { Message, Page } from "../domain/models.js"
+import type { Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
-import { maxMessenger } from "../messenger.js"
 import {
   describe,
   type Finding,
@@ -32,13 +30,16 @@ import {
 } from "../moderation/check.js"
 import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
 import { maxRecord } from "../record.js"
-import { REVIEW_DAYS, review, reviewStart } from "../review.js"
 import type { SessionStore } from "../session/store.js"
-import { type Heard, hearAll, isVoice, transcribe, withTranscript } from "../transcribe/index.js"
+import { type Heard, hearAll, transcribe, withTranscript } from "../transcribe/index.js"
 import { modelsDirectory } from "../transcribe/install.js"
 import { DEFAULT_MODEL, speechModel } from "../transcribe/models.js"
 import { confirmer } from "./confirm.js"
 import type { MaxSession } from "./session.js"
+import { withShared } from "./shared.js"
+
+const REVIEW_DAYS = 3
+const reviewStart = () => Date.now() - REVIEW_DAYS * 86_400_000
 
 const chat = v.pipe(v.string(), v.minLength(1), v.description("chat id, or part of a chat name"))
 const message = v.pipe(v.string(), v.regex(/^\d+$/), v.description("message id"))
@@ -103,26 +104,21 @@ interface Defaults {
   transcribeModel: string
   release: () => Promise<void>
   store: SessionStore
+  warn: (message: string) => void
 }
 
-/**
- * A moved tool answers through cli-messaging's service over this session's client, which guards
- * each write itself; the service's guard lets everything through, and the client's journal line
- * takes the service's operation id. Until max serves the shared MCP tools.
- */
 const PASS = { check: () => {}, record: () => {} }
-
-const shared = (client: MaxClient, store: SessionStore) =>
-  servicesFor(onlineDeps(maxMessenger, maxAdapter(client, store), PASS))
 
 /** Kept transcripts always; with `transcribe`, the rest heard after the connection is released. */
 const heardIn = async (
   client: MaxClient,
-  messages: readonly Message[],
+  messages: readonly SharedMessage[],
   transcribe: boolean,
   { store, transcribeModel, release }: Defaults,
 ): Promise<Heard> => {
-  const voices = messages.filter(isVoice).map((message) => ({ chatId: message.chatId, messageId: message.id }))
+  const voices = messages
+    .filter((message) => message.attachments.some(({ kind }) => kind === "voice"))
+    .map((message) => ({ chatId: message.chatId, messageId: message.id }))
   if (voices.length === 0) return { transcripts: new Map(), unheard: [] }
   const record = maxRecord({ account: () => store.readState().viewerId })
   try {
@@ -136,6 +132,11 @@ const heardIn = async (
     await record.close()
   }
 }
+
+const hearingFields = (heard: Heard, transcribe: boolean) =>
+  transcribe
+    ? { unheard: heard.unheard, ...(heard.problem === undefined ? {} : { transcribeProblem: heard.problem }) }
+    : {}
 
 type AnyTool = Omit<Tool<v.ObjectSchema<v.ObjectEntries, undefined>>, "answer"> & {
   answer: (client: MaxClient, args: Record<string, unknown>, defaults: Defaults) => Promise<object>
@@ -186,8 +187,10 @@ const READ_TOOLS = {
       const limit = args.limit ?? INBOX_LIMIT
       const inbox =
         args.since === undefined
-          ? await client.inbox.unread({ limit })
-          : await client.inbox.since({ since: client.messages.moment(args.since, "since"), limit })
+          ? await withShared(client, defaults, (services) => services.inbox.read({ limit, all: true }))
+          : await withShared(client, defaults, (services) =>
+              services.inbox.read({ since: client.messages.moment(args.since as string, "since"), limit, all: true }),
+            )
       const heard = await heardIn(
         client,
         inbox.chats.flatMap((chat) => chat.messages),
@@ -240,21 +243,30 @@ const READ_TOOLS = {
       ),
     }),
     annotations: READ,
-    answer: async (client, args, { store, transcribeModel, release }) => {
+    answer: async (client, args, defaults) => {
       const since = args.since === undefined ? reviewStart() : client.messages.moment(args.since, "since")
-      const chatId = args.chat === undefined ? undefined : await client.chats.resolve(args.chat)
-      const record = maxRecord({ account: () => store.readState().viewerId })
-      try {
-        return await review(client, {
+      const found = await withShared(client, defaults, (services) =>
+        services.inbox.review({
           since,
-          record,
-          ...(chatId === undefined ? {} : { chatId }),
+          all: true,
+          ...(args.chat === undefined ? {} : { chat: args.chat }),
           ...(args.unanswered_after_hours === undefined ? {} : { unansweredAfterHours: args.unanswered_after_hours }),
-          ...(args.transcribe === true ? { transcribeWith: transcribeModel } : {}),
-          release,
-        })
-      } finally {
-        await record.close()
+        }),
+      )
+      const heard = await heardIn(
+        client,
+        found.chats.flatMap((chat) => chat.messages),
+        args.transcribe === true,
+        defaults,
+      )
+      return {
+        ...found,
+        complete: found.complete && heard.unheard.length === 0,
+        chats: found.chats.map((chat) => ({
+          ...chat,
+          messages: chat.messages.map((message) => withTranscript(message, heard)),
+        })),
+        ...hearingFields(heard, true),
       }
     },
   }),
@@ -283,12 +295,16 @@ const READ_TOOLS = {
     annotations: READ,
     answer: async (client, { search: query, kind, unread, ...paging }, defaults) => {
       const { size, number, request } = window(paging, defaults)
-      const found = await client.chats.list({
-        ...request,
-        ...(query === undefined ? {} : { query }),
-        ...(kind === undefined ? {} : { kind }),
-        ...(unread === true ? { unread } : {}),
-      })
+      const found = await withShared(client, defaults, (services) =>
+        services.chats.list(
+          {
+            ...(query === undefined ? {} : { search: query }),
+            ...(kind === undefined ? {} : { kind }),
+            ...(unread === true ? { unread } : {}),
+          },
+          request,
+        ),
+      )
       return envelope(found, number, size)
     },
   }),
@@ -298,7 +314,7 @@ const READ_TOOLS = {
     description: "One chat: its kind, unread count, last message time, who is in it, and a group's settings.",
     input: v.object({ chat }),
     annotations: READ,
-    answer: (client, args) => client.chats.show(args.chat),
+    answer: (client, args, defaults) => withShared(client, defaults, (services) => services.chats.show(args.chat)),
   }),
 
   max_chats_events: tool({
@@ -368,11 +384,13 @@ const READ_TOOLS = {
     annotations: READ,
     answer: async (client, { search: query, order, ...paging }, defaults) => {
       const { size, number, request } = window(paging, defaults)
-      const found = await client.contacts.list({
-        ...request,
-        ...(query === undefined ? {} : { query }),
-        ...(order === undefined ? {} : { order }),
-      })
+      const found = await withShared(client, defaults, (services) =>
+        services.people.list({
+          ...request,
+          ...(query === undefined ? {} : { search: query }),
+          order: order ?? "recent",
+        }),
+      )
       return envelope(found, number, size)
     },
   }),
@@ -384,7 +402,8 @@ const READ_TOOLS = {
       person: v.pipe(v.string(), v.minLength(1), v.description("person id, @username, or part of a name")),
     }),
     annotations: READ,
-    answer: (client, args) => client.contacts.show(args.person),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) => services.people.show(args.person), { local: true, login: true }),
   }),
 
   max_messages_scheduled: tool({
@@ -420,14 +439,15 @@ const READ_TOOLS = {
         throw new CliError("validation_error", "before and after are two directions; give one of them")
       }
       const size = args.limit ?? defaults.limit
-      const chatId = await client.chats.resolve(args.chat)
       const anchor =
         args.after !== undefined
-          ? { after: client.messages.moment(args.after, "after") }
+          ? { after: { time: client.messages.moment(args.after, "after") } }
           : args.before !== undefined
-            ? { before: client.messages.moment(args.before, "before") }
+            ? { beforeTime: client.messages.moment(args.before, "before") }
             : {}
-      const page = await client.messages.list(chatId, { limit: size, ...anchor })
+      const page = await withShared(client, defaults, (services) =>
+        services.messages.list(args.chat, { limit: size, ...anchor }),
+      )
       const heard = await heardIn(client, page.items, args.transcribe === true, defaults)
       return {
         ...envelope({ ...page, items: page.items.map((message) => withTranscript(message, heard)) }, 1, size),
@@ -449,10 +469,13 @@ const READ_TOOLS = {
     annotations: { ...READ, openWorldHint: false },
     answer: async (client, args, defaults) => {
       const size = args.limit ?? defaults.limit
-      const found = await client.messages.search(args.text, {
-        limit: size,
-        ...(args.chat === undefined ? {} : { chatId: args.chat }),
-      })
+      const found = await withShared(client, defaults, (services) =>
+        services.messages.search({
+          text: args.text,
+          limit: size,
+          ...(args.chat === undefined ? {} : { chat: args.chat }),
+        }),
+      )
       return envelope(found, 1, size)
     },
   }),
@@ -461,7 +484,7 @@ const READ_TOOLS = {
     title: "Transcribe a voice message",
     description:
       "The text of one voice message, heard on the owner's machine by a local speech model; the recording goes " +
-      "nowhere. Up to a minute for five minutes of speech; asked again, it answers from the cache. Refuses when " +
+      "nowhere. Up to a minute for five minutes of speech; asked again, it answers from the shared store. Refuses when " +
       "the model is not downloaded: the owner runs `max models audio download <id>` in a terminal.",
     input: v.object({ chat, message }),
     annotations: READ,
@@ -535,12 +558,13 @@ const READ_TOOLS = {
       after: v.optional(v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(100))),
     }),
     annotations: READ,
-    answer: async (client, args) => {
-      const chatId = await client.chats.resolve(args.chat)
-      return {
-        items: await client.messages.around(chatId, args.message, { before: args.before ?? 0, after: args.after ?? 0 }),
-      }
-    },
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, async (services) => ({
+        items: await services.messages.around(args.chat, args.message, {
+          before: args.before ?? 0,
+          after: args.after ?? 0,
+        }),
+      })),
   }),
 }
 
@@ -576,17 +600,19 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: async (client, args, { store }) => {
+    answer: async (client, args, defaults) => {
       const at = args.at === undefined ? undefined : new Date(sendTime(args.at)).toISOString()
-      const sent = await shared(client, store).messages.send({
-        chat: args.chat,
-        text: args.text,
-        ...(args.reply_to === undefined ? {} : { replyTo: args.reply_to }),
-        ...(args.markdown === true ? { markdown: true } : {}),
-        ...(args.silent === true ? { silent: true } : {}),
-        ...(args.send_id === undefined ? {} : { sendId: String(args.send_id) }),
-        ...(at === undefined ? {} : { at }),
-      })
+      const sent = await withShared(client, defaults, (services) =>
+        services.messages.send({
+          chat: args.chat,
+          text: args.text,
+          ...(args.reply_to === undefined ? {} : { replyTo: args.reply_to }),
+          ...(args.markdown === true ? { markdown: true } : {}),
+          ...(args.silent === true ? { silent: true } : {}),
+          ...(args.send_id === undefined ? {} : { sendId: String(args.send_id) }),
+          ...(at === undefined ? {} : { at }),
+        }),
+      )
       return {
         sendId: sent.sendId,
         operationId: sent.operationId,
@@ -603,8 +629,10 @@ const SEND_TOOLS = {
     input: v.object({ chat, message, text: v.pipe(v.string(), v.minLength(1)) }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).messages.edit({ chat: args.chat, message: args.message, text: args.text }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) =>
+        services.messages.edit({ chat: args.chat, message: args.message, text: args.text }),
+      ),
   }),
   max_messages_forward: tool({
     title: "Forward a message",
@@ -620,13 +648,15 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).messages.forward({
-        chat: args.chat,
-        message: args.message,
-        to: args.to,
-        silent: args.silent === true,
-      }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) =>
+        services.messages.forward({
+          chat: args.chat,
+          message: args.message,
+          to: args.to,
+          silent: args.silent === true,
+        }),
+      ),
   }),
   max_messages_pin: tool({
     title: "Pin a message",
@@ -640,8 +670,10 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).messages.pin({ chat: args.chat, message: args.message, notify: args.notify === true }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) =>
+        services.messages.pin({ chat: args.chat, message: args.message, notify: args.notify === true }),
+      ),
   }),
   max_messages_unpin: tool({
     title: "Unpin a message",
@@ -649,8 +681,8 @@ const SEND_TOOLS = {
     input: v.object({ chat, message }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).messages.unpin({ chat: args.chat, message: args.message }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) => services.messages.unpin({ chat: args.chat, message: args.message })),
   }),
   max_reactions_add: tool({
     title: "React to a message",
@@ -664,8 +696,10 @@ const SEND_TOOLS = {
     }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).messages.react({ chat: args.chat, message: args.message, emoji: args.emoji }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) =>
+        services.messages.react({ chat: args.chat, message: args.message, emoji: args.emoji }),
+      ),
   }),
   max_reactions_remove: tool({
     title: "Take a reaction off",
@@ -673,8 +707,10 @@ const SEND_TOOLS = {
     input: v.object({ chat, message }),
     annotations: { ...WRITE, idempotentHint: true },
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).messages.react({ chat: args.chat, message: args.message, emoji: null }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) =>
+        services.messages.react({ chat: args.chat, message: args.message, emoji: null }),
+      ),
   }),
   max_polls_vote: tool({
     title: "Vote in a poll",
@@ -759,11 +795,13 @@ const MARK_READ_TOOLS = {
     input: v.object({ chat, message: v.optional(message) }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).chats.markRead({
-        chat: args.chat,
-        ...(args.message === undefined ? {} : { until: args.message }),
-      }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) =>
+        services.chats.markRead({
+          chat: args.chat,
+          ...(args.message === undefined ? {} : { until: args.message }),
+        }),
+      ),
   }),
 }
 
@@ -780,8 +818,10 @@ const DELETE_TOOLS = {
     input: v.object({ chat, messages: v.pipe(v.array(message), v.minLength(1), v.maxLength(DELETE_AT_ONCE)) }),
     annotations: WRITE,
     _meta: APPROVE,
-    answer: (client, args, { store }) =>
-      shared(client, store).messages.delete({ chat: args.chat, messages: args.messages, forEveryone: false }),
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) =>
+        services.messages.delete({ chat: args.chat, messages: args.messages, forEveryone: false }),
+      ),
   }),
 }
 
@@ -947,6 +987,7 @@ export const registerTools = (
     transcribeModel = DEFAULT_MODEL,
     permitted,
     toolGroups = [],
+    warn = () => {},
   }: {
     allowSend: boolean
     confirmSend?: boolean
@@ -962,6 +1003,7 @@ export const registerTools = (
     permitted?: readonly Permission[]
     /** From the configuration file only. */
     toolGroups?: readonly McpToolGroup[]
+    warn?: (message: string) => void
   },
 ): void => {
   const confirmed = confirmSend ? confirmer() : undefined
@@ -992,7 +1034,7 @@ export const registerTools = (
       async (args: Record<string, unknown>, ctx: ServerContext) => {
         try {
           const result = await session.use(name.replace(/^max_/, "mcp ").replaceAll("_", " "), (client, release) => {
-            const defaults = { limit: defaultLimit, profile, transcribeModel, release, store }
+            const defaults = { limit: defaultLimit, profile, transcribeModel, release, store, warn }
             return confirmed && name in offered
               ? confirmed(
                   { name, title: definition.title },

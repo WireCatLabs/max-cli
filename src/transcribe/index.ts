@@ -187,7 +187,10 @@ export const hearAll = async (
 export const isVoice = (message: Message): boolean => message.attachments.some(({ kind }) => kind === "audio")
 
 /** A message with its transcript, when there is one; others pass through unchanged. */
-export const withTranscript = <T extends Message>(message: T, heard: Heard): T & { transcript?: string } => {
+export const withTranscript = <T extends Pick<Message, "id" | "chatId">>(
+  message: T,
+  heard: Heard,
+): T & { transcript?: string } => {
   const transcript = heard.transcripts.get(voiceKey({ chatId: message.chatId, messageId: message.id }))
   return transcript === undefined ? message : { ...message, transcript }
 }
