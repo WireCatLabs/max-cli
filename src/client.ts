@@ -1517,29 +1517,6 @@ export class MaxClient {
 
   readonly inbox = {
     /**
-     * Other people's unread messages, as MAX counts them: for each chat with a count, its newest
-     * that many. Reading changes nothing — no `CHAT_MARK` — so the same messages come back until
-     * they are read somewhere else. That is right for a person and wrong for a scheduled run,
-     * which is what `since` is for.
-     */
-    unread: async ({ limit }: { limit: number }): Promise<Inbox> => {
-      const chats = (await this.chats.list()).items
-      const waiting = byRecency(chats.filter((chat) => (chat.unreadCount ?? 0) > 0))
-      const { read, skipped } = capped(waiting, INBOX_CHATS)
-
-      const found: InboxChat[] = []
-      for (const { id, title, kind, unreadCount } of read) {
-        const count = unreadCount ?? 0
-        const wanted = Math.min(count, limit)
-        const { items } = await this.messages.list(id, { limit: wanted })
-        const theirs = items.slice(-wanted).filter((message) => message.outgoing !== true)
-        if (theirs.length > 0) found.push({ id, title, kind, unreadCount, messages: theirs, more: count > limit })
-      }
-
-      return { mode: "unread", chats: found, skipped, partial: !this.#cache && this.#chatsCut }
-    },
-
-    /**
      * Other people's messages in every chat that changed after `since`.
      *
      * A chat changed if its last message is later than `since`; the chat list says so without a
