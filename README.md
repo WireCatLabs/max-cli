@@ -387,7 +387,9 @@ Claude Desktop, Cursor и другие клиенты MCP подключаютс
 Подробно — [docs/mcp.md](docs/mcp.md).
 
 ```sh
-claude mcp add max -- max mcp       # Claude Code
+max mcp doctor                      # проверить локальный MCP
+max mcp setup codex                # Codex
+max mcp setup claude-code          # Claude Code
 max mcp config                      # запись для Claude Desktop, Cursor и других — с полными путями
 ```
 
