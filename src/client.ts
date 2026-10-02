@@ -35,8 +35,6 @@ import type {
   GroupMembers,
   GroupSettings,
   Id,
-  Inbox,
-  InboxChat,
   Message,
   MessageChange,
   MessageHit,
@@ -49,8 +47,6 @@ import type {
   QuotedMessage,
   Reactions,
   ReadMark,
-  Review,
-  ReviewChat,
   WindowedMessage,
 } from "./domain/models.js"
 import { type Invoke, wireClient } from "./generated/client.generated.js"
@@ -449,11 +445,11 @@ export class MaxClient {
       let from = since
       while (true) {
         const page = (
-          await this.#history(chatId, { from, backward: 0, forward: REVIEW_PAGE + 1 }, { reactions: false })
+          await this.#history(chatId, { from, backward: 0, forward: HISTORY_PAGE + 1 }, { reactions: false })
         ).filter((message) => Date.parse(message.timestamp) > from)
         read.push(...page)
         const last = page.at(-1)
-        if (page.length < REVIEW_PAGE || !last) return { messages: read, more: false }
+        if (page.length < HISTORY_PAGE || !last) return { messages: read, more: false }
         if (read.length >= EVENTS_READ) return { messages: read, more: true }
         from = Date.parse(last.timestamp)
       }
@@ -1513,107 +1509,6 @@ export class MaxClient {
         await this.#wire.folders.delete({ folderIds: [String(folder.id)] })
         return toFolder(folder)
       }),
-  }
-
-  readonly inbox = {
-    /**
-     * Other people's messages in every chat that changed after `since`.
-     *
-     * A chat changed if its last message is later than `since`; the chat list says so without a
-     * request, and with a store it covers every chat, not only the ones this login named. Each
-     * changed chat then costs one history read of its newest `limit` — the newest, because the
-     * reader wants what just arrived, and one request rather than paging forward to reach it.
-     *
-     * **Everything is cut at the chat list's newest message**, the snapshot this login took. The
-     * reads run one after another, so a chat read early can gain a message while a later one is
-     * read; had the saved point followed the later read, that message would sit behind it and
-     * never show. Anything newer than the snapshot waits for the next run and shows once there.
-     */
-    since: async ({ since, limit }: { since: number; limit: number }): Promise<Inbox> => {
-      const { chats, changed, cut } = await this.#changedSince(since)
-      const { read, skipped } = capped(changed, INBOX_CHATS)
-
-      let until = since
-      const found: InboxChat[] = []
-      for (const { id, title, kind, unreadCount } of read) {
-        const { items } = await this.messages.list(id, { limit })
-        const fresh = items.filter((message) => {
-          const time = Date.parse(message.timestamp)
-          return time > since && time <= cut
-        })
-        for (const message of fresh) until = Math.max(until, Date.parse(message.timestamp))
-
-        const theirs = fresh.filter((message) => message.outgoing !== true)
-        if (theirs.length > 0)
-          found.push({ id, title, kind, unreadCount, messages: theirs, more: fresh.length >= limit })
-      }
-
-      return {
-        mode: "new",
-        since: new Date(since).toISOString(),
-        until: new Date(until).toISOString(),
-        chats: found,
-        skipped,
-        partial: !this.#cache && this.#chatsCut && changed.length === chats.length,
-      }
-    },
-
-    /**
-     * **Every message, both sides, in each chat that changed after `since`** — what a review of
-     * commitments reads, where `since` reads only other people's newest few. The same cut at the
-     * chat list's newest message, so the next review starting at `until` misses nothing. Pages
-     * forward from `since`; a chat with more than `REVIEW_PER_CHAT` in the window is cut short and
-     * says so.
-     */
-    review: async ({
-      since,
-      chatId,
-    }: {
-      since: number
-      chatId?: Id
-    }): Promise<Omit<Review, "complete" | "unheard">> => {
-      const { chats, changed: all, cut } = await this.#changedSince(since)
-      const changed = chatId === undefined ? all : all.filter((chat) => chat.id === chatId)
-      const { read, skipped } = capped(changed, REVIEW_CHATS)
-
-      const found: ReviewChat[] = []
-      for (const { id, title, kind } of read) {
-        const messages: Message[] = []
-        let from = since
-        let more = false
-        while (true) {
-          const page = await this.messages.list(id, { after: from, limit: REVIEW_PAGE })
-          const inWindow = page.items.filter((message) => Date.parse(message.timestamp) <= cut)
-          messages.push(...inWindow)
-          const last = page.items.at(-1)
-          if (!page.hasMore || !last || inWindow.length < page.items.length) break
-          if (messages.length >= REVIEW_PER_CHAT) {
-            more = true
-            break
-          }
-          from = Date.parse(last.timestamp)
-        }
-        if (messages.length > 0) found.push({ id, title, kind, messages: messages.slice(0, REVIEW_PER_CHAT), more })
-      }
-
-      return {
-        since: new Date(since).toISOString(),
-        until: new Date(cut).toISOString(),
-        chats: found,
-        skipped,
-        partial: !this.#cache && this.#chatsCut && changed.length === chats.length,
-      }
-    },
-  }
-
-  /** Chats whose last message is after `since`, newest first, and that newest time: the snapshot to cut at. */
-  async #changedSince(since: number): Promise<{ chats: Chat[]; changed: Chat[]; cut: number }> {
-    const chats = (await this.chats.list()).items
-    const changed = byRecency(
-      chats.filter((chat) => chat.lastMessageAt !== null && Date.parse(chat.lastMessageAt) > since),
-    )
-    const cut = Math.max(since, ...changed.map((chat) => Date.parse(chat.lastMessageAt ?? "")))
-    return { chats, changed, cut }
   }
 
   /**
@@ -2881,16 +2776,7 @@ export const timeOfMessageId = (id: Id): number | undefined => {
   return Number.isSafeInteger(time) && time > 0 ? time : undefined
 }
 
-/**
- * **At most this many history reads per `max inbox`.** The official client reads a chat's history
- * when a person opens it; twenty in one burst is already more than a person does (§34). A personal
- * account rarely has that many chats change between two checks, and the rest are named, not lost.
- */
-const INBOX_CHATS = 20
-/** A review reads every changed chat of a few days; past this many, the rest are named, not read. */
-const REVIEW_CHATS = 50
-const REVIEW_PAGE = 100
-const REVIEW_PER_CHAT = 500
+const HISTORY_PAGE = 100
 const EVENTS_READ = 2000
 /** How far back `chats events` looks without `since`. */
 export const EVENTS_DAYS = 7
@@ -2930,15 +2816,6 @@ const READ_MARK = 130
 const CHAT_CHANGED = 135
 /** Messages deleted (140 in PyMax, 142 in the web client): the snapshot cannot follow them. */
 const CHANGES_CHATS = new Set([140, 142])
-
-/** Newest first — the chats a reader most likely came for are read before the cap. */
-const byRecency = (chats: Chat[]): Chat[] =>
-  chats.toSorted((a, b) => Date.parse(b.lastMessageAt ?? "") - Date.parse(a.lastMessageAt ?? ""))
-
-const capped = (chats: Chat[], most: number) => ({
-  read: chats.slice(0, most),
-  skipped: chats.slice(most).map(({ id, title, lastMessageAt }) => ({ id, title, lastMessageAt })),
-})
 
 const isPresent = <T>(value: T | null | undefined): value is T => value !== null && value !== undefined
 

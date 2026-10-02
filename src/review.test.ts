@@ -1,12 +1,10 @@
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { describe, expect, it } from "vitest"
-import { contextFor, type Environment } from "./commands/context.js"
+import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
-import { MaxSession } from "./mcp/session.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import type { Payload } from "./protocol/frame.js"
-import { review as legacyReview } from "./review.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
 
@@ -236,87 +234,5 @@ describe("max review", () => {
       expect(code).not.toBe(0)
       expect(stderr).toContain("--unanswered takes a duration")
     })
-  })
-})
-
-describe("legacy MCP review while its command moves to shared services", () => {
-  it("marks a legacy MCP review incomplete when its message cap cuts a busy chat", async () => {
-    const { environment } = reviewMax({
-      111: Array.from({ length: 501 }, (_, index) => message(600 - index, THEM, `message ${index}`)),
-    })
-    const session = new MaxSession(contextFor({ profile: "r-legacy-capped" }, environment))
-    try {
-      const result = await session.use("review", (client) =>
-        legacyReview(client, { since: now - 601 * 60_000, record: undefined }),
-      )
-      expect(result.complete).toBe(false)
-      expect(result.chats[0]?.more).toBe(true)
-      expect(result.chats[0]?.messages).toHaveLength(500)
-    } finally {
-      await session.close()
-    }
-  })
-
-  it("restricts legacy MCP review to the requested chat and releases before hearing", async () => {
-    const { environment } = reviewMax({ 111: [message(120, THEM, "selected?")], 222: [message(100, THEM, "other?")] })
-    const session = new MaxSession(contextFor({ profile: "r-legacy-chat" }, environment))
-    try {
-      const result = await session.use("review", (client, release) =>
-        legacyReview(client, {
-          since: now - 200 * 60_000,
-          record: undefined,
-          chatId: "111",
-          transcribeWith: "gigaam-v3",
-          release,
-          progress: () => {},
-        }),
-      )
-      expect(result.chats.map((chat) => chat.id)).toEqual(["111"])
-      expect(result.complete).toBe(true)
-    } finally {
-      await session.close()
-    }
-  })
-
-  it("keeps open questions and counts known admins' answers before the boundary", async () => {
-    const question = message(100, THEM, "cost?")
-    const { environment } = reviewMax(
-      {
-        111: [
-          message(180, THEM, "open?"),
-          message(170, OTHER, "not sure"),
-          question,
-          replyTo(question, 90, ADMIN, "free"),
-          replyTo(message(195, ME, "owner post"), 80, THEM, "that clashes"),
-          message(70, OTHER, "not sure"),
-          message(30, THEM, "fresh?"),
-        ],
-        222: [
-          message(170, THEM, "still open?"),
-          message(160, OTHER, "maybe"),
-          message(150, THEM, "https://example.com/?q=x"),
-          message(140, ME, "mine?"),
-        ],
-      },
-      { groupFields: { 111: { owner: ME, admins: [ADMIN] } } },
-    )
-    const session = new MaxSession(contextFor({ profile: "r-legacy-open" }, environment))
-    try {
-      const result = await session.use("review", (client) =>
-        legacyReview(client, {
-          since: now - 200 * 60_000,
-          record: undefined,
-          unansweredAfterHours: 1,
-          now,
-        }),
-      )
-      expect(result.chats.map((chat) => chat.messages.map((message) => message.text))).toEqual([
-        ["open?", "that clashes"],
-        ["still open?"],
-      ])
-      expect(result.chats.map((chat) => chat.answeredBy)).toEqual(["owner-and-admins", "owner"])
-    } finally {
-      await session.close()
-    }
   })
 })
