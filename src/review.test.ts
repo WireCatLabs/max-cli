@@ -240,6 +240,23 @@ describe("max review", () => {
 })
 
 describe("legacy MCP review while its command moves to shared services", () => {
+  it("marks a legacy MCP review incomplete when its message cap cuts a busy chat", async () => {
+    const { environment } = reviewMax({
+      111: Array.from({ length: 501 }, (_, index) => message(600 - index, THEM, `message ${index}`)),
+    })
+    const session = new MaxSession(contextFor({ profile: "r-legacy-capped" }, environment))
+    try {
+      const result = await session.use("review", (client) =>
+        legacyReview(client, { since: now - 601 * 60_000, record: undefined }),
+      )
+      expect(result.complete).toBe(false)
+      expect(result.chats[0]?.more).toBe(true)
+      expect(result.chats[0]?.messages).toHaveLength(500)
+    } finally {
+      await session.close()
+    }
+  })
+
   it("restricts legacy MCP review to the requested chat and releases before hearing", async () => {
     const { environment } = reviewMax({ 111: [message(120, THEM, "selected?")], 222: [message(100, THEM, "other?")] })
     const session = new MaxSession(contextFor({ profile: "r-legacy-chat" }, environment))
