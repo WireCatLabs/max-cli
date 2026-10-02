@@ -10,8 +10,6 @@ import { commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext, botRecordingOf, startBotRecording } from "./bot-context.js"
 import { addMembersCommands } from "./bot-members.js"
 import { maxBot } from "./bot-messenger.js"
-import { peopleCommand } from "./bot-people.js"
-import { chatsCommand, messagesCommand } from "./bot-reads.js"
 import { guardedCall } from "./bot-sends.js"
 import { uploadsCommand } from "./bot-setup.js"
 
@@ -74,16 +72,11 @@ export const botCommand = (): Command => {
       renderer.result(await authenticated().me())
     })
 
-  const messages = command.commands.find((child) => child.name() === "messages")
-  if (!messages) throw new Error("the shared bot group has no messages")
-  messagesCommand(messages)
   const chats = command.commands.find((child) => child.name() === "chats")
   if (!chats) throw new Error("the shared bot group has no chats")
-  chatsCommand(chats)
   const members = chats.commands.find((child) => child.name() === "members")
   if (!members) throw new Error("the shared bot group has no chats members")
   addMembersCommands(members)
-  command.addCommand(peopleCommand())
   for (const more of [commentsCommand(), uploadsCommand()]) command.addCommand(more)
 
   const api = new Command("api").description(

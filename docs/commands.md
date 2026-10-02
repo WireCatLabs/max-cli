@@ -2293,7 +2293,7 @@ max bot messages search [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный |  |
+| `query` | необязательный | the words to find. |
 
 | Опция | Что делает |
 |---|---|
@@ -2313,7 +2313,7 @@ max bot messages between <people> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `people` | обязательный |  |
+| `people` | обязательный | two or more people — an id, @username or part of a name each. |
 
 | Опция | Что делает |
 |---|---|
@@ -2501,6 +2501,29 @@ max bot webhooks delete <url>
 |---|---|---|
 | `url` | обязательный | the address. |
 
+### `max bot contacts`
+
+people this bot has seen write — from the local copy on this machine, never asking MAX unless told to
+
+#### `max bot contacts show`
+
+one person: the chats they wrote in (with their last message there) and the latest messages of their private chat with the bot
+
+```sh
+max bot contacts show <who> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `who` | обязательный | an id, @username or part of a name. |
+
+| Опция | Что делает |
+|---|---|
+| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
+| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
+| `--limit <n>` | how many messages from the private chat. |
+| `--refresh` | read the private chat with them from MAX first — one request. |
+
 ### `max bot mcp`
 
 serve this bot to an agent over MCP, on stdin and stdout — `claude mcp add sales-bot -- max sales bot mcp`
@@ -2540,29 +2563,6 @@ the bot this profile's token belongs to: name, id, description, commands
 ```sh
 max bot me
 ```
-
-### `max bot people`
-
-people this bot has seen write — from the local copy on this machine, never asking MAX unless told to
-
-#### `max bot people show`
-
-one person — an id, @username or part of a name: the chats they wrote in (with their last message there) and the latest messages of their private chat with the bot
-
-```sh
-max bot people show <who> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `who` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--all-bots` | also read every other bot's copy on this machine that readOtherBots allows. |
-| `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by readOtherBots. |
-| `--limit <n>` | how many messages from the private chat. |
-| `--refresh` | read the private chat with them from MAX first — one request. |
 
 ### `max bot comments`
 

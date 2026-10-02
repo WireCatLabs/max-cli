@@ -137,7 +137,7 @@ const READS = [
   "max_bot_messages_show",
   "max_bot_messages_search",
   "max_bot_messages_between",
-  "max_bot_people_show",
+  "max_bot_contacts_show",
   "max_bot_chats_members_list",
   "max_bot_chats_admins_list",
   "max_bot_comments_list",
@@ -208,7 +208,7 @@ describe("max bot mcp", () => {
     const schema = async (readOtherBots: boolean | string[]) => {
       const { client } = await connect({ readOtherBots })
       const { tools } = await client.listTools()
-      return tools.find((tool) => tool.name === "max_bot_people_show")?.inputSchema.properties ?? {}
+      return tools.find((tool) => tool.name === "max_bot_contacts_show")?.inputSchema.properties ?? {}
     }
     expect(Object.keys(await schema(false))).not.toContain("all_bots")
     expect(Object.keys(await schema(["other"]))).toEqual(expect.arrayContaining(["all_bots", "bots"]))

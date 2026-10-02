@@ -1,14 +1,6 @@
 import { CliError } from "@leemour/cli-core"
-import { type Message, pickChat, renderMessages } from "@leemour/cli-messaging"
-import type { Command } from "commander"
-import { PROVIDER } from "../bot/keep.js"
+import { pickChat } from "@leemour/cli-messaging"
 import type { ChatRegistry } from "../bot/registry.js"
-import { asFirstWord } from "../profile.js"
-import { botContext } from "./bot-context.js"
-import { type Across, acrossOptions, addBetween, searchMessages } from "./bot-people.js"
-import { renderList, wholeNumber } from "./paging.js"
-
-type Context = ReturnType<typeof botContext>
 
 const CHAT_ID = /^-?\d+$/
 
@@ -19,74 +11,4 @@ export const chatIdOf = (reference: string, registry: ChatRegistry): string => {
     throw new CliError("validation_error", "a direct chat is read by its chat id; `user:<id>` is only for sending")
   }
   return pickChat(reference, registry.list()).id
-}
-
-/** max's own `bot messages` commands — the local copy's search and `between` — added to the shared group. */
-export const messagesCommand = (command: Command): Command => {
-  acrossOptions(command.command("search [query...]"))
-    .option("--limit <n>", "how many", wholeNumber("--limit"))
-    .option("--newest", "newest first instead of best first")
-    .option(
-      "--from <who>",
-      "only what this person wrote — an id, @username or part of a name; repeat it for any of several",
-      (value: string, previous: string[] = []) => [...previous, value],
-    )
-    .description(
-      "search the messages this bot has read, sent or received on this machine — the local copy only, best " +
-        'match first; every word must appear; "a phrase", -word, a OR b, from: chat: after: before: has:; ' +
-        "by text, by --from, or both",
-    )
-    .action(async function (this: Command, query: string[], options: Across & { from?: string[]; newest?: boolean }) {
-      const context = botContext(this, { offline: true })
-      storedBotId(context)
-      const found = await searchMessages(context, query.join(" "), options.from, options)
-      for (const { from, to } of found.corrections) context.renderer.note(`${from} → ${to.join(", ")}`)
-      if (!found.wordsReady) {
-        context.renderer.note(
-          "the word index is still being built, so this searched pieces of words — `max store migrate` finishes it",
-        )
-      }
-      show(context, found.items, false, { hasMore: found.hasMore, limit: context.settings.limit })
-    })
-
-  addBetween(command)
-  return command
-}
-
-const storedBotId = (context: Context): string => {
-  const botId = context.registry.botId()
-  if (botId) return botId
-  throw new CliError(
-    "not_found",
-    `nothing is recorded for this bot on this machine — run \`max ${asFirstWord(context.settings.profile)}bot messages list <chat>\` once`,
-  )
-}
-
-const show = (
-  context: Context,
-  messages: Message[],
-  one = false,
-  page: { hasMore?: boolean; limit?: number } = {},
-): void => {
-  if (one && context.format === "json") {
-    context.renderer.result(messages[0])
-    return
-  }
-  if (context.format !== "pretty") {
-    renderList(context.renderer, context.format, messages, page)
-    return
-  }
-  context.streams.data(
-    renderMessages(messages, {
-      verbosity: context.settings.detail,
-      color: context.color,
-      profile: context.settings.profile,
-      provider: PROVIDER,
-    }),
-  )
-}
-
-/** max's own `bot chats` commands, added to the shared group, which has `list`. */
-export const chatsCommand = (command: Command): Command => {
-  return command
 }
