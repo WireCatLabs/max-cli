@@ -41,6 +41,28 @@ export const UNTESTED: Untested[] = [
         "serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options",
     }),
   ),
+  ...[
+    "",
+    "--allow-writes",
+    "--allow-send",
+    "--confirm-send",
+    "--allow-mark-read",
+    "--allow-delete",
+    "--allow-moderate",
+  ].map((option) => ({
+    command: "mcp setup",
+    ...(option ? { option } : {}),
+    reason:
+      "changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex",
+  })),
+  ...["", "--allow-send", "--confirm-send", "--allow-mark-read", "--allow-delete", "--allow-moderate"].map(
+    (option) => ({
+      command: "mcp doctor",
+      ...(option ? { option } : {}),
+      reason:
+        "starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
+    }),
+  ),
   ...["", "--allow-send", "--confirm-send", "--allow-dangerous", "--allow-delete", "--allow-moderate"].map(
     (option) => ({
       command: "bot mcp",

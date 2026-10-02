@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**482 ✅ · 50 ⛔ · 0 ❌** — 207 commands, 325 options.
+**482 ✅ · 63 ⛔ · 0 ❌** — 209 commands, 336 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -304,6 +304,19 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp config` | `--allow-mark-read` | ✅ |  |
 | `mcp config` | `--allow-delete` | ✅ |  |
 | `mcp config` | `--allow-moderate` | ✅ |  |
+| `mcp setup` |  | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--allow-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--confirm-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--allow-mark-read` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--allow-delete` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--allow-moderate` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--allow-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--confirm-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--allow-mark-read` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--allow-delete` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--allow-moderate` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `bot auth set` |  | ✅ |  |
 | `bot auth show` |  | ✅ |  |
 | `bot auth remove` |  | ✅ |  |
