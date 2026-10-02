@@ -8,7 +8,6 @@ import { checkBody, checkParameter, flagOf, optionKey, readBody } from "../bot/i
 import { type CallInput, plainJson } from "../bot/transport.js"
 import { commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext, botRecordingOf, startBotRecording } from "./bot-context.js"
-import { botMcpCommand } from "./bot-mcp.js"
 import { addMembersCommands } from "./bot-members.js"
 import { maxBot } from "./bot-messenger.js"
 import { peopleCommand } from "./bot-people.js"
@@ -85,7 +84,7 @@ export const botCommand = (): Command => {
   if (!members) throw new Error("the shared bot group has no chats members")
   addMembersCommands(members)
   command.addCommand(peopleCommand())
-  for (const more of [commentsCommand(), uploadsCommand(), botMcpCommand()]) command.addCommand(more)
+  for (const more of [commentsCommand(), uploadsCommand()]) command.addCommand(more)
 
   const api = new Command("api").description(
     "every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md",

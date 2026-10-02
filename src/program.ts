@@ -94,6 +94,7 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
     .option("--json", "machine-readable output: one JSON value on stdout, nothing else")
     .option("--jsonl", "machine-readable output: one JSON object per line, for streaming and jq")
     .option("--quiet", "diagnostics off")
+    .option("--yes", "go ahead without the question an ask level puts before a write")
     .option("--trace", "one line per request on stderr: ids and timings, never message content")
     .option("--timeout <duration>", "give up on the whole command after this — 30s, 2m, 500ms")
     .option("--offline", "answer from what was recorded and never connect; fails if nothing was")

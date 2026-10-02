@@ -76,13 +76,16 @@ describe("the config commands, through the CLI", () => {
     expect(json.mcpServers["max-mcp-confirm"].args.slice(-2)).toEqual(["mcp", "--confirm-send"])
   })
 
-  it("`bot mcp config` names the bot's server and carries its flags", async () => {
-    const flags = ["--allow-send", "--confirm-send", "--allow-delete", "--allow-moderate"]
-    const { code, json } = await cli(["shop", "bot", "mcp", "config", ...flags, "--json"])
+  it("`bot mcp config` names the bot's server and carries --confirm-send, not the retired flags", async () => {
+    const retired = ["--allow-send", "--allow-delete", "--allow-moderate"]
+    const { code, json } = await cli(["shop", "bot", "mcp", "config", ...retired, "--confirm-send", "--json"])
     expect(code).toBe(0)
     const [name, server] = Object.entries(json.mcpServers)[0] as [string, { args: string[] }]
     expect(name).toBe("max-bot-shop")
-    expect(server.args.slice(-7)).toEqual(["shop", "bot", "mcp", ...flags])
+    expect(server.args.slice(-4)).toEqual(["shop", "bot", "mcp", "--confirm-send"])
+
+    const dangerous = await cli(["shop", "bot", "mcp", "config", "--allow-dangerous", "--json"])
+    expect((Object.values(dangerous.json.mcpServers)[0] as { args: string[] }).args.at(-1)).toBe("--allow-dangerous")
   })
 
   it("`models audio list` names every model and marks the default, with none downloaded here", async () => {

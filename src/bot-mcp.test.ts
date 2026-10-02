@@ -2,14 +2,15 @@ import { readFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-core"
+import { type BotServerOptions, botInstructions, commandLookup, createBotServer } from "@leemour/cli-messaging/cli"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
+import type { Command } from "commander"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
-import { instructions } from "./bot-mcp/instructions.js"
-import { type BotServerOptions, createBotServer } from "./bot-mcp/server.js"
+import { botMcpRun, maxBot } from "./commands/bot-messenger.js"
 import { ModerationRules, moderationPathFor } from "./moderation/rules.js"
-import { run } from "./program.js"
+import { createProgram, run } from "./program.js"
 import { SKILL } from "./skill.js"
 
 const BOT = `{"user_id": 900, "first_name": "Helper", "username": "helper_bot", "is_bot": true, "last_activity_time": 1}`
@@ -69,24 +70,41 @@ afterEach(async () => {
   for (const close of closers.splice(0)) await close()
 })
 
-const environment = () => ({ botStore: (name: string) => new BotTokenStore({ profile: name, keyring }), botUrl })
+const testEnvironment = () => ({ botStore: (name: string) => new BotTokenStore({ profile: name, keyring }), botUrl })
 
 /** The owner at the terminal, for what an agent may not do: the recipient list, the rules. */
 const owner = async (profile: string, argv: string[]) => {
   const streams = captureStreams()
-  return run([profile, "bot", ...argv], { streams, tty: false, ...environment() })
+  return run([profile, "bot", ...argv], { streams, tty: false, ...testEnvironment() })
+}
+
+type Options = Partial<Pick<BotServerOptions, "confirmSend" | "allowDangerous" | "yes">> & {
+  permissions?: Record<string, "deny" | "readonly" | "ask" | "allow">
+  readOtherBots?: boolean | string[]
 }
 
 const connect = async (
-  options: Partial<BotServerOptions> = {},
+  { permissions = {}, readOtherBots = false, ...options }: Options = {},
   { form }: { form?: (message: string) => ElicitResult } = {},
 ) => {
   const profile = `bm-${++profiles}`
   new BotTokenStore({ profile, keyring }).write("bot-token")
-  const { build } = createBotServer({ profile, allowSend: false, run, environment: environment(), ...options })
+  const group = createProgram().commands.find((one) => one.name() === "bot") as Command
+  const mcp = maxBot.mcp
+  if (!mcp) throw new Error("max hands in no bot MCP")
+  const { build } = createBotServer({
+    bot: maxBot,
+    commandAt: commandLookup(group),
+    settings: { profile, permissions, readOtherBots },
+    env: process.env,
+    run: await botMcpRun(testEnvironment()),
+    tools: mcp.tools ?? [],
+    ...(mcp.skill ? { skill: mcp.skill } : {}),
+    ...options,
+  })
   const [serverSide, clientSide] = InMemoryTransport.createLinkedPair()
-  const mcp = build()
-  await mcp.connect(serverSide)
+  const server = build()
+  await server.connect(serverSide)
   const client = new Client({ name: "test", version: "0" }, form ? { capabilities: { elicitation: {} } } : {})
   const forms: string[] = []
   if (form) {
@@ -98,7 +116,7 @@ const connect = async (
   await client.connect(clientSide)
   closers.push(async () => {
     await client.close()
-    await mcp.close()
+    await server.close()
   })
   return { client, profile, forms }
 }
@@ -112,25 +130,59 @@ const names = async (client: Client) => (await client.listTools()).tools.map((to
 const posts = () => calls.filter((one) => one.method === "POST")
 const deletes = () => calls.filter((one) => one.method === "DELETE")
 
+const READS = [
+  "max_bot_chats_list",
+  "max_bot_chats_show",
+  "max_bot_messages_list",
+  "max_bot_messages_show",
+  "max_bot_messages_search",
+  "max_bot_messages_between",
+  "max_bot_people_show",
+  "max_bot_chats_members_list",
+  "max_bot_chats_admins_list",
+  "max_bot_comments_list",
+  "max_bot_comments_get",
+  "max_bot_commands_list",
+  "max_bot_sends_list",
+  "max_bot_recipients_list",
+  "max_bot_me",
+  "max_bot_status",
+]
+
 describe("max bot mcp", () => {
-  it("offers only reading unless a flag switches writing on", async () => {
-    const { client } = await connect()
-    const offered = await names(client)
-    expect(offered).toContain("max_bot_messages_list")
-    expect(offered).not.toContain("max_bot_messages_send")
-    expect(offered).not.toContain("max_bot_chats_check")
-    expect(offered.some((name) => /recipients_(add|remove|off)|webhooks|auth|api|uploads/.test(name))).toBe(false)
-    expect((await call(client, "max_bot_me")).body).toMatchObject({ username: "helper_bot" })
+  it("**offers 0.22.0's reads-only list with bot: readonly**, and every write at the default levels", async () => {
+    const readonly = await connect({ permissions: { bot: "readonly" } })
+    expect((await names(readonly.client)).sort()).toEqual([...READS].sort())
+
+    const all = await names((await connect()).client)
+    expect(all).toHaveLength(29)
+    expect(all).toEqual(
+      expect.arrayContaining(["max_bot_messages_send", "max_bot_chats_check", "max_bot_comments_delete"]),
+    )
+    expect(all.some((name) => /recipients_(add|remove|clear)|webhooks|auth|api|uploads|_mcp/.test(name))).toBe(false)
+  })
+
+  it("**bot: deny leaves what no level stops**, and a key opened under it offers that write alone", async () => {
+    expect((await names((await connect({ permissions: { bot: "deny" } })).client)).sort()).toEqual([
+      "max_bot_recipients_list",
+      "max_bot_sends_list",
+      "max_bot_status",
+    ])
+    const send = await names((await connect({ permissions: { bot: "readonly", "bot.messages.send": "allow" } })).client)
+    expect(send).toEqual(expect.arrayContaining(["max_bot_messages_send", "max_bot_comments_send"]))
+    expect(send).not.toContain("max_bot_messages_edit")
+    expect((await call((await connect()).client, "max_bot_me")).body).toMatchObject({ username: "helper_bot" })
   })
 
   it("serves SKILL.md as max://skill, and names it last in instructions within 2048 characters", async () => {
     const { client } = await connect()
-    const text = instructions({
+    const text = botInstructions({
+      command: "max",
+      name: "MAX",
       profile: "a-profile-name-of-some-length",
-      allowSend: true,
+      writes: ["max_bot_messages_send"],
       confirmSend: true,
-      allowDelete: true,
-      allowModerate: true,
+      skill: "`max skill install` installs it as an agent skill.",
     })
 
     const { resources } = await client.listResources()
@@ -141,33 +193,29 @@ describe("max bot mcp", () => {
       { uri: "max://skill", mimeType: "text/markdown", text: readFileSync(SKILL, "utf8") },
     ])
     expect(text.length).toBeLessThanOrEqual(2048)
-    expect(text).toMatch(/`max skill install` installs it as an agent skill\.$/)
     expect(calls).toEqual([])
   })
 
   it("answers max_bot_status with the token's source, the bot and the writing tools that are on", async () => {
-    const { client } = await connect({ allowSend: true })
+    const { client } = await connect()
     const { body } = await call(client, "max_bot_status")
-    expect(body).toMatchObject({ kind: "bot", auth: { username: "helper_bot" }, allow: "all" })
+    expect(body).toMatchObject({ kind: "bot", auth: { username: "helper_bot" } })
     expect(body.writes).toContain("max_bot_messages_send")
     expect(JSON.stringify(body)).not.toContain("bot-token")
   })
 
   it("offers all_bots and bots on the three copy readers only when readOtherBots allows it", async () => {
-    const schema = async (options: Partial<BotServerOptions>) => {
-      const { client } = await connect(options)
+    const schema = async (readOtherBots: boolean | string[]) => {
+      const { client } = await connect({ readOtherBots })
       const { tools } = await client.listTools()
       return tools.find((tool) => tool.name === "max_bot_people_show")?.inputSchema.properties ?? {}
     }
-    expect(Object.keys(await schema({}))).not.toContain("all_bots")
-    expect(Object.keys(await schema({ readOtherBots: false }))).not.toContain("bots")
-    expect(Object.keys(await schema({ readOtherBots: ["other"] }))).toEqual(
-      expect.arrayContaining(["all_bots", "bots"]),
-    )
+    expect(Object.keys(await schema(false))).not.toContain("all_bots")
+    expect(Object.keys(await schema(["other"]))).toEqual(expect.arrayContaining(["all_bots", "bots"]))
   })
 
   it("sends through the command, so the journal has it — and a text starting with - is text", async () => {
-    const { client } = await connect({ allowSend: true })
+    const { client } = await connect()
     const { isError } = await call(client, "max_bot_messages_send", { chat: "-100", text: "-5 градусов" })
     expect(isError).toBe(false)
     expect(JSON.parse(posts().at(-1)?.body ?? "{}")).toEqual({ text: "-5 градусов" })
@@ -175,8 +223,8 @@ describe("max bot mcp", () => {
     expect(journal.at(-1)).toMatchObject({ outcome: "sent" })
   })
 
-  it("**reaches the shared admins and members commands** under their new tool names", async () => {
-    const { client } = await connect({ allowModerate: true })
+  it("**reaches the shared admins and members commands** under their tool names", async () => {
+    const { client } = await connect()
     expect((await call(client, "max_bot_chats_admins_list", { chat: "-100" })).body).toMatchObject({ items: [] })
     const removed = await call(client, "max_bot_chats_members_remove", { chat: "-100", user: "42", block: true })
     expect(removed.isError).toBe(false)
@@ -184,7 +232,7 @@ describe("max bot mcp", () => {
   })
 
   it("meets the bot's recipient list, and the refusal is the command's", async () => {
-    const { client, profile } = await connect({ allowSend: true })
+    const { client, profile } = await connect()
     await owner(profile, ["recipients", "add", "-200"])
     const { isError, error } = await call(client, "max_bot_messages_send", { chat: "-100", text: "hi" })
     expect(isError).toBe(true)
@@ -193,7 +241,7 @@ describe("max bot mcp", () => {
   })
 
   it("refuses an argument that would become a flag or read stdin, before running anything", async () => {
-    const { client } = await connect({ allowSend: true })
+    const { client } = await connect()
     const flagged = await call(client, "max_bot_messages_send", {
       chat: "-100",
       text: "x",
@@ -205,18 +253,18 @@ describe("max bot mcp", () => {
     expect(calls).toHaveLength(0)
   })
 
-  it("hides what the profile's allow does not name", async () => {
-    const { client } = await connect({ allowSend: true, allowModerate: true, permitted: ["read", "edit"] })
-    const offered = await names(client)
-    expect(offered).toContain("max_bot_messages_edit")
-    expect(offered).not.toContain("max_bot_messages_send")
-    expect(offered).not.toContain("max_bot_chats_check")
+  it("**deletes a comment only after the owner's form**: deleting is ask by default", async () => {
+    const declined = await connect({}, { form: () => ({ action: "decline" }) })
+    expect((await call(declined.client, "max_bot_comments_delete", { message: "mid.2", comment: "c1" })).isError).toBe(
+      true,
+    )
+    expect(deletes()).toHaveLength(0)
   })
 
   describe("with --confirm-send", () => {
     it("shows the write first and sends once the owner agrees", async () => {
       const { client, forms } = await connect(
-        { allowSend: true, confirmSend: true },
+        { confirmSend: true },
         { form: () => ({ action: "accept", content: {} }) },
       )
       const { isError } = await call(client, "max_bot_messages_send", { chat: "-100", text: "hello" })
@@ -226,7 +274,7 @@ describe("max bot mcp", () => {
     })
 
     it("sends nothing when the owner declines", async () => {
-      const { client } = await connect({ allowSend: true, confirmSend: true }, { form: () => ({ action: "decline" }) })
+      const { client } = await connect({ confirmSend: true }, { form: () => ({ action: "decline" }) })
       expect((await call(client, "max_bot_messages_send", { chat: "-100", text: "hello" })).isError).toBe(true)
       expect(posts()).toHaveLength(0)
     })
@@ -241,10 +289,7 @@ describe("max bot mcp", () => {
     const since = new Date(now - 3_600_000).toISOString()
 
     it("shows the actions the rules want confirmed in one form, and does exactly those", async () => {
-      const { client, profile, forms } = await connect(
-        { allowModerate: true },
-        { form: () => ({ action: "accept", content: {} }) },
-      )
+      const { client, profile, forms } = await connect({}, { form: () => ({ action: "accept", content: {} }) })
       confirmDeletes(profile)
       const { isError, body } = await call(client, "max_bot_chats_check", { chat: "-100", since })
       expect(isError).toBe(false)
@@ -255,7 +300,7 @@ describe("max bot mcp", () => {
     })
 
     it("deletes nothing when the client cannot show the form", async () => {
-      const { client, profile } = await connect({ allowModerate: true })
+      const { client, profile } = await connect()
       confirmDeletes(profile)
       expect((await call(client, "max_bot_chats_check", { chat: "-100", since })).isError).toBe(true)
       expect(deletes()).toHaveLength(0)
