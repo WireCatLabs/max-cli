@@ -139,12 +139,12 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 ## Foundation and risks
 
-- **CLI-60** · P1 · 🚧 `feat/t6-inbox-review-shared` (item 5 step 3) · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
+- **CLI-60** · P1 · 🚧 `feat/t6-mcp-store` (item 5 step 4) · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
   copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
   and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
-  `conversations` (#308), transcripts into the shared store (item 5 step 2). Left: a live check of
+  `conversations` (#308), transcripts into the shared store (item 5 step 2), `inbox`/`review` (step 3). Left: a live check of
   `messages list --transcribe`, MCP reads and `serve` off the old cache, `src/cache/` deleted,
-  `inbox`/`review`, the admin commands, max's
+  the admin commands, max's
   half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
   `conversations embed` tells the user to run `max models text download`, which max does not have~~.
   **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.

@@ -50,6 +50,8 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
       return { id, name, username: null }
     },
 
+    admins: async (chat) => (await client.chats.adminIds(chat)) ?? null,
+
     chats: ({ limit, offset }) => client.chats.list({ offset, ...(limit === undefined ? {} : { limit }) }),
 
     // MAX answers up to and including the moment it pages from; the port's `before` is "older than".

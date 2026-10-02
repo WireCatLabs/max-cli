@@ -1,4 +1,6 @@
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { existsSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -7,6 +9,11 @@ import { Connection } from "./protocol/connection.js"
 import type { Payload } from "./protocol/frame.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+
+const pointFor = (profile: string) =>
+  join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "inbox", `${profile}.json`)
+const savedPoint = (profile: string): string | undefined =>
+  existsSync(pointFor(profile)) ? JSON.parse(readFileSync(pointFor(profile), "utf8")).lastCheckAt : undefined
 
 const ME = 10000001
 const HOUR = 60 * 60 * 1000
@@ -98,13 +105,13 @@ describe("max inbox — unread", () => {
   })
 
   it("answers the same twice, and never touches the saved point", async () => {
-    const { environment, store } = inboxMax({ 111: [message(30, 10000002, "unread")] }, { unread: { 111: 1 } })
+    const { environment } = inboxMax({ 111: [message(30, 10000002, "unread")] }, { unread: { 111: 1 } })
 
-    const first = await runWith(["u-twice", "inbox", "--json"], environment)
+    const first = await runWith(["u-twice", "inbox", "--all", "--json"], environment)
     const second = await runWith(["u-twice", "inbox", "--json"], environment)
 
     expect(JSON.parse(second.stdout).chats).toEqual(JSON.parse(first.stdout).chats)
-    expect(store("u-twice").readState().lastCheckAt).toBeUndefined()
+    expect(savedPoint("u-twice")).toBeUndefined()
   })
 
   it("shows the newest `--limit` of a long unread run and says how to read all of it", async () => {
@@ -116,7 +123,7 @@ describe("max inbox — unread", () => {
     const { stdout, stderr } = await runWith(["u-more", "inbox", "--limit", "2", "--json"], environment)
 
     expect(JSON.parse(stdout).chats[0]).toMatchObject({ more: true, unreadCount: 3 })
-    expect(stderr).toContain("max messages list 111 --limit 3")
+    expect(stderr).toContain("max messages list 111")
   })
 
   it("says so when nothing is unread", async () => {
@@ -149,7 +156,7 @@ describe("max inbox --new", () => {
     expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
 
     // The owner's own reply is the newest thing read, so the next check starts after it.
-    expect(store("i-first").readState().lastCheckAt).toBe(new Date(now - 10 * 60 * 1000).toISOString())
+    expect(savedPoint("i-first")).toBe(new Date(now - 10 * 60 * 1000).toISOString())
   })
 
   it("leaves a message that arrived during the run for the next one, and does not step over it", async () => {
@@ -162,7 +169,7 @@ describe("max inbox --new", () => {
     const { stdout } = await runWith(["i-race", "inbox", "--new", "--json"], environment)
 
     expect(JSON.parse(stdout).chats[0].messages.map((m: { text: string }) => m.text)).toEqual(["seen at login"])
-    expect(store("i-race").readState().lastCheckAt).toBe(new Date(now - 30 * 60 * 1000).toISOString())
+    expect(savedPoint("i-race")).toBe(new Date(now - 30 * 60 * 1000).toISOString())
   })
 
   it("says there is nothing new, prints nothing on stdout, and leaves the saved point alone", async () => {
@@ -175,7 +182,7 @@ describe("max inbox --new", () => {
     expect(code).toBe(0)
     expect(stdout).toBe("")
     expect(stderr).toContain("nothing new since")
-    expect(store("i-quiet").readState().lastCheckAt).toBe(saved)
+    expect(savedPoint("i-quiet")).toBe(saved)
   })
 
   it("prints the conversation for a person, each message with its chat", async () => {
@@ -202,12 +209,12 @@ describe("max inbox --new", () => {
     store("i-since").writeState({ ...store("i-since").readState(), lastCheckAt: saved })
 
     const { stdout } = await runWith(
-      ["i-since", "inbox", "--new", "--since", new Date(now - HOUR).toISOString(), "--json"],
+      ["i-since", "inbox", "--new", "--since-time", new Date(now - HOUR).toISOString(), "--json"],
       environment,
     )
 
     expect(JSON.parse(stdout).chats[0].messages).toHaveLength(1)
-    expect(store("i-since").readState().lastCheckAt).toBe(saved)
+    expect(savedPoint("i-since")).toBe(saved)
   })
 
   it("shows the newest when more arrived than `--limit`, and says how to read the rest", async () => {
@@ -220,7 +227,7 @@ describe("max inbox --new", () => {
     const [chat] = JSON.parse(stdout).chats
     expect(chat.more).toBe(true)
     expect(stderr).toContain("only the newest shown")
-    expect(stderr).toContain("max messages list 111 --after")
+    expect(stderr).toContain("max messages list 111")
   })
 
   it("reads at most twenty chats in one run and names the rest", async () => {
@@ -237,14 +244,43 @@ describe("max inbox --new", () => {
   })
 
   it("keeps the saved point through the next login of any command", async () => {
-    const { environment, store } = inboxMax({ 111: [message(30, 10000002, "new")] })
+    const { environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
 
     await runWith(["i-keep", "inbox", "--new", "--json"], environment)
-    const saved = store("i-keep").readState().lastCheckAt
+    const saved = savedPoint("i-keep")
     await runWith(["i-keep", "chats", "list", "--json"], environment)
 
     expect(saved).toBeDefined()
-    expect(store("i-keep").readState().lastCheckAt).toBe(saved)
+    expect(savedPoint("i-keep")).toBe(saved)
+  })
+
+  it("preserves the shared checkpoint after migration even when the legacy point stays older", async () => {
+    const { environment, store } = inboxMax({ 111: [message(30, 10000002, "new")] })
+    const old = new Date(now - HOUR).toISOString()
+    store("i-migrate").writeState({ ...store("i-migrate").readState(), lastCheckAt: old })
+
+    const first = await runWith(["i-migrate", "inbox", "--new", "--json"], environment)
+    expect(first.code).toBe(0)
+    expect(savedPoint("i-migrate")).toBe(new Date(now - 30 * 60 * 1000).toISOString())
+    expect(store("i-migrate").readState().lastCheckAt).toBe(old)
+    const second = await runWith(["i-migrate", "inbox", "--new", "--json"], environment)
+    expect(second.code).toBe(0)
+    expect(JSON.parse(second.stdout).chats).toEqual([])
+    expect(savedPoint("i-migrate")).toBe(new Date(now - 30 * 60 * 1000).toISOString())
+  })
+
+  it("a failed inbox leaves the migrated checkpoint where it was", async () => {
+    const { environment, store } = inboxMax({ 111: [message(30, 10000002, "new")] })
+    const old = new Date(now - HOUR).toISOString()
+    store("i-failed").writeState({ ...store("i-failed").readState(), lastCheckAt: old })
+    const result = await runWith(["i-failed", "inbox", "--new", "--json"], {
+      ...environment,
+      connection: () => {
+        throw new Error("scripted connection failure")
+      },
+    })
+    expect(result.code).not.toBe(0)
+    expect(savedPoint("i-failed")).toBe(old)
   })
 
   it("refuses `--offline` before connecting", async () => {

@@ -1527,10 +1527,11 @@ max inbox [options]
 | Опция | Что делает |
 |---|---|
 | `--new` | what arrived since the last check, each message once — for scheduled runs. |
-| `--since <id-or-time>` | what arrived after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays put. |
+| `--since-time <time>` | what arrived after this ISO 8601 time, or 2h / 1d ago; the saved point stays put. |
 | `--limit <n>` | at most this many per chat, the newest. |
-| `--transcribe` | hear voice messages not heard yet, on this machine; slow, the model must be downloaded. |
-| `--model <id>` | which downloaded speech model hears them; `max models audio list` shows them. |
+| `--all` | muted and archived chats too — left out unless they mention you or reply to you. |
+| `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
+| `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 
 ## `max review`
 
@@ -1542,10 +1543,12 @@ max review [options]
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | where the last review ended — a message id, ISO 8601 time, or 2h / 1d ago; 3 days ago if not given. |
-| `--transcribe` | transcribe voice messages not heard yet; slow, and the model must be downloaded. |
-| `--chat <chat>` | only this chat: an id, or part of a chat name. |
-| `--unanswered [hours]` | only questions to you or a group's admins that nobody answered, asked at least this long ago; 24 hours if not given. |
+| `--since-time <time>` | where the last review ended — ISO 8601, or 2h / 1d ago; 3 days ago if not given. |
+| `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
+| `--unanswered [duration]` | only questions to you or a group's admins that nobody answered, asked at least this long ago — 4h, 1d; 24h if not given. |
+| `--all` | muted and archived chats too — left out unless they mention you or reply to you. |
+| `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
+| `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 
 ## `max serve`
 
