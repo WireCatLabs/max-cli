@@ -189,7 +189,7 @@ describe("max inbox --transcribe", () => {
     const { max: mock, environment } = setup([voice])
 
     const { code, stdout } = await max(
-      ["h-inbox", "inbox", "--since", new Date(now - 60 * 60 * 1000).toISOString(), "--transcribe", "--json"],
+      ["h-inbox", "inbox", "--since-time", new Date(now - 60 * 60 * 1000).toISOString(), "--transcribe", "--json"],
       environment,
     )
 
@@ -208,7 +208,16 @@ describe("max review --transcribe", () => {
     const { environment, events } = setup([wire(10, THEM, "", true)])
 
     const { code } = await max(
-      ["h-review", "review", "--since", new Date(now - 60 * 60 * 1000).toISOString(), "--transcribe", "--json"],
+      [
+        "h-review",
+        "review",
+        "--since-time",
+        new Date(now - 60 * 60 * 1000).toISOString(),
+        "--transcribe",
+        "--model",
+        "gigaam-v3",
+        "--json",
+      ],
       environment,
     )
 
@@ -232,7 +241,7 @@ describe("--model and max messages transcribe", () => {
 
     const since = new Date(now - 60 * 60 * 1000).toISOString()
     const inbox = await max(
-      ["h-model-inbox", "inbox", "--since", since, "--transcribe", "--model", "gigaam-v3", "--json"],
+      ["h-model-inbox", "inbox", "--since-time", since, "--transcribe", "--model", "gigaam-v3", "--json"],
       environment,
     )
     expect(JSON.parse(inbox.stdout[0] as string).chats[0].messages[0].transcript).toBe("перезвоню вечером")

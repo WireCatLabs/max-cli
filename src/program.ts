@@ -12,10 +12,12 @@ import {
 } from "@leemour/cli-core"
 import {
   conversationsCommand,
+  inboxCommand,
   pollsCommand,
   provide as provideShared,
   reactionsCommand,
   recorded,
+  reviewCommand,
   storeCommand as sharedStoreCommand,
   wasSettled,
 } from "@leemour/cli-messaging/cli"
@@ -32,12 +34,10 @@ import { configCommand } from "./commands/config.js"
 import { contactsCommand } from "./commands/contacts.js"
 import { type Environment, provide } from "./commands/context.js"
 import { doctorCommand } from "./commands/doctor.js"
-import { inboxCommand } from "./commands/inbox.js"
 import { mcpCommand } from "./commands/mcp.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
 import { recipientsCommand } from "./commands/recipients.js"
-import { reviewCommand } from "./commands/review.js"
 import { runsCommand } from "./commands/runs.js"
 import { sendsCommand } from "./commands/sends.js"
 import { serveCommand } from "./commands/serve.js"
@@ -47,6 +47,7 @@ import { skillCommand } from "./commands/skill.js"
 import { upgradeCommand } from "./commands/upgrade.js"
 import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
+import { migrateInboxPoint } from "./inbox-point.js"
 import { maxMessenger } from "./messenger.js"
 import { commandWords, liftProfile } from "./profile.js"
 import { modelsDirectory } from "./transcribe/install.js"
@@ -121,8 +122,8 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(reactionsCommand(maxMessenger))
   program.addCommand(recipientsCommand())
   program.addCommand(sendsCommand())
-  program.addCommand(inboxCommand())
-  program.addCommand(reviewCommand())
+  program.addCommand(inboxCommand(maxMessenger).hook("preAction", (command) => migrateInboxPoint(command)))
+  program.addCommand(reviewCommand(maxMessenger))
   program.addCommand(serveCommand())
   program.addCommand(serverCommand())
   program.addCommand(watchCommand())

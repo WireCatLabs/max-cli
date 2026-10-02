@@ -1,4 +1,3 @@
-import { CliError } from "@leemour/cli-core"
 import type { MaxClient } from "./client.js"
 import type { Id, Review, ReviewChat, ReviewMessage } from "./domain/models.js"
 import type { MaxRecord } from "./record.js"
@@ -10,18 +9,6 @@ import { speechModel } from "./transcribe/models.js"
 export const REVIEW_DAYS = 3
 
 export const reviewStart = (now = Date.now()): number => now - REVIEW_DAYS * 86_400_000
-
-export const UNANSWERED_HOURS = 24
-
-/** `--unanswered` with no value is `true`; a value is hours, a fraction allowed. */
-export const unansweredHours = (value: unknown): number => {
-  if (value === true) return UNANSWERED_HOURS
-  const hours = Number(value)
-  if (!Number.isFinite(hours) || hours < 0) {
-    throw new CliError("validation_error", `--unanswered takes hours, a number 0 or more — got ${String(value)}`)
-  }
-  return hours
-}
 
 export interface ReviewOptions {
   since: number

@@ -1,10 +1,12 @@
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { describe, expect, it } from "vitest"
-import type { Environment } from "./commands/context.js"
+import { contextFor, type Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
+import { MaxSession } from "./mcp/session.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import type { Payload } from "./protocol/frame.js"
+import { review as legacyReview } from "./review.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
 
@@ -54,9 +56,15 @@ const reviewMax = (
       },
       [Opcode.CHAT_HISTORY]: (request: Payload) => {
         const from = Number(request.from)
+        const backward = Number(request.backward ?? 100)
         const forward = Number(request.forward ?? 0)
         const all = histories[Number(request.chatId)] ?? []
-        return { messages: all.filter((m) => m.time >= from).slice(0, forward) }
+        return {
+          messages:
+            forward > 0
+              ? all.filter((m) => m.time >= from).slice(0, forward)
+              : all.filter((m) => m.time <= from).slice(-backward),
+        }
       },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
       [Opcode.CHATS_LIST]: { chats: [] },
@@ -92,7 +100,7 @@ describe("max review", () => {
       222: [message(500, THEM, "quiet chat")],
     })
 
-    const { code, json } = await review(["r-both", "review", "--since", since(60), "--json"], environment)
+    const { code, json } = await review(["r-both", "review", "--since-time", since(60), "--json"], environment)
 
     expect(code).toBe(0)
     expect(json.chats.map((chat: { id: string }) => chat.id)).toEqual(["111"])
@@ -108,17 +116,17 @@ describe("max review", () => {
       { lastEventMinutesAgo: { 111: 30 } },
     )
 
-    const { json } = await review(["r-cut", "review", "--since", since(60), "--json"], environment)
+    const { json } = await review(["r-cut", "review", "--since-time", since(60), "--json"], environment)
 
     expect(texts(json.chats[0])).toEqual(["before the login"])
     expect(json.until).toBe(since(30))
   })
 
-  it("pages forward through a busy chat instead of taking only the newest", async () => {
+  it("pages through a busy chat instead of taking only the newest", async () => {
     const busy = Array.from({ length: 150 }, (_, i) => message(200 - i, THEM, `m${i}`))
     const { environment, historiesAsked } = reviewMax({ 111: busy })
 
-    const { json } = await review(["r-busy", "review", "--since", since(201), "--json"], environment)
+    const { json } = await review(["r-busy", "review", "--since-time", since(201), "--all", "--json"], environment)
 
     expect(json.chats[0].messages).toHaveLength(150)
     expect(json.chats[0].more).toBe(false)
@@ -139,10 +147,11 @@ describe("max review", () => {
     const voice = message(10, THEM, "", [{ _type: "AUDIO", audioId: 5, duration: 3000, url: "https://x" }])
     const { environment } = reviewMax({ 111: [voice] })
 
-    const plain = await review(["r-voice", "review", "--since", since(60), "--json"], environment)
-    const asked = await review(["r-voice", "review", "--since", since(60), "--transcribe", "--json"], environment)
+    const plain = await review(["r-voice", "review", "--since-time", since(60), "--json"], environment)
+    const asked = await review(["r-voice", "review", "--since-time", since(60), "--transcribe", "--json"], environment)
 
     expect(plain.json).toMatchObject({ complete: false, unheard: [{ chatId: "111", messageId: String(voice.id) }] })
+    expect(plain.json.chats[0].messages[0].attachments[0].kind).toBe("voice")
     expect(asked.code).toBe(0)
     expect(asked.json.transcribeProblem).toMatch(/max models audio download/)
     expect(asked.stderr).toContain("incomplete")
@@ -177,7 +186,7 @@ describe("max review", () => {
       )
 
       const { code, json, stderr } = await review(
-        ["r-open", "review", "--since", since(500), "--unanswered", "1", "--json"],
+        ["r-open", "review", "--since-time", since(500), "--unanswered", "1h", "--json"],
         environment,
       )
 
@@ -192,13 +201,13 @@ describe("max review", () => {
       const { environment } = reviewMax({ 111: [message(300, THEM, "when is it?"), message(290, ADMIN, "Sunday")] })
 
       const { json, stderr } = await review(
-        ["r-unknown", "review", "--since", since(400), "--unanswered", "--json"],
+        ["r-unknown", "review", "--since-time", since(400), "--unanswered", "--json"],
         environment,
       )
 
       expect(json.chats).toEqual([])
       const loose = await review(
-        ["r-unknown", "review", "--since", since(400), "--unanswered", "0", "--json"],
+        ["r-unknown", "review", "--since-time", since(400), "--unanswered", "1ms", "--json"],
         environment,
       )
       expect(texts(loose.json.chats[0])).toEqual(["when is it?"])
@@ -214,18 +223,100 @@ describe("max review", () => {
       })
 
       const { json } = await review(
-        ["r-chat", "review", "--since", since(400), "--chat", "222", "--unanswered", "0", "--json"],
+        ["r-chat", "review", "--since-time", since(400), "--chat", "222", "--unanswered", "1ms", "--json"],
         environment,
       )
 
       expect(json.chats.map((chat: { id: string }) => chat.id)).toEqual(["222"])
     })
 
-    it("refuses hours that are not a number", async () => {
+    it("refuses an invalid unanswered duration", async () => {
       const { environment } = reviewMax({ 111: [message(300, THEM, "one?")] })
       const { code, stderr } = await review(["r-bad", "review", "--unanswered", "soon", "--json"], environment)
       expect(code).not.toBe(0)
-      expect(stderr).toContain("--unanswered takes hours")
+      expect(stderr).toContain("--unanswered takes a duration")
     })
+  })
+})
+
+describe("legacy MCP review while its command moves to shared services", () => {
+  it("marks a legacy MCP review incomplete when its message cap cuts a busy chat", async () => {
+    const { environment } = reviewMax({
+      111: Array.from({ length: 501 }, (_, index) => message(600 - index, THEM, `message ${index}`)),
+    })
+    const session = new MaxSession(contextFor({ profile: "r-legacy-capped" }, environment))
+    try {
+      const result = await session.use("review", (client) =>
+        legacyReview(client, { since: now - 601 * 60_000, record: undefined }),
+      )
+      expect(result.complete).toBe(false)
+      expect(result.chats[0]?.more).toBe(true)
+      expect(result.chats[0]?.messages).toHaveLength(500)
+    } finally {
+      await session.close()
+    }
+  })
+
+  it("restricts legacy MCP review to the requested chat and releases before hearing", async () => {
+    const { environment } = reviewMax({ 111: [message(120, THEM, "selected?")], 222: [message(100, THEM, "other?")] })
+    const session = new MaxSession(contextFor({ profile: "r-legacy-chat" }, environment))
+    try {
+      const result = await session.use("review", (client, release) =>
+        legacyReview(client, {
+          since: now - 200 * 60_000,
+          record: undefined,
+          chatId: "111",
+          transcribeWith: "gigaam-v3",
+          release,
+          progress: () => {},
+        }),
+      )
+      expect(result.chats.map((chat) => chat.id)).toEqual(["111"])
+      expect(result.complete).toBe(true)
+    } finally {
+      await session.close()
+    }
+  })
+
+  it("keeps open questions and counts known admins' answers before the boundary", async () => {
+    const question = message(100, THEM, "cost?")
+    const { environment } = reviewMax(
+      {
+        111: [
+          message(180, THEM, "open?"),
+          message(170, OTHER, "not sure"),
+          question,
+          replyTo(question, 90, ADMIN, "free"),
+          replyTo(message(195, ME, "owner post"), 80, THEM, "that clashes"),
+          message(70, OTHER, "not sure"),
+          message(30, THEM, "fresh?"),
+        ],
+        222: [
+          message(170, THEM, "still open?"),
+          message(160, OTHER, "maybe"),
+          message(150, THEM, "https://example.com/?q=x"),
+          message(140, ME, "mine?"),
+        ],
+      },
+      { groupFields: { 111: { owner: ME, admins: [ADMIN] } } },
+    )
+    const session = new MaxSession(contextFor({ profile: "r-legacy-open" }, environment))
+    try {
+      const result = await session.use("review", (client) =>
+        legacyReview(client, {
+          since: now - 200 * 60_000,
+          record: undefined,
+          unansweredAfterHours: 1,
+          now,
+        }),
+      )
+      expect(result.chats.map((chat) => chat.messages.map((message) => message.text))).toEqual([
+        ["open?", "that clashes"],
+        ["still open?"],
+      ])
+      expect(result.chats.map((chat) => chat.answeredBy)).toEqual(["owner-and-admins", "owner"])
+    } finally {
+      await session.close()
+    }
   })
 })

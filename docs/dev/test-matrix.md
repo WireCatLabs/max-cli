@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**482 ✅ · 63 ⛔ · 0 ❌** — 209 commands, 336 options.
+**485 ✅ · 63 ⛔ · 0 ❌** — 209 commands, 339 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -239,15 +239,18 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `sends list` | `--limit` | ✅ |  |
 | `inbox` |  | ✅ |  |
 | `inbox` | `--new` | ✅ |  |
-| `inbox` | `--since` | ✅ |  |
+| `inbox` | `--since-time` | ✅ |  |
 | `inbox` | `--limit` | ✅ |  |
+| `inbox` | `--all` | ✅ |  |
 | `inbox` | `--transcribe` | ✅ |  |
 | `inbox` | `--model` | ✅ |  |
 | `review` |  | ✅ |  |
-| `review` | `--since` | ✅ |  |
-| `review` | `--transcribe` | ✅ |  |
+| `review` | `--since-time` | ✅ |  |
 | `review` | `--chat` | ✅ |  |
 | `review` | `--unanswered` | ✅ |  |
+| `review` | `--all` | ✅ |  |
+| `review` | `--transcribe` | ✅ |  |
+| `review` | `--model` | ✅ |  |
 | `serve` |  | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
