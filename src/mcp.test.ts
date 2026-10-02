@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { openStore } from "@leemour/cli-messaging/store"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
@@ -165,6 +166,44 @@ describe("the MCP server", () => {
     expect(logins()).toBe(1)
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
     expect(streams.stdout).toEqual([])
+  })
+
+  it("reads shared transcripts in list, inbox, review and direct transcription without a model", async () => {
+    const id = "116762160362694999"
+    const store = await openStore()
+    await store.keepTranscript({ provider: "max", account: "10000001" }, "111", id, "shared words", "gigaam-v3")
+    await store.close()
+    const { client, max } = await connect(
+      {},
+      {
+        answers: {
+          [Opcode.CHAT_HISTORY]: {
+            messages: [
+              {
+                id: BigInt(id),
+                time: 1789776000000,
+                sender: 10000002,
+                text: "",
+                attaches: [{ _type: "AUDIO", audioId: 5, duration: 3000, url: "https://example.test/voice.ogg" }],
+              },
+            ],
+          },
+          [Opcode.CONTACT_INFO]: { contacts: [] },
+        },
+      },
+    )
+
+    const listed = await call(client, "max_messages_list", { chat: "111", transcribe: true })
+    const inbox = await call(client, "max_inbox", { since: "2026-09-01T00:00:00Z", transcribe: true })
+    const reviewed = await call(client, "max_review", { since: "2026-09-01T00:00:00Z", transcribe: true })
+    const direct = await call(client, "max_messages_transcribe", { chat: "111", message: id })
+
+    for (const result of [listed, inbox, reviewed, direct]) {
+      expect(result.isError).toBe(false)
+      expect(JSON.stringify(result.body)).toContain("shared words")
+    }
+    expect(direct.body).toMatchObject({ text: "shared words", cached: true })
+    expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
   })
 
   it("hears voice messages on request, and without a model says why instead of failing", async () => {

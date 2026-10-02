@@ -1,7 +1,7 @@
 import { CliError } from "@leemour/cli-core"
-import type { CacheStore } from "./cache/index.js"
 import type { MaxClient } from "./client.js"
 import type { Id, Review, ReviewChat, ReviewMessage } from "./domain/models.js"
+import type { MaxRecord } from "./record.js"
 import { type HearAllOptions, hearAll, isVoice, withTranscript } from "./transcribe/index.js"
 import { modelsDirectory } from "./transcribe/install.js"
 import { speechModel } from "./transcribe/models.js"
@@ -25,7 +25,7 @@ export const unansweredHours = (value: unknown): number => {
 
 export interface ReviewOptions {
   since: number
-  cache: CacheStore | undefined
+  record: Pick<MaxRecord, "transcript" | "keepTranscript"> | undefined
   /** Transcribe voice messages not heard yet, with this model; otherwise only texts already kept. */
   transcribeWith?: string
   chatId?: Id
@@ -39,7 +39,7 @@ export interface ReviewOptions {
 }
 
 /**
- * `max review` and `max_review` alike. A text already heard comes from the cache with no model
+ * `max review` and `max_review` alike. A text already heard comes from the shared store with no model
  * loaded; with `transcribeWith`, the rest are transcribed. A missing model or a recording that will
  * not decode is a field in the answer, not a failed review: the messages are still worth reading.
  * The model is never downloaded from here (`NEED-231`). Everything that needs MAX — the admins for
@@ -49,7 +49,7 @@ export const review = async (
   client: MaxClient,
   {
     since,
-    cache,
+    record,
     transcribeWith,
     chatId,
     unansweredAfterHours,
@@ -72,7 +72,7 @@ export const review = async (
   const heard = await hearAll(client, voices, {
     model: transcribeWith === undefined ? undefined : speechModel(transcribeWith),
     directory: modelsDirectory(),
-    cache,
+    record,
     ...(release ? { release } : {}),
     ...(progress ? { progress } : {}),
     ...hearing,

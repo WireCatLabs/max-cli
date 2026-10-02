@@ -9,10 +9,10 @@ import {
   unpinCommand,
 } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
-import { openProfileCache } from "../cache/index.js"
 import type { Message } from "../domain/models.js"
 import { type Saved, save } from "../download.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
+import { maxRecord } from "../record.js"
 import { renderMessages } from "../rendering/messages.js"
 import { notDownloaded, transcribe } from "../transcribe/index.js"
 import { isInstalled, modelsDirectory } from "../transcribe/install.js"
@@ -78,19 +78,20 @@ export const messagesCommand = (): Command => {
       const { renderer, format, streams, settings, createClient, run } = context
       const model = speechModel(wanted ?? settings.transcribeModel)
       const directory = modelsDirectory()
-      // Before connecting: a refusal for a missing model should not cost a login.
-      if (!isInstalled(model, directory)) throw notDownloaded(model)
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
-
       await run("messages transcribe", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const client = createClient({ events })
+        const record = maxRecord({ account: () => context.store.readState().viewerId })
         try {
+          if (!isInstalled(model, directory)) {
+            const kept = await record.transcript(chat.trim(), messageId.trim())
+            if (kept?.source !== model.id) throw notDownloaded(model)
+          }
           const chatId = await client.chats.resolve(chat)
           const transcript = await transcribe(client, chatId, messageId.trim(), {
             ...context.hearing,
             model,
             directory,
-            cache,
+            record,
             release: async () => {
               await client.close()
               renderer.note(`transcribing with ${model.id} on this machine`)
@@ -99,8 +100,11 @@ export const messagesCommand = (): Command => {
           if (format === "pretty") streams.data(`${transcript.text}\n`)
           else renderer.result(transcript)
         } finally {
-          await client.close()
-          await cache?.close()
+          try {
+            await client.close()
+          } finally {
+            await record.close()
+          }
         }
       })
     })

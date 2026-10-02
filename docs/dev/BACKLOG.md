@@ -142,8 +142,9 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **CLI-60** · P1 · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
   copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
   and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
-  `conversations` (#308). Left: a live check of `messages list --transcribe`, MCP tools, `serve` and
-  transcription off the old cache and `src/cache/` deleted, `inbox`/`review`, the admin commands, max's
+  `conversations` (#308), transcripts into the shared store (item 5 step 2). Left: a live check of
+  `messages list --transcribe`, MCP reads and `serve` off the old cache, `src/cache/` deleted,
+  `inbox`/`review`, the admin commands, max's
   half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
   `conversations embed` tells the user to run `max models text download`, which max does not have~~.
   **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
@@ -157,10 +158,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **CLI-63** · P3 · The shared `messages list --transcribe` fetches a voice message on a second
   connection after the read's own closes — a second MAX login with `--no-serve`. Keep the read's
   connection until the download is done. cli-messaging `hearing-command.ts`.
-- **CLI-64** · P2 · The shared `contacts list` falls back to dialogs with the chat id as the person's
-  id — right for Telegram, wrong for MAX (a dialog's id is not the partner's). Use
-  `Messenger.partnerOf` there; until then max's MCP contact tools stay on `MaxClient`. cli-messaging
-  `services/people.ts` `contactsIn`.
 - **CLI-65** · P3 · The shared speech-models folder (`cli-common`'s cache) is written twice: in
   cli-messaging `src/speech/install.ts` and again in max (after #282). Export it from cli-messaging
   and use that.

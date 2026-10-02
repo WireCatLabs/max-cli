@@ -11,8 +11,10 @@ export interface LoginDelta {
   marker?: number
 }
 
-/** What `MaxClient` itself keeps in cli-messaging's `messages.db`; history is saved by the shared `stored` wrapper. */
+/** MAX login data and transcripts in `messages.db`; history is saved by the shared `stored` wrapper. */
 export interface MaxRecord {
+  transcript(chatId: Id, messageId: Id): Promise<{ text: string; source: string } | undefined>
+  keepTranscript(chatId: Id, messageId: Id, text: string, source: string): Promise<void>
   syncMarker(): Promise<number | undefined>
   applyLogin(delta: LoginDelta): Promise<void>
   names(ids: Id[]): Promise<Map<Id, string>>
@@ -40,6 +42,17 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
   }
 
   return {
+    transcript: async (chatId, messageId) => {
+      const key = keyOf()
+      return key ? (await store()).transcript(key, chatId, messageId) : undefined
+    },
+
+    keepTranscript: async (chatId, messageId, text, source) => {
+      const key = keyOf()
+      if (!key) throw new Error("cannot keep a transcript before the MAX account is known")
+      await (await store()).keepTranscript(key, chatId, messageId, text, source)
+    },
+
     syncMarker: async () => {
       const key = keyOf()
       const saved = key && (await (await store()).syncState(key, MARKER))
