@@ -49,7 +49,11 @@ describe("every failure is kept as a run", () => {
 
   it("a command that never talks to MAX", async () => {
     expect(await runWith(["f-local", "models", "audio", "download", "no-such-model"])).not.toBe(0)
-    expect(runsOf("f-local")).toMatchObject([{ command: "models audio download", status: "failed" }])
+    expect(await runWith(["f-local", "models", "text", "download", "no-such-model"])).not.toBe(0)
+    expect(runsOf("f-local")).toMatchObject([
+      { command: "models text download", status: "failed" },
+      { command: "models audio download", status: "failed" },
+    ])
   })
 
   it("`session start` refused before anything happened", async () => {

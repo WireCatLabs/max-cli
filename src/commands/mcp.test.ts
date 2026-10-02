@@ -90,4 +90,10 @@ describe("the config commands, through the CLI", () => {
     expect(code).toBe(0)
     expect(json.items).toContainEqual(expect.objectContaining({ id: "gigaam-v3", default: true, downloaded: false }))
   })
+
+  it("`models text list` names the embedding models `conversations embed` uses", async () => {
+    const listed = await cli(["models", "text", "list", "--json"])
+    expect(listed.code).toBe(0)
+    expect(listed.json.items).toContainEqual(expect.objectContaining({ id: "e5-small", default: true }))
+  })
 })
