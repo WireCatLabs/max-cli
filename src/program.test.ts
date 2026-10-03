@@ -63,6 +63,7 @@ const acquaintedMax = () => {
             title: "First",
             type: "CHAT",
             newMessages: 2,
+            participantsCount: 3,
             lastEventTime: 1789776000000,
             participants: { 10000001: 1, 10000002: 1, 10000003: 1 },
           },
@@ -742,8 +743,11 @@ describe("the program", () => {
         id: "111",
         kind: "group",
         unreadCount: 2,
+        participantsCount: 3,
         members: [{ name: "Another Person" }, { name: "Someone Else", username: "someone" }],
       })
+      expect(shown.stderr).toContain("2 listed members; the chat reports 3 participants")
+      expect(shown.stderr).toContain("may omit your account or be partial")
 
       const missing = await runWith(["t-show", "chats", "show", "999", "--json"], environment)
       expect(JSON.parse(missing.stderr).error.code).toBe("not_found")
@@ -782,11 +786,14 @@ describe("the program", () => {
       expect(offline.code).toBe(0)
       expect(JSON.parse(offline.stdout)).toMatchObject({
         id: "111",
+        participantsCount: 3,
         members: [
           { id: "10000003", name: "Another Person" },
           { id: "10000002", name: "Someone Else" },
         ],
       })
+      expect(offline.stderr).toContain("2 listed members; the chat reports 3 participants")
+      expect(offline.stderr).toContain("may omit your account or be partial")
 
       const send = await runWith(["t-offline", "messages", "send", "111", "hi", "--offline"], silent.environment)
       expect(send.code).not.toBe(0)
