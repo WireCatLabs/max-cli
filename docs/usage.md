@@ -875,3 +875,7 @@ max config set --defaults allow send          # для всех профилей
 `sends list` использует настроенный `limit`, если `--limit` не задан.
 JSON включает `items`, `page`, `limit`, `hasMore`; `limit` — выбранный предел списка,
 а не число строк. JSONL выдаёт одну запись попытки на строку.
+
+`account show --json` сохраняет поля MAX `id`, `name`, `phone`, `description` и добавляет
+`username: null`, как общий формат аккаунта. Номер по-прежнему маскируется;
+`--show-phone` явно показывает его целиком.

@@ -1,3 +1,4 @@
+import { CliError } from "@leemour/cli-core"
 import { contactsCommand as sharedContactsCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
@@ -54,7 +55,14 @@ export const contactsCommand = (): Command => {
   command
     .command("lookup")
     .description("who MAX has under a phone number — asks for it, or reads it from stdin")
+    .allowExcessArguments()
     .action(async function (this: Command) {
+      if (this.args.length > 0) {
+        throw new CliError(
+          "validation_error",
+          "the phone number is never an argument — pipe it in, or type it when asked",
+        )
+      }
       const { renderer, createClient, run, ask, store } = forCommand(this)
       const phone = await ask("phone number: ")
       const record = maxRecord({ account: () => store.readState().viewerId })

@@ -205,6 +205,27 @@ describe("contacts", () => {
     expectNowhereOnDisk("1234567890")
   })
 
+  it("refuses a phone number in argv without echoing it, prompting or connecting", async () => {
+    const { environment, sent } = account()
+    let asked = false
+    const refused = await runWith(["a-private-argv", "contacts", "lookup", PHONE, "--record", "--trace"], {
+      ...environment,
+      ask: async () => {
+        asked = true
+        return PHONE
+      },
+    })
+    expect(refused.code).toBe(2)
+    expect(refused.stdout).toBe("")
+    expect(refused.stderr).not.toContain(PHONE)
+    expect(refused.stderr).not.toContain("1234567890")
+    expect(JSON.parse(refused.stderr).error.message).toContain("never an argument")
+    expect(asked).toBe(false)
+    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(sent(Opcode.CONTACT_INFO_BY_PHONE)).toEqual([])
+    expectNowhereOnDisk("1234567890")
+  })
+
   it("`lookup` refuses what is not a number without repeating it", async () => {
     const { environment, sent } = account()
     const refused = await runWith(["contacts", "lookup"], { ...environment, ask: async () => "call 555-mom" })
@@ -432,7 +453,7 @@ describe("the phone number", () => {
     const masked = await runWith(["account", "show"], environment)
     const whole = await runWith(["account", "show", "--show-phone"], environment)
 
-    expect(JSON.parse(masked.stdout).phone).toBe("***7890")
+    expect(JSON.parse(masked.stdout)).toMatchObject({ phone: "***7890", username: null, description: null })
     expect(masked.stdout).not.toContain("123456")
     expect(JSON.parse(whole.stdout).phone).toBe(PHONE)
   })
