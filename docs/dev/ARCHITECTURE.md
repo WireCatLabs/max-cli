@@ -554,6 +554,13 @@ into an exact decimal string. They expect numbers from `lossless-json`, and they
 request is validated with them and then sent as the original lossless value. Enums and
 discriminated unions are strict, so an update type newer than the snapshot fails validation.
 
+**Live evidence 2026-10-03:** `addMembers` remains in the current official OpenAPI0.0.33
+and succeeded against the test group with a bot holding member-management rights. The participant
+was absent before the request, present in personal-account read-back afterwards, and the original
+membership and role were restored. The provider website announces removal on 2026-09-30;
+that notice conflicts with the observed backend behavior. Keep the generated and friendly commands;
+do not generalize one successful group check into availability for every bot or chat.
+
 At run time: `src/commands/bot.ts` → `src/bot/client.ts` (the only door to the generated code) →
 `src/bot/transport.ts`. The transport sends the token as the bare `Authorization` header, parses
 with `lossless-json`, repeats only reads (429, 502, 503, no answer; `Retry-After` first), and turns a
