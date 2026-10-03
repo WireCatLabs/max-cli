@@ -168,6 +168,11 @@ max models audio download gigaam-v3  # 233 МБ, один раз
 max messages transcribe "Иван Петров" 100000000000000001
 ```
 
+Модели лежат в общем каталоге MAX и Telegram; `CLI_COMMON_CACHE_DIR` переносит его.
+`models audio list --json` возвращает страницу `items/page/limit/hasMore` и путь `directory`.
+Скачанные файлы используются повторно. Первой остаётся `gigaam-v3`, а выбранную модель задаёт
+`config set --defaults transcribeModel <модель>`.
+
 | Модель | Языки | Размер | 5 минут речи |
 |---|---|---|---|
 | `gigaam-v3` — по умолчанию | русский — лучше всех с русским | 233 МБ | ~40 с |

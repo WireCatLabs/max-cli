@@ -24,7 +24,6 @@ export default defineConfig({
         "src/commands/serve.ts",
         "src/commands/watch.ts",
         "src/commands/bot-mcp.ts",
-        "src/commands/models.ts",
         "src/server/start.ts",
       ],
       reporter: ["text-summary", "json-summary", "html"],

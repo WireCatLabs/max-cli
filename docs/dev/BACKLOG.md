@@ -153,13 +153,11 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   group reads (`members list`, `events`, `inspect`), and shared moderation/rules with
   legacy checkpoint migration. Left: a live check of
   `messages list --transcribe`, max's
-  half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
-  `conversations embed` tells the user to run `max models text download`, which max does not have~~.
-  **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
+  half of the permission levels. **Correction 2026-10-03:** `models text` is shared since #322;
+  `models audio`, its catalogue and installer now use the shared package too. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
   Shared runner and operational diagnostics: done (#347/#352).
   **Correction 2026-10-03:** search read-only MCP bridge is merged (#357), as is the
-  shared package-upgrade workflow (#358). Permissions and audio-model moves remain with T6.
-  Audio models and CLI-65: 🚧 `refactor/t6-audio-models` owns the shared model commands/catalogue/installer move.
+  shared package-upgrade workflow (#358). The permission-model move remains with T6.
 - **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
   poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
   Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
@@ -170,9 +168,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **CLI-63** · P3 · The shared `messages list --transcribe` fetches a voice message on a second
   connection after the read's own closes — a second MAX login with `--no-serve`. Keep the read's
   connection until the download is done. cli-messaging `hearing-command.ts`.
-- **CLI-65** · P3 · The shared speech-models folder (`cli-common`'s cache) is written twice: in
-  cli-messaging `src/speech/install.ts` and again in max (after #282). Export it from cli-messaging
-  and use that.
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
