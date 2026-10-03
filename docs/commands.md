@@ -1734,22 +1734,6 @@ max doctor report create [options]
 | `--run <id>` | the run the report is about; the newest failed one if not given. |
 | `--output <file>` | where to write it; a new file in this directory if not given. |
 
-## `max cache`
-
-the local copy of chats, contacts and messages
-
-### `max cache clear`
-
-forget everything this profile has cached
-
-```sh
-max cache clear [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--left` | only the chats this account has left, with their messages. |
-
 ## `max runs`
 
 recorded runs — what this tool did, and when

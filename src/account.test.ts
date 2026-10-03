@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { SendJournal } from "@leemour/cli-messaging/sends"
+import { storePath } from "@leemour/cli-messaging/store"
 import { describe, expect, it } from "vitest"
-import { profileCacheFile } from "./cache/index.js"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -102,14 +102,16 @@ const runWith = async (argv: string[], environment: Environment = {}) => {
 }
 
 const filesUnder = (directory: string): string[] =>
-  readdirSync(directory, { recursive: true, withFileTypes: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath, entry.name))
+  !existsSync(directory)
+    ? []
+    : readdirSync(directory, { recursive: true, withFileTypes: true })
+        .filter((entry) => entry.isFile())
+        .map((entry) => join(entry.parentPath, entry.name))
 
-/** Everywhere `max` writes: state (runs, sends, profiles) and the cache. */
+/** Everywhere `max` writes: state (runs, sends, profiles) and the shared store. */
 const expectNowhereOnDisk = (text: string) => {
   const { state, cache } = resolvePaths({ appName: "max-cli", prefix: "MAX", env: process.env })
-  for (const directory of [state, cache])
+  for (const directory of [state, cache, dirname(storePath())])
     for (const file of filesUnder(directory)) expect(readFileSync(file, "latin1"), file).not.toContain(text)
 }
 
@@ -155,16 +157,6 @@ describe("contacts", () => {
     expect(markers.at(-1)).toBe(time - 1000)
   })
 
-  it("`cache clear` forgets what the shared reads keep, too", async () => {
-    const { environment } = acquaintances()
-    await runWith(["a-clear", "contacts", "list"], environment)
-    expect(idsOf((await runWith(["a-clear", "contacts", "list", "--offline"], environment)).stdout)).toHaveLength(3)
-
-    expect((await runWith(["a-clear", "cache", "clear"], environment)).code).toBe(0)
-
-    expect(idsOf((await runWith(["a-clear", "contacts", "list", "--offline"], environment)).stdout)).toEqual([])
-  })
-
   it("shared reads keep their marker without creating a legacy cache", async () => {
     let time = 1789776000000
     const login = { profile: { contact: { id: 10000001 } }, chats: [] }
@@ -174,14 +166,14 @@ describe("contacts", () => {
     }
     const { environment, sent } = account({ [Opcode.LOGIN]: answer })
     await runWith(["a-rebuilt", "contacts", "list"], environment)
-    expect(existsSync(profileCacheFile("a-rebuilt"))).toBe(false)
+    expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, "a-rebuilt.db"))).toBe(false)
     await runWith(["a-rebuilt", "contacts", "list"], environment)
     await runWith(["a-rebuilt", "contacts", "list"], environment)
 
     const markers = sent(Opcode.LOGIN).map((one) => one.contactsSync)
     expect(markers.at(-2)).toBe(time - 2000)
     expect(markers.at(-1)).toBe(time - 1000)
-    expect(existsSync(profileCacheFile("a-rebuilt"))).toBe(false)
+    expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, "a-rebuilt.db"))).toBe(false)
   })
 
   it("`sync` forgets where the last login left off, and answers counts with no name in them", async () => {
@@ -258,7 +250,7 @@ describe("contacts", () => {
     expect(sent(Opcode.CONTACT_UPDATE)).toMatchObject([
       { contactId: 20000002, action: "UPDATE", firstName: "Neighbour" },
     ])
-    expect(existsSync(profileCacheFile("a-name"))).toBe(false)
+    expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, "a-name.db"))).toBe(false)
   })
 
   it("`import` sends each line of the file as number and name, and reports what MAX recognised", async () => {

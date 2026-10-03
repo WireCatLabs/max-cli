@@ -11,7 +11,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { openCache } from "../dist/cache/open.js"
+import { openCache } from "@leemour/cli-messaging/store"
 import { decodeOgg } from "../dist/transcribe/speech.js"
 
 const runtime = typeof (globalThis as { Bun?: unknown }).Bun === "undefined" ? "node" : "bun"
@@ -93,12 +93,9 @@ const shown = maxHere("runs", "show", kept[0] ?? "", "--json")
 check("`runs show` answers with the run and its events", JSON.parse(shown.stdout).runId === kept[0])
 check("`runs show` refuses an id it does not have", maxHere("runs", "show", "no-such-run").status !== 0)
 
-// The cache picks its SQLite by runtime, because node:sqlite and bun:sqlite are different modules
-// (NEED-11). A type check cannot see that and the Vitest suite only ever runs one of the two, so
-// the seam is only really proven here.
 const database = await openCache(join(isolated, "smoke.db"))
 try {
-  check("the cache opens under this runtime", true)
+  check("shared SQLite opens under this runtime", true)
   check(
     "it is in write-ahead mode",
     (database.prepare("PRAGMA journal_mode").get() as { journal_mode?: string })?.journal_mode === "wal",

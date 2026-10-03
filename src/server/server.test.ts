@@ -1,14 +1,13 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { createServer, type Server } from "node:net"
 import { dirname, join } from "node:path"
-import { type CliError, captureStreams, exitCodeFor, memoryKeyring } from "@leemour/cli-core"
+import { type CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { thisMachine, unitScope } from "@leemour/cli-messaging/background"
 import { guardedWrite, RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
 import { openStore } from "@leemour/cli-messaging/store"
 import { decode, ExtData } from "@msgpack/msgpack"
 import { afterEach, describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
-import { profileCacheFile } from "../cache/index.js"
 import { MaxClient } from "../client.js"
 import { contextFor } from "../commands/context.js"
 import { maxServerOptions, NO_RESTART_ON } from "../commands/server.js"
@@ -139,7 +138,9 @@ describe("max serve", () => {
       const key = { provider: "max", account: String(ME) }
       expect((await db.chats(key, {})).items.find((chat) => chat.id === "111")).toMatchObject({ title: "First" })
       expect((await db.people("max", { account: key.account })).get("10000002")?.name).toBe("Someone Else")
-      expect(existsSync(profileCacheFile(store.profile))).toBe(false)
+      expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, `${store.profile}.db`))).toBe(
+        false,
+      )
     } finally {
       await db.close()
     }

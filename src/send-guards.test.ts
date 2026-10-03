@@ -135,12 +135,11 @@ describe("sending", () => {
     expect((await runWith(["g-limit", "messages", "send", "111", "four"], environment)).code).toBe(8)
   })
 
-  it("keeps the journal through `cache clear`, and `sends list` shows it newest first", async () => {
+  it("keeps sent and refused outcomes, and `sends list` shows them newest first", async () => {
     const { environment } = messenger()
     await runWith(["g-keep", "messages", "send", "111", "first"], environment)
     await runWith(["g-keep", "config", "set", "readOnly", "true"])
     await runWith(["g-keep", "messages", "send", "111", "second"], environment)
-    await runWith(["g-keep", "cache", "clear"])
 
     const listed = await runWith(["g-keep", "sends", "list", "--json"])
     expect(JSON.parse(listed.stdout).items.map((entry: { outcome: string }) => entry.outcome)).toEqual([

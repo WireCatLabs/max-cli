@@ -24,7 +24,7 @@ MAX_PROFILE=personal max chats list   # переменная выбирает п
 Два исключения, которые старше этого порядка. Они не забыты, а записаны:
 
 - **`MAX_TOKEN` старше ключницы.** Если переменная задана, берётся она — так это работает в CI.
-- **`MAX_CONFIG_DIR`, `MAX_STATE_DIR`, `MAX_CACHE_DIR` переносят настройки, вход и кэш `max`**, включая то,
+- **`MAX_CONFIG_DIR`, `MAX_STATE_DIR` переносят настройки и вход `max`**, включая то,
   какая запись в ключнице соответствует профилю.
 
 ## Что действует сейчас
@@ -177,8 +177,8 @@ max config show --json
 | `MAX_TOKEN` | токен напрямую, в обход ключницы — для CI и разовых запусков |
 | `MAX_BOT_TOKEN` | токен бота для `max bot`, в обход ключницы |
 | `MAX_CONFIG_DIR` | где лежат `config.json` и, при отсутствии ключницы, файл с токеном |
+| `MESSAGING_STORE` | файл общей локальной копии чатов, сообщений и расшифровок |
 | `MAX_STATE_DIR` | где лежат состояние профилей и каталог `runs/` |
-| `MAX_CACHE_DIR` | где лежит локальная копия чатов и сообщений |
 | `NO_COLOR` | выключает цвет, как и в любой другой программе |
 | `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER` | не спрашивать npm о новой версии; `CI` действует так же |
 
@@ -199,7 +199,6 @@ max config show --json
 ```sh
 export MAX_CONFIG_DIR=/tmp/max-try/config
 export MAX_STATE_DIR=/tmp/max-try/state
-export MAX_CACHE_DIR=/tmp/max-try/cache
 export MESSAGING_STORE=/tmp/max-try/messages.db
 
 max session start     # этот токен не виден обычной установке
@@ -215,3 +214,7 @@ max chats list
 - [commands.md](commands.md) — каждая команда и опция, и полная таблица кодов возврата
 - [sessions.md](sessions.md) — как устроены профили и где лежит токен
 - [troubleshooting.md](troubleshooting.md) — что делать, когда не работает
+
+`MAX_CACHE_DIR` относится только к прежнему кэшу: `max doctor` ищет там оставшийся файл.
+Для совместимости эта переменная всё ещё меняет запись в ключнице; для новой общей копии
+используйте `MESSAGING_STORE`.

@@ -147,14 +147,14 @@ describe("the program", () => {
 
   it("offers every resource at the top level", async () => {
     const { stdout } = await runWith(["--help"])
-    for (const command of ["session", "account", "chats", "contacts", "messages", "cache", "runs"]) {
+    for (const command of ["session", "account", "chats", "contacts", "messages", "store", "runs"]) {
       expect(stdout).toContain(command)
     }
   })
 
-  it("**offers a way out of the cache**, because a cache is the one part that remembers being wrong", async () => {
+  it("offers offline reads and cleanup of departed chats", async () => {
     expect((await runWith(["--help"])).stdout).toContain("--offline")
-    expect((await runWith(["cache", "--help"])).stdout).toContain("clear")
+    expect((await runWith(["store", "--help"])).stdout).toContain("clear")
   })
 
   it("**does not offer --no-cache**, because not using the record is already what happens", async () => {
