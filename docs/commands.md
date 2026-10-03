@@ -1289,7 +1289,7 @@ speech models for transcribing voice messages
 
 #### `max models audio list`
 
-the models max can use, which are downloaded, and which one is the default
+the speech models, most suitable first, which are downloaded, and which one is the default
 
 ```sh
 max models audio list
@@ -1297,7 +1297,7 @@ max models audio list
 
 #### `max models audio download`
 
-download a speech model once, checked against the sha256 this version of max expects
+download a speech model once, checked against the sha256 this version expects
 
 ```sh
 max models audio download <model>
@@ -1305,7 +1305,7 @@ max models audio download <model>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `model` | обязательный | a model id from `max models audio list`. |
+| `model` | обязательный | a model id from `models audio list`. |
 
 ### `max models text`
 
