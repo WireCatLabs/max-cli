@@ -551,10 +551,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | *global* | `--json` | ✅ |  |
 | *global* | `--jsonl` | ✅ |  |
 | *global* | `--quiet` | ✅ |  |
-| *global* | `--yes` | ✅ |  |
 | *global* | `--trace` | ✅ |  |
 | *global* | `--timeout` | ✅ |  |
 | *global* | `--offline` | ✅ |  |
+| *global* | `--yes` | ✅ |  |
 | *global* | `--record` | ✅ |  |
 | *global* | `--no-record` | ✅ |  |
 | *global* | `--serve` | ✅ |  |

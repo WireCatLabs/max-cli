@@ -1,27 +1,19 @@
 import { appendFileSync } from "node:fs"
-import {
-  CliError,
-  type CliErrorDetails,
-  type ErrorCode,
-  errorCodes,
-  exitCodeFor,
-  GENERIC_FAILURE,
-  processStreams,
-  type Streams,
-  visibleControls,
-} from "@leemour/cli-core"
+import { processStreams } from "@leemour/cli-core"
 import {
   conversationsCommand,
+  createProgram as createSharedProgram,
   inboxCommand,
+  type ProgramDefinition,
+  type ProgramOptions,
   pollsCommand,
   provide as provideShared,
   reactionsCommand,
-  recorded,
   reviewCommand,
+  run as runShared,
   storeCommand as sharedStoreCommand,
-  wasSettled,
 } from "@leemour/cli-messaging/cli"
-import { Command, CommanderError } from "commander"
+import type { Command } from "commander"
 import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
 import { botCommand } from "./commands/bot.js"
@@ -48,299 +40,90 @@ import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
 import { migrateInboxPoint } from "./inbox-point.js"
 import { maxMessenger } from "./messenger.js"
-import { commandWords, liftProfile } from "./profile.js"
 import { modelsDirectory } from "./transcribe/install.js"
 import type { SpeechModel } from "./transcribe/models.js"
-import { skillHint, updateNotice } from "./update.js"
-import { VERSION } from "./version.js"
+import { updateNotice } from "./update.js"
+
+export type { ProgramOptions }
 
 export interface RunOptions extends Environment {
-  streams?: Streams
-  /** Whether a person is looking. Defaults to whether stdout is a terminal. */
-  tty?: boolean
-  /** The answer to a shared command's question, in place of a terminal: the bot MCP server's form. */
   answer?: (question: string) => string | null
 }
 
-export interface ProgramOptions {
-  /** Where `--version` and `--help` write. Injected so a test reads them instead of the terminal. */
-  out?: (text: string) => void
-  err?: (text: string) => void
-}
+const definition = (options: RunOptions = {}): ProgramDefinition => ({
+  app: {
+    ...MAX_APP,
+    description:
+      "MAX Messenger from the terminal: bots through the official Bot API (`max bot …`), and your personal account",
+  },
+  configuration: { resolveSettings },
+  commands: () => [
+    sessionCommand(),
+    accountCommand(),
+    chatsCommand(),
+    contactsCommand(),
+    messagesCommand(),
+    sharedStoreCommand(maxMessenger),
+    conversationsCommand(maxMessenger),
+    modelsCommand(),
+    pollsCommand(maxMessenger),
+    reactionsCommand(maxMessenger),
+    recipientsCommand(),
+    sendsCommand(),
+    inboxCommand(maxMessenger).hook("preAction", (command) => migrateInboxPoint(command)),
+    reviewCommand(maxMessenger),
+    serveCommand(),
+    serverCommand(),
+    watchCommand(),
+    configCommand(),
+    doctorCommand(),
+    runsCommand(),
+    skillCommand(),
+    commandsCommand(),
+    upgradeCommand(),
+    completeCommand(),
+    mcpCommand(),
+    botCommand(),
+  ],
+  configure: (program) => {
+    program
+      .option("--serve", "start `max serve` in the background if it is not running (the default)")
+      .option("--no-serve", "do not start it; log in on this command's own connection unless one is running")
+    const descriptions: Record<string, string> = {
+      "--trace": "one line per request on stderr: ids and timings, never message content",
+      "--record": "keep this run under `max runs` — ids and timings, never message content",
+      "--quiet": "diagnostics off",
+    }
+    for (const option of program.options) {
+      const description = descriptions[option.long ?? ""]
+      if (description) option.description = description
+    }
+    const argvLog = process.env.MAX_TEST_ARGV_LOG
+    if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
+  },
+  prepare: (program, environment) => {
+    provide(program, { ...options, streams: environment.streams ?? processStreams })
+    provideShared(program, environment)
+  },
+  onFailure: (error, program) => botRecordingOf(program)?.fail(error),
+})
 
-/**
- * The command tree, built fresh on each call.
- *
- * Commander is global state by default — `exitOverride` and the write hooks below turn it into a
- * value a test can drive. A command that calls `process.exit` cannot be tested, and a CLI whose
- * argument parsing is untested is a CLI that breaks on the day someone adds an option.
- */
-export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
-  const program = new Command()
+export const createProgram = (options: ProgramOptions = {}): Command => createSharedProgram(definition(), options)
 
-  program
-    .name("max")
-    .usage("[profile] [options] <command>")
-    .description(
-      "MAX Messenger from the terminal: bots through the official Bot API (`max bot …`), and your personal account\n\n" +
-        "The first word is the profile whenever it is not a command — `max personal chats list`.\n" +
-        "`MAX_PROFILE` says the same thing for a whole shell session; without either it is `default`.",
-    )
-    .version(VERSION, "-V, --version")
-    .option(
-      "-v, --verbose",
-      "more detail in what is shown: -v ids, -vv everything we know",
-      (_, level: number) => level + 1,
-      0,
-    )
-    .option("--json", "machine-readable output: one JSON value on stdout, nothing else")
-    .option("--jsonl", "machine-readable output: one JSON object per line, for streaming and jq")
-    .option("--quiet", "diagnostics off")
-    .option("--yes", "go ahead without the question an ask level puts before a write")
-    .option("--trace", "one line per request on stderr: ids and timings, never message content")
-    .option("--timeout <duration>", "give up on the whole command after this — 30s, 2m, 500ms")
-    .option("--offline", "answer from what was recorded and never connect; fails if nothing was")
-    .option("--record", "keep this run under `max runs` — ids and timings, never message content")
-    .option("--no-record", "do not keep it, whatever the configuration says")
-    .option("--serve", "start `max serve` in the background if it is not running (the default)")
-    .option("--no-serve", "do not start it; log in on this command's own connection unless one is running")
-    .showHelpAfterError()
-
-  // One resource per command, one action per subcommand — `max chats list`, `max messages send`.
-  // The shape `braze-cli` uses, and the reason there is no `max send`: an action is never a
-  // top-level command, so there is one rule instead of a list of exceptions.
-  program.addCommand(sessionCommand())
-  program.addCommand(accountCommand())
-  program.addCommand(chatsCommand())
-  program.addCommand(contactsCommand())
-  program.addCommand(messagesCommand())
-  program.addCommand(sharedStoreCommand(maxMessenger))
-  program.addCommand(conversationsCommand(maxMessenger))
-  program.addCommand(modelsCommand())
-  program.addCommand(pollsCommand(maxMessenger))
-  program.addCommand(reactionsCommand(maxMessenger))
-  program.addCommand(recipientsCommand())
-  program.addCommand(sendsCommand())
-  program.addCommand(inboxCommand(maxMessenger).hook("preAction", (command) => migrateInboxPoint(command)))
-  program.addCommand(reviewCommand(maxMessenger))
-  program.addCommand(serveCommand())
-  program.addCommand(serverCommand())
-  program.addCommand(watchCommand())
-  program.addCommand(configCommand())
-  program.addCommand(doctorCommand())
-  program.addCommand(runsCommand())
-  program.addCommand(skillCommand())
-  program.addCommand(commandsCommand())
-  program.addCommand(upgradeCommand())
-  program.addCommand(completeCommand())
-  program.addCommand(mcpCommand())
-  program.addCommand(botCommand())
-
-  // Depth-first: Commander does not pass `configureOutput` down to a command added with
-  // `addCommand`, so `max messages --help` would write to the real terminal while the top level
-  // wrote to the injected streams — and a test reading stdout would see nothing at all.
-  if (out || err) {
-    forEachCommand(program, (command) =>
-      command.configureOutput({
-        writeOut: (text) => out?.(text),
-        writeErr: (text) => err?.(text),
-      }),
-    )
-  }
-
-  return program
-}
-
-const forEachCommand = (command: Command, apply: (command: Command) => void): void => {
-  apply(command)
-  for (const child of command.commands) forEachCommand(child, apply)
-}
-
-/**
- * Runs the program and **returns an exit code instead of throwing**.
- *
- * A stack trace is not an error message: it puts Node internals on stderr, tells a script nothing
- * it can branch on, and exits 1 for every kind of failure alike. Here a failure becomes a code an
- * agent can switch on, and a sentence a person can act on.
- */
 export const run = async (argv: string[], options: RunOptions = {}): Promise<number> => {
-  const streams = options.streams ?? processStreams
-  const program = createProgram({
-    out: (text) => streams.data(text.replace(/\n$/, "")),
-    err: (text) => streams.diagnostic(text.replace(/\n$/, "")),
-  })
-
-  // Commands print through this rather than the process's own streams, so a test sees their output
-  // and not only help and errors.
-  provide(program, { ...options, streams })
-  const { recognizer } = options
-  provideShared(program, {
-    streams,
-    app: MAX_APP,
-    ...(options.tty === undefined ? {} : { tty: options.tty }),
-    ...(options.system ? { system: options.system } : {}),
-    ...(options.stdin ? { stdin: options.stdin } : {}),
-    ...(options.answer ? { answer: options.answer } : {}),
+  const { recognizer, ...environment } = options
+  const notice = updateNotice(argv, { tty: options.tty, environment: options.update })
+  const code = await runShared(argv, definition(options), {
+    ...environment,
     ...(recognizer ? { recognizer: (model: SpeechModel) => recognizer(model, modelsDirectory()) } : {}),
   })
   const argvLog = process.env.MAX_TEST_ARGV_LOG
-  if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
-
-  // Commander calls process.exit for --help and --version. A library that kills the process cannot
-  // be tested and cannot be embedded, so it throws instead and `run` decides the exit code.
-  //
-  // Depth-first, not one level: `max chats list --nonsense` is handled by the subcommand, and a
-  // subcommand left with the default behaviour kills the process from inside a test.
-  forEachCommand(program, (command) => command.exitOverride())
-
-  // Before commander, not inside it: a custom argument parser would still have to be told that
-  // the first word is sometimes a command, and commander has no hook that runs before it decides
-  // which subcommand it is looking at.
-  const { profile, rest } = liftProfile(argv, commandWords(program))
-  if (profile !== undefined) program.setOptionValue("profile", profile)
-
-  // `max me` — a command that was renamed away — is now a profile with nothing after it, and
-  // commander answers a missing command by printing help **on stdout**. That breaks the one
-  // contract this program has, and it tells the person nothing about why their command vanished.
-  if (profile !== undefined && rest.length === 0) {
-    const message =
-      `"${profile}" is not a command, so it was read as a profile name — and no command followed it. ` +
-      `Run \`max --help\` for the commands, or \`max ${profile} account show\` if "${profile}" is your profile.`
-    report(streams, options, { code: "validation_error", message })
-    await keepFailure(new CliError("validation_error", message), program, rest, profile, streams)
-    return exitCodeFor("validation_error")
+  if (argvLog && code === 0 && argv.some((word) => word === "--version" || word === "-V")) {
+    appendFileSync(argvLog, `${JSON.stringify({ command: "", options: ["--version"] })}\n`)
   }
-
-  const notice = updateNotice(rest, { tty: options.tty, environment: options.update })
-
-  try {
-    await program.parseAsync(rest, { from: "user" })
-    const line = await notice
-    if (line) streams.diagnostic(line)
-    const hint = skillHint(rest)
-    if (hint) streams.diagnostic(hint)
-    return process.exitCode === undefined ? 0 : Number(process.exitCode)
-  } catch (thrown) {
-    const error = ownCliError(thrown)
-    await botRecordingOf(program)?.fail(error)
-    if (!(error instanceof CommanderError) || error.exitCode !== 0) {
-      const failure = error instanceof CommanderError ? new CliError("validation_error", error.message) : error
-      await keepFailure(failure, program, rest, profile, streams)
-    }
-
-    if (error instanceof CommanderError) {
-      // --version exits before any action, so the preAction log never sees it.
-      if (argvLog && error.code === "commander.version") {
-        appendFileSync(argvLog, `${JSON.stringify({ command: "", options: ["--version"] })}\n`)
-      }
-      // `max chat list` — one letter short of `chats` — now reports an unknown command `list`,
-      // which is baffling on its own. This is the everyday cost of the first word being a profile.
-      const first = rest[0]
-      if (
-        profile !== undefined &&
-        error.code === "commander.unknownCommand" &&
-        first !== undefined &&
-        !commandWords(program).has(first)
-      ) {
-        streams.diagnostic(
-          `"${profile}" is not a command, so it was read as a profile name — which left "${first}" to be one.`,
-        )
-      }
-      return error.exitCode
-    }
-
-    if (error instanceof CliError) {
-      report(streams, options, { code: error.code, message: error.message, ...error.details })
-      return exitCodeFor(error.code)
-    }
-
-    report(streams, options, {
-      code: "generic_failure",
-      message: error instanceof Error ? error.message : String(error),
-    })
-    return GENERIC_FAILURE
-  }
-}
-
-/**
- * cli-messaging brings its own copy of cli-core, and its `CliError` is not an `instanceof` ours —
- * a recipient-list refusal would otherwise leave with exit 1 and `generic_failure`.
- */
-const ownCliError = (error: unknown): unknown => {
-  if (error instanceof CliError || !(error instanceof Error) || error.name !== "CliError") return error
-  const { code, details } = error as Error & { code?: unknown; details?: CliErrorDetails }
-  if (typeof code !== "string" || !(errorCodes as readonly string[]).includes(code)) return error
-  return new CliError(code as ErrorCode, error.message, details ?? {})
-}
-
-/**
- * **Every failure is kept as a run** — a usage error, a check before a command opened its run, a
- * command that never opens one — through the same recorder, unless recording was turned off by
- * name (`OPS-15`). Only the command's words are named, never its arguments: those can be a message.
- */
-const keepFailure = async (
-  error: unknown,
-  program: Command,
-  rest: string[],
-  profile: string | undefined,
-  streams: Streams,
-): Promise<void> => {
-  if (wasSettled(error)) return
-  let settings: ReturnType<typeof resolveSettings> | undefined
-  try {
-    settings = resolveSettings(
-      { ...program.opts(), ...(profile === undefined ? {} : { profile }) },
-      { kind: rest[0] === "bot" ? "bot" : "personal" },
-    )
-  } catch {
-    // A configuration that will not load is a failure worth keeping too; the flag is all there is to go on.
-  }
-  await recorded(
-    {
-      app: MAX_APP,
-      command: commandPath(program, rest) || "max",
-      profile: settings?.profile ?? profile ?? "default",
-      record: false,
-      keepFailed: settings?.keepFailedRuns ?? !rest.includes("--no-record"),
-      trace: false,
-      format: "json",
-      streams,
-      ...(settings ? { keepDays: settings.keepRunsForDays } : {}),
-    },
-    async () => {
-      throw error
-    },
-  ).catch(() => {})
-}
-
-/** `messages list` from `messages list 111 --limit 5`: the words that name commands, and nothing typed after them. */
-const commandPath = (program: Command, rest: string[]): string => {
-  const words: string[] = []
-  let current = program
-  for (const token of rest) {
-    if (token.startsWith("-")) continue
-    const next = current.commands.find((command) => command.name() === token || command.aliases().includes(token))
-    if (!next) break
-    words.push(token)
-    current = next
-  }
-  return words.join(" ")
-}
-
-interface ReportedError {
-  code: string
-  message: string
-  [detail: string]: unknown
-}
-
-/**
- * **A failure never reaches stdout.** An agent reading stdout must not be able to mistake a refusal
- * for a result, so the error goes to stderr — as JSON when nobody is watching, because an exit code
- * says which kind of thing went wrong and nothing about which chat or how long to wait.
- */
-const report = (streams: Streams, options: RunOptions, error: ReportedError): void => {
-  const interactive = options.tty ?? process.stdout.isTTY === true
-  streams.diagnostic(interactive ? `\u2717 ${visibleControls(error.message)}` : JSON.stringify({ error }))
+  const line = await notice
+  if (line && code === 0) (options.streams ?? processStreams).diagnostic(line)
+  return code
 }
 
 /**

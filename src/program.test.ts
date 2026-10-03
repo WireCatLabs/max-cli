@@ -1,6 +1,8 @@
 import { existsSync } from "node:fs"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { listRuns, runsDirFor } from "@leemour/cli-messaging/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
+import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -827,5 +829,40 @@ describe("the program", () => {
     expect(stderr).toContain("unknown command 'status'")
     expect(stderr).not.toContain("read as a profile name")
     expect(code).not.toBe(0)
+  })
+})
+
+describe("shared runner adoption", () => {
+  it("preserves separate bot and personal failed-run retention before an action begins", async () => {
+    const profile = "t-shell-scope"
+    expect((await runWith([profile, "config", "set", "--personal", "record", "true", "--json"])).code).toBe(0)
+    expect((await runWith([profile, "config", "set", "--bot", "record", "false", "--json"])).code).toBe(0)
+    const runsDir = runsDirFor(MAX_APP)
+    const before = new Set(listRuns(runsDir).map((item) => item.runId))
+    const bot = await runWith([profile, "--timeout", "1s", "--quiet", "bot", "auth", "missing"])
+    const personal = await runWith([profile, "--quiet", "account", "missing"])
+    expect(bot.code).not.toBe(0)
+    expect(personal.code).not.toBe(0)
+    expect(bot.stdout).toBe("")
+    expect(personal.stdout).toBe("")
+    const added = listRuns(runsDir).filter((item) => !before.has(item.runId))
+    expect(added).toEqual([expect.objectContaining({ profile, command: "account", status: "failed" })])
+  })
+
+  it("uses the configured default profile for a failure before context creation", async () => {
+    const profile = "t-shell-default"
+    vi.stubEnv("MAX_PROFILE", profile)
+    try {
+      const before = new Set(listRuns(runsDirFor(MAX_APP)).map((item) => item.runId))
+      const result = await runWith(["messages", "list", "--nonsense"])
+      expect(result.code).not.toBe(0)
+      expect(result.stdout).toBe("")
+      const added = listRuns(runsDirFor(MAX_APP)).filter((item) => !before.has(item.runId))
+      expect(added).toEqual([
+        expect.objectContaining({ profile, command: "messages list", errorCode: "validation_error" }),
+      ])
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })
