@@ -23,6 +23,10 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 - **Close in the PR that ships the work:** delete the line here in that PR, and append it to
   `docs_ai/BACKLOG_DONE.md` (local, not in git). Users read what shipped in `CHANGELOG.md`.
 
+## Fixes
+
+- **BUG-123** · P2 · 🚧 `fix/transcribe-chat-resolution` · Saved voice transcript lookup must resolve chat names before querying the store (`src/commands/messages.ts:86`).
+
 ## Features
 
 - **CLI-58** · P2 · `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
