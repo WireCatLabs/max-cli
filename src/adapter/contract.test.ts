@@ -4,19 +4,18 @@ import { join } from "node:path"
 import { memoryKeyring } from "@leemour/cli-core"
 import { type ContractCase, contractCases, type Seed } from "@leemour/cli-messaging/testing"
 import { afterEach, describe, expect, it } from "vitest"
-import { openCache } from "../cache/open.js"
-import { type CacheStore, openStore } from "../cache/store.js"
 import { MaxClient } from "../client.js"
 import { Connection } from "../protocol/connection.js"
+import { type MaxRecord, maxRecord } from "../record.js"
 import { SessionStore } from "../session/store.js"
 import { maxIds, seededMax } from "../testing/seeded-max.js"
 import { maxAdapter } from "./max-adapter.js"
 
 const SKIPPED: Record<string, string> = {}
 
-const caches: CacheStore[] = []
+const records: MaxRecord[] = []
 afterEach(async () => {
-  for (const cache of caches.splice(0)) await cache.close()
+  for (const record of records.splice(0)) await record.close()
 })
 
 const connect = async (seed: Seed) => {
@@ -26,12 +25,15 @@ const connect = async (seed: Seed) => {
     store.writeToken("a-token")
     store.writeState({ ...store.readState(), viewerId: seed.account.id })
   }
-  const cache = openStore({ database: await openCache(join(dir, "cache.db")) })
-  caches.push(cache)
+  const record = maxRecord({
+    account: () => store.readState().viewerId,
+    env: { MESSAGING_STORE: join(dir, "messages.db") },
+  })
+  records.push(record)
   const client = new MaxClient({
     sends: "caller",
     store,
-    cache,
+    record,
     connection: new Connection({ createSocket: seededMax(seed).createSocket, timeoutMs: 50 }),
     warn: () => {},
     sleep: async () => {},

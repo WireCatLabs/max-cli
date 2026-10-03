@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
-import type { CacheStore } from "./cache/store.js"
-import type { Chat, Contact } from "./domain/models.js"
-import { pickChat, pickPerson } from "./resolve.js"
+import type { Chat } from "./domain/models.js"
+import { pickChat } from "./resolve.js"
 
 const chat = (id: string, title: string): Chat => ({
   id,
@@ -31,34 +30,5 @@ describe("a chat named by its title", () => {
     }
     expect(message.split("\n")).toHaveLength(3)
     expect(message).toContain("Работа\\x0a  999")
-  })
-})
-
-const person = (id: string, name: string): Contact => ({
-  id,
-  name,
-  username: null,
-  description: null,
-  lastMessagedAt: null,
-})
-
-const knowing = (people: Contact[]) =>
-  ({
-    people: {
-      get: async (id: string) => people.find((one) => one.id === id),
-      page: async () => people,
-    },
-  }) as unknown as CacheStore
-
-describe("a person named by name", () => {
-  it("takes an exact name over names that contain it", async () => {
-    const cache = knowing([person("1", "Ольга"), person("2", "Ольга Петрова")])
-    expect((await pickPerson("ольга", cache)).id).toBe("1")
-  })
-
-  it("asks which one when a fragment matches two, and finds nobody by an unknown id", async () => {
-    const cache = knowing([person("1", "Ольга Иванова"), person("2", "Ольга Петрова")])
-    await expect(pickPerson("Ольга", cache)).rejects.toThrow(/matches 2 people/)
-    await expect(pickPerson("3", cache)).rejects.toThrow(/no person 3/)
   })
 })

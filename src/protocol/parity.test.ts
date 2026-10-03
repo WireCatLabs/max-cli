@@ -4,10 +4,9 @@ import { join } from "node:path"
 import { memoryKeyring } from "@leemour/cli-core"
 import { decode, ExtData } from "@msgpack/msgpack"
 import { describe, expect, it } from "vitest"
-import { openCache } from "../cache/open.js"
-import { openStore } from "../cache/store.js"
 import { MaxClient } from "../client.js"
 import { Opcode } from "../generated/opcodes.generated.js"
+import { maxRecord } from "../record.js"
 import { SessionStore } from "../session/store.js"
 import { mockMax } from "../testing/mock-max.js"
 import { Connection } from "./connection.js"
@@ -82,7 +81,10 @@ describe("our requests beside web.max.ru's", async () => {
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
   const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
   store.writeToken("a-token")
-  const cache = openStore({ database: await openCache(join(dir, "cache.db")) })
+  const record = maxRecord({
+    account: () => store.readState().viewerId,
+    env: { MESSAGING_STORE: join(dir, "messages.db") },
+  })
   // Twice, so the second login carries the time the first one returned — the request MAX refused
   // while that time went out as a float.
   let max = scripted()
@@ -91,13 +93,15 @@ describe("our requests beside web.max.ru's", async () => {
     const client = new MaxClient({
       sends: "caller",
       store,
-      cache,
+      record,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     })
     await client.connect()
     await client.messages.list("111", { limit: 30 })
     await client.close()
   }
+
+  await record.close()
 
   const sent = (opcode: number) => {
     const index = max.sent.findIndex((call) => call.opcode === opcode)
