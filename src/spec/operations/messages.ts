@@ -19,7 +19,7 @@ export const messagesSend = defineOperation({
          * never be regenerated on a retry: a fresh one means a second message in somebody's chat.
          */
         cid: v.pipe(v.number(), v.integer()),
-        /** Markup in UTF-16 positions. STRONG, EMPHASIZED, STRIKETHROUGH, MONOSPACED measured locally 2026-09-24; LINK attributes.url and UNDERLINE from external traffic observations (max-api-docs/protocol/elements.md). */
+        /** Markup in UTF-16 positions. STRONG, EMPHASIZED, STRIKETHROUGH, MONOSPACED measured locally 2026-09-24; LINK attributes.url and UNDERLINE preserved in raw CHAT_HISTORY readback locally 2026-10-03 (release Saved messages check). */
         elements: v.optional(
           v.array(
             v.strictObject({
@@ -110,6 +110,7 @@ export const messagesSend = defineOperation({
       "`link` and `elements` measured 2026-09-23 in Saved messages (`pnpm probe:reply`); shapes from tsmax and PyMax",
       "the FORWARD link: web.max.ru `_app/immutable/chunks/5oCuRT0F.js` (2026-09-24), PyMax `api/messages/payloads.py:56-73`",
       "a forward with no `text` and no `elements` measured 2026-09-24 in Saved messages (`pnpm probe:edit-pin-forward`)",
+      "LINK attributes.url and UNDERLINE sent and preserved in raw CHAT_HISTORY readback 2026-10-03 in Saved messages (release check)",
       "group creation measured 2026-09-24 (`pnpm probe:groups`); shape from PyMax create_group",
       "`delayedAttributes` from web.max.ru (2026-09-24, `FIND-78`), measured 2026-09-24 in Saved messages (`pnpm probe:scheduled`)",
     ],
