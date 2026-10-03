@@ -1,6 +1,13 @@
 import { CliError, isCliError } from "@leemour/cli-core"
 import type { Message as SharedMessage } from "@leemour/cli-messaging"
-import { guardedClose, guardedCreatePoll, guardedVote } from "@leemour/cli-messaging/cli"
+import {
+  answerMessagesSearch,
+  guardedClose,
+  guardedCreatePoll,
+  guardedVote,
+  MESSAGES_SEARCH_DESCRIPTION,
+  messagesSearchInput,
+} from "@leemour/cli-messaging/cli"
 import type { Permission } from "@leemour/cli-messaging/sends"
 import {
   type CallToolResult,
@@ -18,6 +25,7 @@ import { type McpToolGroup, sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
+import { maxMessenger } from "../messenger.js"
 import {
   describe,
   type Finding,
@@ -458,26 +466,16 @@ const READ_TOOLS = {
 
   max_messages_search: tool({
     title: "Search messages",
-    description:
-      "Find messages in what this machine has already read — it never asks MAX, so an empty answer means " +
-      '"not in what was read", not "never said". Returns { items, page, limit, hasMore }.',
-    input: v.object({
-      text: v.pipe(v.string(), v.minLength(3), v.description("what to look for; at least 3 characters")),
-      chat: v.optional(v.pipe(v.string(), v.regex(/^-?\d+$/), v.description("only this chat, by id"))),
-      limit,
-    }),
+    description: MESSAGES_SEARCH_DESCRIPTION,
+    input: messagesSearchInput(maxMessenger),
     annotations: { ...READ, openWorldHint: false },
-    answer: async (client, args, defaults) => {
-      const size = args.limit ?? defaults.limit
-      const found = await withShared(client, defaults, (services) =>
-        services.messages.search({
-          text: args.text,
-          limit: size,
-          ...(args.chat === undefined ? {} : { chat: args.chat }),
-        }),
-      )
-      return envelope(found, 1, size)
-    },
+    answer: (client, args, defaults) =>
+      withShared(
+        client,
+        defaults,
+        (services) => answerMessagesSearch(services.messages, args, { limit: defaults.limit }),
+        { local: true },
+      ),
   }),
 
   max_messages_transcribe: tool({
