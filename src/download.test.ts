@@ -17,6 +17,8 @@ let origin: string
 
 beforeAll(async () => {
   server = createServer((request, response) => {
+    if (request.url?.startsWith("/webp"))
+      return response.writeHead(200, { "content-type": "image/webp" }).end("webp bytes")
     if (request.url === "/truncated")
       return response.writeHead(200, { "content-length": "1000", connection: "close" }).end("short body")
     if (request.url === "/missing") return response.writeHead(404).end()
@@ -56,7 +58,8 @@ const download = async (
     path = "/file",
     reach = anywhere,
     args,
-  }: { name?: string; path?: string; reach?: Reach; args?: string[] } = {},
+    photo = false,
+  }: { name?: string; path?: string; reach?: Reach; args?: string[]; photo?: boolean } = {},
 ) => {
   const max = mockMax({
     answers: {
@@ -69,7 +72,9 @@ const download = async (
             time: 1789776000000,
             sender: 10000001,
             text: "",
-            attaches: [{ _type: "FILE", fileId: 42, name, size: 10 }, { _type: "CALL" }],
+            attaches: photo
+              ? [{ _type: "PHOTO", photoId: 5, photoToken: "synthetic-photo-token", baseUrl: `${origin}/webp` }]
+              : [{ _type: "FILE", fileId: 42, name, size: 10 }, { _type: "CALL" }],
           },
         ],
       },
@@ -109,6 +114,16 @@ describe("max messages download", () => {
     })
     expect(stderr).toContain("not a file, not downloaded: call")
     expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
+  })
+
+  it("names an unnamed WebP photo from its HTTP response MIME", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const result = await download(directory, { photo: true })
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout).items).toEqual([
+      { kind: "photo", path: join(directory, "116762160362694583-1.webp"), bytes: 10 },
+    ])
+    expect(await readdir(directory)).toEqual(["116762160362694583-1.webp"])
   })
 
   it("supports the common output-dir flag and creates its directory", async () => {

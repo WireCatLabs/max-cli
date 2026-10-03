@@ -203,3 +203,5 @@ which; the plan for it starts by saying so.
 - Completed 2026-10-03: message downloads, scheduled reads and evidence now use shared factories (#370); MAX retains safe transport and compatibility --output. Session-end mutation metadata is explicit.
 
 - Completed 2026-10-03: shared account-show factory retains MAX profile fields; contact-lookup argv refusal never repeats a number (#371). Permission runtime remains with T6/P7.
+
+- Completed 2026-10-03: response MIME preserves shared download fallback extensions (SDK0.136); streams remain lazy and bounded, without eager unused attachment requests.
