@@ -63,10 +63,30 @@ export const maxMessenger: Messenger = {
   // apart (`NEED-216` A). MAX's ids pass 2^53, so held stretches are kept by send time.
   fetching: { page: 30, pause: "5s", jitter: true, maxPages: 40, orderBy: "time" },
 
-  guard: (command, { profile }, warn) => ({
-    ...overServer(guardFor(resolveSettings({ profile }), warn), () => clients.get(rootOf(command))?.server),
-    ask: async (request) => refuseUnmeantDeletion(command, request),
-  }),
+  guard: (command, { profile }, warn) => {
+    const client = () => clients.get(rootOf(command))
+    const guard = overServer(guardFor(resolveSettings({ profile }), warn), () => client()?.server)
+    return {
+      ...guard,
+      record: (entry) => {
+        const applied = client()?.takeApplied(entry.operationId) === true
+        // MAX can acknowledge the closure before the token save or follow-up session read fails.
+        if (applied && (entry.outcome === "failed" || entry.outcome === "outcome_unknown")) {
+          const { errorCode: _errorCode, ...done } = entry
+          guard.record({ ...done, outcome: "sent" })
+        } else guard.record(entry)
+      },
+      ask: async (request) => {
+        refuseUnmeantDeletion(command, request)
+        if (request.action === "sessions-end" && command.optsWithGlobals<{ yes?: boolean }>().yes !== true) {
+          throw new CliError(
+            "confirmation_required",
+            "this logs out every other device, the MAX app on your phone included — add --yes to go ahead",
+          )
+        }
+      },
+    }
+  },
 
   resolveSettings: (flags: GlobalFlags, options: ResolveOptions = {}): Settings => {
     const { profile, offline, ...rest } = flags

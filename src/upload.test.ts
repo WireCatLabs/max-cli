@@ -125,8 +125,27 @@ describe("the profile photo", () => {
       connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     })
     const of = (opcode: number) => max.sent.filter((call) => call.opcode === opcode).map((call) => call.payload)
-    return { code, slots: of(Opcode.PHOTO_UPLOAD), profiles: of(Opcode.PROFILE) }
+    return {
+      code,
+      slots: of(Opcode.PHOTO_UPLOAD),
+      profiles: of(Opcode.PROFILE),
+      logins: of(Opcode.LOGIN),
+      stderr: streams.stderr.join("\n"),
+    }
   }
+
+  it.each([
+    ["missing.png", "no such file"],
+    [".hidden.png", "hidden files"],
+    ["picture.gif", "a photo is a"],
+  ])("refuses %s before logging in", async (file, message) => {
+    const result = await update(file)
+    expect(result.code).not.toBe(0)
+    expect(result.stderr).toContain(message)
+    expect(result.logins).toEqual([])
+    expect(result.slots).toEqual([])
+    expect(result.profiles).toEqual([])
+  })
 
   it("uploads as a profile photo, then sends its token with the current name", async () => {
     const { code, slots, profiles } = await update("picture.png")

@@ -40,6 +40,9 @@ export type MaxAdapter = MessengerAdapter &
       | "createFolder"
       | "updateFolder"
       | "deleteFolder"
+      | "updateProfile"
+      | "endOtherSessions"
+      | "sessions"
     >
   >
 
@@ -66,6 +69,13 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
       const { id, name } = await client.account.me()
       return { id, name, username: null }
     },
+
+    updateProfile: async (change) => {
+      const { id, name, phone } = await client.account.update(change)
+      return { id, name, username: null, phone }
+    },
+    sessions: () => client.account.sessions(),
+    endOtherSessions: () => client.account.endOtherSessions(),
 
     admins: async (chat) => (await client.chats.adminIds(chat)) ?? null,
 
