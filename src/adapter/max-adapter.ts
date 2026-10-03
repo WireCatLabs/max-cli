@@ -80,6 +80,7 @@ export const maxAdapter = (
   options: { reactions?: boolean } = {},
 ): MaxAdapter => {
   const chatId = (reference: string) => client.chats.resolve(reference)
+  const downloads = new AbortController()
 
   return {
     formatMarkdown: async (text) => {
@@ -148,9 +149,15 @@ export const maxAdapter = (
               return mime
             },
             bytes: async function* () {
-              yield* streamBytes(link, reach, link.kind === "audio" ? LARGEST_VOICE : undefined, (value) => {
-                mime = value ?? ""
-              })
+              yield* streamBytes(
+                link,
+                reach,
+                link.kind === "audio" ? LARGEST_VOICE : undefined,
+                (value) => {
+                  mime = value ?? ""
+                },
+                downloads.signal,
+              )
             },
           }
         }),
@@ -347,7 +354,10 @@ export const maxAdapter = (
     logout: async () => {
       throw new CliError("validation_error", "`max session end` forgets the session on this machine")
     },
-    close: () => client.close(),
+    close: async () => {
+      downloads.abort()
+      await client.close()
+    },
   }
 }
 
