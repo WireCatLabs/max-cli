@@ -19,8 +19,17 @@ export const messagesSend = defineOperation({
          * never be regenerated on a retry: a fresh one means a second message in somebody's chat.
          */
         cid: v.pipe(v.number(), v.integer()),
-        /** Markup in UTF-16 positions. STRONG, EMPHASIZED, STRIKETHROUGH, MONOSPACED read back from MAX 2026-09-24. */
-        elements: v.optional(v.array(v.strictObject({ type: v.string(), from: v.number(), length: v.number() }))),
+        /** Markup in UTF-16 positions. STRONG, EMPHASIZED, STRIKETHROUGH, MONOSPACED measured locally 2026-09-24; LINK attributes.url and UNDERLINE from external traffic observations (max-api-docs/protocol/elements.md). */
+        elements: v.optional(
+          v.array(
+            v.strictObject({
+              type: v.string(),
+              from: v.number(),
+              length: v.number(),
+              attributes: v.optional(v.strictObject({ url: v.string() })),
+            }),
+          ),
+        ),
         attaches: v.array(v.unknown()),
         /** Read back as `{type, chatId, message}` — the quoted message whole (measured 2026-09-23). */
         link: v.optional(
@@ -120,7 +129,16 @@ export const messagesEdit = defineOperation({
     messageId: id(),
     /** Left out when closing a poll, as the web client does: only the attachment changes. */
     text: v.optional(v.string()),
-    elements: v.optional(v.array(v.strictObject({ type: v.string(), from: v.number(), length: v.number() }))),
+    elements: v.optional(
+      v.array(
+        v.strictObject({
+          type: v.string(),
+          from: v.number(),
+          length: v.number(),
+          attributes: v.optional(v.strictObject({ url: v.string() })),
+        }),
+      ),
+    ),
     /** `attachments`, not `attaches` as in MSG_SEND — every source spells them differently. */
     attachments: v.array(v.unknown()),
   }),

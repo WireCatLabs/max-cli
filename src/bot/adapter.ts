@@ -10,6 +10,7 @@ import type {
   BotWebhook,
   EventSink,
 } from "@leemour/cli-messaging/cli"
+import { formatMarkdown, toHtml } from "../format-markdown.js"
 import { type BotApiClient, botOperations } from "./client.js"
 import { checkBody } from "./input.js"
 import { plainJson } from "./transport.js"
@@ -232,10 +233,16 @@ export const maxBotAdapter = ({
 
   return {
     me,
+    formatMarkdown: async (text) => formatMarkdown(text),
     close: async () => {},
 
-    send: async (chat, text, { replyTo, silent, markup, html, attachments = [] }) => {
+    send: async (chat, text, { replyTo, silent, markup, formatting, html, attachments = [] }) => {
       if (attachments.length > 1) throw new CliError("validation_error", "a MAX bot sends one file at a time")
+      const content = formatting
+        ? toHtml(text, formatting)
+        : markup && markup.length > 0
+          ? toMarkdown(text, markup)
+          : text
       const [file] = attachments
       let attachment: unknown
       if (file) {
@@ -258,11 +265,10 @@ export const maxBotAdapter = ({
           ...(timeoutMs === undefined ? {} : { timeoutMs }),
         })
       }
-      const content = markup && markup.length > 0 ? toMarkdown(text, markup) : text
       const sent = body("sendMessage", {
         ...(content ? { text: content } : {}),
         ...(attachment ? { attachments: [attachment] } : {}),
-        ...format(markup, html),
+        ...format(markup, html || formatting !== undefined),
         ...(silent ? { notify: false } : {}),
         ...(replyTo ? { link: { type: "reply", mid: replyTo } } : {}),
       })
@@ -276,10 +282,14 @@ export const maxBotAdapter = ({
       return sentMessage(answer)
     },
 
-    edit: async (chat, messageId, text, { markup, html }) => {
+    edit: async (chat, messageId, text, { markup, formatting, html }) => {
       const before = await inChat(chat, messageId)
-      const content = markup && markup.length > 0 ? toMarkdown(text, markup) : text
-      const edited = body("editMessage", { text: content, ...format(markup, html) })
+      const content = formatting
+        ? toHtml(text, formatting)
+        : markup && markup.length > 0
+          ? toMarkdown(text, markup)
+          : text
+      const edited = body("editMessage", { text: content, ...format(markup, html || formatting !== undefined) })
       await api.call(operation("editMessage"), {
         query: { message_id: messageId },
         ...(edited ? { body: edited } : {}),

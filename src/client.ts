@@ -1470,11 +1470,11 @@ export class MaxClient {
       at?: number
     },
   ): Promise<Message> {
+    const { text: plain, markup } = options.markdown ? parseMarkdown(text) : { text, markup: options.markup ?? [] }
     await this.#connectOnce()
     const session = this.#session()
     const attaches: unknown[] = [...(options.attaches ?? [])]
     for (const file of options.files ?? []) attaches.push(await this.#upload(file))
-    const { text: plain, markup } = options.markdown ? parseMarkdown(text) : { text, markup: options.markup ?? [] }
     // A forward carries no text or markup of its own — the web client leaves both out, and so was it measured.
     const content = options.forward
       ? { link: { type: "FORWARD" as const, ...options.forward } }

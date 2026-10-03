@@ -19,9 +19,13 @@ describe("parseMarkdown", () => {
   })
 
   it("**leaves snake_case, arithmetic and an unclosed mark as typed**", () => {
-    for (const text of ["file_name_here", "2*3*4", "a ** b", "**open", "_a\nb_"]) {
+    for (const text of ["file_name_here", "2*3*4", "a ** b", "**open"]) {
       expect(parseMarkdown(text)).toEqual({ text, markup: [] })
     }
+  })
+
+  it("formats multiline emphasis in MAX", () => {
+    expect(parseMarkdown("_a\nb_")).toEqual({ text: "a\nb", markup: [{ type: "EMPHASIZED", from: 0, length: 3 }] })
   })
 
   it("keeps a backslashed mark literal", () => {
