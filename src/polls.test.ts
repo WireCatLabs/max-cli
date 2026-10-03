@@ -170,6 +170,18 @@ describe("voting", () => {
     expect(sentWith(Opcode.SEND_VOTE)[0]?.payload).toMatchObject({ answersIds: [] })
   })
 
+  it("does not recommend retract again when the explicit retract was refused", async () => {
+    const { environment, sentWith } = messenger({
+      attach: pollAttach({ settings: REVOTE, mine: true }),
+      refusal: "poll.already.voted",
+    })
+    const failed = await runWith(["p-retract-refused", "polls", "vote", "111", MESSAGE, "--retract"], environment)
+
+    expect(failed.code).toBe(11)
+    expect(failed.stderr).not.toContain("--retract")
+    expect(sentWith(Opcode.SEND_VOTE).map(({ payload }) => payload.answersIds)).toEqual([[]])
+  })
+
   it("refuses what the web client refuses, without asking MAX", async () => {
     const refusals = [
       { attach: pollAttach(), argv: ["1", "2"], says: "takes one answer" },

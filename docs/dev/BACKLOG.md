@@ -160,10 +160,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   shared package-upgrade workflow (#358). The permission-model move remains with T6.
   P7 migration prerequisite/cutover: 🚧 `feat/t6-permissions` owns the shared migration engine and MAX follow-up.
   Operation-id and server wrappers retain shared guard confirmation; the atomic config/CLI/MCP/server cutover remains.
-- **CLI-61** · P2 · 🚧 `fix/poll-revote-hint` · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
-  poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
-  Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
-  shared `polls vote`. Found live 2026-10-01.
 - **CLI-63** · P3 · The shared `messages list --transcribe` fetches a voice message on a second
   connection after the read's own closes — a second MAX login with `--no-serve`. Keep the read's
   connection until the download is done. cli-messaging `hearing-command.ts`.
@@ -206,5 +202,7 @@ which; the plan for it starts by saying so.
 - Completed 2026-10-03: response MIME preserves shared download fallback extensions (SDK0.136); streams remain lazy and bounded, without eager unused attachment requests.
 
 - Completed 2026-10-03: chats-show member counts explain possible self omission or partial lists without claiming incomplete loading (SDK0.137, CLI-62). Online and offline consumer regressions retain JSON counts and members.
+
+- Completed 2026-10-03: MAX poll.already.voted refusal explains explicit retract before a new vote when the poll permits changing votes (CLI-61). Provider error identity and one attempted write are preserved; wire refusal regressions cover other errors and an explicit retract refusal.
 
 - B1c · 🚧 feat/messages-link · shared personal messages link command and read-only MCP; validated locator fallback until personal permalink protocol is proven.
