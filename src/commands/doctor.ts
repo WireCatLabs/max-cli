@@ -87,7 +87,7 @@ export const doctorCommand = (): Command => {
       }
       if (report.legacyCache.exists) {
         renderer.note(
-          `the profile's local copy ${report.legacyCache.file} is still used by group moderation and some chats commands; history, search and contacts read the shared store`,
+          `the old local copy ${report.legacyCache.file} is no longer used by shared reads — you can remove it; use \`max store fetch\` to fetch history again`,
         )
       }
 
