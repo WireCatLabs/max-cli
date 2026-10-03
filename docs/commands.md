@@ -58,6 +58,8 @@ max session start [method]
 
 forget the stored session for this profile
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max session end
 ```
@@ -773,20 +775,40 @@ max messages links <chat> <message>
 
 ### `max messages download`
 
-save a message's photos, files, videos and audio to a directory
+save a message's photos, files, videos and voice notes to a folder — or a whole chat's with --all
 
 ```sh
-max messages download <chat> <message> [options]
+max messages download <chat> [message] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
-| `message` | обязательный | message id. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `message` | необязательный | the message id; left out with --all. |
 
 | Опция | Что делает |
 |---|---|
-| `--output <dir>` | where to save them. По умолчанию: `.`. |
+| `--output-dir <dir>` | where to save them; created if missing. По умолчанию: `.`. |
+| `--all` | every file of the chat, newest first; run it again to continue where it stopped. |
+| `--pause <duration>` | with --all, a pause between pages, to stay under the provider's limits. По умолчанию: `5s`. |
+| `--output <dir>` | compatibility alias for --output-dir. |
+
+### `max messages evidence`
+
+a bounded evidence packet from stored messages, newest first
+
+```sh
+max messages evidence <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many, 1–100. |
+| `--before-id <id>` | only messages older than this message id. |
 
 ### `max messages transcribe`
 
@@ -837,7 +859,7 @@ max messages send <chat> [text] [options]
 
 ### `max messages scheduled`
 
-messages waiting to be sent later in a chat, soonest first; cancel one in the MAX app
+messages waiting to be sent later in a chat, soonest first; cancel one in the app
 
 ```sh
 max messages scheduled <chat>
@@ -845,7 +867,7 @@ max messages scheduled <chat>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 ### `max messages edit`
 

@@ -85,6 +85,34 @@ describe("max store", () => {
     expect(JSON.parse(status.stdout)).toMatchObject({ items: [{ chatId: "111", messages: 70 }] })
   })
 
+  it("builds evidence from the local archive without connecting or marking read", async () => {
+    const { environment, sent } = setup()
+    expect(
+      (await max(["s-evidence", "store", "fetch", "111", "--pause", "1ms", "--limit", "150", "--json"], environment))
+        .code,
+    ).toBe(0)
+    const before = sent(Opcode.LOGIN).length
+    const packet = await max(["s-evidence", "messages", "evidence", "111", "--limit", "2", "--json"], environment)
+    expect(packet.code).toBe(0)
+    const body = JSON.parse(packet.stdout)
+    expect(body.items).toHaveLength(2)
+    expect(body.items[0].locator).toContain("msg:max/")
+    expect(body.coverage.included).toBe(2)
+    expect(body.nextBeforeId).not.toBeNull()
+    const older = await max(
+      ["s-evidence", "messages", "evidence", "111", "--limit", "2", "--before-id", body.nextBeforeId, "--json"],
+      environment,
+    )
+    expect(older.code).toBe(0)
+    const next = JSON.parse(older.stdout)
+    expect(next.items).toHaveLength(2)
+    expect(next.items.map((one: { locator: string }) => one.locator)).not.toEqual(
+      body.items.map((one: { locator: string }) => one.locator),
+    )
+    expect(sent(Opcode.LOGIN)).toHaveLength(before)
+    expect(sent(Opcode.CHAT_MARK)).toEqual([])
+  })
+
   it("asks MAX for --page-size messages a page", async () => {
     const { environment, sent } = setup()
 

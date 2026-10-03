@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { CliError, captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import type { AttachmentLink } from "./domain/models.js"
-import { fetchBytes, publicOnly, type Reach } from "./download.js"
+import { fetchBytes, publicOnly, type Reach, streamBytes } from "./download.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
@@ -19,6 +19,13 @@ beforeAll(async () => {
   server = createServer((request, response) => {
     if (request.url === "/missing") return response.writeHead(404).end()
     if (request.url === "/moved") return response.writeHead(302, { location: "/elsewhere" }).end()
+    if (request.url === "/large-file") {
+      response.writeHead(200, { "content-length": String(33 * 1024 * 1024) })
+      response.end(Buffer.alloc(33 * 1024 * 1024, 1))
+      return
+    }
+    if (request.url === "/too-large-file")
+      return response.writeHead(200, { "content-length": String(5 * 1024 ** 3) }).end()
     if (request.url === "/huge") return response.writeHead(200, { "content-length": String(64 * 1024 * 1024) }).end()
     if (request.url === "/endless") {
       response.writeHead(200)
@@ -42,7 +49,12 @@ const anywhere: Reach = async () => {}
 
 const download = async (
   directory: string,
-  { name = "report.pdf", path = "/file", reach = anywhere }: { name?: string; path?: string; reach?: Reach } = {},
+  {
+    name = "report.pdf",
+    path = "/file",
+    reach = anywhere,
+    args,
+  }: { name?: string; path?: string; reach?: Reach; args?: string[] } = {},
 ) => {
   const max = mockMax({
     answers: {
@@ -59,22 +71,26 @@ const download = async (
           },
         ],
       },
+      [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
       [Opcode.FILE_DOWNLOAD]: { unsafe: false, url: `${origin}${path}` },
     },
   })
   const keyring = memoryKeyring()
   const streams = captureStreams()
-  const code = await run(["messages", "download", "111", "116762160362694583", "--output", directory, "--json"], {
-    streams,
-    tty: false,
-    reach,
-    store: (profile: string) => {
-      const store = new SessionStore({ profile, keyring })
-      store.writeToken("a-token")
-      return store
+  const code = await run(
+    args ?? ["messages", "download", "111", "116762160362694583", "--output", directory, "--json"],
+    {
+      streams,
+      tty: false,
+      reach,
+      store: (profile: string) => {
+        const store = new SessionStore({ profile, keyring })
+        store.writeToken("a-token")
+        return store
+      },
+      connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     },
-    connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
-  })
+  )
   return { code, max, stdout: streams.stdout.join(""), stderr: streams.stderr.join("") }
 }
 
@@ -88,12 +104,52 @@ describe("max messages download", () => {
     expect(String(max.sent.find((call) => call.opcode === Opcode.FILE_DOWNLOAD)?.payload.fileId)).toBe("42")
     expect(JSON.parse(stdout)).toEqual({
       items: [{ kind: "file", path: join(directory, "report.pdf"), bytes: 10 }],
-      page: 1,
-      limit: 1,
-      hasMore: false,
     })
-    expect(stderr).toContain("not downloadable: call")
+    expect(stderr).toContain("not a file, not downloaded: call")
     expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
+  })
+
+  it("supports the common output-dir flag and creates its directory", async () => {
+    const directory = join(await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-")), "new")
+    const result = await download(directory, {
+      args: ["messages", "download", "111", "116762160362694583", "--output-dir", directory, "--json"],
+    })
+    expect(result.code).toBe(0)
+    expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
+  })
+
+  it("refuses conflicting directory flags before connecting", async () => {
+    const result = await download("unused", {
+      args: ["messages", "download", "111", "42", "--output", "one", "--output-dir", "two", "--json"],
+    })
+    expect(result.code).toBe(2)
+    expect(result.max.sent).toEqual([])
+    expect(result.stderr).toContain("must name the same directory")
+  })
+
+  it("downloads and resumes a whole chat using MAX time keys", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const args = ["messages", "download", "111", "--all", "--output-dir", directory, "--pause", "1ms", "--json"]
+    const first = await download(directory, { args })
+    expect(first.code).toBe(0)
+    expect(JSON.parse(first.stdout)).toMatchObject({ saved: 1, complete: true })
+    expect(
+      first.max.sent
+        .filter(({ opcode }) => opcode === Opcode.CHAT_HISTORY)
+        .every(({ payload }) => Number(payload.backward) <= 30),
+    ).toBe(true)
+    const second = await download(directory, { args })
+    expect(second.code).toBe(0)
+    expect(second.max.sent.filter(({ opcode }) => opcode === Opcode.FILE_DOWNLOAD)).toEqual([])
+    expect(JSON.parse(second.stdout)).toMatchObject({ saved: 0, complete: true })
+    expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
+  })
+
+  it("streams a file larger than the voice budget through the consumer", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const result = await download(directory, { path: "/large-file" })
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout).items[0].bytes).toBe(33 * 1024 * 1024)
   })
 
   it("**never overwrites a file that is already there**, and leaves no partial file behind", async () => {
@@ -172,6 +228,19 @@ describe("fetchBytes, for a voice message", () => {
 
   it("stops reading a body that runs past the limit without saying its length", async () => {
     await expect(fetchBytes(voice("/endless"), anywhere)).rejects.toThrow(/larger than 32 MiB/)
+  })
+})
+
+describe("streamBytes", () => {
+  it("retains the general attachment size cap", async () => {
+    const bytes = streamBytes({ kind: "file", url: `${origin}/too-large-file` }, anywhere)
+    await expect(bytes.next()).rejects.toThrow(/larger than 4096 MiB/)
+  })
+
+  it("closes an interrupted HTTP body when its consumer stops early", async () => {
+    const bytes = streamBytes({ kind: "file", url: `${origin}/endless` }, anywhere)
+    expect((await bytes.next()).value?.byteLength).toBeGreaterThan(0)
+    await expect(bytes.return(undefined)).resolves.toMatchObject({ done: true })
   })
 })
 

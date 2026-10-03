@@ -1,4 +1,4 @@
-import { CliError } from "@leemour/cli-core"
+import { CliError, singleLine } from "@leemour/cli-core"
 import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@leemour/cli-messaging"
 import type {
   MessageEditing,
@@ -13,7 +13,7 @@ import type {
 import type { Upload } from "@leemour/cli-messaging/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
-import { fetchBytes, publicOnly, type Reach } from "../download.js"
+import { LARGEST_VOICE, publicOnly, type Reach, streamBytes } from "../download.js"
 import { formatMarkdown, toNativeMarkup } from "../format-markdown.js"
 import type { Markup } from "../markdown.js"
 import { isId } from "../resolve.js"
@@ -133,20 +133,24 @@ export const maxAdapter = (
       return { ...page, items: page.items.map(toMessage) }
     },
 
-    // Only voice messages are heard through it for now, so a file past a voice message's size is not read.
     download: async (chat, messageId) => {
       const { links, skipped } = await client.messages.links(await chatId(chat), messageId)
+      for (const link of links) {
+        if (link.unsafe) warn(`MAX marks ${singleLine(link.name ?? "this file")} as possibly unsafe`)
+      }
       return {
         files: links.map((link) => ({
           kind: kindOf(link.kind),
           ...(link.name ? { name: link.name } : {}),
           bytes: async function* () {
-            yield await fetchBytes(link, reach)
+            yield* streamBytes(link, reach, link.kind === "audio" ? LARGEST_VOICE : undefined)
           },
         })),
         skipped,
       }
     },
+
+    scheduled: async (chat) => (await client.messages.scheduled(await chatId(chat))).map(toMessage),
 
     // An id is taken as it is, without connecting: a write the guard refuses must not have logged in first.
     resolve: async (reference): Promise<Chat> => {
