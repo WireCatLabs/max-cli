@@ -153,7 +153,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
   `conversations embed` tells the user to run `max models text download`, which max does not have~~.
   **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
-  Shared runner: done (#347). Operational diagnostics follow-up: 🚧 `refactor/shared-diagnostics`
+  Shared runner: done (#347). Operational diagnostics follow-up: 🚧 `refactor/shared-diagnostics-adoption`
   owns `src/commands/runs.ts`, `src/commands/commands.ts` and their tests/docs;
   admin, permissions and audio-model moves remain with T6.
 - **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
