@@ -2,10 +2,10 @@ import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { markReadCommand, chatsCommand as sharedChatsCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
-import { openProfileCache } from "../cache/index.js"
 import { ADMIN_RIGHTS, type AdminRight, EVENTS_DAYS, type MaxClient } from "../client.js"
 import type { GroupSettings } from "../domain/models.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
+import { maxRecord } from "../record.js"
 import { checkCommand } from "./check.js"
 import { forCommand } from "./context.js"
 import { foldersCommand } from "./folders.js"
@@ -30,8 +30,8 @@ export const chatsCommand = (): Command => {
     .description("who joined, left, was added or removed, and by whom — from the chat's service messages")
     .action(async function (this: Command, chat: string) {
       const options = this.optsWithGlobals()
-      const { renderer, settings, format, createClient, run } = forCommand(this)
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const { renderer, format, createClient, run, store } = forCommand(this)
+      const record = maxRecord({ account: () => store.readState().viewerId })
       const only =
         options.event === undefined
           ? undefined
@@ -42,7 +42,7 @@ export const chatsCommand = (): Command => {
             )
 
       await run("chats events", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const client = createClient({ events, record })
         try {
           const found = await client.chats.events(
             chat,
@@ -65,7 +65,7 @@ export const chatsCommand = (): Command => {
           if (kept.more) renderer.note(`more history than one run reads — run again with --since after the last one`)
         } finally {
           await client.close()
-          await cache?.close()
+          await record.close()
         }
       })
     })
@@ -222,16 +222,16 @@ export const chatsCommand = (): Command => {
 }
 
 const withClient = async (command: Command, label: string, act: (client: MaxClient) => Promise<unknown>) => {
-  const { renderer, settings, createClient, run } = forCommand(command)
-  const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+  const { renderer, createClient, run, store } = forCommand(command)
+  const record = maxRecord({ account: () => store.readState().viewerId })
 
   await run(label, async (events) => {
-    const client = createClient({ events, ...(cache ? { cache } : {}) })
+    const client = createClient({ events, record })
     try {
       renderer.result(await act(client))
     } finally {
       await client.close()
-      await cache?.close()
+      await record.close()
     }
   })
 }

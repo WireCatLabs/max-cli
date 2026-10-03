@@ -1,8 +1,8 @@
 import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
-import { openProfileCache } from "../cache/index.js"
 import { type CheckRow, describe, finish, MAX_ACTIONS, personal, prepare, sessionPoints } from "../moderation/check.js"
+import { maxRecord } from "../record.js"
 import { forCommand } from "./context.js"
 import { renderList } from "./paging.js"
 
@@ -30,10 +30,10 @@ export const checkCommand = (): Command =>
       if (!Number.isInteger(maxActions) || maxActions < 0) {
         throw new CliError("validation_error", `--max-actions takes a whole number — got ${String(options.maxActions)}`)
       }
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const record = maxRecord({ account: () => store.readState().viewerId })
 
       await run("chats check", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const client = createClient({ events, record })
         try {
           const prepared = await prepare(client, {
             points: sessionPoints(store),
@@ -53,7 +53,7 @@ export const checkCommand = (): Command =>
           for (const note of notes) renderer.note(note)
         } finally {
           await client.close()
-          await cache?.close()
+          await record.close()
         }
       })
     })

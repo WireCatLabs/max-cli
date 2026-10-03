@@ -1,8 +1,8 @@
 import { annotate } from "@leemour/cli-core/commands"
 import { Command } from "commander"
-import { openProfileCache } from "../cache/index.js"
 import type { MaxClient } from "../client.js"
 import { defaultRules, ModerationRules, moderationPathFor, RULE_KEYS } from "../moderation/rules.js"
+import { maxRecord } from "../record.js"
 import { forCommand } from "./context.js"
 
 /**
@@ -55,11 +55,11 @@ const withRules = async (
   chat: string,
   act: (rules: ModerationRules, group: { id: string; title: string | null }) => { saved: boolean; rules?: unknown },
 ) => {
-  const { renderer, settings, createClient, run } = forCommand(command)
-  const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+  const { renderer, settings, createClient, run, store } = forCommand(command)
+  const record = maxRecord({ account: () => store.readState().viewerId })
 
   await run(label, async (events) => {
-    const client: MaxClient = createClient({ events, ...(cache ? { cache } : {}) })
+    const client: MaxClient = createClient({ events, record })
     try {
       const group = await client.chats.show(chat)
       const rules = new ModerationRules(moderationPathFor(settings.profile))
@@ -73,7 +73,7 @@ const withRules = async (
       })
     } finally {
       await client.close()
-      await cache?.close()
+      await record.close()
     }
   })
 }

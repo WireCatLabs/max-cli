@@ -4,13 +4,13 @@ import { dirname } from "node:path"
 import { CliError } from "@leemour/cli-core"
 import type { SendGuard } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
-import type { CacheStore } from "../cache/store.js"
 import { FIRST_TAB_SYNC, MaxClient, type MaxClientOptions, type ResumeFrom, type TabSync } from "../client.js"
 import { resolveSettings } from "../config.js"
 import type { MessageChange, MessageHit } from "../domain/models.js"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { Connection, type ConnectionOptions, ProtocolError } from "../protocol/connection.js"
 import { asId, type Payload } from "../protocol/frame.js"
+import { type MaxRecord, maxRecord } from "../record.js"
 import { guardFor } from "../sends.js"
 import type { SessionStore } from "../session/store.js"
 import type { Guarded } from "../spec/define.js"
@@ -26,7 +26,6 @@ export type ServerEvent =
 
 export interface MaxServerOptions {
   store: SessionStore
-  cache?: CacheStore
   timeoutMs?: number
   /** One line for a person, on stderr. */
   note: (line: string) => void
@@ -92,6 +91,7 @@ const REFRESH_EVERY_MS = 60_000
  */
 export class MaxServer {
   readonly #options: MaxServerOptions
+  readonly #record: MaxRecord
   readonly #subscribers = new Set<Socket>()
   #listener: Server | undefined
   #client: MaxClient | undefined
@@ -123,6 +123,7 @@ export class MaxServer {
 
   constructor(options: MaxServerOptions) {
     this.#options = options
+    this.#record = maxRecord({ account: () => options.store.readState().viewerId })
     this.#up = new Promise((resolve) => {
       this.#markUp = resolve
     })
@@ -182,9 +183,14 @@ export class MaxServer {
       await new Promise<void>((resolve) => this.#listener?.close(() => resolve()))
       if (process.platform !== "win32") rmSync(this.#options.store.socketPath(), { force: true })
     }
-    await this.#client?.close()
-    this.#client = undefined
-    this.#finish?.(error)
+    try {
+      await this.#client?.close()
+      await this.#handing
+    } finally {
+      this.#client = undefined
+      await this.#record.close()
+      this.#finish?.(error)
+    }
   }
 
   /**
@@ -193,7 +199,7 @@ export class MaxServer {
    * dropped: `Connection` has already acknowledged them, so MAX will not send them again.
    */
   async #connect(): Promise<void> {
-    const { store, cache, timeoutMs, events } = this.#options
+    const { store, timeoutMs, events } = this.#options
     let mine: MaxClient | undefined
     const early: [number, Record<string, unknown>][] = []
     const connection = (
@@ -218,7 +224,7 @@ export class MaxServer {
       fullLogin: true,
       ...(resume ? { resume } : {}),
       warn: this.#options.note,
-      ...(cache ? { cache } : {}),
+      record: this.#record,
       ...(events ? { events } : {}),
     })
     try {
@@ -516,7 +522,7 @@ export class MaxServer {
       // Nor a chat we changed: the answer carries it whole, as a 135 push would. Without this the
       // owner's own rename showed the old title until something else touched the chat.
       if (answer.chat) this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
-      // The same for a contact we renamed: every command writes the login's contacts to its cache.
+      // The same for a contact we renamed: commands keep the login's contacts in the shared store.
       if (objectOf(answer.contact).id !== undefined) client.live.contact(objectOf(answer.contact))
       // Nor does it push our own deletion back; the chat's last message may be the one deleted.
       if (opcode === Opcode.MSG_DELETE) this.#goneStale()

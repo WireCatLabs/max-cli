@@ -87,7 +87,7 @@ export interface CommandContext {
   streams: Streams
   store: SessionStore
   /**
-   * Not connected yet: the action owns the `finally` that closes it — and the cache, if it opened one.
+   * Not connected yet: the action owns the `finally` that closes it — and any local record it opened.
    * It goes through the profile's one `max serve`; `own` is for logging in, which cannot.
    */
   createClient: (extra?: Partial<Omit<MaxClientOptions, "store">>, options?: { own?: boolean }) => MaxClient
@@ -128,8 +128,6 @@ export interface CommandContext {
  * `resolveSettings` decided — flag, then environment, then the configuration file — rather than
  * what `commander` happened to parse.
  *
- * The cache is not opened here on purpose — only the reading commands want one, and opening it
- * would create a database file for `session end`, which will never read it.
  */
 export const forCommand = (command: Command): CommandContext =>
   contextFor(command.optsWithGlobals<GlobalFlags & { offline?: boolean }>(), environmentOf(command))

@@ -314,7 +314,24 @@ export class MaxClient {
       })
 
       const cache = this.#cache
-      if (!cache) return paged(matching(chats, { query, kind, unread }), limit, offset)
+      if (!cache) {
+        let known = chats
+        await this.#keep("chats", async (record) => {
+          known = await record.rememberChats(chats, this.#chatsComplete)
+        })
+        const partners = new Map(chats.map((chat) => [chat.id, chat.providerMetadata]))
+        return paged(
+          matching(
+            known.map((chat) => ({
+              ...chat,
+              ...(partners.get(chat.id) ? { providerMetadata: partners.get(chat.id) } : {}),
+            })),
+            { query, kind, unread },
+          ),
+          limit,
+          offset,
+        )
+      }
 
       // Written first, then read back: the titles just resolved have to be in the store before it
       // is asked to order and page over them, and the delta this login carried is only a slice of
@@ -359,7 +376,11 @@ export class MaxClient {
       if (!chat) throw new CliError("not_found", `no chat ${reference.trim()} among this account's chats`)
 
       const cache = this.#cache
-      const members = chat.kind === "channel" || !cache ? null : await cache.chats.members(chat.id)
+      let members = chat.kind === "channel" || !cache ? null : await cache.chats.members(chat.id)
+      if (chat.kind !== "channel")
+        await this.#keep("members", async (record) => {
+          members = await record.members(chat.id)
+        })
       // The login carries only the chats that changed lately; the settings of the rest are not known here.
       const raw =
         this.#offline || chat.kind === "dialog"

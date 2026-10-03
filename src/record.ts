@@ -1,4 +1,4 @@
-import type { Chat, Contact, Id, PeopleLookup } from "@leemour/cli-messaging"
+import type { Chat, Contact, Id, Member, PeopleLookup } from "@leemour/cli-messaging"
 import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@leemour/cli-messaging/store"
 
 const MARKER = "login.marker"
@@ -25,6 +25,8 @@ export interface MaxRecord {
   applyLogin(delta: LoginDelta): Promise<SyncSummary | undefined>
   people(): Promise<PeopleLookup>
   chatsWith(personId: Id): Promise<Chat[]>
+  rememberChats(chats: Chat[], complete: boolean): Promise<Chat[]>
+  members(chatId: Id): Promise<Member[]>
   names(ids: Id[]): Promise<Map<Id, string>>
   remember(people: Contact[]): Promise<void>
   /** The next login asks for everything, as `contacts sync` wants. */
@@ -94,6 +96,24 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
     chatsWith: async (personId) => {
       const key = keyOf()
       return key ? (await store()).chatsWith(key, personId) : []
+    },
+
+    rememberChats: async (chats, complete) => {
+      const key = keyOf()
+      if (!key) return chats
+      const db = await store()
+      await db.saveChats(key, chats)
+      if (complete && chats.length > 0)
+        await db.markChatsLeft(
+          key,
+          chats.map((chat) => chat.id),
+        )
+      return (await db.chats(key, {})).items
+    },
+
+    members: async (chatId) => {
+      const key = keyOf()
+      return key ? (await store()).members(key, chatId) : []
     },
 
     names: async (ids) => {
