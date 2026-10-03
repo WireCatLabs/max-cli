@@ -207,3 +207,5 @@ which; the plan for it starts by saying so.
 - Completed 2026-10-03: shared account-show factory retains MAX profile fields; contact-lookup argv refusal never repeats a number (#371). Permission runtime remains with T6/P7.
 
 - Completed 2026-10-03: response MIME preserves shared download fallback extensions (SDK0.136); streams remain lazy and bounded, without eager unused attachment requests.
+
+- B1c · 🚧 feat/messages-link · shared personal messages link command and read-only MCP; validated locator fallback until personal permalink protocol is proven.
