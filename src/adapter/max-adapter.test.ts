@@ -50,6 +50,12 @@ const connected = (answers: Record<number, Payload | ((request: Payload) => Payl
 }
 
 describe("the MAX adapter", () => {
+  it("resolves numeric people without connecting, so the shared contact guard can refuse first", async () => {
+    const { adapter, sent } = connected()
+    expect(await adapter.people([" 20000002 ", "20000003"])).toEqual(["20000002", "20000003"])
+    expect(sent(Opcode.LOGIN)).toEqual([])
+  })
+
   it("refuses explicit topics for direct send and poll calls without connecting", async () => {
     const { adapter, sent } = connected()
     const options = { sendId: "42", threadId: "12" }

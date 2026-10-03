@@ -145,7 +145,8 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
   `conversations` (#308), transcripts into the shared store (item 5 step 2), `inbox`/`review` (step 3), MCP reads (step 4),
   shared completion and store diagnostics in doctor (step 5), record-backed client/callers/serve (#340–#343),
-  and removal of the cache command and storage code (steps 6–7). Left: a live check of
+  removal of the cache command and storage code (steps 6–7), and contact writes
+  (`add|remove|block|unblock|rename|import`). Left: a live check of
   `messages list --transcribe`, the admin commands, max's
   half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
   `conversations embed` tells the user to run `max models text download`, which max does not have~~.
