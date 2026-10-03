@@ -222,7 +222,7 @@ max messages send 0 "текст"     # эта строка видна в ps и �
 |---|---|
 | `wss://api.oneme.ru/websocket`, заголовок `Origin` — `https://web.max.ru` | каждая команда, которой нужен MAX |
 | серверы файлов MAX — адрес выдаёт сам MAX | `messages send --file`, `messages download` |
-| `https://web.max.ru` во временном профиле Chromium | `session start qr-chrome` и `session start sms` |
+| `https://web.max.ru` во временном профиле Chromium | `session start qr-chrome`, `session start sms`, `setup --method qr-chrome|sms` |
 | Hugging Face и GitHub — файлы модели распознавания речи | только `max models audio download`; голос туда не уходит — он распознаётся на этом компьютере |
 | `https://platform-api2.max.ru` — официальный Bot API, токен в заголовке `Authorization` | только команды `max bot` |
 | реестр npm — узнать номер последней версии | `max upgrade`; и раз в сутки, когда команду запускает человек в терминале. Выключается `updateCheck: false` |
@@ -258,7 +258,7 @@ push-уведомления, а `max` — нет. Поэтому MAX может 
   который только отвечает на запросы `max`, выглядит иначе, чем аккаунт живого человека.
 - **Не превращайте `max` в поток запросов.** Чтение по делу, а не каждую минуту по расписанию.
 
-При первом `max session start` профиля это же говорится один раз, на stderr.
+При первом входе профиля через `max setup` или `max session start` это же говорится один раз, на stderr.
 
 ## Только для себя
 

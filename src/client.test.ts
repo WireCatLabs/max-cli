@@ -55,7 +55,7 @@ describe("MaxClient", () => {
     const { client } = clientWith(max, "")
 
     await expect(client.connect()).rejects.toMatchObject({ code: "authentication_error" })
-    expect(String(await client.connect().catch((error: Error) => error.message))).toContain("max session start")
+    expect(String(await client.connect().catch((error: Error) => error.message))).toContain("max setup")
   })
 
   it("blames the keyring, not the session, when a profile that has logged in finds no token", async () => {

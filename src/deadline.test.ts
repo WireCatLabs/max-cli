@@ -43,6 +43,25 @@ describe("the command deadline", () => {
     expect([one.state.closed, two.state.closed]).toEqual([true, true])
   })
 
+  it("reports timeout when closing input rejects the running body", async () => {
+    let cancel: (error: Error) => void = () => {}
+    const input = new Promise<never>((_, reject) => {
+      cancel = reject
+    })
+    const failure = await withDeadline(
+      20,
+      [
+        {
+          close: async () => {
+            cancel(new Error("input closed"))
+          },
+        },
+      ],
+      () => input,
+    ).catch((error) => error)
+    expect(failure).toMatchObject({ code: "timeout" })
+  })
+
   it("leaves the ordinary path alone when no bound was asked for", async () => {
     expect(await withDeadline(undefined, [], async () => "done")).toBe("done")
   })

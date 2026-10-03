@@ -34,6 +34,7 @@ import { sendsCommand } from "./commands/sends.js"
 import { serveCommand } from "./commands/serve.js"
 import { serverCommand } from "./commands/server.js"
 import { sessionCommand } from "./commands/session.js"
+import { setupCommand } from "./commands/setup.js"
 import { skillCommand } from "./commands/skill.js"
 import { upgradeCommand } from "./commands/upgrade.js"
 import { watchCommand } from "./commands/watch.js"
@@ -59,6 +60,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
   configuration: { resolveSettings },
   commands: () => [
     sessionCommand(),
+    setupCommand(),
     accountCommand(),
     chatsCommand(),
     contactsCommand(),
@@ -86,6 +88,16 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     botCommand(),
   ],
   configure: (program) => {
+    program.addHelpText(
+      "after",
+      "\nGetting started after installation:\n" +
+        "  max setup                    Guided personal-account login; allow about 5 minutes\n" +
+        "  max setup --agent codex      Connect the skill for your agent\n" +
+        "  max setup --help             Login methods, Windows advice and examples\n" +
+        "\nAgents: read `max skill show` before login; `max commands --json` lists commands.\n" +
+        "Choose a chat and how much history to fetch after setup.\n" +
+        "Bots: `max <profile> bot auth set` connects a bot separately.\n",
+    )
     program
       .option("--serve", "start `max serve` in the background if it is not running (the default)")
       .option("--no-serve", "do not start it; log in on this command's own connection unless one is running")

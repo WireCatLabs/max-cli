@@ -6,12 +6,11 @@ import { commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { stopServer } from "../server/server-connection.js"
 import { adoptToken } from "../session/adopt.js"
 import { serveQrPage } from "../session/browser.js"
-import { readSecret } from "../session/prompt.js"
 import { terminalQr } from "../session/qr-terminal.js"
 import { type CommandContext, forCommand } from "./context.js"
 
 // NEED-149: gentle on purpose — it asks for ordinary use alongside, and does not cite blocked accounts.
-const TERMS_NOTICE = [
+export const TERMS_NOTICE = [
   "max is not the official MAX app, and the MAX terms do not allow automated programs (legal.max.ru/ps, 4.3.7).",
   "Keep using MAX as usual in the browser or on your phone alongside it. More: docs/security.md",
 ].join("\n")
@@ -36,63 +35,31 @@ export const sessionCommand = (): Command => {
   command
     .command("start")
     .description("log this profile in to MAX")
+    .addHelpText(
+      "after",
+      "\nFirst time: run `max setup --agent codex` for guided login and agent setup.\n" +
+        "Examples:\n  max session start qr          Scan a QR with MAX on your phone\n" +
+        "  max session start qr-chrome   Log in through web.max.ru in Chromium\n" +
+        "  max session start sms         Enter your phone number in that browser\n" +
+        "  max work session start        Import a token at a hidden prompt\n" +
+        "\nAn interrupted first setup can be resumed with `max setup`.\n" +
+        "For an expired session, explicitly log in again with `max session start qr`.\n" +
+        "Agents: read `max skill show` before login. QR/browser login needs a local terminal.\n" +
+        "Never put tokens or passwords in command arguments.\n",
+    )
     .addArgument(
       new Argument("[method]", "token (pasted or piped), qr, qr-chrome or sms").choices(METHODS).default("token"),
     )
     .action(async function (this: Command, method: Method) {
       const context = forCommand(this)
-      const { renderer, settings, store, createClient, run, interactive } = context
+      const { renderer, run } = context
 
-      // Creation is the only moment the collision can still be explained; after this the name is
-      // written down and `max <name>` would silently be a command instead.
-      refuseCommandName(settings.profile, commandWords(rootOf(this)))
-      // Before `qr` asks MAX for a code over our socket: PyMax #106 hit the limit on exactly that.
-      if (store.hasLoggedIn()) refuseWhilePaused(store.readState())
-
-      if (method !== "token" && !interactive) {
-        throw new CliError(
-          "validation_error",
-          `\`session start ${method}\` needs a person at a terminal — use \`session start token\``,
-        )
-      }
-
-      // It outranks the keyring, so every later command would still log in with it and the new
-      // session would look as if it had not worked.
-      if (method !== "token" && process.env.MAX_TOKEN) {
-        throw new CliError(
-          "validation_error",
-          "MAX_TOKEN is set, and it would outrank the new session — unset it first",
-        )
-      }
-
-      const pasted = method === "token" ? process.env.MAX_TOKEN?.trim() || (await readSecret("MAX token: ")) : undefined
-
-      // Before the run directory: nothing was attempted, so there is nothing to record.
-      if (method === "token" && !pasted) {
-        throw new CliError("validation_error", "no token given")
-      }
-
+      refuseCommandName(context.settings.profile, commandWords(rootOf(this)))
       await run("session start", async (events) => {
-        // One connection per profile at any moment (`NEED-229`): a login needs one of its own — MAX
-        // logs in before there is a token to share — so the server holding the old session goes
-        // first, and comes back on the new one below.
-        if ((await context.stopServer()) === "stopped")
-          renderer.note("stopped `max serve`; it starts again on the new session")
-        const token = method === "token" ? String(pasted) : await obtain(method, context, events)
-        const client = createClient({ events }, { own: true })
-
-        // No account on record means this profile has never logged in, or `session end` forgot it.
-        const firstLogin = store.readState().viewerId === undefined
-
-        try {
-          await adoptToken(client, store, token)
-          const profile = await client.account.me()
-          renderer.result({ profile: maskedProfile(profile), stored: true, method })
-          renderer.success(`logged in as ${profile.name ?? profile.id}`)
-          if (firstLogin) renderer.note(TERMS_NOTICE)
-        } finally {
-          await client.close()
-        }
+        const { firstLogin, ...answer } = await startSession(context, method, events)
+        renderer.result(answer)
+        renderer.success(`logged in as ${answer.profile.name ?? answer.profile.id}`)
+        if (firstLogin) renderer.note(TERMS_NOTICE)
         if (await context.shareServer()) renderer.note("`max serve` is up on the new session")
       })
     })
@@ -131,7 +98,38 @@ export const sessionCommand = (): Command => {
 }
 
 const METHODS = ["token", "qr", "qr-chrome", "sms"] as const
-type Method = (typeof METHODS)[number]
+export type Method = (typeof METHODS)[number]
+
+export const startSession = async (context: CommandContext, method: Method, events: MaxClientOptions["events"]) => {
+  const { renderer, store, createClient, interactive } = context
+  if (store.hasLoggedIn()) refuseWhilePaused(store.readState())
+  if (method !== "token" && !interactive)
+    throw new CliError(
+      "validation_error",
+      `\`session start ${method}\` needs a person at a terminal — use \`session start token\``,
+    )
+  if (method !== "token" && process.env.MAX_TOKEN)
+    throw new CliError("validation_error", "MAX_TOKEN is set, and it would outrank the new session — unset it first")
+  const pasted =
+    method === "token"
+      ? process.env.MAX_TOKEN?.trim() || (await context.ask("MAX token: ", { secret: true }))
+      : undefined
+  if (method === "token" && !pasted) throw new CliError("validation_error", "no token given")
+  context.signal.throwIfAborted()
+  if ((await context.stopServer()) === "stopped")
+    renderer.note("stopped `max serve`; it starts again on the new session")
+  const token = method === "token" ? String(pasted) : await obtain(method, context, events)
+  context.signal.throwIfAborted()
+  const client = createClient({ events }, { own: true })
+  const firstLogin = store.readState().viewerId === undefined
+  try {
+    await adoptToken(client, store, token)
+    const profile = await client.account.me()
+    return { profile: maskedProfile(profile), stored: true, method, firstLogin }
+  } finally {
+    await client.close()
+  }
+}
 
 /** Long enough to find the phone and type a number and a code; the profile dies with the wait. */
 const BROWSER_WAIT_MS = 5 * 60_000

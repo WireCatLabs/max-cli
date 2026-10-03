@@ -18,7 +18,8 @@ describe("the skill an agent is given", () => {
   it("**names only flags that exist** — a skill that recommends a missing flag is worse than none", () => {
     const flags = new Set(commands.flatMap((command) => command.options.map((option) => option.long)))
     flags.add("--help")
-    const named = [...new Set(skill.match(/--[a-z][a-z-]*/g) ?? [])]
+    const cliSkill = skill.replace(/`npm\.cmd exec[^`]+`/g, "")
+    const named = [...new Set(cliSkill.match(/--[a-z][a-z-]*/g) ?? [])]
 
     expect(named.filter((flag) => !flags.has(flag) && flag !== "--profile")).toEqual([])
     expect(flags.has("--profile")).toBe(false)

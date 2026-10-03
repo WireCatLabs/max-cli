@@ -281,6 +281,7 @@ npx @leemour/max-cli --help
 ```sh
 npm install -g @leemour/max-cli
 max --version
+max setup --agent codex  # вход и подключение навыка агента
 ```
 
 Нужен **Node 22.16 или новее**, либо **Bun 1.3+**. Работает на macOS, Linux и Windows. Подробности,
@@ -291,16 +292,24 @@ max --version
 
 ## Вход
 
-`max session start qr` рисует QR-код в терминале: вы сканируете его приложением MAX, и токен входа
-сохраняется в системном хранилище паролей. Ещё способы — `qr-chrome`, `sms` (оба через web.max.ru в браузере) и `token`
-([docs/sessions.md](docs/sessions.md)).
+`max setup` проводит через первый запуск: проверяет локальные каталоги, показывает QR-код,
+проверяет аккаунт и до пяти чатов, затем предлагает подключить навык агента. Выделите около
+пяти минут. Скачивание истории — отдельный шаг после выбора чата и объёма; setup не запускает
+фоновый сервис. Повторный запуск проверяет существующую сессию без нового входа.
 
 ```sh
-max session start qr                   # QR-код в терминале
-max session start                      # или спросит токен, не отображая ввод
-pass show max/token | max session start # или из трубы
-max account show                       # кто вы
+max setup --agent codex                # QR-вход и навык Codex
+max setup --agent claude               # или Claude Code
+max setup --method qr-chrome           # QR через web.max.ru в Chromium
+max setup --method sms                 # номер телефона вводится в браузере
+max setup --method token               # скрытый ввод токена или stdin
+max setup --help                       # все способы и примеры
 ```
+
+Вместо агента можно выбрать `cursor`, `gemini`, `all` или `none`. Агент перед входом читает
+`max skill show`; инструкция доступна без сессии. `max session start` остаётся отдельной
+командой импорта токена, а `max session start qr` — явного повторного входа при истёкшей сессии
+([docs/sessions.md](docs/sessions.md)).
 
 Несколько аккаунтов — несколько профилей, и профиль называется **первым словом**, а не флагом:
 
@@ -365,15 +374,16 @@ max store export "Проект Альфа" --format markdown --output alfa.md
 
 Навык (skill) — файл с инструкцией, который агент читает перед работой. В навыке `max` описано,
 какие команды есть, что агент делает только по вашей просьбе и как безопасно повторить отправку.
-Его понимают **Claude Code**, **Codex** и **Gemini CLI**. Навык ставится одной командой и всегда
+Его понимают **Claude Code**, **Codex**, **Cursor** и **Gemini CLI**. Навык ставится одной командой и всегда
 той же версии, что и `max`:
 
 ```sh
-max skill install
+max skill show                         # прочитать перед входом
+max skill install --for all             # установить без входа
 ```
 
 Команда кладёт навык в `~/.claude/skills/max-cli/` для Claude Code и в `~/.agents/skills/max-cli/`
-для Codex и Gemini CLI; `--for claude` или `--for agents` — только в одну из папок. После
+для Codex, Gemini CLI и Cursor (при поддержке обнаружения навыков); `--for claude` или `--for agents` — только в одну из папок. После
 обновления `max` запустите её ещё раз. Если навыка нет или он старше `max`, агент раз в сутки
 увидит об этом строку в stderr; выключается `max config set skillHint false --defaults`.
 
@@ -415,7 +425,7 @@ max chats list --json
 нельзя принять за пустой результат:
 
 ```json
-{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max session start`"}}
+{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max setup` in a local terminal; agents: read `max skill show`"}}
 ```
 
 У каждой ошибки есть номер — код завершения программы. По нему скрипт решает, что делать дальше:
