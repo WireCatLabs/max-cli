@@ -1,81 +1,82 @@
 ---
 name: parity-audit
-description: Audit how far tg-cli and max-cli are from working the same way — measure both CLIs' main with cli-messaging's `pnpm parity:audit --fresh`, compare with the last audit, write the new audit file, journal the findings and hand each open item to the workstream that owns it. Use when asked to check parity, compare max and tg, align tg and max, rerun or update the parity audit, «паритет», «сравнить tg и max».
+description: Compare MAX and Telegram functionality, every CLI command/argument/flag/default, MCP schemas and visibility, shared versus retained implementation, and fresh test coverage. Use for parity checks, max/tg comparison, detailed audits or «паритет». Collect with the shared deep auditor, then interpret its evidence; never infer behaviour from matching names or green manifest checks.
 ---
 
-# Audit the parity of tg and max
+# Detailed MAX/Telegram parity audit
 
-The rules are cli-messaging's `docs/dev/STANDARD.md`; the manifest of every command and option is its
-`parity.json`; the plan with the workstreams (P0b, P2, P4, P6, P7, P8, T6) is
-`docs_ai/plans/2026-09-30-parity-plan.md`. Audits live in `docs_ai/plans/parity/audit-<date>.md` —
-read the newest one first: it is the baseline you compare against.
+Start from the latest audit linked in `docs_ai/HANDOFF.md` (or the public backlog if private docs are
+absent), cli-messaging's STANDARD and current claims. The report answers which functionality is
+shared, what differs, where implementations remain separate, what tests actually prove, and what
+is unverified. Preserve the owner's scope: this audit authorizes no live account operations.
 
-Nothing here contacts Telegram or MAX. The script starts each MCP server in an empty temporary home
-and asks only for its tool list.
+## Collect everything in one run
 
-## 1. Measure
-
-In a cli-messaging worktree on `origin/main` — never the shared checkout, other sessions use it:
+From max-cli, run:
 
 ```sh
-git -C ../cli-messaging fetch -q
-git -C ../cli-messaging worktree add --detach ../cli-messaging-wt-audit origin/main
-cd ../cli-messaging-wt-audit && pnpm install --frozen-lockfile --prefer-offline
-pnpm -s parity:audit --fresh > <scratchpad>/audit.md
+python3 .claude/skills/parity-audit/scripts/run.py
 ```
 
-`--fresh` clones and builds max-cli and tg-cli `main` into a temporary folder (the path is on
-stderr). Do not use the local `../tg-cli` or `../max-cli` checkouts — they trail `main` and carry
-other sessions' work. The output has two parts:
+The launcher clones fresh cli-messaging main into a disposable workspace; the shared runner clones
+and builds both consumers on pinned main snapshots. It captures discovery and MCP in empty homes,
+runs coverage/gates/argv matrices, collects source registration evidence, and executes the same
+synthetic local search/read scenarios through both actual CLIs. No user binary or profile is used.
+The launcher prints the report and retained workspace paths.
 
-- **The manifest** — counts by state, planned rows by who closes them, one-sided rows with their
-  reasons, option names still in conflict.
-- **Measured from the two CLIs** — the checks CI runs, pinned shared versions, MCP tools, user pages,
-  README sections, release scripts and skills.
+Use `--output <new-directory>` for a specific destination. Existing output directories are refused.
+Default: a timestamped evidence directory under `docs_ai/plans/parity`, or the system temp directory
+when private docs are absent. `--skip-checks` is only for an explicitly limited surface/source run:
+its report says tests **not-run**, and must not be described as a complete audit.
 
-## 2. Judge
+For development of the auditor, `--shared-source <isolated-cli-messaging-worktree>` runs the same
+workflow against that worktree. Never pass a shared checkout another session owns. The direct
+shared command is documented in
+[PARITY-AUDIT.md](https://github.com/leemour/cli-messaging/blob/main/docs/dev/PARITY-AUDIT.md).
 
-The script measures; you decide what each difference means.
+## Read the evidence before judging
 
-- **A 🔴 check** (a CLI against the manifest, help sentences, pages) is a bug: find the PR that
-  caused it (`git log -S`) and who owns the file (the parity plan, §8).
-- **MCP tools one CLI has alone** — expected while its commands are one-sided or planned; a tool
-  whose command is `both` in the manifest is a finding.
-- **A page pair 🔴 by headings** is a lead, not a verdict: open both and say what the one with fewer
-  sections lacks. Also check that STANDARD's list of one-sided pages still names real files.
-- **README sections** — compare against STANDARD Documents rule 2 and the open ruling on it in
-  `DECISIONS.md` (`NEED-500` at the time of writing).
-- **Pinned versions** — a CLI more than one release behind blocks the rows the newer manifest
-  flipped; check its open dependency PR.
-- **Who is on it** — before calling anything unowned, check the backlog (`🚧`), the newest journals
-  and `ListAgents`. Many sessions work on parity at once.
+- `report.md`: measured draft, snapshots/pins, direct differences and incomplete checks.
+- `commands.md`: **every** actual path/argument/option/default and argv status, including globals,
+  short aliases and one-sided groups. Planned/exempt manifest rows do not hide direct differences.
+- `mcp.md`: full input/output schemas, required fields, enums, annotations and default/send/flags/
+  configured visibility. All allow flags are not necessarily all available tools: opt-in config
+  groups are measured separately. Tool availability is not the same as execution permission.
+- `functions.md` / `sources.md`: mounting candidates, shared imports, local registrations and
+  service calls with source anchors. Lexical candidates are **not** a resolved call graph; inspect
+  mixed/aliased/unresolved routes instead of guessing they share an implementation.
+- `tests.md`: fresh results/skips, every file's line/branch/function coverage, exact exclusions,
+  gate failures and argv exceptions. Consumer coverage excludes dependency implementation.
+- `search.md`: versions, fields/operators and budgets exported by each pinned package; declared
+  support does not prove that every combination was tested.
+- `scenarios.md`: shared synthetic recipe/read outcomes; distinguish personal archive search,
+  legacy bot search, semantic embeddings and provider name filters.
+- `surface.md` / `evidence.json`: manifest/pages/tooling and complete machine data, failures,
+  source snapshots, main movement and retained paths.
 
-## 3. Write the audit
+A nonzero run is incomplete/failed, not a parity success. Read preserved failures; fix auditor faults
+within scope, or record an external/build/feature block. Never replace failed captures with empty
+lists, reuse old coverage as fresh, or present skipped checks as passed. If main moves, keep the
+captured commits explicit and inspect the delta before deciding whether to rerun.
 
-A new file `docs_ai/plans/parity/audit-<date>.md` (add `-2` for a second one that day), in the
-format the owner asked for ([the second audit of 2026-10-01](../../../docs_ai/plans/parity/audit-2026-10-01-2.md)
-is the example to copy):
+## Produce the understandable audit
 
-- **Lists, not wide tables**; statuses ✅ done · 🟡 being worked on · 🔴 open, nobody on it · ⚪
-  one-sided on purpose.
-- **"Words used here"** first — every workstream id and term the page uses, explained.
-- **"In short"**, then **"What changed since the last audit"**, then **"What to do now"** — each item
-  with its owner and the PR or plan that carries it — then the measurements.
-- **"How this was measured"** — the three commits and versions from the script's header.
+Read [references/interpreting.md](references/interpreting.md) for the evidence rubric and functional
+checklist. Write in the owner's language. Use a concise interpreted main report plus links to the
+exhaustive generated appendices; do not reduce the result to counts or page-heading comparisons.
 
-Put a correction line at the top of the previous audit pointing to the new one; do not rewrite it —
-it is a snapshot. Update the link in `docs_ai/HANDOFF.md` if it points at the old audit.
+Explain terminology, the outcome, changes since the previous snapshot, each functional group's
+CLI/MCP → service → adapter route, actual argument/flag/result/permission differences, tested and
+untested behaviour, and next actions with current owners. Categories: shared implementation,
+mixed/local implementation, temporary adoption debt, documented protocol difference, or unknown.
+The generator cannot decide protocol justification or whether every scenario works live.
 
-## 4. Record and hand off
+Save the interpreted report alongside the generated bundle. Annotate the previous audit at its top
+with a link to the new one and update HANDOFF's latest-audit link. Historical snapshots stay intact.
+Record findings when discovered with `docs_ai/journal/note.sh`; check current backlog/claims before
+assigning an owner. Commit/push private evidence in its own worktree, preserving other sessions'
+work. Add printed workspaces and evidence paths to CLEANUP; do not delete them mid-task.
 
-- Every finding goes into the journal as you find it: `docs_ai/journal/note.sh FIND|BUG|RISK "…"`.
-- An item nobody owns goes to the workstream handoff it belongs to (`docs_ai/plans/parity/p*.md`), or
-  to `docs/dev/BACKLOG.md` if it belongs to none.
-- A fix you can make in a file no workstream owns (CI, a manifest note), make it: one PR each, based
-  on `main`.
-- Leave the cli-messaging worktree and the temporary clones on `docs_ai/CLEANUP.md`.
-
-## 5. Improve the script, not the ritual
-
-A check you did by hand twice belongs in `src/parity/audit.ts` (with a case in `audit.test.ts`), not
-in this skill.
+Repeated mechanical checks belong in shared `src/parity`/`scripts/parity` with meaningful regression
+cases, not another ad-hoc private script. Consumer adoption, release and live testing remain their
+own authorized tasks.
