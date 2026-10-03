@@ -149,8 +149,8 @@ describe("max messages list --transcribe", () => {
     expect(page.items[0]).toMatchObject({ id: String(voice.id), transcript: "перезвоню вечером" })
     expect(page.items[1].transcript).toBeUndefined()
     expect(page).toMatchObject({ unheard: [] })
-    // The voice is fetched on a connection of its own, and heard once every connection is closed.
-    expect(events).toEqual(["closed", "closed", "recognized"])
+    expect(events).toEqual(["closed", "recognized"])
+    expect(mock.sent.filter(({ opcode }) => opcode === Opcode.LOGIN)).toHaveLength(1)
     expect(mock.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
 
     events.length = 0
@@ -224,6 +224,71 @@ describe("max review --transcribe", () => {
     expect(code).toBe(0)
     expect(events.indexOf("closed")).toBeLessThan(events.indexOf("recognized"))
     expect(events).toContain("recognized")
+  })
+})
+
+describe("voice questions in unanswered review", () => {
+  it("uses a retained transcript before filtering, without downloading or recognizing", async () => {
+    const voice = wire(10, THEM, "", true)
+    const { environment, events } = setup([voice])
+    const store = await openStore()
+    try {
+      await store.keepTranscript(
+        { provider: "max", account: String(ME) },
+        "111",
+        String(voice.id),
+        "Можно завтра?",
+        "gigaam-v3",
+      )
+    } finally {
+      await store.close()
+    }
+    const fetched = audioFetched
+    const answer = await max(
+      ["h-question-kept", "review", "--chat", "111", "--since-time", "1h", "--unanswered", "1m", "--json"],
+      environment,
+    )
+    expect(answer.code).toBe(0)
+    expect(JSON.parse(answer.stdout[0] as string).chats[0]?.messages).toMatchObject([
+      { text: "", transcript: "Можно завтра?" },
+    ])
+    expect(events).not.toContain("recognized")
+    expect(audioFetched).toBe(fetched)
+  })
+
+  it("hears a fresh question with one LOGIN and closes before recognition", async () => {
+    installModel()
+    const voice = wire(10, THEM, "", true)
+    const { environment, events, max: mock } = setup([voice])
+    environment.recognizer = () => ({
+      recognize: () => {
+        events.push("recognized")
+        return "Можно завтра?"
+      },
+      free: () => {},
+    })
+    const answer = await max(
+      [
+        "h-question-fresh",
+        "review",
+        "--chat",
+        "111",
+        "--since-time",
+        "1h",
+        "--unanswered",
+        "1m",
+        "--transcribe",
+        "--json",
+      ],
+      environment,
+    )
+    expect(answer.code).toBe(0)
+    expect(JSON.parse(answer.stdout[0] as string).chats[0]?.messages).toMatchObject([
+      { text: "", transcript: "Можно завтра?" },
+    ])
+    expect(events).toEqual(["closed", "recognized"])
+    expect(mock.sent.filter(({ opcode }) => opcode === Opcode.LOGIN)).toHaveLength(1)
+    expect(mock.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
   })
 })
 

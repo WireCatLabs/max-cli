@@ -376,6 +376,49 @@ describe("the MCP server", () => {
     expect(shown.body).toMatchObject({ id: "20000002", name: "Partner", chats: [{ id: "777" }] })
   })
 
+  it("keeps a cached voice question in unanswered MCP review without a model", async () => {
+    const id = "116762160362694999"
+    const store = await openStore()
+    try {
+      await store.keepTranscript(
+        { provider: "max", account: "10000001" },
+        "111",
+        id,
+        "Can we meet tomorrow?",
+        "gigaam-v3",
+      )
+    } finally {
+      await store.close()
+    }
+    const { client, max } = await connect(
+      {},
+      {
+        answers: {
+          [Opcode.CHAT_HISTORY]: {
+            messages: [
+              {
+                id: BigInt(id),
+                time: 1789776000000,
+                sender: 10000002,
+                text: "",
+                attaches: [{ _type: "AUDIO", audioId: 5, duration: 3000, url: "https://example.test/voice.ogg" }],
+              },
+            ],
+          },
+          [Opcode.CONTACT_INFO]: { contacts: [] },
+        },
+      },
+    )
+    const reviewed = await call(client, "max_review", {
+      since: "2026-09-01T00:00:00Z",
+      chat: "111",
+      unanswered_after_hours: 0,
+    })
+    expect(reviewed.isError).toBe(false)
+    expect(reviewed.body).toMatchObject({ chats: [{ messages: [{ text: "", transcript: "Can we meet tomorrow?" }] }] })
+    expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
+  })
+
   it("reads shared transcripts in list, inbox, review and direct transcription without a model", async () => {
     const id = "116762160362694999"
     const store = await openStore()
