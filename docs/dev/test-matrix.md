@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**485 ✅ · 63 ⛔ · 0 ❌** — 209 commands, 339 options.
+**487 ✅ · 63 ⛔ · 0 ❌** — 209 commands, 341 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -115,6 +115,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages transcribe` |  | ✅ |  |
 | `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
+| `messages send` | `--topic` | ✅ |  |
 | `messages send` | `--reply-to` | ✅ |  |
 | `messages send` | `--send-id` | ✅ |  |
 | `messages send` | `--silent` | ✅ |  |
@@ -224,6 +225,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `polls vote` | `--retract` | ✅ |  |
 | `polls close` |  | ✅ |  |
 | `polls create` |  | ✅ |  |
+| `polls create` | `--topic` | ✅ |  |
 | `polls create` | `--multiple` | ✅ |  |
 | `polls create` | `--anonymous` | ✅ |  |
 | `polls create` | `--revote` | ✅ |  |
