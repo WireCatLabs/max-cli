@@ -21,13 +21,17 @@ const clients = new WeakMap<Command, MaxClient>()
  * Over `max serve` the server reserves and journals each write it forwards, with the outcome it saw;
  * the command checks too, and records only what it refused itself (`NEED-269`).
  */
-export const overServer = (guard: SendGuard, server: () => { readonly journals: boolean } | undefined): SendGuard => ({
-  check: (request) => guard.check(request, server() ? { reserve: false } : {}),
-  record: (entry) => {
-    const through = server()
-    if (!through || entry.outcome === "refused" || !through.journals) guard.record(entry)
-  },
-})
+export const overServer = (guard: SendGuard, server: () => { readonly journals: boolean } | undefined): SendGuard => {
+  const ask = guard.ask
+  return {
+    ...(ask ? { ask: (request: GuardRequest) => ask.call(guard, request) } : {}),
+    check: (request) => guard.check(request, server() ? { reserve: false } : {}),
+    record: (entry) => {
+      const through = server()
+      if (!through || entry.outcome === "refused" || !through.journals) guard.record(entry)
+    },
+  }
+}
 
 /**
  * Since cli-messaging 0.76 the shared `messages delete` leaves its `--allow-dangerous` to the
