@@ -283,10 +283,12 @@ describe("max serve", () => {
   it("logs in again when MAX drops it, and tells the watchers both ways", async () => {
     const { store, max } = await serve("s-drop")
     const watch = watching(store)
-    await settle()
+    await expect.poll(() => watch.events.map((event) => event.event === "status" && event.connected)).toEqual([true])
 
     max.drop()
-    await settle(60)
+    await expect
+      .poll(() => watch.events.map((event) => event.event === "status" && event.connected))
+      .toEqual([true, false, true])
     watch.stop()
     await watch.listening
 
