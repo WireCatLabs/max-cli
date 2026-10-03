@@ -186,8 +186,8 @@ which; the plan for it starts by saying so.
 
 ## Parity tooling follow-up
 
-- Release documentation readiness · 🚧 `docs/release-parity-readiness`: correct stale P7 safety
-  claims and permission recipes before the next release; no publication in this workstream.
+- Completed 2026-10-04: release documentation describes canonical P7 defaults, resource-specific
+  restrictions, explicit deletion confirmation and current permission recipes. Publication is separate.
 
 - Completed 2026-10-03: repository parity-audit skill runs the shared detailed auditor (#365; shared #470–#474). No account access.
 

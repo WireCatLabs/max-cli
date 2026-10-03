@@ -54,7 +54,7 @@ claude mcp add max-work -- max work mcp
 **Claude Desktop, Cursor и другие** — готовую запись для их файла настроек печатает сам `max`:
 
 ```sh
-max mcp config                  # только чтение
+max mcp config                  # права текущего профиля
 max work mcp config --confirm-send
 ```
 
@@ -158,9 +158,9 @@ claude mcp add max -- max mcp --confirm-send
 | `max_reactions_remove` | `max reactions remove` | снять свою реакцию, так же |
 | `max_polls_vote` | `max polls vote` | проголосовать или снять голос, по правам профиля |
 | `max_polls_create` | `max polls create` | создать опрос, по правам профиля |
-| `max_chats_mark_read` | `max chats mark-read` | отметить чат прочитанным, только с `--allow-mark-read` |
+| `max_chats_mark_read` | `max chats mark-read` | отметить чат прочитанным, по правам `chats.mark-read` |
 | `max_messages_delete` | `max messages delete` | удалить у владельца, по правам `messages.delete` |
-| `max_chats_check` | `max chats moderate` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |
+| `max_chats_check` | `max chats moderate` | проверить группу по правилам и сделать, что они разрешают, по правам `chats.moderate` и уровню каждого действия |
 | `max_contacts_*`, `max_polls_close`, `max_chats_join` и другие | `max contacts …`, `max polls close`, `max chats …`, `max account update` | по правам соответствующего ресурса |
 
 В `max_review` отбор вопросов учитывает сохранённые и новые расшифровки до фильтрации.
