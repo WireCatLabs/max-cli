@@ -4,7 +4,7 @@ import { join } from "node:path"
 import { memoryKeyring } from "@leemour/cli-core"
 import type { DiagnosticEvent } from "@leemour/cli-messaging/cli"
 import type { SendEntry, SendGuard } from "@leemour/cli-messaging/sends"
-import { SendJournal } from "@leemour/cli-messaging/sends"
+import { guardedWrite, SendJournal } from "@leemour/cli-messaging/sends"
 import { Command } from "commander"
 import { describe, expect, it } from "vitest"
 import { provide } from "./commands/context.js"
@@ -12,6 +12,7 @@ import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { maxMessenger, overServer } from "./messenger.js"
 import { Connection } from "./protocol/connection.js"
+import type { Payload } from "./protocol/frame.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
@@ -72,7 +73,7 @@ describe("the MAX messenger's settings", () => {
   })
 })
 
-const commandFor = (profile: string) => {
+const commandFor = (profile: string, answers: Record<number, Payload> = {}, refuse: Record<number, string> = {}) => {
   const max = mockMax({
     answers: {
       [Opcode.SESSION_INIT]: {},
@@ -82,7 +83,9 @@ const commandFor = (profile: string) => {
       },
       [Opcode.MSG_REACTION]: { reactionInfo: {} },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
+      ...answers,
     },
+    refuse,
   })
   const program = new Command("max").option("--profile <name>").option("--no-serve")
   program.setOptionValue("profile", profile)
@@ -124,6 +127,41 @@ describe("the MAX messenger's connection", () => {
     expect(new SendJournal(sendsPathFor("m-guard")).entries()).toMatchObject([
       { chatId: "111", kind: "reaction", outcome: "sent", operationId: "op-1" },
     ])
+  })
+  it("consumes the applied receipt only for its operation", async () => {
+    const profile = "m-applied"
+    const { program } = commandFor(profile, { [Opcode.SESSIONS_CLOSE]: {} }, { [Opcode.SESSIONS_INFO]: "login.token" })
+    program.setOptionValue("yes", true)
+    const adapter = await maxMessenger.connect(program, {} as never)
+    const guard = maxMessenger.guard?.(program, maxMessenger.resolveSettings({ profile }), () => {})
+    if (!guard) throw new Error("guard missing")
+    try {
+      await expect(
+        guardedWrite(
+          guard,
+          { operationId: "applied-1", chatId: null, kind: "account", action: "sessions-end" },
+          async () => {
+            if (!adapter.endOtherSessions) throw new Error("adapter capability missing")
+            return adapter.endOtherSessions()
+          },
+        ),
+      ).rejects.toMatchObject({ code: "authentication_error" })
+      guard.record({ operationId: "other-2", chatId: null, kind: "account", action: "sessions-end", outcome: "failed" })
+      guard.record({
+        operationId: "applied-1",
+        chatId: null,
+        kind: "account",
+        action: "sessions-end",
+        outcome: "failed",
+      })
+      expect(new SendJournal(sendsPathFor(profile)).entries()).toMatchObject([
+        { operationId: "applied-1", outcome: "sent" },
+        { operationId: "other-2", outcome: "failed" },
+        { operationId: "applied-1", outcome: "failed" },
+      ])
+    } finally {
+      await adapter.close()
+    }
   })
 })
 

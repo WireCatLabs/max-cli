@@ -358,7 +358,10 @@ describe("the profile", () => {
 
     expect(updated.code).toBe(0)
     expect(sent(Opcode.PROFILE)).toEqual([{ firstName: "Test", lastName: "Person", description: "hi" }])
-    expect(JSON.parse(updated.stdout)).toMatchObject({ id: "10000001", description: "hi" })
+    expect(JSON.parse(updated.stdout)).toEqual({
+      operationId: expect.any(String),
+      account: { id: "10000001", name: "Test Person", username: null, phone: null },
+    })
   })
 
   it("a read-only profile refuses before anything is sent, and journals the refusal", async () => {
@@ -369,10 +372,48 @@ describe("the profile", () => {
 
     expect(JSON.parse(refused.stderr).error.code).toBe("permission_error")
     expect(sent(Opcode.PROFILE)).toEqual([])
+    expect(sent(Opcode.LOGIN)).toEqual([])
     expect(new SendJournal(sendsPathFor("a-readonly")).entries()).toMatchObject([
       { chatId: null, kind: "account", action: "profile", outcome: "refused" },
     ])
   })
+  it("returns the shared account shape with a masked phone", async () => {
+    const { environment } = account({
+      [Opcode.PROFILE]: {
+        profile: {
+          contact: {
+            id: 10000001,
+            phone: 71234567890,
+            names: [{ name: "Test Person", type: "ONEME" }],
+            description: "about me",
+          },
+        },
+      },
+    })
+    const result = await runWith(["account", "update", "--description", "about me"], environment)
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout)).toEqual({
+      operationId: expect.any(String),
+      account: {
+        id: "10000001",
+        name: "Test Person",
+        username: null,
+        phone: "***7890",
+      },
+    })
+    expect(result.stdout).not.toContain("1234567890")
+  })
+
+  it.each([{ args: [] }, { args: ["--first-name", "   "] }, { args: ["--description", "hi", "--offline"] }])(
+    "refuses invalid or offline changes before login: %j",
+    async ({ args }) => {
+      const { environment, sent } = account()
+      const result = await runWith(["account", "update", ...args], environment)
+      expect(JSON.parse(result.stderr).error.code).toBe("validation_error")
+      expect(sent(Opcode.LOGIN)).toEqual([])
+      expect(sent(Opcode.PROFILE)).toEqual([])
+    },
+  )
 })
 
 describe("the profile's last name", () => {
@@ -598,6 +639,7 @@ describe("sessions", () => {
     expect(JSON.parse(unnamed.stderr).error).toMatchObject({ code: "validation_error" })
     expect(unnamed.stderr).toContain("--others")
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([])
+    expect(sent(Opcode.LOGIN)).toEqual([])
   })
 
   it("`end --others --yes` keeps a token MAX hands back, prints none, and lists what is left", async () => {
@@ -608,9 +650,12 @@ describe("sessions", () => {
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([{}])
     expect(stores.at(-1)?.readToken()).toBe("a-new-token")
     expect(ended.stdout + ended.stderr).not.toContain("a-new-token")
-    expect(JSON.parse(ended.stdout)).toEqual([
-      { current: true, client: "WEB", device: "Chrome", location: null, lastActiveAt: "2026-09-19T00:00:00.000Z" },
-    ])
+    expect(JSON.parse(ended.stdout)).toEqual({
+      operationId: expect.any(String),
+      sessions: [
+        { current: true, client: "WEB", device: "Chrome", location: null, lastActiveAt: "2026-09-19T00:00:00.000Z" },
+      ],
+    })
   })
 
   it("`end --others --yes` says so plainly when MAX ended this session too", async () => {
@@ -630,5 +675,56 @@ describe("sessions", () => {
       action: "sessions-end",
       outcome: "sent",
     })
+  })
+  it("journals a failed closure as failed", async () => {
+    const base = account()
+    const max = mockMax({
+      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: {} },
+      refuse: { [Opcode.SESSIONS_CLOSE]: "action.denied" },
+    })
+    const profile = "a-end-failed"
+    const result = await runWith([profile, "account", "sessions", "end", "--others", "--yes"], {
+      ...base.environment,
+      connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+    })
+    expect(result.code).not.toBe(0)
+    expect(new SendJournal(sendsPathFor(profile)).entries()).toMatchObject([
+      { action: "sessions-end", outcome: "failed", operationId: expect.any(String) },
+    ])
+  })
+
+  it("journals an applied closure when saving its replacement token fails", async () => {
+    const { environment, sent } = account({ [Opcode.SESSIONS_CLOSE]: { token: "replacement-token" } })
+    const result = await runWith(["a-end-save", "account", "sessions", "end", "--others", "--yes"], {
+      ...environment,
+      store: (profile) => {
+        const store = environment.store?.(profile)
+        if (!store) throw new Error("test store missing")
+        store.writeToken = () => {
+          throw new Error("synthetic save failure")
+        }
+        return store
+      },
+    })
+    expect(JSON.parse(result.stderr).error.code).toBe("configuration_error")
+    expect(result.stdout + result.stderr).not.toContain("replacement-token")
+    expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([{}])
+    expect(sent(Opcode.SESSIONS_INFO)).toEqual([])
+    expect(new SendJournal(sendsPathFor("a-end-save")).entries()).toMatchObject([
+      { action: "sessions-end", outcome: "sent", operationId: expect.any(String) },
+    ])
+  })
+
+  it.each(["offline", "readOnly"])("refuses session closure with %s before login", async (flag) => {
+    const { environment, sent } = account()
+    const profile = `a-end-${flag}`
+    if (flag === "readOnly") await runWith([profile, "config", "set", "readOnly", "true"])
+    const result = await runWith(
+      [profile, "account", "sessions", "end", "--others", "--yes", ...(flag === "offline" ? ["--offline"] : [])],
+      environment,
+    )
+    expect(result.code).not.toBe(0)
+    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([])
   })
 })

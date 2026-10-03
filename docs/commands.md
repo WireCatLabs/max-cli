@@ -101,7 +101,7 @@ where else this account is logged in — not `max session`, which is this tool's
 
 #### `max account sessions list`
 
-every device and browser logged in to this account
+every device and app logged in to this account; nothing is ended
 
 ```sh
 max account sessions list
@@ -119,7 +119,7 @@ max account sessions end [options]
 
 | Опция | Что делает |
 |---|---|
-| `--others` | every session but this one — the only choice MAX offers. |
+| `--others` | every session but this one. |
 
 ## `max chats`
 

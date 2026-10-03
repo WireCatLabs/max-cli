@@ -1,7 +1,14 @@
 import { CliError, realSleep, type SleepLike } from "@leemour/cli-core"
 import { pickPerson as pickStoredPerson } from "@leemour/cli-messaging"
 import { type DiagnosticEvent, providerErrorKey } from "@leemour/cli-messaging/cli"
-import type { AccountAction, ChatAction, GuardRequest, SendGuard } from "@leemour/cli-messaging/sends"
+import {
+  type AccountAction,
+  type ChatAction,
+  currentOperation,
+  type GuardRequest,
+  type SendGuard,
+  type Upload as SharedUpload,
+} from "@leemour/cli-messaging/sends"
 import { delayMs } from "./config.js"
 import {
   namesFrom,
@@ -141,6 +148,7 @@ export class MaxClient {
   readonly #sends: SendGuard | undefined
   readonly #invoke = ((operation, request) => this.#send(operation, request)) as Invoke
   readonly #wire = wireClient(this.#invoke)
+  readonly #appliedOperations = new Set<string>()
   #login: Payload | undefined
   #chatsCut = false
   /** Every chat the account is in: only then may a chat absent from the list be marked as left. */
@@ -2153,9 +2161,10 @@ export class MaxClient {
     }
   }
 
-  async #profilePhoto(path: string): Promise<string> {
+  async #profilePhoto(photo: string | SharedUpload): Promise<string> {
+    const path = typeof photo === "string" ? photo : photo.name
     if (!isImage(path)) throw new CliError("validation_error", `${path} is not an image MAX takes as a photo`)
-    const bytes = await readUpload(path)
+    const bytes = typeof photo === "string" ? await readUpload(photo) : Buffer.from(photo.bytes)
     const { url } = await this.#wire.uploads.photo({ count: 1, type: 0, uploaderType: 0, profile: true })
     if (typeof url !== "string") throw new CliError("provider_error", "MAX gave no address to upload the photo to")
     return uploadPhoto(url, path, bytes)
@@ -2273,6 +2282,10 @@ export class MaxClient {
       },
       action === "members.add" ? userIds : undefined,
     )
+  }
+
+  takeApplied(operationId: string | undefined): boolean {
+    return operationId !== undefined && this.#appliedOperations.delete(operationId)
   }
 
   /** An id goes as given; a name is looked up in the store, and an ambiguous one is refused. */
@@ -2399,6 +2412,8 @@ export class MaxClient {
     const done = () => {
       if (recorded) return
       recorded = true
+      const operationId = currentOperation()
+      if (operationId !== undefined) this.#appliedOperations.add(operationId)
       this.#sends?.record({ chatId: null, kind: "account", action, outcome: "sent" })
     }
 
@@ -2743,8 +2758,8 @@ export interface ProfileChange {
   firstName?: string
   lastName?: string
   description?: string
-  /** A path to an image; uploaded first, so a failed upload leaves the profile as it was. */
-  photo?: string
+  /** Uploaded first, so a failed upload leaves the profile as it was. */
+  photo?: string | SharedUpload
 }
 
 export interface FolderChange {

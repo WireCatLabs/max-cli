@@ -8,6 +8,15 @@
 
 ### Изменено — может сломать скрипты
 
+- **`max account update` и `max account sessions end` возвращают общий формат с `operationId`.**
+  Изменение профиля отвечает `{operationId, account}` с полями `id`, `name`, `username`, `phone`,
+  завершение сеансов — `{operationId, sessions}` вместо массива. Это единый формат операций
+  MAX и Telegram; скриптам нужно читать данные из `account` либо `sessions`. Описание профиля
+  больше не возвращается после изменения: его показывает `account show`. Номер телефона
+  остаётся замаскированным; `sessions end` по-прежнему требует `--others --yes`.
+  Для фото профиля теперь принимаются JPG, JPEG, PNG и WebP; GIF нужно преобразовать в один
+  из этих форматов. Подробнее: [профиль и сеансы](docs/usage.md#контакты-профиль-папки).
+
 - **`max chats folders create|update|delete` возвращают `operationId` вместе с результатом.**
   Создание и изменение отвечают `{operationId, folder}`, удаление — `{operationId, folderId}`,
   вместо самой карточки папки. Это общий формат операций MAX и Telegram; скриптам нужно
