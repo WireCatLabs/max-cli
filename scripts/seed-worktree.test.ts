@@ -38,8 +38,10 @@ describe("seed", () => {
     const into = keyringService("max-cli", target.config, true)
     expect(keyring.get(into, "default")).toBe("token-default")
     expect(keyring.get(into, "bot:test")).toBe("token-bot")
-    expect(statSync(join(target.state, "profiles/default.moderation.json")).mode & 0o777).toBe(0o600)
-    expect(statSync(join(target.state, "profiles")).mode & 0o777).toBe(0o700)
+    if (process.platform !== "win32") {
+      expect(statSync(join(target.state, "profiles/default.moderation.json")).mode & 0o777).toBe(0o600)
+      expect(statSync(join(target.state, "profiles")).mode & 0o777).toBe(0o700)
+    }
     expect(readFileSync(join(target.state, "bots/sends/test.jsonl"), "utf8")).toBe("{}")
     expect(readFileSync(join(target.config, "config.json"), "utf8")).toBe("{}")
     for (const gone of ["profiles/default.sock", "profiles/default.serve.log", "runs", "update-check.json"])

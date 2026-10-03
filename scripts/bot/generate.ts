@@ -46,10 +46,10 @@ const artifacts = generate(
   { overrides, banner: ["Source: spec/bot/schema.yaml", "Run: pnpm bot:generate"] },
 )
 
-const biome = join(root, "node_modules/.bin", process.platform === "win32" ? "biome.cmd" : "biome")
+const biome = join(root, "node_modules/@biomejs/biome/bin/biome")
 const format = (path: string, content: string): string =>
   path.endsWith(".ts")
-    ? execFileSync(biome, ["check", "--write", `--stdin-file-path=${path}`], {
+    ? execFileSync(process.execPath, [biome, "check", "--write", `--stdin-file-path=${path}`], {
         input: content,
         encoding: "utf8",
         cwd: root,

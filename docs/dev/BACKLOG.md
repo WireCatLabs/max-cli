@@ -25,9 +25,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **CLI-66** · P2 · 🚧 `feat/guided-setup` · Guided first run, agent skill discovery and installation help.
-  Start at `src/commands/session.ts`; approved plan: `docs_ai/plans/2026-10-03-guided-setup.md`.
-
 - **CLI-58** · P2 · `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
   third-party proxy. Streamable HTTP on `127.0.0.1` behind a tunnel, with its own OAuth for exactly
   one owner (dynamic client registration, PKCE, a one-time code from the terminal that expires and

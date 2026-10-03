@@ -154,7 +154,7 @@ What holds for every command, how to produce it, and the test that pins it.
 | Trace and record | `--trace`, `--record`, then `max runs list\|show` | events on stderr, never content; a run directory | cli-messaging `src/cli/runs/recording.test.ts`, `src/commands/bot.test.ts` |
 | A failed run is kept | any failure, no flag | `max runs list` shows it with `keptBecauseFailed` | `src/run-log.test.ts`, `src/every-failure.test.ts`, `src/report.test.ts` |
 | `--quiet` | any command | notes gone, data and errors kept | `src/inbox.test.ts`, `src/client.test.ts` |
-| No session | a profile never logged in | exit 4, names `max <p> session start` | `src/every-failure.test.ts`, `src/client.test.ts` |
+| No session | a profile never logged in | exit 4, names `max <p> setup` | `src/every-failure.test.ts`, `src/client.test.ts` |
 | A bot-only profile | a personal command on it | exit 4, names `max <p> bot …` | `src/client.test.ts` |
 | Read-only | `config set readOnly true` | every write refused, exit 5, nothing sent | `src/send-guards.test.ts`, `src/permissions.test.ts` |
 | `allow` | `config set allow send` | other writes refused with the `config set` that allows them | `src/permissions.test.ts`, `src/commands/bot.test.ts` |
@@ -165,6 +165,14 @@ What holds for every command, how to produce it, and the test that pins it.
 | Outcome unknown | a send with no answer | `outcome_unknown` with the `cid` to repeat, never "failed" | `src/client.test.ts`, `src/edit-pin-forward.test.ts`, `src/mcp.test.ts` |
 | A config typo | an unknown key in `config.json` | exit 3, names the key and the known ones | `src/config.test.ts` |
 | Content never logged | a run with titles, names and texts in play | none of them in the events; the ids are | `src/client.test.ts` |
+
+### Guided setup
+
+**Correction 2026-10-03:** `src/setup.test.ts` drives `max setup` against scripted MAX and a memory
+keyring: token/QR/browser login, existing-session reuse, inaccessible keyring, paused/bot profiles,
+agent selection, one-result output and cancellation. Help and the bundled skill are checked before
+credentials exist. Real first-login `setup`/`session start` is not run by the live smoke: it would
+create another device. A manual first-login check needs a separately approved dedicated test account.
 
 ## Profiles for the live checks
 
