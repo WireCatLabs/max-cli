@@ -186,6 +186,9 @@ which; the plan for it starts by saying so.
 
 ## Parity tooling follow-up
 
+- Completed 2026-10-04: release documentation describes canonical P7 defaults, resource-specific
+  restrictions, explicit deletion confirmation and current permission recipes. Publication is separate.
+
 - Completed 2026-10-03: repository parity-audit skill runs the shared detailed auditor (#365; shared #470–#474). No account access.
 
 - Completed 2026-10-03: shared sends-list factory honors configured limit and shared skill factory exposes named link-conversations instructions (#368).
@@ -200,5 +203,4 @@ which; the plan for it starts by saying so.
 
 - Completed 2026-10-03: MAX poll.already.voted refusal explains explicit retract before a new vote when the poll permits changing votes (CLI-61). Provider error identity and one attempted write are preserved; wire refusal regressions cover other errors and an explicit retract refusal.
 
-
-- Release coordination · 🚧 `release/coordinated-027` prepares the next shared MAX release, aggregates parallel PR evidence, and keeps publication/sign-off pending. Handoff: `docs_ai/plans/2026-10-04-coordinated-release.md`. Avoid competing version/changelog bumps.
+- Release coordination · 🚧 `release/coordinated-027` prepares MAX and TG together, aggregates parallel PR evidence, and keeps publication/sign-off pending. Handoff: `docs_ai/plans/2026-10-04-coordinated-release.md`. Avoid competing version/changelog bumps.

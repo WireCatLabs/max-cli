@@ -40,13 +40,19 @@ claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max inbox:*)"
 **Запрет на уровне `max`** действует на любого агента:
 
 ```sh
-max config set readOnly true           # профиль ничего не отправит
+for resource in messages reactions polls topics chats contacts account bot conversations; do
+  max config set "permissions.$resource" readonly
+done
+max config show                       # проверить эффективные права
 max config set sendsPerHour 5          # или: не больше пяти сообщений в час
 max recipients add "Иван Петров"       # и писать только в эти чаты
 ```
 
-`readOnly` запрещает отправку и вам тоже, пока вы его не выключите: `max config unset readOnly`.
-Все попытки отправки, в том числе отклонённые, — `max sends list`.
+`readonly` ограничивает каждый указанный ресурс и для вас, и для агента. Более точные ключи
+вроде `permissions.messages.send: allow` имеют приоритет: удалите такие разрешения, если профиль
+должен только читать. После миграции старый `readOnly` менять нельзя. Чтобы убрать своё ограничение,
+используйте `max config unset permissions.<ресурс>`; тогда снова действуют унаследованные настройки
+и defaults. Все попытки отправки, в том числе отклонённые, — `max sends list`.
 
 **Чтение не выдаёт вас.** Ни одна команда в рецептах ниже не ставит отметку «прочитано»:
 собеседник не видит, что агент открыл чат.
