@@ -1,5 +1,6 @@
-import { existsSync } from "node:fs"
-import { captureStreams } from "@leemour/cli-core"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
+import { captureStreams, resolvePaths } from "@leemour/cli-core"
 import { rememberAccount } from "@leemour/cli-messaging/cli"
 import { openStore } from "@leemour/cli-messaging/store"
 import { beforeAll, describe, expect, it } from "vitest"
@@ -16,7 +17,14 @@ const complete = async (...words: string[]) => {
 
 const values = (lines: string[]) => lines.filter((line) => !line.startsWith(":")).map((line) => line.split("\t")[0])
 
+const bindProfile = (profile: string, viewerId: string) => {
+  const directory = join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")
+  mkdirSync(directory, { recursive: true })
+  writeFileSync(join(directory, `${profile}.json`), JSON.stringify({ viewerId }))
+}
+
 beforeAll(async () => {
+  bindProfile("tabbed", "500")
   rememberAccount(MAX_APP, "tabbed", "500", process.env)
   const store = await openStore()
   await store.saveChats({ provider: "max", account: "500" }, [
@@ -56,6 +64,7 @@ describe("max complete", () => {
   })
 
   it("does not offer another account's chats or people", async () => {
+    bindProfile("other", "600")
     rememberAccount(MAX_APP, "other", "600", process.env)
     const store = await openStore()
     try {
@@ -69,6 +78,26 @@ describe("max complete", () => {
     expect(values((await complete("tabbed", "messages", "list", "")).lines)).not.toContain("201")
     expect(values((await complete("tabbed", "contacts", "show", "")).lines)).not.toContain("9")
     expect(values((await complete("other", "messages", "list", "")).lines)).toEqual(["201"])
+  })
+
+  it("offers names for an MCP-only profile without a shared pointer or a login", async () => {
+    bindProfile("mcponly", "500")
+    const streams = captureStreams()
+    const connect = () => {
+      throw new Error("Tab must not connect")
+    }
+    expect(await run(["complete", "--", "mcponly", "messages", "list", ""], { streams, connection: connect })).toBe(0)
+    expect(values(streams.stdout.join("\n").split("\n"))).toContain("101")
+    const directory = resolvePaths({ appName: "max-cli", prefix: "MAX" }).state
+    expect(existsSync(join(directory, "accounts", "mcponly.json"))).toBe(false)
+    expect(streams.stderr).toEqual([])
+  })
+
+  it("does not trust a stale shared pointer over MAX's current account", async () => {
+    bindProfile("stale", "500")
+    rememberAccount(MAX_APP, "stale", "600", process.env)
+    expect(values((await complete("stale", "messages", "list", "")).lines)).toContain("101")
+    expect(values((await complete("stale", "messages", "list", "")).lines)).not.toContain("201")
   })
 
   it("offers a bot's own chats to a bot command, not the personal account's", async () => {
@@ -107,6 +136,19 @@ describe("max complete", () => {
     expect(code).toBe(0)
     expect(lines).toEqual([":4"])
     expect(existsSync(profileCacheFile("nocache"))).toBe(false)
+  })
+
+  it("stays silent for malformed local state and leaves it unchanged", async () => {
+    const directory = join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")
+    const file = join(directory, "broken.json")
+    for (const text of ["null", "{}", '{"viewerId":1}', '{"viewerId":""}', "not JSON"]) {
+      writeFileSync(file, text)
+      const answer = await complete("broken", "messages", "list", "")
+      expect(answer.code).toBe(0)
+      expect(answer.lines).toEqual([":4"])
+      expect(answer.stderr).toEqual([])
+      expect(readFileSync(file, "utf8")).toBe(text)
+    }
   })
 
   it("offers no names for a first word that cannot be a profile name", async () => {

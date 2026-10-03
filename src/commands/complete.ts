@@ -1,4 +1,6 @@
-import { singleLine } from "@leemour/cli-core"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
+import { resolvePaths, singleLine } from "@leemour/cli-core"
 import { completeCommand as sharedCompleteCommand } from "@leemour/cli-messaging/cli"
 import { ChatRegistry } from "../bot/registry.js"
 import { configuredProfiles } from "../config.js"
@@ -13,6 +15,7 @@ export const completeCommand = () =>
         knownProfiles({ configured: configuredProfiles({ env }), env }).map(({ name }) => name),
     },
     {
+      account: localAccount,
       sources: (profile, words, env) => {
         if (words[0] !== "bot") return undefined
         const chats = () =>
@@ -23,3 +26,14 @@ export const completeCommand = () =>
       },
     },
   )
+
+const localAccount = (profile: string, env: NodeJS.ProcessEnv): string | undefined => {
+  try {
+    const state = resolvePaths({ appName: "max-cli", prefix: "MAX", env }).state
+    const value: unknown = JSON.parse(readFileSync(join(state, "profiles", `${profile}.json`), "utf8"))
+    if (typeof value !== "object" || value === null || !("viewerId" in value)) return undefined
+    return typeof value.viewerId === "string" && value.viewerId !== "" ? value.viewerId : undefined
+  } catch {
+    return undefined
+  }
+}
