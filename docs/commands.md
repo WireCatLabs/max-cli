@@ -477,7 +477,7 @@ max chats folders delete <folder>
 
 ### `max chats rules`
 
-a group's moderation rules, kept on this machine
+what `chats moderate` judges a group by, kept in a file of this profile
 
 #### `max chats rules show`
 
@@ -489,7 +489,7 @@ max chats rules show <chat>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 #### `max chats rules set`
 
@@ -503,9 +503,9 @@ max chats rules set <chat> <key> <value>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 | `key` | обязательный | one of: trusted, blocked, blockedNames, links, invites, forwards, blockedPeople, flood.messages, flood.minutes, flood.action, newAccount.days, newAccount.action, consent.delete, consent.remove. |
-| `value` | обязательный | see `max chats rules show`; lists are comma-separated and replace the old one. |
+| `value` | обязательный | the new value; a list is comma-separated. |
 
 #### `max chats rules unset`
 
@@ -519,29 +519,29 @@ max chats rules unset <chat> <key>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 | `key` | обязательный | one of: trusted, blocked, blockedNames, links, invites, forwards, blockedPeople, flood.messages, flood.minutes, flood.action, newAccount.days, newAccount.action, consent.delete, consent.remove. |
 
-### `max chats check`
+### `max chats moderate`
 
 judge a group's new messages and members by its rules, and act as they allow
 
 **Меняет что-то в MAX.**
 
 ```sh
-max chats check <chat> [options]
+max chats moderate <chat> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | judge what came after this message id, ISO 8601 time, or 2h / 1d ago; the saved point stays. |
+| `--since-time <time>` | judge what came after this ISO 8601 time, or 2h / 1d ago; the saved point stays. |
 | `--dry-run` | judge and plan; do nothing. |
-| `--allow-dangerous` | do what a rule at consent level flag asks: delete messages, remove people. |
-| `--max-actions <n>` | at most this many actions in one check; 10 if not given. |
+| `--allow-dangerous` | yes to every action whose level in the group's rules is ask. |
+| `--max-actions <n>` | at most this many actions in one run; 10 if not given. |
 
 ## `max contacts`
 

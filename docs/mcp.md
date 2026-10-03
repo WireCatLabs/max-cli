@@ -137,7 +137,7 @@ claude mcp add max -- max mcp --allow-send --confirm-send
 `max messages delete --for-everyone` или проверка группы по правилам (ниже). Удаление проходит те же
 проверки, что отправка, и каждое сообщение считается в `sendsPerHour`.
 
-`--allow-moderate` даёт агенту инструмент `max_chats_check` — то же, что `max chats check`: проверить
+`--allow-moderate` даёт агенту инструмент `max_chats_check` — то же, что `max chats moderate`: проверить
 группу по её правилам и сделать то, что они разрешают. Сам флаг — это то согласие, которого требует
 уровень `flag`: с ним сервер удаляет сообщения и людей из группы там, где правило стоит на `flag` или
 `allow`. Для уровня `confirm` сервер сначала ничего не делает и показывает вам одну форму со всеми
@@ -202,7 +202,7 @@ max work config set mcpTools groups         # профилю work
 | `max_polls_create` | `max polls create` | создать опрос, только с `--allow-send` |
 | `max_chats_mark_read` | `max chats mark-read` | отметить чат прочитанным, только с `--allow-mark-read` |
 | `max_messages_delete` | `max messages delete` | удалить у владельца, только с `--allow-delete` |
-| `max_chats_check` | `max chats check` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |
+| `max_chats_check` | `max chats moderate` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |
 | `max_contacts_*`, `max_polls_close`, `max_chats_join` и другие | `max contacts …`, `max polls close`, `max chats …`, `max account update` | только если группа названа в `mcpTools` (выше) |
 
 Списки используют `{ items, page, limit, hasMore }`, id — строки. Форматы MCP и CLI могут

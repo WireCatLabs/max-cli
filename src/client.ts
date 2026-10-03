@@ -777,7 +777,7 @@ export class MaxClient {
       const { before, after, reactions = true } = options
 
       if (after !== undefined) {
-        const found = await this.#history(chatId, { from: after + 1, backward: 0, forward: limit + 1 })
+        const found = await this.#history(chatId, { from: after + 1, backward: 0, forward: limit + 1 }, { reactions })
         const later = found.filter((message) => Date.parse(message.timestamp) > after)
         return { items: later.slice(0, limit), hasMore: later.length > limit }
       }

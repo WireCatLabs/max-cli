@@ -157,9 +157,9 @@ Claude Desktop и других клиентах MCP это команда `/revi
 ## Группа, которую вы ведёте
 
 Пишет в MAX: **только если разрешено правилами группы**. Разрешить: `Bash(max review:*)`,
-`Bash(max chats events:*)`, `Bash(max chats members list:*)`, `Bash(max chats check:*)`.
+`Bash(max chats events:*)`, `Bash(max chats members list:*)`, `Bash(max chats moderate:*)`.
 
-> Выполни `max review --chat "Поход" --unanswered 4h --json` и `max chats check "Поход" --dry-run
+> Выполни `max review --chat "Поход" --unanswered 4h --json` и `max chats moderate "Поход" --dry-run
 > --json`. Коротко: какие вопросы ждут ответа и от кого; что проверка нашла по правилам и что
 > предлагает сделать. Ничего не удаляй сам — перечисли команды, которые сделают это, если я соглашусь.
 

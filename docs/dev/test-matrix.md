@@ -75,11 +75,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats rules show` |  | ✅ |  |
 | `chats rules set` |  | ✅ |  |
 | `chats rules unset` |  | ✅ |  |
-| `chats check` |  | ✅ |  |
-| `chats check` | `--since` | ✅ |  |
-| `chats check` | `--dry-run` | ✅ |  |
-| `chats check` | `--allow-dangerous` | ✅ |  |
-| `chats check` | `--max-actions` | ✅ |  |
+| `chats moderate` |  | ✅ |  |
+| `chats moderate` | `--since-time` | ✅ |  |
+| `chats moderate` | `--dry-run` | ✅ |  |
+| `chats moderate` | `--allow-dangerous` | ✅ |  |
+| `chats moderate` | `--max-actions` | ✅ |  |
 | `contacts list` |  | ✅ |  |
 | `contacts list` | `--limit` | ✅ |  |
 | `contacts list` | `--page` | ✅ |  |

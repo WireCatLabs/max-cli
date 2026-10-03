@@ -116,7 +116,11 @@ describe("max chats rules", () => {
     const before = await rules(["ru-cmd", "chats", "rules", "show", "Team", "--json"], env)
     const set = await rules(["ru-cmd", "chats", "rules", "set", "Team", "newAccount.days", "3", "--json"], env)
 
-    expect(before.json).toMatchObject({ chatId: "-70000000000001", saved: false, rules: defaultRules("Team") })
+    expect(before.json).toMatchObject({
+      chatId: "-70000000000001",
+      saved: false,
+      rules: { ...defaultRules("Team"), consent: { delete: "ask", remove: "ask" } },
+    })
     expect(set.code).toBe(0)
     expect(set.json).toMatchObject({ saved: true, rules: { newAccount: { days: 3, action: "report" } } })
     expect(new ModerationRules(moderationPathFor("ru-cmd")).read("-70000000000001")?.title).toBe("Team")

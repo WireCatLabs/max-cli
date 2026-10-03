@@ -27,7 +27,7 @@ export interface SessionState {
   lastLoginAt?: string
   /** Where `max inbox` starts next time: the newest message it has read (`NEED-162`). */
   lastCheckAt?: string
-  /** Where `max chats check` starts next time in each group: the newest message it has judged. */
+  /** Legacy moderation checkpoints, copied once into the rules file by the shared CLI. */
   checkedUntil?: Record<string, string>
   /** Logins MAX refused for too many attempts in a row; a login that succeeds clears it (`MAX-38`). */
   loginRefusals?: number

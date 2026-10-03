@@ -1,7 +1,7 @@
 import { CliError } from "@leemour/cli-core"
 import type { MaxClient } from "../client.js"
 import type { GroupMember, Id, Message } from "../domain/models.js"
-import type { SessionStore } from "../session/store.js"
+import { moderationPoints } from "./points.js"
 import { defaultRules, type GroupRules, ModerationRules, moderationPathFor } from "./rules.js"
 
 export type Action = "report" | "delete" | "remove"
@@ -295,14 +295,7 @@ export interface SavedPoints {
   write(chatId: Id, at: string): void
 }
 
-/** The personal account keeps them in its session state, beside `max inbox`'s. */
-export const sessionPoints = (store: SessionStore): SavedPoints => ({
-  read: (chatId) => store.readState().checkedUntil?.[chatId],
-  write: (chatId, at) => {
-    const state = store.readState()
-    store.writeState({ ...state, checkedUntil: { ...state.checkedUntil, [chatId]: at } })
-  },
-})
+export const sessionPoints = moderationPoints
 
 /** A group never checked before is looked at this far back. */
 const FIRST_LOOK_MS = 24 * 3_600_000

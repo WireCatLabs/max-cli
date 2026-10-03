@@ -150,16 +150,15 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   (`add|remove|block|unblock|rename|import`), the `chats folders` group, and
   `account update`/`account sessions list|end`, and group administration
   (`create|join|leave|update`, members/admin writes, invite links), and
-  group reads (`members list`, `events`, `inspect`). Left: a live check of
-  `messages list --transcribe`, moderation/rules, max's
+  group reads (`members list`, `events`, `inspect`), and shared moderation/rules with
+  legacy checkpoint migration. Left: a live check of
+  `messages list --transcribe`, max's
   half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
   `conversations embed` tells the user to run `max models text download`, which max does not have~~.
   **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
   Shared runner and operational diagnostics: done (#347/#352).
-  Search read-only MCP bridge: 🚧 `fix/search-mcp-contract` owns the search schema/answer and tests;
-  Moderation/rules: 🚧 `feat/t6-moderation` owns the shared CLI and checkpoint migration.
-  Permissions and audio-model moves remain with T6.
-  Package-upgrade workflow follow-up: 🚧 `refactor/shared-upgrade` owns only upgrade wrapper/tests.
+  **Correction 2026-10-03:** search read-only MCP bridge is merged (#357), as is the
+  shared package-upgrade workflow (#358). Permissions and audio-model moves remain with T6.
 - **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
   poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
   Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
