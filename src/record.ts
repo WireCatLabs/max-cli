@@ -1,7 +1,13 @@
-import type { Chat, Contact, Id } from "@leemour/cli-messaging"
+import type { Chat, Contact, Id, PeopleLookup } from "@leemour/cli-messaging"
 import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@leemour/cli-messaging/store"
 
 const MARKER = "login.marker"
+
+export interface SyncSummary {
+  known: number
+  added: number
+  changed: number
+}
 
 export interface LoginDelta {
   chats: Chat[]
@@ -16,7 +22,9 @@ export interface MaxRecord {
   transcript(chatId: Id, messageId: Id): Promise<{ text: string; source: string } | undefined>
   keepTranscript(chatId: Id, messageId: Id, text: string, source: string): Promise<void>
   syncMarker(): Promise<number | undefined>
-  applyLogin(delta: LoginDelta): Promise<void>
+  applyLogin(delta: LoginDelta): Promise<SyncSummary | undefined>
+  people(): Promise<PeopleLookup>
+  chatsWith(personId: Id): Promise<Chat[]>
   names(ids: Id[]): Promise<Map<Id, string>>
   remember(people: Contact[]): Promise<void>
   /** The next login asks for everything, as `contacts sync` wants. */
@@ -62,12 +70,30 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
     applyLogin: async ({ chats, people, members, marker }) => {
       const key = keyOf()
       if (!key) return
-      await (await store()).applyDelta(key, {
+      const db = await store()
+      const known = await db.people("max", { account: key.account })
+      const added = people.filter((person) => !known.get(person.id)).length
+      await db.applyDelta(key, {
         chats,
         people: people.map(factsOf),
         members,
         ...(marker === undefined ? {} : { state: { [MARKER]: String(marker) } }),
       })
+      return {
+        known: (await db.people("max", { account: key.account })).all().length,
+        added,
+        changed: people.length - added,
+      }
+    },
+
+    people: async () => {
+      const key = keyOf()
+      return key ? (await store()).people("max", { account: key.account }) : { get: () => undefined, all: () => [] }
+    },
+
+    chatsWith: async (personId) => {
+      const key = keyOf()
+      return key ? (await store()).chatsWith(key, personId) : []
     },
 
     names: async (ids) => {
