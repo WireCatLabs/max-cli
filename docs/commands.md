@@ -210,7 +210,7 @@ max chats join <link>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `link` | обязательный | an invite link, https://max.ru/join/…, or a public one, https://max.ru/<name>. |
+| `link` | обязательный | an invite link, or a public one. |
 
 ### `max chats mark-read`
 
@@ -242,7 +242,7 @@ max chats leave <chat>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 ### `max chats create`
 
@@ -291,7 +291,7 @@ max chats members add <chat> <person> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
 
 | Опция | Что делает |
@@ -310,7 +310,7 @@ max chats members remove <chat> <person>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
 
 ### `max chats admins`
@@ -329,7 +329,7 @@ max chats admins add <chat> <person> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
 
 | Опция | Что делает |
@@ -348,7 +348,7 @@ max chats admins remove <chat> <person>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
 
 ### `max chats update`
@@ -363,7 +363,7 @@ max chats update <chat> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 | Опция | Что делает |
 |---|---|
@@ -389,7 +389,7 @@ max chats link show <chat>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 #### `max chats link reset`
 
@@ -403,7 +403,7 @@ max chats link reset <chat>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 ### `max chats folders`
 

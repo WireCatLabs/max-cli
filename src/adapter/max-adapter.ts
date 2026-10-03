@@ -43,6 +43,16 @@ export type MaxAdapter = MessengerAdapter &
       | "updateProfile"
       | "endOtherSessions"
       | "sessions"
+      | "createGroup"
+      | "join"
+      | "leave"
+      | "group"
+      | "updateGroup"
+      | "resetInviteLink"
+      | "addMembers"
+      | "removeMembers"
+      | "addAdmin"
+      | "removeAdmin"
     >
   >
 
@@ -131,6 +141,50 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
 
     chat: (reference) => client.chats.show(reference),
     contact: (reference) => client.contacts.show(reference),
+
+    createGroup: (title, people, options) => client.chats.create(title, people, options),
+    join: (link) => client.chats.join(link),
+    leave: async (chat) => {
+      const { chatId } = await client.chats.leave(chat)
+      return { chatId }
+    },
+    group: (chat) => client.chats.settings(chat),
+    updateGroup: async (chat, { title, description, settings }) => {
+      // Sending a title and settings together was never measured for MAX.
+      const renamed =
+        title !== undefined || description !== undefined
+          ? await client.chats.update(chat, {
+              ...(title === undefined ? {} : { title }),
+              ...(description === undefined ? {} : { description }),
+            })
+          : undefined
+      if (settings && Object.keys(settings).length > 0) {
+        try {
+          return await client.chats.settings(chat, settings)
+        } catch (error) {
+          if (!renamed) throw error
+          throw new CliError(
+            "outcome_unknown",
+            "the group's title or description changed, but its settings did not finish — read the group with `chats show` before retrying",
+          )
+        }
+      }
+      return renamed ?? client.chats.settings(chat)
+    },
+    resetInviteLink: (chat) => client.chats.resetLink(chat),
+    addMembers: async (chat, people, options) => {
+      await client.chats.members.add(chat, people, options)
+      return { notAdded: [] }
+    },
+    removeMembers: async (chat, people) => {
+      await client.chats.members.remove(chat, people)
+    },
+    addAdmin: async (chat, person, rights) => {
+      await client.chats.admins.add(chat, person, rights)
+    },
+    removeAdmin: async (chat, person) => {
+      await client.chats.admins.remove(chat, person)
+    },
 
     folders: () => client.folders.list(),
     createFolder: (title, chatIds) => client.folders.create(title, chatIds),

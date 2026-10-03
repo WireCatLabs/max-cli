@@ -1,9 +1,6 @@
-import { CliError } from "@leemour/cli-core"
-import { annotate } from "@leemour/cli-core/commands"
 import { markReadCommand, chatsCommand as sharedChatsCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
-import { ADMIN_RIGHTS, type AdminRight, EVENTS_DAYS, type MaxClient } from "../client.js"
-import type { GroupSettings } from "../domain/models.js"
+import { EVENTS_DAYS, type MaxClient } from "../client.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
 import { checkCommand } from "./check.js"
@@ -77,31 +74,12 @@ export const chatsCommand = (): Command => {
       await withClient(this, "chats inspect", (client) => client.chats.inspect(link))
     })
 
-  annotate(command.command("join"), { mutates: true })
-    .argument("<link>", "an invite link, https://max.ru/join/…, or a public one, https://max.ru/<name>")
-    .description("join a group or channel by its link; the others in it see that you joined")
-    .action(async function (this: Command, link: string) {
-      await withClient(this, "chats join", (client) => client.chats.join(link))
-    })
+  command.addCommand(sharedSubcommand(shared, "join"))
 
   command.addCommand(markReadCommand(maxMessenger))
 
-  annotate(command.command("leave"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("leave a group or channel; the others in it see that you left")
-    .action(async function (this: Command, chat: string) {
-      await withClient(this, "chats leave", (client) => client.chats.leave(chat))
-    })
-
-  annotate(command.command("create"), { mutates: true })
-    .argument("<title>", "the group's name")
-    .argument("[person...]", "people to add: an id, or part of a name")
-    .option("--channel", "a private channel instead of a group; people join it by its link")
-    .description("create a group or a channel; the people added are told")
-    .action(async function (this: Command, title: string, people: string[]) {
-      const channel = this.opts<{ channel?: boolean }>().channel === true
-      await withClient(this, "chats create", (client) => client.chats.create(title, people, { channel }))
-    })
+  command.addCommand(sharedSubcommand(shared, "leave"))
+  command.addCommand(sharedSubcommand(shared, "create"))
 
   const members = command.command("members").description("who is in a group or channel; add or remove people")
   members
@@ -126,93 +104,12 @@ export const chatsCommand = (): Command => {
         }
       })
     })
-  annotate(members.command("add"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<person...>", "an id, or part of a name")
-    .option("--history", "the people added also see the messages from before they came")
-    .description("add people; they are told")
-    .action(async function (this: Command, chat: string, people: string[]) {
-      const history = this.opts().history === true
-      await withClient(this, "chats members add", (client) => client.chats.members.add(chat, people, { history }))
-    })
-  annotate(members.command("remove"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<person...>", "an id, or part of a name")
-    .description("remove people; their messages stay")
-    .action(async function (this: Command, chat: string, people: string[]) {
-      await withClient(this, "chats members remove", (client) => client.chats.members.remove(chat, people))
-    })
-
-  const admins = command.command("admins").description("give or take back a member's admin rights")
-  annotate(admins.command("add"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<person>", "an id, or part of a name")
-    .requiredOption("--can <rights>", `what they may do, comma-separated: ${Object.keys(ADMIN_RIGHTS).join(", ")}`)
-    .description("make a member an admin with these rights")
-    .action(async function (this: Command, chat: string, person: string) {
-      const rights = adminRights(String(this.opts().can))
-      await withClient(this, "chats admins add", (client) => client.chats.admins.add(chat, person, rights))
-    })
-
-  annotate(admins.command("remove"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<person>", "an id, or part of a name")
-    .description("take an admin's rights back; they stay a member")
-    .action(async function (this: Command, chat: string, person: string) {
-      await withClient(this, "chats admins remove", (client) => client.chats.admins.remove(chat, person))
-    })
-
-  const update = annotate(command.command("update"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .option("--title <title>", "the new name")
-    .option("--description <text>", "the new description")
-    .description("rename a group or channel, change its description, or turn one of its settings on or off")
-  for (const [flag, , help] of SETTINGS) update.option(`--${flag} <on|off>`, help)
-  update.action(async function (this: Command, chat: string) {
-    const { title, description, ...rest } = this.opts() as { title?: string; description?: string }
-    const changes = settingChanges(rest)
-    const renaming = title !== undefined || description !== undefined
-    if (!renaming && Object.keys(changes).length === 0) {
-      throw new CliError(
-        "validation_error",
-        `nothing to change — give --title, --description or a setting: ${SETTINGS.map(([flag]) => `--${flag}`).join(", ")}`,
-      )
-    }
-    await withClient(this, "chats update", async (client) => {
-      // Two requests, not one: a title and settings together in one CHAT_UPDATE was never measured.
-      const renamed = renaming
-        ? await client.chats.update(chat, {
-            ...(title === undefined ? {} : { title }),
-            ...(description === undefined ? {} : { description }),
-          })
-        : undefined
-      return Object.keys(changes).length === 0 ? renamed : client.chats.settings(chat, changes)
-    })
-  })
-
-  const link = command.command("link").description("a group's invite link")
-  link
-    .command("show")
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("the invite link, if you may see it")
-    .action(async function (this: Command, chat: string) {
-      await withClient(this, "chats link show", async (client) => {
-        const { id, title, link: current } = await client.chats.settings(chat)
-        if (current === null) {
-          throw new CliError(
-            "not_found",
-            `${title ?? id} shows you no invite link — only admins, or members when the group allows it`,
-          )
-        }
-        return { chatId: id, title, link: current }
-      })
-    })
-  annotate(link.command("reset"), { mutates: true })
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("replace the invite link; the old one stops working")
-    .action(async function (this: Command, chat: string) {
-      await withClient(this, "chats link reset", (client) => client.chats.resetLink(chat))
-    })
+  const sharedMembers = sharedSubcommand(shared, "members")
+  members.addCommand(sharedSubcommand(sharedMembers, "add"))
+  members.addCommand(sharedSubcommand(sharedMembers, "remove"))
+  command.addCommand(sharedSubcommand(shared, "admins"))
+  command.addCommand(sharedSubcommand(shared, "update"))
+  command.addCommand(sharedSubcommand(shared, "link"))
   command.addCommand(sharedSubcommand(shared, "folders"))
   command.addCommand(rulesCommand())
   command.addCommand(checkCommand())
@@ -233,40 +130,4 @@ const withClient = async (command: Command, label: string, act: (client: MaxClie
       await record.close()
     }
   })
-}
-
-const SETTINGS: [flag: string, key: keyof GroupSettings, help: string][] = [
-  ["all-can-pin", "allCanPin", "every member may pin messages"],
-  ["only-admins-add", "onlyAdminsAdd", "only admins may add members"],
-  ["only-admins-call", "onlyAdminsCall", "only admins may start a call"],
-  ["only-owner-edits-info", "onlyOwnerEditsInfo", "only the owner may change the name and photo"],
-  ["members-see-link", "membersSeeLink", "members may see the invite link"],
-]
-
-const settingChanges = (options: Record<string, unknown>): Partial<GroupSettings> => {
-  const changes: Partial<GroupSettings> = {}
-  for (const [flag, key] of SETTINGS) {
-    const value = options[key]
-    if (value === undefined) continue
-    if (value !== "on" && value !== "off") {
-      throw new CliError("validation_error", `--${flag} takes on or off, not "${String(value)}"`)
-    }
-    changes[key] = value === "on"
-  }
-  return changes
-}
-
-const adminRights = (value: string): AdminRight[] => {
-  const rights = value
-    .split(",")
-    .map((right) => right.trim())
-    .filter((right) => right !== "")
-  const unknown = rights.filter((right) => !(right in ADMIN_RIGHTS))
-  if (rights.length === 0 || unknown.length > 0) {
-    throw new CliError(
-      "validation_error",
-      `--can takes ${Object.keys(ADMIN_RIGHTS).join(", ")}${unknown.length > 0 ? `, not "${unknown.join(", ")}"` : ""}`,
-    )
-  }
-  return rights as AdminRight[]
 }

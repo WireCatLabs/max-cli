@@ -22,7 +22,7 @@ const GROUP = {
 
 const messenger = (
   answers: Record<number, Payload | ((request: Payload) => Payload | undefined)> = {},
-  refuse: Record<number, string> = {},
+  refuse: Record<number, string | ((request: Payload) => string | undefined)> = {},
 ) => {
   const max = mockMax({
     refuse,
@@ -73,11 +73,14 @@ describe("joining and leaving", () => {
     expect(joined.code).toBe(0)
     expect(sent(Opcode.CHAT_JOIN)).toEqual([{ link: "join/abcdef" }])
     expect(JSON.parse(joined.stdout)).toMatchObject({
-      id: "-70000000000001",
-      title: "Team",
-      kind: "group",
-      access: "private",
-      settings: { allCanPin: true, onlyAdminsAdd: false, onlyAdminsCall: null },
+      operationId: expect.any(String),
+      chat: {
+        id: "-70000000000001",
+        title: "Team",
+        kind: "group",
+        access: "private",
+        settings: { allCanPin: true, onlyAdminsAdd: false, onlyAdminsCall: null },
+      },
     })
     expect(journalOf("gr-join")).toMatchObject([
       { chatId: "-70000000000001", kind: "chat", action: "join", outcome: "sent" },
@@ -128,6 +131,10 @@ describe("creating a group", () => {
     const created = await runWith(["gr-create", "chats", "create", "Team", "20000002", "--json"], environment)
 
     expect(created.code).toBe(0)
+    expect(JSON.parse(created.stdout)).toMatchObject({
+      operationId: expect.any(String),
+      chat: { id: String(GROUP.id), kind: "group" },
+    })
     const [request] = sent(Opcode.MSG_SEND) as { message: { attaches: Payload[] } }[]
     expect(request?.message.attaches).toEqual([
       { _type: "CONTROL", event: "new", chatType: "CHAT", title: "Team", userIds: [20000002] },
@@ -220,8 +227,22 @@ describe("changing a group", () => {
 
   it("adds without history unless asked, and removes without erasing anyone's messages", async () => {
     const { environment, sent } = messenger()
-    await runWith(["gr-members", "chats", "members", "add", "Team", "20000002"], environment)
-    await runWith(["gr-members", "chats", "members", "remove", "Team", "20000002"], environment)
+    const added = await runWith(["gr-members", "chats", "members", "add", "Team", "20000002", "--json"], environment)
+    const removed = await runWith(
+      ["gr-members", "chats", "members", "remove", "Team", "20000002", "--json"],
+      environment,
+    )
+    expect(JSON.parse(added.stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: String(GROUP.id),
+      added: ["20000002"],
+      notAdded: [],
+    })
+    expect(JSON.parse(removed.stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: String(GROUP.id),
+      removed: ["20000002"],
+    })
 
     expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toMatchObject([
       { userIds: [20000002], operation: "add", showHistory: false },
@@ -337,13 +358,141 @@ describe("changing a group", () => {
       { chatId: -70000000000001, options: { ALL_CAN_PIN_MESSAGE: true } },
     ])
     expect(neither.code).toBe(2)
-    expect(neither.stderr).toContain("--all-can-pin")
+    expect(neither.stderr).toContain("a setting")
   })
 
   it("replaces the invite link", async () => {
     const { environment, sent } = messenger()
     expect((await runWith(["gr-link", "chats", "link", "reset", "Team"], environment)).code).toBe(0)
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: -70000000000001, revokePrivateLink: true }])
+  })
+
+  it("combined updates report partial application if the settings request is refused", async () => {
+    const { environment, sent } = messenger(
+      {},
+      {
+        [Opcode.CHAT_UPDATE]: (request) => (request.options === undefined ? undefined : "settings.denied"),
+      },
+    )
+    const profile = "gr-partial"
+    const result = await runWith(
+      [profile, "chats", "update", String(GROUP.id), "--title", "Crew", "--all-can-pin", "on", "--json"],
+      environment,
+    )
+    expect(result.code).not.toBe(0)
+    expect(JSON.parse(result.stderr).error).toMatchObject({
+      code: "outcome_unknown",
+    })
+    expect(result.stderr).toContain("title or description changed")
+    expect(sent(Opcode.CHAT_UPDATE)).toEqual([
+      { chatId: GROUP.id, theme: "Crew" },
+      { chatId: GROUP.id, options: { ALL_CAN_PIN_MESSAGE: true } },
+    ])
+    expect(journalOf(profile)).toMatchObject([
+      { operationId: expect.any(String), action: "update", outcome: "outcome_unknown" },
+    ])
+  })
+
+  it("a rejected rename never sends settings", async () => {
+    const { environment, sent } = messenger({}, { [Opcode.CHAT_UPDATE]: "update.denied" })
+    const result = await runWith(
+      ["gr-first-refused", "chats", "update", String(GROUP.id), "--title", "Crew", "--all-can-pin", "on", "--json"],
+      environment,
+    )
+    expect(JSON.parse(result.stderr).error.code).toBe("provider_error")
+    expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: GROUP.id, theme: "Crew" }])
+    expect(journalOf("gr-first-refused")).toMatchObject([{ action: "update", outcome: "failed" }])
+  })
+
+  it("leaving and admin writes use the shared results and deduplicate rights", async () => {
+    const { environment } = messenger()
+    const profile = "gr-results"
+    const add = await runWith(
+      [profile, "chats", "admins", "add", String(GROUP.id), "20000002", "--can", "members,pin,members", "--json"],
+      environment,
+    )
+    expect(JSON.parse(add.stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: String(GROUP.id),
+      personId: "20000002",
+      rights: ["members", "pin"],
+    })
+    const remove = await runWith(
+      [profile, "chats", "admins", "remove", String(GROUP.id), "20000002", "--json"],
+      environment,
+    )
+    expect(JSON.parse(remove.stdout)).toEqual({
+      operationId: expect.any(String),
+      chatId: String(GROUP.id),
+      personId: "20000002",
+    })
+    const leave = await runWith([profile, "chats", "leave", String(GROUP.id), "--json"], environment)
+    expect(JSON.parse(leave.stdout)).toEqual({ operationId: expect.any(String), chatId: String(GROUP.id) })
+    expect(journalOf(profile)).toHaveLength(3)
+  })
+
+  it("update and link reset return a chat, while link show keeps its result", async () => {
+    const { environment, sent } = messenger()
+    const profile = "gr-card-results"
+    const show = await runWith([profile, "chats", "link", "show", String(GROUP.id), "--json"], environment)
+    expect(JSON.parse(show.stdout)).toEqual({ chatId: String(GROUP.id), title: "Team", link: GROUP.link })
+    expect(sent(Opcode.CHAT_UPDATE)).toEqual([])
+    for (const args of [
+      ["update", String(GROUP.id), "--title", "Crew"],
+      ["link", "reset", String(GROUP.id)],
+    ]) {
+      const result = await runWith([profile, "chats", ...args, "--json"], environment)
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        operationId: expect.any(String),
+        chat: { id: String(GROUP.id) },
+      })
+    }
+    expect(journalOf(profile)).toHaveLength(2)
+  })
+
+  const writes = [
+    ["join", GROUP.link],
+    ["create", "Team", "20000002"],
+    ["leave", String(GROUP.id)],
+    ["update", String(GROUP.id), "--all-can-pin", "on"],
+    ["members", "add", String(GROUP.id), "20000002"],
+    ["members", "remove", String(GROUP.id), "20000002"],
+    ["admins", "add", String(GROUP.id), "20000002", "--can", "pin"],
+    ["admins", "remove", String(GROUP.id), "20000002"],
+    ["link", "reset", String(GROUP.id)],
+  ]
+  it.each(writes.map((args, index) => ({ args, index })))(
+    "read-only write $index never logs in",
+    async ({ args, index }) => {
+      const { environment, max } = messenger()
+      const profile = `gr-guard-${index}`
+      await runWith([profile, "config", "set", "readOnly", "true"])
+      const result = await runWith([profile, "chats", ...args, "--json"], environment)
+      expect(JSON.parse(result.stderr).error.code).toBe("permission_error")
+      expect(max.sent).toEqual([])
+      expect(journalOf(profile)).toMatchObject([{ operationId: expect.any(String), outcome: "refused" }])
+    },
+  )
+  it.each(writes.map((args, index) => ({ args, index })))(
+    "offline write $index never logs in",
+    async ({ args, index }) => {
+      const { environment, max } = messenger()
+      const result = await runWith([`gr-offline-${index}`, "chats", ...args, "--offline", "--json"], environment)
+      expect(JSON.parse(result.stderr).error.code).toBe("validation_error")
+      expect(max.sent).toEqual([])
+    },
+  )
+
+  it("reports a provider refusal to add a member, without inventing success", async () => {
+    const { environment } = messenger({}, { [Opcode.CHAT_MEMBERS_UPDATE]: "participants.filter.out" })
+    const result = await runWith(
+      ["gr-add-refused", "chats", "members", "add", String(GROUP.id), "20000002", "--json"],
+      environment,
+    )
+    expect(result.stdout).toBe("")
+    expect(result.code).not.toBe(0)
+    expect(journalOf("gr-add-refused")).toMatchObject([{ action: "members.add", outcome: "failed" }])
   })
 
   it("has no join requests to list, accept or decline: MAX groups have no join approval", async () => {
