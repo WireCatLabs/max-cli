@@ -42,3 +42,5 @@ max sales bot messages send "Команда продаж" "Сборка гото
 - [recipes.md](recipes.md) — готовые задачи для агента
 - [commands.md](commands.md) — каждая команда и опция
 - [troubleshooting.md](troubleshooting.md) — если что-то не работает
+
+[Поиск сообщений](search.md): синтаксис Lucene, поля, regex, даты и переход с legacy.

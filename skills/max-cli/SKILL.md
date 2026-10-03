@@ -99,11 +99,15 @@ description: Читать и отправлять сообщения в личн
 4. **Повтор отправки — только с тем же `--send-id`.** Код `14` значит, что сообщение, возможно, ушло.
    В тексте ошибки есть `--send-id <n>`; повтор с ним MAX схлопнет, повтор без него — второе сообщение
    человеку.
-5. **`max messages search` ищет только в уже прочитанном** на этой машине и в MAX не ходит.
-   Пусто — не значит «такого не было». Сначала `max messages list <чат>`.
-5a. **Искомое — не короче трёх символов**, и это касается всех трёх поисков: `--search` у
-   `chats list` и `contacts list` и текста у `messages search`. Два символа — отказ с кодом `2`,
-   а не пустой список.
+5. **`max messages search` читает только локальный архив.** Default — строгий профиль Lucene:
+   фразы, AND/OR/NOT, field groups и date ranges. `alpha OR beta gamma` = `(alpha OR beta) AND gamma`.
+   Для прежних filters/discovery — `--language legacy`; --regex — отдельный JS iu mode с пределами.
+   Для version/coverage используйте --json; пустая выдача не доказывает отсутствие сообщения.
+   `--timezone` задаёт календарную zone; kind:bot и in:bots имеют разные смыслы.
+   Term/body regex различаются. Примеры и поддержанные поля: [search guide](https://github.com/leemour/max-cli/blob/main/docs/search.md).
+5a. **Substring-поиску имён нужны три символа:** --search у chats/contacts list. Строгие message
+   terms могут быть короче; не заменяйте strict zero hits fuzzy discovery автоматически.
+
 5b. **`max store export` выгружает только скачанное и прочитанное** и в MAX не ходит. Какие куски
    чата скачаны целиком, показывает `max store status <чат>`; прежде чем отдать файл как «всю
    переписку», сверьтесь с ним.
