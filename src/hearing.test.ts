@@ -286,6 +286,34 @@ describe("--model and max messages transcribe", () => {
     expect(events.filter((event) => event === "recognized")).toHaveLength(1)
   })
 
+  it.each(["Chat 111", "Chat"])("reuses a saved transcript for chat name %s without its model", async (chat) => {
+    const voice = wire(10, THEM, "", true)
+    const { environment, events } = setup([voice])
+    const store = await openStore()
+    try {
+      await store.keepTranscript(
+        { provider: "max", account: String(ME) },
+        "111",
+        String(voice.id),
+        "kept words",
+        "parakeet-v3",
+      )
+    } finally {
+      await store.close()
+    }
+    const fetched = audioFetched
+    const answer = await max(
+      ["h-name-kept", "messages", "transcribe", chat, String(voice.id), "--model", "parakeet-v3", "--json"],
+      environment,
+    )
+
+    expect(answer.code).toBe(0)
+    expect(JSON.parse(answer.stdout[0] as string)).toMatchObject({ chatId: "111", text: "kept words", cached: true })
+    expect(audioFetched).toBe(fetched)
+    expect(events).not.toContain("recognized")
+    expect(events).toContain("closed")
+  })
+
   it("answers a saved direct transcript without an installed model or MAX login", async () => {
     const voice = wire(10, THEM, "", true)
     const { environment, events, max: mock } = setup([voice])
