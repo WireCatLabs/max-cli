@@ -39,8 +39,9 @@ const pollAttach = ({ settings = 0, mine = false, version = 1 } = {}) => ({
   },
 })
 
-const messenger = ({ attach = pollAttach(), sender = OWNER } = {}) => {
+const messenger = ({ attach = pollAttach(), sender = OWNER, refusal = "" } = {}) => {
   const max = mockMax({
+    ...(refusal ? { refuse: { [Opcode.SEND_VOTE]: refusal } } : {}),
     answers: {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: {
@@ -124,6 +125,22 @@ describe("reading a poll", () => {
 })
 
 describe("voting", () => {
+  it.each([
+    ["poll.already.voted", true],
+    ["poll.closed", false],
+  ])("explains %s without retrying, retracting or losing the provider error", async (refusal, hint) => {
+    const { environment, sentWith } = messenger({ attach: pollAttach({ settings: REVOTE, mine: true }), refusal })
+    const profile = hint ? "p-revote-hint" : "p-revote-other"
+    const failed = await runWith([profile, "polls", "vote", "111", MESSAGE, "2"], environment)
+
+    expect(failed.code).toBe(11)
+    expect(failed.stdout).toBe("")
+    expect(JSON.parse(failed.stderr).error).toMatchObject({ code: "provider_error", providerError: refusal })
+    expect(failed.stderr.includes("--retract")).toBe(hint)
+    expect(sentWith(Opcode.SEND_VOTE).map(({ payload }) => payload.answersIds)).toEqual([[2]])
+    expect(journalOf(profile)).toMatchObject([{ kind: "reaction", outcome: "failed", errorCode: "provider_error" }])
+  })
+
   it("sends the answer ids as plain numbers, and journals the vote as a reaction", async () => {
     const { environment, sentWith } = messenger()
     const voted = await runWith(["p-vote", "polls", "vote", "111", MESSAGE, "1"], environment)
