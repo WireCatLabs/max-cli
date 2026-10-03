@@ -1767,7 +1767,7 @@ max runs list [options]
 
 ### `max runs show`
 
-one run: what it was, and one line per request
+one run: what it was, and one line per operation
 
 ```sh
 max runs show <run-id>

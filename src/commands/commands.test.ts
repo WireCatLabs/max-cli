@@ -5,6 +5,7 @@ import { captureStreams, EXIT_CODES } from "@leemour/cli-core"
 import type { CommandInfo } from "@leemour/cli-core/commands"
 import type { Command } from "commander"
 import { describe, expect, it } from "vitest"
+import { MAX_APP } from "../app.js"
 import { createProgram, run } from "../program.js"
 
 const commands = async (argv: string[] = ["commands", "--json"], tty = false) => {
@@ -30,7 +31,7 @@ describe("max commands", () => {
     expect(code).toBe(0)
     expect(stdout).toHaveLength(1)
     expect(stderr).toEqual([])
-    expect(JSON.parse(stdout[0] as string).cli).toBe("max")
+    expect(JSON.parse(stdout[0] as string)).toMatchObject({ cli: "max", version: MAX_APP.version, contract: 0 })
   })
 
   it("lists every command the program has, with the argv path already split", async () => {
