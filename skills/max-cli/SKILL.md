@@ -164,8 +164,8 @@ max watch --jsonl                              # новые сообщения �
 max watch --events --jsonl                     # плюс правки, удаления, реакции; в каждой строке "event"
 max server status --json                       # работает ли фоновый сервер, какой версии, подключён ли
 max chats show -1000 --json                    # один чат и кто в нём
-max chats events -1000 --since 2026-09-20T00:00 --json   # кто вступил, вышел, кого добавили и удалили
-max chats members list -1000 --json            # все участники от MAX: registeredAt, lastSeenAt
+max chats events -1000 --since-time 2026-09-20T00:00 --json   # кто вступил, вышел, кого добавили и удалили
+max chats members list -1000 --all --json            # все участники от MAX: registeredAt, lastSeenAt
 max chats rules show -1000 --json              # правила модерации группы; set <ключ> <значение> меняет одно
 max chats check -1000 --dry-run --json         # что нового нарушает правила; без --dry-run — только по слову владельца
 max contacts show @ivan --json                 # один человек и общие чаты

@@ -141,7 +141,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 
 ## Foundation and risks
 
-- **CLI-60** · P1 · 🟡 🚧 `feat/t6-group-reads` (members/events/inspect) Personal-account commands onto cli-messaging's shared commands, deleting max's
+- **CLI-60** · P1 · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
   copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
   and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
   `conversations` (#308), transcripts into the shared store (item 5 step 2), `inbox`/`review` (step 3), MCP reads (step 4),
@@ -149,8 +149,9 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   removal of the cache command and storage code (steps 6–7), and contact writes
   (`add|remove|block|unblock|rename|import`), the `chats folders` group, and
   `account update`/`account sessions list|end`, and group administration
-  (`create|join|leave|update`, members/admin writes, invite links). Left: a live check of
-  `messages list --transcribe`, remaining group reads and moderation, max's
+  (`create|join|leave|update`, members/admin writes, invite links), and
+  group reads (`members list`, `events`, `inspect`). Left: a live check of
+  `messages list --transcribe`, moderation/rules, max's
   half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
   `conversations embed` tells the user to run `max models text download`, which max does not have~~.
   **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.

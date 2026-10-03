@@ -53,6 +53,9 @@ export type MaxAdapter = MessengerAdapter &
       | "removeMembers"
       | "addAdmin"
       | "removeAdmin"
+      | "members"
+      | "chatEvents"
+      | "inspect"
     >
   >
 
@@ -68,7 +71,12 @@ const MARKUP: Record<string, string> = {
  * shared services guard every write, and a second guard would count each one twice. The resend
  * rule and the name filling stay in `MaxClient` (`NEED-34`).
  */
-export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach = publicOnly): MaxAdapter => {
+export const maxAdapter = (
+  client: MaxClient,
+  store: SessionStore,
+  reach: Reach = publicOnly,
+  warn: (message: string) => void = () => {},
+): MaxAdapter => {
   const chatId = (reference: string) => client.chats.resolve(reference)
 
   return {
@@ -141,6 +149,24 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
 
     chat: (reference) => client.chats.show(reference),
     contact: (reference) => client.contacts.show(reference),
+
+    members: async (chat, window) => {
+      const { items, hasMore, chatId, rolesKnown, truncated, readCount } = await client.chats.members.page(chat, window)
+      if (truncated) warn(`only the first ${readCount} members were read; MAX's member list is incomplete`)
+      if (!rolesKnown) warn("who is owner or admin is not known: the login did not carry this group")
+      return { items, hasMore, chatId }
+    },
+    chatEvents: async (chat, window) => {
+      const found = await client.chats.events(chat, window)
+      return {
+        ...found,
+        events: found.events.map((event) => ({ ...event, event: event.event === "new" ? "create" : event.event })),
+      }
+    },
+    inspect: async (link) => {
+      const { id, kind, title, participantsCount, description } = await client.chats.inspect(link)
+      return { id: id || null, kind, title, username: null, participantsCount, description, member: null }
+    },
 
     createGroup: (title, people, options) => client.chats.create(title, people, options),
     join: (link) => client.chats.join(link),
