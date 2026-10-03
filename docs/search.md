@@ -65,3 +65,14 @@ Legacy сохраняет прежние фильтры и поиск с исп�
 [Техническая спецификация](https://github.com/leemour/cli-messaging/blob/main/docs/search/query-language-spec.md)
 описывает зафиксированную грамматику, AST/schema, эталонные примеры и компилятор.
 [Архив](archive.md) объясняет fetch и полноту; [команды](commands.md) перечисляют текущие параметры.
+
+## Поиск через MCP
+
+`max_messages_search` использует тот же язык и service, что `messages search`. Запрос содержит
+`text` или versioned `ast`; `language` выбирает `lucene` или `legacy`, `timezone` задаёт календарный
+часовой пояс. `chat` принимает id или имя из локальной копии; `source`, `newest`, `context` и `limit`
+выбирают охват и представление результата.
+
+Ответ сохраняет `query`, `coverage`, `completeness`, `wordsReady` и `corrections` рядом с обычной
+страницей `items/page/limit/hasMore`, в том числе при нуле совпадений. Metadata описывает локальный
+архив, а не полноту удалённого чата. Права инструмента и его имя при этом сохраняются.

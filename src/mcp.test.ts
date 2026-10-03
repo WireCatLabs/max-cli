@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
+import { parseLucene } from "@leemour/cli-messaging/services"
 import { openStore } from "@leemour/cli-messaging/store"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
@@ -203,6 +204,55 @@ describe("the MCP server", () => {
     expect(max.sent).toHaveLength(before)
     expect(logins()).toBe(1)
     expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, `${profile}.db`))).toBe(false)
+  })
+
+  it("keeps Lucene search parameters and completeness metadata in MCP without another login", async () => {
+    const profile = "mcp-lucene-bridge"
+    const original = await connect(
+      {},
+      {
+        profile,
+        answers: {
+          [Opcode.CONTACT_INFO]: { contacts: [] },
+          [Opcode.CHAT_HISTORY]: {
+            messages: [
+              { id: 116762160362694599n, time: 1789776000000, sender: 10000002, text: "x invoice", attaches: [] },
+            ],
+          },
+        },
+      },
+    )
+    await call(original.client, "max_messages_list", { chat: "111" })
+    await original.session.close()
+    const reopened = await connect({}, { profile })
+    const result = await call(reopened.client, "max_messages_search", {
+      text: "x",
+      chat: "Team Alpha",
+      language: "lucene",
+      timezone: "Europe/Madrid",
+      limit: 5,
+    })
+    expect(result.isError).toBe(false)
+    expect(result.body).toMatchObject({
+      items: [{ id: "116762160362694599" }],
+      page: 1,
+      limit: 5,
+      hasMore: false,
+      query: { language: "lucene-v1", timezone: "Europe/Madrid", version: 1 },
+      coverage: { inventoryComplete: false },
+      wordsReady: true,
+      corrections: [],
+    })
+    expect(result.body.completeness).toBeDefined()
+    const legacy = await call(reopened.client, "max_messages_search", { text: "invoice", language: "legacy" })
+    expect(legacy.isError).toBe(false)
+    const ast = await call(reopened.client, "max_messages_search", { ast: parseLucene("invoice") })
+    expect(ast.isError).toBe(false)
+    expect(ast.body).toMatchObject({ items: [{ id: "116762160362694599" }], query: { language: "lucene-v1" } })
+    const missing = await call(reopened.client, "max_messages_search", {})
+    expect(missing.isError).toBe(true)
+    expect(reopened.logins()).toBe(0)
+    expect(reopened.max.sent).toEqual([])
   })
 
   it("reads message context through shared services and keeps it searchable", async () => {
