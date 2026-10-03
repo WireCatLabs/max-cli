@@ -132,7 +132,7 @@ max messages send "Иван Петров" "Опаздываю на 15 минут
 ```sh
 max review --chat "Поход" --unanswered            # вопросы, на которые сутки никто не ответил
 max chats events "Поход"                          # кто вступил и вышел за неделю
-max chats members list "Поход"                    # все участники: когда заведён аккаунт
+max chats members list "Поход" --all              # все участники: когда заведён аккаунт
 max chats rules set "Поход" invites delete        # приглашения в чужие чаты — удалять
 max chats check "Поход" --allow-dangerous         # проверить группу и сделать, что разрешено
 ```

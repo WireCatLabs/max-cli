@@ -205,7 +205,10 @@ max work config set mcpTools groups         # профилю work
 | `max_chats_check` | `max chats check` | проверить группу по правилам и сделать, что они разрешают, только с `--allow-moderate` |
 | `max_contacts_*`, `max_polls_close`, `max_chats_join` и другие | `max contacts …`, `max polls close`, `max chats …`, `max account update` | только если группа названа в `mcpTools` (выше) |
 
-Ответы — те же, что `--json` у команды: список — `{ items, page, limit, hasMore }`, id — строки.
+Списки используют `{ items, page, limit, hasMore }`, id — строки. Форматы MCP и CLI могут
+различаться: `max_chats_events` сохраняет `since` (в том числе id сообщения) и поля `chatId`/`since`;
+`max_chats_members_list` сохраняет `chatId`/`rolesKnown` и не принимает опции страниц.
+У соответствующих команд CLI новые параметры и форматы описаны в [группах](groups.md).
 Ошибка — `{ error: { code, message, … } }` с теми же кодами, что у CLI; неоднозначное имя чата
 отвечает списком `candidates` и ничего не отправляет.
 
