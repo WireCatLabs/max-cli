@@ -202,4 +202,4 @@ which; the plan for it starts by saying so.
 
 - Completed 2026-10-03: message downloads, scheduled reads and evidence now use shared factories (#370); MAX retains safe transport and compatibility --output. Session-end mutation metadata is explicit.
 
-- 🚧 `refactor/parity-account-reads` · Shared account-show factory with retained MAX profile fields and safe contact-lookup argv refusal. Permission runtime remains with T6/P7.
+- Completed 2026-10-03: shared account-show factory retains MAX profile fields; contact-lookup argv refusal never repeats a number (#371). Permission runtime remains with T6/P7.
