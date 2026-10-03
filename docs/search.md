@@ -1,0 +1,67 @@
+# Поиск сообщений
+
+`max messages search` ищет только в общем локальном архиве, без сети и отметок о прочтении.
+
+## Быстрый старт
+
+```sh
+max messages search 'invoice AND (kind:group OR kind:private)' --json
+max messages search 'from:"Alice Synthetic" date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid --json
+max messages search 'preset:secret kind:saved' --json
+max messages search 'text:/pass(port)?/' --json
+max messages search 'chat:"Работа" AND body:/.*invoice.*/' --json
+max messages search 'has:file' --json
+```
+
+Имена в примерах замените своими. Слова и фразы сопоставляются строго, без автоматических
+исправлений и подстрочного поиска. `alpha OR beta gamma` означает `(alpha OR beta) AND gamma`;
+`alpha OR beta AND gamma` — `alpha OR (beta AND gamma)`. Для ясности ставьте скобки.
+
+## Поля и операторы
+
+Поддержаны поля `text/body/from/chat/date/kind/has/topic/in/preset`, логические группы и группы
+значений поля, включающие и исключающие диапазоны, ограниченные wildcard и Lucene regex.
+`topic` требует одного обязательного чата. `kind:bot` выбирает собеседника, `in:bots` — аккаунты
+Bot API. `filename/mime/size/tag` пока не поддержаны; fuzzy/proximity/boost/intervals также
+дают ошибку. Неизвестные поля не становятся текстом.
+
+## Даты и regex
+
+`--timezone` задаёт часовой пояс IANA; дата без времени означает календарный день. Включающая
+верхняя граница включает день целиком, исключающая исключает его; из-за перехода на летнее время
+день может длиться не 24 часа. Точное время пишите в кавычках, с секундами и смещением от UTC.
+
+Regex поля `text` совпадает с целым нормализованным словом; `body` — с полным исходным текстом,
+с учётом регистра. Для подстроки в `body` используйте `.*`. Поддержана часть Lucene regex,
+без JS lookaround/backreferences/flags. Превышение пределов строк, байтов, состояний автомата,
+работы или времени — явная ошибка; сузьте область поиска.
+
+## Архив и машинный ответ
+
+Пустая выдача не доказывает отсутствие сообщения в мессенджере. JSON сообщает версию запроса,
+полноту и охват аккаунтов/чатов и готовность индекса даже без совпадений. `lastSyncedAt` сейчас
+`null`; список чатов профиля не считается полным. JSONL содержит только `items`;
+для охвата используйте `--json`.
+Неготовый word index требует `max store migrate`; историю дочитывают через `max store fetch`.
+Готовые предикаты находят кандидатов, а не подтверждают действительность учётных данных.
+
+## Миграция legacy
+
+```sh
+max messages search 'from:alice after:7d invoice -draft' --language legacy --json
+max messages search --regex 'invoice\s+\d+' --json
+```
+
+Legacy сохраняет прежние фильтры и поиск с исправлениями. `--regex` — отдельный режим JS `iu`
+по полному тексту с изолированным worker и пределами; сочетание `--regex --language lucene`
+отвергается. Программный контракт сохранённого запроса содержит `language/version`;
+предпросмотр миграции не обещает сохранить результаты поиска с исправлениями.
+
+## Полная справка
+
+[Основная справка языка](https://github.com/leemour/cli-messaging/blob/main/docs/search/query-language.md)
+содержит таблицы полей и операторов, Unicode и экранирование, готовые предикаты, пределы,
+ошибки и десять проверяемых рецептов.
+[Техническая спецификация](https://github.com/leemour/cli-messaging/blob/main/docs/search/query-language-spec.md)
+описывает зафиксированную грамматику, AST/schema, эталонные примеры и компилятор.
+[Архив](archive.md) объясняет fetch и полноту; [команды](commands.md) перечисляют текущие параметры.

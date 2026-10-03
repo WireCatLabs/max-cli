@@ -708,7 +708,7 @@ max messages search <query> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | обязательный | every word must appear, best match first; "a phrase", -word, a OR b, and the filters from: chat: after: before: has: in: — a typo is corrected, and a word that matches nothing falls back to any word, then to a piece of a word. |
+| `query` | обязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges; --language legacy keeps discovery. |
 
 | Опция | Что делает |
 |---|---|
@@ -717,6 +717,8 @@ max messages search <query> [options]
 | `--limit <n>` | how many. |
 | `--newest` | newest first instead of best first. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
+| `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
+| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 
 ### `max messages show`
