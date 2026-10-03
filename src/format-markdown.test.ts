@@ -40,6 +40,40 @@ describe("MAX Markdown", () => {
     )
     expect(toHtml('*literal* & "', [])).toBe("*literal* &amp; &quot;")
   })
+  it("preserves fenced code and CRLF quote text for both MAX transports", () => {
+    const fenced = formatMarkdown("```ts\nx\n```\n")
+    expect(fenced).toEqual({ text: "x\n", spans: [{ type: "pre", from: 0, length: 2, language: "ts" }] })
+    expect(fenced.spans.map(toNativeMarkup)).toEqual([{ type: "MONOSPACED", from: 0, length: 2 }])
+    expect(toHtml(fenced.text, fenced.spans)).toBe("<pre>x\n</pre>")
+    expect(formatMarkdown("> a\r\n> b\r\nend")).toEqual({
+      text: "a\r\nb\r\nend",
+      spans: [{ type: "blockquote", from: 0, length: 5 }],
+    })
+  })
+  it("parses escaped link delimiters and retains literal escaped marks", () => {
+    expect(formatMarkdown("[l](https://example.test/a\\)b)")).toEqual({
+      text: "l",
+      spans: [{ type: "link", from: 0, length: 1, url: "https://example.test/a)b" }],
+    })
+    expect(formatMarkdown("\\*x\\*")).toEqual({ text: "*x*", spans: [] })
+    expect(() => formatMarkdown("[a [b](https://example.test)](https://example.test)")).toThrow("nested")
+  })
+  it("rejects malformed HTML span geometry and unsupported transport styles", () => {
+    expect(() =>
+      toHtml("abcd", [
+        { type: "bold", from: 0, length: 3 },
+        { type: "italic", from: 2, length: 2 },
+      ]),
+    ).toThrow("overlapping")
+    expect(() => toHtml("x", [{ type: "spoiler", from: 0, length: 1 }])).toThrow("Bot API")
+    expect(() => toNativeMarkup({ type: "link", from: 0, length: 1 })).toThrow("URL")
+  })
+  it("bounds nesting and entity counts before transport work", () => {
+    expect(() => formatMarkdown("> ".repeat(33) + "x")).toThrow("32")
+    expect(() => formatMarkdown("**x** ".repeat(101))).toThrow("100")
+    expect(() => formatMarkdown("```")).toThrow("newline")
+  })
+
   it("keeps literal input and refuses malformed or unsafe forms", () => {
     for (const value of ["file_name_here", "𝒜_x_", "2*3*4", "**open", "||spoiler||"])
       expect(formatMarkdown(value)).toEqual({ text: value, spans: [] })
