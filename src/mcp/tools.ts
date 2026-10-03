@@ -253,19 +253,30 @@ const READ_TOOLS = {
     annotations: READ,
     answer: async (client, args, defaults) => {
       const since = args.since === undefined ? reviewStart() : client.messages.moment(args.since, "since")
+      let heard: Heard = { transcripts: new Map(), unheard: [] }
       const found = await withShared(client, defaults, (services) =>
         services.inbox.review({
           since,
           all: true,
           ...(args.chat === undefined ? {} : { chat: args.chat }),
           ...(args.unanswered_after_hours === undefined ? {} : { unansweredAfterHours: args.unanswered_after_hours }),
+          enrich: async (raw) => {
+            heard = await heardIn(
+              client,
+              raw.chats.flatMap((chat) => chat.messages),
+              args.transcribe === true,
+              defaults,
+            )
+            return {
+              ...raw,
+              complete: raw.complete && heard.unheard.length === 0,
+              chats: raw.chats.map((chat) => ({
+                ...chat,
+                messages: chat.messages.map((message) => withTranscript(message, heard)),
+              })),
+            }
+          },
         }),
-      )
-      const heard = await heardIn(
-        client,
-        found.chats.flatMap((chat) => chat.messages),
-        args.transcribe === true,
-        defaults,
       )
       return {
         ...found,

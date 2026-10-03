@@ -160,9 +160,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   shared package-upgrade workflow (#358). The permission-model move remains with T6.
   P7 migration prerequisite/cutover: 🚧 `feat/t6-permissions` owns the shared migration engine and MAX follow-up.
   Operation-id and server wrappers retain shared guard confirmation; the atomic config/CLI/MCP/server cutover remains.
-- **CLI-63** · P3 · The shared `messages list --transcribe` fetches a voice message on a second
-  connection after the read's own closes — a second MAX login with `--no-serve`. Keep the read's
-  connection until the download is done. cli-messaging `hearing-command.ts`.
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
