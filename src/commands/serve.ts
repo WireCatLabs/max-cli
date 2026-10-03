@@ -2,7 +2,6 @@ import { writeFileSync } from "node:fs"
 import { holdLock, lockPath, releaseLock } from "@leemour/cli-messaging/background"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
-import { openProfileCache } from "../cache/index.js"
 import { parseDuration } from "../config.js"
 import { asFirstWord } from "../profile.js"
 import { MaxServer, refusedLogin } from "../server/server.js"
@@ -26,7 +25,6 @@ export const serveCommand = (): Command =>
       const { idle, startedByCommand = false } = this.opts<{ idle?: string; startedByCommand?: boolean }>()
       const { renderer, settings, store, run, format, streams } = forCommand(this)
       const idleMs = idle === undefined ? undefined : parseDuration(idle, "--idle")
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
 
       await run("serve", async (events) => {
         const server = new MaxServer({
@@ -37,7 +35,6 @@ export const serveCommand = (): Command =>
               ? renderer.note(line)
               : streams.diagnostic(JSON.stringify({ time: new Date().toISOString(), note: line })),
           ...(events ? { events } : {}),
-          ...(cache ? { cache } : {}),
           ...(settings.timeoutMs ? { timeoutMs: settings.timeoutMs } : {}),
           ...(idleMs === undefined ? {} : { idleMs }),
           startedByCommand,
@@ -66,7 +63,6 @@ export const serveCommand = (): Command =>
           releaseLock(lock)
           process.off("SIGINT", stop)
           process.off("SIGTERM", stop)
-          await cache?.close()
         }
       })
     })

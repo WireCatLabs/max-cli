@@ -37,8 +37,11 @@ const setUp = () => {
   const loginOnce = async (
     served = false,
     act: (client: MaxClient) => Promise<unknown> = (client) => client.chats.list(),
+    chats = login.chats,
   ) => {
-    const max = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: login, [Opcode.CONTACT_UPDATE]: {} } })
+    const max = mockMax({
+      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: { ...login, chats }, [Opcode.CONTACT_UPDATE]: {} },
+    })
     const record = maxRecord({ account: () => session.readState().viewerId, env })
     const Wire = served ? Served : Connection
     const client = new MaxClient({
@@ -117,6 +120,29 @@ describe("the record", () => {
     })
     expect(payload?.contactsSync).toBe(0)
     expect((await loginOnce())?.contactsSync).toBe(login.time)
+  })
+
+  it("a complete chat snapshot marks departures, while an empty one keeps the last snapshot", async () => {
+    const { env, loginOnce } = setUp()
+    await loginOnce()
+    await loginOnce(
+      false,
+      async (client) => {
+        expect((await client.chats.list()).items.map((chat) => chat.id)).toEqual(["111", "222"])
+      },
+      [],
+    )
+    await loginOnce(
+      false,
+      async (client) => {
+        expect((await client.chats.show("First")).members).toMatchObject([{ id: "10000002", name: "Someone Else" }])
+        expect((await client.chats.list()).items.map((chat) => chat.id)).toEqual(["111"])
+      },
+      login.chats.slice(0, 1),
+    )
+    const store = await openStore({ env })
+    expect(await store.leftChats({ provider: "max", account: ME })).toEqual({ chats: 1, messages: 0 })
+    await store.close()
   })
 
   it("logs in with the marker it kept", async () => {

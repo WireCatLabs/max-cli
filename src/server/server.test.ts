@@ -4,9 +4,11 @@ import { dirname, join } from "node:path"
 import { type CliError, captureStreams, exitCodeFor, memoryKeyring } from "@leemour/cli-core"
 import { thisMachine, unitScope } from "@leemour/cli-messaging/background"
 import { guardedWrite, RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
+import { openStore } from "@leemour/cli-messaging/store"
 import { decode, ExtData } from "@msgpack/msgpack"
 import { afterEach, describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
+import { profileCacheFile } from "../cache/index.js"
 import { MaxClient } from "../client.js"
 import { contextFor } from "../commands/context.js"
 import { maxServerOptions, NO_RESTART_ON } from "../commands/server.js"
@@ -127,6 +129,20 @@ describe("max serve", () => {
     expect(max.sent.filter((call) => call.opcode === Opcode.LOGIN)).toHaveLength(1)
     // A named pipe on Windows is not a file with mode bits.
     if (process.platform !== "win32") expect(statSync(store.socketPath()).mode & 0o777).toBe(0o600)
+  })
+
+  it("keeps its login in the shared store without opening a legacy profile cache", async () => {
+    const { server, store } = await serve("s-record")
+    await server.stop()
+    const db = await openStore()
+    try {
+      const key = { provider: "max", account: String(ME) }
+      expect((await db.chats(key, {})).items.find((chat) => chat.id === "111")).toMatchObject({ title: "First" })
+      expect((await db.people("max", { account: key.account })).get("10000002")?.name).toBe("Someone Else")
+      expect(existsSync(profileCacheFile(store.profile))).toBe(false)
+    } finally {
+      await db.close()
+    }
   })
 
   it("hands a new message to every watcher in the shape `messages list` prints, and acknowledges it", async () => {
