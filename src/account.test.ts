@@ -416,6 +416,10 @@ describe("folders", () => {
     const updated = await runWith(["chats", "folders", "update", "Personal", "--title", "Renamed"], environment)
 
     expect(updated.code).toBe(0)
+    expect(JSON.parse(updated.stdout)).toEqual({
+      operationId: expect.any(String),
+      folder: { id: "folder.personal", title: "Renamed", chatIds: ["111"] },
+    })
     const [request] = sent(Opcode.FOLDERS_UPDATE)
     expect({ ...request, include: (request as { include: unknown[] }).include.map(String) }).toEqual({
       id: "folder.personal",
@@ -435,8 +439,15 @@ describe("folders", () => {
 
   it("`create` sends a new id with the chats named, and `delete` sends the folder's id", async () => {
     const { environment, sent } = account()
-    await runWith(["chats", "folders", "create", "New", "--chat", "Friends"], environment)
-    await runWith(["chats", "folders", "delete", "Personal"], environment)
+    const createdResult = await runWith(["chats", "folders", "create", "New", "--chat", "Friends"], environment)
+    const deletedResult = await runWith(["chats", "folders", "delete", "Personal"], environment)
+    expect(createdResult.code).toBe(0)
+    expect(deletedResult.code).toBe(0)
+    expect(JSON.parse(createdResult.stdout)).toMatchObject({
+      operationId: expect.any(String),
+      folder: { id: "folder.personal" },
+    })
+    expect(JSON.parse(deletedResult.stdout)).toEqual({ operationId: expect.any(String), folderId: "folder.personal" })
 
     const [created] = sent(Opcode.FOLDERS_UPDATE)
     expect(created?.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-/)
@@ -448,6 +459,106 @@ describe("folders", () => {
       options: [],
     })
     expect(sent(Opcode.FOLDERS_DELETE)).toEqual([{ folderIds: ["folder.personal"] }])
+  })
+
+  it("updates preserve filters, options and favourites, deduplicate additions and let removals win", async () => {
+    const { environment, sent } = account({
+      [Opcode.FOLDERS_GET]: { folders: [{ ...FOLDER, favorites: [111], filters: [3, 5], options: [1, 2] }] },
+    })
+    const result = await runWith(
+      [
+        "chats",
+        "folders",
+        "update",
+        "folder.personal",
+        "--add",
+        "222",
+        "--add",
+        "222",
+        "--add",
+        "111",
+        "--remove",
+        "111",
+      ],
+      environment,
+    )
+    expect(result.code).toBe(0)
+    expect(sent(Opcode.FOLDERS_UPDATE)).toHaveLength(1)
+    const request = sent(Opcode.FOLDERS_UPDATE)[0] as { include: unknown[] }
+    expect({ ...request, include: request.include.map(String) }).toEqual({
+      id: "folder.personal",
+      title: "Personal",
+      include: ["222"],
+      filters: [3, 5],
+      options: [1, 2],
+      favorites: [111],
+    })
+  })
+
+  it("leaves an automatic folder's include field absent when renaming it", async () => {
+    const { include: _include, ...automatic } = FOLDER
+    const { environment, sent } = account({ [Opcode.FOLDERS_GET]: { folders: [automatic] } })
+    const result = await runWith(["chats", "folders", "update", "folder.personal", "--title", "New"], environment)
+    expect(result.code).toBe(0)
+    expect(sent(Opcode.FOLDERS_UPDATE)).toEqual([{ id: "folder.personal", title: "New", filters: [3], options: [1] }])
+  })
+
+  it("refuses ambiguous titles but accepts a folder id", async () => {
+    const { environment, sent } = account({
+      [Opcode.FOLDERS_GET]: { folders: [FOLDER, { ...FOLDER, id: "folder.second" }] },
+    })
+    const ambiguous = await runWith(["chats", "folders", "delete", "Personal"], environment)
+    expect(JSON.parse(ambiguous.stderr).error.code).toBe("validation_error")
+    expect(sent(Opcode.FOLDERS_DELETE)).toEqual([])
+    const byId = await runWith(["chats", "folders", "delete", "folder.second"], environment)
+    expect(byId.code).toBe(0)
+    expect(sent(Opcode.FOLDERS_DELETE)).toEqual([{ folderIds: ["folder.second"] }])
+    expect(JSON.parse(byId.stdout)).toEqual({ operationId: expect.any(String), folderId: "folder.second" })
+  })
+
+  it.each(["create", "update", "delete"])(
+    "read-only folders %s never writes and journals one refusal",
+    async (action) => {
+      const { environment, sent } = account()
+      const profile = `folder-readonly-${action}`
+      await runWith([profile, "config", "set", "readOnly", "true"])
+      const args =
+        action === "create"
+          ? ["New", "--chat", "111"]
+          : ["folder.personal", ...(action === "update" ? ["--title", "New"] : [])]
+      const result = await runWith([profile, "chats", "folders", action, ...args], environment)
+      expect(JSON.parse(result.stderr).error.code).toBe("permission_error")
+      expect(sent(Opcode.FOLDERS_UPDATE)).toEqual([])
+      expect(sent(Opcode.FOLDERS_DELETE)).toEqual([])
+      expect(new SendJournal(sendsPathFor(profile)).entries()).toMatchObject([
+        { kind: "account", action: `folder-${action}`, outcome: "refused" },
+      ])
+      if (action === "create") expect(sent(Opcode.LOGIN)).toEqual([])
+    },
+  )
+
+  it.each(["list", "create", "update", "delete"])("offline folders %s never logs in", async (action) => {
+    const { environment, sent } = account()
+    const args =
+      action === "list"
+        ? []
+        : action === "create"
+          ? ["New"]
+          : ["folder.personal", ...(action === "update" ? ["--title", "New"] : [])]
+    const result = await runWith(["chats", "folders", action, ...args, "--offline"], environment)
+    expect(JSON.parse(result.stderr).error.code).toBe("validation_error")
+    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(sent(Opcode.FOLDERS_GET)).toEqual([])
+    expect(sent(Opcode.FOLDERS_UPDATE)).toEqual([])
+    expect(sent(Opcode.FOLDERS_DELETE)).toEqual([])
+  })
+
+  it("refuses an update with no changes before login", async () => {
+    const { environment, sent } = account()
+    const result = await runWith(["chats", "folders", "update", "folder.personal"], environment)
+    expect(JSON.parse(result.stderr).error.message).toContain("nothing to change")
+    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(sent(Opcode.FOLDERS_UPDATE)).toEqual([])
   })
 
   it("refuses a title longer than the 20 characters MAX takes, before sending", async () => {

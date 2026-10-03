@@ -8,7 +8,6 @@ import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
 import { checkCommand } from "./check.js"
 import { forCommand } from "./context.js"
-import { foldersCommand } from "./folders.js"
 import { renderList } from "./paging.js"
 import { rulesCommand } from "./rules.js"
 
@@ -214,7 +213,7 @@ export const chatsCommand = (): Command => {
     .action(async function (this: Command, chat: string) {
       await withClient(this, "chats link reset", (client) => client.chats.resetLink(chat))
     })
-  command.addCommand(foldersCommand())
+  command.addCommand(sharedSubcommand(shared, "folders"))
   command.addCommand(rulesCommand())
   command.addCommand(checkCommand())
 
