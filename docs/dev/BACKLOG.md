@@ -202,4 +202,3 @@ which; the plan for it starts by saying so.
 
 - Completed 2026-10-03: MAX poll.already.voted refusal explains explicit retract before a new vote when the poll permits changing votes (CLI-61). Provider error identity and one attempted write are preserved; wire refusal regressions cover other errors and an explicit retract refusal.
 
-- B1c · 🚧 feat/messages-link · shared personal messages link command and read-only MCP; validated locator fallback until personal permalink protocol is proven.
