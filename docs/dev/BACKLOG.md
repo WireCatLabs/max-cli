@@ -158,6 +158,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   Shared runner and operational diagnostics: done (#347/#352).
   Search read-only MCP bridge: 🚧 `fix/search-mcp-contract` owns the search schema/answer and tests;
   admin, permissions and audio-model moves remain with T6.
+  Package-upgrade workflow follow-up: 🚧 `refactor/shared-upgrade` owns only upgrade wrapper/tests.
 - **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
   poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
   Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's

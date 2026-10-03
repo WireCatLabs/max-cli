@@ -33,6 +33,7 @@ describe("max upgrade", () => {
       installer: "pnpm",
       command: "pnpm add -g @leemour/max-cli@latest",
       updated: false,
+      restarted: [],
     })
   })
 
@@ -40,7 +41,7 @@ describe("max upgrade", () => {
     const { code, ran, result } = await upgrade([])
     expect(code).toBe(0)
     expect(ran).toEqual([["pnpm", "add", "-g", "@leemour/max-cli@latest"]])
-    expect(result).toMatchObject({ updated: true })
+    expect(result).toMatchObject({ updated: true, restarted: [] })
   })
 
   it("runs nothing when this is already the newest", async () => {
