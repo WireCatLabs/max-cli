@@ -861,10 +861,6 @@ max runs path <id>            # каталог, для jq и grep
 
 ### Что профилю можно
 
-`allow` — список действий, которые профилю разрешены. Без него разрешено всё, как раньше.
-
-### Права по ресурсам и командам
-
 ```sh
 max config set permissions.messages readonly
 max work config set permissions.messages.delete allow

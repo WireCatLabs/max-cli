@@ -202,3 +202,5 @@ which; the plan for it starts by saying so.
 - Completed 2026-10-03: chats-show member counts explain possible self omission or partial lists without claiming incomplete loading (SDK0.137, CLI-62). Online and offline consumer regressions retain JSON counts and members.
 
 - Completed 2026-10-03: MAX poll.already.voted refusal explains explicit retract before a new vote when the poll permits changing votes (CLI-61). Provider error identity and one attempted write are preserved; wire refusal regressions cover other errors and an explicit retract refusal.
+
+- Release coordination · 🚧 `release/coordinated-027` prepares MAX and TG together, aggregates parallel PR evidence, and keeps publication/sign-off pending. Handoff: `docs_ai/plans/2026-10-04-coordinated-release.md`. Avoid competing version/changelog bumps.
