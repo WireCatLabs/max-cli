@@ -164,7 +164,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
   Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
   shared `polls vote`. Found live 2026-10-01.
-- **CLI-62** · P3 · `chats show` notes «only 2 of 3 members could be read» when the list is complete:
+- **CLI-62** · P3 · 🚧 `fix/member-count-diagnostic` · `chats show` notes «only 2 of 3 members could be read» when the list is complete:
   `members` leaves out the account itself, `participantsCount` counts it. cli-messaging,
   `chats-command.ts` `show`.
 - **CLI-63** · P3 · The shared `messages list --transcribe` fetches a voice message on a second
