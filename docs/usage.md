@@ -170,9 +170,9 @@ max messages download -1000 100000000000000001 --output-dir ~/Downloads
 файлы доступны только владельцу (права 600). Голосовые имеют `kind: voice` в JSON;
 расширение безымянного вложения выбирается по HTTP MIME.
 
-### Ссылка на сообщение (планируется)
+### Ссылка на сообщение
 
-`max messages link <chat> <message>` или `max messages link <msg:locator>` вернёт
+`max messages link <chat> <message>` или `max messages link <msg:locator>` возвращает
 `{ locator, url, access, reason }`. Личный MAX сначала проверяет сообщение в локальном архиве
 и возвращает locator; формат нативной ссылки пока не подтверждён. С `--offline` подключения нет.
 Locator другой учётной записи отклоняется. `messages links` остаётся командой связей разговоров.

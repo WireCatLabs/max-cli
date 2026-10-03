@@ -14,7 +14,7 @@ export const withShared = async <T>(
   client: MaxClient,
   { store: state, profile, warn }: { store: SessionStore; profile: string; warn: (message: string) => void },
   read: (services: Services) => Promise<T>,
-  { local = false, login = false }: { local?: boolean; login?: boolean } = {},
+  { local = false, login = false, reads }: { local?: boolean; login?: boolean; reads?: "store" } = {},
 ): Promise<T> => {
   let opened: Promise<MessageStore> | undefined
   let connection: MessengerAdapter | undefined
@@ -37,6 +37,7 @@ export const withShared = async <T>(
         store,
         account,
         offline: local,
+        ...(reads ? { reads } : {}),
         connection: async () => {
           if (connection) return connection
           connection = stored(adapter, { account: key, store, warn, events: () => {} })

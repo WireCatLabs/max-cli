@@ -149,6 +149,14 @@ description: Читать и отправлять сообщения в личн
    Через MCP — параметр `at` у `max_messages_send` и инструмент `max_messages_scheduled`.
    Отменить можно только в приложении MAX.
 
+## Ссылки на сообщения
+
+`messages link <chat> <message>` или `messages link <msg:locator>` проверяет сообщение в
+архиве текущей учётной записи и возвращает locator без текста. Личный MAX пока не выдаёт
+нативный permalink: `url: null`, `access: unavailable`, `reason: unsupported_provider`.
+С `--offline` причина `offline`, подключения нет. Locator другой учётной записи отклоняется.
+Это отдельная команда от `messages links` (связи разговоров).
+
 ## Типичный путь
 
 Id ниже выдуманные — подставить настоящие из предыдущего ответа.

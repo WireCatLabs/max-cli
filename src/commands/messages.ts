@@ -22,6 +22,9 @@ export const messagesCommand = (): Command => {
   const shared = sharedMessagesCommand(maxMessenger)
   for (const name of ["list", "search", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
 
+  const localLinks = sharedMessagesCommand({ ...maxMessenger, history: "store" })
+  command.addCommand(sharedSubcommand(localLinks, "link"))
+
   const download = sharedSubcommand(shared, "download")
     .option("--output <dir>", "compatibility alias for --output-dir")
     .hook("preAction", (action) => {

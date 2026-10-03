@@ -187,6 +187,7 @@ max work config set mcpTools groups         # профилю work
 | `max_contacts_show` | `max contacts show` | один человек и общие чаты |
 | `max_messages_list` | `max messages list` | сообщения чата; с `transcribe` расшифровывает голосовые; ничего не отмечает прочитанным |
 | `max_messages_search` | `max messages search` | поиск по уже прочитанному на этой машине |
+| `max_messages_link` | `max messages link` | locator сообщения из архива без подключения и текста |
 | `max_messages_context` | `max messages show`, `context` | одно сообщение и соседние |
 | `max_messages_photo` | `max messages download` | фото из сообщения как картинка, до 512 КБ; файл, видео, голосовое или фото крупнее — отказ с командой, которая их сохранит. ссылку на фото этот инструмент не отдаёт |
 | `max_messages_scheduled` | `max messages scheduled` | что ждёт отправки в чате, с `scheduledFor` |
