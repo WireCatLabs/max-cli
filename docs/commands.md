@@ -29,10 +29,10 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--json` | machine-readable output: one JSON value on stdout, nothing else. |
 | `--jsonl` | machine-readable output: one JSON object per line, for streaming and jq. |
 | `--quiet` | diagnostics off. |
-| `--yes` | go ahead without the question an ask level puts before a write. |
 | `--trace` | one line per request on stderr: ids and timings, never message content. |
 | `--timeout <duration>` | give up on the whole command after this — 30s, 2m, 500ms. |
 | `--offline` | answer from what was recorded and never connect; fails if nothing was. |
+| `--yes` | go ahead without the question an ask level puts before a write. |
 | `--record` | keep this run under `max runs` — ids and timings, never message content. |
 | `--no-record` | do not keep it, whatever the configuration says. |
 | `--serve` | start `max serve` in the background if it is not running (the default). |
