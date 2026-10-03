@@ -158,7 +158,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   Shared runner and operational diagnostics: done (#347/#352).
   **Correction 2026-10-03:** search read-only MCP bridge is merged (#357), as is the
   shared package-upgrade workflow (#358). The permission-model move remains with T6.
-  P7 migration prerequisite/cutover: 🚧 `feat/t6-permissions` owns the shared migration engine and MAX follow-up.
+  P7 migration prerequisite/cutover: 🚧 `feat/p7-cutover` owns the shared migration engine and MAX follow-up.
   Operation-id and server wrappers retain shared guard confirmation; the atomic config/CLI/MCP/server cutover remains.
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
