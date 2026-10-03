@@ -107,6 +107,24 @@ const runWith = async (argv: string[], environment: Environment = {}) => {
 }
 
 describe("the program", () => {
+  it("refuses --topic for shared message and poll commands without sending", async () => {
+    const { max, ...environment } = scriptedMax()
+    const sent = await runWith(["messages", "send", "111", "hi", "--topic", "12", "--json"], environment)
+    const poll = await runWith(
+      ["polls", "create", "111", "Friday?", "yes", "no", "--topic", "12", "--json"],
+      environment,
+    )
+    for (const result of [sent, poll]) {
+      expect(result.code).toBe(2)
+      expect(result.stdout).toBe("")
+      expect(JSON.parse(result.stderr).error).toMatchObject({
+        code: "validation_error",
+        message: "this messenger cannot send to a forum topic",
+      })
+    }
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)).toEqual([])
+  })
+
   it("shows a control character from the command line in an error, instead of passing it to the terminal", async () => {
     const streams = captureStreams()
     const code = await run(["config", "set", "limit", "x\u001b[2Ky"], { streams, tty: true })
