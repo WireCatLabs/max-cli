@@ -12,7 +12,7 @@
 ## Подключение
 
 Для бота — свой сервер, `max <имя> bot mcp` ([bot.md](bot.md#бот-для-агента-mcp)). У него
-доступ определяют настройки профиля бота: `readOnly` и `allow`. Его флаги `--allow-send`,
+доступ определяет `permissions` профиля бота. Его флаги `--allow-send`,
 `--allow-delete`, `--allow-moderate` принимаются с предупреждением и ничего не включают.
 Описанные ниже флаги `max mcp` относятся к личному аккаунту и включают его инструменты записи.
 
@@ -55,7 +55,7 @@ claude mcp add max-work -- max work mcp
 
 ```sh
 max mcp config                  # только чтение
-max work mcp config --allow-send
+max work mcp config --confirm-send
 ```
 
 ```json

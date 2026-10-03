@@ -158,14 +158,14 @@ max config set defaultProfile work      # какой профиль без пе�
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max config set limit 0`
 откажет, и файл останется прежним. `serve`, `senderColors` и `mcpTools` с `--bot` не принимаются: у бота
-нет ни сервера, ни цветов авторов, а `mcpTools` включает инструменты личного аккаунта.
+нет ни сервера, ни цветов авторов, а старое `mcpTools` относится только к личному аккаунту.
 
 ## Опечатка — это ошибка, а не умолчание
 
 Неизвестное поле отвергается с именем поля и кодом `configuration_error` (возврат `3`):
 
 ```json
-{"error":{"code":"configuration_error","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools"}}
+{"error":{"code":"configuration_error","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, serve, mcpTools"}}
 ```
 
 Значение не того вида называет поле и то, что допустимо: `profiles.default.limit: has to be a
