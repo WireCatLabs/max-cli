@@ -8,6 +8,7 @@ import { FIRST_TAB_SYNC, MaxClient, type MaxClientOptions, type ResumeFrom, type
 import { resolveSettings } from "../config.js"
 import type { MessageChange, MessageHit } from "../domain/models.js"
 import { Opcode } from "../generated/opcodes.generated.js"
+import { assertReadable } from "../permissions.js"
 import { Connection, type ConnectionOptions, ProtocolError } from "../protocol/connection.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import { type MaxRecord, maxRecord } from "../record.js"
@@ -329,6 +330,15 @@ export class MaxServer {
   }
 
   #broadcast(event: ServerEvent): void {
+    if (event.event !== "status") {
+      try {
+        assertReadable(resolveSettings({ profile: this.#options.store.profile }), "messages.watch")
+      } catch {
+        for (const socket of this.#subscribers) socket.destroy()
+        this.#subscribers.clear()
+        return
+      }
+    }
     if (event.event === "message") {
       // A retried send answers with the same message, and MAX repeats pushes after a hiccup.
       if (this.#seen.has(event.message.id)) return
@@ -413,6 +423,12 @@ export class MaxServer {
     this.#lastUse = Date.now()
 
     if (request.subscribe === true) {
+      try {
+        assertReadable(resolveSettings({ profile: this.#options.store.profile }), "messages.watch")
+      } catch (error) {
+        socket.end(toLine({ id, ...refusal(error) }))
+        return
+      }
       this.#subscribers.add(socket)
       socket.write(toLine(status))
     } else if (request.status === true) {
@@ -427,6 +443,13 @@ export class MaxServer {
       socket.end(toLine({ id, stopped: true }))
       await this.stop()
     } else if (request.login === true) {
+      try {
+        const settings = resolveSettings({ profile: this.#options.store.profile })
+        for (const key of ["messages", "chats", "contacts", "account"]) assertReadable(settings, key)
+      } catch (error) {
+        socket.write(toLine({ id, ...refusal(error) }))
+        return
+      }
       // A request that arrives while the server logs in, or logs in again, waits for it: the
       // command's own timeout is what gives up, not this. A login a deletion made stale is still
       // handed out — only a deleted last message can be wrong in it — while a fresh one is fetched.
@@ -441,13 +464,20 @@ export class MaxServer {
       )
     } else if (typeof request.opcode === "number") {
       const operationId = typeof request.operationId === "string" ? request.operationId : undefined
-      socket.write(toLine({ id, ...(await this.#forward(request.opcode, request.payload, operationId)) }))
+      socket.write(
+        toLine({ id, ...(await this.#forward(request.opcode, request.payload, operationId, request.approvals)) }),
+      )
     } else {
       socket.write(toLine({ id, error: { code: "bad_request", message: "subscribe, status, login or an opcode" } }))
     }
   }
 
-  async #forward(opcode: number, payload: unknown, operationId?: string): Promise<Record<string, unknown>> {
+  async #forward(
+    opcode: number,
+    payload: unknown,
+    operationId?: string,
+    approvals?: unknown,
+  ): Promise<Record<string, unknown>> {
     await this.#up
     const client = this.#client
     const operation = forwardedOperation(opcode)
@@ -461,7 +491,21 @@ export class MaxServer {
     if (!v.safeParse(operation.request, asStrings(request)).success) {
       return refusal(new CliError("validation_error", `${operation.name}: not a request this version of max sends`))
     }
-    if (!operation.guard) return this.#pass(client, opcode, request)
+    if (!operation.guard) {
+      try {
+        assertReadable(
+          resolveSettings({ profile: this.#options.store.profile }),
+          operation.name === "chats.history" || operation.name.startsWith("attachments.")
+            ? "messages"
+            : operation.name.startsWith("folders.")
+              ? `chats.${operation.name}`
+              : operation.name,
+        )
+      } catch (error) {
+        return refusal(error)
+      }
+      return this.#pass(client, opcode, request)
+    }
 
     let entry: Guarded
     let guard: SendGuard
@@ -470,11 +514,18 @@ export class MaxServer {
       // Read again for every write, so `config set readOnly true` needs no restart.
       guard =
         this.#options.guard?.() ??
-        guardFor(resolveSettings({ profile: this.#options.store.profile }), this.#options.note)
+        guardFor(resolveSettings({ profile: this.#options.store.profile }), this.#options.note, async (key) => {
+          if (!Array.isArray(approvals) || !approvals.includes(key))
+            throw new CliError(
+              "confirmation_required",
+              `${key} asks before it acts — this request has no explicit confirmation`,
+            )
+        })
     } catch (error) {
       return refusal(error)
     }
     try {
+      await guard.ask?.(entry)
       guard.check(entry)
     } catch (error) {
       guard.record({ ...entry, outcome: "refused", errorCode: asCliError(error).code })

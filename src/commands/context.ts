@@ -3,7 +3,7 @@ import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@l
 import type { FetchLike } from "@leemour/cli-core/http"
 import type { ServerSystem } from "@leemour/cli-messaging/background"
 import { recorded } from "@leemour/cli-messaging/cli"
-import { sharedJournal } from "@leemour/cli-messaging/sends"
+import { levelFor, sharedJournal } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import type { BotTokenStore } from "../bot/auth.js"
@@ -13,6 +13,7 @@ import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, publicOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
+import { askerFor, assertReadable, currentReadPermission, permissionScope } from "../permissions.js"
 import { rootOf } from "../profile.js"
 import { guardFor } from "../sends.js"
 import { ServerConnection, stopServer } from "../server/server-connection.js"
@@ -43,6 +44,7 @@ export interface Environment {
   recognizer?: HearAllOptions["open"]
   /** What the shared commands read as stdin; a test pipes an answer in. */
   stdin?: NodeJS.ReadableStream & { isTTY?: boolean }
+  answer?: (question: string) => string | null | Promise<string | null>
   ask?: Ask
   interactive?: boolean
   columns?: number
@@ -135,7 +137,7 @@ export const forCommand = (command: Command): CommandContext =>
 
 /** The same context from flags already parsed — for `max mcp`, whose calls arrive without argv. */
 export const contextFor = (
-  flags: GlobalFlags & { offline?: boolean },
+  flags: GlobalFlags & { offline?: boolean; yes?: boolean; allowDangerous?: boolean },
   environment: Environment = {},
 ): CommandContext => {
   const settings = resolveSettings(flags)
@@ -166,9 +168,12 @@ export const contextFor = (
     stopServer: () => stopServer(store.socketPath(), { force: true }),
     createClient: (extra = {}, { own = false } = {}) => {
       const timeout = settings.timeoutMs ? { timeoutMs: settings.timeoutMs } : {}
-      const shares = starts && flags.offline !== true
+      const snapshotAllowed = ["messages", "chats", "contacts", "account"].every(
+        (key) => levelFor(settings.permissions, key).level !== "deny",
+      )
+      const shares = starts && flags.offline !== true && snapshotAllowed
       const wire =
-        !own && (shares || existsSync(store.socketPath()))
+        !own && snapshotAllowed && (shares || existsSync(store.socketPath()))
           ? new ServerConnection({
               path: store.socketPath(),
               store,
@@ -185,7 +190,8 @@ export const contextFor = (
         ...(environment.connection ? { connection: environment.connection() } : wire ? { connection: wire } : {}),
         ...extra,
         // After `extra`, so an `undefined` handed in falls back to the guard rather than to none.
-        sends: extra.sends ?? sharedJournal(guardFor(settings, renderer.warn), wire),
+        reads: extra.reads ?? ((key) => assertReadable(settings, currentReadPermission() ?? key)),
+        sends: extra.sends ?? sharedJournal(guardFor(settings, renderer.warn, askerFor(flags, environment)), wire),
       })
       clients.push(client)
       return client
@@ -207,20 +213,22 @@ export const contextFor = (
     interactive: environment.interactive ?? (process.stdin.isTTY === true && process.stderr.isTTY === true),
     columns: environment.columns ?? process.stderr.columns,
     run: (command, body) =>
-      withDeadline(settings.commandTimeoutMs, clients, () =>
-        recorded(
-          {
-            app: MAX_APP,
-            command,
-            profile: settings.profile,
-            record: settings.record,
-            keepFailed: settings.keepFailedRuns,
-            trace: settings.trace,
-            format,
-            streams,
-            keepDays: settings.keepRunsForDays,
-          },
-          body,
+      permissionScope(() =>
+        withDeadline(settings.commandTimeoutMs, clients, () =>
+          recorded(
+            {
+              app: MAX_APP,
+              command,
+              profile: settings.profile,
+              record: settings.record,
+              keepFailed: settings.keepFailedRuns,
+              trace: settings.trace,
+              format,
+              streams,
+              keepDays: settings.keepRunsForDays,
+            },
+            body,
+          ),
         ),
       ),
   }

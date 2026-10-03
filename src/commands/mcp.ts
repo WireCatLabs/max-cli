@@ -6,6 +6,8 @@ import { ownScript } from "../install.js"
 import { forCommand } from "./context.js"
 
 interface Flags {
+  yes?: boolean
+  allowDangerous?: boolean
   allowSend?: boolean
   confirmSend?: boolean
   allowMarkRead?: boolean
@@ -15,29 +17,17 @@ interface Flags {
 
 const withFlags = (command: Command): Command =>
   command
-    .option("--allow-send", "offer the send tool; without it the server can only read")
+    .option("--allow-dangerous", "skip confirmation for messages.delete at level ask")
+    .option("--allow-send", "deprecated: use permissions.messages.send in config; does not grant access")
     .option(
       "--confirm-send",
       "show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first",
     )
-    .option("--allow-mark-read", "offer the tool that marks a chat read; the other person sees it")
-    .option("--allow-delete", "offer the tool that deletes messages for you only; it cannot be undone")
-    .option(
-      "--allow-moderate",
-      "let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it",
-    )
+    .option("--allow-mark-read", "deprecated: use permissions.chats.mark-read in config; does not grant access")
+    .option("--allow-delete", "deprecated: use permissions.messages.delete in config; does not grant access")
+    .option("--allow-moderate", "deprecated: use permissions.chats.moderate and group rules; does not grant access")
 
-const checked = (flags: Flags, mcpTools: readonly string[]): Flags => {
-  const writes =
-    flags.allowSend || flags.allowMarkRead || flags.allowDelete || flags.allowModerate || mcpTools.length > 0
-  if (flags.confirmSend && !writes) {
-    throw new CliError(
-      "validation_error",
-      "`--confirm-send` confirms writes, and without `--allow-send`, `--allow-mark-read`, `--allow-delete`, `--allow-moderate` or `mcpTools` in the settings there are none",
-    )
-  }
-  return flags
-}
+const checked = (flags: Flags, _mcpTools: readonly string[]): Flags => flags
 
 export const mcpCommand = (): Command => {
   const command = withFlags(
@@ -50,10 +40,15 @@ export const mcpCommand = (): Command => {
       this.opts<Flags>(),
       context.settings.mcpTools,
     )
+    for (const flag of ["allowSend", "allowMarkRead", "allowDelete", "allowModerate"] as const)
+      if (this.opts<Flags>()[flag])
+        context.renderer.note(`${flag} is deprecated and does not grant access — use permissions in config`)
     // Loaded here, not at the top: every other command would otherwise pay for the SDK and zod.
     const { serveOverStdio } = await import("../mcp/server.js")
     await serveOverStdio(context, {
       allowSend: allowSend === true,
+      yes: this.optsWithGlobals<Flags>().yes === true,
+      allowDangerous: this.optsWithGlobals<Flags>().allowDangerous === true,
       confirmSend: confirmSend === true,
       allowMarkRead: allowMarkRead === true,
       allowDelete: allowDelete === true,
@@ -151,6 +146,8 @@ export const mcpCommand = (): Command => {
 const FLAG_ARGS: [keyof Flags, string][] = [
   ["allowSend", "--allow-send"],
   ["confirmSend", "--confirm-send"],
+  ["yes", "--yes"],
+  ["allowDangerous", "--allow-dangerous"],
   ["allowMarkRead", "--allow-mark-read"],
   ["allowDelete", "--allow-delete"],
   ["allowModerate", "--allow-moderate"],

@@ -1,7 +1,10 @@
 import { captureStreams } from "@leemour/cli-core"
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
+import { serveOverStdio } from "../mcp/server.js"
 import { run } from "../program.js"
 import { serverEntry } from "./mcp.js"
+
+vi.mock("../mcp/server.js", () => ({ serveOverStdio: vi.fn(async () => {}) }))
 
 const SCRIPT = "C:\\Users\\x\\AppData\\Roaming\\npm\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js"
 const entry = (over: Partial<Parameters<typeof serverEntry>[0]> = {}) =>
@@ -58,17 +61,25 @@ describe("the config commands, through the CLI", () => {
   }
 
   it("`mcp config` carries every write flag into the server's arguments", async () => {
-    const flags = ["--allow-send", "--confirm-send", "--allow-mark-read", "--allow-delete", "--allow-moderate"]
+    const flags = [
+      "--allow-send",
+      "--confirm-send",
+      "--yes",
+      "--allow-dangerous",
+      "--allow-mark-read",
+      "--allow-delete",
+      "--allow-moderate",
+    ]
     const { code, json } = await cli(["work", "mcp", "config", ...flags, "--json"])
     expect(code).toBe(0)
-    expect(json.mcpServers["max-work"].args.slice(-6)).toEqual(["mcp", ...flags])
+    expect(json.mcpServers["max-work"].args.slice(-8)).toEqual(["mcp", ...flags])
   })
 
-  it("`mcp config --confirm-send` needs something to confirm: a write flag or mcpTools", async () => {
+  it("`mcp config --confirm-send` works with permission-based default writes", async () => {
     const refused = captureStreams()
     expect(
       await run(["mcp-confirm", "mcp", "config", "--confirm-send", "--json"], { streams: refused, tty: false }),
-    ).toBe(2)
+    ).toBe(0)
 
     await run(["mcp-confirm", "config", "set", "mcpTools", "contacts"], { streams: captureStreams(), tty: false })
     const { code, json } = await cli(["mcp-confirm", "mcp", "config", "--confirm-send", "--json"])
@@ -99,4 +110,30 @@ describe("the config commands, through the CLI", () => {
     expect(listed.code).toBe(0)
     expect(listed.json.items).toContainEqual(expect.objectContaining({ id: "e5-small", default: true }))
   })
+})
+
+it("starts MCP with explicit confirmation flags and warns about retired grants on stderr", async () => {
+  const streams = captureStreams()
+  vi.mocked(serveOverStdio).mockClear()
+  const code = await run(
+    [
+      "work",
+      "mcp",
+      "--allow-send",
+      "--allow-delete",
+      "--allow-mark-read",
+      "--allow-moderate",
+      "--allow-dangerous",
+      "--yes",
+      "--confirm-send",
+    ],
+    { streams, tty: false },
+  )
+  expect(code).toBe(0)
+  expect(streams.stdout).toEqual([])
+  expect(streams.stderr.join("")).toContain("deprecated and does not grant access")
+  expect(serveOverStdio).toHaveBeenCalledExactlyOnceWith(
+    expect.objectContaining({ settings: expect.objectContaining({ profile: "work" }) }),
+    expect.objectContaining({ yes: true, allowDangerous: true, confirmSend: true }),
+  )
 })

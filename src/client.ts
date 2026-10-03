@@ -119,6 +119,7 @@ export interface MaxClientOptions {
    * Required, so a client without a guard is a choice somebody wrote and never one they forgot.
    */
   sends: SendGuard | "caller"
+  reads?: (key: string) => void
   /** The wait between retries; a test passes one that returns at once. */
   sleep?: SleepLike
 }
@@ -167,6 +168,7 @@ export class MaxClient {
     events,
     sleep,
     sends,
+    reads,
     fullLogin = false,
     resume,
   }: MaxClientOptions) {
@@ -180,6 +182,47 @@ export class MaxClient {
     this.#events = events ?? (() => {})
     this.#sleep = sleep ?? realSleep
     this.#sends = sends === "caller" ? undefined : sends
+    if (reads) {
+      const aliases: Record<string, string> = {
+        "account.me": "account.show",
+        "account.sessions": "account.sessions.list",
+        "account.endOtherSessions": "account.sessions.end",
+        "chats.markRead": "chats.mark-read",
+        "chats.adminIds": "chats.admins.list",
+        "chats.since": "messages.list",
+        "messages.around": "messages.context",
+        "messages.react": "reactions.add",
+        "messages.unreact": "reactions.remove",
+        "contacts.sync": "contacts.list",
+      }
+      const gated = <T extends object>(resource: string, methods: T): T =>
+        new Proxy(methods, {
+          get: (target, key, receiver) => {
+            const value: unknown = Reflect.get(target, key, receiver)
+            const path = `${resource}.${String(key)}`
+            if (typeof value === "object" && value !== null) return gated(path, value)
+            return typeof value === "function"
+              ? (...args: unknown[]) => {
+                  if (
+                    path !== "messages.moment" &&
+                    !(path === "chats.resolve" && typeof args[0] === "string" && isId(args[0]))
+                  ) {
+                    const actual =
+                      path === "messages.pin" && args[1] === null ? "messages.unpin" : (aliases[path] ?? path)
+                    reads(actual)
+                  }
+                  return Reflect.apply(value, target, args)
+                }
+              : value
+          },
+        })
+      this.account = gated("account", this.account)
+      this.chats = gated("chats", this.chats)
+      this.contacts = gated("contacts", this.contacts)
+      this.messages = gated("messages", this.messages)
+      this.polls = gated("polls", this.polls)
+      this.folders = gated("chats.folders", this.folders)
+    }
   }
 
   readonly account = {
@@ -466,7 +509,7 @@ export class MaxClient {
     markRead: async (chatId: Id, messageId?: Id): Promise<ReadMark> => {
       if (this.#offline)
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot mark a chat read")
-      this.#guard({ chatId, kind: "read" }, messageId)
+      await this.#guard({ chatId, kind: "read" }, messageId)
 
       try {
         await this.#connectOnce()
@@ -959,7 +1002,7 @@ export class MaxClient {
       const sendId = String(cid)
       // Before connecting: a refused send never opens a socket when the chat was given as an id.
       try {
-        this.#sends?.check({
+        await this.#checked({
           chatId,
           kind: "message",
           sendId,
@@ -1001,7 +1044,7 @@ export class MaxClient {
 
     /** Takes your reaction off. Measured 2026-09-24: a second call is answered the same, not refused. */
     unreact: (chatId: Id, messageId: Id): Promise<Reactions> =>
-      this.#reaction(chatId, messageId, () => this.#wire.messages.unreact({ chatId, messageId })),
+      this.#reaction(chatId, messageId, () => this.#wire.messages.unreact({ chatId, messageId }), "reactions.remove"),
 
     /**
      * Changes the text of one of the owner's own messages. The person may have read it already.
@@ -1019,7 +1062,7 @@ export class MaxClient {
       { markdown = false, markup }: { markdown?: boolean; markup?: Markup[] } = {},
     ): Promise<Message> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot edit")
-      this.#guard({ chatId, kind: "edit" }, messageId)
+      await this.#guard({ chatId, kind: "edit" }, messageId)
 
       try {
         await this.#connectOnce()
@@ -1072,7 +1115,7 @@ export class MaxClient {
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot forward")
       const cid = options.cid ?? this.#nextCid()
       const sendId = String(cid)
-      this.#guard({ chatId: toChatId, kind: "forward", sendId })
+      await this.#guard({ chatId: toChatId, kind: "forward", sendId })
 
       try {
         const sent = await this.#deliver(toChatId, "", cid, {
@@ -1111,7 +1154,7 @@ export class MaxClient {
         )
       }
       const count = messageIds.length
-      this.#guard({ chatId, kind: "delete", count })
+      await this.#guard({ chatId, kind: "delete", count, forEveryone })
 
       try {
         await this.#connectOnce()
@@ -1141,7 +1184,10 @@ export class MaxClient {
      */
     pin: async (chatId: Id, messageId: Id | null, { notify = false } = {}): Promise<Pin> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot pin")
-      this.#guard({ chatId, kind: "pin", notify }, messageId ?? undefined)
+      await this.#guard(
+        { chatId, kind: "pin", notify, key: messageId === null ? "messages.unpin" : "messages.pin" },
+        messageId ?? undefined,
+      )
 
       try {
         await this.#connectOnce()
@@ -1180,7 +1226,7 @@ export class MaxClient {
 
     vote: async (chatId: Id, messageId: Id, answerIds: Id[]): Promise<PollMessage> => {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot vote")
-      this.#guard({ chatId, kind: "reaction" }, messageId)
+      await this.#guard({ chatId, kind: "reaction", key: "polls.vote" }, messageId)
 
       try {
         await this.#connectOnce()
@@ -1245,7 +1291,7 @@ export class MaxClient {
     close: async (chatId: Id, messageId: Id): Promise<PollMessage> => {
       if (this.#offline)
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot close a poll")
-      this.#guard({ chatId, kind: "edit" }, messageId)
+      await this.#guard({ chatId, kind: "edit", key: "polls.close" }, messageId)
 
       try {
         await this.#connectOnce()
@@ -1290,7 +1336,7 @@ export class MaxClient {
       const cid = options.cid ?? this.#nextCid()
       const sendId = String(cid)
       try {
-        this.#sends?.check({ chatId, kind: "message", sendId })
+        await this.#checked({ chatId, kind: "message", sendId, key: "polls.create" })
       } catch (error) {
         this.#sends?.record({ chatId, kind: "message", outcome: "refused", sendId, errorCode: asCliError(error).code })
         throw error
@@ -1402,11 +1448,11 @@ export class MaxClient {
    * message. Not retried: a reaction lost in transit costs a second command, and nothing about it is
    * measured to make a blind repeat safe.
    */
-  async #reaction(chatId: Id, messageId: Id, call: () => Promise<Payload>): Promise<Reactions> {
+  async #reaction(chatId: Id, messageId: Id, call: () => Promise<Payload>, key = "reactions.add"): Promise<Reactions> {
     if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot react")
 
     try {
-      this.#sends?.check({ chatId, kind: "reaction" })
+      await this.#checked({ chatId, kind: "reaction", key })
     } catch (error) {
       this.#sends?.record({ chatId, kind: "reaction", outcome: "refused", errorCode: asCliError(error).code })
       throw error
@@ -1423,11 +1469,16 @@ export class MaxClient {
     }
   }
 
+  async #checked(request: GuardRequest): Promise<void> {
+    await this.#sends?.ask?.(request)
+    this.#sends?.check(request)
+  }
+
   /** Asks the send guard, and writes a refusal to the send journal before passing it on. */
-  #guard(request: GuardRequest & { chatId: Id }, messageId?: Id): void {
+  async #guard(request: GuardRequest & { chatId: Id }, messageId?: Id): Promise<void> {
     const { chatId, kind, notify } = request
     try {
-      this.#sends?.check(request)
+      await this.#checked(request)
     } catch (error) {
       this.#sends?.record({
         chatId,
@@ -2282,7 +2333,7 @@ export class MaxClient {
       throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot change a chat")
 
     try {
-      this.#sends?.check({ chatId, kind: "chat", action, ...(personIds ? { personIds } : {}) })
+      await this.#checked({ chatId, kind: "chat", action, ...(personIds ? { personIds } : {}) })
     } catch (error) {
       this.#sends?.record({ chatId, kind: "chat", action, outcome: "refused", errorCode: asCliError(error).code })
       throw error
@@ -2448,7 +2499,7 @@ export class MaxClient {
       throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot change the account")
 
     try {
-      this.#sends?.check({ chatId: null, kind: "account", action })
+      await this.#checked({ chatId: null, kind: "account", action })
     } catch (error) {
       this.#sends?.record({
         chatId: null,

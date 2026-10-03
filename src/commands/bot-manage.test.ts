@@ -137,13 +137,13 @@ describe("max bot messages send to a positive number", () => {
     const readonly = await max(["hintbot", "bot", "messages", "edit", "-100", "mid.9", "synthetic", "--json"])
     expect(readonly.code).toBe(5)
     const firstHint = JSON.parse(readonly.stderr).error.message.split("to allow it: ")[1] as string
-    expect(firstHint).toBe("max hintbot config set --bot readOnly false")
+    expect(firstHint).toBe("max hintbot config set --bot permissions.bot.messages.edit allow")
     expect((await max(firstHint.split(" ").slice(1))).code).toBe(0)
-    await max(["hintbot", "config", "set", "--bot", "allow", "send,pin"])
+    await max(["hintbot", "config", "set", "--bot", "permissions.bot.messages.edit", "readonly"])
     const denied = await max(["hintbot", "bot", "messages", "edit", "-100", "mid.9", "synthetic", "--json"])
     expect(denied.code).toBe(5)
     const hint = JSON.parse(denied.stderr).error.message.split("to allow it: ")[1] as string
-    expect(hint).toBe("max hintbot config set --bot allow send,pin,edit")
+    expect(hint).toBe("max hintbot config set --bot permissions.bot.messages.edit allow")
     expect((await max(hint.split(" ").slice(1))).code).toBe(0)
     expect(writes()).toEqual([])
   })
@@ -512,7 +512,7 @@ describe("max bot webhooks", () => {
   })
 
   it("refuses a profile that may not set one before asking for the secret", async () => {
-    await max(["ro", "config", "set", "readOnly", "true"])
+    await max(["ro", "config", "set", "--bot", "permissions.bot", "readonly"])
     new BotTokenStore({ profile: "ro", keyring }).write(TOKEN)
     let asked = false
     const refused = await max(
@@ -525,4 +525,15 @@ describe("max bot webhooks", () => {
     expect(refused.code).toBe(5)
     expect(asked).toBe(false)
   })
+})
+
+it("requires explicit confirmation for a comment deletion and keeps its raw HTTP contract", async () => {
+  const refused = await max(["bot", "comments", "delete", "mid.9", "c1", "--json"])
+  expect(refused.code).toBe(7)
+  expect(writes()).toEqual([])
+  const accepted = await max(["bot", "comments", "delete", "mid.9", "c1", "--allow-dangerous", "--json"])
+  expect(accepted.code, accepted.stderr).toBe(0)
+  expect(writes()).toEqual([
+    expect.objectContaining({ method: "DELETE", url: "/messages/mid.9/comments?comment_id=c1" }),
+  ])
 })

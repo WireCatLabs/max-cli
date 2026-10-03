@@ -147,10 +147,8 @@ describe("a profile with an allow list", () => {
 
     expect(refused.code).toBe(5)
     expect(max.sent).toEqual([])
-    expect(JSON.parse(refused.stderr).error.message).toBe(
-      "profile p-cmd does not allow send (allow: reaction — from the config file: profiles.p-cmd); " +
-        "to allow it: max p-cmd config set allow reaction,send",
-    )
+    expect(JSON.parse(refused.stderr).error).toMatchObject({ permission: "messages.send" })
+    expect(JSON.parse(refused.stderr).error.message).toContain("config set permissions.messages.send allow")
     expect(new SendJournal(sendsPathFor("p-cmd")).entries()).toMatchObject([{ chatId: "111", outcome: "refused" }])
 
     expect((await runWith(["p-cmd", "reactions", "add", "111", "116762160362694583", "👍"], environment)).code).toBe(0)
@@ -160,7 +158,7 @@ describe("a profile with an allow list", () => {
     await runWith(["config", "set", "--defaults", "allow", "send"])
     const guard = profileGuard(resolveSettings({ profile: "p-def" }), () => {})
     expect(() => guard.check({ chatId: null, kind: "account", action: "sessions-end" })).toThrow(
-      "to allow it: max config set --defaults allow send,sessions",
+      "permissions.account.sessions.end allow",
     )
     await runWith(["config", "unset", "--defaults", "allow"])
   })

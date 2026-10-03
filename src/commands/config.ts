@@ -1,10 +1,22 @@
-import { CliError, pathsAreOverridden } from "@leemour/cli-core"
+import { existsSync, readdirSync, readFileSync } from "node:fs"
+import { join } from "node:path"
+import {
+  CliError,
+  loadConfigFile,
+  pathsAreOverridden,
+  resolvePaths,
+  saveConfigFile,
+  writeSecurely,
+} from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
+import { migratePermissionConfig } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
+import * as v from "valibot"
 import {
   ALL_SETTINGS,
   BOT_ONLY_SETTINGS,
   changeSetting,
+  configSchema,
   type GlobalFlags,
   PERSONAL_ONLY_SETTINGS,
   type ProfileKind,
@@ -13,6 +25,7 @@ import {
   scopePath,
 } from "../config.js"
 import { knownProfiles } from "../diagnose.js"
+import { ModerationRules } from "../moderation/rules.js"
 import { forCommand } from "./context.js"
 
 const SHOWN: SourcedSetting[] = [
@@ -27,7 +40,7 @@ const SHOWN: SourcedSetting[] = [
   "readOnly",
   "allow",
   "sendsPerHour",
-  "mcpTools",
+  "permissions",
   "readOtherBots",
   "updateCheck",
   "skillHint",
@@ -57,6 +70,8 @@ export const configCommand = (): Command => {
         profile: settings.profile,
         profileFrom: settings.sources.profile,
         kind: settings.kind,
+        permissions: settings.permissions,
+        permissionSources: settings.permissionSources,
         profiles: knownProfiles({ configured: settings.configuredProfiles }),
         configFile: settings.configPath,
         configFound: settings.configFound,
@@ -80,6 +95,51 @@ export const configCommand = (): Command => {
         )
       }
     })
+
+  command.addCommand(
+    annotate(new Command("migrate"), { mutates: true, local: true })
+      .description("replace legacy access settings with permissions, preserving effective levels")
+      .option("--dry-run", "show the migration without writing the file")
+      .action(function (this: Command) {
+        const { settings, renderer } = forCommand(this)
+        const dryRun = this.opts<{ dryRun?: boolean }>().dryRun === true
+        if (!dryRun && process.env.MAX_PROFILE_LOCK)
+          throw new CliError("permission_error", "config migrate changes every profile — run outside the profile lock")
+        const migrated = migratePermissionConfig(
+          loadConfigFile(settings.configPath, configSchema, () => ({ profiles: {} })),
+        )
+        const checked = v.safeParse(configSchema, migrated.config)
+        if (!checked.success)
+          throw new CliError("configuration_error", "the migrated config is invalid — nothing was written")
+        const directory = join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")
+        const rules = (existsSync(directory) ? readdirSync(directory) : [])
+          .filter((name) => name.endsWith(".moderation.json"))
+          .map((name) => {
+            const path = join(directory, name)
+            const raw = JSON.parse(readFileSync(path, "utf8")) as {
+              groups: Record<string, unknown>
+              checkedUntil?: Record<string, string>
+            }
+            const reader = new ModerationRules(path)
+            reader.read("")
+            const groups = Object.fromEntries(Object.keys(raw.groups ?? {}).map((id) => [id, reader.read(id)]))
+            const next = { ...raw, groups }
+            return { path, next, changed: JSON.stringify(next) !== JSON.stringify(raw) }
+          })
+          .filter((rule) => rule.changed)
+        if (!dryRun) {
+          if (migrated.changed) saveConfigFile(settings.configPath, checked.output)
+          for (const rule of rules) writeSecurely(rule.path, `${JSON.stringify(rule.next, null, 2)}\n`, 0o600)
+        }
+        renderer.result({
+          configFile: settings.configPath,
+          changed: migrated.changed || rules.length > 0,
+          rulesFiles: rules.map((rule) => rule.path),
+          dryRun,
+          changes: migrated.changes,
+        })
+      }),
+  )
 
   for (const action of ["set", "unset"] as const) {
     const sub = annotate(command.command(action), { mutates: true, local: true })

@@ -170,7 +170,11 @@ message id** and **one** copy, also across two connections and logins — the ca
   **Correction 2026-10-03:** the operation-id wrapper retains one prepared request object
   across `ask` and `check`, because the shared guard binds confirmation to that object.
   The client-side server wrapper forwards `ask` too; a matching operation id on a different
-  request grants no confirmation. This prepares P7; MAX's configuration still uses `readOnly`/`allow`.
+  request grants no confirmation. MAX now uses canonical permission levels; legacy configuration is translated at read time
+  until `config migrate` writes the canonical file. CLI, native reads, MCP tools and resources,
+  and raw server requests enforce the same resource policy. Confirmed writes carry explicit
+  permission keys to the server, which rechecks the current configuration; neither confirmation
+  nor moderation consent bypasses a denied or read-only action.
 - **`max serve` runs the same guard on every write it forwards, and journals it** (`NEED-269`):
   anything of the owner's can write to its socket, not only a command that checked first. Every
   request is first checked against the operation's strict schema, as `buildRequest` checks it in a

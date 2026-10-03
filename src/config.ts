@@ -1,7 +1,9 @@
 import { existsSync } from "node:fs"
 import { CliError, configFilePath, loadConfigFile, resolvePaths, saveConfigFile } from "@leemour/cli-core"
-import { PERMISSIONS, type Permission } from "@leemour/cli-messaging/sends"
+import { settingsFor } from "@leemour/cli-messaging/cli"
+import { fromOldSettings, type Level, PERMISSIONS, type Permission } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
+import { MAX_APP } from "./app.js"
 import { DEFAULT_PROFILE, usableProfileName } from "./profile.js"
 import { DEFAULT_MODEL, MODELS } from "./transcribe/models.js"
 
@@ -58,6 +60,7 @@ const sharedEntries = {
   keepRunsForDays: v.optional(count),
   readOnly: v.optional(flag),
   allow: v.optional(permissionList),
+  permissions: settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries.permissions,
   sendsPerHour: v.optional(count),
 }
 
@@ -201,6 +204,8 @@ export interface Settings {
   /** `undefined` is every action, as before `CLI-37`; a list is only those. */
   allow: readonly Permission[] | undefined
   sendsPerHour: number
+  permissions: Record<string, Level>
+  permissionSources: Record<string, string>
   mcpTools: readonly McpToolGroup[]
   /** For a bot command: which other bots' copies it may read when asked (`--all-bots`, `--bots`). */
   readOtherBots: boolean | readonly string[]
@@ -243,6 +248,7 @@ export type SourcedSetting =
   | "allow"
   | "sendsPerHour"
   | "mcpTools"
+  | "permissions"
   | "readOtherBots"
   | "updateCheck"
   | "skillHint"
@@ -340,6 +346,16 @@ export const resolveSettings = (
         )
       : first(fromFile("sendsPerHour"), DEFAULT_SENDS_PER_HOUR)
 
+  const permissions = fromOldSettings(readOnly.value, allow.value, { bot: kind === "bot" })
+  const permissionSources: Record<string, string> = Object.fromEntries(
+    Object.keys(permissions).map((key) => [key, readOnly.value ? readOnly.from : allow.from]),
+  )
+  for (const [from, layer] of [...layers].reverse()) {
+    for (const [key, level] of Object.entries(layer?.permissions ?? {})) {
+      permissions[key] = level
+      permissionSources[key] = from
+    }
+  }
   const mcpTools = first<readonly McpToolGroup[]>(fromFile("mcpTools"), [])
   const readOtherBots = first<boolean | readonly string[]>(
     kind === "bot"
@@ -392,6 +408,8 @@ export const resolveSettings = (
     readOnly: readOnly.value,
     allow: allow.value,
     sendsPerHour: sendsPerHour.value,
+    permissions,
+    permissionSources,
     mcpTools: mcpTools.value,
     readOtherBots: readOtherBots.value,
     updateCheck: updateCheck.value,
@@ -415,6 +433,7 @@ export const resolveSettings = (
       allow: allow.from,
       sendsPerHour: sendsPerHour.from,
       mcpTools: mcpTools.from,
+      permissions: "default",
       readOtherBots: readOtherBots.from,
       updateCheck: updateCheck.from,
       skillHint: skillHint.from,
@@ -585,10 +604,13 @@ export const changeSetting = (
   path: string,
   { profile, kind, setting, value }: SettingScope & { setting: string; value: string | undefined },
 ): unknown => {
-  if (!ALL_SETTINGS.includes(setting)) {
+  const permission = setting.startsWith("permissions.") ? setting.slice("permissions.".length) : undefined
+  if (!ALL_SETTINGS.includes(setting) && permission === undefined) {
     throw new CliError("validation_error", `no setting called "${setting}" — one of: ${ALL_SETTINGS.join(", ")}`)
   }
   const config = readConfig(path)
+  if (["readOnly", "allow", "mcpTools"].includes(setting) && hasPermissionConfig(config))
+    throw new CliError("validation_error", `${setting} is a legacy setting — use permissions instead`)
   if (setting === "defaultProfile") {
     if (kind !== undefined)
       throw new CliError("validation_error", "defaultProfile is one for the whole file — drop --personal or --bot")
@@ -614,7 +636,13 @@ export const changeSetting = (
   const section = kind === undefined ? config : { ...config[kind] }
   const table = (profile === undefined ? section.defaults : section.profiles?.[profile]) as Record<string, unknown>
   const scope = { ...table }
-  if (value === undefined) delete scope[setting]
+  if (permission !== undefined) {
+    const levels = { ...(scope.permissions as Record<string, Level> | undefined) }
+    if (value === undefined) delete levels[permission]
+    else levels[permission] = value.trim() as Level
+    if (Object.keys(levels).length) scope.permissions = levels
+    else delete scope.permissions
+  } else if (value === undefined) delete scope[setting]
   else if (setting === "readOtherBots")
     scope[setting] = value === "true" || value === "false" ? value === "true" : parseList(value)
   else scope[setting] = setting === "allow" || setting === "mcpTools" ? parseList(value) : parseValue(value)
@@ -648,7 +676,9 @@ export const changeSetting = (
     )
   }
   saveConfigFile(path, checked.output)
-  return scope[setting] ?? null
+  return permission === undefined
+    ? (scope[setting] ?? null)
+    : ((scope.permissions as Record<string, Level> | undefined)?.[permission] ?? null)
 }
 
 const changeDefaultProfile = (path: string, config: Config, value: string | undefined): string | null => {
@@ -695,3 +725,13 @@ const given = (value: string | undefined): string | undefined => {
   const trimmed = value?.trim()
   return trimmed === undefined || trimmed === "" ? undefined : trimmed
 }
+
+export const hasPermissionConfig = (config: Config): boolean =>
+  [
+    config.defaults,
+    ...Object.values(config.profiles),
+    config.personal?.defaults,
+    ...Object.values(config.personal?.profiles ?? {}),
+    config.bot?.defaults,
+    ...Object.values(config.bot?.profiles ?? {}),
+  ].some((scope) => scope?.permissions !== undefined)

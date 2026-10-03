@@ -38,23 +38,25 @@ export const botCommand = (): Command => {
   addMembersCommands(members)
   for (const more of [commentsCommand(), uploadsCommand()]) command.addCommand(more)
 
-  command.addCommand(
-    generatedApiCommand({
-      operations: botOperations,
-      description: "every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md",
-      checkParameter,
-      checkBody,
-      before: (action, operation) => {
-        const context = botContext(action.parent ?? action)
-        if (operation.effect !== "read") assertAllowed(operation, context.settings)
-      },
-      execute: async (action, operation, input) => {
-        const context = botContext(action.parent ?? action)
-        const call = { path: input.path, query: input.query, ...(input.body === undefined ? {} : { body: input.body }) }
-        context.renderer.result(plainJson(await guardedCall(context, operation, call)))
-      },
-    }),
-  )
+  const api = generatedApiCommand({
+    operations: botOperations,
+    description: "every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md",
+    checkParameter,
+    checkBody,
+    before: (action, operation) => {
+      const context = botContext(action)
+      assertAllowed(operation, context.settings)
+    },
+    execute: async (action, operation, input) => {
+      const context = botContext(action)
+      const call = { path: input.path, query: input.query, ...(input.body === undefined ? {} : { body: input.body }) }
+      context.renderer.result(plainJson(await guardedCall(context, operation, call)))
+    },
+  })
+  for (const child of api.commands)
+    if (["delete-message", "delete-comment"].includes(child.name()))
+      child.option("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask")
+  command.addCommand(api)
 
   return command
 }

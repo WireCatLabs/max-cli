@@ -189,18 +189,14 @@ describe("act", () => {
   it("follows each consent level", async () => {
     const { fake, calls } = client()
 
-    expect(outcomes(await act(fake, [deletion("1")], options("forbid", { allowDangerous: true })))).toEqual([
-      "forbidden",
-    ])
-    expect(outcomes(await act(fake, [deletion("2")], options("flag")))).toEqual(["planned"])
-    expect(outcomes(await act(fake, [deletion("3")], options("flag", { allowDangerous: true })))).toEqual(["done"])
-    expect(outcomes(await act(fake, [deletion("4")], options("confirm")))).toEqual(["planned"])
-    expect(outcomes(await act(fake, [deletion("5")], options("confirm", { confirm: async () => false })))).toEqual([
+    expect(outcomes(await act(fake, [deletion("1")], options("deny", { allowDangerous: true })))).toEqual(["forbidden"])
+    expect(outcomes(await act(fake, [deletion("2")], options("ask")))).toEqual(["planned"])
+    expect(outcomes(await act(fake, [deletion("3")], options("ask", { allowDangerous: true })))).toEqual(["done"])
+    expect(outcomes(await act(fake, [deletion("4")], options("ask")))).toEqual(["planned"])
+    expect(outcomes(await act(fake, [deletion("5")], options("ask", { confirm: async () => false })))).toEqual([
       "declined",
     ])
-    expect(outcomes(await act(fake, [deletion("6")], options("confirm", { confirm: async () => true })))).toEqual([
-      "done",
-    ])
+    expect(outcomes(await act(fake, [deletion("6")], options("ask", { confirm: async () => true })))).toEqual(["done"])
     expect(outcomes(await act(fake, [deletion("7")], options("allow")))).toEqual(["done"])
     expect(outcomes(await act(fake, [deletion("8")], options("allow", { dryRun: true })))).toEqual(["planned"])
     expect(calls).toEqual(["delete 3", "delete 6", "delete 7"])

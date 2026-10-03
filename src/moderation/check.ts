@@ -168,25 +168,25 @@ export const act = async (moderator: Moderator, findings: Finding[], options: Ac
       ...(outcome === "done" ? {} : { command }),
     })
 
-    if (level === "forbid") {
-      rows.push(row("forbidden", `consent.${CONSENT[finding.action]} is forbid`))
+    if (level === "deny") {
+      rows.push(row("forbidden", `consent.${CONSENT[finding.action]} is deny`))
       continue
     }
     if (dryRun) {
       rows.push(row("planned", "--dry-run"))
       continue
     }
-    if (level === "flag" && !allowDangerous) {
-      rows.push(row("planned", `consent.${CONSENT[finding.action]} is flag — run with --allow-dangerous`))
+    if (level === "readonly") {
+      rows.push(row("reported", `consent.${CONSENT[finding.action]} is readonly`))
       continue
     }
     if (stopped || acted >= maxActions) {
       rows.push(row("skipped", stopped ?? `over the limit of ${maxActions} actions per check`))
       continue
     }
-    if (level === "confirm") {
+    if (level === "ask" && !allowDangerous) {
       if (!confirm) {
-        rows.push(row("planned", `consent.${CONSENT[finding.action]} is confirm, and nobody is there to ask`))
+        rows.push(row("planned", `consent.${CONSENT[finding.action]} is ask, and nobody is there to ask`))
         continue
       }
       if (!(await confirm(finding))) {
@@ -228,7 +228,7 @@ export const describe = (finding: Finding): string =>
 
 /** Whether acting on it waits for the owner's yes. */
 export const needsConfirm = (rules: GroupRules, finding: Finding): boolean =>
-  (finding.action === "delete" || finding.action === "remove") && rules.consent[finding.action] === "confirm"
+  (finding.action === "delete" || finding.action === "remove") && rules.consent[finding.action] === "ask"
 
 const commandFor = (chatId: Id, finding: Finding): string => {
   switch (finding.action) {

@@ -122,17 +122,17 @@ describe("the MCP server", () => {
     const { isError, body } = await call(client, "max_status")
 
     expect(isError).toBe(false)
-    expect(body).toMatchObject({ kind: "personal", token: "keyring", loggedInHere: false, allow: "all" })
+    expect(body).toMatchObject({ kind: "personal", token: "keyring", loggedInHere: false, permissions: {} })
     expect(body.writes).toContain("max_messages_send")
     expect(logins()).toBe(0)
   })
 
-  it("offers only reading unless it was started with --allow-send", async () => {
+  it("offers writes by default without retired flags", async () => {
     const { client } = await connect()
     const { tools } = await client.listTools()
 
-    expect(tools.map(({ name }) => name)).not.toContain("max_messages_send")
-    expect(tools.every(({ annotations }) => annotations?.readOnlyHint === true)).toBe(true)
+    expect(tools.map(({ name }) => name)).toContain("max_messages_send")
+    expect(tools.some(({ annotations }) => annotations?.readOnlyHint === false)).toBe(true)
   })
 
   it("marks every writing tool as one a person approves every time", async () => {
@@ -140,21 +140,20 @@ describe("the MCP server", () => {
     const { tools } = await client.listTools()
     const writing = tools.filter(({ annotations }) => annotations?.readOnlyHint === false)
 
-    expect(writing.map(({ name }) => name).sort()).toEqual([
-      "max_messages_edit",
-      "max_messages_forward",
-      "max_messages_pin",
-      "max_messages_send",
-      "max_messages_unpin",
-      "max_polls_create",
-      "max_polls_vote",
-      "max_reactions_add",
-      "max_reactions_remove",
-    ])
-    for (const { annotations, _meta } of writing) {
-      expect(annotations).toMatchObject({ destructiveHint: true })
-      expect(_meta).toMatchObject({ "anthropic/requiresUserInteraction": true })
-    }
+    expect(writing.map(({ name }) => name)).toEqual(
+      expect.arrayContaining([
+        "max_messages_send",
+        "max_messages_delete",
+        "max_contacts_block",
+        "max_account_update",
+        "max_chats_create",
+      ]),
+    )
+    for (const { annotations } of writing) expect(annotations).toMatchObject({ destructiveHint: true })
+    expect(writing.find(({ name }) => name === "max_messages_delete")?._meta).toMatchObject({
+      "anthropic/requiresUserInteraction": true,
+    })
+    expect(writing.find(({ name }) => name === "max_messages_send")?._meta).toBeUndefined()
   })
 
   it("answers listings in the CLI's envelope, logs in once for several calls, and marks nothing read", async () => {
@@ -332,7 +331,7 @@ describe("the MCP server", () => {
     const id = "116762160362694888"
     const original = { id: BigInt(id), time: 1789776000000, sender: 10000001, text: "original archived", attaches: [] }
     const { client } = await connect(
-      { allowSend: true, allowDelete: true },
+      { allowSend: true, allowDelete: true, allowDangerous: true },
       {
         answers: {
           [Opcode.CHAT_HISTORY]: { messages: [original] },
@@ -673,18 +672,16 @@ describe("the MCP server", () => {
     await run([profile, "config", "set", "readOnly", "true"], { streams: captureStreams(), tty: false })
     const { client, max } = await connect({ allowSend: true }, { profile })
 
-    const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "hello" })
-
-    expect(isError).toBe(true)
-    expect(body.error).toMatchObject({ code: "permission_error" })
+    expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_messages_send")
+    await expect(call(client, "max_messages_send", { chat: "111", text: "hello" })).rejects.toThrow("not found")
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEND)
   })
 
-  it("offers marking a chat read only with --allow-mark-read, which --allow-send does not imply", async () => {
+  it("offers marking a chat read by the profile permissions", async () => {
     const names = async (options: Partial<ServerOptions>) =>
       (await (await connect(options)).client.listTools()).tools.map(({ name }) => name)
 
-    expect(await names({ allowSend: true })).not.toContain("max_chats_mark_read")
+    expect(await names({ allowSend: true })).toContain("max_chats_mark_read")
     expect(await names({ allowMarkRead: true })).toContain("max_chats_mark_read")
   })
 
@@ -727,14 +724,14 @@ describe("the MCP server", () => {
     const configure = (profile: string, ...argv: string[]) =>
       run([profile, "config", "set", ...argv], { streams: captureStreams(), tty: false })
 
-    it("are off whatever the flags, until the configuration file names their group", async () => {
-      expect((await offered("mcp-no-groups")).filter((name) => ACCOUNT.includes(name))).toEqual([])
+    it("ignore retired mcpTools and follow the profile permissions", async () => {
+      expect((await offered("mcp-no-groups")).filter((name) => ACCOUNT.includes(name)).sort()).toEqual(
+        [...ACCOUNT].sort(),
+      )
 
       await configure("mcp-groups", "mcpTools", "contacts,polls")
       const names = await offered("mcp-groups")
-      expect(names.filter((name) => ACCOUNT.includes(name)).sort()).toEqual(
-        ACCOUNT.filter((name) => name.startsWith("max_contacts") || name === "max_polls_close").sort(),
-      )
+      expect(names.filter((name) => ACCOUNT.includes(name)).sort()).toEqual([...ACCOUNT].sort())
     })
 
     it("are still hidden when the profile's allow list leaves their action out", async () => {
@@ -776,9 +773,8 @@ describe("the MCP server", () => {
       await configure("mcp-block-ro", "mcpTools", "contacts")
       await configure("mcp-block-ro", "readOnly", "true")
       const { client, max } = await connect({}, { profile: "mcp-block-ro" })
-      const { isError, body } = await call(client, "max_contacts_block", { person: "20000002" })
-      expect(isError).toBe(true)
-      expect((body.error as { code: string }).code).toBe("permission_error")
+      expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_contacts_block")
+      await expect(call(client, "max_contacts_block", { person: "20000002" })).rejects.toThrow("not found")
       expect(max.sent.filter(({ opcode }) => opcode === Opcode.CONTACT_UPDATE)).toEqual([])
     })
 
@@ -806,12 +802,12 @@ describe("the MCP server", () => {
     expect(marks.map(({ payload }) => String(payload.messageId))).toEqual(["116762160362694583"])
   })
 
-  it("offers deleting only with --allow-delete, which --allow-send does not imply, and only for the owner", async () => {
+  it("offers deleting by permissions, with confirmation skipped explicitly, and only for the owner", async () => {
     const names = async (options: Partial<ServerOptions>) =>
       (await (await connect(options)).client.listTools()).tools.map(({ name }) => name)
-    expect(await names({ allowSend: true, allowMarkRead: true })).not.toContain("max_messages_delete")
+    expect(await names({ allowSend: true, allowMarkRead: true })).toContain("max_messages_delete")
 
-    const { client, max } = await connect({ allowDelete: true }, { answers: { [Opcode.MSG_DELETE]: {} } })
+    const { client, max } = await connect({ allowDangerous: true }, { answers: { [Opcode.MSG_DELETE]: {} } })
     const { isError } = await call(client, "max_messages_delete", {
       chat: "111",
       messages: ["116762160362694583"],
@@ -1274,7 +1270,7 @@ describe("max_chats_check", () => {
   const deletes = (max: ReturnType<typeof mockMax>) => max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)
   const rows = (body: Record<string, unknown>) => body.rows as { outcome: string }[]
 
-  it("is offered only with --allow-moderate, and plans without acting on dry_run", async () => {
+  it("is offered by permissions, and plans without acting on dry_run", async () => {
     withRules("ck-mcp-dry", "allow")
     const off = await connect({}, { profile: "ck-mcp-dry", answers: groupAnswers })
     const { client, max } = await connect({ allowModerate: true }, { profile: "ck-mcp-dry", answers: groupAnswers })
@@ -1282,14 +1278,14 @@ describe("max_chats_check", () => {
     const { tools } = await off.client.listTools()
     const { body } = await call(client, "max_chats_check", { chat: "111", dry_run: true })
 
-    expect(tools.map(({ name }) => name)).not.toContain("max_chats_check")
+    expect(tools.map(({ name }) => name)).toContain("max_chats_check")
     expect(rows(body).map((row) => row.outcome)).toEqual(["planned"])
     expect(deletes(max)).toEqual([])
   })
 
   it("with --allow-moderate, does what consent level flag asks", async () => {
-    withRules("ck-mcp-flag", "flag")
-    const { client, max } = await connect({ allowModerate: true }, { profile: "ck-mcp-flag", answers: groupAnswers })
+    withRules("ck-mcp-flag", "ask")
+    const { client, max } = await connect({ allowDangerous: true }, { profile: "ck-mcp-flag", answers: groupAnswers })
 
     const { body } = await call(client, "max_chats_check", { chat: "111" })
 
@@ -1298,7 +1294,7 @@ describe("max_chats_check", () => {
   })
 
   it("asks in one form at level confirm, and deletes only once the owner accepts", async () => {
-    withRules("ck-mcp-yes", "confirm")
+    withRules("ck-mcp-yes", "ask")
     const { client, max, forms } = await connect(
       { allowModerate: true },
       { profile: "ck-mcp-yes", answers: groupAnswers, form: () => ({ action: "accept", content: {} }) },
@@ -1312,7 +1308,7 @@ describe("max_chats_check", () => {
   })
 
   it("deletes nothing when the owner declines the form", async () => {
-    withRules("ck-mcp-no", "confirm")
+    withRules("ck-mcp-no", "ask")
     const { client, max } = await connect(
       { allowModerate: true },
       { profile: "ck-mcp-no", answers: groupAnswers, form: () => ({ action: "decline" }) },
@@ -1381,5 +1377,66 @@ describe("group reads", () => {
     expect(rules.body).toMatchObject({ saved: true, rules: { invites: "delete" } })
     expect(other.body).toMatchObject({ saved: false, rules: { invites: "report" } })
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_DELETE)
+  })
+})
+
+describe("P7 MCP policy", () => {
+  it("offers the owner's mixed message policy and deletes without any form or retired flag", async () => {
+    const profile = "p7-mcp-work"
+    expect(
+      await run([profile, "config", "set", "permissions", '{"messages":"readonly","messages.delete":"allow"}'], {
+        streams: captureStreams(),
+        tty: false,
+      }),
+    ).toBe(0)
+    const form = vi.fn(() => ({ action: "decline" as const }))
+    const { client, max } = await connect({}, { profile, answers: { [Opcode.MSG_DELETE]: {} }, form })
+    const names = (await client.listTools()).tools.map(({ name }) => name)
+    expect(names).toContain("max_messages_list")
+    expect(names).toContain("max_messages_delete")
+    for (const name of [
+      "max_messages_send",
+      "max_messages_edit",
+      "max_messages_forward",
+      "max_messages_pin",
+      "max_messages_unpin",
+    ])
+      expect(names).not.toContain(name)
+    const result = await call(client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })
+    expect(result.isError, JSON.stringify(result.body)).toBe(false)
+    expect(form).not.toHaveBeenCalled()
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
+  })
+
+  it("uses a form for a default ask, and refuses without one before deleting", async () => {
+    const noForm = await connect({}, { answers: { [Opcode.MSG_DELETE]: {} } })
+    expect(
+      (await call(noForm.client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })).isError,
+    ).toBe(true)
+    expect(noForm.max.sent.some(({ opcode }) => opcode === Opcode.MSG_DELETE)).toBe(false)
+    const accepted = await connect(
+      {},
+      { answers: { [Opcode.MSG_DELETE]: {} }, form: () => ({ action: "accept", content: {} }) },
+    )
+    expect(
+      (await call(accepted.client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })).isError,
+    ).toBe(false)
+    expect(accepted.forms).toHaveLength(1)
+    expect(accepted.max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
+  })
+
+  it("hides denied message tools and resources and refuses their direct invocation", async () => {
+    const profile = "p7-mcp-deny"
+    expect(
+      await run([profile, "config", "set", "permissions.messages", "deny"], { streams: captureStreams(), tty: false }),
+    ).toBe(0)
+    const { client, max } = await connect({ allowSend: true, allowDelete: true }, { profile })
+    const names = (await client.listTools()).tools.map(({ name }) => name)
+    expect(
+      names.some((name) => name.startsWith("max_messages_") || name === "max_inbox" || name === "max_review"),
+    ).toBe(false)
+    expect((await client.listResources()).resources).toEqual([])
+    await expect(call(client, "max_messages_list", { chat: "111" })).rejects.toThrow("not found")
+    expect(max.sent).toEqual([])
   })
 })

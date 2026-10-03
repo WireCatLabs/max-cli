@@ -1,5 +1,6 @@
 import { appendFileSync } from "node:fs"
-import { processStreams } from "@leemour/cli-core"
+import { CliError, processStreams } from "@leemour/cli-core"
+import { metaOf } from "@leemour/cli-core/commands"
 import {
   conversationsCommand,
   createProgram as createSharedProgram,
@@ -13,6 +14,7 @@ import {
   run as runShared,
   storeCommand as sharedStoreCommand,
 } from "@leemour/cli-messaging/cli"
+import { levelFor } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
@@ -41,6 +43,8 @@ import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
 import { migrateInboxPoint } from "./inbox-point.js"
 import { maxMessenger } from "./messenger.js"
+import { assertReadable, commandPermission, permissionScope } from "./permissions.js"
+import { rootOf } from "./profile.js"
 import { modelsDirectory } from "./transcribe/install.js"
 import type { SpeechModel } from "./transcribe/models.js"
 import { updateNotice } from "./update.js"
@@ -48,7 +52,7 @@ import { updateNotice } from "./update.js"
 export type { ProgramOptions }
 
 export interface RunOptions extends Environment {
-  answer?: (question: string) => string | null
+  answer?: (question: string) => string | null | Promise<string | null>
 }
 
 const definition = (options: RunOptions = {}): ProgramDefinition => ({
@@ -110,6 +114,17 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
       const description = descriptions[option.long ?? ""]
       if (description) option.description = description
     }
+    program.hook("preAction", (_root, action) => {
+      const key = commandPermission(action)
+      if (key) {
+        const settings = resolveSettings(rootOf(action).opts(), { kind: key.startsWith("bot.") ? "bot" : "personal" })
+        assertReadable(settings, key)
+        if (metaOf(action).mutates && metaOf(action).local && levelFor(settings.permissions, key).level === "readonly")
+          throw new CliError("permission_error", `profile ${settings.profile} does not let ${key} write`, {
+            permission: key,
+          })
+      }
+    })
     const argvLog = process.env.MAX_TEST_ARGV_LOG
     if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
   },
@@ -125,10 +140,12 @@ export const createProgram = (options: ProgramOptions = {}): Command => createSh
 export const run = async (argv: string[], options: RunOptions = {}): Promise<number> => {
   const { recognizer, ...environment } = options
   const notice = updateNotice(argv, { tty: options.tty, environment: options.update })
-  const code = await runShared(argv, definition(options), {
-    ...environment,
-    ...(recognizer ? { recognizer: (model: SpeechModel) => recognizer(model, modelsDirectory()) } : {}),
-  })
+  const code = await permissionScope(() =>
+    runShared(argv, definition(options), {
+      ...environment,
+      ...(recognizer ? { recognizer: (model: SpeechModel) => recognizer(model, modelsDirectory()) } : {}),
+    }),
+  )
   const argvLog = process.env.MAX_TEST_ARGV_LOG
   if (argvLog && code === 0 && argv.some((word) => word === "--version" || word === "-V")) {
     appendFileSync(argvLog, `${JSON.stringify({ command: "", options: ["--version"] })}\n`)
