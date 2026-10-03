@@ -2276,6 +2276,10 @@ export class MaxClient {
   }
 
   /** An id goes as given; a name is looked up in the store, and an ambiguous one is refused. */
+  people(references: string[]): Promise<Id[]> {
+    return this.#personIds(references)
+  }
+
   async #personIds(references: string[]): Promise<Id[]> {
     if (references.every(isId)) return references.map((reference) => reference.trim())
 

@@ -216,8 +216,15 @@ describe("contacts", () => {
 
   it("`add` and `remove` send CONTACT_UPDATE with the id and the action", async () => {
     const { environment, sent } = account()
-    expect((await runWith(["contacts", "add", "20000002"], environment)).code).toBe(0)
-    expect((await runWith(["contacts", "remove", "20000002"], environment)).code).toBe(0)
+    const added = await runWith(["contacts", "add", "20000002"], environment)
+    expect(added.code).toBe(0)
+    expect(JSON.parse(added.stdout)).toEqual({
+      operationId: expect.any(String),
+      person: { id: "20000002", name: "Found Person", username: null },
+    })
+    const removed = await runWith(["contacts", "remove", "20000002"], environment)
+    expect(removed.code).toBe(0)
+    expect(JSON.parse(removed.stdout)).toEqual({ operationId: expect.any(String), personId: "20000002" })
 
     expect(sent(Opcode.CONTACT_UPDATE).map((one) => ({ ...one, contactId: String(one.contactId) }))).toEqual([
       { contactId: "20000002", action: "ADD" },
@@ -232,8 +239,11 @@ describe("contacts", () => {
       ["contacts", "unblock", "20000002"],
       ["contacts", "rename", "20000002", "Neighbour", "Ana"],
       ["contacts", "rename", "20000002", "Neighbour"],
-    ])
-      expect((await runWith(argv, environment)).code).toBe(0)
+    ]) {
+      const result = await runWith(argv, environment)
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout)).toMatchObject({ operationId: expect.any(String) })
+    }
 
     expect(sent(Opcode.CONTACT_UPDATE).map((one) => ({ ...one, contactId: String(one.contactId) }))).toEqual([
       { contactId: "20000002", action: "BLOCK" },
@@ -264,20 +274,67 @@ describe("contacts", () => {
     expect(sent(Opcode.SYNC)).toEqual([
       { contactList: { [PHONE]: { firstName: "Found Person" }, "+79990003344": { firstName: "Other One" } } },
     ])
-    expect(JSON.parse(imported.stdout)).toEqual({ sent: 2, recognised: [PHONE], contacts: [] })
+    expect(JSON.parse(imported.stdout)).toEqual({ operationId: expect.any(String), sent: 2, recognised: [] })
+    expect(imported.stdout).not.toContain("1234567890")
     expect(imported.stderr).not.toContain("1234567890")
     for (const file of filesUnder(resolvePaths({ appName: "max-cli", prefix: "MAX", env: process.env }).state))
       if (!file.endsWith(".csv")) expect(readFileSync(file, "latin1"), file).not.toContain("1234567890")
   })
 
-  it("`import` refuses a number written the domestic way, by its line", async () => {
+  it("`import` returns recognised contact cards without their private fields", async () => {
+    const { environment } = account({
+      [Opcode.SYNC]: {
+        phones: { [PHONE]: 20000002 },
+        contacts: [
+          { id: 20000002, phone: 71234567890, description: "private about", names: [{ name: "Found Person" }] },
+        ],
+      },
+    })
+    const file = join(process.env.TMPDIR ?? "/tmp", "recognised-book.csv")
+    writeFileSync(file, `${PHONE}, Found Person\n`)
+    const imported = await runWith(["contacts", "import", file], environment)
+    expect(imported.code).toBe(0)
+    expect(JSON.parse(imported.stdout)).toEqual({
+      operationId: expect.any(String),
+      sent: 1,
+      recognised: [{ id: "20000002", name: "Found Person", username: null }],
+    })
+  })
+
+  it.each(["add", "remove", "block", "unblock", "rename"])(
+    "a read-only profile refuses contacts %s by id before login and journals once",
+    async (action) => {
+      const { environment, sent } = account()
+      const profile = `contact-readonly-${action}`
+      await runWith([profile, "config", "set", "readOnly", "true"])
+      const result = await runWith(
+        [profile, "contacts", action, "20000002", ...(action === "rename" ? ["Neighbour"] : [])],
+        environment,
+      )
+      expect(result.code).not.toBe(0)
+      expect(sent(Opcode.LOGIN)).toEqual([])
+      expect(sent(Opcode.CONTACT_UPDATE)).toEqual([])
+      const journal = new SendJournal(sendsPathFor(profile))
+      expect(journal.entries()).toMatchObject([{ action: `contact-${action}`, outcome: "refused" }])
+    },
+  )
+
+  it("offline contact writes never connect", async () => {
+    const { environment, sent } = account()
+    const result = await runWith(["contacts", "add", "20000002", "--offline"], environment)
+    expect(result.code).not.toBe(0)
+    expect(JSON.parse(result.stderr).error.code).toBe("validation_error")
+    expect(sent(Opcode.LOGIN)).toEqual([])
+  })
+
+  it("`import` refuses a number written the domestic way without repeating it", async () => {
     const { environment, sent } = account()
     const file = join(process.env.TMPDIR ?? "/tmp", "domestic-book.csv")
     writeFileSync(file, `${PHONE}, Found Person\n8 999 000 33 44, Other One\n`)
 
     const refused = await runWith(["contacts", "import", file], environment)
 
-    expect(JSON.parse(refused.stderr).error.message).toContain("line 2: write a number that starts with 8")
+    expect(JSON.parse(refused.stderr).error.message).toContain("write a number that starts with 8")
     expect(refused.stderr).not.toContain("999")
     expect(sent(Opcode.SYNC)).toEqual([])
   })

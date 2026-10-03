@@ -644,7 +644,7 @@ max contacts rename <person> <first-name> [last-name]
 
 ### `max contacts import`
 
-upload phone numbers to MAX and add the people it has under them
+upload phone numbers and add the people the messenger has under them
 
 **Меняет что-то в MAX.**
 
@@ -654,7 +654,7 @@ max contacts import <file>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `file` | обязательный | one person per line: number, then a comma or a tab, then the name. |
+| `file` | обязательный | one person per line: number, then a comma, a tab or a semicolon, then the name. |
 
 ## `max messages`
 

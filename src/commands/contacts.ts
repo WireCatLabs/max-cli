@@ -1,9 +1,5 @@
-import { readFile } from "node:fs/promises"
-import { CliError } from "@leemour/cli-core"
-import { annotate } from "@leemour/cli-core/commands"
 import { contactsCommand as sharedContactsCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
-import { type PhoneBookEntry, wirePhone } from "../client.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
 import { forCommand } from "./context.js"
@@ -75,97 +71,9 @@ export const contactsCommand = (): Command => {
       })
     })
 
-  for (const [name, description] of [
-    ["add", "add a person to your contacts — `contacts list` still shows only people you have a dialog with"],
-    ["remove", "remove a person from your contacts; the chat stays, a name you gave them may not"],
-    ["block", "stop a person from writing to you — they need not be a contact"],
-    ["unblock", "let a blocked person write to you again"],
-  ] as const) {
-    annotate(command.command(name), { mutates: true })
-      .argument("<person>", "person id — `contacts lookup` finds one — or part of a known name")
-      .description(description)
-      .action(async function (this: Command, person: string) {
-        const { renderer, createClient, run, store } = forCommand(this)
-        const record = maxRecord({ account: () => store.readState().viewerId })
-
-        await run(`contacts ${name}`, async (events) => {
-          const client = createClient({ events, record })
-
-          try {
-            renderer.result(await client.contacts[name](person))
-          } finally {
-            await client.close()
-            await record.close()
-          }
-        })
-      })
+  for (const name of ["add", "remove", "block", "unblock", "rename", "import"]) {
+    command.addCommand(sharedSubcommand(shared, name))
   }
-
-  annotate(command.command("rename"), { mutates: true })
-    .argument("<person>", "person id — `contacts lookup` finds one — or part of a known name")
-    .argument("<first-name>", "the name you want to see for them")
-    .argument("[last-name]")
-    .description("give a person a name of your own — they do not see it")
-    .action(async function (this: Command, person: string, firstName: string, lastName?: string) {
-      const { renderer, createClient, run, store } = forCommand(this)
-      const record = maxRecord({ account: () => store.readState().viewerId })
-
-      await run("contacts rename", async (events) => {
-        const client = createClient({ events, record })
-
-        try {
-          renderer.result(await client.contacts.rename(person, firstName, lastName))
-        } finally {
-          await client.close()
-          await record.close()
-        }
-      })
-    })
-
-  /** A file rather than lines on argv, for the same reason `lookup` asks: these are phone numbers. */
-  annotate(command.command("import"), { mutates: true })
-    .argument("<file>", "one person per line: number, then a comma or a tab, then the name")
-    .description("upload phone numbers to MAX and add the people it has under them")
-    .action(async function (this: Command, file: string) {
-      const { renderer, createClient, run, store } = forCommand(this)
-      const entries = phoneBook(
-        await readFile(file, "utf8").catch((error: NodeJS.ErrnoException) => {
-          throw new CliError("not_found", `cannot read ${file}: ${error.code ?? error.message}`)
-        }),
-      )
-      const record = maxRecord({ account: () => store.readState().viewerId })
-
-      await run("contacts import", async (events) => {
-        const client = createClient({ events, record })
-
-        try {
-          const imported = await client.contacts.import(entries)
-          renderer.result(imported)
-          renderer.success(`${imported.sent} sent, ${imported.recognised.length} recognised by MAX`)
-        } finally {
-          await client.close()
-          await record.close()
-        }
-      })
-    })
 
   return command
 }
-
-/** ⚠ A bad line is named by its number, never by what is on it. */
-export const phoneBook = (text: string): PhoneBookEntry[] =>
-  text.split(/\r?\n/).flatMap((line, index) => {
-    if (line.trim() === "") return []
-    const match = /^\s*([^,\t;]+?)\s*[,\t;]\s*(.*\S)\s*$/.exec(line)
-    if (!match?.[1] || !match[2]) {
-      throw new CliError("validation_error", `line ${index + 1} is not "number, name"`)
-    }
-    try {
-      return [{ phone: wirePhone(match[1]), name: match[2] }]
-    } catch (error) {
-      throw new CliError(
-        "validation_error",
-        `line ${index + 1}: ${error instanceof Error ? error.message : String(error)}`,
-      )
-    }
-  })

@@ -25,7 +25,13 @@ export type MaxAdapter = MessengerAdapter &
   MessagePins &
   MessageReactions &
   ReadState &
-  MessagePolls
+  MessagePolls &
+  Required<
+    Pick<
+      MessengerAdapter,
+      "people" | "addContact" | "removeContact" | "block" | "unblock" | "renameContact" | "importContacts"
+    >
+  >
 
 const MARKUP: Record<string, string> = {
   bold: "STRONG",
@@ -105,6 +111,20 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
 
     chat: (reference) => client.chats.show(reference),
     contact: (reference) => client.contacts.show(reference),
+
+    people: (references) => client.people(references),
+    addContact: async (id) => toMember(await client.contacts.add(id)),
+    removeContact: async (id) => {
+      await client.contacts.remove(id)
+    },
+    block: async (id) => {
+      await client.contacts.block(id)
+    },
+    unblock: async (id) => {
+      await client.contacts.unblock(id)
+    },
+    renameContact: async (id, firstName, lastName) => toMember(await client.contacts.rename(id, firstName, lastName)),
+    importContacts: async (entries) => (await client.contacts.import(entries)).contacts.map(toMember),
 
     around: async (chat, messageId, window): Promise<WindowedMessage[]> =>
       (await client.messages.around(await chatId(chat), messageId, window)).map(({ anchor, ...message }) => ({
@@ -258,3 +278,5 @@ const toAttachment = ({ fileId, videoId, event, userIds, poll, kind, ...shared }
   const typed = { ...shared, kind: kindOf(kind) }
   return Object.keys(own).length === 0 ? typed : { ...typed, providerRef: own }
 }
+
+const toMember = ({ id, name, username }: Max.Contact): Max.Member => ({ id, name, username })
