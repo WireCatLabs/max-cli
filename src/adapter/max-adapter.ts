@@ -14,6 +14,7 @@ import type { Upload } from "@leemour/cli-messaging/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
 import { fetchBytes, publicOnly, type Reach } from "../download.js"
+import { formatMarkdown, toNativeMarkup } from "../format-markdown.js"
 import type { Markup } from "../markdown.js"
 import { isId } from "../resolve.js"
 import type { SessionStore } from "../session/store.js"
@@ -81,6 +82,11 @@ export const maxAdapter = (
   const chatId = (reference: string) => client.chats.resolve(reference)
 
   return {
+    formatMarkdown: async (text) => {
+      const formatted = formatMarkdown(text)
+      formatted.spans.forEach(toNativeMarkup)
+      return formatted
+    },
     self: () => store.readState().viewerId ?? null,
     newSendId: () => client.newSendId(),
 
@@ -245,7 +251,7 @@ export const maxAdapter = (
       })),
 
     send: async (to, text, options: SendOptions & { threadId?: string }) => {
-      const { sendId, replyTo, silent, noPreview, markup = [], at, attachments = [], threadId } = options
+      const { sendId, replyTo, silent, noPreview, markup = [], formatting, at, attachments = [], threadId } = options
       if (threadId !== undefined) throw new CliError("validation_error", "MAX does not support forum topic addressing")
       if (noPreview) {
         throw new CliError("validation_error", "MAX's own client has no way to send a link without its preview")
@@ -255,7 +261,9 @@ export const maxAdapter = (
         ...(silent ? { notify: false } : {}),
         ...(replyTo === undefined ? {} : { replyTo }),
         ...(at === undefined ? {} : { at: Date.parse(at) }),
-        ...(markup.length === 0 ? {} : { markup: markup.map(toMaxMarkup) }),
+        ...((formatting ?? markup).length === 0
+          ? {}
+          : { markup: formatting ? formatting.map(toNativeMarkup) : markup.map(toMaxMarkup) }),
         ...(attachments.length === 0
           ? {}
           : { uploads: attachments.map((upload) => ({ ...upload, kind: uploadKind(upload) })) }),
@@ -263,9 +271,16 @@ export const maxAdapter = (
       return { message: toMessage(message), sendId }
     },
 
-    edit: async (to, messageId, text, { markup = [] }) =>
+    edit: async (to, messageId, text, { markup = [], formatting }) =>
       toMessage(
-        await client.messages.edit(to, messageId, text, markup.length === 0 ? {} : { markup: markup.map(toMaxMarkup) }),
+        await client.messages.edit(
+          to,
+          messageId,
+          text,
+          (formatting ?? markup).length === 0
+            ? {}
+            : { markup: formatting ? formatting.map(toNativeMarkup) : markup.map(toMaxMarkup) },
+        ),
       ),
 
     forward: async (from, messageId, to, { sendId, silent }) =>
@@ -357,11 +372,11 @@ const unknownChat = (id: string): Chat => ({
   participantsCount: null,
 })
 
-const toMaxMarkup = ({ type, from, length }: { type: string; from: number; length: number }): Markup => ({
-  type: MARKUP[type] ?? type,
-  from,
-  length,
-})
+const toMaxMarkup = ({ type, from, length }: { type: string; from: number; length: number }): Markup => {
+  const native = MARKUP[type]
+  if (!native) throw new CliError("validation_error", "MAX does not support this formatting span")
+  return { type: native, from, length }
+}
 
 export const toMessage = ({ attachments, replyTo, forwardedFrom, ...message }: Max.Message): Message => ({
   ...message,

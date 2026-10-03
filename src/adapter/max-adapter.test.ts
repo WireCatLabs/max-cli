@@ -71,6 +71,39 @@ describe("the MAX adapter", () => {
     expect(sent(Opcode.MSG_SEND)).toEqual([])
   })
 
+  it("formats MAX underline and links with their personal wire attributes", async () => {
+    const { adapter, client, sent } = connected()
+    try {
+      const formatted = await adapter.formatMarkdown?.("__b__ ++u++ [l](https://example.test)")
+      expect(formatted).toBeDefined()
+      await adapter.send("111", formatted?.text ?? "", { sendId: "42", formatting: formatted?.spans })
+      expect(sent(Opcode.MSG_SEND)).toMatchObject([
+        {
+          message: {
+            text: "b u l",
+            elements: [
+              { type: "STRONG", from: 0, length: 1 },
+              { type: "UNDERLINE", from: 2, length: 1 },
+              { type: "LINK", from: 4, length: 1, attributes: { url: "https://example.test" } },
+            ],
+          },
+        },
+      ])
+    } finally {
+      await client.close()
+    }
+  })
+  it("refuses private Markdown types without connecting or uploading", async () => {
+    const { adapter, client, sent } = connected()
+    try {
+      await expect(adapter.formatMarkdown?.("^^highlight^^")).rejects.toThrow("personal MAX")
+      expect(sent(Opcode.LOGIN)).toEqual([])
+      expect(sent(Opcode.MSG_SEND)).toEqual([])
+    } finally {
+      await client.close()
+    }
+  })
+
   it("sends with the send id as MAX's cid, quietly when asked, with the marks in MAX's names", async () => {
     const { adapter, sent } = connected()
     const sendId = adapter.newSendId?.() ?? ""

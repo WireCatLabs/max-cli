@@ -129,12 +129,23 @@ describe("max bot messages send", () => {
     expect(refusedRow).toMatchObject({ chatId: "-200", outcome: "refused" })
   })
 
+  it("uses MAX-native bold, underline and highlight through the common bot command", async () => {
+    expect(
+      (await max(["bot", "messages", "send", "-100", "__b__ ++u++ ^^h^^ [l](https://example.test)", "--md", "--json"]))
+        .code,
+    ).toBe(0)
+    expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({
+      text: '<b>b</b> <u>u</u> <mark>h</mark> <a href="https://example.test">l</a>',
+      format: "html",
+    })
+  })
+
   it("sends --md as MAX's markdown and --reply-to as a reply link", async () => {
     const argv = ["bot", "messages", "send", "-100", "**hi**", "--md", "--reply-to", "mid.1", "--json"]
     expect((await max(argv)).code).toBe(0)
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({
-      text: "**hi**",
-      format: "markdown",
+      text: "<b>hi</b>",
+      format: "html",
       link: { type: "reply", mid: "mid.1" },
     })
   })
@@ -177,7 +188,7 @@ describe("max bot messages edit and delete", () => {
     expect((await max(["bot", "messages", "edit", "-100", "mid.9", "<b>new</b>", "--html", "--json"])).code).toBe(0)
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "<b>new</b>", format: "html" })
     expect((await max(["bot", "messages", "edit", "-100", "mid.9", "**new**", "--md", "--json"])).code).toBe(0)
-    expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "**new**", format: "markdown" })
+    expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "<b>new</b>", format: "html" })
     expect((await max(["bot", "messages", "edit", "user:777", "mid.9", "to a person", "--json"])).code).toBe(0)
     expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--json"])).code).toBe(7)
     expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--allow-dangerous", "--json"])).code).toBe(0)
