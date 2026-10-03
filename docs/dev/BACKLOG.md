@@ -25,6 +25,8 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+- **CLI-67** · P2 · Strict local search language, timezone options and migration guide from the shared package. 🚧 `feat/search-lucene-guide`
+
 - **CLI-58** · P2 · `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
   third-party proxy. Streamable HTTP on `127.0.0.1` behind a tunnel, with its own OAuth for exactly
   one owner (dynamic client registration, PKCE, a one-time code from the terminal that expires and
