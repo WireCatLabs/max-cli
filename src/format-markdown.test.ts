@@ -69,7 +69,7 @@ describe("MAX Markdown", () => {
     expect(() => toNativeMarkup({ type: "link", from: 0, length: 1 })).toThrow("URL")
   })
   it("bounds nesting and entity counts before transport work", () => {
-    expect(() => formatMarkdown("> ".repeat(33) + "x")).toThrow("32")
+    expect(() => formatMarkdown("> ".repeat(33).concat("x"))).toThrow("32")
     expect(() => formatMarkdown("**x** ".repeat(101))).toThrow("100")
     expect(() => formatMarkdown("```")).toThrow("newline")
   })

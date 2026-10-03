@@ -35,7 +35,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       # These runners are slower than ubuntu's; five seconds timed out tests that do not hang.
-      - run: pnpm test --testTimeout=20000
+      # Windows named-pipe fixtures use short RPC budgets; audio/SQLite workers compete with them.
+      - if: matrix.os == 'windows-latest'
+        run: pnpm test --testTimeout=20000 --maxWorkers=1
+      - if: matrix.os != 'windows-latest'
+        run: pnpm test --testTimeout=20000
       - run: pnpm build
       - run: node dist/bin/max.js --version
       - run: node dist/bin/max.js upgrade --check --json
