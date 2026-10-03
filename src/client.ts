@@ -1222,13 +1222,21 @@ export class MaxClient {
         const state = record(answer.state)
         return { chatId, messageId, poll: (state && toPoll({ ...attach, state })) ?? poll }
       } catch (error) {
+        const failure = asCliError(error)
         this.#sends?.record({
           chatId,
           kind: "reaction",
           outcome: "failed",
           messageId,
-          errorCode: asCliError(error).code,
+          errorCode: failure.code,
         })
+        if (answerIds.length > 0 && failure.details.providerError === "poll.already.voted") {
+          throw new CliError(
+            failure.code,
+            `${failure.message}; if this poll allows changing votes, run \`polls vote <chat> <message> --retract\` in the same profile before voting again`,
+            failure.details,
+          )
+        }
         throw error
       }
     },
