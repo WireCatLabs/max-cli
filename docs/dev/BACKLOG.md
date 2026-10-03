@@ -200,3 +200,5 @@ which; the plan for it starts by saying so.
 
 - Completed 2026-10-03: MAX poll.already.voted refusal explains explicit retract before a new vote when the poll permits changing votes (CLI-61). Provider error identity and one attempted write are preserved; wire refusal regressions cover other errors and an explicit retract refusal.
 
+
+- Release coordination · 🚧 `release/coordinated-027` prepares the next shared MAX release, aggregates parallel PR evidence, and keeps publication/sign-off pending. Handoff: `docs_ai/plans/2026-10-04-coordinated-release.md`. Avoid competing version/changelog bumps.
