@@ -193,3 +193,7 @@ which; the plan for it starts by saying so.
   line; and `max watch --jsonl | <command>` on a running `max serve` (`MAX-35`) already does this
   for live messages, as `max inbox --new` on a schedule does for batches — say what a hook adds
   over those two pipes. Correction 2026-09-24: written before `max serve` existed.
+
+## Parity tooling follow-up
+
+- 🚧 `docs/parity-audit-automation` · Update the parity-audit skill to run the detailed shared audit: all commands/options/defaults, MCP schemas/configured visibility, source registrations, fresh tests/coverage and synthetic consumer scenarios. Shared tooling claim: `feat/deep-parity-audit`. No account access.
