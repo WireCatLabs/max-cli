@@ -555,6 +555,16 @@ const READ_TOOLS = {
     },
   }),
 
+  max_messages_link: tool({
+    title: "Get a message link",
+    description:
+      "A validated account-scoped locator for a stored message, without its body. Returns { locator, url, access, reason }; personal MAX currently returns no native URL. Does not connect or mark read. A locator can replace chat and message.",
+    input: v.object({ chat, message: v.optional(message) }),
+    annotations: READ,
+    answer: (client, args, defaults) =>
+      withShared(client, defaults, (services) => services.messages.link(args.chat, args.message), { reads: "store" }),
+  }),
+
   max_messages_context: tool({
     title: "Show a message",
     description:

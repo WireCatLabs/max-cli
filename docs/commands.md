@@ -773,6 +773,19 @@ max messages links <chat> <message>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the message id. |
 
+### `max messages link`
+
+a message permalink when supported, and its account-scoped locator
+
+```sh
+max messages link <chat> [message]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
+| `message` | необязательный | the message id. |
+
 ### `max messages download`
 
 save a message's photos, files, videos and voice notes to a folder — or a whole chat's with --all

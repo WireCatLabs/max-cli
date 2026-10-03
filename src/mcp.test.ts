@@ -255,6 +255,57 @@ describe("the MCP server", () => {
     expect(reopened.max.sent).toEqual([])
   })
 
+  it("message link reads only the current account's archive without logging in", async () => {
+    const profile = "mcp-link-local"
+    const state = new SessionStore({ profile, keyring: memoryKeyring() })
+    state.writeState({ ...state.readState(), viewerId: "10000001" })
+    const store = await openStore()
+    const key = { provider: "max", account: "10000001" }
+    try {
+      await store.saveChats(key, [
+        { id: "111", title: "Synthetic", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
+      ])
+      await store.saveMessages(
+        key,
+        "111",
+        [
+          {
+            id: "9007199254740993123",
+            chatId: "111",
+            senderId: "9",
+            senderName: "Synthetic",
+            text: "synthetic body",
+            timestamp: "2026-10-03T00:00:00.000Z",
+            editedAt: null,
+            outgoing: false,
+            attachments: [],
+            replyTo: null,
+            forwardedFrom: null,
+            reactions: null,
+          },
+        ],
+        { via: "history" },
+      )
+    } finally {
+      await store.close()
+    }
+    const { client, max, logins } = await connect({}, { profile })
+    const offered = (await client.listTools()).tools.find((one) => one.name === "max_messages_link")
+    expect(offered?.annotations?.readOnlyHint).toBe(true)
+    const result = await call(client, "max_messages_link", { chat: "111", message: "9007199254740993123" })
+    expect(result.isError).toBe(false)
+    expect(result.body).toEqual({
+      locator: "msg:max/10000001/111/9007199254740993123",
+      url: null,
+      access: "unavailable",
+      reason: "unsupported_provider",
+    })
+    const mismatch = await call(client, "max_messages_link", { chat: "msg:max/other/111/9007199254740993123" })
+    expect(mismatch.isError).toBe(true)
+    expect(logins()).toBe(0)
+    expect(max.sent).toEqual([])
+  })
+
   it("reads message context through shared services and keeps it searchable", async () => {
     const id = "116762160362694555"
     const { client } = await connect(
