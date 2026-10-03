@@ -1539,7 +1539,7 @@ max sends list [options]
 
 | Опция | Что делает |
 |---|---|
-| `--limit <n>` | how many to show. По умолчанию: `20`. |
+| `--limit <n>` | how many to show. |
 
 ## `max inbox`
 
@@ -1806,8 +1806,12 @@ the instructions an agent is given for this tool
 print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look for it
 
 ```sh
-max skill show
+max skill show [name]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | необязательный | one of the skills shipped for a task: link-conversations. |
 
 ### `max skill install`
 
