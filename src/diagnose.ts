@@ -2,10 +2,8 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join } from "node:path"
 import { pathsAreOverridden, resolvePaths } from "@leemour/cli-core"
-import { runtime } from "@leemour/cli-messaging/cli"
-import { storePath } from "@leemour/cli-messaging/store"
-import { openCache } from "./cache/open.js"
-import { SCHEMA_VERSION } from "./cache/schema.js"
+import { runtime, storeSummary } from "@leemour/cli-messaging/cli"
+import { openCache, storePath } from "@leemour/cli-messaging/store"
 import { checkInstall, type Install, ownScript } from "./install.js"
 import { CLIENT } from "./spec/identity.js"
 import { isInstalled, modelsDirectory } from "./transcribe/install.js"
@@ -18,7 +16,7 @@ export interface DiagnoseOptions {
   stateDir?: string
   cacheDir?: string
   /** Injected so a test needs no SQLite file and no keyring. */
-  readSchemaVersion?: (file: string) => Promise<number | undefined>
+  readStore?: typeof storeSummary
   /** Where a stored token is — the keyring, or the file that stands in for one; `undefined` for none. */
   storedToken?: (profile: string) => "keyring" | "file" | undefined
   /** The same for the bot token, keyring account `bot:<profile>` (`src/bot/auth.ts`). */
@@ -81,15 +79,8 @@ export interface Diagnosis {
   }
   /** Where this profile's files live — one place to look instead of nine. */
   paths: { state: string; cache: string; runs: string; bots: string; sends: string; messages: string }
-  cache: {
-    file: string
-    exists: boolean
-    /** What is written in the file, which is not always what this build speaks. */
-    schemaVersion: number | undefined
-    speaks: number
-    /** A file from a newer `max` is refused rather than written to — and that looks like a bug. */
-    readable: boolean
-  }
+  store: Awaited<ReturnType<typeof storeSummary>>
+  legacyCache: { file: string; exists: boolean }
   runs: { directory: string; kept: number }
   /** The web client we present, and how old that reading is. Past `STALE_AFTER_DAYS` MAX may refuse it. */
   client: { appVersion: string; chrome: string; readOn: string; ageDays: number; stale: boolean }
@@ -109,7 +100,7 @@ export const STALE_AFTER_DAYS = 60
  * on (`CLI-15`, and `src/session/adopt.ts` moved for the same reason).
  *
  * ⚠ **It must work when everything is broken**, which is the only time anybody runs it: no
- * session, no configuration file, a cache from a newer version, a keyring that will not open. Each
+ * session, no configuration file, an unreadable store, a keyring that will not open. Each
  * of those is a field in the answer, never an exception.
  *
  * ⚠ **It reads the state file directly instead of calling `readState`**, which invents a device
@@ -121,7 +112,7 @@ export const diagnose = async ({
   env = process.env,
   stateDir,
   cacheDir,
-  readSchemaVersion = schemaVersionOf,
+  readStore = storeSummary,
   storedToken = () => undefined,
   storedBotToken = () => undefined,
   configured = [],
@@ -144,7 +135,6 @@ export const diagnose = async ({
 
   const cacheFile = join(cacheHome, `${profile}.db`)
   const cacheExists = existsSync(cacheFile)
-  const schemaVersion = cacheExists ? await readSchemaVersion(cacheFile) : undefined
 
   const runsDirectory = join(state, "runs")
   const bots = join(state, "bots")
@@ -199,13 +189,8 @@ export const diagnose = async ({
       sends: join(state, "sends", `${profile}.jsonl`),
       messages: storePath(env),
     },
-    cache: {
-      file: cacheFile,
-      exists: cacheExists,
-      schemaVersion,
-      speaks: SCHEMA_VERSION,
-      readable: !cacheExists || (schemaVersion !== undefined && schemaVersion <= SCHEMA_VERSION),
-    },
+    store: await readStore(env),
+    legacyCache: { file: cacheFile, exists: cacheExists },
     runs: { directory: runsDirectory, kept: countEntries(runsDirectory) },
     client: clientAge(now()),
     install: install(),
@@ -304,28 +289,6 @@ const countEntries = (directory: string): number => {
     return readdirSync(directory).filter((name) => statSync(join(directory, name)).isDirectory()).length
   } catch {
     return 0
-  }
-}
-
-/**
- * The schema version written in the file, read **without migrating it**.
- *
- * It goes through `openCache`, the one seam that knows which SQLite this runtime has — and
- * crucially `openCache` does **not** migrate: `migrate` runs inside `openStore`. So this reads the
- * number the file already carries rather than the number it would carry after being upgraded,
- * which is the whole point. A command asked to describe the state must not change it.
- */
-const schemaVersionOf = async (file: string): Promise<number | undefined> => {
-  try {
-    const database = await openCache(file)
-    try {
-      const row = database.prepare("PRAGMA user_version").get() as { user_version?: number } | undefined
-      return typeof row?.user_version === "number" ? row.user_version : undefined
-    } finally {
-      database.close()
-    }
-  } catch {
-    return undefined
   }
 }
 

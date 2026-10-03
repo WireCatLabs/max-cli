@@ -19,12 +19,16 @@ const homes: string[] = []
 
 const inAnEmptyHome = async (
   argv: string[],
-  { token = false, loggedIn = false, tty = false, bots = [] as string[] } = {},
+  { token = false, loggedIn = false, tty = false, bots = [] as string[], legacy = false } = {},
 ) => {
   const home = mkdtempSync(join(tmpdir(), "max-doctor-cmd-"))
   for (const bot of bots) {
     mkdirSync(join(home, "state", "bots"), { recursive: true })
     writeFileSync(join(home, "state", "bots", `${bot}.json`), JSON.stringify({ chats: [] }))
+  }
+  if (legacy) {
+    mkdirSync(join(home, "cache"), { recursive: true })
+    writeFileSync(join(home, "cache", "default.db"), "unreadable legacy file")
   }
   const before = { ...process.env }
   homes.push(home)
@@ -76,8 +80,20 @@ describe("max doctor", () => {
     expect(JSON.parse(stdout)).toMatchObject({
       token: { present: false, from: "none" },
       session: { exists: false },
-      cache: { exists: false },
+      legacyCache: { exists: false },
+      store: { path: expect.any(String) },
     })
+  })
+
+  it("names an unreadable legacy file on stderr while JSON describes the shared store", async () => {
+    const { code, stdout, stderr, home } = await inAnEmptyHome(["doctor", "--json"], { legacy: true })
+    expect(code).toBe(0)
+    const answer = JSON.parse(stdout)
+    expect(answer).not.toHaveProperty("cache")
+    expect(answer.legacyCache).toEqual({ file: join(home, "cache", "default.db"), exists: true })
+    expect(answer.store.path).toBe(process.env.MESSAGING_STORE)
+    expect(stderr).toContain(join(home, "cache", "default.db"))
+    expect(stderr).toContain("max store fetch")
   })
 
   it("blames the keyring, not the session, when a profile that has logged in has no token", async () => {

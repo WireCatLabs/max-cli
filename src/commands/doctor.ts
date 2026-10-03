@@ -19,7 +19,7 @@ import { environmentOf, forCommand } from "./context.js"
  * The state every other command depends on, read from disk and **never from MAX**.
  *
  * ⚠ **It must answer when everything is broken**, because that is the only time anybody runs it.
- * No session, no configuration file, a cache written by a newer `max`, a keyring that will not
+ * No session, no configuration file, an unreadable message store, a keyring that will not
  * open — each is a field in the answer and none is an exception. A diagnosis that fails with
  * `authentication_error` when asked "do I have a session" is worth nothing.
  *
@@ -78,10 +78,16 @@ export const doctorCommand = (): Command => {
         )
       }
 
-      if (!report.cache.readable) {
+      if ("error" in report.store && report.store.error)
+        renderer.note(`the message store could not be read: ${report.store.error}`)
+      if ("writable" in report.store && report.store.writable === false) {
         renderer.note(
-          `the local copy was written by a newer max (schema ${report.cache.schemaVersion}, this one speaks ` +
-            `${report.cache.speaks}) — commands still work, but the copy is ignored until \`max cache clear\``,
+          `the message store needs a newer max (schema ${report.store.schema}, this one speaks ${report.store.speaks})`,
+        )
+      }
+      if (report.legacyCache.exists) {
+        renderer.note(
+          `the old local copy ${report.legacyCache.file} is no longer used by shared reads — you can remove it; use \`max store fetch\` to fetch history again`,
         )
       }
 
@@ -342,9 +348,7 @@ const forPerson = (report: Diagnosis, profile: string) => ({
   "bot token": report.bot.token.present ? `yes, from ${BOT_TOKEN_FROM[report.bot.token.from]}` : "none",
   ...(report.bot.registry.exists ? { "bot chats seen": `${report.bot.registry.chats}` } : {}),
   profiles: report.profiles.length === 0 ? "none" : report.profiles.map(profileLine).join(", "),
-  "local copy": report.cache.exists
-    ? `schema ${report.cache.schemaVersion ?? "unreadable"}, this max speaks ${report.cache.speaks}`
-    : "not created yet",
+  "message store": storeLine(report.store),
   runs: `${report.runs.kept} kept in ${report.runs.directory}`,
   runtime: `${report.install.runtime.version}, ${report.install.runtime.path}`,
   "installed by": report.install.installer,
@@ -354,3 +358,10 @@ const forPerson = (report: Diagnosis, profile: string) => ({
       : `${report.install.onPath}${report.install.isMaxCli === false ? " — another program" : ""}`,
   "speech model": `${report.speech.model}, ${report.speech.downloaded ? "downloaded" : "not downloaded"}`,
 })
+
+const storeLine = (store: Diagnosis["store"]): string => {
+  if ("error" in store && store.error) return `${store.error} (${store.path})`
+  if ("schema" in store)
+    return `schema ${store.schema}, ${store.chats ?? 0} chats, ${store.messages ?? 0} messages in ${store.path}`
+  return `not created yet (${store.path})`
+}

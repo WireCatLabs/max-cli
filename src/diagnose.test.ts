@@ -1,8 +1,8 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { MIGRATIONS, openCache, openStore } from "@leemour/cli-messaging/store"
 import { beforeEach, describe, expect, it } from "vitest"
-import { SCHEMA_VERSION } from "./cache/schema.js"
 import { diagnose, knownProfiles } from "./diagnose.js"
 
 let home: string
@@ -14,8 +14,14 @@ const withState = (profile: string, state: Record<string, unknown>) => {
   writeFileSync(at("state", "profiles", `${profile}.json`), JSON.stringify(state))
 }
 
-const look = (over = {}) =>
-  diagnose({ profile: "default", env: {}, stateDir: at("state"), cacheDir: at("cache"), ...over })
+const look = ({ env = {}, ...over }: Partial<Parameters<typeof diagnose>[0]> = {}) =>
+  diagnose({
+    profile: "default",
+    env: { ...env, MESSAGING_STORE: at("messages.db") },
+    stateDir: at("state"),
+    cacheDir: at("cache"),
+    ...over,
+  })
 
 beforeEach(() => {
   home = mkdtempSync(join(tmpdir(), "max-doctor-"))
@@ -27,7 +33,7 @@ describe("what a command depends on", () => {
 
     expect(report.session.exists).toBe(false)
     expect(report.token).toEqual({ present: false, from: "none" })
-    expect(report.cache.exists).toBe(false)
+    expect(report.legacyCache.exists).toBe(false)
     expect(report.loggedInProfiles).toEqual([])
   })
 
@@ -137,24 +143,55 @@ describe("what a command depends on", () => {
     })
   })
 
-  describe("the local copy", () => {
-    it("**reports a file this build cannot read**, which otherwise looks like a broken search", async () => {
-      mkdirSync(at("cache"), { recursive: true })
-      writeFileSync(at("cache", "default.db"), "")
-
-      const report = await look({ readSchemaVersion: async () => SCHEMA_VERSION + 1 })
-      expect(report.cache).toMatchObject({ exists: true, schemaVersion: SCHEMA_VERSION + 1, readable: false })
+  describe("the shared store", () => {
+    it("does not create a missing store", async () => {
+      expect((await look()).store).toMatchObject({ exists: false, path: at("messages.db") })
+      expect(existsSync(at("messages.db"))).toBe(false)
     })
 
-    it("calls a file this build speaks readable", async () => {
-      mkdirSync(at("cache"), { recursive: true })
-      writeFileSync(at("cache", "default.db"), "")
-
-      expect((await look({ readSchemaVersion: async () => SCHEMA_VERSION })).cache.readable).toBe(true)
+    it("reports a broken store without failing the diagnosis", async () => {
+      writeFileSync(at("messages.db"), "not SQLite")
+      expect((await look()).store).toMatchObject({ exists: true, error: expect.any(String) })
     })
 
-    it("does not call a missing file unreadable", async () => {
-      expect((await look()).cache).toMatchObject({ exists: false, readable: true })
+    it("reports schema and counts without migrating an old file", async () => {
+      const database = await openCache(at("messages.db"))
+      try {
+        database.exec(
+          "CREATE TABLE schema_migrations (version INTEGER, min_compatible INTEGER); INSERT INTO schema_migrations VALUES (1, 1); CREATE TABLE chats (id INTEGER); CREATE TABLE messages (id INTEGER); INSERT INTO messages VALUES (1)",
+        )
+      } finally {
+        database.close()
+      }
+      expect((await look()).store).toMatchObject({ schema: 1, writable: true, chats: 0, messages: 1 })
+      const reopened = await openCache(at("messages.db"))
+      try {
+        expect(reopened.prepare("SELECT version FROM schema_migrations").get()?.version).toBe(1)
+      } finally {
+        reopened.close()
+      }
+    })
+
+    it("reports an incompatible future schema", async () => {
+      const env = { MESSAGING_STORE: at("messages.db") }
+      await (await openStore({ env })).close()
+      const database = await openCache(at("messages.db"))
+      const future = (MIGRATIONS.at(-1)?.version ?? 0) + 1
+      try {
+        database.exec(
+          `INSERT INTO schema_migrations (version, min_compatible, applied_at) VALUES (${future}, ${future}, 0)`,
+        )
+      } finally {
+        database.close()
+      }
+      expect((await look()).store).toMatchObject({ schema: future, writable: false })
+    })
+
+    it("names the legacy file without opening or changing it", async () => {
+      mkdirSync(at("cache"), { recursive: true })
+      writeFileSync(at("cache", "default.db"), "old and unreadable")
+      expect((await look()).legacyCache).toEqual({ exists: true, file: at("cache", "default.db") })
+      expect(readFileSync(at("cache", "default.db"), "utf8")).toBe("old and unreadable")
     })
   })
 })

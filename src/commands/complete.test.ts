@@ -1,8 +1,12 @@
-import { existsSync } from "node:fs"
-import { captureStreams } from "@leemour/cli-core"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
+import { captureStreams, resolvePaths } from "@leemour/cli-core"
+import { rememberAccount } from "@leemour/cli-messaging/cli"
+import { openStore } from "@leemour/cli-messaging/store"
 import { beforeAll, describe, expect, it } from "vitest"
+import { MAX_APP } from "../app.js"
 import { ChatRegistry } from "../bot/registry.js"
-import { openProfileCache, profileCacheFile } from "../cache/index.js"
+import { profileCacheFile } from "../cache/index.js"
 import { run } from "../program.js"
 
 const complete = async (...words: string[]) => {
@@ -13,23 +17,28 @@ const complete = async (...words: string[]) => {
 
 const values = (lines: string[]) => lines.filter((line) => !line.startsWith(":")).map((line) => line.split("\t")[0])
 
+const bindProfile = (profile: string, viewerId: string) => {
+  const directory = join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")
+  mkdirSync(directory, { recursive: true })
+  writeFileSync(join(directory, `${profile}.json`), JSON.stringify({ viewerId }))
+}
+
 beforeAll(async () => {
-  const store = await openProfileCache("tabbed")
-  await store?.chats.write([
+  bindProfile("tabbed", "500")
+  rememberAccount(MAX_APP, "tabbed", "500", process.env)
+  const store = await openStore()
+  await store.saveChats({ provider: "max", account: "500" }, [
     { id: "101", title: "Family", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 3 },
     { id: "102", title: "Work chat", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 5 },
     { id: "103", title: "Evil\u001b[2K", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
     { id: "104", title: "$(touch x)", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
     { id: "105", title: "ok\n$(touch y)", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
   ])
-  await store?.people.upsert(
-    [
-      { id: "7", name: "Иван Петров", username: "ivan", description: null, lastMessagedAt: null },
-      { id: "8", name: "Eve\n$(touch z)", username: "$(touch w)", description: null, lastMessagedAt: null },
-    ],
-    "login",
-  )
-  await store?.close()
+  await store.savePeople({ provider: "max", account: "500" }, [
+    { id: "7", name: "Иван Петров", username: "ivan", description: null },
+    { id: "8", name: "Eve\n$(touch z)", username: "$(touch w)", description: null },
+  ])
+  await store.close()
 })
 
 describe("max complete", () => {
@@ -52,6 +61,43 @@ describe("max complete", () => {
     expect(lines).toContain("101\tFamily")
     expect(lines).toContain("102\tWork chat")
     expect(values(lines)).toEqual(["101", "102", "103", "104", "105"])
+  })
+
+  it("does not offer another account's chats or people", async () => {
+    bindProfile("other", "600")
+    rememberAccount(MAX_APP, "other", "600", process.env)
+    const store = await openStore()
+    try {
+      await store.saveChats({ provider: "max", account: "600" }, [
+        { id: "201", title: "Other", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
+      ])
+      await store.savePeople({ provider: "max", account: "600" }, [{ id: "9", name: "Another account" }])
+    } finally {
+      await store.close()
+    }
+    expect(values((await complete("tabbed", "messages", "list", "")).lines)).not.toContain("201")
+    expect(values((await complete("tabbed", "contacts", "show", "")).lines)).not.toContain("9")
+    expect(values((await complete("other", "messages", "list", "")).lines)).toEqual(["201"])
+  })
+
+  it("offers names for an MCP-only profile without a shared pointer or a login", async () => {
+    bindProfile("mcponly", "500")
+    const streams = captureStreams()
+    const connect = () => {
+      throw new Error("Tab must not connect")
+    }
+    expect(await run(["complete", "--", "mcponly", "messages", "list", ""], { streams, connection: connect })).toBe(0)
+    expect(values(streams.stdout.join("\n").split("\n"))).toContain("101")
+    const directory = resolvePaths({ appName: "max-cli", prefix: "MAX" }).state
+    expect(existsSync(join(directory, "accounts", "mcponly.json"))).toBe(false)
+    expect(streams.stderr).toEqual([])
+  })
+
+  it("does not trust a stale shared pointer over MAX's current account", async () => {
+    bindProfile("stale", "500")
+    rememberAccount(MAX_APP, "stale", "600", process.env)
+    expect(values((await complete("stale", "messages", "list", "")).lines)).toContain("101")
+    expect(values((await complete("stale", "messages", "list", "")).lines)).not.toContain("201")
   })
 
   it("offers a bot's own chats to a bot command, not the personal account's", async () => {
@@ -85,20 +131,27 @@ describe("max complete", () => {
     expect(people.lines).toContain("8\tEve\\x0a$(touch z)")
   })
 
-  it("offers nothing for a chat when this profile has no cache, and creates none", async () => {
+  it("offers nothing for a chat when this profile has no account, and creates no legacy cache", async () => {
     const { code, lines } = await complete("nocache", "messages", "list", "")
     expect(code).toBe(0)
     expect(lines).toEqual([":4"])
     expect(existsSync(profileCacheFile("nocache"))).toBe(false)
   })
 
-  it("reads no cache for a first word that cannot be a profile name, even when a file is there", async () => {
-    const outside = await openProfileCache("../outside")
-    outside?.chats.write([
-      { id: "201", title: "Outside", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
-    ])
-    outside?.close()
+  it("stays silent for malformed local state and leaves it unchanged", async () => {
+    const directory = join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")
+    const file = join(directory, "broken.json")
+    for (const text of ["null", "{}", '{"viewerId":1}', '{"viewerId":""}', "not JSON"]) {
+      writeFileSync(file, text)
+      const answer = await complete("broken", "messages", "list", "")
+      expect(answer.code).toBe(0)
+      expect(answer.lines).toEqual([":4"])
+      expect(answer.stderr).toEqual([])
+      expect(readFileSync(file, "utf8")).toBe(text)
+    }
+  })
 
+  it("offers no names for a first word that cannot be a profile name", async () => {
     const { code, lines } = await complete("../outside", "messages", "list", "")
     expect(code).toBe(0)
     expect(lines).toEqual([":4"])
