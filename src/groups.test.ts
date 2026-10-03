@@ -112,6 +112,15 @@ describe("joining and leaving", () => {
     const read = await runWith(["gr-inspect", "chats", "inspect", "max.ru/join/abcdef", "--json"], environment)
 
     expect(read.code).toBe(0)
+    expect(JSON.parse(read.stdout)).toEqual({
+      id: String(GROUP.id),
+      kind: "group",
+      title: "Team",
+      username: null,
+      participantsCount: 2,
+      description: null,
+      member: null,
+    })
     expect(sent(Opcode.LINK_INFO)).toEqual([{ link: "join/abcdef" }])
     expect(sent(Opcode.CHAT_JOIN)).toEqual([])
     expect(journalOf("gr-inspect")).toEqual([])
@@ -549,7 +558,7 @@ describe("changing a group", () => {
 
       expect(code).toBe(0)
       const found = JSON.parse(stdout)
-      expect(found.items.map((one: { event: string }) => one.event)).toEqual(["new", "add", "remove"])
+      expect(found.items.map((one: { event: string }) => one.event)).toEqual(["create", "add", "remove"])
       expect(found.items[1]).toMatchObject({
         messageId: "3",
         by: { id: "10000001", name: "Owner" },
@@ -560,7 +569,37 @@ describe("changing a group", () => {
       expect(sent(Opcode.CHAT_MARK)).toEqual([])
     })
 
-    it("keeps only the events --event names, and none from before --since", async () => {
+    it("filters the canonical creation name and streams one JSON value per event", async () => {
+      const { environment, sent } = withHistory()
+      const result = await runWith(
+        ["gr-event-jsonl", "chats", "events", "Team", "--type", "create", "--jsonl"],
+        environment,
+      )
+      expect(result.code).toBe(0)
+      const rows = result.stdout
+        .trim()
+        .split(/\r?\n/)
+        .map((line) => JSON.parse(line))
+      expect(rows).toHaveLength(1)
+      expect(rows[0]).toMatchObject({ event: "create", title: "Team" })
+      expect(sent(Opcode.CHAT_MARK)).toEqual([])
+    })
+
+    it("passes an unrecognised MAX event through without inventing a name", async () => {
+      const { environment } = messenger({
+        [Opcode.CHAT_HISTORY]: {
+          messages: [{ id: 9n, time: at(50), attaches: [{ _type: "CONTROL", event: "custom-event" }] }],
+        },
+      })
+      const result = await runWith(
+        ["gr-custom-event", "chats", "events", "Team", "--type", "custom-event", "--json"],
+        environment,
+      )
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout).items).toMatchObject([{ event: "custom-event", messageId: "9" }])
+    })
+
+    it("keeps only the events --type names, and none from before --since-time", async () => {
       const { environment } = withHistory()
 
       const { stdout } = await runWith(
@@ -569,9 +608,9 @@ describe("changing a group", () => {
           "chats",
           "events",
           "Team",
-          "--event",
+          "--type",
           "add,remove",
-          "--since",
+          "--since-time",
           new Date(at(60)).toISOString(),
           "--json",
         ],
@@ -607,6 +646,81 @@ describe("changing a group", () => {
       expect(stderr).not.toContain("only the first")
     })
 
+    it("reads only enough native rows for a requested page, without marking intentional paging incomplete", async () => {
+      const { environment, sent } = messenger({
+        [Opcode.CHAT_MEMBERS]: (request) =>
+          Number(request.marker) === 0
+            ? { members: [member(1), member(2), member(3)], marker: 77 }
+            : { members: [member(3), member(4), member(5)], marker: 88 },
+      })
+      const first = await runWith(
+        ["gr-window", "chats", "members", "list", "Team", "--limit", "2", "--json"],
+        environment,
+      )
+      expect(JSON.parse(first.stdout)).toEqual({ items: expect.any(Array), page: 1, limit: 2, hasMore: true })
+      expect(JSON.parse(first.stdout).items.map((one: { id: string }) => one.id)).toEqual(["1", "2"])
+      expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(1)
+      expect(first.stderr).not.toContain("member list is incomplete")
+      const second = await runWith(
+        ["gr-window", "chats", "members", "list", "Team", "--limit", "2", "--page", "2", "--json"],
+        environment,
+      )
+      expect(JSON.parse(second.stdout).items.map((one: { id: string }) => one.id)).toEqual(["3", "4"])
+      expect(JSON.parse(second.stdout)).toMatchObject({ page: 2, limit: 2, hasMore: true })
+      expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(3)
+      expect(second.stderr).not.toContain("member list is incomplete")
+    })
+
+    it("--all retains the full available read with age and presence fields", async () => {
+      const { environment, sent } = messenger({
+        [Opcode.CHAT_MEMBERS]: (request) =>
+          Number(request.marker) === 0
+            ? { members: [member(1)], marker: 77 }
+            : {
+                members: [
+                  {
+                    ...member(2),
+                    contact: { ...member(2).contact, registrationTime: 1789776000000 },
+                    presence: { seen: 1789776100000 },
+                  },
+                ],
+              },
+      })
+      const result = await runWith(["gr-all", "chats", "members", "list", "Team", "--all", "--json"], environment)
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout)).toMatchObject({ page: 1, limit: 2, hasMore: false })
+      expect(JSON.parse(result.stdout).items).toHaveLength(2)
+      expect(JSON.parse(result.stdout).items[1].registeredAt).toBe(new Date(1789776000000).toISOString())
+      expect(JSON.parse(result.stdout).items[1].lastSeenAt).toBe(new Date(1789776100000).toISOString())
+      expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(2)
+      expect(sent(Opcode.CHAT_MARK)).toEqual([])
+      expect(sent(Opcode.MSG_GET_REACTIONS)).toEqual([])
+    })
+
+    it("--all keeps the 5000-member read bound and warns when MAX still has a marker", async () => {
+      const { environment, sent } = messenger({
+        [Opcode.CHAT_MEMBERS]: (request) => {
+          const from = Number(request.marker)
+          return { members: Array.from({ length: 50 }, (_, index) => member(from + index + 1)), marker: from + 50 }
+        },
+      })
+      const result = await runWith(["gr-cap", "chats", "members", "list", "Team", "--all", "--json"], environment)
+      expect(result.code).toBe(0)
+      expect(JSON.parse(result.stdout).items).toHaveLength(5000)
+      expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(100)
+      expect(result.stderr).toContain("only the first 5000 members were read")
+    })
+
+    it("a page beyond a stalled list still warns about the actual number read", async () => {
+      const { environment } = messenger({ [Opcode.CHAT_MEMBERS]: () => ({ members: [member(1)], marker: 5 }) })
+      const result = await runWith(
+        ["gr-empty-page", "chats", "members", "list", "Team", "--page", "2", "--limit", "2", "--json"],
+        environment,
+      )
+      expect(JSON.parse(result.stdout)).toMatchObject({ items: [], page: 2, hasMore: false })
+      expect(result.stderr).toContain("only the first 1 members were read")
+    })
+
     it("stops when a marker repeats instead of asking forever, and says the list is short", async () => {
       const { environment, sent } = messenger({
         [Opcode.CHAT_MEMBERS]: () => ({ members: [member(1)], marker: 5 }),
@@ -636,10 +750,40 @@ describe("changing a group", () => {
     const plain = await runWith(["gr-noroles", "chats", "members", "list", "Team", "--json"], unknown.environment)
 
     expect(JSON.parse(stdout).items.map((one: { role: string }) => one.role)).toEqual(["owner", "admin", "member"])
-    expect(JSON.parse(stdout)).toMatchObject({ hasMore: false, rolesKnown: true })
-    expect(JSON.parse(plain.stdout)).toMatchObject({ hasMore: false, rolesKnown: false })
+    expect(JSON.parse(stdout)).toMatchObject({ hasMore: false })
+    expect(JSON.parse(stdout)).not.toHaveProperty("rolesKnown")
+    expect(JSON.parse(plain.stdout)).not.toHaveProperty("rolesKnown")
     expect(JSON.parse(plain.stdout).items[0].role).toBeUndefined()
     expect(plain.stderr).toContain("who is owner or admin is not known")
+  })
+
+  it("shows a recorded group absent from the login delta with unknown settings", async () => {
+    const first = messenger()
+    expect((await runWith(["gr-delta-show", "chats", "list", "--json"], first.environment)).code).toBe(0)
+    const next = messenger({ [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, chats: [] } })
+    const result = await runWith(["gr-delta-show", "chats", "show", "Team", "--json"], next.environment)
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      id: String(GROUP.id),
+      title: "Team",
+      link: null,
+      settings: {
+        allCanPin: null,
+        onlyAdminsAdd: null,
+        onlyAdminsCall: null,
+        onlyOwnerEditsInfo: null,
+        membersSeeLink: null,
+      },
+    })
+    expect(next.sent(Opcode.CHAT_UPDATE)).toEqual([])
+  })
+
+  it.each(["members", "events", "inspect"])("offline %s reads never log in", async (name) => {
+    const { environment, max } = messenger()
+    const args = name === "members" ? [name, "list", "Team"] : name === "inspect" ? [name, GROUP.link] : [name, "Team"]
+    const result = await runWith([`gr-read-offline-${name}`, "chats", ...args, "--offline", "--json"], environment)
+    expect(JSON.parse(result.stderr).error.code).toBe("validation_error")
+    expect(max.sent).toEqual([])
   })
 
   it("shows the invite link, and says so when there is none to see", async () => {

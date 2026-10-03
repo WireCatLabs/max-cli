@@ -525,34 +525,24 @@ export class MaxClient {
        * page repeats its marker or brings nobody new, so a misread marker cannot loop.
        */
       list: async (reference: string): Promise<GroupMembers> => {
-        if (this.#offline) throw new CliError("validation_error", "`--offline` has no member list; MAX has")
-        const chatId = await this.chats.resolve(reference)
-        await this.#connectOnce()
-        const members = new Map<Id, GroupMember>()
-        let marker = 0
-        let complete = false
-        while (members.size < MEMBERS_READ) {
-          const answer = await this.#wire.chats.members({ chatId, type: "MEMBER", marker, count: MEMBERS_PAGE })
-          const before = members.size
-          for (const raw of asArray(answer.members)) {
-            const member = toGroupMember(raw)
-            if (member.id) members.set(member.id, member)
-          }
-          const next = typeof answer.marker === "number" ? answer.marker : 0
-          if (!next || next === marker || members.size === before) {
-            complete = !next
-            break
-          }
-          marker = next
-        }
-        const roles = await this.#roles(chatId)
-        const role = (id: Id) => (id === roles?.owner ? "owner" : roles?.admins.has(id) ? "admin" : "member")
-        return {
+        const {
+          hasMore: _hasMore,
+          truncated: _truncated,
+          readCount: _readCount,
+          ...found
+        } = await this.#members(reference)
+        return found
+      },
+      page: async (reference: string, window: { limit?: number; offset: number }) => {
+        const {
+          members: items,
+          hasMore,
           chatId,
-          members: [...members.values()].map((member) => (roles ? { ...member, role: role(member.id) } : member)),
-          complete,
-          rolesKnown: roles !== undefined,
-        }
+          rolesKnown,
+          truncated,
+          readCount,
+        } = await this.#members(reference, window)
+        return { items, hasMore, chatId, rolesKnown, truncated, readCount }
       },
       /** No history unless asked (`NEED-272`): what was said before somebody joined is not theirs by default. */
       add: (reference: string, people: string[], { history = false }: { history?: boolean } = {}) =>
@@ -596,7 +586,20 @@ export class MaxClient {
       if (entries.length === 0) {
         await this.#connectOnce()
         const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)
-        if (!raw) throw new CliError("not_found", `no chat ${chatId} among this account's chats`)
+        if (!raw) {
+          const shown = await this.chats.show(chatId)
+          return {
+            ...shown,
+            link: null,
+            settings: shown.settings ?? {
+              allCanPin: null,
+              onlyAdminsAdd: null,
+              onlyAdminsCall: null,
+              onlyOwnerEditsInfo: null,
+              membersSeeLink: null,
+            },
+          }
+        }
         return toGroupCard(raw)
       }
 
@@ -2019,6 +2022,47 @@ export class MaxClient {
   }
 
   /** The chat's owner and admins as the login carried them; `undefined` when it did not. */
+  async #members(
+    reference: string,
+    { limit, offset }: { limit?: number; offset: number } = { offset: 0 },
+  ): Promise<GroupMembers & { hasMore: boolean; truncated: boolean; readCount: number }> {
+    if (this.#offline) throw new CliError("validation_error", "`--offline` has no member list; MAX has")
+    const chatId = await this.chats.resolve(reference)
+    await this.#connectOnce()
+    const members = new Map<Id, GroupMember>()
+    const target = limit === undefined ? MEMBERS_READ : Math.min(MEMBERS_READ, offset + limit + 1)
+    let marker = 0
+    let complete = false
+    while (members.size < target) {
+      const answer = await this.#wire.chats.members({ chatId, type: "MEMBER", marker, count: MEMBERS_PAGE })
+      const before = members.size
+      for (const raw of asArray(answer.members)) {
+        const member = toGroupMember(raw)
+        if (member.id) members.set(member.id, member)
+      }
+      const next = typeof answer.marker === "number" ? answer.marker : 0
+      if (!next || next === marker || members.size === before) {
+        complete = !next
+        break
+      }
+      marker = next
+    }
+    const roles = await this.#roles(chatId)
+    const role = (id: Id) => (id === roles?.owner ? "owner" : roles?.admins.has(id) ? "admin" : "member")
+    const end = limit === undefined ? members.size : offset + limit
+    return {
+      chatId,
+      members: [...members.values()]
+        .slice(offset, end)
+        .map((member) => (roles ? { ...member, role: role(member.id) } : member)),
+      complete,
+      rolesKnown: roles !== undefined,
+      hasMore: end < members.size,
+      truncated: !complete && (members.size < target || members.size >= MEMBERS_READ),
+      readCount: members.size,
+    }
+  }
+
   async #roles(chatId: Id): Promise<{ owner?: Id; admins: Set<Id> } | undefined> {
     await this.#connectOnce()
     const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)

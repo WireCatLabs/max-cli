@@ -119,7 +119,7 @@ export const maxMessenger: Messenger = {
         ...(events ? { events } : {}),
       })
       clients.set(rootOf(command), client)
-      const adapter = maxAdapter(client, store, reach)
+      const adapter = maxAdapter(client, store, reach, (message) => context.renderer.note(message))
       return {
         ...adapter,
         close: async () => {

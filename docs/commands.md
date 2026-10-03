@@ -179,16 +179,16 @@ max chats events <chat> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 | Опция | Что делает |
 |---|---|
-| `--since <id-or-time>` | from this message id, ISO 8601 time, or 2h / 1d ago; 7 days ago if not given. |
-| `--event <names>` | only these, comma-separated, as MAX names them: new, add, remove, pin…. |
+| `--since-time <time>` | ISO 8601, or 2h / 1d ago; 7 days ago if not given. |
+| `--type <names>` | only these, comma-separated: join, leave, add, remove, create, title, pin. |
 
 ### `max chats inspect`
 
-what a link leads to, without joining it
+what an invite or public link leads to, without joining it
 
 ```sh
 max chats inspect <link>
@@ -196,7 +196,7 @@ max chats inspect <link>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `link` | обязательный | an invite link, https://max.ru/join/…, or a public one, https://max.ru/<name>. |
+| `link` | обязательный | an invite link or a public one. |
 
 ### `max chats join`
 
@@ -265,19 +265,25 @@ max chats create <title> [person] [options]
 
 ### `max chats members`
 
-who is in a group or channel; add or remove people
+who is in a group
 
 #### `max chats members list`
 
-everyone in a group or channel, from MAX: when their account was made and when they were last seen
+everyone in a group, a page at a time, with their role and when they were last seen
 
 ```sh
-max chats members list <chat>
+max chats members list <chat> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | chat id, or part of a chat name. |
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many to show. |
+| `--page <n>` | which page, starting at 1. |
+| `--all` | every row, no paging. |
 
 #### `max chats members add`
 

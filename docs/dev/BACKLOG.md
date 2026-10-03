@@ -149,8 +149,9 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   removal of the cache command and storage code (steps 6–7), and contact writes
   (`add|remove|block|unblock|rename|import`), the `chats folders` group, and
   `account update`/`account sessions list|end`, and group administration
-  (`create|join|leave|update`, members/admin writes, invite links). Left: a live check of
-  `messages list --transcribe`, remaining group reads and moderation, max's
+  (`create|join|leave|update`, members/admin writes, invite links), and
+  group reads (`members list`, `events`, `inspect`). Left: a live check of
+  `messages list --transcribe`, moderation/rules, max's
   half of the permission levels, and the `models` group: ~~max mounts its own, with `audio` only, so
   `conversations embed` tells the user to run `max models text download`, which max does not have~~.
   **Correction 2026-10-02:** `models text` is the shared one since #322; `models audio` is still max's own. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.

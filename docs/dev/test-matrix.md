@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**490 ✅ · 63 ⛔ · 0 ❌** — 209 commands, 344 options.
+**493 ✅ · 63 ⛔ · 0 ❌** — 209 commands, 347 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -35,8 +35,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats list` | `--unread` | ✅ |  |
 | `chats show` |  | ✅ |  |
 | `chats events` |  | ✅ |  |
-| `chats events` | `--since` | ✅ |  |
-| `chats events` | `--event` | ✅ |  |
+| `chats events` | `--since-time` | ✅ |  |
+| `chats events` | `--type` | ✅ |  |
 | `chats inspect` |  | ✅ |  |
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
@@ -45,6 +45,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats create` |  | ✅ |  |
 | `chats create` | `--channel` | ✅ |  |
 | `chats members list` |  | ✅ |  |
+| `chats members list` | `--limit` | ✅ |  |
+| `chats members list` | `--page` | ✅ |  |
+| `chats members list` | `--all` | ✅ |  |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
