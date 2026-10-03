@@ -396,7 +396,7 @@ your chat folders
 
 #### `max chats folders list`
 
-your chat folders, in the order MAX shows them
+your chat folders, in the order the app shows them
 
 ```sh
 max chats folders list
@@ -414,7 +414,7 @@ max chats folders create <title> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `title` | обязательный | the folder's name; MAX refused 21 characters and took 15. |
+| `title` | обязательный | the folder's name; the app may refuse a long one. |
 
 | Опция | Что делает |
 |---|---|

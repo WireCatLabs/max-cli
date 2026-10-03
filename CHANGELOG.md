@@ -8,6 +8,13 @@
 
 ### Изменено — может сломать скрипты
 
+- **`max chats folders create|update|delete` возвращают `operationId` вместе с результатом.**
+  Создание и изменение отвечают `{operationId, folder}`, удаление — `{operationId, folderId}`,
+  вместо самой карточки папки. Это общий формат операций MAX и Telegram; скриптам нужно
+  читать карточку из `folder` и использовать `folderId` после удаления. `update` без `--title`,
+  `--add` или `--remove` теперь отказывается вместо повторной записи той же папки.
+  Список папок сохраняет прежний формат. Подробнее: [папки](docs/usage.md#контакты-профиль-папки).
+
 - **`max contacts add|remove|block|unblock|rename|import` возвращают общий формат с `operationId`.**
   Добавление и переименование отвечают `{operationId, person}`, удаление и блокировка —
   `{operationId, personId}`, импорт — `{operationId, sent, recognised}`. В `recognised` теперь

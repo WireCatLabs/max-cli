@@ -29,7 +29,17 @@ export type MaxAdapter = MessengerAdapter &
   Required<
     Pick<
       MessengerAdapter,
-      "people" | "addContact" | "removeContact" | "block" | "unblock" | "renameContact" | "importContacts"
+      | "people"
+      | "addContact"
+      | "removeContact"
+      | "block"
+      | "unblock"
+      | "renameContact"
+      | "importContacts"
+      | "folders"
+      | "createFolder"
+      | "updateFolder"
+      | "deleteFolder"
     >
   >
 
@@ -111,6 +121,13 @@ export const maxAdapter = (client: MaxClient, store: SessionStore, reach: Reach 
 
     chat: (reference) => client.chats.show(reference),
     contact: (reference) => client.contacts.show(reference),
+
+    folders: () => client.folders.list(),
+    createFolder: (title, chatIds) => client.folders.create(title, chatIds),
+    updateFolder: (id, change) => client.folders.update(id, change),
+    deleteFolder: async (id) => {
+      await client.folders.delete(id)
+    },
 
     people: (references) => client.people(references),
     addContact: async (id) => toMember(await client.contacts.add(id)),
