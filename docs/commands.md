@@ -81,7 +81,7 @@ max setup [options]
 
 ## `max account`
 
-the account this profile is logged in as
+the logged-in account
 
 ### `max account show`
 

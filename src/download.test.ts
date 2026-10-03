@@ -3,9 +3,9 @@ import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
 import { CliError, captureStreams, memoryKeyring } from "@leemour/cli-core"
-import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import type { AttachmentLink } from "./domain/models.js"
-import { fetchBytes, publicOnly, type Reach, streamBytes } from "./download.js"
+import { fetchBytes, publicOnly, type Reach, streamBytes, watchdog } from "./download.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
@@ -17,6 +17,8 @@ let origin: string
 
 beforeAll(async () => {
   server = createServer((request, response) => {
+    if (request.url === "/truncated")
+      return response.writeHead(200, { "content-length": "1000", connection: "close" }).end("short body")
     if (request.url === "/missing") return response.writeHead(404).end()
     if (request.url === "/moved") return response.writeHead(302, { location: "/elsewhere" }).end()
     if (request.url === "/large-file") {
@@ -231,7 +233,42 @@ describe("fetchBytes, for a voice message", () => {
   })
 })
 
+describe("download stall watchdog", () => {
+  it("resets on progress, aborts after silence and disarms on completion", () => {
+    vi.useFakeTimers()
+    try {
+      const stalled = watchdog(100)
+      vi.advanceTimersByTime(90)
+      stalled.poke()
+      vi.advanceTimersByTime(90)
+      expect(stalled.signal.aborted).toBe(false)
+      vi.advanceTimersByTime(10)
+      expect(stalled.signal.aborted).toBe(true)
+      stalled.stop()
+      const completed = watchdog(100)
+      completed.stop()
+      vi.advanceTimersByTime(100)
+      expect(completed.signal.aborted).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+})
+
 describe("streamBytes", () => {
+  it("rejects a disconnected HTTP body and leaves no finished or partial file", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const result = await download(directory, { path: "/truncated" })
+    expect(result.code).not.toBe(0)
+    expect(result.stdout).toBe("")
+    expect(await readdir(directory)).toEqual([])
+  })
+
+  it("enforces a streaming byte budget when the server declares no length", async () => {
+    const bytes = streamBytes({ kind: "file", url: `${origin}/endless` }, anywhere, 8)
+    await expect(bytes.next()).rejects.toThrow(/larger than/)
+  })
+
   it("retains the general attachment size cap", async () => {
     const bytes = streamBytes({ kind: "file", url: `${origin}/too-large-file` }, anywhere)
     await expect(bytes.next()).rejects.toThrow(/larger than 4096 MiB/)

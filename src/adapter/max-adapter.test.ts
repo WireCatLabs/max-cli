@@ -190,6 +190,12 @@ describe("the MAX adapter", () => {
 
     store.writeState({ ...store.readState(), viewerId: String(OWNER) })
     expect(adapter.self()).toBe(String(OWNER))
-    expect(await adapter.me()).toEqual({ id: String(OWNER), name: "Owner", username: null })
+    expect(await adapter.me()).toEqual({
+      id: String(OWNER),
+      name: "Owner",
+      username: null,
+      phone: null,
+      description: null,
+    })
   })
 })

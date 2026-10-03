@@ -91,8 +91,8 @@ export const maxAdapter = (
     newSendId: () => client.newSendId(),
 
     me: async (): Promise<Account> => {
-      const { id, name } = await client.account.me()
-      return { id, name, username: null }
+      const profile = await client.account.me()
+      return { ...profile, username: null }
     },
 
     updateProfile: async (change) => {
