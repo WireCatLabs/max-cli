@@ -160,7 +160,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   shared package-upgrade workflow (#358). The permission-model move remains with T6.
   P7 migration prerequisite/cutover: 🚧 `feat/t6-permissions` owns the shared migration engine and MAX follow-up.
   Operation-id and server wrappers retain shared guard confirmation; the atomic config/CLI/MCP/server cutover remains.
-- **CLI-61** · P2 · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
+- **CLI-61** · P2 · 🚧 `fix/poll-revote-hint` · `polls vote` on another answer is refused by MAX (`poll.already.voted`) even on a
   poll with `--revote`; changing a vote takes `--retract` first, and the error does not say so.
   Retract first when the poll allows it, or name `--retract` in the error. Fix in cli-messaging's
   shared `polls vote`. Found live 2026-10-01.
