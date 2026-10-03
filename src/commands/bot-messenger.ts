@@ -1,6 +1,6 @@
 import type { BotMessenger, GlobalFlags, ResolveOptions, RunBotCommand, Settings } from "@leemour/cli-messaging/cli"
 import { asFirstWord } from "@leemour/cli-messaging/cli"
-import { fromOldSettings, permissionFor } from "@leemour/cli-messaging/sends"
+import { keyForWrite } from "@leemour/cli-messaging/sends"
 import { MAX_APP } from "../app.js"
 import { BOT_ADMIN_RIGHTS, maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
@@ -55,9 +55,8 @@ export const maxBot: BotMessenger = {
   fetching: { page: 100, pause: "1s", maxPages: 10, orderBy: "time" },
   permissionFix: (settings, request) => {
     const config = `max ${asFirstWord(settings.profile)}config set --bot`
-    if (settings.readOnly) return `${config} readOnly false`
-    const permission = permissionFor(request.kind ?? "message", request.action)
-    return `${config} allow ${[...new Set([...(settings.allow ?? []), permission])].join(",")}`
+    const key = request.key ?? `bot.${keyForWrite(request.kind ?? "message", request.action)}`
+    return `${config} permissions.${key} allow`
   },
   chatKindOf: (hit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown",
   joinsSince: (_command, profile, chatId, since) => {
@@ -78,14 +77,13 @@ export const maxBot: BotMessenger = {
         ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
       },
     )
-    // max's own guard decides a bot's writes until they move; the levels only keep the shared shape.
     return {
       ...own,
       offline: offline === true,
       configured: {},
       shared: {},
-      permissions: fromOldSettings(own.readOnly, own.allow, { bot: true }),
-      permissionSources: {},
+      permissions: own.permissions,
+      permissionSources: own.permissionSources,
     }
   },
   connect: async (command, token, { stop, events } = {}) => {

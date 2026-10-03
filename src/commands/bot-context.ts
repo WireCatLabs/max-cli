@@ -1,15 +1,17 @@
 import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { type EventSink, type Recording, startRecording } from "@leemour/cli-messaging/cli"
+import { levelFor } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { BotApiClient } from "../bot/client.js"
-import { BOT_PERMISSIONS } from "../bot/permissions.js"
+import { BOT_KEYS } from "../bot/permissions.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { botFetch } from "../bot/transport.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { resolveOutput } from "../output.js"
+import { askerFor, assertReadable } from "../permissions.js"
 import { asFirstWord, rootOf } from "../profile.js"
 import { readSecret } from "../session/prompt.js"
 import { environmentOf } from "./context.js"
@@ -57,7 +59,8 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   if (offline && !answersOffline) {
     throw new CliError("validation_error", `--offline reads the local copy; \`${command.name()}\` has to ask MAX`)
   }
-  const settings = resolveSettings(flags, { kind: "bot" })
+  const nativeApi = command.name() === "api" || command.parent?.name() === "api"
+  const settings = resolveSettings(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, { kind: "bot" })
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
     ...(environment.streams ? { streams: environment.streams } : {}),
@@ -95,6 +98,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
   const uploadFetch = () => environment.botFetch ?? botFetch()
   return {
+    askPermission: askerFor(command.optsWithGlobals(), environment),
     sleep: environment.sleep,
     /** The run's sink, for the requests that do not go through the transport — the upload. */
     events: recording?.events,
@@ -116,21 +120,11 @@ export const botContext = (command: Command, { offline: answersOffline = false }
 
 /** The personal account's `readOnly` and `allow` hold for the bot too; a prompt was waived (`NEED-304`), a refusal was not. */
 export const assertAllowed = (operation: ManifestOperation, settings: Settings): void => {
-  if (operation.effect === "read") return
-  if (settings.readOnly) {
-    throw new CliError(
-      "permission_error",
-      `profile ${settings.profile} is read-only (readOnly, from the ${settings.sources.readOnly}) — ` +
-        `the bot cannot ${operation.command} either`,
-    )
-  }
-  if (!settings.allow) return
-  const permission = BOT_PERMISSIONS[operation.id]
-  if (!permission || !settings.allow.includes(permission)) {
-    throw new CliError(
-      "permission_error",
-      `profile ${settings.profile} does not allow ${permission ?? operation.command} ` +
-        `(allow: ${settings.allow.join(", ") || "nothing"} — from the ${settings.sources.allow})`,
-    )
-  }
+  const key = BOT_KEYS[operation.id]
+  if (!key) throw new CliError("configuration_error", `unmapped Bot API permission: ${operation.id}`)
+  assertReadable(settings, key)
+  if (operation.effect !== "read" && levelFor(settings.permissions, key).level === "readonly")
+    throw new CliError("permission_error", `profile ${settings.profile} does not allow ${key} to write`, {
+      permission: key,
+    })
 }

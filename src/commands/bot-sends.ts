@@ -4,7 +4,7 @@ import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { newSendId, RecipientList, SendJournal, type SendKind, sendGuard } from "@leemour/cli-messaging/sends"
 import { botOperations } from "../bot/client.js"
-import { BOT_JOURNAL_KINDS } from "../bot/permissions.js"
+import { BOT_JOURNAL_KINDS, BOT_KEYS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
 import type { CallInput } from "../bot/transport.js"
 import { endpointOf, type UploadType, uploadFile, uploadTypeOf } from "../bot/uploads.js"
@@ -133,8 +133,11 @@ const chatOfCall = async (context: Context, input: CallInput): Promise<string | 
 /** Every bot write, from any command: readOnly and allow, then the recipient list and the journal. */
 export const guardedCall = async (context: Context, target: ManifestOperation, input: CallInput): Promise<unknown> => {
   const client = context.authenticated()
-  if (target.effect === "read") return client.call(target, input)
   assertAllowed(target, context.settings)
+  if (target.effect === "read") return client.call(target, input)
+  const key = BOT_KEYS[target.id]
+  if (key && (await import("@leemour/cli-messaging/sends")).levelFor(context.settings.permissions, key).level === "ask")
+    await context.askPermission(key, { chatId: null })
   const kind = BOT_JOURNAL_KINDS[target.id]
   if (!kind) return client.call(target, input)
   const chatId = await chatOfCall(context, input)

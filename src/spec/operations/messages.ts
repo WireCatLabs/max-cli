@@ -89,6 +89,14 @@ export const messagesSend = defineOperation({
     if (Array.isArray(message.attaches) && message.attaches.some((attach) => objectOf(attach)._type === "CONTROL")) {
       return ambiguous("messages.send")
     }
+    const attaches = Array.isArray(message.attaches) ? message.attaches.map(objectOf) : []
+    if (
+      attaches.some((attach) => attach._type === "POLL") &&
+      (attaches.length !== 1 ||
+        (typeof message.text === "string" && message.text !== "") ||
+        objectOf(message.link).type !== undefined)
+    )
+      return ambiguous("polls.create")
     const link = objectOf(message.link)
     const at = objectOf(message.delayedAttributes).timeToFire
     if (link.type === "FORWARD") {
@@ -98,6 +106,7 @@ export const messagesSend = defineOperation({
     return {
       chatId,
       kind: "message",
+      ...(control?._type === "POLL" ? { key: "polls.create" } : {}),
       ...cid,
       length: typeof message.text === "string" ? message.text.length : 0,
       ...(typeof at === "number" ? { scheduledFor: new Date(at).toISOString() } : {}),
@@ -147,6 +156,12 @@ export const messagesEdit = defineOperation({
   guard: (request) => ({
     chatId: chatOf(request),
     kind: "edit",
+    ...(request.text === undefined &&
+    Array.isArray(request.attachments) &&
+    request.attachments.length === 1 &&
+    objectOf(request.attachments[0])._type === "POLL"
+      ? { key: "polls.close" }
+      : {}),
     ...messageOf(request),
     length: typeof request.text === "string" ? request.text.length : 0,
   }),
@@ -195,7 +210,7 @@ export const messagesReact = defineOperation({
     reaction: v.strictObject({ reactionType: v.literal("EMOJI"), id: v.string() }),
   }),
   response: v.looseObject({ reactionInfo: v.optional(v.looseObject({})) }),
-  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", ...messageOf(request) }),
+  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", key: "reactions.add", ...messageOf(request) }),
   provenance: {
     confidence: "measured",
     sources: [
@@ -215,7 +230,7 @@ export const messagesUnreact = defineOperation({
   auth: true,
   request: v.strictObject({ chatId: id(), messageId: id() }),
   response: v.looseObject({ reactionInfo: v.optional(v.looseObject({})) }),
-  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", ...messageOf(request) }),
+  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", key: "reactions.remove", ...messageOf(request) }),
   provenance: {
     confidence: "measured",
     sources: ["measured against MAX 2026-09-24 in Saved messages", "tsmax removeReaction", "PyMax remove_reaction"],
@@ -236,7 +251,7 @@ export const messagesPollVote = defineOperation({
     answersIds: v.array(v.pipe(v.number(), v.integer(), v.minValue(0))),
   }),
   response: v.looseObject({ state: v.optional(v.looseObject({})) }),
-  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", ...messageOf(request) }),
+  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", key: "polls.vote", ...messageOf(request) }),
   provenance: {
     confidence: "measured",
     sources: [

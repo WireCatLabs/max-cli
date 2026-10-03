@@ -152,14 +152,12 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   (`create|join|leave|update`, members/admin writes, invite links), and
   group reads (`members list`, `events`, `inspect`), and shared moderation/rules with
   legacy checkpoint migration. Left: a live check of
-  `messages list --transcribe`, max's
-  half of the permission levels. **Correction 2026-10-03:** `models text` is shared since #322;
+  `messages list --transcribe`. MAX permission levels, config migration and MCP filtering are complete. **Correction 2026-10-03:** `models text` is shared since #322;
   `models audio`, its catalogue and installer now use the shared package too. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
   Shared runner and operational diagnostics: done (#347/#352).
   **Correction 2026-10-03:** search read-only MCP bridge is merged (#357), as is the
-  shared package-upgrade workflow (#358). The permission-model move remains with T6.
-  P7 migration prerequisite/cutover: 🚧 `feat/p7-cutover` owns the shared migration engine and MAX follow-up.
-  Operation-id and server wrappers retain shared guard confirmation; the atomic config/CLI/MCP/server cutover remains.
+  shared package-upgrade workflow (#358). The permission-model move is complete.
+  Canonical permissions now govern CLI/native reads, server writes/reads and MCP; `config migrate` preserves legacy levels and group checkpoints.
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside

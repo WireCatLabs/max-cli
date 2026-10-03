@@ -1,3 +1,4 @@
+import { levelFor } from "@leemour/cli-messaging/sends"
 import { McpServer } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
 import type { CommandContext } from "../commands/context.js"
@@ -9,7 +10,9 @@ import { MaxSession, type SessionOptions } from "./session.js"
 import { registerTools } from "./tools.js"
 
 export interface ServerOptions extends SessionOptions {
-  allowSend: boolean
+  allowSend?: boolean
+  yes?: boolean
+  allowDangerous?: boolean
   confirmSend?: boolean
   allowMarkRead?: boolean
   allowDelete?: boolean
@@ -24,7 +27,9 @@ export interface ServerOptions extends SessionOptions {
 export const createMaxServer = (
   context: CommandContext,
   {
-    allowSend,
+    allowSend = true,
+    yes = false,
+    allowDangerous = false,
     confirmSend = false,
     allowMarkRead = false,
     allowDelete = false,
@@ -33,7 +38,8 @@ export const createMaxServer = (
   }: ServerOptions,
 ) => {
   const session = new MaxSession(context, sessionOptions)
-  const permitted = context.settings.allow
+  const permitted = undefined
+  const toolGroups = ["contacts", "polls", "groups", "profile"] as const
   const build = (): McpServer => {
     const server = new McpServer(
       { name: "max", version: VERSION },
@@ -46,13 +52,15 @@ export const createMaxServer = (
           allowModerate,
           profile: context.settings.profile,
           permitted,
-          toolGroups: context.settings.mcpTools,
+          toolGroups,
         }),
       },
     )
     registerTools(server, session, {
       allowSend,
       confirmSend,
+      yes,
+      allowDangerous,
       allowMarkRead,
       allowDelete,
       allowModerate,
@@ -61,16 +69,20 @@ export const createMaxServer = (
       profile: context.settings.profile,
       transcribeModel: context.settings.transcribeModel,
       permitted,
-      toolGroups: context.settings.mcpTools,
+      toolGroups,
       warn: context.renderer.note,
     })
-    registerPrompts(server)
-    registerResources(server, session, {
-      profile: context.settings.profile,
-      defaultLimit: context.settings.limit,
-      store: context.store,
-      warn: context.renderer.note,
-    })
+    if (levelFor(context.settings.permissions, "messages").level !== "deny") registerPrompts(server)
+    if (
+      levelFor(context.settings.permissions, "messages").level !== "deny" &&
+      levelFor(context.settings.permissions, "chats").level !== "deny"
+    )
+      registerResources(server, session, {
+        profile: context.settings.profile,
+        defaultLimit: context.settings.limit,
+        store: context.store,
+        warn: context.renderer.note,
+      })
     return server
   }
   return { session, build }

@@ -247,7 +247,10 @@ describe("max chats moderate", () => {
     expect(config.code, config.stderr).toBe(0)
     const result = await check([profile, "chats", "moderate", "Team", "--json"], environment)
     expect(result.json).toEqual([
-      expect.objectContaining({ outcome: "refused", reason: expect.stringContaining("does not allow delete") }),
+      expect.objectContaining({
+        outcome: "refused",
+        reason: expect.stringContaining("does not let messages.delete write"),
+      }),
     ])
     expect(deletes()).toEqual([])
   })
@@ -263,8 +266,8 @@ describe("max chats moderate", () => {
     expect(max.sent).toEqual([])
   })
   it.each([
-    ["forbid", "forbidden"],
-    ["confirm", "planned"],
+    ["deny", "forbidden"],
+    ["ask", "planned"],
     ["readonly", "reported"],
   ])("reads consent.delete %s without any deletion", async (level, outcome) => {
     const profile = `ck-level-${level}`

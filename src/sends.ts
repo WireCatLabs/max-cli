@@ -1,6 +1,10 @@
+import { CliError } from "@leemour/cli-core"
 import {
+  type Asker,
   currentOperation,
   type GuardRequest,
+  keyForWrite,
+  levelFor,
   newOperationId,
   RecipientList,
   type SendGuard,
@@ -11,6 +15,7 @@ import {
 } from "@leemour/cli-messaging/sends"
 import { MAX_APP } from "./app.js"
 import { type Settings, setCommandFor } from "./config.js"
+import { approvePermission } from "./permissions.js"
 
 export const sendsPathFor = (profile: string, env: NodeJS.ProcessEnv = process.env): string =>
   sharedSendsPath(MAX_APP, profile, env)
@@ -26,7 +31,7 @@ export const recipientListFor = (profile: string, env: NodeJS.ProcessEnv = proce
  * a send's is its send id. A write a shared service started keeps the service's. `MaxClient` checks before each write and records after it, one at a
  * time, and the server builds a guard per request, so one guard never holds two writes at once.
  */
-export const operating = (guard: SendGuard): SendGuard => {
+export const operating = (guard: SendGuard, key?: string): SendGuard => {
   let current: string | undefined
   const ask = guard.ask
   const requests = new WeakMap<GuardRequest, { source: GuardRequest; value: GuardRequest }>()
@@ -49,6 +54,7 @@ export const operating = (guard: SendGuard): SendGuard => {
       }
       const value = {
         ...source,
+        ...(source.key === undefined && key ? { key } : {}),
         operationId: request.operationId ?? currentOperation() ?? request.sendId ?? newOperationId(),
       }
       found = { source, value }
@@ -74,8 +80,8 @@ export const operating = (guard: SendGuard): SendGuard => {
  * The guard a profile's configuration asks for — the command's, and `max serve`'s for every write
  * it forwards. Built per request in the server, so `config set readOnly true` needs no restart.
  */
-export const guardFor = (settings: Settings, warn: (message: string) => void): SendGuard =>
-  operating(
+export const guardFor = (settings: Settings, warn: (message: string) => void, ask?: Asker, key?: string): SendGuard => {
+  const guard = operating(
     sendGuard({
       profile: settings.profile,
       command: MAX_APP.command,
@@ -88,9 +94,29 @@ export const guardFor = (settings: Settings, warn: (message: string) => void): S
             allowFix: setCommandFor(settings.sources.allow, settings.profile, "allow"),
           }
         : {}),
+      permissions: settings.permissions,
+      permissionSources: settings.permissionSources,
+      ...(ask ? { ask } : {}),
       sendsPerHour: settings.sendsPerHour,
       journal: new SendJournal(sendsPathFor(settings.profile)),
       recipients: recipientListFor(settings.profile),
       warn,
     }),
+    key,
   )
+  return {
+    ...guard,
+    check: (request, options) => {
+      if (request.key === "chats.moderate") {
+        const action = keyForWrite(request.kind ?? "message", request.action)
+        const level = levelFor(settings.permissions, action).level
+        if (level === "deny" || level === "readonly")
+          throw new CliError("permission_error", `profile ${settings.profile} does not let ${action} write`, {
+            permission: action,
+          })
+      }
+      guard.check(request, options)
+      if (request.key === "chats.moderate") approvePermission(keyForWrite(request.kind ?? "message", request.action))
+    },
+  }
+}

@@ -21,8 +21,8 @@ describe("ModerationRules", () => {
 
     expect(saved).toEqual({ ...defaultRules("Team"), invites: "delete" })
     expect(JSON.parse(readFileSync(rules.path, "utf8")).groups["-1"].consent).toEqual({
-      delete: "flag",
-      remove: "flag",
+      delete: "ask",
+      remove: "ask",
     })
     expect(saved.newAccount).toEqual({ days: 7, action: "report" })
   })
@@ -32,7 +32,7 @@ describe("ModerationRules", () => {
     const consent = { delete: "ask", remove: "deny" }
     writeFileSync(rules.path, JSON.stringify({ groups: { "-1": { ...defaultRules("Team"), consent } } }))
 
-    expect(rules.read("-1")?.consent).toEqual({ delete: "confirm", remove: "forbid" })
+    expect(rules.read("-1")?.consent).toEqual({ delete: "ask", remove: "deny" })
   })
 
   it("loads a file written when join requests had rules, and drops them on the next write", () => {
@@ -40,7 +40,7 @@ describe("ModerationRules", () => {
     const old = {
       ...defaultRules("Team"),
       requests: "both",
-      consent: { delete: "flag", remove: "flag", accept: "allow", decline: "allow" },
+      consent: { delete: "ask", remove: "ask", accept: "allow", decline: "allow" },
     }
     writeFileSync(rules.path, JSON.stringify({ groups: { "-1": old } }))
 
@@ -48,7 +48,7 @@ describe("ModerationRules", () => {
     rules.set("-1", "Team", "links", "delete")
     const written = JSON.parse(readFileSync(rules.path, "utf8")).groups["-1"]
     expect(written.requests).toBeUndefined()
-    expect(written.consent).toEqual({ delete: "flag", remove: "flag" })
+    expect(written.consent).toEqual({ delete: "ask", remove: "ask" })
   })
 
   it("reads lists and numbers from text, and puts a rule back with unset", () => {
@@ -56,8 +56,8 @@ describe("ModerationRules", () => {
 
     expect(rules.set("-1", null, "trusted", "30000003, 30000004").trusted).toEqual(["30000003", "30000004"])
     expect(rules.set("-1", null, "flood.messages", "10").flood).toEqual({ messages: 10, minutes: 1, action: "report" })
-    expect(rules.set("-1", null, "consent.remove", "confirm").consent.remove).toBe("confirm")
-    expect(rules.unset("-1", null, "consent.remove").consent.remove).toBe("flag")
+    expect(rules.set("-1", null, "consent.remove", "ask").consent.remove).toBe("ask")
+    expect(rules.unset("-1", null, "consent.remove").consent.remove).toBe("ask")
     expect(rules.read("-1")?.trusted).toEqual(["30000003", "30000004"])
   })
 
@@ -65,7 +65,7 @@ describe("ModerationRules", () => {
     const rules = fresh()
 
     expect(() => rules.set("-1", null, "spam", "delete")).toThrow(/no rule spam — one of: trusted/)
-    expect(() => rules.set("-1", null, "consent.delete", "sometimes")).toThrow(/forbid\|flag\|confirm\|allow/)
+    expect(() => rules.set("-1", null, "consent.delete", "sometimes")).toThrow(/deny\|readonly\|ask\|allow/)
     expect(() => rules.set("-1", null, "flood.minutes", "0")).toThrow(/1 or more/)
     expect(() => rules.set("-1", null, "blocked", "Bob")).toThrow(/person ids/)
     expect(rules.read("-1")).toBeUndefined()

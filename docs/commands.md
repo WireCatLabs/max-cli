@@ -1722,6 +1722,20 @@ max config show [options]
 |---|---|
 | `--bot` | the settings a `max bot` command on this profile gets, rather than the personal account's. |
 
+### `max config migrate`
+
+replace legacy access settings with permissions, preserving effective levels
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max config migrate [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--dry-run` | show the migration without writing the file. |
+
 ### `max config set`
 
 save a setting to the configuration file
@@ -1734,7 +1748,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -1755,7 +1769,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
 
 | Опция | Что делает |
 |---|---|
@@ -1902,11 +1916,12 @@ max mcp [options]
 
 | Опция | Что делает |
 |---|---|
-| `--allow-send` | offer the send tool; without it the server can only read. |
+| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
-| `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it. |
-| `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone. |
-| `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it. |
+| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
+| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
+| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ### `max mcp config`
 
@@ -1918,11 +1933,12 @@ max mcp config [options]
 
 | Опция | Что делает |
 |---|---|
-| `--allow-send` | offer the send tool; without it the server can only read. |
+| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
-| `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it. |
-| `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone. |
-| `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it. |
+| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
+| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
+| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ### `max mcp setup`
 
@@ -1941,11 +1957,12 @@ max mcp setup <client> [options]
 | Опция | Что делает |
 |---|---|
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
-| `--allow-send` | offer the send tool; without it the server can only read. |
+| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
-| `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it. |
-| `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone. |
-| `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it. |
+| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
+| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
+| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ### `max mcp doctor`
 
@@ -1957,11 +1974,12 @@ max mcp doctor [options]
 
 | Опция | Что делает |
 |---|---|
-| `--allow-send` | offer the send tool; without it the server can only read. |
+| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
-| `--allow-mark-read` | offer the tool that marks a chat read; the other person sees it. |
-| `--allow-delete` | offer the tool that deletes messages for you only; it cannot be undone. |
-| `--allow-moderate` | let max_chats_check act on a group's rules — delete others' messages, remove people — where they allow it. |
+| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
+| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
+| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ## `max bot`
 
@@ -2757,13 +2775,17 @@ delete a comment under a post
 **Меняет что-то в MAX.**
 
 ```sh
-max bot comments delete <message> <comment>
+max bot comments delete <message> <comment> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `message` | обязательный |  |
 | `comment` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
 
 ### `max bot uploads`
 
@@ -3140,6 +3162,7 @@ max bot api delete-message [options]
 | Опция | Что делает |
 |---|---|
 | `--message-id <value>` | Deleting message identifier. |
+| `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
 
 #### `max bot api get-message-by-id`
 
@@ -3217,6 +3240,7 @@ max bot api delete-comment [options]
 |---|---|
 | `--message-id <value>` | Message identifier (`mid`) of the commented message. |
 | `--comment-id <value>` | Deleting comment identifier. |
+| `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
 
 #### `max bot api get-comment-by-id`
 

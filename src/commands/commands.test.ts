@@ -147,6 +147,7 @@ describe("max commands", () => {
       "recipients add",
       "recipients remove",
       "recipients clear",
+      "config migrate",
       "config set",
       "config unset",
       "mcp setup",

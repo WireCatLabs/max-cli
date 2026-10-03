@@ -162,7 +162,13 @@ export const chatsUpdate = defineOperation({
     if (changes.filter(Boolean).length !== 1) return ambiguous("chats.update")
     if (changes[0]) {
       const pinned = messageOf(request, "pinMessageId")
-      return { chatId, kind: "pin", notify: request.notifyPin === true, ...(pinned.messageId === "0" ? {} : pinned) }
+      return {
+        chatId,
+        kind: "pin",
+        key: pinned.messageId === "0" ? "messages.unpin" : "messages.pin",
+        notify: request.notifyPin === true,
+        ...(pinned.messageId === "0" ? {} : pinned),
+      }
     }
     if (changes[1]) return { chatId, kind: "chat", action: "link.reset" }
     if (changes[2]) return { chatId, kind: "chat", action: "settings" }

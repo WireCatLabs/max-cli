@@ -68,6 +68,7 @@ export interface Operation<
 export type Guarded = Omit<SendEntry, "at" | "profile" | "outcome" | "errorCode" | "kind"> &
   Required<Pick<SendEntry, "kind">> & {
     /** Who a new group or an added member is: the recipient list is asked about each. Not journaled. */
+    key?: string
     personIds?: string[]
   }
 

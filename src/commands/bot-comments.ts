@@ -74,6 +74,7 @@ export const commentsCommand = (): Command => {
 
   annotate(command.command("delete <message> <comment>"), { mutates: true })
     .description("delete a comment under a post")
+    .option("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask")
     .action(async function (this: Command, message: string, comment: string) {
       const context = botContext(this)
       const answer = await guardedCall(context, operation("deleteComment"), {

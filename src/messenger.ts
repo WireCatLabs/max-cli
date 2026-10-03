@@ -1,14 +1,14 @@
-import { CliError } from "@leemour/cli-core"
 import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
-import { fromOldSettings, type GuardRequest, type SendGuard } from "@leemour/cli-messaging/sends"
+import type { GuardRequest, SendGuard } from "@leemour/cli-messaging/sends"
 import { moderationService } from "@leemour/cli-messaging/services"
 import type { Command } from "commander"
 import { maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
-import { forCommand } from "./commands/context.js"
+import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { migrateModerationPoints } from "./moderation/points.js"
+import { askerFor, commandPermission } from "./permissions.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
@@ -31,25 +31,6 @@ export const overServer = (guard: SendGuard, server: () => { readonly journals: 
       if (!through || entry.outcome === "refused" || !through.journals) guard.record(entry)
     },
   }
-}
-
-/**
- * Since cli-messaging 0.76 the shared `messages delete` leaves its `--allow-dangerous` to the
- * guard's permission levels, which max does not use until its half of P7 lands. Until then a
- * deletion is refused without the flag (`NEED-238`), except moderation after its rule-level consent.
- */
-const refuseUnmeantDeletion = (command: Command, { kind, count, key }: GuardRequest): void => {
-  if (
-    key === "chats.moderate" ||
-    kind !== "delete" ||
-    command.optsWithGlobals<{ allowDangerous?: boolean }>().allowDangerous === true
-  )
-    return
-  throw new CliError(
-    "confirmation_required",
-    `this deletes ${count === 1 ? "a message" : `${count ?? "the"} messages`} and cannot be undone — ` +
-      "add --allow-dangerous to go ahead",
-  )
 }
 
 /** One subcommand of a shared command group, to sit among max's own. */
@@ -76,7 +57,15 @@ export const maxMessenger: Messenger = {
 
   guard: (command, { profile }, warn) => {
     const client = () => clients.get(rootOf(command))
-    const guard = overServer(guardFor(resolveSettings({ profile }), warn), () => client()?.server)
+    const guard = overServer(
+      guardFor(
+        resolveSettings({ profile }),
+        warn,
+        askerFor(command.optsWithGlobals(), environmentOf(command)),
+        commandPermission(command) ?? undefined,
+      ),
+      () => client()?.server,
+    )
     return {
       ...guard,
       record: (entry) => {
@@ -86,15 +75,6 @@ export const maxMessenger: Messenger = {
           const { errorCode: _errorCode, ...done } = entry
           guard.record({ ...done, outcome: "sent" })
         } else guard.record(entry)
-      },
-      ask: async (request) => {
-        refuseUnmeantDeletion(command, request)
-        if (request.action === "sessions-end" && command.optsWithGlobals<{ yes?: boolean }>().yes !== true) {
-          throw new CliError(
-            "confirmation_required",
-            "this logs out every other device, the MAX app on your phone included — add --yes to go ahead",
-          )
-        }
       },
     }
   },
@@ -108,15 +88,14 @@ export const maxMessenger: Messenger = {
         ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
       },
     )
-    // max's guard decides its writes (P7 freeze); the levels here only let the shared read gate see the same profile.
     return {
       ...own,
       offline: offline === true,
       configured: {},
       // The shared hearing reads its model as `speechModel`; max's setting is `transcribeModel`.
       shared: { speechModel: own.transcribeModel },
-      permissions: fromOldSettings(own.readOnly, own.allow),
-      permissionSources: {},
+      permissions: own.permissions,
+      permissionSources: own.permissionSources,
     }
   },
 

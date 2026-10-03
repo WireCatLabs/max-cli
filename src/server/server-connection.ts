@@ -4,6 +4,7 @@ import { CliError, errorCodes } from "@leemour/cli-core"
 import { currentOperation } from "@leemour/cli-messaging/sends"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { OPERATIONS } from "../generated/operations.generated.js"
+import { permissionApprovals } from "../permissions.js"
 import { Connection, ProtocolError, type Wire, type WireEvent } from "../protocol/connection.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { SessionStore } from "../session/store.js"
@@ -92,7 +93,12 @@ export class ServerConnection implements Wire {
     watch?.({ phase: "sent", seq: this.#id + 1, opcode, bytes: 0 })
     // The write this frame belongs to, so the server's journal line carries the id the command answers with.
     const operationId = currentOperation()
-    const answer = await this.#ask({ opcode, payload, ...(operationId === undefined ? {} : { operationId }) })
+    const answer = await this.#ask({
+      opcode,
+      payload,
+      approvals: permissionApprovals(),
+      ...(operationId === undefined ? {} : { operationId }),
+    })
     watch?.({ phase: "received", seq: this.#id, opcode, bytes: 0 })
     return answer
   }

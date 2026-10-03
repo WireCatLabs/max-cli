@@ -11,12 +11,15 @@ import { MAX_APP } from "../app.js"
 import { MaxClient } from "../client.js"
 import { contextFor } from "../commands/context.js"
 import { maxServerOptions, NO_RESTART_ON } from "../commands/server.js"
+import { resolveSettings } from "../config.js"
 import { Opcode } from "../generated/opcodes.generated.js"
+import { overServer } from "../messenger.js"
+import { permissionScope, withPermissionApproval } from "../permissions.js"
 import { run } from "../program.js"
 import { Connection } from "../protocol/connection.js"
 import { decodeHeader, HEADER_BYTES } from "../protocol/frame.js"
 import { decompressBlock } from "../protocol/lz4.js"
-import { recipientsPathFor, sendsPathFor } from "../sends.js"
+import { guardFor, recipientsPathFor, sendsPathFor } from "../sends.js"
 import { SessionStore } from "../session/store.js"
 import { mockMax } from "../testing/mock-max.js"
 import { VERSION } from "../version.js"
@@ -620,7 +623,7 @@ describe("a command through max serve", () => {
     const { store, max } = await serve("c-delete", scripted(), { refreshEveryMs: 0 })
     const { client } = commandClient(store)
 
-    await client.messages.delete("111", ["116762160362694583"])
+    await withPermissionApproval("messages.delete", () => client.messages.delete("111", ["116762160362694583"]))
     await client.close()
     await settle(60)
 
@@ -874,8 +877,10 @@ describe("the send guard, in the server", () => {
     const client = context.createClient({ sends: "caller" })
     const passing = { check: () => {}, record: () => {} }
 
-    await guardedWrite(passing, { operationId: "op-42", chatId: "111", kind: "delete", count: 1 }, () =>
-      client.messages.delete("111", ["116762160362694583"]),
+    await withPermissionApproval("messages.delete", () =>
+      guardedWrite(passing, { operationId: "op-42", chatId: "111", kind: "delete", count: 1 }, () =>
+        client.messages.delete("111", ["116762160362694583"]),
+      ),
     )
     const sent = await client.messages.send("111", "hi")
     await client.close()
@@ -1220,4 +1225,79 @@ describe("max server on the shared commands", () => {
     await server.done
     expect(await answers(store.socketPath())).toBe(false)
   })
+})
+
+describe("P7 policy on the raw server socket", () => {
+  it("requires explicit confirmation of a raw ask write and still enforces readonly", async () => {
+    const { store, max } = await serve("p7-raw-ask", scripted())
+    const request = {
+      id: "delete",
+      opcode: Opcode.MSG_DELETE,
+      payload: { chatId: 111n, messageIds: [116762160362694583n], forMe: true },
+    }
+    expect((await ask(store, request)).error).toMatchObject({ code: "confirmation_required", guard: true })
+    expect(max.sent.some(({ opcode }) => opcode === Opcode.MSG_DELETE)).toBe(false)
+    expect(await ask(store, { ...request, approvals: ["messages.delete"] })).toMatchObject({ payload: {} })
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
+    const streams = captureStreams()
+    expect(
+      await run([store.profile, "config", "set", "permissions.messages", "readonly", "--json"], {
+        streams,
+        tty: false,
+      }),
+    ).toBe(0)
+    expect((await ask(store, { ...request, approvals: ["messages.delete"] })).error).toMatchObject({
+      code: "permission_error",
+    })
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
+  })
+
+  it("refuses denied history and snapshot requests after the server is already running", async () => {
+    const { store, max } = await serve("p7-raw-deny", scripted())
+    expect(
+      await run([store.profile, "config", "set", "permissions.messages", "deny", "--json"], {
+        streams: captureStreams(),
+        tty: false,
+      }),
+    ).toBe(0)
+    const before = max.sent.filter(({ opcode }) => opcode === Opcode.CHAT_HISTORY).length
+    expect(
+      (
+        await ask(store, {
+          id: "history",
+          opcode: Opcode.CHAT_HISTORY,
+          payload: { chatId: 111n, from: 1789776000000, forward: 0, backward: 1, getMessages: true },
+        })
+      ).error,
+    ).toMatchObject({ code: "permission_error", guard: true })
+    expect((await ask(store, { id: "snapshot", login: true })).error).toMatchObject({
+      code: "permission_error",
+      guard: true,
+    })
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.CHAT_HISTORY)).toHaveLength(before)
+  })
+})
+
+it("does not ask again on the server after the moderation layer approved the action", async () => {
+  const { store, max } = await serve("p7-rule-approved", scripted())
+  const client = contextFor({ profile: store.profile }, { store: () => store, streams: captureStreams() }).createClient(
+    { sends: "caller" },
+  )
+  const guard = overServer(
+    guardFor(resolveSettings({ profile: store.profile }), () => {}),
+    () => client.server,
+  )
+  try {
+    await permissionScope(() =>
+      guardedWrite(
+        guard,
+        { operationId: "moderated-1", key: "chats.moderate", chatId: "111", kind: "delete", count: 1 },
+        () => client.messages.delete("111", ["116762160362694583"]),
+      ),
+    )
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
+    expect(new SendJournal(sendsPathFor(store.profile)).entries()).toMatchObject([{ kind: "delete", outcome: "sent" }])
+  } finally {
+    await client.close()
+  }
 })

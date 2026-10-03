@@ -181,7 +181,7 @@ describe("max bot api, guarded like the personal account", () => {
       "--json",
     ])
     expect(write.code).not.toBe(0)
-    expect(write.stdout + write.stderr).toContain("read-only")
+    expect(write.stdout + write.stderr).toContain("does not allow bot.messages.send to write")
     expect(requests).toHaveLength(0)
     expect((await max(["ro", "bot", "me", "--json"])).code).toBe(0)
   })
@@ -204,7 +204,7 @@ describe("max bot api, guarded like the personal account", () => {
       `{"message_id": "m"}`,
       "--json",
     ])
-    expect(pin.stdout + pin.stderr).toContain("does not allow pin")
+    expect(pin.stdout + pin.stderr).toContain("does not allow bot.messages.pin to write")
     const hook = await max([
       "narrow",
       "bot",
@@ -214,7 +214,7 @@ describe("max bot api, guarded like the personal account", () => {
       `{"url": "https://example.test/h"}`,
       "--json",
     ])
-    expect(hook.stdout + hook.stderr).toContain("does not allow subscribe")
+    expect(hook.stdout + hook.stderr).toContain("does not allow bot.webhooks.set to write")
   })
 
   it("keeps message text out of what it prints and of every file it writes", async () => {

@@ -158,7 +158,15 @@ describe("max bot api, every generated operation with every flag", () => {
 
       for (const body of variants) {
         requests.length = 0
-        const result = await max(["bot", "api", operation.command, ...flags, ...body, "--json"])
+        const result = await max([
+          "bot",
+          "api",
+          operation.command,
+          ...flags,
+          ...body,
+          ...(["deleteMessage", "deleteComment"].includes(operation.id) ? ["--allow-dangerous"] : []),
+          "--json",
+        ])
         expect(result, result.stderr).toMatchObject({ code: 0 })
         const reached = requests.find(
           (request) => request.method === method && new URL(request.url ?? "", botUrl).pathname === expectedPath,

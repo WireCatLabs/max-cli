@@ -8,7 +8,7 @@ import {
   MESSAGES_SEARCH_DESCRIPTION,
   messagesSearchInput,
 } from "@leemour/cli-messaging/cli"
-import type { Permission } from "@leemour/cli-messaging/sends"
+import { levelFor, type Permission } from "@leemour/cli-messaging/sends"
 import {
   type CallToolResult,
   isInputRequiredResult,
@@ -21,7 +21,7 @@ import * as v from "valibot"
 import { maxAdapter } from "../adapter/max-adapter.js"
 import { ADMIN_RIGHTS, type AdminRight, DELETE_AT_ONCE, EVENTS_DAYS, type MaxClient } from "../client.js"
 import { listed } from "../commands/paging.js"
-import { type McpToolGroup, sendTime } from "../config.js"
+import { type McpToolGroup, resolveSettings, sendTime } from "../config.js"
 import { maskedProfile } from "../domain/map.js"
 import type { Page } from "../domain/models.js"
 import { fetchBytes, publicOnly } from "../download.js"
@@ -37,6 +37,7 @@ import {
   sessionPoints,
 } from "../moderation/check.js"
 import { defaultRules, ModerationRules, moderationPathFor } from "../moderation/rules.js"
+import { withPermissionApproval } from "../permissions.js"
 import { maxRecord } from "../record.js"
 import type { SessionStore } from "../session/store.js"
 import { type Heard, hearAll, transcribe, withTranscript } from "../transcribe/index.js"
@@ -778,33 +779,6 @@ const SEND_TOOLS = {
   }),
 }
 
-/** Which profile permission each writing tool needs (`CLI-37`). */
-const TOOL_PERMISSION: Record<string, Permission> = {
-  max_messages_send: "send",
-  max_messages_edit: "edit",
-  max_messages_forward: "forward",
-  max_messages_pin: "pin",
-  max_messages_unpin: "pin",
-  max_reactions_add: "reaction",
-  max_reactions_remove: "reaction",
-  max_polls_vote: "reaction",
-  max_polls_create: "send",
-  max_chats_mark_read: "read",
-  max_messages_delete: "delete",
-  max_contacts_add: "contacts",
-  max_contacts_remove: "contacts",
-  max_contacts_block: "contacts",
-  max_contacts_unblock: "contacts",
-  max_contacts_rename: "contacts",
-  max_polls_close: "edit",
-  max_chats_join: "groups",
-  max_chats_leave: "groups",
-  max_chats_create: "groups",
-  max_chats_admins_add: "groups",
-  max_chats_admins_remove: "groups",
-  max_account_update: "profile",
-}
-
 /** Registered only with `--allow-mark-read`: the other person sees it, and `--allow-send` does not imply it. */
 const MARK_READ_TOOLS = {
   max_chats_mark_read: tool({
@@ -995,21 +969,19 @@ export const registerTools = (
   server: McpServer,
   session: MaxSession,
   {
-    allowSend,
     confirmSend = false,
-    allowMarkRead = false,
-    allowDelete = false,
-    allowModerate = false,
+    yes = false,
+    allowDangerous = false,
     store,
     defaultLimit,
     profile,
     transcribeModel = DEFAULT_MODEL,
-    permitted,
-    toolGroups = [],
     warn = () => {},
   }: {
     allowSend: boolean
     confirmSend?: boolean
+    yes?: boolean
+    allowDangerous?: boolean
     allowMarkRead?: boolean
     allowDelete?: boolean
     allowModerate?: boolean
@@ -1025,21 +997,30 @@ export const registerTools = (
     warn?: (message: string) => void
   },
 ): void => {
-  const confirmed = confirmSend ? confirmer() : undefined
-
+  const settings = resolveSettings({ profile })
+  const confirmed = confirmer()
+  const keyForTool = (name: string): string => {
+    if (name === "max_inbox" || name === "max_review") return "messages"
+    if (name === "max_chats_mark_read") return "chats.mark-read"
+    if (name === "max_chats_rules") return "chats.rules.show"
+    return name.replace(/^max_/, "").replaceAll("_", ".")
+  }
   const offered: Record<string, AnyTool> = {
-    ...(allowSend ? SEND_TOOLS : {}),
-    ...(allowMarkRead ? MARK_READ_TOOLS : {}),
-    ...(allowDelete ? DELETE_TOOLS : {}),
-    ...Object.assign({}, ...toolGroups.map((group) => ACCOUNT_TOOLS[group])),
+    ...SEND_TOOLS,
+    ...MARK_READ_TOOLS,
+    ...DELETE_TOOLS,
+    ...Object.assign({}, ...Object.values(ACCOUNT_TOOLS)),
   }
-  const tools: Record<string, AnyTool> = {
-    ...READ_TOOLS,
-    ...Object.fromEntries(
-      Object.entries(offered).filter(([name]) => !permitted || permitted.includes(TOOL_PERMISSION[name] as Permission)),
-    ),
-  }
+  const tools = Object.fromEntries(
+    Object.entries({ ...READ_TOOLS, ...offered }).filter(([name]) => {
+      const level = levelFor(settings.permissions, keyForTool(name)).level
+      return level !== "deny" && (!(name in offered) || level !== "readonly")
+    }),
+  )
 
+  const needsForm = (key: string) =>
+    confirmSend ||
+    (levelFor(settings.permissions, key).level === "ask" && !(key === "messages.delete" ? allowDangerous : yes))
   for (const [name, definition] of Object.entries(tools)) {
     server.registerTool(
       name,
@@ -1048,21 +1029,23 @@ export const registerTools = (
         description: name in READ_TOOLS ? `${definition.description} ${UNTRUSTED}` : definition.description,
         inputSchema: toStandardJsonSchema(definition.input),
         annotations: definition.annotations,
-        ...(definition._meta ? { _meta: definition._meta } : {}),
+        ...(name in offered && needsForm(keyForTool(name)) ? { _meta: APPROVE } : {}),
       },
       async (args: Record<string, unknown>, ctx: ServerContext) => {
         try {
           const result = await session.use(name.replace(/^max_/, "mcp ").replaceAll("_", " "), (client, release) => {
             const defaults = { limit: defaultLimit, profile, transcribeModel, release, store, warn }
-            return confirmed && name in offered
+            const key = keyForTool(name)
+            const asks = name in offered && needsForm(key)
+            return asks
               ? confirmed(
                   { name, title: definition.title },
                   (reference) => client.chats.show(reference),
                   args,
                   ctx,
-                  (resolved) => definition.answer(client, resolved, defaults),
+                  (resolved) => withPermissionApproval(key, () => definition.answer(client, resolved, defaults)),
                 )
-              : definition.answer(client, args, defaults)
+              : withPermissionApproval(key, () => definition.answer(client, args, defaults))
           })
           return isInputRequiredResult(result) ? result : answered(result)
         } catch (error) {
@@ -1072,8 +1055,8 @@ export const registerTools = (
     )
   }
 
-  if (allowModerate && (!permitted || (permitted.includes("delete") && permitted.includes("groups")))) {
-    registerCheck(server, session, { store, profile })
+  if (["allow", "ask"].includes(levelFor(settings.permissions, "chats.moderate").level)) {
+    registerCheck(server, session, { store, profile, allowDangerous, yes, confirmSend })
   }
 
   server.registerTool(
@@ -1098,8 +1081,8 @@ export const registerTools = (
         kind: store.isBot() ? "personal + bot" : "personal",
         token,
         loggedInHere: store.hasLoggedIn(),
-        writes: Object.keys(offered),
-        allow: permitted ?? "all",
+        writes: Object.keys(tools).filter((name) => name in offered),
+        permissions: settings.permissions,
       })
     },
   )
@@ -1114,7 +1097,13 @@ export const registerTools = (
 const registerCheck = (
   server: McpServer,
   session: MaxSession,
-  { store, profile }: { store: SessionStore; profile: string },
+  {
+    store,
+    profile,
+    allowDangerous,
+    yes,
+    confirmSend,
+  }: { store: SessionStore; profile: string; allowDangerous: boolean; yes: boolean; confirmSend: boolean },
 ) => {
   const confirmed = confirmer()
   const title = "Check a group by its rules"
@@ -1143,7 +1132,9 @@ const registerCheck = (
         }),
       ),
       annotations: WRITE,
-      _meta: APPROVE,
+      ...(confirmSend || levelFor(resolveSettings({ profile }).permissions, "chats.moderate").level === "ask"
+        ? { _meta: APPROVE }
+        : {}),
     },
     async (args: Record<string, unknown>, ctx: ServerContext) => {
       try {
@@ -1157,15 +1148,25 @@ const registerCheck = (
           })
           const dryRun = args.dry_run === true
           const run = (confirm?: (finding: Finding) => Promise<boolean>) =>
-            finish(personal(client), sessionPoints(store), prepared, {
-              allowDangerous: true,
-              dryRun,
-              maxActions: MAX_ACTIONS,
-              ...(confirm ? { confirm } : {}),
-            })
+            withPermissionApproval("messages.delete", () =>
+              withPermissionApproval("chats.members.remove", () =>
+                finish(personal(client), sessionPoints(store), prepared, {
+                  allowDangerous,
+                  dryRun,
+                  maxActions: MAX_ACTIONS,
+                  ...(confirm ? { confirm } : {}),
+                }),
+              ),
+            )
 
-          const asked = dryRun ? [] : prepared.findings.filter((finding) => needsConfirm(prepared.rules, finding))
-          if (asked.length === 0) return run()
+          const asked =
+            dryRun || allowDangerous ? [] : prepared.findings.filter((finding) => needsConfirm(prepared.rules, finding))
+          if (
+            asked.length === 0 &&
+            !confirmSend &&
+            (levelFor(resolveSettings({ profile }).permissions, "chats.moderate").level !== "ask" || yes)
+          )
+            return run()
           const actions = asked.map(describe)
           return confirmed(
             { name: "max_chats_check", title },
