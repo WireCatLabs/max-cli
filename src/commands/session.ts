@@ -1,4 +1,5 @@
 import { CliError } from "@leemour/cli-core"
+import { annotate } from "@leemour/cli-core/commands"
 import { Argument, Command } from "commander"
 import { type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { maskedProfile } from "../domain/map.js"
@@ -72,8 +73,7 @@ export const sessionCommand = (): Command => {
    * glossed over: a forgotten token that is still live elsewhere is a different thing from a
    * revoked one.
    */
-  command
-    .command("end")
+  annotate(command.command("end"), { mutates: true, local: true })
     .description("forget the stored session for this profile")
     .action(async function (this: Command) {
       const { renderer, store, run } = forCommand(this)

@@ -1,4 +1,4 @@
-import { CliError, singleLine } from "@leemour/cli-core"
+import { CliError } from "@leemour/cli-core"
 import {
   deleteCommand,
   editCommand,
@@ -9,16 +9,12 @@ import {
   unpinCommand,
 } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
-import type { Message } from "../domain/models.js"
-import { type Saved, save } from "../download.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
-import { renderMessages } from "../rendering/messages.js"
 import { notDownloaded, transcribe } from "../transcribe/index.js"
 import { isInstalled, modelsDirectory } from "../transcribe/install.js"
 import { speechModel } from "../transcribe/models.js"
-import { type CommandContext, forCommand } from "./context.js"
-import { renderList } from "./paging.js"
+import { forCommand } from "./context.js"
 
 export const messagesCommand = (): Command => {
   const command = new Command("messages").description("read and send messages in a chat")
@@ -26,40 +22,18 @@ export const messagesCommand = (): Command => {
   const shared = sharedMessagesCommand(maxMessenger)
   for (const name of ["list", "search", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
 
-  command
-    .command("download")
-    .argument("<chat>", "chat id, or part of a chat name")
-    .argument("<message>", "message id")
-    .description("save a message's photos, files, videos and audio to a directory")
-    .option("--output <dir>", "where to save them", ".")
-    .action(async function (this: Command, chat: string, messageId: string) {
-      const { output } = this.opts<{ output: string }>()
-      const context = forCommand(this)
-      const { renderer, format, streams, createClient, run } = context
-
-      await run("messages download", async (events) => {
-        const client = createClient({ events })
-        try {
-          const chatId = await client.chats.resolve(chat)
-          const id = messageId.trim()
-          const { links, skipped } = await client.messages.links(chatId, id)
-          if (skipped.length > 0) renderer.note(`not downloadable: ${skipped.join(", ")}`)
-          if (links.length === 0) throw new CliError("not_found", `message ${id} has nothing to download`)
-
-          const saved: Saved[] = []
-          for (const [index, attachment] of links.entries()) {
-            if (attachment.unsafe)
-              renderer.note(`MAX marks ${singleLine(attachment.name ?? "this file")} as possibly unsafe`)
-            saved.push(await save(attachment, output, `${id}-${index + 1}`, context.reach))
-          }
-
-          if (format === "pretty") streams.data(`${saved.map((file) => singleLine(file.path)).join("\n")}\n`)
-          else renderList(renderer, format, saved)
-        } finally {
-          await client.close()
-        }
-      })
+  const download = sharedSubcommand(shared, "download")
+    .option("--output <dir>", "compatibility alias for --output-dir")
+    .hook("preAction", (action) => {
+      const { output, outputDir } = action.opts<{ output?: string; outputDir: string }>()
+      if (output === undefined) return
+      if (action.getOptionValueSource("outputDir") !== "default" && outputDir !== output) {
+        throw new CliError("validation_error", "--output and --output-dir must name the same directory")
+      }
+      action.setOptionValue("outputDir", output)
     })
+  command.addCommand(download)
+  command.addCommand(sharedSubcommand(shared, "evidence"))
 
   /**
    * **On this machine, and only with a model the owner downloaded** (`NEED-231`). The recording is
@@ -111,27 +85,7 @@ export const messagesCommand = (): Command => {
 
   command.addCommand(sendCommand(maxMessenger))
 
-  /** Read-only: cancelling one is `MSG_DELETE`, which max does not send — that stays in the MAX app. */
-  command
-    .command("scheduled")
-    .argument("<chat>", "chat id, or part of a chat name")
-    .description("messages waiting to be sent later in a chat, soonest first; cancel one in the MAX app")
-    .action(async function (this: Command, chat: string) {
-      const context = forCommand(this)
-      const { renderer, format, streams, createClient, run } = context
-
-      await run("messages scheduled", async (events) => {
-        const client = createClient({ events })
-        try {
-          const messages = await client.messages.scheduled(await client.chats.resolve(chat))
-          if (format !== "pretty") renderList(renderer, format, messages)
-          else if (messages.length === 0) renderer.note("nothing scheduled")
-          else streams.data(feed(context)(messages.map((m) => ({ ...m, timestamp: m.scheduledFor ?? m.timestamp }))))
-        } finally {
-          await client.close()
-        }
-      })
-    })
+  command.addCommand(sharedSubcommand(shared, "scheduled"))
 
   command.addCommand(editCommand(maxMessenger))
   command.addCommand(deleteCommand(maxMessenger))
@@ -141,14 +95,3 @@ export const messagesCommand = (): Command => {
 
   return command
 }
-
-const feed =
-  ({ color, settings }: CommandContext) =>
-  (messages: Message[]) =>
-    renderMessages(messages, {
-      color,
-      senderColors: settings.senderColors,
-      verbosity: settings.detail,
-      width: process.stdout.columns ?? 80,
-      profile: settings.profile,
-    })

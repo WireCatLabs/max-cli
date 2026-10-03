@@ -3,7 +3,7 @@ import { createWriteStream } from "node:fs"
 import { link, rm } from "node:fs/promises"
 import { BlockList, isIP } from "node:net"
 import { basename, join } from "node:path"
-import { Readable, Transform, Writable } from "node:stream"
+import { PassThrough, Readable, Transform, Writable } from "node:stream"
 import { pipeline } from "node:stream/promises"
 import { CliError } from "@leemour/cli-core"
 import type { AttachmentLink } from "./domain/models.js"
@@ -178,6 +178,29 @@ const tooLarge = (attachment: AttachmentLink, limit: number) =>
     "validation_error",
     `the ${attachment.kind} is larger than ${limit >= 1024 ** 2 ? `${Math.round(limit / 1024 ** 2)} MiB` : `${Math.round(limit / 1024)} KiB`} — not downloaded`,
   )
+
+/** General attachments stream with a file budget; voice transcription keeps its smaller memory budget. */
+export const streamBytes = async function* (
+  attachment: AttachmentLink,
+  reach: Reach = publicOnly,
+  limit = LARGEST_ATTACHMENT,
+): AsyncGenerator<Uint8Array> {
+  const { pump } = await open(attachment, reach, limit)
+  const body = new PassThrough()
+  const finished = pump(body).catch((error: unknown) => {
+    body.destroy(error instanceof Error ? error : new Error("attachment download failed"))
+    throw error
+  })
+  // The stream reports failures to its reader; observe the pump immediately as well.
+  void finished.catch(() => {})
+  try {
+    for await (const chunk of body) yield chunk as Buffer
+    await finished
+  } finally {
+    body.destroy()
+    await finished.catch(() => {})
+  }
+}
 
 /** Into memory rather than a file: a voice message is a few hundred kilobytes, and transcription reads it once. */
 export const fetchBytes = async (

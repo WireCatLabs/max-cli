@@ -42,6 +42,14 @@ describe("max commands", () => {
     expect(listed.sort()).toEqual(leaves(createProgram()).sort())
   })
 
+  it("marks session end as a local mutation without implying a remote logout", async () => {
+    const { stdout } = await commands()
+    const end = flat(JSON.parse(stdout[0] as string).commands).find(
+      (command) => command.path.join(" ") === "session end",
+    )
+    expect(end).toMatchObject({ mutates: true, local: true })
+  })
+
   it("marks the commands that change something in MAX, and only those", async () => {
     const { stdout } = await commands()
     const writing = flat(JSON.parse(stdout[0] as string).commands)
@@ -133,6 +141,7 @@ describe("max commands", () => {
       .filter((command) => command.local)
       .map((command) => `${command.path.join(" ")}${command.mutates ? "" : " (not a write)"}`)
     expect(local).toEqual([
+      "session end",
       "chats rules set",
       "chats rules unset",
       "recipients add",
