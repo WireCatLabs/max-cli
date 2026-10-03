@@ -184,8 +184,9 @@ export const streamBytes = async function* (
   attachment: AttachmentLink,
   reach: Reach = publicOnly,
   limit = LARGEST_ATTACHMENT,
+  onMime?: (mime: string | undefined) => void,
 ): AsyncGenerator<Uint8Array> {
-  const { pump } = await open(attachment, reach, limit)
+  const { pump, response } = await open(attachment, reach, limit)
   const body = new PassThrough()
   const finished = pump(body).catch((error: unknown) => {
     body.destroy(error instanceof Error ? error : new Error("attachment download failed"))
@@ -194,6 +195,7 @@ export const streamBytes = async function* (
   // The stream reports failures to its reader; observe the pump immediately as well.
   void finished.catch(() => {})
   try {
+    onMime?.(response.headers.get("content-type")?.split(";")[0]?.trim().toLowerCase())
     for await (const chunk of body) yield chunk as Buffer
     await finished
   } finally {

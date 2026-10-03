@@ -139,13 +139,21 @@ export const maxAdapter = (
         if (link.unsafe) warn(`MAX marks ${singleLine(link.name ?? "this file")} as possibly unsafe`)
       }
       return {
-        files: links.map((link) => ({
-          kind: kindOf(link.kind),
-          ...(link.name ? { name: link.name } : {}),
-          bytes: async function* () {
-            yield* streamBytes(link, reach, link.kind === "audio" ? LARGEST_VOICE : undefined)
-          },
-        })),
+        files: links.map((link) => {
+          let mime = ""
+          return {
+            kind: kindOf(link.kind),
+            ...(link.name ? { name: link.name } : {}),
+            get mime() {
+              return mime
+            },
+            bytes: async function* () {
+              yield* streamBytes(link, reach, link.kind === "audio" ? LARGEST_VOICE : undefined, (value) => {
+                mime = value ?? ""
+              })
+            },
+          }
+        }),
         skipped,
       }
     },
