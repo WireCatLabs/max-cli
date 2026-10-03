@@ -167,6 +167,10 @@ message id** and **one** copy, also across two connections and logins — the ca
   file (`wx`, so Windows too), and its outcome settles it; reading folds settled ones away, so two
   processes at the limit cannot both pass. Over `max serve` only the server reserves. These stop a model
   talked into sending by what it read, not an agent that edits the configuration (`NEED-159`).
+  **Correction 2026-10-03:** the operation-id wrapper retains one prepared request object
+  across `ask` and `check`, because the shared guard binds confirmation to that object.
+  The client-side server wrapper forwards `ask` too; a matching operation id on a different
+  request grants no confirmation. This prepares P7; MAX's configuration still uses `readOnly`/`allow`.
 - **`max serve` runs the same guard on every write it forwards, and journals it** (`NEED-269`):
   anything of the owner's can write to its socket, not only a command that checked first. Every
   request is first checked against the operation's strict schema, as `buildRequest` checks it in a

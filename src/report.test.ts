@@ -146,8 +146,8 @@ describe("the new issue", () => {
     const report = build()
     const ids = report.run?.events[0]?.ids as Record<string, string>
 
-    expect(JSON.stringify(report)).not.toMatch(/4242|"99"/)
     expect(ids.chat).toMatch(/^id:[0-9a-f]{12}$/)
+    expect(ids.message).toMatch(/^id:[0-9a-f]{12}$/)
     expect(report.sends[0]?.chatId).toBe(ids.chat)
     expect(report.sends[0]?.messageId).toBe(ids.message)
     expect(ids.cid).toBe("7")

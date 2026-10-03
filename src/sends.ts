@@ -1,5 +1,6 @@
 import {
   currentOperation,
+  type GuardRequest,
   newOperationId,
   RecipientList,
   type SendGuard,
@@ -27,10 +28,40 @@ export const recipientListFor = (profile: string, env: NodeJS.ProcessEnv = proce
  */
 export const operating = (guard: SendGuard): SendGuard => {
   let current: string | undefined
+  const ask = guard.ask
+  const requests = new WeakMap<GuardRequest, { source: GuardRequest; value: GuardRequest }>()
+  const prepared = (request: GuardRequest): GuardRequest => {
+    let found = requests.get(request)
+    const previous = found?.source
+    const unchanged =
+      previous &&
+      Object.keys(previous).length === Object.keys(request).length &&
+      Object.entries(request).every(([key, value]) =>
+        key === "personIds" && Array.isArray(value)
+          ? value.length === previous.personIds?.length &&
+            value.every((id, index) => id === previous.personIds?.[index])
+          : value === previous[key as keyof GuardRequest],
+      )
+    if (!found || !unchanged) {
+      const source = {
+        ...request,
+        ...(request.personIds ? { personIds: [...request.personIds] } : {}),
+      }
+      const value = {
+        ...source,
+        operationId: request.operationId ?? currentOperation() ?? request.sendId ?? newOperationId(),
+      }
+      found = { source, value }
+      requests.set(request, found)
+    }
+    current = found.value.operationId
+    return found.value
+  }
   return {
+    // The shared guard binds confirmation to the request object, not to its operation id.
+    ...(ask ? { ask: (request: GuardRequest) => ask.call(guard, prepared(request)) } : {}),
     check: (request, options) => {
-      current = request.operationId ?? currentOperation() ?? request.sendId ?? newOperationId()
-      guard.check({ ...request, operationId: current }, options)
+      guard.check(prepared(request), options)
     },
     record: (entry) => {
       const operationId = entry.operationId ?? entry.sendId ?? current
