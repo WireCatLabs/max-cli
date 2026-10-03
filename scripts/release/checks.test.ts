@@ -31,9 +31,9 @@ describe("docsRules", () => {
     write("docs/dev/notes.md", "# Notes\n\n~~old~~ **Correction 2026-09-28:** new, CLI-5.\n")
     write("docs/usage.md", "# Использование\n\n**Поправка:** ~~было~~ стало (MAX-4).\n")
     expect(docsProblems(root, docsRules(root))).toEqual([
-      "docs/usage.md:3: a correction mark on a user page",
-      "docs/usage.md:3: struck-out text on a user page",
-      "docs/usage.md:3: internal id MAX-4 on a user page",
+      `${join("docs", "usage.md")}:3: a correction mark on a user page`,
+      `${join("docs", "usage.md")}:3: struck-out text on a user page`,
+      `${join("docs", "usage.md")}:3: internal id MAX-4 on a user page`,
     ])
   })
 })

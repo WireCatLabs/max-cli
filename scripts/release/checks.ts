@@ -29,10 +29,13 @@ export const docsRules = (root: string): DocsRules => ({
   ],
   ids: IDS,
   // The pages a user reads: no «Поправка», no struck-out text, no ids (`docs/dev/CONVENTIONS.md`).
-  userPage: (name) => name === "README.md" || (/^docs\/[^/]+\.md$/.test(name) && !GENERATED.has(name)),
+  userPage: (name) => {
+    const portable = name.replaceAll("\\", "/")
+    return portable === "README.md" || (/^docs\/[^/]+\.md$/.test(portable) && !GENERATED.has(portable))
+  },
   correction: /поправка|correction \d{4}/i,
   // The private working trail is not in this repository, so a link into it cannot be checked here.
-  skipLink: (target) => /(^|\/)docs_ai(\/|$)/.test(target),
+  skipLink: (target) => /(^|\/)docs_ai(\/|$)/.test(target.replaceAll("\\", "/")),
 })
 
 const MAX_AGE_DAYS = 30

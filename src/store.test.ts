@@ -123,7 +123,7 @@ describe("max store", () => {
     expect(since.stdout.split("\n")).toHaveLength(10)
     expect(transcript.stdout).toMatch(/^# Друзья/)
     expect(JSON.parse(written.stdout)).toMatchObject({ path: file, count: 70 })
-    expect(statSync(file).mode & 0o777).toBe(0o600)
+    if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600)
     expect(readFileSync(file, "utf8").split("\n")[0]).toContain('"chatId":"111"')
   })
 

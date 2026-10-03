@@ -3,6 +3,7 @@ import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-core"
+import type { FetchLike } from "@leemour/cli-core/http"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { botsDirectory } from "../bot/registry.js"
@@ -62,13 +63,14 @@ beforeEach(() => {
   for (const name of ["default", "team", "quiet"]) new BotTokenStore({ profile: name, keyring }).write(TOKEN)
 })
 
-const max = async (argv: string[], timeoutMs?: number) => {
+const max = async (argv: string[], timeoutMs?: number, botFetch?: FetchLike) => {
   const streams = captureStreams()
   const code = await run(timeoutMs ? ["--timeout", `${timeoutMs}ms`, ...argv] : argv, {
     streams,
     tty: false,
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
+    ...(botFetch ? { botFetch } : {}),
     sleep: async () => {},
   })
   const stderr = streams.stderr.join("\n")
@@ -145,9 +147,16 @@ describe("max bot messages send", () => {
   })
 
   it("has no hourly limit", async () => {
-    for (let index = 0; index < 35; index++) {
-      expect((await max(["quiet", "bot", "messages", "send", "-100", "x", "--json"])).code).toBe(0)
+    let sends = 0
+    const fetch: FetchLike = async (input) => {
+      const sending = new URL(String(input)).pathname === "/messages"
+      if (sending) sends += 1
+      return new Response(sending ? sent("-100", "x") : BOT, { headers: { "content-type": "application/json" } })
     }
+    for (let index = 0; index < 35; index++) {
+      expect((await max(["quiet", "bot", "messages", "send", "-100", "x", "--json"], undefined, fetch)).code).toBe(0)
+    }
+    expect(sends).toBe(35)
   })
 
   it("records a send that got no answer as an unknown outcome, and does not repeat it", async () => {
