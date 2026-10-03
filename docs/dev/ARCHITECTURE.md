@@ -369,6 +369,11 @@ file. Either, both, or (default) neither. What it looks like and how to use it:
 
 ### The run directory
 
+**Correction 2026-10-03:** local `commands` discovery and `runs` read commands mount the shared
+cli-messaging factories; the MAX modules contain only the app binding. Discovery includes the
+common `contract` field, and truncated run output points to `--limit`. Reading these records
+starts no session and creates no new run.
+
 `<state dir>/runs/<UTC day>/<timestamp>-<command>-<suffix>/` with `run.json` and `events.jsonl`.
 [`../diagnostics.md`](../diagnostics.md) has the layout, modes (`0700`/`0600`), the twice-written
 `run.json` (`running`, then the outcome) and 30-day retention, pruned only when a recorded run
