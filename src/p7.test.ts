@@ -175,3 +175,20 @@ it("allows migration preview under a profile lock and refuses the whole-file wri
     delete process.env.MAX_PROFILE_LOCK
   }
 })
+
+it("honors a shared read child override even when its adapter uses a context read internally", async () => {
+  save({ profiles: { work: { permissions: { messages: "deny", "messages.show": "allow" } } } })
+  const { max, environment } = scripted()
+  const result = await cli(["work", "messages", "show", "111", "116762160362694583", "--json"], environment)
+  expect(result.code, result.stderr).toBe(6)
+  expect(max.sent.some(({ opcode }) => opcode === Opcode.CHAT_HISTORY)).toBe(true)
+})
+
+it("refuses a readonly command child when the parent allows writes", async () => {
+  save({ profiles: { work: { permissions: { reactions: "allow", "reactions.add": "readonly" } } } })
+  const { max, environment } = scripted()
+  expect((await cli(["work", "reactions", "add", "111", "116762160362694583", "👍", "--json"], environment)).code).toBe(
+    5,
+  )
+  expect(max.sent).toEqual([])
+})

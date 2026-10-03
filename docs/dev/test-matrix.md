@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**500 ✅ · 63 ⛔ · 0 ❌** — 211 commands, 352 options.
+**513 ✅ · 59 ⛔ · 0 ❌** — 212 commands, 360 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -285,6 +285,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `config show` |  | ✅ |  |
 | `config show` | `--bot` | ✅ |  |
+| `config migrate` |  | ✅ |  |
+| `config migrate` | `--dry-run` | ✅ |  |
 | `config set` |  | ✅ |  |
 | `config set` | `--defaults` | ✅ |  |
 | `config set` | `--personal` | ✅ |  |
@@ -310,13 +312,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `upgrade` |  | ✅ |  |
 | `upgrade` | `--check` | ✅ |  |
 | `complete` |  | ✅ |  |
-| `mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
-| `mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
-| `mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
-| `mcp` | `--allow-mark-read` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
-| `mcp` | `--allow-delete` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
-| `mcp` | `--allow-moderate` | ⛔ | serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options |
+| `mcp` |  | ✅ |  |
+| `mcp` | `--allow-dangerous` | ✅ |  |
+| `mcp` | `--allow-send` | ✅ |  |
+| `mcp` | `--confirm-send` | ✅ |  |
+| `mcp` | `--allow-mark-read` | ✅ |  |
+| `mcp` | `--allow-delete` | ✅ |  |
+| `mcp` | `--allow-moderate` | ✅ |  |
 | `mcp config` |  | ✅ |  |
+| `mcp config` | `--allow-dangerous` | ✅ |  |
 | `mcp config` | `--allow-send` | ✅ |  |
 | `mcp config` | `--confirm-send` | ✅ |  |
 | `mcp config` | `--allow-mark-read` | ✅ |  |
@@ -324,12 +328,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp config` | `--allow-moderate` | ✅ |  |
 | `mcp setup` |  | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--allow-dangerous` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--confirm-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-mark-read` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-delete` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-moderate` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--allow-dangerous` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--allow-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--confirm-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--allow-mark-read` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
@@ -447,6 +453,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot comments edit` |  | ✅ |  |
 | `bot comments edit` | `--format` | ✅ |  |
 | `bot comments delete` |  | ✅ |  |
+| `bot comments delete` | `--allow-dangerous` | ✅ |  |
 | `bot uploads put` |  | ✅ |  |
 | `bot uploads put` | `--type` | ✅ |  |
 | `bot api get-my-info` |  | ✅ |  |
@@ -525,6 +532,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot api edit-message` | `--body-file` | ✅ |  |
 | `bot api delete-message` |  | ✅ |  |
 | `bot api delete-message` | `--message-id` | ✅ |  |
+| `bot api delete-message` | `--allow-dangerous` | ✅ |  |
 | `bot api get-message-by-id` |  | ✅ |  |
 | `bot api get-message-by-id` | `--message-id` | ✅ |  |
 | `bot api get-comments` |  | ✅ |  |
@@ -546,6 +554,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot api delete-comment` |  | ✅ |  |
 | `bot api delete-comment` | `--message-id` | ✅ |  |
 | `bot api delete-comment` | `--comment-id` | ✅ |  |
+| `bot api delete-comment` | `--allow-dangerous` | ✅ |  |
 | `bot api get-comment-by-id` |  | ✅ |  |
 | `bot api get-comment-by-id` | `--message-id` | ✅ |  |
 | `bot api get-comment-by-id` | `--comment-id` | ✅ |  |

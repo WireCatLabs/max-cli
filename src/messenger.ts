@@ -8,7 +8,7 @@ import type { MaxClient } from "./client.js"
 import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { migrateModerationPoints } from "./moderation/points.js"
-import { askerFor, commandPermission } from "./permissions.js"
+import { askerFor, assertReadable, commandPermission } from "./permissions.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
@@ -113,12 +113,13 @@ export const maxMessenger: Messenger = {
   }),
 
   connect: async (command, context, { events } = {}) => {
-    const { createClient, store, reach } = forCommand(command)
+    const { createClient, store, reach, settings } = forCommand(command)
     if (command.name() === "moderate") migrateModerationPoints(store, context.env)
     const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
     try {
       const client = createClient({
         sends: "caller",
+        reads: (key) => assertReadable(settings, commandPermission(command) ?? key),
         record,
         ...(events ? { events } : {}),
       })

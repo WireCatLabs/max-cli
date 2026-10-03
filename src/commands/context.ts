@@ -13,7 +13,7 @@ import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, publicOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
-import { askerFor, assertReadable, permissionScope } from "../permissions.js"
+import { askerFor, assertReadable, currentReadPermission, permissionScope } from "../permissions.js"
 import { rootOf } from "../profile.js"
 import { guardFor } from "../sends.js"
 import { ServerConnection, stopServer } from "../server/server-connection.js"
@@ -190,7 +190,7 @@ export const contextFor = (
         ...(environment.connection ? { connection: environment.connection() } : wire ? { connection: wire } : {}),
         ...extra,
         // After `extra`, so an `undefined` handed in falls back to the guard rather than to none.
-        reads: (key) => assertReadable(settings, key),
+        reads: extra.reads ?? ((key) => assertReadable(settings, currentReadPermission() ?? key)),
         sends: extra.sends ?? sharedJournal(guardFor(settings, renderer.warn, askerFor(flags, environment)), wire),
       })
       clients.push(client)
