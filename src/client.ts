@@ -2,7 +2,6 @@ import { CliError, realSleep, type SleepLike } from "@leemour/cli-core"
 import { pickPerson as pickStoredPerson } from "@leemour/cli-messaging"
 import { type DiagnosticEvent, providerErrorKey } from "@leemour/cli-messaging/cli"
 import type { AccountAction, ChatAction, GuardRequest, SendGuard } from "@leemour/cli-messaging/sends"
-import type { CacheStore, PersonOrder, SyncSummary } from "./cache/store.js"
 import { delayMs } from "./config.js"
 import {
   namesFrom,
@@ -55,8 +54,8 @@ import { type Markup, parseMarkdown } from "./markdown.js"
 import { asFirstWord } from "./profile.js"
 import { Connection, ProtocolError, type Wire } from "./protocol/connection.js"
 import { asId, type Payload } from "./protocol/frame.js"
-import type { MaxRecord } from "./record.js"
-import { isId, pickChat, pickPerson } from "./resolve.js"
+import type { MaxRecord, SyncSummary } from "./record.js"
+import { isId, pickChat } from "./resolve.js"
 import { LOGIN_CHATS, type Resume, startSession } from "./session/handshake.js"
 import { type QrLogin, tokenByQr } from "./session/login.js"
 import {
@@ -88,8 +87,7 @@ export interface MaxClientOptions {
   /** Injected by tests, or one through `max serve`; defaults to a real WebSocket connection. */
   connection?: Wire
   /**
-   * Log in without the cache's sync marker, so the answer names every chat rather than what
-   * changed. `max serve` needs that: it hands its login to other commands as theirs.
+   * Log in without the saved contact marker, so the answer names every contact. `max serve` needs that: it hands its login to other commands as theirs.
    */
   fullLogin?: boolean
   /** The previous connection's login, for logging in again as a web tab does (`MAX-51`). `max serve` only. */
@@ -99,18 +97,9 @@ export interface MaxClientOptions {
    * and nothing else.
    */
   warn?: (message: string) => void
-  /** Where reads are recorded. It is a record, not a shortcut — see `offline`. */
-  cache?: CacheStore
-  /** What the login brings, kept in the shared `messages.db`. Beside `cache` until the cache goes. */
+  /** What the login brings, kept in the shared `messages.db`. */
   record?: MaxRecord
-  /**
-   * Answer from what was recorded and **never connect**.
-   *
-   * Off by default, and deliberately: `LOGIN` already returns the chats, the contacts and recent
-   * messages, so once a command connects at all those are fresh for free. Serving them from disk
-   * instead buys only the right to skip connecting — which is the same act as deciding not to find
-   * out what changed. For a messenger that is backwards (§3.4z of the cache plan).
-   */
+  /** Refuse network use; the shared services own offline reads. */
   offline?: boolean
   /**
    * One event per request, for whoever is keeping a diagnostic. Injected the way `warn` is: the
@@ -145,7 +134,6 @@ export class MaxClient {
   readonly #fullLogin: boolean
   readonly #resume: ResumeFrom | undefined
   readonly #warn: (message: string) => void
-  readonly #cache: CacheStore | undefined
   readonly #record: MaxRecord | undefined
   readonly #offline: boolean
   readonly #events: (event: DiagnosticEvent) => void
@@ -166,7 +154,6 @@ export class MaxClient {
     timeoutMs,
     connection,
     warn,
-    cache,
     record,
     offline = false,
     events,
@@ -180,7 +167,6 @@ export class MaxClient {
     this.#resume = resume
     this.#connection = connection ?? new Connection(timeoutMs === undefined ? {} : { timeoutMs })
     this.#warn = warn ?? ((message) => process.stderr.write(`${message}\n`))
-    this.#cache = cache
     this.#record = record
     this.#offline = offline
     this.#events = events ?? (() => {})
@@ -287,15 +273,6 @@ export class MaxClient {
       const { limit, offset = 0, kind, unread } = options
       const query = checkedQuery(options.query)
 
-      if (this.#offline) {
-        const recorded = this.#cache
-        if (!recorded) this.#recorded(undefined, "chats")
-        const store = recorded as CacheStore
-        if ((await store.chats.count()) === 0) this.#recorded(undefined, "chats")
-        const items = await store.chats.page({ limit: limit ?? Number.MAX_SAFE_INTEGER, offset, query, kind, unread })
-        return { items, hasMore: offset + items.length < (await store.chats.count({ query, kind, unread })) }
-      }
-
       await this.#connectOnce()
       const raw = asArray(this.#session().chats)
       const people = await this.#peopleFor(raw)
@@ -313,43 +290,22 @@ export class MaxClient {
         return { ...named, title: partner === undefined ? null : (people.get(partner)?.name ?? null) }
       })
 
-      const cache = this.#cache
-      if (!cache) {
-        let known = chats
-        await this.#keep("chats", async (record) => {
-          known = await record.rememberChats(chats, this.#chatsComplete)
-        })
-        const partners = new Map(chats.map((chat) => [chat.id, chat.providerMetadata]))
-        return paged(
-          matching(
-            known.map((chat) => ({
-              ...chat,
-              ...(partners.get(chat.id) ? { providerMetadata: partners.get(chat.id) } : {}),
-            })),
-            { query, kind, unread },
-          ),
-          limit,
-          offset,
-        )
-      }
-
-      // Written first, then read back: the titles just resolved have to be in the store before it
-      // is asked to order and page over them, and the delta this login carried is only a slice of
-      // what it now holds.
-      await cache.chats.write(chats)
-      // An empty answer is more likely a hiccup than an account that left every chat.
-      if (this.#chatsComplete && chats.length > 0) await cache.chats.markLeft(chats.map((chat) => chat.id))
-      const items = await cache.chats.page({ limit: limit ?? Number.MAX_SAFE_INTEGER, offset, query, kind, unread })
-      const partners = new Map(
-        chats.flatMap((chat) => (chat.providerMetadata ? [[chat.id, chat.providerMetadata]] : [])),
+      let known = chats
+      await this.#keep("chats", async (record) => {
+        known = await record.rememberChats(chats, this.#chatsComplete)
+      })
+      const partners = new Map(chats.map((chat) => [chat.id, chat.providerMetadata]))
+      return paged(
+        matching(
+          known.map((chat) => ({
+            ...chat,
+            ...(partners.get(chat.id) ? { providerMetadata: partners.get(chat.id) } : {}),
+          })),
+          { query, kind, unread },
+        ),
+        limit,
+        offset,
       )
-      return {
-        items: items.map((chat) => ({
-          ...chat,
-          ...(partners.has(chat.id) ? { providerMetadata: partners.get(chat.id) } : {}),
-        })),
-        hasMore: offset + items.length < (await cache.chats.count({ query, kind, unread })),
-      }
     },
 
     /**
@@ -375,8 +331,7 @@ export class MaxClient {
       const chat = isId(reference) ? items.find((one) => one.id === reference.trim()) : pickChat(reference, items)
       if (!chat) throw new CliError("not_found", `no chat ${reference.trim()} among this account's chats`)
 
-      const cache = this.#cache
-      let members = chat.kind === "channel" || !cache ? null : await cache.chats.members(chat.id)
+      let members: ChatCard["members"] = null
       if (chat.kind !== "channel")
         await this.#keep("members", async (record) => {
           members = await record.members(chat.id)
@@ -658,49 +613,6 @@ export class MaxClient {
 
   readonly contacts = {
     /**
-     * The people this account has a one-to-one chat with, named, newest conversation first.
-     *
-     * **It answers from the store**, which the login has just brought up to date (`#mergeLogin`),
-     * so the order and the paging happen in SQL over every person we know rather than over the
-     * handful this particular login mentioned. A delta carries almost nothing after the first run;
-     * rendering the response instead of the store would show an empty list on the second command.
-     *
-     * ⚠ **A group member is not in this answer** and nothing marks them as excluded: the query
-     * asks for people a *dialog* exists with, and they are outside it (`NEED-105`). They are in
-     * the store, with the chats they share with us, for the commands that will want them.
-     */
-    list: async (options: PageRequest = {}): Promise<Page<Contact>> => {
-      const { order = "recent", limit, offset = 0 } = options
-      const query = checkedQuery(options.query)
-
-      // The same query as the online path, so `--offline` cannot answer with people the other
-      // one deliberately leaves out — a group member is not a contact in either mode.
-      if (this.#offline) {
-        const recorded = this.#cache
-        if (!recorded || (await recorded.people.countContacts()) === 0) this.#recorded(undefined, "contacts")
-        return this.#pageOfContacts(recorded as CacheStore, order, limit, offset, query)
-      }
-
-      await this.#connectOnce()
-      const people = await this.#peopleFor(asArray(this.#session().chats))
-      const cache = this.#cache
-
-      // No store — it failed to open, and that is not a reason to lose the answer MAX just gave.
-      // What is lost is only the ordering and the paging the store does better.
-      if (!cache)
-        return paged(
-          matchingPeople(
-            [...people.values()].filter((contact) => contact.id !== ""),
-            query,
-          ),
-          limit,
-          offset,
-        )
-
-      return this.#pageOfContacts(cache, order, limit, offset, query)
-    },
-
-    /**
      * Finds whoever MAX has under a phone number. A lookup, not an add: nothing changes on the
      * account. ⚠ The number is never repeated in an error — it is the one field here the sixth
      * constraint is about.
@@ -757,37 +669,12 @@ export class MaxClient {
      * Only from the store: the shared chats are its `chat_members`, which nothing else holds.
      */
     show: async (reference: string): Promise<PersonCard> => {
-      if (this.#record) {
-        if (!this.#offline) {
-          await this.#connectOnce()
-          await this.#peopleFor(asArray(this.#session().chats))
-        }
-        const person = await this.#person(reference)
-        const chats = (await this.#record.chatsWith(person.id)).map(({ id, title, kind, lastMessageAt }) => ({
-          id,
-          title,
-          kind,
-          lastMessageAt,
-        }))
-        return { ...person, chats }
-      }
-      const cache = this.#cache
-      if (!cache) {
-        throw new CliError(
-          "configuration_error",
-          `there is no local store for profile "${this.#store.profile}" to look people up in — the note above says why`,
-        )
-      }
-
-      if (this.#offline) {
-        if ((await cache.people.count()) === 0) this.#recorded(undefined, "people")
-      } else {
-        await this.#connectOnce()
-        await this.#peopleFor(asArray(this.#session().chats))
-      }
-
-      const person = await pickPerson(reference, cache)
-      const chats = (await cache.people.sharedChats(person.id)).map(({ id, title, kind, lastMessageAt }) => ({
+      const record = this.#record
+      if (!record) throw new CliError("configuration_error", "no local store to look people up in")
+      await this.#connectOnce()
+      await this.#peopleFor(asArray(this.#session().chats))
+      const person = await this.#person(reference)
+      const chats = (await record.chatsWith(person.id)).map(({ id, title, kind, lastMessageAt }) => ({
         id,
         title,
         kind,
@@ -803,16 +690,14 @@ export class MaxClient {
      * It is a repair tool, not the way contacts arrive. The delta rides on the login every command
      * already performs, so there is nothing to schedule and no budget to spend — what this is for
      * is a store that has drifted, or a full re-take after a schema rebuild threw the rows away.
-     * It is also the only thing that could ever prune somebody MAX has stopped returning, which is
-     * the second reason it exists.
      */
     sync: async (): Promise<SyncSummary & { full: true }> => {
       if (this.#offline) {
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot sync")
       }
 
-      const cache = this.#cache
-      if (!cache && !this.#record) {
+      const record = this.#record
+      if (!record) {
         throw new CliError(
           "configuration_error",
           `there is no local store for profile "${this.#store.profile}" to sync into — the note above says why`,
@@ -820,7 +705,6 @@ export class MaxClient {
       }
 
       // Before connecting, or the login would carry the marker this is meant to discard.
-      await cache?.forgetSyncMarker()
       await this.#keep("marker", (record) => record.forgetMarker())
       await this.#connectOnce()
 
@@ -828,48 +712,12 @@ export class MaxClient {
       // here would store ids without names for most of them.
       await this.#peopleFor(asArray(this.#session().chats))
 
-      const known = this.#record ? (await this.#record.people()).all().length : ((await cache?.people.count()) ?? 0)
+      const known = (await record.people()).all().length
       return { ...(this.#merged ?? { known: 0, added: 0, changed: 0 }), known, full: true }
     },
   }
 
   readonly messages = {
-    /**
-     * **Searches what this machine has read, and never asks MAX.**
-     *
-     * MAX has no search operation in our registry — nine opcodes, none of them a query — so there
-     * is nothing to ask. That makes this the one read that is local by nature rather than by
-     * choice, and it is the opposite of the rule every other read follows (`df6792a`: the record
-     * does not answer a read).
-     *
-     * ⚠ **So it finds what has been read, not what exists.** A chat nobody has opened contributes
-     * nothing, and there is no way for the answer to know that. The command says so on stderr
-     * rather than leaving the reader to infer it from a short list, and `max messages list <chat>`
-     * is what fills the gap.
-     *
-     * It opens no connection at all, which also means it costs no login (`RISK-2`).
-     */
-    search: async (
-      query: string,
-      options: { chatId?: Id; limit?: number; offset?: number } = {},
-    ): Promise<Page<MessageHit>> => {
-      const checked = checkedQuery(query)
-      if (checked === undefined) throw new CliError("validation_error", "a search needs something to search for")
-
-      const cache = this.#cache
-      if (!cache) {
-        throw new CliError(
-          "not_found",
-          "searching reads the local copy, and this profile has none — run `max messages list <chat>` first",
-        )
-      }
-
-      const { chatId, limit = 20, offset = 0 } = options
-      const items = await cache.messages.search({ query: checked, ...(chatId ? { chatId } : {}), limit, offset })
-      const total = await cache.messages.countSearch({ query: checked, ...(chatId ? { chatId } : {}) })
-      return { items, hasMore: offset + items.length < total }
-    },
-
     /**
      * The chat's queue of scheduled messages, soonest first. Read-only: cancelling is `MSG_DELETE`,
      * which nothing here sends. Never cached — the queue empties by itself as messages go out.
@@ -918,21 +766,9 @@ export class MaxClient {
       const { before, after, reactions = true } = options
 
       if (after !== undefined) {
-        const found = this.#offline
-          ? this.#recorded(await this.#cache?.messages.window(chatId, after + 1, 0, limit + 1), "messages")
-          : await this.#history(chatId, { from: after + 1, backward: 0, forward: limit + 1 })
+        const found = await this.#history(chatId, { from: after + 1, backward: 0, forward: limit + 1 })
         const later = found.filter((message) => Date.parse(message.timestamp) > after)
         return { items: later.slice(0, limit), hasMore: later.length > limit }
-      }
-
-      if (this.#offline) {
-        const cache = this.#cache
-        const stored =
-          before === undefined
-            ? await cache?.messages.read(chatId, limit, ANY_AGE)
-            : await cache?.messages.window(chatId, before, limit, 0)
-        const items = this.#recorded(stored, "messages")
-        return { items, hasMore: items.length >= limit }
       }
 
       const messages = await this.#history(
@@ -963,9 +799,7 @@ export class MaxClient {
       const time = timeOfMessageId(messageId)
       if (time === undefined) throw new CliError("validation_error", `"${messageId}" is not a message id`)
 
-      const found = this.#offline
-        ? ((await this.#cache?.messages.window(chatId, time, before + 1, after)) ?? [])
-        : await this.#history(chatId, { from: time, backward: before + 1, forward: after }, { reactions })
+      const found = await this.#history(chatId, { from: time, backward: before + 1, forward: after }, { reactions })
 
       if (!found.some((message) => message.id === messageId)) {
         throw new CliError("not_found", `no message ${messageId} in chat ${chatId} — deleted, or in another chat`)
@@ -1204,7 +1038,6 @@ export class MaxClient {
           elements: parsed.markup,
           attachments: asArray(raw.attaches),
         })
-        await this.#cache?.messages.invalidate(chatId)
         this.#sends?.record({ chatId, kind: "edit", outcome: "sent", messageId, length: text.length })
         return toMessage(record(answer.message) ?? raw, chatId, lookup)
       } catch (error) {
@@ -1272,7 +1105,6 @@ export class MaxClient {
       try {
         await this.#connectOnce()
         await this.#wire.messages.delete({ chatId, messageIds, forMe: !forEveryone })
-        await this.#cache?.messages.forget(chatId, messageIds)
         this.#sends?.record({ chatId, kind: "delete", outcome: "sent", count, forEveryone })
         return { chatId, deleted: messageIds, forEveryone }
       } catch (error) {
@@ -1375,7 +1207,6 @@ export class MaxClient {
           pollId: poll.id,
           answersIds: answerIds.map(Number),
         })
-        await this.#cache?.messages.invalidate(chatId)
         this.#sends?.record({ chatId, kind: "reaction", outcome: "sent", messageId })
         const state = record(answer.state)
         return { chatId, messageId, poll: (state && toPoll({ ...attach, state })) ?? poll }
@@ -1411,7 +1242,6 @@ export class MaxClient {
           settings: (typeof attach.settings === "number" ? attach.settings : 0) | POLL_CLOSED,
         }
         const answer = await this.#wire.messages.edit({ chatId, messageId, attachments: [closed] })
-        await this.#cache?.messages.invalidate(chatId)
         this.#sends?.record({ chatId, kind: "edit", outcome: "sent", messageId })
         const after = asArray(record(answer.message)?.attaches).find((each) => each._type === "POLL")
         return { chatId, messageId, poll: (after && toPoll(after)) ?? { ...poll, closed: true } }
@@ -1674,9 +1504,6 @@ export class MaxClient {
       }
     }
 
-    // What the cache holds for this chat is now one message short of the truth.
-    await this.#cache?.messages.invalidate(chatId)
-
     const sent = record(answer.message) ?? answer
     return toMessage(sent, chatId, { names: namesFrom(session.contacts), ...viewer(this.#store) })
   }
@@ -1875,6 +1702,8 @@ export class MaxClient {
    * keyring only after MAX has accepted it. Nothing here writes a token; see `session/adopt.ts`.
    */
   async connect({ token: candidate }: { token?: string } = {}): Promise<void> {
+    if (this.#offline)
+      throw new CliError("validation_error", "`--offline` reads through the shared store; it cannot connect to MAX")
     const token = candidate ?? this.#store.readToken()
     if (!token) {
       const profile = this.#store.profile
@@ -2062,9 +1891,8 @@ export class MaxClient {
    * since rows that were never written.
    */
   async #mergeLogin(viewerId: string | undefined): Promise<void> {
-    const cache = this.#cache
     const marker = asMarker(this.#session().time)
-    if (!cache && !this.#record) return
+    if (!this.#record) return
 
     const chats = asArray(this.#session().chats)
     const members = new Map<Id, Id[]>()
@@ -2084,31 +1912,15 @@ export class MaxClient {
         .filter((contact) => contact.id !== ""),
       members,
     }
-    if (cache && marker !== undefined) {
-      try {
-        this.#merged = await cache.mergeDelta({ ...delta, marker })
-      } catch (error) {
-        this.#warnAbout(
-          "cache_not_written",
-          `the local record did not take this login, so nothing was kept from it: ${reasonOf(error)}`,
-        )
-      }
-    }
     // A login `max serve` made answered its own marker, not the record's: what changed before it is not in it.
     const own = this.server?.journals !== true
     await this.#keep("login", async (record) => {
       const summary = await record.applyLogin({ ...delta, ...(own && marker !== undefined ? { marker } : {}) })
-      if (!cache) this.#merged = summary
+      this.#merged = summary
     })
   }
 
-  /**
-   * The record's marker when there is one — a login without it asks for everything, which both stores can take.
-   * A cache with no marker of its own was emptied (an upgrade, a deleted file) and takes a delta as the whole list.
-   */
   async #loginMarker(): Promise<number | undefined> {
-    const own = await this.#cache?.syncMarker()
-    if (!this.#record || (this.#cache && own === undefined)) return own
     let marker: number | undefined
     await this.#keep("marker", async (record) => {
       marker = await record.syncMarker()
@@ -2116,7 +1928,7 @@ export class MaxClient {
     return marker
   }
 
-  /** Like the cache, the record never fails the command it serves. */
+  /** A failed record never loses an answer MAX already gave. */
   async #keep(what: string, write: (record: MaxRecord) => Promise<void>): Promise<void> {
     if (!this.#record) return
     try {
@@ -2126,26 +1938,6 @@ export class MaxClient {
     }
   }
 
-  /** One page of contacts out of the store — the same query online and offline. */
-  async #pageOfContacts(
-    cache: CacheStore,
-    order: PersonOrder,
-    limit: number | undefined,
-    offset: number,
-    query?: string,
-  ): Promise<Page<Contact>> {
-    const items = await cache.people.contacts({ order, limit: limit ?? Number.MAX_SAFE_INTEGER, offset, query })
-    return { items, hasMore: offset + items.length < (await cache.people.countContacts({ query })) }
-  }
-
-  /**
-   * Everyone in the chat except us, or **`undefined` when MAX did not say who is in it**.
-   *
-   * ⚠ The difference is the whole of it. A delta re-sends a chat because a message arrived and
-   * carries no `participants`; read as "nobody is in this chat", that empties the membership and
-   * the person on the other side stops being a contact. "Did not say" is not "nobody", and only
-   * the first of the two may replace anything.
-   */
   #participantsOf(chat: Payload, viewerId: string | undefined): Id[] | undefined {
     const participants = record(chat.participants)
     return participants === undefined ? undefined : Object.keys(participants).filter((id) => id !== viewerId)
@@ -2153,15 +1945,6 @@ export class MaxClient {
 
   async close(): Promise<void> {
     await this.#connection.close()
-  }
-
-  /** What `--offline` can answer with, or a refusal that says how to fix it. */
-  #recorded<T>(value: T[] | undefined, what: string): T[] {
-    if (value) return value
-    throw new CliError(
-      "not_found",
-      `nothing recorded for ${what} on profile "${this.#store.profile}" — run the command once without \`--offline\``,
-    )
   }
 
   /**
@@ -2183,7 +1966,6 @@ export class MaxClient {
 
     const lookup = { names: namesFrom(session.contacts), ...viewer(this.#store) }
     const messages = await this.#nameSenders(asArray(answer.messages).map((raw) => toMessage(raw, chatId, lookup)))
-    await this.#cache?.messages.write(chatId, messages)
     return reactions ? this.#withReactions(chatId, messages) : messages
   }
 
@@ -2245,9 +2027,9 @@ export class MaxClient {
 
   /** Names we hold first, the rest from `CONTACT_INFO`, kept for next time. A refusal costs the names only. */
   async #namesOf(ids: Id[]): Promise<Map<Id, string>> {
-    const names = (await this.#cache?.people.names(ids)) ?? new Map<Id, string>()
+    const names = new Map<Id, string>()
     await this.#keep("names", async (record) => {
-      for (const [id, name] of await record.names(ids.filter((one) => !names.has(one)))) names.set(id, name)
+      for (const [id, name] of await record.names(ids)) names.set(id, name)
     })
     const fetched: Contact[] = []
     try {
@@ -2269,7 +2051,6 @@ export class MaxClient {
         `some people are shown by id: their names could not be looked up (${reasonOf(error)})`,
       )
     }
-    if (fetched.length > 0) await this.#cache?.people.upsert(fetched, "info")
     await this.#keep("names", (record) => record.remember(fetched))
     return names
   }
@@ -2285,13 +2066,6 @@ export class MaxClient {
     return await flow()
   }
 
-  /**
-   * **The socket is opened only when something actually needs MAX.**
-   *
-   * This is the whole point of the cache: a read the cache can answer opens no connection, spends
-   * no login, and is over before a socket would have finished its handshake. `connect()` stays
-   * public for the one command that must reach MAX to mean anything — starting a session.
-   */
   async #connectOnce(): Promise<void> {
     if (!this.#login) await this.connect()
   }
@@ -2505,8 +2279,7 @@ export class MaxClient {
   async #personIds(references: string[]): Promise<Id[]> {
     if (references.every(isId)) return references.map((reference) => reference.trim())
 
-    const cache = this.#cache
-    if (!cache && !this.#record) {
+    if (!this.#record) {
       throw new CliError(
         "configuration_error",
         `there is no local store for profile "${this.#store.profile}" to look names up in — give people by id`,
@@ -2577,16 +2350,8 @@ export class MaxClient {
       }
     }
 
-    // Written here rather than left in memory: the process ends in a moment, and the next one
-    // should not pay for these names again.
-    //
-    // ⚠ **And the order is recomputed after**, not before. These people did not exist when the
-    // login's chats were written, so the recency that was set then reached only the handful the
-    // login itself named — 6 of 22 on the real account, with every other dialog partner sorting
-    // as never-messaged.
+    // One-shot clients keep these names for the next command.
     if (named.length > 0) {
-      await this.#cache?.people.upsert(named, "info")
-      await this.#cache?.people.refreshRecency()
       await this.#keep("names", (record) => record.remember(named))
     }
 
@@ -2654,11 +2419,7 @@ export class MaxClient {
 
   #contactAction(action: AccountAction, wire: ContactWire, reference: string): Promise<Contact> {
     return this.#change(action, async () => {
-      const known = isId(reference)
-        ? this.#record
-          ? (await this.#record.people()).get(reference.trim())
-          : await this.#cache?.people.get(reference.trim())
-        : undefined
+      const known = isId(reference) ? (await this.#record?.people())?.get(reference.trim()) : undefined
       const id = isId(reference) ? reference.trim() : (await this.#person(reference)).id
 
       const answer = await this.#wire.contacts.update({ contactId: id, ...wire })
@@ -2670,7 +2431,6 @@ export class MaxClient {
 
   async #person(reference: string): Promise<Contact> {
     if (this.#record) return pickStoredPerson(reference, await this.#record.people())
-    if (this.#cache) return pickPerson(reference, this.#cache)
     throw new CliError(
       "validation_error",
       "without a local store a person is named by id — `max contacts lookup` finds one",
@@ -2679,7 +2439,6 @@ export class MaxClient {
 
   async #remember(contact: Contact): Promise<Contact> {
     if (contact.id !== "") {
-      await this.#cache?.people.upsert([contact], "info")
       await this.#keep("contact", (record) => record.remember([contact]))
     }
     return contact
@@ -2763,7 +2522,6 @@ const largestMp4 = (answer: Payload): string | undefined =>
 
 /** What every listing takes. Absent means "the caller did not say", never a number chosen here. */
 export interface PageRequest {
-  order?: PersonOrder
   limit?: number
   offset?: number
   /** Part of a name. Refused below three characters — see `checkedQuery`. */
@@ -2779,7 +2537,7 @@ export interface PageRequest {
  * so this refuses instead — the one answer that is never mistaken for a result.
  *
  * It is checked here rather than in each command, and on every path rather than only where a
- * store exists: a filter that works with a cache and not without it would make the answer depend
+ * store exists: a filter that works with a local store and not without it would make the answer depend
  * on something the person never asked about.
  */
 const MIN_QUERY = 3
@@ -2870,19 +2628,7 @@ const batched = <T>(items: T[], size: number): T[][] => {
   return batches
 }
 
-/**
- * The same filter as the store's, for the path where no store opened.
- *
- * ⚠ **This is a second implementation of one promise, and that is a cost paid knowingly.** The
- * store asks a trigram index; here there is nothing to ask, so it is `includes` over a lowered
- * string. For a needle of three characters or more the two agree — a trigram match *is* a
- * substring match — and where they could drift is an alphabet whose lowercase form differs
- * between SQLite's folding and JavaScript's. Nobody has hit that; if somebody does, the fix is
- * this function, not the index.
- *
- * The alternative was to let a filter only work when a cache happened to exist, which makes the
- * answer depend on something the person never asked about.
- */
+/** Filtering still works when saving the local record failed. */
 const matching = (chats: Chat[], { query, kind, unread }: Pick<PageRequest, "query" | "kind" | "unread">): Chat[] => {
   const needle = query?.toLocaleLowerCase()
   return chats.filter(
@@ -2893,21 +2639,11 @@ const matching = (chats: Chat[], { query, kind, unread }: Pick<PageRequest, "que
   )
 }
 
-/** As `matching`, over the two columns `people_fts` indexes. */
-const matchingPeople = (people: Contact[], query: string | undefined): Contact[] => {
-  if (query === undefined) return people
-  const needle = query.toLocaleLowerCase()
-  return people.filter((person) => `${person.name ?? ""} ${person.username ?? ""}`.toLocaleLowerCase().includes(needle))
-}
-
 /** Paging over a list already in hand — the fallback for when there is no store to page in SQL. */
 const paged = <T>(items: T[], limit: number | undefined, offset: number): Page<T> => {
   const page = limit === undefined ? items.slice(offset) : items.slice(offset, offset + limit)
   return { items: page, hasMore: offset + page.length < items.length }
 }
-
-/** `--offline` was asked for explicitly, so age is not a reason to refuse what was recorded. */
-const ANY_AGE = Number.POSITIVE_INFINITY
 
 /**
  * The marker only means anything if MAX gave us one. A login without a `time` is not a reason to
