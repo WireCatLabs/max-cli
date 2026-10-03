@@ -6,7 +6,6 @@ import { openStore } from "@leemour/cli-messaging/store"
 import { beforeAll, describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
 import { ChatRegistry } from "../bot/registry.js"
-import { profileCacheFile } from "../cache/index.js"
 import { run } from "../program.js"
 
 const complete = async (...words: string[]) => {
@@ -135,7 +134,7 @@ describe("max complete", () => {
     const { code, lines } = await complete("nocache", "messages", "list", "")
     expect(code).toBe(0)
     expect(lines).toEqual([":4"])
-    expect(existsSync(profileCacheFile("nocache"))).toBe(false)
+    expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, "nocache.db"))).toBe(false)
   })
 
   it("stays silent for malformed local state and leaves it unchanged", async () => {

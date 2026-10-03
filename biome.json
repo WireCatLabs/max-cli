@@ -33,7 +33,7 @@
       }
     },
     {
-      "includes": ["src/domain/models.ts", "src/cache/**", "src/rendering/**", "src/resolve.ts"],
+      "includes": ["src/domain/models.ts", "src/rendering/**", "src/resolve.ts"],
       "linter": {
         "rules": {
           "style": {
@@ -121,11 +121,10 @@
                       "**/commands/**",
                       "**/mcp/**",
                       "**/server/**",
-                      "**/cache/**",
                       "**/bot/**",
                       "**/messenger.js"
                     ],
-                    "message": "the adapter maps MaxClient onto the shared messenger port; the wire stays behind src/client.ts, and commands, MCP, max serve, the cache and the bot are above or beside it"
+                    "message": "the adapter maps MaxClient onto the shared messenger port; the wire stays behind src/client.ts, and commands, MCP, max serve, the shared store and the bot are above or beside it"
                   }
                 ]
               }
@@ -144,15 +143,8 @@
               "options": {
                 "patterns": [
                   {
-                    "group": [
-                      "**/commands/**",
-                      "**/mcp/**",
-                      "**/cache/**",
-                      "**/bot/**",
-                      "**/adapter/**",
-                      "**/messenger.js"
-                    ],
-                    "message": "the session is the handshake, the keyring and the state file; it may not know the commands, MCP, the cache, the adapter or the bot"
+                    "group": ["**/commands/**", "**/mcp/**", "**/bot/**", "**/adapter/**", "**/messenger.js"],
+                    "message": "the session is the handshake, the keyring and the state file; it may not know the commands, MCP, the shared store, the adapter or the bot"
                   }
                 ]
               }

@@ -81,8 +81,9 @@ nothing and the profile still arrived (same day, `NEED-103`).
 
 - **`src/session/handshake.ts` sends the stored marker in all four**, so only a profile's first
   login fetches everything. The marker is one row (`sync_marker`) in the cache database, not the
-  state file, so `max cache clear` forgets marker and rows together.
-- ⚠ **Marker and rows are written in one transaction** (`mergeDelta`, `src/cache/store.ts`). A
+  state file. **Correction 2026-10-03 (T6):** `contacts sync` clears the shared contact marker;
+  the old cache command is removed.
+- ⚠ **Marker and rows are written in one transaction** (cli-messaging store `applyDelta`). A
   marker saved over rows that failed makes the next login ask for changes since data nobody has;
   those people stay missing, silently. It has its own test.
 - ⚠ **A delta is mostly empty, and that is correct**: after the first login, absent means unchanged.

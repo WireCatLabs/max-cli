@@ -5,7 +5,7 @@ How this repository is put together, and which seams you may not cross.
 **Status 2026-09-20: this describes working code, not a plan.** ~~Seven operations run against MAX;~~
 **Correction 2026-09-28:** 44 operations are declared in `src/spec/operations/`, the official Bot API
 has its own half (§18), and the diagram below shows only the first commands;
-`max cache` and `max runs` answer from this machine. Both runtimes pass. Everything here was
+`max store` and `max runs` answer from this machine. Both runtimes pass. Everything here was
 verified against the real service unless it says otherwise. Round trip re-verified live 2026-09-20:
 `max chats list --limit 3 --verbose --record` made three requests, stdout was one JSON value, stderr
 only the event lines.
@@ -20,7 +20,7 @@ only the event lines.
 ## 1. One published package, four layers, one direction
 
 ```text
-     src/commands/     session · account · chats · contacts · messages · cache · runs
+     src/commands/     session · account · chats · contacts · messages · store · runs
             │          speaks the domain model, owns no protocol knowledge
             ▼
      src/client.ts     MaxClient — the only thing above here that knows MAX exists
@@ -34,7 +34,7 @@ only the event lines.
  mapping      provenance         never hand-edited
                                          ▲
                         src/session/   handshake (INIT → LOGIN) · keyring · state
-                        src/cache/     the record, behind a driver seam per runtime
+                        src/record.ts  account-scoped login data in the shared store
                         src/wire-events.ts  which ids and counts a MAX event carries
                         (the run directory and the event format: cli-messaging's, T6 item 3c)
 ```
@@ -49,16 +49,16 @@ only the event lines.
   `src/generated/`**: a Biome rule fails the build with that sentence. Verified by writing the
   forbidden import, both directions.
 - **A second rule marks what any messenger CLI could share** (`CLI-30`, `NEED-147`; was `CLI-26`, a number taken three times):
-  `src/domain/models.ts`, `src/cache/`, `src/rendering/` and `src/resolve.ts` may not import the
+  `src/domain/models.ts`, `src/rendering/` and `src/resolve.ts` may not import the
   protocol, the specification, the generated wrappers, the session, the client or the commands.
   The files stay where they are; a future `cli-messenger` package is a move of exactly these, not
   an untangling. `src/domain/map.ts` is outside it on purpose — it is where MAX becomes the model.
   Verified by a forbidden import in each of the four places.
 - **The newer directories have rules too** (2026-10-01): `src/adapter/` keeps off the wire, the
-  commands, MCP, `max serve`, the cache and the bot; `src/session/` off the commands, MCP, the cache,
+  commands, MCP, `max serve`, the shared store and the bot; `src/session/` off the commands, MCP, the shared store,
   the adapter and the bot; `src/server/` off the commands, MCP, the adapter, `program.ts` and the
   bot; `src/messenger.ts` off the wire, MCP, `max serve` and the bot; `src/bot/` off the personal
-  account's protocol, session, spec, server, cache and client. Test files are exempt
+  account's protocol, session, spec, server, store and client. Test files are exempt
   in the first three, since they wire the real pieces together. Not ruled, because code already does
   it: `messenger.ts` → `commands/context.js`, `session/adopt.ts` → `server/start.js` and `client.js`. Verified by a forbidden import in each place.
 
@@ -465,33 +465,25 @@ construction site cannot.
 
 ## 15. The store: people, and the chats they are in
 
-The cache database (`<cache dir>/<profile>.db`, mode `0600`, `SCHEMA_VERSION` 4) is **a record and
-an offline source, never a way to skip a request**. Every read still asks MAX, since the login
-returns chats, contacts and recent messages anyway; `--offline` alone answers from the record
-without connecting. No freshness window: a stored person is valid until told otherwise.
-`--offline` reaches the client in one place (`createClient` in `src/commands/context.ts`), and a
-send under it is refused — until 2026-09-23 the flag reached no command, so `--offline messages
-send` would have sent.
+**Correction 2026-10-03 (T6):** max no longer opens its per-profile cache. `src/record.ts` keeps
+login chats, people, membership snapshots and the contact sync marker in cli-messaging's
+account-scoped `messages.db`. It opens lazily once the account is known. The shared `stored`
+adapter wrapper saves history; shared services own search, offline reads, edits and deletions.
+A failed record write warns without losing an answer MAX already gave, and does not advance its
+marker. `max serve` owns its record across reconnects and closes it on stop.
 
-In [`architecture/store.md`](architecture/store.md):
+`max contacts sync` forgets the contact marker before a full login. Only a complete nonempty
+chat snapshot marks departures; an empty answer keeps the previous list. `max cache` is removed;
+`store clear --left` replaces its departed-chat cleanup. `doctor` reports an existing legacy file
+without opening it. The old data is not migrated.
 
-- [A group member is a person, not a contact](architecture/store.md#a-group-member-is-a-person-not-a-contact)
-  (`NEED-105`): `people` + `chat_members`; a contact is whoever shares a `dialog`, decided by the
-  query. Group members are stored but never in `contacts list`. `chat_members` alone deletes, per chat.
-- [A version bump is a rebuild, except for the history](architecture/store.md#a-version-bump-is-a-rebuild-except-for-the-history):
-  `migrate` drops and recreates every table but `messages` and `ranges`, whose rows are carried
-  over (`MAX-44`); a newer file is refused.
-- [It never fails the command](architecture/store.md#it-never-fails-the-command): falls back to the
-  login's data and says why on stderr (`NEED-97`).
+Details: [`architecture/store.md`](architecture/store.md).
 
-## 16. Searching, and why it is FTS5 rather than `LIKE`
+## 16. Searching
 
-Three external-content FTS5 indexes (`chats_fts`, `people_fts`, `messages_fts`), `trigram`
-tokenizer, kept in sync by triggers. `LIKE`, `lower()` and `COLLATE NOCASE` fold ASCII only and miss
-Cyrillic names; `trigram` matches inside words like `chats.resolve`'s `includes()`. `max messages
-search` never connects, so it finds what has been read, not what exists. Measurements, the three
-traps (short queries, input as FTS5 syntax, index drift) and the offline rule:
-[`architecture/store.md`](architecture/store.md#searching-why-fts5-and-not-like).
+**Correction 2026-10-03 (T6):** shared services search the account's `messages.db`; `MaxClient`
+no longer implements local search. Search finds recorded history, not unread history that has
+never been fetched. `store fetch` fills it; `--offline` reads it without connecting.
 
 ## 17. The MCP server is a second adapter, and it keeps the connection for minutes
 

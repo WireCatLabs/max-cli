@@ -26,7 +26,6 @@ import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
 import { botCommand } from "./commands/bot.js"
 import { botRecordingOf } from "./commands/bot-context.js"
-import { cacheCommand } from "./commands/cache.js"
 import { chatsCommand } from "./commands/chats.js"
 import { commandsCommand } from "./commands/commands.js"
 import { completeCommand } from "./commands/complete.js"
@@ -129,7 +128,6 @@ export const createProgram = ({ out, err }: ProgramOptions = {}): Command => {
   program.addCommand(watchCommand())
   program.addCommand(configCommand())
   program.addCommand(doctorCommand())
-  program.addCommand(cacheCommand())
   program.addCommand(runsCommand())
   program.addCommand(skillCommand())
   program.addCommand(commandsCommand())

@@ -160,7 +160,6 @@ What holds for every command, how to produce it, and the test that pins it.
 | `allow` | `config set allow send` | other writes refused with the `config set` that allows them | `src/permissions.test.ts`, `src/commands/bot.test.ts` |
 | Locked profile | `MAX_PROFILE_LOCK=a max b …` | refused, exit 5 | `src/config.test.ts`, `src/send-guards.test.ts` |
 | Login paused | MAX refused logins for too many attempts | no login until the time given, exit 8 | `src/login-limit.test.ts` |
-| A cache from a newer `max` | schema above what this build speaks | still works, the copy ignored, `doctor` says so | `src/cache/schema.test.ts`, `src/cache/profile.test.ts` |
 | `--offline` | a read with it | no connection at all; refused for writes | `src/client.test.ts`, `src/export.test.ts` |
 | `--timeout` | `--timeout 1s` against no answer | exit on time; a write in flight is `outcome_unknown` | `src/deadline.test.ts`, `src/commands/bot.test.ts` |
 | Outcome unknown | a send with no answer | `outcome_unknown` with the `cid` to repeat, never "failed" | `src/client.test.ts`, `src/edit-pin-forward.test.ts`, `src/mcp.test.ts` |
@@ -242,10 +241,8 @@ bin/max chats list --json --limit 5
 ```
 
 It runs the build with config, state, cache and the shared message store (`MESSAGING_STORE`) in
-`.max/` inside the worktree (gitignored). A
-build with a newer cache schema migrates whatever cache it opens and ~~drops the read history~~
-(correction 2026-09-24, `MAX-44`: keeps messages but drops chats, people and memberships), so a
-branch must never open the owner's real one.
+`.max/` inside the worktree (gitignored). **Correction 2026-10-03 (T6):** shared store migrations
+are forward-only, so a branch must never open the owner's real store.
 
 ⚠ **Each worktree therefore has its own session.** The directory variables also move the keyring
 entry — `cli-core` makes the service `max-cli:<config dir>` when any of them is set

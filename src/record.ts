@@ -31,8 +31,6 @@ export interface MaxRecord {
   remember(people: Contact[]): Promise<void>
   /** The next login asks for everything, as `contacts sync` wants. */
   forgetMarker(): Promise<void>
-  /** Everything this account holds in `messages.db`; other accounts stay. */
-  purge(): Promise<boolean>
   close(): Promise<void>
 }
 
@@ -136,13 +134,6 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
     forgetMarker: async () => {
       const key = keyOf()
       if (key) await (await store()).clearSyncState(key, MARKER)
-    },
-
-    purge: async () => {
-      const key = keyOf()
-      if (!key) return false
-      await (await store()).purge(key)
-      return true
     },
 
     close: async () => {
