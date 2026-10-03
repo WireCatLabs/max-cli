@@ -82,11 +82,11 @@ export const messagesCommand = (): Command => {
         const client = createClient({ events })
         const record = maxRecord({ account: () => context.store.readState().viewerId })
         try {
+          const chatId = await client.chats.resolve(chat)
           if (!isInstalled(model, directory)) {
-            const kept = await record.transcript(chat.trim(), messageId.trim())
+            const kept = await record.transcript(chatId, messageId.trim())
             if (kept?.source !== model.id) throw notDownloaded(model)
           }
-          const chatId = await client.chats.resolve(chat)
           const transcript = await transcribe(client, chatId, messageId.trim(), {
             ...context.hearing,
             model,
