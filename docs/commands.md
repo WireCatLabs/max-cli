@@ -2752,6 +2752,14 @@ max bot uploads put <file> [options]
 
 every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md
 
+```sh
+max bot api [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--store-token <profile>` | keep a returned authentication token only in this bot profile's OS keyring; never print it. |
+
 #### `max bot api get-my-info`
 
 Get current bot info — read (GET /me)
