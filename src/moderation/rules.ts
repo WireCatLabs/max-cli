@@ -23,7 +23,7 @@ const level = v.pipe(
   v.transform((typed) => SHARED_LEVELS[typed] ?? (typed as (typeof CONSENT_LEVELS)[number])),
 )
 const action = v.picklist(RULE_ACTIONS)
-const personIds = v.array(v.pipe(v.string(), v.regex(/^\d+$/, "a person id is digits")))
+const personIds = v.array(v.pipe(v.string(), v.regex(/^-?\d+$/, "a person id is digits")))
 const atLeast = (min: number) => v.pipe(v.number(), v.integer(), v.minValue(min))
 
 /**
@@ -54,7 +54,10 @@ const groupRules = v.pipe(
 
 export type GroupRules = v.InferOutput<typeof groupRules>
 
-const file = v.strictObject({ groups: v.record(v.string(), groupRules) })
+const file = v.strictObject({
+  groups: v.record(v.string(), groupRules),
+  checkedUntil: v.optional(v.record(v.string(), v.string())),
+})
 
 /** Every key written out, so the file shows all there is to set (`NEED-314`). Nothing here acts. */
 export const defaultRules = (title: string | null): GroupRules => ({
@@ -111,7 +114,7 @@ export class ModerationRules {
 
   /** `undefined` when this group has no section yet. */
   read(chatId: Id): GroupRules | undefined {
-    return this.#all()[chatId]
+    return this.#file().groups[chatId]
   }
 
   /** Writes the group's whole section — the defaults first, if it had none — with one key changed. */
@@ -122,7 +125,8 @@ export class ModerationRules {
     const changed = assign(current, key, known.parse(value))
     const checked = v.safeParse(groupRules, changed)
     if (!checked.success) throw invalid(`${key} ${JSON.stringify(value)} is not valid — ${known.help}`)
-    this.#write({ ...this.#all(), [chatId]: checked.output })
+    const saved = this.#file()
+    this.#write({ ...saved, groups: { ...saved.groups, [chatId]: checked.output } })
     return checked.output
   }
 
@@ -132,12 +136,13 @@ export class ModerationRules {
     const fallback = lookup(defaultRules(title), key)
     const current = this.read(chatId) ?? defaultRules(title)
     const changed = assign(current, key, fallback)
-    this.#write({ ...this.#all(), [chatId]: changed })
+    const saved = this.#file()
+    this.#write({ ...saved, groups: { ...saved.groups, [chatId]: changed } })
     return changed
   }
 
-  #all(): Record<string, GroupRules> {
-    if (!existsSync(this.path)) return {}
+  #file(): v.InferOutput<typeof file> {
+    if (!existsSync(this.path)) return { groups: {} }
     let parsed: unknown
     try {
       parsed = JSON.parse(readFileSync(this.path, "utf8"))
@@ -149,11 +154,11 @@ export class ModerationRules {
       const problems = checked.issues.map((issue) => `${v.getDotPath(issue) ?? "file"}: ${issue.message}`)
       throw broken(this.path, problems.join("; "))
     }
-    return checked.output.groups
+    return checked.output
   }
 
-  #write(groups: Record<string, GroupRules>): void {
-    writeSecurely(this.path, `${JSON.stringify({ groups }, null, 2)}\n`, 0o600)
+  #write(saved: v.InferOutput<typeof file>): void {
+    writeSecurely(this.path, `${JSON.stringify(saved, null, 2)}\n`, 0o600)
   }
 }
 

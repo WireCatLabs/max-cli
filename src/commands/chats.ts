@@ -1,8 +1,6 @@
 import { markReadCommand, chatsCommand as sharedChatsCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
-import { checkCommand } from "./check.js"
-import { rulesCommand } from "./rules.js"
 
 export const chatsCommand = (): Command => {
   const command = new Command("chats").description("the chats this account is in")
@@ -26,8 +24,8 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "update"))
   command.addCommand(sharedSubcommand(shared, "link"))
   command.addCommand(sharedSubcommand(shared, "folders"))
-  command.addCommand(rulesCommand())
-  command.addCommand(checkCommand())
+  command.addCommand(sharedSubcommand(shared, "rules"))
+  command.addCommand(sharedSubcommand(shared, "moderate"))
 
   return command
 }

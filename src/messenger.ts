@@ -1,12 +1,14 @@
 import { CliError } from "@leemour/cli-core"
 import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
 import { fromOldSettings, type GuardRequest, type SendGuard } from "@leemour/cli-messaging/sends"
+import { moderationService } from "@leemour/cli-messaging/services"
 import type { Command } from "commander"
 import { maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
 import { forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
+import { migrateModerationPoints } from "./moderation/points.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
@@ -30,10 +32,15 @@ export const overServer = (guard: SendGuard, server: () => { readonly journals: 
 /**
  * Since cli-messaging 0.76 the shared `messages delete` leaves its `--allow-dangerous` to the
  * guard's permission levels, which max does not use until its half of P7 lands. Until then a
- * deletion is refused without the flag, as before, and nothing asks instead (`NEED-238`).
+ * deletion is refused without the flag (`NEED-238`), except moderation after its rule-level consent.
  */
-const refuseUnmeantDeletion = (command: Command, { kind, count }: GuardRequest): void => {
-  if (kind !== "delete" || command.optsWithGlobals<{ allowDangerous?: boolean }>().allowDangerous === true) return
+const refuseUnmeantDeletion = (command: Command, { kind, count, key }: GuardRequest): void => {
+  if (
+    key === "chats.moderate" ||
+    kind !== "delete" ||
+    command.optsWithGlobals<{ allowDangerous?: boolean }>().allowDangerous === true
+  )
+    return
   throw new CliError(
     "confirmation_required",
     `this deletes ${count === 1 ? "a message" : `${count ?? "the"} messages`} and cannot be undone — ` +
@@ -109,8 +116,22 @@ export const maxMessenger: Messenger = {
     }
   },
 
+  services: (_base, deps) => ({
+    moderation: moderationService({
+      ...deps,
+      connection: async () => {
+        const adapter = await deps.connection()
+        return new Proxy(adapter, {
+          get: (target, key, receiver) =>
+            key === "resolve" ? (reference: string) => target.chat(reference) : Reflect.get(target, key, receiver),
+        })
+      },
+    }),
+  }),
+
   connect: async (command, context, { events } = {}) => {
     const { createClient, store, reach } = forCommand(command)
+    if (command.name() === "moderate") migrateModerationPoints(store, context.env)
     const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
     try {
       const client = createClient({
@@ -119,7 +140,9 @@ export const maxMessenger: Messenger = {
         ...(events ? { events } : {}),
       })
       clients.set(rootOf(command), client)
-      const adapter = maxAdapter(client, store, reach, (message) => context.renderer.note(message))
+      const adapter = maxAdapter(client, store, reach, (message) => context.renderer.note(message), {
+        reactions: command.name() !== "moderate",
+      })
       return {
         ...adapter,
         close: async () => {

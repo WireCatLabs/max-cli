@@ -102,7 +102,7 @@ Windows. На Windows режимы `0600` и `0700` не задают ACL: до�
 - **Не отправляет ничего, чего не просили.** Что-то меняют только `messages send|edit|delete|forward|pin|unpin`,
   `reactions add|remove`, `polls vote|close|create`, `contacts add|remove|import|rename|block|unblock`,
   `account update`, `account sessions end`, `chats join|leave|create|update`,
-  `chats members|admins …`, `chats link reset`, `chats folders create|update|delete`, `chats check`
+  `chats members|admins …`, `chats link reset`, `chats folders create|update|delete`, `chats moderate`
   (только то, что разрешают правила группы), `chats mark-read` и `messages list --mark-read` — и каждая делает
   только то, что написано в набранной строке. `max commands --json` помечает их `mutates`.
 - **Не удаляет сообщения без явного слова.** `max messages delete` требует `--allow-dangerous`, а

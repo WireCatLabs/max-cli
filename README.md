@@ -134,7 +134,7 @@ max review --chat "Поход" --unanswered            # вопросы, на к
 max chats events "Поход"                          # кто вступил и вышел за неделю
 max chats members list "Поход" --all              # все участники: когда заведён аккаунт
 max chats rules set "Поход" invites delete        # приглашения в чужие чаты — удалять
-max chats check "Поход" --allow-dangerous         # проверить группу и сделать, что разрешено
+max chats moderate "Поход" --allow-dangerous         # проверить группу и сделать, что разрешено
 ```
 
 Проверка сверяет новое в группе с вашими правилами: заблокированные люди, приглашения, ссылки,
@@ -351,7 +351,7 @@ max chats admins add "Поход" "Аня" --can pin,members
 max chats link reset "Поход"                      # старая ссылка-приглашение перестаёт работать
 max polls create "Поход" "Когда едем?" "Суббота" "Воскресенье"
 max review --chat "Поход" --unanswered            # вопросы, на которые сутки никто не ответил
-max chats check "Поход" --dry-run                 # спам, чужие ссылки, флуд — по вашим правилам
+max chats moderate "Поход" --dry-run                 # спам, чужие ссылки, флуд — по вашим правилам
 ```
 
 **Найти и сохранить:**

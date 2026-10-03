@@ -76,6 +76,7 @@ export const maxAdapter = (
   store: SessionStore,
   reach: Reach = publicOnly,
   warn: (message: string) => void = () => {},
+  options: { reactions?: boolean } = {},
 ): MaxAdapter => {
   const chatId = (reference: string) => client.chats.resolve(reference)
 
@@ -121,6 +122,7 @@ export const maxAdapter = (
       const page = await client.messages.list(await chatId(chat), {
         limit,
         after: "id" in after ? client.messages.moment(after.id, "--after") : after.time,
+        ...(options.reactions === undefined ? {} : { reactions: options.reactions }),
       })
       return { ...page, items: page.items.map(toMessage) }
     },
@@ -160,7 +162,10 @@ export const maxAdapter = (
       const found = await client.chats.events(chat, window)
       return {
         ...found,
-        events: found.events.map((event) => ({ ...event, event: event.event === "new" ? "create" : event.event })),
+        events: found.events.map((event) => ({
+          ...event,
+          event: event.event === "new" ? "create" : event.event === "joinByLink" ? "join" : event.event,
+        })),
       }
     },
     inspect: async (link) => {
