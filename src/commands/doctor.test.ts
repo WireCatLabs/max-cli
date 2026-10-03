@@ -93,7 +93,7 @@ describe("max doctor", () => {
     expect(answer.legacyCache).toEqual({ file: join(home, "cache", "default.db"), exists: true })
     expect(answer.store.path).toBe(process.env.MESSAGING_STORE)
     expect(stderr).toContain(join(home, "cache", "default.db"))
-    expect(stderr).toContain("max store fetch")
+    expect(stderr).toContain("still keeps chat members and contacts")
   })
 
   it("blames the keyring, not the session, when a profile that has logged in has no token", async () => {
