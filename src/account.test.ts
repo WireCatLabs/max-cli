@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { SendJournal } from "@leemour/cli-messaging/sends"
@@ -165,7 +165,7 @@ describe("contacts", () => {
     expect(idsOf((await runWith(["a-clear", "contacts", "list", "--offline"], environment)).stdout)).toEqual([])
   })
 
-  it("an emptied cache asks for everything, though the shared store remembers where the last login left off", async () => {
+  it("shared reads keep their marker without creating a legacy cache", async () => {
     let time = 1789776000000
     const login = { profile: { contact: { id: 10000001 } }, chats: [] }
     const answer = () => {
@@ -174,14 +174,14 @@ describe("contacts", () => {
     }
     const { environment, sent } = account({ [Opcode.LOGIN]: answer })
     await runWith(["a-rebuilt", "contacts", "list"], environment)
-    // What a cache upgrade leaves behind: no chats, no people, no marker — and the shared store untouched.
-    for (const suffix of ["", "-wal", "-shm"]) rmSync(`${profileCacheFile("a-rebuilt")}${suffix}`, { force: true })
+    expect(existsSync(profileCacheFile("a-rebuilt"))).toBe(false)
     await runWith(["a-rebuilt", "contacts", "list"], environment)
     await runWith(["a-rebuilt", "contacts", "list"], environment)
 
     const markers = sent(Opcode.LOGIN).map((one) => one.contactsSync)
-    expect(markers.at(-2)).toBe(0)
+    expect(markers.at(-2)).toBe(time - 2000)
     expect(markers.at(-1)).toBe(time - 1000)
+    expect(existsSync(profileCacheFile("a-rebuilt"))).toBe(false)
   })
 
   it("`sync` forgets where the last login left off, and answers counts with no name in them", async () => {
@@ -249,6 +249,16 @@ describe("contacts", () => {
       { contactId: "20000002", action: "UPDATE", firstName: "Neighbour", lastName: "Ana" },
       { contactId: "20000002", action: "UPDATE", firstName: "Neighbour", lastName: null },
     ])
+  })
+
+  it("a contact found by phone can be renamed by name without opening the old cache", async () => {
+    const { environment, sent } = account()
+    expect((await runWith(["a-name", "contacts", "lookup"], environment)).code).toBe(0)
+    expect((await runWith(["a-name", "contacts", "rename", "Found Person", "Neighbour"], environment)).code).toBe(0)
+    expect(sent(Opcode.CONTACT_UPDATE)).toMatchObject([
+      { contactId: 20000002, action: "UPDATE", firstName: "Neighbour" },
+    ])
+    expect(existsSync(profileCacheFile("a-name"))).toBe(false)
   })
 
   it("`import` sends each line of the file as number and name, and reports what MAX recognised", async () => {

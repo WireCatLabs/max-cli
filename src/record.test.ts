@@ -34,8 +34,11 @@ const setUp = () => {
   const env = { MESSAGING_STORE: join(dir, "messages.db") }
   const session = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
   session.writeToken("a-token")
-  const loginOnce = async (served = false) => {
-    const max = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: login } })
+  const loginOnce = async (
+    served = false,
+    act: (client: MaxClient) => Promise<unknown> = (client) => client.chats.list(),
+  ) => {
+    const max = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: login, [Opcode.CONTACT_UPDATE]: {} } })
     const record = maxRecord({ account: () => session.readState().viewerId, env })
     const Wire = served ? Served : Connection
     const client = new MaxClient({
@@ -45,9 +48,12 @@ const setUp = () => {
       connection: new Wire({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: () => {},
     })
-    await client.chats.list()
-    await client.close()
-    await record.close()
+    try {
+      await act(client)
+    } finally {
+      await client.close()
+      await record.close()
+    }
     return max.sent.find((call) => call.opcode === Opcode.LOGIN)?.payload
   }
   return { env, loginOnce }
@@ -80,6 +86,37 @@ describe("the record", () => {
     expect((await store.syncState(key, "login.marker"))?.value).toBe("1789776000000")
     expect((await store.chats({ provider: "max", account: "99" }, {})).items).toEqual([])
     await store.close()
+  })
+
+  it("resolves a contact name under this account, without the legacy cache", async () => {
+    const { env, loginOnce } = setUp()
+    const other = maxRecord({ account: () => "99", env })
+    await other.remember([
+      { id: "10000002", name: "Foreign Name", username: null, description: null, lastMessagedAt: null },
+    ])
+    await other.close()
+
+    await loginOnce(false, async (client) => {
+      expect(await client.contacts.show("Someone")).toMatchObject({
+        id: "10000002",
+        name: "Someone Else",
+        chats: [{ id: "111" }, { id: "222" }],
+      })
+      await expect(client.contacts.rename("Foreign Name", "Renamed")).rejects.toMatchObject({ code: "not_found" })
+      expect(await client.contacts.rename("Someone", "Renamed")).toMatchObject({ id: "10000002", name: null })
+    })
+  })
+
+  it("a full sync clears the shared marker and reports people counts without a cache", async () => {
+    const { loginOnce } = setUp()
+    await loginOnce(false, async (client) => {
+      expect(await client.contacts.sync()).toEqual({ known: 1, added: 1, changed: 0, full: true })
+    })
+    const payload = await loginOnce(false, async (client) => {
+      expect(await client.contacts.sync()).toEqual({ known: 1, added: 0, changed: 1, full: true })
+    })
+    expect(payload?.contactsSync).toBe(0)
+    expect((await loginOnce())?.contactsSync).toBe(login.time)
   })
 
   it("logs in with the marker it kept", async () => {

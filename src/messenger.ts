@@ -4,7 +4,6 @@ import { fromOldSettings, type GuardRequest, type SendGuard } from "@leemour/cli
 import type { Command } from "commander"
 import { maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
-import { openProfileCache } from "./cache/index.js"
 import type { MaxClient } from "./client.js"
 import { forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
@@ -90,18 +89,13 @@ export const maxMessenger: Messenger = {
     }
   },
 
-  // Built with the profile's cache — without it `chats show` has no members and `contacts show`
-  // refuses — and without the send guard, which the shared services hold. The record keeps what the
-  // login brings in `messages.db`, where the shared reads look.
   connect: async (command, context, { events } = {}) => {
-    const { settings, renderer, createClient, store, reach } = forCommand(command)
+    const { createClient, store, reach } = forCommand(command)
     const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
     try {
-      const cache = await openProfileCache(settings.profile, { onProblem: renderer.note })
       const client = createClient({
         sends: "caller",
         record,
-        ...(cache ? { cache } : {}),
         ...(events ? { events } : {}),
       })
       clients.set(rootOf(command), client)
@@ -112,7 +106,6 @@ export const maxMessenger: Messenger = {
           try {
             await adapter.close()
           } finally {
-            await cache?.close()
             await record.close()
           }
         },

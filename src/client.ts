@@ -1,4 +1,5 @@
 import { CliError, realSleep, type SleepLike } from "@leemour/cli-core"
+import { pickPerson as pickStoredPerson } from "@leemour/cli-messaging"
 import { type DiagnosticEvent, providerErrorKey } from "@leemour/cli-messaging/cli"
 import type { AccountAction, ChatAction, GuardRequest, SendGuard } from "@leemour/cli-messaging/sends"
 import type { CacheStore, PersonOrder, SyncSummary } from "./cache/store.js"
@@ -735,6 +736,20 @@ export class MaxClient {
      * Only from the store: the shared chats are its `chat_members`, which nothing else holds.
      */
     show: async (reference: string): Promise<PersonCard> => {
+      if (this.#record) {
+        if (!this.#offline) {
+          await this.#connectOnce()
+          await this.#peopleFor(asArray(this.#session().chats))
+        }
+        const person = await this.#person(reference)
+        const chats = (await this.#record.chatsWith(person.id)).map(({ id, title, kind, lastMessageAt }) => ({
+          id,
+          title,
+          kind,
+          lastMessageAt,
+        }))
+        return { ...person, chats }
+      }
       const cache = this.#cache
       if (!cache) {
         throw new CliError(
@@ -776,7 +791,7 @@ export class MaxClient {
       }
 
       const cache = this.#cache
-      if (!cache) {
+      if (!cache && !this.#record) {
         throw new CliError(
           "configuration_error",
           `there is no local store for profile "${this.#store.profile}" to sync into — the note above says why`,
@@ -784,7 +799,7 @@ export class MaxClient {
       }
 
       // Before connecting, or the login would carry the marker this is meant to discard.
-      await cache.forgetSyncMarker()
+      await cache?.forgetSyncMarker()
       await this.#keep("marker", (record) => record.forgetMarker())
       await this.#connectOnce()
 
@@ -792,7 +807,8 @@ export class MaxClient {
       // here would store ids without names for most of them.
       await this.#peopleFor(asArray(this.#session().chats))
 
-      return { ...(this.#merged ?? { known: 0, added: 0, changed: 0 }), known: await cache.people.count(), full: true }
+      const known = this.#record ? (await this.#record.people()).all().length : ((await cache?.people.count()) ?? 0)
+      return { ...(this.#merged ?? { known: 0, added: 0, changed: 0 }), known, full: true }
     },
   }
 
@@ -2059,9 +2075,10 @@ export class MaxClient {
     }
     // A login `max serve` made answered its own marker, not the record's: what changed before it is not in it.
     const own = this.server?.journals !== true
-    await this.#keep("login", (record) =>
-      record.applyLogin({ ...delta, ...(own && marker !== undefined ? { marker } : {}) }),
-    )
+    await this.#keep("login", async (record) => {
+      const summary = await record.applyLogin({ ...delta, ...(own && marker !== undefined ? { marker } : {}) })
+      if (!cache) this.#merged = summary
+    })
   }
 
   /**
@@ -2468,7 +2485,7 @@ export class MaxClient {
     if (references.every(isId)) return references.map((reference) => reference.trim())
 
     const cache = this.#cache
-    if (!cache) {
+    if (!cache && !this.#record) {
       throw new CliError(
         "configuration_error",
         `there is no local store for profile "${this.#store.profile}" to look names up in — give people by id`,
@@ -2477,9 +2494,7 @@ export class MaxClient {
     await this.#connectOnce()
     await this.#peopleFor(asArray(this.#session().chats))
     return Promise.all(
-      references.map(async (reference) =>
-        isId(reference) ? reference.trim() : (await pickPerson(reference, cache)).id,
-      ),
+      references.map(async (reference) => (isId(reference) ? reference.trim() : (await this.#person(reference)).id)),
     )
   }
 
@@ -2618,21 +2633,27 @@ export class MaxClient {
 
   #contactAction(action: AccountAction, wire: ContactWire, reference: string): Promise<Contact> {
     return this.#change(action, async () => {
-      const cache = this.#cache
-      const known = isId(reference) ? await cache?.people.get(reference.trim()) : undefined
-      if (!isId(reference) && !cache) {
-        throw new CliError(
-          "validation_error",
-          "without a local store a person is named by id — `max contacts lookup` finds one",
-        )
-      }
-      const id = isId(reference) ? reference.trim() : (await pickPerson(reference, cache as CacheStore)).id
+      const known = isId(reference)
+        ? this.#record
+          ? (await this.#record.people()).get(reference.trim())
+          : await this.#cache?.people.get(reference.trim())
+        : undefined
+      const id = isId(reference) ? reference.trim() : (await this.#person(reference)).id
 
       const answer = await this.#wire.contacts.update({ contactId: id, ...wire })
       const contact = record(answer.contact)
       if (contact) return this.#remember(toContact(contact))
       return known ?? { id, name: null, username: null, description: null, lastMessagedAt: null }
     })
+  }
+
+  async #person(reference: string): Promise<Contact> {
+    if (this.#record) return pickStoredPerson(reference, await this.#record.people())
+    if (this.#cache) return pickPerson(reference, this.#cache)
+    throw new CliError(
+      "validation_error",
+      "without a local store a person is named by id — `max contacts lookup` finds one",
+    )
   }
 
   async #remember(contact: Contact): Promise<Contact> {

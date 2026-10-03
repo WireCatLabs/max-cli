@@ -3,7 +3,6 @@ import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { contactsCommand as sharedContactsCommand } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
-import { openProfileCache } from "../cache/index.js"
 import { type PhoneBookEntry, wirePhone } from "../client.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
@@ -35,12 +34,11 @@ export const contactsCommand = (): Command => {
     .command("sync")
     .description("forget where the last sync left off and take the whole list again")
     .action(async function (this: Command) {
-      const { renderer, settings, createClient, run, store } = forCommand(this)
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const { renderer, createClient, run, store } = forCommand(this)
       const record = maxRecord({ account: () => store.readState().viewerId })
 
       await run("contacts sync", async (events) => {
-        const client = createClient({ events, record, ...(cache ? { cache } : {}) })
+        const client = createClient({ events, record })
 
         try {
           const summary = await client.contacts.sync()
@@ -48,7 +46,6 @@ export const contactsCommand = (): Command => {
           renderer.success(`${summary.added} new, ${summary.changed} changed, ${summary.known} people known`)
         } finally {
           await client.close()
-          await cache?.close()
           await record.close()
         }
       })
@@ -62,18 +59,18 @@ export const contactsCommand = (): Command => {
     .command("lookup")
     .description("who MAX has under a phone number — asks for it, or reads it from stdin")
     .action(async function (this: Command) {
-      const { renderer, settings, createClient, run, ask } = forCommand(this)
+      const { renderer, createClient, run, ask, store } = forCommand(this)
       const phone = await ask("phone number: ")
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const record = maxRecord({ account: () => store.readState().viewerId })
 
       await run("contacts lookup", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const client = createClient({ events, record })
 
         try {
           renderer.result(await client.contacts.lookup(phone))
         } finally {
           await client.close()
-          await cache?.close()
+          await record.close()
         }
       })
     })
@@ -88,17 +85,17 @@ export const contactsCommand = (): Command => {
       .argument("<person>", "person id — `contacts lookup` finds one — or part of a known name")
       .description(description)
       .action(async function (this: Command, person: string) {
-        const { renderer, settings, createClient, run } = forCommand(this)
-        const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+        const { renderer, createClient, run, store } = forCommand(this)
+        const record = maxRecord({ account: () => store.readState().viewerId })
 
         await run(`contacts ${name}`, async (events) => {
-          const client = createClient({ events, ...(cache ? { cache } : {}) })
+          const client = createClient({ events, record })
 
           try {
             renderer.result(await client.contacts[name](person))
           } finally {
             await client.close()
-            await cache?.close()
+            await record.close()
           }
         })
       })
@@ -110,17 +107,17 @@ export const contactsCommand = (): Command => {
     .argument("[last-name]")
     .description("give a person a name of your own — they do not see it")
     .action(async function (this: Command, person: string, firstName: string, lastName?: string) {
-      const { renderer, settings, createClient, run } = forCommand(this)
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const { renderer, createClient, run, store } = forCommand(this)
+      const record = maxRecord({ account: () => store.readState().viewerId })
 
       await run("contacts rename", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const client = createClient({ events, record })
 
         try {
           renderer.result(await client.contacts.rename(person, firstName, lastName))
         } finally {
           await client.close()
-          await cache?.close()
+          await record.close()
         }
       })
     })
@@ -130,16 +127,16 @@ export const contactsCommand = (): Command => {
     .argument("<file>", "one person per line: number, then a comma or a tab, then the name")
     .description("upload phone numbers to MAX and add the people it has under them")
     .action(async function (this: Command, file: string) {
-      const { renderer, settings, createClient, run } = forCommand(this)
+      const { renderer, createClient, run, store } = forCommand(this)
       const entries = phoneBook(
         await readFile(file, "utf8").catch((error: NodeJS.ErrnoException) => {
           throw new CliError("not_found", `cannot read ${file}: ${error.code ?? error.message}`)
         }),
       )
-      const cache = await openProfileCache(settings.profile, { onProblem: (message) => renderer.note(message) })
+      const record = maxRecord({ account: () => store.readState().viewerId })
 
       await run("contacts import", async (events) => {
-        const client = createClient({ events, ...(cache ? { cache } : {}) })
+        const client = createClient({ events, record })
 
         try {
           const imported = await client.contacts.import(entries)
@@ -147,7 +144,7 @@ export const contactsCommand = (): Command => {
           renderer.success(`${imported.sent} sent, ${imported.recognised.length} recognised by MAX`)
         } finally {
           await client.close()
-          await cache?.close()
+          await record.close()
         }
       })
     })
