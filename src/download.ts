@@ -122,8 +122,10 @@ const open = async (
   attachment: AttachmentLink,
   reach: Reach,
   limit: number,
+  parentSignal?: AbortSignal,
 ): Promise<{ response: Response; pump: (destination: Writable) => Promise<number> }> => {
   const stalled = watchdog(STALL_MS)
+  const signal = parentSignal ? AbortSignal.any([stalled.signal, parentSignal]) : stalled.signal
   const failed = (error: unknown): never => {
     stalled.stop()
     if (stalled.signal.aborted) {
@@ -135,7 +137,7 @@ const open = async (
   let target = new URL(attachment.url)
   for (let hop = 0; ; hop += 1) {
     const response = await reach(target)
-      .then(() => fetch(target, { headers: HEADERS, redirect: "manual", signal: stalled.signal }))
+      .then(() => fetch(target, { headers: HEADERS, redirect: "manual", signal }))
       .catch(failed)
     const location = response.headers.get("location")
     if (response.status >= 300 && response.status < 400 && location) {
@@ -185,8 +187,9 @@ export const streamBytes = async function* (
   reach: Reach = publicOnly,
   limit = LARGEST_ATTACHMENT,
   onMime?: (mime: string | undefined) => void,
+  signal?: AbortSignal,
 ): AsyncGenerator<Uint8Array> {
-  const { pump, response } = await open(attachment, reach, limit)
+  const { pump, response } = await open(attachment, reach, limit, signal)
   const body = new PassThrough()
   const finished = pump(body).catch((error: unknown) => {
     body.destroy(error instanceof Error ? error : new Error("attachment download failed"))

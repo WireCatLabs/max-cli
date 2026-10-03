@@ -14,9 +14,24 @@ import { mockMax } from "./testing/mock-max.js"
 
 let server: Server
 let origin: string
+let stalledOpened = 0
+let stalledClosed = 0
+let stalledCompletion: Promise<void> = Promise.resolve()
 
 beforeAll(async () => {
   server = createServer((request, response) => {
+    if (request.url === "/stalled") {
+      stalledOpened++
+      stalledCompletion = new Promise((resolve) => {
+        response.once("close", () => {
+          stalledClosed++
+          resolve()
+        })
+      })
+      response.writeHead(200, { "content-type": "application/octet-stream" })
+      response.write("partial bytes")
+      return
+    }
     if (request.url?.startsWith("/webp"))
       return response.writeHead(200, { "content-type": "image/webp" }).end("webp bytes")
     if (request.url === "/truncated")
@@ -124,6 +139,53 @@ describe("max messages download", () => {
       { kind: "photo", path: join(directory, "116762160362694583-1.webp"), bytes: 10 },
     ])
     expect(await readdir(directory)).toEqual(["116762160362694583-1.webp"])
+  })
+
+  it("the command timeout closes its stalled HTTP stream and leaves no partial file", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const beforeOpened = stalledOpened
+    const beforeClosed = stalledClosed
+    const operation = download(directory, {
+      path: "/stalled",
+      args: [
+        "messages",
+        "download",
+        "111",
+        "116762160362694583",
+        "--output-dir",
+        directory,
+        "--timeout",
+        "1s",
+        "--json",
+      ],
+    })
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let closedAtDeadline = false
+    const result = await Promise.race([
+      operation,
+      new Promise<{ code: number; stdout: string; stderr: string }>((resolve) => {
+        timer = setTimeout(() => resolve({ code: 99, stdout: "", stderr: '{"error":{"code":"probe_timeout"}}' }), 1500)
+      }),
+    ])
+    let closeTimer: ReturnType<typeof setTimeout> | undefined
+    try {
+      closedAtDeadline = await Promise.race([
+        stalledCompletion.then(() => stalledClosed > beforeClosed),
+        new Promise<boolean>((resolve) => {
+          closeTimer = setTimeout(() => resolve(false), 500)
+        }),
+      ])
+    } finally {
+      clearTimeout(timer)
+      clearTimeout(closeTimer)
+      server.closeAllConnections()
+      await operation
+    }
+    expect(stalledOpened).toBeGreaterThan(beforeOpened)
+    expect(result.stderr).toMatch(/"code"\s*:\s*"timeout"/)
+    expect(closedAtDeadline).toBe(true)
+    expect(result.stdout).toBe("")
+    await expect.poll(() => readdir(directory), { timeout: 500 }).toEqual([])
   })
 
   it("supports the common output-dir flag and creates its directory", async () => {
