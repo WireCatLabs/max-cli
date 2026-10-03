@@ -166,7 +166,7 @@ max runs list --json | jq '.items[] | select(.status=="failed") | {runId, comman
 - [security.md](security.md) — что вообще попадает на диск
 - [troubleshooting.md](troubleshooting.md) — как этим пользоваться, когда что-то не работает
 
-## Справочник для скриптов
+## Справочник для скриптов (планируется)
 
 `max commands --json` перечисляет команды, глобальные опции и коды завершения без подключения
 к аккаунту. `cli` — имя инструмента, `version` — версия установленного пакета, `contract` — версия
