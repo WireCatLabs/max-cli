@@ -43,4 +43,4 @@ max sales bot messages send "Команда продаж" "Сборка гото
 - [commands.md](commands.md) — каждая команда и опция
 - [troubleshooting.md](troubleshooting.md) — если что-то не работает
 
-[Поиск сообщений](search.md): Lucene syntax, поля, regex, даты и legacy migration.
+[Поиск сообщений](search.md): синтаксис Lucene, поля, regex, даты и переход с legacy.
