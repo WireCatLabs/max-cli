@@ -58,7 +58,7 @@ export interface Environment {
 }
 
 /** One line from the person at the terminal; `secret` keeps it off the screen. */
-export type Ask = (prompt: string, options?: { secret?: boolean }) => Promise<string>
+export type Ask = (prompt: string, options?: { secret?: boolean; signal?: AbortSignal }) => Promise<string>
 
 const environments = new WeakMap<Command, Environment>()
 
@@ -110,6 +110,7 @@ export interface CommandContext {
   /** How voice messages are fetched and heard: through `reach`, and by the downloaded model. */
   hearing: Pick<HearAllOptions, "fetchAudio" | "open">
   ask: Ask
+  signal: AbortSignal
   /** Whether a person is there to scan a code or type one: both stdin and stderr are a terminal. */
   interactive: boolean
   /** How wide the terminal is that diagnostics go to; unknown when it is not a terminal. */
@@ -147,7 +148,8 @@ export const contextFor = (
 
   // Every client this command builds, so the deadline can shut them. There is always one; relying
   // on that is what makes the second one, some day, the leak that keeps the process alive.
-  const clients: Closeable[] = []
+  const cancellation = new AbortController()
+  const clients: Closeable[] = [{ close: async () => cancellation.abort() }]
 
   // Only for the real thing: a test hands in its own store, and must never start a process.
   // A server does not take `MAX_TOKEN` along, so a token from there has no server to share.
@@ -197,7 +199,11 @@ export const contextFor = (
       fetchAudio: (link) => fetchBytes(link, environment.reach ?? publicOnly),
       ...(environment.recognizer ? { open: environment.recognizer } : {}),
     },
-    ask: environment.ask ?? ((prompt, { secret = false } = {}) => readSecret(prompt, { echo: !secret })),
+    ask:
+      environment.ask ??
+      ((prompt, { secret = false, signal = cancellation.signal } = {}) =>
+        readSecret(prompt, { input: environment.stdin ?? process.stdin, echo: !secret, signal })),
+    signal: cancellation.signal,
     interactive: environment.interactive ?? (process.stdin.isTTY === true && process.stderr.isTTY === true),
     columns: environment.columns ?? process.stderr.columns,
     run: (command, body) =>

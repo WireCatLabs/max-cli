@@ -110,16 +110,19 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 ## «no session for profile "default"»
 
 ```json
-{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max session start`"}}
+{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max setup` in a local terminal; agents: read `max skill show`"}}
 ```
 
 Код возврата `4`. Токена для этого профиля нет — либо не входили, либо вошли **в другой профиль**,
 либо вошли с другими переменными каталогов.
 
 ```sh
-max session start          # войти
+max setup                  # первый запуск
 max personal chats list    # или назвать профиль, в который входили
 ```
+
+Прерванный первый запуск можно продолжить повторным `max setup`. Истёкший токен требует
+явного повторного входа: `max session start qr`. Агент перед входом читает `max skill show`.
 
 ⚠ Самая частая причина, когда токен точно есть: `MAX_CONFIG_DIR` задана в одном окне терминала и
 не задана в другом. Эти переменные переносят и запись в ключнице, поэтому сессия, сохранённая с

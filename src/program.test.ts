@@ -798,7 +798,7 @@ describe("the program", () => {
     const code = await run(["a-profile-that-does-not-exist", "account", "show"], { streams, tty: true })
 
     expect(streams.stdout).toEqual([])
-    expect(streams.stderr.join("")).toContain("max a-profile-that-does-not-exist session start")
+    expect(streams.stderr.join("")).toContain("max a-profile-that-does-not-exist setup")
     expect(code).toBe(4)
   })
 

@@ -1737,7 +1737,7 @@ export class MaxClient {
       // in under is the ordinary shape of this failure now that the first word is the profile.
       throw new CliError(
         "authentication_error",
-        `no session for profile "${profile}" — run \`max ${asFirstWord(profile)}session start\``,
+        `no session for profile "${profile}" — run \`max ${asFirstWord(profile)}setup\` in a local terminal; agents: read \`max skill show\``,
       )
     }
 

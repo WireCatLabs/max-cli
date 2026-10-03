@@ -201,7 +201,7 @@ export MAX_CONFIG_DIR=/tmp/max-try/config
 export MAX_STATE_DIR=/tmp/max-try/state
 export MESSAGING_STORE=/tmp/max-try/messages.db
 
-max session start     # этот токен не виден обычной установке
+max setup            # этот токен не виден обычной установке
 max chats list
 ```
 

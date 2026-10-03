@@ -686,7 +686,7 @@ describe("the MCP server", () => {
 
     expect(isError).toBe(true)
     expect(body.error).toMatchObject({ code: "authentication_error" })
-    expect(String((body.error as { message: string }).message)).toMatch(/session start/)
+    expect(String((body.error as { message: string }).message)).toMatch(/max mcp-\d+ setup/)
   })
 
   it("closes the socket to MAX when the session closes", async () => {

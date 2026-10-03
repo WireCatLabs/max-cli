@@ -47,6 +47,7 @@ describe("max commands", () => {
       .filter((command) => command.mutates && !command.local)
       .map((command) => command.path.join(" "))
     expect(writing).toEqual([
+      "setup",
       "account update",
       "account sessions end",
       "chats join",

@@ -62,6 +62,21 @@ forget the stored session for this profile
 max session end
 ```
 
+## `max setup`
+
+set up your personal MAX account and connect your agent
+
+**Меняет что-то в MAX.**
+
+```sh
+max setup [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--agent <agent>` | install the skill for this agent; asks at a terminal, otherwise none. Одно из: `none`, `codex`, `cursor`, `claude`, `gemini`, `all`. |
+| `--method <method>` | how to log in when there is no session. Одно из: `token`, `qr`, `qr-chrome`, `sms`. По умолчанию: `qr`. |
+
 ## `max account`
 
 the account this profile is logged in as

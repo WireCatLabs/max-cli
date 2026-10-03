@@ -13,18 +13,20 @@ max [профиль] [опции] <ресурс> <действие> [аргум�
 
 Полный список команд и опций — [commands.md](commands.md), он собирается из самой программы.
 
-## Первая минута
+## Начало работы
 
 ```sh
-max session start qr     # QR-код в терминале, токен уйдёт в ключницу
+max setup --agent codex  # QR-вход и навык агента
 max chats list           # ваши чаты
 ```
 
-Больше для чтения ничего не нужно.
+Настройка может занять около пяти минут. Команда проверяет до пяти чатов и не запускает
+фоновый сервис. История скачивается отдельно после выбора чата и объёма. Агент перед входом
+читает `max skill show`, доступный без сессии.
 
 ## Вход
 
-Проще всего — `max session start qr`: в терминале появится QR-код, вы отсканируете его приложением
+Первый запуск — `max setup`. Для явного повторного входа — `max session start qr`: в терминале появится QR-код, вы отсканируете его приложением
 MAX, и токен ляжет в ключницу. Все способы входа —
 [docs/sessions.md](sessions.md). Без способа `max session start` **импортирует токен**, полученный в
 официальном клиенте, и кладёт его в ключницу операционной системы.
@@ -727,7 +729,7 @@ max messages list -1000 --jsonl | jq 'select(.senderId == "111")'
 Ошибка уходит **на stderr**, а stdout остаётся пустым — так отказ невозможно принять за результат:
 
 ```json
-{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max session start`"}}
+{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max setup` in a local terminal; agents: read `max skill show`"}}
 ```
 
 Ветвиться надо по коду возврата, а не по тексту: текст меняется, код — нет. Вся таблица — в
@@ -738,7 +740,7 @@ max messages list -1000 --jsonl | jq 'select(.senderId == "111")'
 if ! max messages send 0 "текст" --json > /dev/null; then
   case $? in
     14) echo "могло уйти, повторять только с тем же --send-id" ;;
-    4)  echo "нужен max session start" ;;
+    4)  echo "нужен max setup" ;;
   esac
 fi
 ```

@@ -2,7 +2,7 @@
 
 `max` — одна команда. Ставится как обычный пакет npm, работает под Node и под Bun, ничего не
 компилирует при установке и сама ничего не запускает. Фоновый `max serve` появляется позже, когда
-его запустит первая команда (`serve` в [configuration.md](configuration.md)).
+его запустит первая обычная команда (setup его не запускает) (`serve` в [configuration.md](configuration.md)).
 
 ## Что нужно
 
@@ -75,6 +75,32 @@ max --help              # список команд
 ```
 
 Имя без области (`max-cli`) занято чужим пакетом с 2018 года, поэтому область обязательна.
+
+## Первый запуск и инструкция для агента
+
+```sh
+max --help
+max setup --help
+max commands --json
+max skill show                    # доступно до входа
+max setup --agent codex            # QR-вход и навык агента
+```
+
+Выделите около пяти минут. `setup` проверяет аккаунт и до пяти чатов; повторно использует
+существующую сессию. История скачивается отдельно, после выбора чата и объёма. Команда не
+запускает фоновый сервис. Выбор агента: `codex`, `cursor`, `claude`, `gemini`, `all`, `none`.
+Установка навыка отдельно: `max skill install --for all`. Способы входа и восстановление —
+[sessions.md](sessions.md).
+
+**Windows.** После установки Node.js откройте новый PowerShell. Если выполнение скриптов
+блокируется, используйте `npm.cmd` и `max.cmd`. Когда команда не найдена на PATH:
+
+```powershell
+npm.cmd exec --yes --package=@leemour/max-cli -- max setup --agent codex
+```
+
+Тот же префикс подходит для `--help`, `skill show` и остальных команд. Диагностика:
+`npm.cmd exec --yes --package=@leemour/max-cli -- max doctor --json`.
 
 ## Куда всё ложится
 
