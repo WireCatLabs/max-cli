@@ -9,7 +9,7 @@ import {
   writeSecurely,
 } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
-import { migratePermissionConfig } from "@leemour/cli-messaging/cli"
+import { migratePermissionConfig, refuseUnknownKey } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import * as v from "valibot"
 import {
@@ -26,6 +26,7 @@ import {
 } from "../config.js"
 import { knownProfiles } from "../diagnose.js"
 import { ModerationRules } from "../moderation/rules.js"
+import { permissionKeyOf } from "../permissions.js"
 import { forCommand } from "./context.js"
 
 const SHOWN: SourcedSetting[] = [
@@ -170,6 +171,7 @@ export const configCommand = (): Command => {
           `this process is locked to profile ${settings.profile} (MAX_PROFILE_LOCK) — ${setting === "defaultProfile" ? "defaultProfile" : "--defaults"} changes other profiles`,
         )
       }
+      if (value !== undefined) refuseUnknownKey(this, setting, value, permissionKeyOf)
       const scope = { profile: defaults ? undefined : settings.profile, kind }
       const saved = changeSetting(settings.configPath, { ...scope, setting, value })
       renderer.result({

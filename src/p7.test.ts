@@ -150,6 +150,15 @@ describe("P7 permissions", () => {
   })
 })
 
+it("refuses a permission key that names no command, and takes max's own bot keys", async () => {
+  const typo = await cli(["work", "config", "set", "permissions.messages.dlete", "allow", "--json"])
+  expect(typo.code).toBe(2)
+  expect(typo.stdout + typo.stderr).toMatch(/permissions\.messages\.dlete names no command — .*messages\.delete/)
+  expect((await cli(["work", "config", "set", "permissions", '{"messages.dlete":"allow"}', "--json"])).code).toBe(2)
+  expect((await cli(["work", "config", "set", "permissions.bot.me", "deny", "--json"])).code).toBe(0)
+  expect((await cli(["work", "config", "set", "permissions.messages.delete", "allow", "--json"])).code).toBe(0)
+})
+
 it("keeps a native read child override and checks nested native read groups", async () => {
   save({ profiles: { work: { permissions: { account: "deny", "account.show": "allow", chats: "deny" } } } })
   const { max, environment } = scripted()
