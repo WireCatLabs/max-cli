@@ -1056,18 +1056,22 @@ max store jobs cancel <job>
 a chat's stored messages as JSON lines, oldest first; never asks the messenger
 
 ```sh
-max store export <chat> [options]
+max store export [chats] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | a chat: its id, or part of its title. |
+| `chats` | необязательный | a chat: its id, or part of its title; several with --to. |
 
 | Опция | Что делает |
 |---|---|
 | `--format <format>` | jsonl (the default): one message per line; markdown: a transcript with a heading per day, replies and forwards quoted. |
 | `--since-time <time>` | only from this ISO 8601 time, or 30m / 2h / 1d ago, on. |
 | `--output <file>` | write JSON lines, or the transcript, to this new file, readable only by you. |
+| `--to <dir>` | write into this folder, a file per chat and a manifest; run again on it for only what changed since. |
+| `--kind <kinds>` | with --to: every stored chat of these kinds, comma-separated: dialog, group, channel, saved. |
+| `--all` | with --to: every stored chat of this account. |
+| `--encrypt` | compress and encrypt with a password, typed at a hidden prompt or piped on stdin; it is never kept — lose it and the file cannot be opened. |
 
 ### `max store clear`
 
@@ -1119,12 +1123,16 @@ max store reindex
 copy the store into a new file, while it is in use; never overwrites a file
 
 ```sh
-max store backup <file>
+max store backup <file> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `file` | обязательный | the new file. |
+
+| Опция | Что делает |
+|---|---|
+| `--encrypt` | compress and encrypt with a password, typed at a hidden prompt or piped on stdin; it is never kept — lose it and the file cannot be opened. |
 
 ### `max store restore`
 
@@ -1136,7 +1144,23 @@ max store restore <file>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `file` | обязательный | a file `store backup` wrote. |
+| `file` | обязательный | a file `store backup` wrote; one written with --encrypt asks for its password. |
+
+### `max store decrypt`
+
+open a file written with --encrypt into a new file; asks for its password
+
+```sh
+max store decrypt <file> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `file` | обязательный | a file `store backup --encrypt` or `store export --encrypt` wrote. |
+
+| Опция | Что делает |
+|---|---|
+| `--output <file>` | the new file, readable only by you. |
 
 ## `max conversations`
 
@@ -1144,7 +1168,7 @@ the conversations inside a chat, found in the stored messages by replies, mentio
 
 ### `max conversations build`
 
-find a chat's conversations in what the store holds, replacing the last build; never asks the messenger
+find a chat's conversations in what the store holds, replacing the last build; without --chat, every chat that changed since its build and every group never built; never asks the messenger
 
 ```sh
 max conversations build [options]
@@ -1153,6 +1177,7 @@ max conversations build [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
+| `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
 
 ### `max conversations list`
 
@@ -1181,6 +1206,43 @@ max conversations show <conversation> [message]
 | `conversation` | обязательный | a conversation id from `conversations list`; or a chat: its id, or part of its title, with a message. |
 | `message` | необязательный | a message id in that chat: show the conversation it is in. |
 
+### `max conversations related`
+
+the conversations nearest in meaning to the one a message is in, in every built chat, best first — from the vectors `conversations embed` stored; runs no model
+
+```sh
+max conversations related <chat> <message> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `message` | обязательный | a message id in that chat. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many. |
+| `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
+| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
+| `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+
+### `max conversations status`
+
+how fresh each built chat's conversations and vectors are: messages the build has not seen, chunks with a current, stale or missing vector
+
+```sh
+max conversations status [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
+| `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
+| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
+| `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+
 ### `max conversations search`
 
 the conversations nearest to a query in meaning and in words, best first, in one chat or every one — meaning after `conversations embed`; runs on this machine
@@ -1199,9 +1261,12 @@ max conversations search <query> [options]
 | `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+| `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
+| `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given. |
 | `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
 | `--since-time <time>` | only those still going at this ISO 8601 time, or 30m / 2h / 1d ago, or later. |
 | `--limit <n>` | how many. |
+| `--refresh` | first build and embed, on this machine, the chats in scope that changed or were never built — within --max-chats and --max-chunks. |
 
 ### `max conversations batches`
 
@@ -1264,7 +1329,7 @@ max conversations links clear [options]
 
 ### `max conversations embed`
 
-compute a vector for each chunk of a chat's conversations for search by meaning — on this machine, or with --provider through a service and your key; resumes where it stopped
+compute a vector for each chunk of a chat's conversations for search by meaning — on this machine, or with --provider through a service and your key; resumes where it stopped; without --chat, every built chat with chunks left, on this machine only
 
 ```sh
 max conversations embed [options]
@@ -1281,6 +1346,8 @@ max conversations embed [options]
 | `--threads <n>` | local: threads in all (default: min(8, cores)). |
 | `--concurrency <n>` | remote: requests at once (default: 4). |
 | `--max-tokens <n>` | remote: stop before a run that could send more tokens than this. |
+| `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
+| `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given. |
 
 #### `max conversations embed status`
 
@@ -1590,8 +1657,11 @@ max inbox [options]
 | `--since-time <time>` | what arrived after this ISO 8601 time, or 2h / 1d ago; the saved point stays put. |
 | `--limit <n>` | at most this many per chat, the newest. |
 | `--all` | muted and archived chats too — left out unless they mention you or reply to you. |
+| `--kind <kinds>` | only chats of these kinds, comma-separated: dialog, group, channel, saved. |
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
+| `--mark-read` | also mark each chat shown read, up to the newest message shown; the other side sees it. |
+| `--no-mark-read` | do not, whatever the catchUpMarksRead setting says. |
 
 ## `max review`
 
@@ -1605,10 +1675,14 @@ max review [options]
 |---|---|
 | `--since-time <time>` | where the last review ended — ISO 8601, or 2h / 1d ago; 3 days ago if not given. |
 | `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
+| `--kind <kinds>` | only chats of these kinds, comma-separated: dialog, group, channel, saved. |
 | `--unanswered [duration]` | only questions to you or a group's admins that nobody answered, asked at least this long ago — 4h, 1d; 24h if not given. |
 | `--all` | muted and archived chats too — left out unless they mention you or reply to you. |
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
+| `--new` | what changed since the last `review --new`, a point per chat — for scheduled runs. |
+| `--mark-read` | also mark each chat shown read, up to the newest message shown; the other side sees it. |
+| `--no-mark-read` | do not, whatever the catchUpMarksRead setting says. |
 
 ## `max serve`
 
@@ -1748,7 +1822,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -1769,7 +1843,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
 
 | Опция | Что делает |
 |---|---|

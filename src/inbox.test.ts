@@ -12,8 +12,12 @@ import { mockMax } from "./testing/mock-max.js"
 
 const pointFor = (profile: string) =>
   join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "inbox", `${profile}.json`)
-const savedPoint = (profile: string): string | undefined =>
-  existsSync(pointFor(profile)) ? JSON.parse(readFileSync(pointFor(profile), "utf8")).lastCheckAt : undefined
+/** Where chat 111's next `--new` starts: its own point, or `lastCheckAt` — the first check — when it has none. */
+const savedPoint = (profile: string, chat = "111"): string | undefined => {
+  if (!existsSync(pointFor(profile))) return undefined
+  const saved = JSON.parse(readFileSync(pointFor(profile), "utf8"))
+  return saved.chats?.[chat] ?? saved.lastCheckAt
+}
 
 const ME = 10000001
 const HOUR = 60 * 60 * 1000
