@@ -83,7 +83,13 @@ export const toMessage = (raw: Payload, chatId: Id, lookup: NameLookup = {}): Me
     ...linked(raw.link, lookup),
     reactions: null,
     ...scheduled(raw.delayedAttributes),
+    ...counted(raw.stats),
   }
+}
+
+const counted = (value: unknown): Pick<Message, "providerMetadata"> => {
+  const views = asRecord(value)?.views
+  return typeof views === "number" ? { providerMetadata: { views } } : {}
 }
 
 const scheduled = (value: unknown): Pick<Message, "scheduledFor"> => {
