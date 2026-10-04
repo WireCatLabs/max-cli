@@ -10,6 +10,12 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  ...["", "--budget", "--min-score"].map((option) => ({
+    command: "chats members audit",
+    ...(option ? { option } : {}),
+    reason:
+      "shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members",
+  })),
   ...["conversations status", "conversations related"].flatMap((command) =>
     ["--provider", "--base-url", "--dims"].map((option) => ({
       command,

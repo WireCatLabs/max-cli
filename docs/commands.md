@@ -287,6 +287,23 @@ max chats members list <chat> [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 
+#### `max chats members audit`
+
+members that look like bots, each with its reasons — read from the member list and the local store; never one request per person, and it removes nobody
+
+```sh
+max chats members audit <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--budget <pages>` | at most this many pages of 200 members, a pause between them (default: 10). |
+| `--min-score <n>` | only members scoring at least this; 1 lists everyone with a reason (default: 2). |
+
 #### `max chats members add`
 
 add people; they are told
