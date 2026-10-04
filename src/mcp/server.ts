@@ -130,6 +130,10 @@ export const serveOverHttpUntilStopped = async (
   context: CommandContext,
   options: ServerOptions,
   http: Omit<HttpOptions, "onCode" | "onError" | "appName">,
+  stopped: Promise<void> = new Promise<void>((resolve) => {
+    process.once("SIGINT", resolve)
+    process.once("SIGTERM", resolve)
+  }),
 ): Promise<void> => {
   const { session, build } = createMaxServer(context, { ...options, ...OVER_HTTP })
   const listening = await serveOverHttp(build, {
@@ -150,10 +154,7 @@ export const serveOverHttpUntilStopped = async (
     `serving on ${listening.url.href} — point your tunnel at it; connectors use ${new URL(MCP_PATH, http.publicUrl).href}`,
   )
 
-  await new Promise<void>((resolve) => {
-    process.once("SIGINT", resolve)
-    process.once("SIGTERM", resolve)
-  })
+  await stopped
 
   try {
     await listening.close()

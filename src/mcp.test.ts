@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 import { contextFor } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { instructions } from "./mcp/instructions.js"
-import { createMaxServer, type ServerOptions } from "./mcp/server.js"
+import { createMaxServer, type ServerOptions, serveOverHttpUntilStopped } from "./mcp/server.js"
 import { maxMessenger } from "./messenger.js"
 import { type GroupRules, ModerationRules, moderationPathFor } from "./moderation/rules.js"
 import { run } from "./program.js"
@@ -202,6 +202,71 @@ const connect = async (
   const logins = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGIN).length
   return { client, session, max, streams, logins, forms }
 }
+
+describe("max mcp --http, served until stopped", () => {
+  const httpContext = () => {
+    const max = scriptedMax({})
+    const streams = captureStreams()
+    const context = contextFor(
+      { profile: `mcp-http-${++profiles}` },
+      {
+        streams,
+        tty: false,
+        store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
+        connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+      },
+    )
+    return { context, streams }
+  }
+  const tokenFile = () => join(mkdtempSync(join(tmpdir(), "max-http-")), "tokens.json")
+
+  it("prints the login code and the connector address, answers 401 without a token, and stops", async () => {
+    const { context, streams } = httpContext()
+    const port = await freePort()
+    let stop = () => {}
+    const stopped = new Promise<void>((resolve) => {
+      stop = resolve
+    })
+    const served = serveOverHttpUntilStopped(
+      context,
+      {},
+      { publicUrl: new URL(`http://127.0.0.1:${port}`), port, tokenFile: tokenFile() },
+      stopped,
+    )
+    let status = 0
+    for (let i = 0; i < 50 && status === 0; i++)
+      status = await fetch(`http://127.0.0.1:${port}/mcp`, { method: "POST" })
+        .then((response) => response.status)
+        .catch(async () => {
+          await new Promise((resolve) => setTimeout(resolve, 20))
+          return 0
+        })
+
+    expect(status).toBe(401)
+    expect(streams.stderr.join("\n")).toMatch(/login code for a new browser app: [A-Z0-9]{4}-[A-Z0-9]{4}/)
+    expect(streams.stderr.join("\n")).toContain(`connectors use http://127.0.0.1:${port}/mcp`)
+    expect(streams.stdout).toEqual([])
+    stop()
+    await served
+  })
+
+  it("names a busy port and suggests --port", async () => {
+    const { context } = httpContext()
+    const port = await freePort()
+    const blocker = createNetServer()
+    await new Promise<void>((resolve) => blocker.listen(port, "127.0.0.1", resolve))
+    closers.push(() => new Promise<void>((resolve) => blocker.close(() => resolve())))
+
+    await expect(
+      serveOverHttpUntilStopped(
+        context,
+        {},
+        { publicUrl: new URL(`http://127.0.0.1:${port}`), port, tokenFile: tokenFile() },
+        new Promise<void>(() => {}),
+      ),
+    ).rejects.toMatchObject({ code: "configuration_error", message: expect.stringContaining("--port") })
+  })
+})
 
 const call = async (client: Client, name: string, args: Record<string, unknown> = {}) => {
   const result = await client.callTool({ name, arguments: args })
