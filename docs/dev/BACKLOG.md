@@ -25,6 +25,8 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+- **OPS-21** · P2 · 🚧 `feat/npm-install-ready` · Global npm installation repairs Windows PATH and installs versioned agent skills; `package.json`, `src/install/`.
+
 
 - **CLI-58** · P2 · `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
   third-party proxy. Streamable HTTP on `127.0.0.1` behind a tunnel, with its own OAuth for exactly
