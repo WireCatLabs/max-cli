@@ -33,7 +33,8 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   the form (NEED-593), `--revoke` — cli-messaging #527/#528/#543 (0.146.0), tg-cli #266, max-cli #398,
   `docs/remote.md` in both. Left: the live check with Claude.ai and ChatGPT through Tailscale Funnel (owner;
   tg-cli `bin/tg-remote`) — it also answers whether the apps show MCP forms at all, without which `--http`
-  only reads; then the tg and max releases, after NEED-564's search work.
+  only reads. MAX0.28.0 and TG0.27.0 are published with core0.17.0 and cli-messaging0.147.0;
+  the reviewed search/history/service diagnostics work is included.
 - **CLI-68** · P3 · `mcp --http` as a background service: `server install` for it (systemd/launchd), so the
   browser apps reach a machine without an open terminal. Follows CLI-58's live check (NEED-595 A: foreground
   first).
