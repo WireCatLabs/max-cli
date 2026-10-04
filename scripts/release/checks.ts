@@ -15,8 +15,16 @@ export const CHANGELOG: ChangelogRules = {
 }
 
 // The agent skill ships because `max skill show` reads it from the package (`src/commands/skill.ts`).
-export const PACKED = ["dist/", "package.json", "README.md", "LICENSE", "skills/max-cli/SKILL.md"]
-export const PACKED_SAID = "dist/, package.json, README.md, LICENSE and the agent skill"
+export const PACKED = [
+  "dist/",
+  "package.json",
+  "README.md",
+  "LICENSE",
+  "skills/max-cli/SKILL.md",
+  "install/postinstall.mjs",
+  "install/windows.ps1",
+]
+export const PACKED_SAID = "dist/, package.json, README.md, LICENSE, the agent skill and installation entrypoints"
 
 const GENERATED = new Set(["docs/commands.md", "docs/dev/protocol.md"])
 

@@ -1,0 +1,52 @@
+name: Windows install readiness
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/install-windows.yml"
+      - "install/**"
+      - "src/install/**"
+      - "scripts/install-windows.test.ps1"
+      - "package.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: npm pack --ignore-scripts
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: package
+          path: leemour-max-cli-*.tgz
+
+  install:
+    needs: pack
+    runs-on: windows-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["22.16.0", "24"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: package
+          path: package
+      - name: Install without PATH and verify direct launch and skills
+        shell: pwsh
+        run: ./scripts/install-windows.test.ps1 -Tarball (Get-ChildItem package/*.tgz).FullName
