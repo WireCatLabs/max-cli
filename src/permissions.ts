@@ -57,6 +57,15 @@ export const commandPermission = (command: Command): string | null => {
   throw new Error(`unmapped permission path: ${words.join(" ")}`)
 }
 
+/** `commandPermission` for checking a file's keys: a command it cannot map names no key, rather than throwing. */
+export const permissionKeyOf = (command: Command): string | null | undefined => {
+  try {
+    return commandPermission(command)
+  } catch {
+    return undefined
+  }
+}
+
 export const askerFor =
   (
     flags: { yes?: boolean; allowDangerous?: boolean; json?: boolean; jsonl?: boolean },
