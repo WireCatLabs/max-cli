@@ -197,4 +197,3 @@ which; the plan for it starts by saying so.
 
 - MCP parity · ✅ canonical personal tool catalogue and strict shared input schemas mounted on MAX’s held session; missing supported bindings and local-write permission checks implemented. Telegram forum tools remain unavailable; legacy moderation/rules names and native preview/transcript behavior retained. Shared prerequisite 0.144.0; final synthetic audit is kept in the private implementation plan. Consumer publication is separate.
 
-- **CLI-67** · 🚧 `feat/messages-stats` mounts the shared local-only statistics command already available over MCP; account/permission isolation, grouping/query options, generated docs and test matrix. Plan: `docs_ai/plans/2026-10-04-next-release.md`.
