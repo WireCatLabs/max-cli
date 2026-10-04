@@ -7,6 +7,7 @@ on:
       - "install/**"
       - "src/install/**"
       - "scripts/install-windows.test.ps1"
+      - "scripts/install-unix.test.mjs"
       - "package.json"
   workflow_dispatch:
 
@@ -50,3 +51,22 @@ jobs:
       - name: Install without PATH and verify direct launch and skills
         shell: pwsh
         run: ./scripts/install-windows.test.ps1 -Tarball (Get-ChildItem package/*.tgz).FullName
+
+  unix-install:
+    needs: pack
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: ["22.16.0", "24"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ matrix.node }}
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          name: package
+          path: package
+      - run: node scripts/install-unix.test.mjs package/leemour-max-cli-*.tgz
