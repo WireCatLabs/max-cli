@@ -8,7 +8,7 @@ import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import type { Payload } from "./protocol/frame.js"
 import { SessionStore } from "./session/store.js"
-import { mockMax } from "./testing/mock-max.js"
+import { mockMax, pagedHistory } from "./testing/mock-max.js"
 
 const pointFor = (profile: string) =>
   join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "inbox", `${profile}.json`)
@@ -56,7 +56,7 @@ const inboxMax = (
         chats,
         contacts: [{ id: 10000002, names: [{ name: "Someone Else", type: "FULL_NAME" }] }],
       },
-      [Opcode.CHAT_HISTORY]: (request: Payload) => ({ messages: histories[Number(request.chatId)] ?? [] }),
+      [Opcode.CHAT_HISTORY]: (request: Payload) => pagedHistory(histories[Number(request.chatId)] ?? [])(request),
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
       [Opcode.CHATS_LIST]: { chats: [] },
       [Opcode.CHAT_MARK]: {},
@@ -157,7 +157,7 @@ describe("max inbox --new", () => {
     expect(inbox.chats).toHaveLength(1)
     expect(inbox.chats[0]).toMatchObject({ id: "111", more: false })
     expect(inbox.chats[0].messages.map((m: { text: string }) => m.text)).toEqual(["new"])
-    expect(historiesAsked()).toEqual(["111"])
+    expect(historiesAsked()).toEqual(["111", "111"])
     expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
 
     // The owner's own reply is the newest thing read, so the next check starts after it.
@@ -243,7 +243,7 @@ describe("max inbox --new", () => {
 
     const { stdout, stderr } = await runWith(["i-many", "inbox", "--new", "--json"], environment)
 
-    expect(historiesAsked()).toHaveLength(20)
+    expect(new Set(historiesAsked()).size).toBe(20)
     expect(JSON.parse(stdout).skipped.map((chat: { id: string }) => chat.id)).toEqual(["1001", "1000"])
     expect(stderr).toContain("too many chats at once")
   })

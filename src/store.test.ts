@@ -77,7 +77,7 @@ describe("max store", () => {
 
     expect(fetched.code).toBe(0)
     expect(JSON.parse(fetched.stdout)).toMatchObject({ chat: "111", complete: true })
-    expect(sent(Opcode.CHAT_HISTORY).every((request) => request?.backward === 30)).toBe(true)
+    expect(sent(Opcode.CHAT_HISTORY).map((request) => request?.backward)).toEqual([30, 30, 30, 1])
     expect(sent(Opcode.MSG_GET_REACTIONS)).toEqual([])
     expect(sent(Opcode.CHAT_MARK)).toEqual([])
 
@@ -122,7 +122,8 @@ describe("max store", () => {
     )
 
     expect(fetched.code).toBe(0)
-    expect(sent(Opcode.CHAT_HISTORY).every((request) => request?.backward === 10)).toBe(true)
+    const pages = sent(Opcode.CHAT_HISTORY).filter((request) => request?.backward !== 1)
+    expect(pages.every((request) => request?.backward === 10)).toBe(true)
   })
 
   it("refuses --estimate: MAX's ids do not count the messages missing", async () => {

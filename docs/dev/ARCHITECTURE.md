@@ -283,8 +283,11 @@ Verified live: stdout one JSON value, stderr empty. Failures too: `run()` return
   `hasMore: false`) and `--offline`. **The shape never says where rows came from**; exit code and
   diagnostics do.
 - `hasMore` is a boolean, not a total (counting rows MAX has not sent is another cost). Exact for
-  chats and contacts. ⚠ **For `messages list` it is a claim about our copy**: history comes in
-  windows, and a full page is the only evidence of another.
+  chats and contacts; a chat list MAX cut (`#chatsCut`) says `hasMore: true` on its last nonempty page.
+  ⚠ **For `messages list` it is a claim about our copy**: history comes in windows, and MAX's answer
+  says nothing of what is older. **Correction 2026-10-04:** this said a full page is the only evidence
+  of another; a page can come back short mid-chat, so a short page back is now checked with one
+  request for a single older message (`#olderThan` in `src/client.ts`).
 - In a terminal, the "more pages" line goes to **stderr**, from `src/commands/paging.ts`, not
   `renderer.result`: `account show` and `session start|end` are not listings and answer a bare
   object.

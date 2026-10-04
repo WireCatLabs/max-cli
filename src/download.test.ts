@@ -10,7 +10,7 @@ import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
-import { mockMax } from "./testing/mock-max.js"
+import { mockMax, pagedHistory } from "./testing/mock-max.js"
 
 let server: Server
 let origin: string
@@ -80,19 +80,17 @@ const download = async (
     answers: {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, chats: [{ id: 111, title: "First", type: "CHAT" }] },
-      [Opcode.CHAT_HISTORY]: {
-        messages: [
-          {
-            id: 116762160362694583n,
-            time: 1789776000000,
-            sender: 10000001,
-            text: "",
-            attaches: photo
-              ? [{ _type: "PHOTO", photoId: 5, photoToken: "synthetic-photo-token", baseUrl: `${origin}/webp` }]
-              : [{ _type: "FILE", fileId: 42, name, size: 10 }, { _type: "CALL" }],
-          },
-        ],
-      },
+      [Opcode.CHAT_HISTORY]: pagedHistory([
+        {
+          id: 116762160362694583n,
+          time: Number(116762160362694583n >> 16n),
+          sender: 10000001,
+          text: "",
+          attaches: photo
+            ? [{ _type: "PHOTO", photoId: 5, photoToken: "synthetic-photo-token", baseUrl: `${origin}/webp` }]
+            : [{ _type: "FILE", fileId: 42, name, size: 10 }, { _type: "CALL" }],
+        },
+      ]),
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
       [Opcode.FILE_DOWNLOAD]: { unsafe: false, url: `${origin}${path}` },
     },

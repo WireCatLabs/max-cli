@@ -128,7 +128,7 @@ describe("max review", () => {
 
     expect(json.chats[0].messages).toHaveLength(150)
     expect(json.chats[0].more).toBe(false)
-    expect(historiesAsked()).toBe(2)
+    expect(historiesAsked()).toBe(3)
   })
 
   it("looks back three days without --since", async () => {

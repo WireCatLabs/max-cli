@@ -38,6 +38,21 @@ export interface MockMax {
 
 const built: MockMax[] = []
 
+/**
+ * A chat's `CHAT_HISTORY`, oldest first, answered as MAX pages it (measured 2026-09-23): `backward`
+ * up to and including `from`, or with `backward: 0`, `forward` from `from` itself.
+ */
+export const pagedHistory =
+  (messages: Payload[]) =>
+  ({ from, backward = 0, forward = 0 }: Payload): Payload => {
+    const at = Number(from)
+    const older = Number(backward) > 0 ? messages.filter((one) => Number(one.time) <= at).slice(-Number(backward)) : []
+    const newer = messages
+      .filter((one) => (Number(backward) > 0 ? Number(one.time) > at : Number(one.time) >= at))
+      .slice(0, Number(forward))
+    return { messages: [...older, ...newer] }
+  }
+
 /** Every mock built since the last call, and forgets them — so each test sees only its own. */
 export const takeBuiltMocks = (): MockMax[] => built.splice(0)
 

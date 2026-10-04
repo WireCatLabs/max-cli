@@ -8,6 +8,7 @@ import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { maxMessenger } from "./messenger.js"
 import { Connection } from "./protocol/connection.js"
+import type { Payload } from "./protocol/frame.js"
 import { type MaxRecord, maxRecord } from "./record.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
@@ -215,6 +216,26 @@ describe("MaxClient", () => {
       expect(items).toHaveLength(15)
       expect(notes.join("\n")).toContain("only the newest 15 chats")
     })
+
+    it("says more chats exist when the list was cut, on its last nonempty page only", async () => {
+      const max = mockMax({
+        answers: {
+          [Opcode.SESSION_INIT]: {},
+          [Opcode.LOGIN]: { ...loginAnswer, chats: fifteen },
+          [Opcode.CHATS_LIST]: () => {
+            throw Object.assign(new Error("refused"), { payload: { error: "proto.payload" } })
+          },
+        },
+      })
+      const { client } = clientWith(max)
+
+      const every = await client.chats.list()
+      const last = await client.chats.list({ limit: 10, offset: 10 })
+      const past = await client.chats.list({ limit: 10, offset: 20 })
+      await client.close()
+
+      expect([every.hasMore, last.hasMore, past.hasMore]).toEqual([true, true, false])
+    })
   })
 
   it("**refuses a token belonging to another account**, and says how to switch on purpose", async () => {
@@ -359,6 +380,49 @@ describe("MaxClient", () => {
     await expect(client.chats.resolve("nobody")).rejects.toMatchObject({ code: "not_found" })
 
     await client.close()
+  })
+
+  describe("a short page back (MAX says nothing of what is older)", () => {
+    const at = (minute: number) => Date.UTC(2026, 8, 1, 10, minute)
+    const message = (minute: number) => ({
+      id: (BigInt(at(minute)) << 16n) + 1n,
+      time: at(minute),
+      sender: 10000002,
+      text: `m${minute}`,
+      attaches: [],
+    })
+    const listing = async (older: unknown[]) => {
+      const max = mockMax({
+        answers: {
+          [Opcode.SESSION_INIT]: {},
+          [Opcode.LOGIN]: loginAnswer,
+          [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
+          [Opcode.CONTACT_INFO]: { contacts: [] },
+          [Opcode.CHAT_HISTORY]: (request: Payload) =>
+            request.backward === 1 ? { messages: older } : { messages: [message(5), message(6)] },
+        },
+      })
+      const { client } = clientWith(max)
+      const page = await client.messages.list("111", { limit: 20, before: at(30) })
+      await client.close()
+      const asked = max.sent.filter((call) => call.opcode === Opcode.CHAT_HISTORY).map((call) => call.payload)
+      return { page, asked, max }
+    }
+
+    it("**continues when one more older message is there**, asked for as web.max.ru asks", async () => {
+      const { page, asked, max } = await listing([message(1)])
+
+      expect([page.items.map((one) => one.text), page.hasMore]).toEqual([["m5", "m6"], true])
+      expect(asked[1]).toEqual({ chatId: 111, from: at(5) - 1, forward: 0, backward: 1, getMessages: true })
+      expect(max.sent.filter((call) => call.opcode === Opcode.MSG_GET_REACTIONS)).toHaveLength(1)
+    })
+
+    it("stops at the chat's start when nothing older comes back", async () => {
+      const { page, asked } = await listing([])
+
+      expect(page.hasMore).toBe(false)
+      expect(asked).toHaveLength(2)
+    })
   })
 
   it("**never marks anything read while reading history**", async () => {

@@ -10,7 +10,7 @@ import { commandWords, liftProfile } from "./profile.js"
 import { createProgram, run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
-import { mockMax } from "./testing/mock-max.js"
+import { mockMax, pagedHistory } from "./testing/mock-max.js"
 
 /** A MAX that answers a login and one history read, and a keyring that holds a token or not. */
 const scriptedMax = ({ token = true } = {}) => {
@@ -22,9 +22,9 @@ const scriptedMax = ({ token = true } = {}) => {
         chats: [{ id: 111, title: "First", type: "CHAT", lastEventTime: 1789776000000 }],
       },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
-      [Opcode.CHAT_HISTORY]: {
-        messages: [{ id: 116762160362694583n, time: 1789776000000, sender: 10000002, text: "hi", attaches: [] }],
-      },
+      [Opcode.CHAT_HISTORY]: pagedHistory([
+        { id: 116762160362694583n, time: 1789776000000, sender: 10000002, text: "hi", attaches: [] },
+      ]),
       // The sender is in no chat the login named, so naming them costs this request — a group
       // member is looked up now, not only the other half of a dialog. Left unscripted it does not
       // fail: the client waits, gives up and says "shown by id" on stderr, which is correct of it
