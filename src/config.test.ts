@@ -1,6 +1,7 @@
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { levelFor } from "@leemour/cli-messaging/sends"
 import { beforeEach, describe, expect, it } from "vitest"
 import { changeSetting, configuredProfiles, resolveSettings, setCommandFor } from "./config.js"
 
@@ -160,6 +161,32 @@ describe("the order a setting is decided in", () => {
   it("leaves a profile the file says nothing about on the defaults", () => {
     withConfig(JSON.stringify({ profiles: { personal: { limit: 99 } } }))
     expect(settings({ profile: "other" })).toMatchObject({ limit: 20, timeoutMs: undefined, color: undefined })
+  })
+})
+
+describe("permissions across sections", () => {
+  it("**lets the profile's own key win** over a key under it in `personal.defaults` or `defaults`", () => {
+    withConfig(
+      JSON.stringify({
+        defaults: { permissions: { "messages.delete": "allow" } },
+        personal: { defaults: { permissions: { "messages.send": "allow" } } },
+        profiles: { agent: { permissions: { messages: "readonly" } } },
+      }),
+    )
+    const { permissions, permissionSources } = settings({ profile: "agent" })
+    expect(levelFor(permissions, "messages.delete").level).toBe("readonly")
+    expect(levelFor(permissions, "messages.send").level).toBe("readonly")
+    expect(permissionSources).toEqual({ messages: "config file: profiles.agent" })
+  })
+
+  it("reads an old `readOnly` in the profile as nearer than `defaults.permissions`", () => {
+    withConfig(
+      JSON.stringify({
+        defaults: { permissions: { "messages.send": "allow" } },
+        profiles: { agent: { readOnly: true } },
+      }),
+    )
+    expect(levelFor(settings({ profile: "agent" }).permissions, "messages.send").level).toBe("readonly")
   })
 })
 
