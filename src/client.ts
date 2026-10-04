@@ -346,7 +346,7 @@ export class MaxClient {
         known = await record.rememberChats(chats, this.#chatsComplete)
       })
       const partners = new Map(chats.map((chat) => [chat.id, chat.providerMetadata]))
-      return paged(
+      const page = paged(
         matching(
           known.map((chat) => ({
             ...chat,
@@ -357,6 +357,8 @@ export class MaxClient {
         limit,
         offset,
       )
+      // MAX holds chats it did not send; the last nonempty page says so, and an empty one ends a paging script.
+      return this.#chatsCut && page.items.length > 0 ? { ...page, hasMore: true } : page
     },
 
     /**
@@ -809,8 +811,10 @@ export class MaxClient {
      * asked for to tell whether another follows. Asking from the moment itself spent that one on the anchor.
      * `before` keeps the anchor, as it always has.
      *
-     * `hasMore` here is a claim about the copy we hold, never about the chat: a full page back is
-     * the only evidence there is that another page exists.
+     * `hasMore` here is a claim about the copy we hold, never about the chat. MAX's answer carries
+     * `messages` and nothing that says whether older ones exist, and a page can come back short in the
+     * middle of a chat, as Telegram's does. So a short page back is checked with one more request for a
+     * single older message; a full page is taken as more, and an empty one as the start.
      */
     list: async (
       chatId: Id,
@@ -830,7 +834,8 @@ export class MaxClient {
         { from: before ?? Date.now(), backward: limit, forward: 0 },
         { reactions },
       )
-      return { items: messages, hasMore: messages.length >= limit }
+      const hasMore = messages.length >= limit || (messages.length > 0 && (await this.#olderThan(chatId, messages)))
+      return { items: messages, hasMore }
     },
 
     /**
@@ -2037,6 +2042,19 @@ export class MaxClient {
     const lookup = { names: namesFrom(session.contacts), ...viewer(this.#store) }
     const messages = await this.#nameSenders(asArray(answer.messages).map((raw) => toMessage(raw, chatId, lookup)))
     return reactions ? this.#withReactions(chatId, messages) : messages
+  }
+
+  /** Straight to the wire: the reactions and names `#history` fetches are not wanted for a yes or no. */
+  async #olderThan(chatId: Id, messages: Message[]): Promise<boolean> {
+    const oldest = Math.min(...messages.map((message) => Date.parse(message.timestamp)))
+    const answer = await this.#wire.chats.history({
+      chatId,
+      from: oldest - 1,
+      forward: 0,
+      backward: 1,
+      getMessages: true,
+    })
+    return asArray(answer.messages).length > 0
   }
 
   /** One request per page: history carries no reactions (measured 2026-09-23). */
