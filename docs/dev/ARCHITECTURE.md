@@ -514,35 +514,23 @@ never been fetched. `store fetch` fills it; `--offline` reads it without connect
 
 ## 17. The MCP server is a second adapter, and it keeps the connection for minutes
 
-`max mcp` (`src/mcp/`) is a sibling of `src/commands/`, not a layer under it (REQUIREMENTS §6): each
-tool calls `MaxClient`, and the Biome rule that keeps commands off `protocol/`, `spec/` and
-`generated/` covers `src/mcp/` too. The context comes from `contextFor` — the same settings,
-keyring, deadline and run record as a command, built from flags instead of argv.
+`max mcp` (`src/mcp/`) mounts `personalMcpTools(maxMessenger)` from the shared SDK through
+`registerPersonalMcpTools`. MAX retains `MaxSession`, native permission guards and account-scoped
+archive services. Unsupported forum tools are filtered out; photo previews and cached direct
+transcripts retain native callbacks under the shared input schemas. Legacy `chats_check` and
+`chats_rules` names remain available.
 
-**Correction 2026-10-04:** the server is still max's own (`src/mcp/server.ts`, `MaxSession`), but most
-tools now run cli-messaging's services over the held client: `withShared` (`src/mcp/shared.ts`) builds
-`servicesFor(…)` over `maxAdapter(client)` and the shared store, so a tool and its command run the same
-method. Which tools exist is decided by the profile's `permissions` (P7, #382), not by flags:
-`registerTools` (`src/mcp/tools.ts`) leaves out a tool whose level is `deny`, a write tool whose level
-is `readonly`, and shows a form for `ask` or with `--confirm-send`. `--allow-send`, `--allow-mark-read`,
-`--allow-delete` and `--allow-moderate` are accepted with a deprecation note and grant nothing
-(`src/commands/mcp.ts`). The "sending is absent without `--allow-send`" bullet below is superseded.
-
-- **One connection per agent session, never for long** (`NEED-152`): `MaxSession` logs in on the
-  first call and keeps the client; it drops it after 2 minutes idle, 5 minutes after the login
-  whatever the traffic (the chat list is the login's snapshot), after any error that may have been
-  the connection's, and on stdin EOF. Calls run one at a time.
-- **Sending is absent, not refused**, without `--allow-send`. With it, the tool carries
-  `destructiveHint` and Claude Code's `anthropic/requiresUserInteraction`, and goes through the same
-  `MaxClient.messages.send` as the command — so the send guards apply unchanged.
-- **`--confirm-send` asks the owner from the server** (`CLI-28`, `src/mcp/confirm.ts`): the first
-  call resolves the chat and returns an elicitation form showing its title, id and the text; only
-  the SDK's second call, carrying Accept, sends. The form has no fields — Accept is the
-  "yes"; a required checkbox under it was missed and made Accept look broken. The form's `requestState` is an
-  HMAC of chat and text under a per-process key, recomputed from the second call's own arguments —
-  state round-trips through the client. Clients on the 2025 protocol (Claude Code over stdio) get
-  the same flow through the SDK's legacy shim; a client without form support fails before the
-  second call. Tested on both protocol eras.
+- **One connection per agent session, never for long**: calls serialize; the connection closes
+  after 2 minutes idle, after 5 minutes since login, on a connection failure and on stdin EOF.
+  Local evidence and conversation callbacks use the profile's known account without connecting.
+- **Profile permissions govern discovery and execution.** The mounting scope rechecks the exact
+  key, including local reads. Native write guards retain recipient checks and the journal.
+  Retired access flags grant no permissions.
+- **Confirmation uses the shared one-use HMAC form**, bound to tool, resolved chat and parameters,
+  with a five-minute lifetime. `ask` requires consent unless its skip flag applies; `--confirm-send`
+  applies to every write. Scheduled writes execute the absolute time shown in the form.
+- **Local inference releases the connection.** Warm embedding models are disposed on shutdown;
+  speech models are never downloaded by a tool. Native transcription retains same-model cache reuse.
 - **Discovery is the client's.** Clients that defer tools keep only the names and the server's
   `instructions` in context; `instructions` is `max --help` plus the skill's boundaries, under the
   2048 characters Claude Code keeps. No meta-tools, no tool with an `action` parameter: approval is

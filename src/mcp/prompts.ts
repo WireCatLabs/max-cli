@@ -18,13 +18,13 @@ export const registerPrompts = (server: McpServer): void => {
       title: "Catch up on MAX",
       description: "What came in, summarised per chat. Reads only.",
       argsSchema: toStandardJsonSchema(
-        v.object({ since: v.optional(v.pipe(v.string(), v.description("a message id or an ISO 8601 time"))) }),
+        v.object({ since: v.optional(v.pipe(v.string(), v.description("an ISO 8601 time or a duration"))) }),
       ),
     },
     ({ since }) =>
       asked(
         [
-          `Catch me up on MAX. Call max_inbox once${since ? ` with since ${JSON.stringify(since)}` : ""}.`,
+          `Catch me up on MAX. Call max_inbox once${since ? ` with since_time ${JSON.stringify(since)}` : ""}.`,
           "Summarise per chat, busiest first: who wrote, what they want, and whether it needs my answer.",
           "Do not send, react, forward or mark anything read.",
           DATA,
@@ -64,7 +64,7 @@ export const registerPrompts = (server: McpServer): void => {
       argsSchema: toStandardJsonSchema(
         v.object({
           since: v.optional(
-            v.pipe(v.string(), v.description("where the last review ended: a message id or an ISO 8601 time")),
+            v.pipe(v.string(), v.description("where the last review ended: an ISO 8601 time or a duration")),
           ),
           groups: v.optional(
             v.pipe(v.string(), v.description("group chats where work gets done, by name or id, comma-separated")),
@@ -77,7 +77,7 @@ export const registerPrompts = (server: McpServer): void => {
         [
           "Review my commitments in MAX. Do not send, react, forward or mark anything read, except as step 5 allows.",
           "If I gave you the open items of the previous review, check each of those first.",
-          `1. Call max_review once${since ? ` with since ${JSON.stringify(since)}` : ""}, with transcribe: true. It returns`,
+          `1. Call max_review once${since ? ` with since_time ${JSON.stringify(since)}` : ""}, with transcribe: true. It returns`,
           "every message in each chat that changed, mine included (outgoing: true — most of what I owe is there).",
           "2. Sort what you find into three lists: I owe · Waiting on others · Needs clarifying. Each item: chat",
           "title and id, date, the ids of the messages it rests on, and a deadline only if one was stated. When a",
