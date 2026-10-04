@@ -19,11 +19,16 @@ max messages search 'has:file' --json
 
 ## Поля и операторы
 
-Поддержаны поля `text/body/from/chat/date/kind/has/topic/in/preset`, логические группы и группы
-значений поля, включающие и исключающие диапазоны, ограниченные wildcard и Lucene regex.
+Поддержаны поля `text/body/from/chat/date/kind/has/topic/in/preset/filename/mime/size`, логические
+группы и группы значений поля, включающие и исключающие диапазоны, ограниченные wildcard и Lucene regex.
 `topic` требует одного обязательного чата. `kind:bot` выбирает собеседника, `in:bots` — аккаунты
-Bot API. `filename/mime/size/tag` пока не поддержаны; fuzzy/proximity/boost/intervals также
-дают ошибку. Неизвестные поля не становятся текстом.
+Bot API. `tag` пока не поддержан; fuzzy/proximity/boost/intervals также дают ошибку. Неизвестные
+поля не становятся текстом.
+
+Файлы ищутся по имени и размеру, текст сообщения не нужен: `filename:*.pdf`, `filename:*договор*`
+(имя целиком, без учёта регистра и ё), `size>10MB`, `size:[1KB TO 300KB]` (KB/MB/GB по 1024).
+MAX не сообщает тип файла, поэтому `mime:` здесь ничего не находит — ищите по расширению.
+Ссылку на сайт находит фраза: `has:link AND "github.com"`.
 
 ## Даты и regex
 
