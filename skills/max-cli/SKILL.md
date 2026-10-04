@@ -151,7 +151,7 @@ description: Читать и отправлять сообщения в личн
    (непрочитанное) или `max inbox --since-time <время>`.
 13. **`--at-time` ставит сообщение в очередь MAX, а не отправляет.** Ответ — `{sendId, operationId,
    message, scheduledFor}`; ушедшее сообщение получит другой id. Очередь: `max messages scheduled <чат>`.
-   Через MCP — параметр `at` у `max_messages_send` и инструмент `max_messages_scheduled`.
+   Через MCP — параметр `at_time` у `max_messages_send` и инструмент `max_messages_scheduled`.
    Отменить можно только в приложении MAX.
 
 ## Ссылки на сообщения

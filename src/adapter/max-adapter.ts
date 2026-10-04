@@ -44,6 +44,7 @@ export type MaxAdapter = MessengerAdapter &
       | "updateProfile"
       | "endOtherSessions"
       | "sessions"
+      | "lookup"
       | "createGroup"
       | "join"
       | "leave"
@@ -176,6 +177,7 @@ export const maxAdapter = (
 
     chat: (reference) => client.chats.show(reference),
     contact: (reference) => client.contacts.show(reference),
+    lookup: async (phone) => toMember(await client.contacts.lookup(phone)),
 
     members: async (chat, window) => {
       const { items, hasMore, chatId, rolesKnown, truncated, readCount } = await client.chats.members.page(chat, window)

@@ -1,3 +1,4 @@
+import { warmEmbedders } from "@leemour/cli-messaging/cli"
 import { levelFor } from "@leemour/cli-messaging/sends"
 import { McpServer } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
@@ -37,7 +38,8 @@ export const createMaxServer = (
     ...sessionOptions
   }: ServerOptions,
 ) => {
-  const session = new MaxSession(context, sessionOptions)
+  const embedders = warmEmbedders()
+  const session = new MaxSession(context, { ...sessionOptions, dispose: () => embedders.close() })
   const permitted = undefined
   const toolGroups = ["contacts", "polls", "groups", "profile"] as const
   const build = (): McpServer => {
@@ -71,6 +73,8 @@ export const createMaxServer = (
       permitted,
       toolGroups,
       warn: context.renderer.note,
+      reach: context.reach,
+      embedders,
     })
     if (levelFor(context.settings.permissions, "messages").level !== "deny") registerPrompts(server)
     if (
@@ -104,6 +108,9 @@ export const serveOverStdio = async (context: CommandContext, options: ServerOpt
     process.once("SIGTERM", resolve)
   })
 
-  await handle.close()
-  await session.close()
+  try {
+    await handle.close()
+  } finally {
+    await session.close()
+  }
 }

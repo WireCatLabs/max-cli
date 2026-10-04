@@ -11,6 +11,7 @@ export interface SessionOptions {
   /** Log in again after this long, whatever the traffic: the chat list is what the login answered. */
   maxAgeMs?: number
   now?: () => number
+  dispose?: () => Promise<void>
 }
 
 /** The caller's mistake, not the connection's — nothing about the socket is in doubt after these. */
@@ -39,17 +40,22 @@ export class MaxSession {
   readonly #idleMs: number
   readonly #maxAgeMs: number
   readonly #now: () => number
+  readonly #dispose: (() => Promise<void>) | undefined
   #held: Held | undefined
   #idle: NodeJS.Timeout | undefined
   #queue: Promise<unknown> = Promise.resolve()
   #events: Events = () => {}
   #closed = false
 
-  constructor(context: CommandContext, { idleMs = 120_000, maxAgeMs = 300_000, now = Date.now }: SessionOptions = {}) {
+  constructor(
+    context: CommandContext,
+    { idleMs = 120_000, maxAgeMs = 300_000, now = Date.now, dispose }: SessionOptions = {},
+  ) {
     this.#context = context
     this.#idleMs = idleMs
     this.#maxAgeMs = maxAgeMs
     this.#now = now
+    this.#dispose = dispose
   }
 
   use<T>(name: string, body: (client: MaxClient, release: () => Promise<void>) => Promise<T>): Promise<T> {
@@ -60,8 +66,21 @@ export class MaxSession {
 
   async close(): Promise<void> {
     this.#closed = true
-    await this.#queue
-    await this.#release()
+    try {
+      await this.#queue
+      await this.#release()
+    } finally {
+      await this.#dispose?.()
+    }
+  }
+
+  local<T>(name: string, body: () => Promise<T>): Promise<T> {
+    const turn = this.#queue.then(() => {
+      if (this.#closed) throw new Error("the MCP server is shutting down")
+      return this.#context.run(name, body)
+    })
+    this.#queue = turn.catch(() => {})
+    return turn
   }
 
   async #call<T>(name: string, body: (client: MaxClient, release: () => Promise<void>) => Promise<T>): Promise<T> {
