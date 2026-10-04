@@ -27,12 +27,16 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 
 
-- **CLI-58** · P2 · 🚧 `cli-messaging feat/mcp-http` · `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
-  third-party proxy. Streamable HTTP on `127.0.0.1` behind a tunnel, with its own OAuth for exactly
-  one owner (dynamic client registration, PKCE, a one-time code from the terminal that expires and
-  locks after a few tries), the same read-only default and send guards as stdio. Shared with `tg`,
-  so it belongs in cli-messaging. Until then `docs/remote.md` names an external tool. Plan:
-  `docs_ai/plans/2026-09-30-tg-alignment.md` §5.
+- **CLI-58** · P2 · 🟡 `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
+  third-party proxy. Done: Streamable HTTP on `127.0.0.1` behind the owner's tunnel, a one-owner OAuth login
+  (one-time terminal code, PKCE S256, 1 h access / 30-day rotating refresh, hashes only), every write through
+  the form (NEED-593), `--revoke` — cli-messaging #527/#528/#543 (0.146.0), tg-cli #266, max-cli #398,
+  `docs/remote.md` in both. Left: the live check with Claude.ai and ChatGPT through Tailscale Funnel (owner;
+  tg-cli `bin/tg-remote`) — it also answers whether the apps show MCP forms at all, without which `--http`
+  only reads; then the tg and max releases, after NEED-564's search work.
+- **CLI-68** · P3 · `mcp --http` as a background service: `server install` for it (systemd/launchd), so the
+  browser apps reach a machine without an open terminal. Follows CLI-58's live check (NEED-595 A: foreground
+  first).
 
 **From the PyMax comparison (2026-09-24, `NEED-175`).** Each is what PyMax's source declares
 (`MaxApiTeam/PyMax`, `src/pymax/api/`, commit `53103f0`) — a claim until measured. Every writing
