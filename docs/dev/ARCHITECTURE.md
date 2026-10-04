@@ -39,6 +39,18 @@ only the event lines.
                         (the run directory and the event format: cli-messaging's, T6 item 3c)
 ```
 
+**Correction 2026-10-04:** the diagram above is the personal account's own half. Since #260 and T6 (#330–#382)
+max also plugs into `@leemour/cli-messaging`: `src/messenger.ts` describes MAX once as a `Messenger`
+(`maxMessenger` — provider, paging, the guard, permissions), and `src/adapter/max-adapter.ts`
+(`maxAdapter`) wraps `MaxClient` behind cli-messaging's `MessengerAdapter` port, translating MAX's
+models into the shared domain types. `src/program.ts` registers cli-messaging's shared commands —
+`store`, `conversations`, `polls`, `reactions`, `inbox`, `review`, and `chats mark-read` among `chats`
+— beside max's own; they reach MAX only through that adapter, and read and write the shared store
+(`~/.local/share/cli-messaging/messages.db`), not a cache of max's own. So the path is now
+commands → cli-messaging services → `maxAdapter` → `MaxClient` → protocol; `MaxClient` stays the
+only code that knows the wire. `src/adapter/contract.test.ts` runs cli-messaging's contract cases over
+the adapter.
+
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
   §12.
 - [`@leemour/cli-core`](https://github.com/leemour/cli-core) supplies output streams, renderer,
@@ -506,6 +518,15 @@ never been fetched. `store fetch` fills it; `--offline` reads it without connect
 tool calls `MaxClient`, and the Biome rule that keeps commands off `protocol/`, `spec/` and
 `generated/` covers `src/mcp/` too. The context comes from `contextFor` — the same settings,
 keyring, deadline and run record as a command, built from flags instead of argv.
+
+**Correction 2026-10-04:** the server is still max's own (`src/mcp/server.ts`, `MaxSession`), but most
+tools now run cli-messaging's services over the held client: `withShared` (`src/mcp/shared.ts`) builds
+`servicesFor(…)` over `maxAdapter(client)` and the shared store, so a tool and its command run the same
+method. Which tools exist is decided by the profile's `permissions` (P7, #382), not by flags:
+`registerTools` (`src/mcp/tools.ts`) leaves out a tool whose level is `deny`, a write tool whose level
+is `readonly`, and shows a form for `ask` or with `--confirm-send`. `--allow-send`, `--allow-mark-read`,
+`--allow-delete` and `--allow-moderate` are accepted with a deprecation note and grant nothing
+(`src/commands/mcp.ts`). The "sending is absent without `--allow-send`" bullet below is superseded.
 
 - **One connection per agent session, never for long** (`NEED-152`): `MaxSession` logs in on the
   first call and keeps the client; it drops it after 2 minutes idle, 5 minutes after the login
