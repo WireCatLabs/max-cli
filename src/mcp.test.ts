@@ -549,11 +549,13 @@ describe("the MCP server", () => {
       limit: 5,
       hasMore: false,
       query: { language: "lucene-v1", timezone: "Europe/Madrid", version: 1 },
-      coverage: { inventoryComplete: false },
+      coverage: { inventoryComplete: true, lastSyncedAt: null },
       wordsReady: true,
       corrections: [],
     })
-    expect(result.body.completeness).toBeDefined()
+    expect(result.body.completeness).toEqual(
+      expect.arrayContaining([expect.objectContaining({ chatId: "111", fetchedAt: null })]),
+    )
     const legacy = await call(reopened.client, "max_messages_search", { text: "invoice", language: "legacy" })
     expect(legacy.isError).toBe(false)
     const ast = await call(reopened.client, "max_messages_search", { ast: parseLucene("invoice") })

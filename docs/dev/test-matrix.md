@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**544 ✅ · 70 ⛔ · 0 ❌** — 216 commands, 398 options.
+**544 ✅ · 73 ⛔ · 0 ❌** — 217 commands, 400 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -48,6 +48,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members list` | `--limit` | ✅ |  |
 | `chats members list` | `--page` | ✅ |  |
 | `chats members list` | `--all` | ✅ |  |
+| `chats members audit` |  | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members audit` | `--budget` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members audit` | `--min-score` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
