@@ -792,6 +792,29 @@ describe("the MCP server", () => {
     expect(max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload).toMatchObject({ chatId: 111 })
   })
 
+  it("keeps a successful send when the secondary local account binding cannot be saved", async () => {
+    const profile = "mcp-account-binding-fails"
+    mkdirSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "accounts", `${profile}.json`), {
+      recursive: true,
+    })
+    const { client, max, session } = await connect(
+      {},
+      {
+        profile,
+        answers: {
+          [Opcode.MSG_SEND]: {
+            message: { id: 116762160362694590n, time: 1789776000000, sender: 10000001, text: "synthetic" },
+          },
+        },
+      },
+    )
+    const result = await call(client, "max_messages_send", { chat: "111", text: "synthetic" })
+    expect(result.isError).toBe(false)
+    expect(result.body).toMatchObject({ message: { id: "116762160362694590" }, operationId: expect.any(String) })
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)).toHaveLength(1)
+    await session.close()
+  })
+
   it("hands back the send id when it cannot tell whether a send went out", async () => {
     const { client } = await connect({ allowSend: true }, { answers: { [Opcode.MSG_SEND]: () => undefined } })
 

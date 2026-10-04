@@ -100,7 +100,13 @@ export const registerTools = (
   }
   const remember = () => {
     const account = store.readState().viewerId
-    if (account) rememberAccount(MAX_APP, profile, account, process.env)
+    if (!account) return
+    try {
+      rememberAccount(MAX_APP, profile, account, process.env)
+    } catch {
+      // A secondary local binding must not replace a successful send or prevent store cleanup.
+      warn("could not remember the account for local archive tools")
+    }
   }
   const adapterFor = (client: MaxClient) => {
     const adapter = maxAdapter(client, store, reach, warn)
