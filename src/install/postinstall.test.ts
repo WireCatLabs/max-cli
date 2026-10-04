@@ -1,8 +1,11 @@
+import { spawnSync } from "node:child_process"
 import { existsSync, mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join, resolve } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { describe, expect, it, vi } from "vitest"
 import { completeGlobalInstall } from "./postinstall.js"
+
+vi.mock("node:child_process", () => ({ spawnSync: vi.fn() }))
 
 const sandbox = () => {
   const home = mkdtempSync(join(tmpdir(), "max-install-"))
@@ -82,6 +85,49 @@ describe("global installation", () => {
     completeGlobalInstall({ ...install, env: { ...install.env, TG_INSTALL_AGENT: "codex" }, platform: "linux" })
     expect(existsSync(join(install.home, ".agents/skills/max-cli/SKILL.md"))).toBe(true)
     expect(existsSync(join(install.home, ".claude"))).toBe(false)
+  })
+
+  it("passes Windows paths through environment variables to the bundled repair", () => {
+    const install = sandbox()
+    vi.mocked(spawnSync).mockReturnValue({ pid: 1, output: [], stdout: "", stderr: "", status: 0, signal: null })
+    completeGlobalInstall({ ...install, platform: "win32" })
+    const [command, args, options] = vi.mocked(spawnSync).mock.calls.at(-1) ?? []
+    expect(command).toBe("powershell.exe")
+    expect(args).toContain("-EncodedCommand")
+    expect(options?.env?.MAX_INSTALL_PREFIX).toBe(install.env.npm_config_prefix)
+    expect(options?.env?.MAX_INSTALL_SCRIPT).toBe(resolve("install/windows.ps1"))
+    expect(options?.env?.MAX_INSTALL_NODE).toBe(dirname(process.execPath))
+    expect(existsSync(join(install.home, ".agents/skills/max-cli/SKILL.md"))).toBe(true)
+  })
+
+  it("reports a failed Windows repair before creating any agent files", () => {
+    const install = sandbox()
+    vi.mocked(spawnSync).mockReturnValue({ pid: 1, output: [], stdout: "", stderr: "denied", status: 1, signal: null })
+    expect(() => completeGlobalInstall({ ...install, platform: "win32" })).toThrow("Windows PATH setup failed")
+    expect(existsSync(join(install.home, ".agents"))).toBe(false)
+  })
+
+  it("sets a failed npm lifecycle exit code and prints the actionable error", async () => {
+    const install = sandbox()
+    vi.mocked(spawnSync).mockReturnValue({ pid: 1, output: [], stdout: "", stderr: "", status: 0, signal: null })
+    const argv = process.argv[1]
+    const exitCode = process.exitCode
+    const write = vi.spyOn(process.stderr, "write").mockImplementation(() => true)
+    vi.stubEnv("npm_config_global", "true")
+    vi.stubEnv("npm_config_prefix", install.env.npm_config_prefix)
+    vi.stubEnv("MAX_INSTALL_AGENT", "unknown")
+    process.argv[1] = resolve("src/install/postinstall.ts")
+    vi.resetModules()
+    try {
+      await import("./postinstall.js")
+      expect(process.exitCode).toBe(1)
+      expect(write).toHaveBeenCalledWith(expect.stringContaining("max installation incomplete: MAX_INSTALL_AGENT"))
+    } finally {
+      process.argv[1] = argv ?? ""
+      process.exitCode = exitCode
+      vi.unstubAllEnvs()
+      write.mockRestore()
+    }
   })
 
   it("rejects an unknown agent instead of silently choosing a directory", () => {
