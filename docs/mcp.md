@@ -155,7 +155,7 @@ claude mcp add max -- max mcp --confirm-send
 | `max_chats_update`, `max_chats_settings` | `max chats update`, `settings` | название и настройки группы |
 | `max_polls_show` | `max polls show` | опрос и варианты ответа |
 | `max_messages_evidence` | `max messages evidence` | пакет сообщений из архива текущей учётной записи, без подключения |
-| `max_messages_stats` | `max messages stats` | число совпадений запроса в локальном архиве |
+| `max_messages_stats` | — | число совпадений запроса в локальном архиве |
 | `max_conversations_status`, `max_conversations_refresh` | `max conversations status`, `search --refresh` | состояние индекса и локальное обновление; запись по `conversations.embed` |
 | `max_conversations_related` | `max conversations related` | похожие беседы по сохранённым векторам, без запуска модели |
 | `max_conversations_list`, `max_conversations_show`, `max_conversations_search` | `max conversations …` | беседы из построенного локального архива; поиск по словам и установленной модели |
