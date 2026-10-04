@@ -20,7 +20,8 @@ export const messagesCommand = (): Command => {
   const command = new Command("messages").description("read and send messages in a chat")
 
   const shared = sharedMessagesCommand(maxMessenger)
-  for (const name of ["list", "search", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
+  for (const name of ["list", "search", "show", "context", "links", "stats"])
+    command.addCommand(sharedSubcommand(shared, name))
 
   const localLinks = sharedMessagesCommand({ ...maxMessenger, history: "store" })
   command.addCommand(sharedSubcommand(localLinks, "link"))
