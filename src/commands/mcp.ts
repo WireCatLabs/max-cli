@@ -1,7 +1,9 @@
 import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { installerOf } from "@leemour/cli-core/update"
+import { httpTokenFile, revokeAll } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
+import { MAX_APP } from "../app.js"
 import { ownScript } from "../install.js"
 import { forCommand } from "./context.js"
 
@@ -13,6 +15,37 @@ interface Flags {
   allowMarkRead?: boolean
   allowDelete?: boolean
   allowModerate?: boolean
+  http?: boolean
+  port?: string
+  publicUrl?: string
+  revoke?: boolean
+}
+
+const DEFAULT_PORT = 8765
+
+const publicUrlOf = (given: string | undefined): URL => {
+  const example = "--public-url https://<name>.ts.net"
+  if (!given) throw new CliError("configuration_error", `--http needs the tunnel's address: ${example}`)
+  let url: URL
+  try {
+    url = new URL(given)
+  } catch {
+    throw new CliError("validation_error", `--public-url is not an address: ${example}`)
+  }
+  const local = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)
+  if (url.protocol !== "https:" && !local)
+    throw new CliError("validation_error", "--public-url must be https — the browser apps reach max through it")
+  if (url.pathname !== "/" || url.search || url.hash)
+    throw new CliError("validation_error", `--public-url is the tunnel's address only, without a path: ${example}`)
+  return url
+}
+
+const portOf = (given: string | undefined): number => {
+  if (given === undefined) return DEFAULT_PORT
+  const port = Number(given)
+  if (!Number.isInteger(port) || port < 1 || port > 65535)
+    throw new CliError("validation_error", "--port takes 1–65535")
+  return port
 }
 
 const withFlags = (command: Command): Command =>
@@ -34,8 +67,23 @@ export const mcpCommand = (): Command => {
     new Command("mcp").description(
       "serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max mcp`",
     ),
-  ).action(async function (this: Command) {
+  )
+    .option(
+      "--http",
+      "serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; every write asks first",
+    )
+    .option("--port <port>", `the local port for --http (default ${DEFAULT_PORT})`)
+    .option("--public-url <url>", "the tunnel's https address the browser apps use, e.g. https://<name>.ts.net")
+    .option("--revoke", "forget every login given to a browser app; each must log in again")
+  command.action(async function (this: Command) {
     const context = forCommand(this)
+    const own = this.opts<Flags>()
+    const tokenFile = httpTokenFile(MAX_APP, context.settings.profile, process.env)
+    if (own.revoke) {
+      revokeAll(tokenFile)
+      context.renderer.result({ revoked: true, profile: context.settings.profile })
+      return
+    }
     const { allowSend, confirmSend, allowMarkRead, allowDelete, allowModerate } = checked(
       this.opts<Flags>(),
       context.settings.mcpTools,
@@ -43,6 +91,12 @@ export const mcpCommand = (): Command => {
     for (const flag of ["allowSend", "allowMarkRead", "allowDelete", "allowModerate"] as const)
       if (this.opts<Flags>()[flag])
         context.renderer.note(`${flag} is deprecated and does not grant access — use permissions in config`)
+    if (own.http) {
+      const publicUrl = publicUrlOf(own.publicUrl)
+      const { serveOverHttpUntilStopped } = await import("../mcp/server.js")
+      await serveOverHttpUntilStopped(context, {}, { publicUrl, port: portOf(own.port), tokenFile })
+      return
+    }
     // Loaded here, not at the top: every other command would otherwise pay for the SDK and zod.
     const { serveOverStdio } = await import("../mcp/server.js")
     await serveOverStdio(context, {
