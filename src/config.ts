@@ -68,6 +68,8 @@ const sharedEntries = {
 const personalEntries = {
   ...sharedEntries,
   senderColors: v.optional(flag),
+  /** `inbox` and `review` mark what they show read, as `--mark-read` does — off unless set (`NEED-566`). */
+  catchUpMarksRead: v.optional(flag),
   /** Start `max serve` in the background when a command needs MAX and none is running (`MAX-35`). */
   serve: v.optional(flag),
   /** Only the file turns these on — no `max mcp` flag does (`NEED-350`). */
@@ -175,6 +177,8 @@ export interface Settings {
   color: boolean | undefined
   /** A colour per sender in `messages` — a matter of taste, so off until the profile asks. */
   senderColors: boolean
+  /** `inbox` and `review` mark each chat they show read; the other side sees it. Off unless the profile asks. */
+  catchUpMarksRead: boolean
   limit: number
   /** Which page, 1-based. Per invocation only — a page number in a configuration file is a setting nobody wants twice. */
   page: number
@@ -241,6 +245,7 @@ export type SourcedSetting =
   | "commandTimeoutMs"
   | "color"
   | "senderColors"
+  | "catchUpMarksRead"
   | "record"
   | "serve"
   | "keepRunsForDays"
@@ -332,6 +337,7 @@ export const resolveSettings = (
   const timeoutMs = first<number | undefined>(fromFile("timeoutMs"), undefined)
   const color = first<boolean | undefined>(fromFile("color"), undefined)
   const senderColors = first(fromFile("senderColors"), false)
+  const catchUpMarksRead = first(fromFile("catchUpMarksRead"), false)
   const record = first(fromFile("record", flags.record), false)
   const serve = first(fromFile("serve", flags.serve), true)
   const keepRunsForDays = first(fromFile("keepRunsForDays"), DEFAULT_KEEP_RUNS_FOR_DAYS)
@@ -396,6 +402,7 @@ export const resolveSettings = (
     trace: flags.trace === true,
     color: color.value,
     senderColors: senderColors.value,
+    catchUpMarksRead: catchUpMarksRead.value,
     limit: limit.value,
     page: flags.page ?? 1,
     all: flags.all === true,
@@ -426,6 +433,7 @@ export const resolveSettings = (
       commandTimeoutMs: timeout.from,
       color: color.from,
       senderColors: senderColors.from,
+      catchUpMarksRead: catchUpMarksRead.from,
       record: record.from,
       serve: serve.from,
       keepRunsForDays: keepRunsForDays.from,

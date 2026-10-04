@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**513 ✅ · 59 ⛔ · 0 ❌** — 212 commands, 360 options.
+**534 ✅ · 70 ⛔ · 0 ❌** — 215 commands, 389 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -171,6 +171,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store export` | `--format` | ✅ |  |
 | `store export` | `--since-time` | ✅ |  |
 | `store export` | `--output` | ✅ |  |
+| `store export` | `--to` | ✅ |  |
+| `store export` | `--kind` | ✅ |  |
+| `store export` | `--all` | ✅ |  |
+| `store export` | `--encrypt` | ✅ |  |
 | `store clear` |  | ✅ |  |
 | `store clear` | `--left` | ✅ |  |
 | `store clear` | `--allow-dangerous` | ✅ |  |
@@ -179,22 +183,41 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store migrate` |  | ✅ |  |
 | `store reindex` |  | ✅ |  |
 | `store backup` |  | ✅ |  |
+| `store backup` | `--encrypt` | ✅ |  |
 | `store restore` |  | ✅ |  |
+| `store decrypt` |  | ✅ |  |
+| `store decrypt` | `--output` | ✅ |  |
 | `conversations build` |  | ✅ |  |
 | `conversations build` | `--chat` | ✅ |  |
+| `conversations build` | `--max-chats` | ✅ |  |
 | `conversations list` |  | ✅ |  |
 | `conversations list` | `--chat` | ✅ |  |
 | `conversations list` | `--since-time` | ✅ |  |
 | `conversations list` | `--limit` | ✅ |  |
 | `conversations show` |  | ✅ |  |
+| `conversations related` |  | ✅ |  |
+| `conversations related` | `--limit` | ✅ |  |
+| `conversations related` | `--model` | ✅ |  |
+| `conversations related` | `--provider` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations related` | `--base-url` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations related` | `--dims` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations status` |  | ✅ |  |
+| `conversations status` | `--chat` | ✅ |  |
+| `conversations status` | `--model` | ✅ |  |
+| `conversations status` | `--provider` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations status` | `--base-url` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations status` | `--dims` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
 | `conversations search` |  | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--model` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--provider` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--base-url` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--dims` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations search` | `--max-chats` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations search` | `--max-chunks` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--since-time` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--limit` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations search` | `--refresh` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations batches status` |  | ✅ |  |
 | `conversations batches status` | `--chat` | ✅ |  |
 | `conversations batches status` | `--size` | ✅ |  |
@@ -216,6 +239,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations embed` | `--threads` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--concurrency` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--max-tokens` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--max-chats` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--max-chunks` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed status` |  | ✅ |  |
 | `conversations embed status` | `--chat` | ✅ |  |
 | `conversations embed status` | `--model` | ✅ |  |
@@ -259,15 +284,22 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `inbox` | `--since-time` | ✅ |  |
 | `inbox` | `--limit` | ✅ |  |
 | `inbox` | `--all` | ✅ |  |
+| `inbox` | `--kind` | ✅ |  |
 | `inbox` | `--transcribe` | ✅ |  |
 | `inbox` | `--model` | ✅ |  |
+| `inbox` | `--mark-read` | ✅ |  |
+| `inbox` | `--no-mark-read` | ✅ |  |
 | `review` |  | ✅ |  |
 | `review` | `--since-time` | ✅ |  |
 | `review` | `--chat` | ✅ |  |
+| `review` | `--kind` | ✅ |  |
 | `review` | `--unanswered` | ✅ |  |
 | `review` | `--all` | ✅ |  |
 | `review` | `--transcribe` | ✅ |  |
 | `review` | `--model` | ✅ |  |
+| `review` | `--new` | ✅ |  |
+| `review` | `--mark-read` | ✅ |  |
+| `review` | `--no-mark-read` | ✅ |  |
 | `serve` |  | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
