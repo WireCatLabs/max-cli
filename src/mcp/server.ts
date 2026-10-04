@@ -1,4 +1,12 @@
-import { warmEmbedders } from "@leemour/cli-messaging/cli"
+import { CliError } from "@leemour/cli-core"
+import {
+  type HttpOptions,
+  MCP_PATH,
+  OVER_HTTP,
+  personalMcpConfirmer,
+  serveOverHttp,
+  warmEmbedders,
+} from "@leemour/cli-messaging/cli"
 import { levelFor } from "@leemour/cli-messaging/sends"
 import { McpServer } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
@@ -40,6 +48,7 @@ export const createMaxServer = (
 ) => {
   const embedders = warmEmbedders()
   const session = new MaxSession(context, { ...sessionOptions, dispose: () => embedders.close() })
+  const confirmed = personalMcpConfirmer()
   const permitted = undefined
   const toolGroups = ["contacts", "polls", "groups", "profile"] as const
   const build = (): McpServer => {
@@ -75,6 +84,7 @@ export const createMaxServer = (
       warn: context.renderer.note,
       reach: context.reach,
       embedders,
+      confirmed,
     })
     if (levelFor(context.settings.permissions, "messages").level !== "deny") registerPrompts(server)
     if (
@@ -110,6 +120,43 @@ export const serveOverStdio = async (context: CommandContext, options: ServerOpt
 
   try {
     await handle.close()
+  } finally {
+    await session.close()
+  }
+}
+
+/** The same server over HTTP behind the owner's tunnel, until Ctrl-C (CLI-58); every write asks first. */
+export const serveOverHttpUntilStopped = async (
+  context: CommandContext,
+  options: ServerOptions,
+  http: Omit<HttpOptions, "onCode" | "onError" | "appName">,
+): Promise<void> => {
+  const { session, build } = createMaxServer(context, { ...options, ...OVER_HTTP })
+  const listening = await serveOverHttp(build, {
+    ...http,
+    appName: "max",
+    onCode: (code, expires) =>
+      context.renderer.note(
+        `login code for a new browser app: ${code} (until ${expires.toTimeString().slice(0, 5)}; a new one after each login)`,
+      ),
+    onError: (error) => context.renderer.note(`mcp: ${error.message}`),
+  }).catch(async (error: unknown) => {
+    await session.close()
+    if ((error as NodeJS.ErrnoException).code === "EADDRINUSE")
+      throw new CliError("configuration_error", `port ${http.port} is in use — pass another with --port`)
+    throw error
+  })
+  context.renderer.note(
+    `serving on ${listening.url.href} — point your tunnel at it; connectors use ${new URL(MCP_PATH, http.publicUrl).href}`,
+  )
+
+  await new Promise<void>((resolve) => {
+    process.once("SIGINT", resolve)
+    process.once("SIGTERM", resolve)
+  })
+
+  try {
+    await listening.close()
   } finally {
     await session.close()
   }

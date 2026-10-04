@@ -1,10 +1,13 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { createHash, randomBytes } from "node:crypto"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { createServer as createNetServer } from "node:net"
+import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
-import { personalMcpTools } from "@leemour/cli-messaging/cli"
+import { OVER_HTTP, personalMcpTools, serveOverHttp } from "@leemour/cli-messaging/cli"
 import { parseLucene, servicesFor, storedDeps } from "@leemour/cli-messaging/services"
 import { openStore } from "@leemour/cli-messaging/store"
-import { Client, type ElicitResult } from "@modelcontextprotocol/client"
+import { Client, type ElicitResult, StreamableHTTPClientTransport } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
@@ -47,6 +50,51 @@ afterEach(async () => {
   for (const close of closers.splice(0)) await close()
 })
 
+/** What a browser app does once: register, type the owner's terminal code on the consent page, swap the code for a token. */
+const ownerLogin = async (base: URL, loginCode: string): Promise<string> => {
+  const redirect = "https://app.example/callback"
+  const registered = await fetch(new URL("/register", base), {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ redirect_uris: [redirect], client_name: "Test app" }),
+  }).then((response) => response.json() as Promise<{ client_id: string }>)
+  const verifier = randomBytes(32).toString("base64url")
+  const consent = await fetch(new URL("/authorize", base), {
+    method: "POST",
+    redirect: "manual",
+    body: new URLSearchParams({
+      response_type: "code",
+      client_id: registered.client_id,
+      redirect_uri: redirect,
+      code_challenge: createHash("sha256").update(verifier).digest("base64url"),
+      code_challenge_method: "S256",
+      login_code: loginCode,
+    }),
+  })
+  const code = new URL(consent.headers.get("location") ?? "").searchParams.get("code") ?? ""
+  const issued = await fetch(new URL("/token", base), {
+    method: "POST",
+    body: new URLSearchParams({
+      grant_type: "authorization_code",
+      code,
+      redirect_uri: redirect,
+      client_id: registered.client_id,
+      code_verifier: verifier,
+    }),
+  }).then((response) => response.json() as Promise<{ access_token: string }>)
+  return issued.access_token
+}
+
+const freePort = (): Promise<number> =>
+  new Promise((resolve, reject) => {
+    const probe = createNetServer()
+    probe.once("error", reject)
+    probe.listen(0, "127.0.0.1", () => {
+      const address = probe.address()
+      probe.close(() => resolve(typeof address === "object" && address ? address.port : 0))
+    })
+  })
+
 let profiles = 0
 
 const connect = async (
@@ -57,7 +105,10 @@ const connect = async (
     profile = `mcp-${++profiles}`,
     form,
     era = "legacy",
+    http = false,
   }: {
+    /** Over `max mcp --http` on 127.0.0.1, logged in through the owner login. */
+    http?: boolean
     token?: boolean
     answers?: MockMaxOptions["answers"]
     profile?: string
@@ -82,7 +133,45 @@ const connect = async (
       connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     },
   )
-  const { session, build } = createMaxServer(context, { allowSend: false, ...options })
+  const { session, build } = createMaxServer(context, { allowSend: false, ...options, ...(http ? OVER_HTTP : {}) })
+  if (http) {
+    const codes: string[] = []
+    const port = await freePort()
+    const base = new URL(`http://127.0.0.1:${port}`)
+    const listening = await serveOverHttp(build, {
+      publicUrl: base,
+      port,
+      tokenFile: join(mkdtempSync(join(tmpdir(), "max-http-")), "tokens.json"),
+      appName: "max",
+      onCode: (code) => codes.push(code),
+    })
+    const client = new Client(
+      { name: "test", version: "0" },
+      {
+        ...(form ? { capabilities: { elicitation: {} } } : {}),
+        ...(era === "modern" ? { versionNegotiation: { mode: { pin: "2026-07-28" } } } : {}),
+      },
+    )
+    const forms: string[] = []
+    if (form)
+      client.setRequestHandler("elicitation/create", async (request) => {
+        forms.push(request.params.message)
+        return form(request.params.message)
+      })
+    const accessToken = await ownerLogin(base, codes.at(-1) ?? "")
+    await client.connect(
+      new StreamableHTTPClientTransport(new URL("/mcp", base), {
+        requestInit: { headers: { authorization: `Bearer ${accessToken}` } },
+      }),
+    )
+    closers.push(async () => {
+      await client.close()
+      await listening.close()
+      await session.close()
+    })
+    const logins = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGIN).length
+    return { client, session, max, streams, logins, forms }
+  }
   const [serverSide, clientSide] = InMemoryTransport.createLinkedPair()
   // The modern era is chosen by `serveStdio`, as in `max mcp`; a server connected directly only speaks the legacy one.
   const served = era === "modern" ? serveStdio(build, { transport: serverSide }) : undefined
@@ -1082,6 +1171,32 @@ describe("the MCP server", () => {
 
       expect(isError).toBe(true)
       expect(body?.error ?? body).toBeDefined()
+      expect(sends(max)).toBe(0)
+    })
+
+    it.each(["legacy", "modern"] as const)(
+      "over mcp --http, asks through the form before a send even without --confirm-send (%s protocol)",
+      async (era) => {
+        const { client, max, forms } = await connect(
+          { allowSend: true },
+          { answers: sendAnswer, era, http: true, form: () => ({ action: "accept", content: {} }) },
+        )
+
+        const { isError } = await call(client, "max_messages_send", { chat: "Alpha", text: "hello" })
+
+        expect(isError).toBe(false)
+        expect(forms).toEqual(['Send a message?\n\nchat: "Team Alpha" (111)\n\nhello'])
+        expect(sends(max)).toBe(1)
+      },
+    )
+
+    it("over mcp --http, sends nothing when the owner declines", async () => {
+      const { client, max } = await connect(
+        { allowSend: true },
+        { answers: sendAnswer, http: true, form: () => ({ action: "decline" }) },
+      )
+
+      expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(true)
       expect(sends(max)).toBe(0)
     })
 

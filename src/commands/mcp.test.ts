@@ -1,10 +1,17 @@
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { dirname } from "node:path"
 import { captureStreams } from "@leemour/cli-core"
+import { httpTokenFile } from "@leemour/cli-messaging/cli"
 import { describe, expect, it, vi } from "vitest"
-import { serveOverStdio } from "../mcp/server.js"
+import { MAX_APP } from "../app.js"
+import { serveOverHttpUntilStopped, serveOverStdio } from "../mcp/server.js"
 import { run } from "../program.js"
 import { serverEntry } from "./mcp.js"
 
-vi.mock("../mcp/server.js", () => ({ serveOverStdio: vi.fn(async () => {}) }))
+vi.mock("../mcp/server.js", () => ({
+  serveOverStdio: vi.fn(async () => {}),
+  serveOverHttpUntilStopped: vi.fn(async () => {}),
+}))
 
 const SCRIPT = "C:\\Users\\x\\AppData\\Roaming\\npm\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js"
 const entry = (over: Partial<Parameters<typeof serverEntry>[0]> = {}) =>
@@ -136,4 +143,44 @@ it("starts MCP with explicit confirmation flags and warns about retired grants o
     expect.objectContaining({ settings: expect.objectContaining({ profile: "work" }) }),
     expect.objectContaining({ yes: true, allowDangerous: true, confirmSend: true }),
   )
+})
+
+describe("max mcp --http", () => {
+  const cli = async (argv: string[]) => {
+    const streams = captureStreams()
+    const code = await run(argv, { streams, tty: false })
+    return { code, stdout: streams.stdout.join(""), stderr: streams.stderr.join("") }
+  }
+
+  it("refuses without an https tunnel address, and never starts the server", async () => {
+    const missing = await cli(["mcp", "--http", "--json"])
+    const plain = await cli(["mcp", "--http", "--public-url", "http://name.example", "--json"])
+
+    expect(missing.code).not.toBe(0)
+    expect(missing.stderr).toContain("--public-url https://")
+    expect(plain.stderr).toContain("must be https")
+    expect(serveOverHttpUntilStopped).not.toHaveBeenCalled()
+  })
+
+  it("serves over HTTP on the given port with the tunnel's address", async () => {
+    await cli(["mcp", "--http", "--public-url", "https://name.ts.net", "--port", "9100"])
+
+    expect(serveOverHttpUntilStopped).toHaveBeenCalledWith(
+      expect.anything(),
+      {},
+      expect.objectContaining({ publicUrl: new URL("https://name.ts.net"), port: 9100 }),
+    )
+  })
+
+  it("--revoke forgets every browser login of the profile", async () => {
+    const file = httpTokenFile(MAX_APP, "default", process.env)
+    mkdirSync(dirname(file), { recursive: true })
+    writeFileSync(file, "{}")
+
+    const { code, stdout } = await cli(["mcp", "--revoke", "--json"])
+
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toEqual({ revoked: true, profile: "default" })
+    expect(existsSync(file)).toBe(false)
+  })
 })

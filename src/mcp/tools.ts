@@ -55,6 +55,11 @@ interface Options {
   warn?: (message: string) => void
   reach?: Reach
   embedders?: PersonalMcpDefaults["embedders"]
+  /**
+   * One per server, shared by every instance its factory builds: over HTTP each request may meet a
+   * fresh instance, and the form's answer must reach the one that issued it.
+   */
+  confirmed?: ReturnType<typeof personalMcpConfirmer>
 }
 
 export const registerTools = (
@@ -71,6 +76,7 @@ export const registerTools = (
     warn = () => {},
     reach,
     embedders,
+    confirmed = personalMcpConfirmer(),
   }: Options,
 ): void => {
   const settings = () => resolveSettings({ profile })
@@ -193,7 +199,7 @@ export const registerTools = (
       env: process.env,
       ...(embedders ? { embedders } : {}),
     },
-    confirmed: personalMcpConfirmer(),
+    confirmed,
     resolveChat: (adapter, reference) => {
       const client = adapters.get(adapter)
       if (!client) throw new Error("MAX confirmation requires its held adapter")
