@@ -228,6 +228,63 @@ describe("max conversations", () => {
     expect(logins()).toBe(before)
   })
 
+  it("**exports chats into a folder**, again only what changed, and with a password it never keeps", async () => {
+    const { environment, logins } = await fetched("s-folder")
+    const before = logins()
+    const root = join(tmpdir(), `s-folder-${process.pid}`)
+    const password = { ...environment, stdin: Object.assign(Readable.from(["pw one\n"]), { isTTY: false }) }
+    const again = () => ({ ...environment, stdin: Object.assign(Readable.from(["pw one\n"]), { isTTY: false }) })
+
+    const first = await max(["s-folder", "store", "export", "111", "--to", join(root, "one"), "--json"], environment)
+    const second = await max(["s-folder", "store", "export", "111", "--to", join(root, "one"), "--json"], environment)
+    const all = await max(["s-folder", "store", "export", "--all", "--to", join(root, "all"), "--json"], environment)
+    const kind = await max(
+      ["s-folder", "store", "export", "--kind", "dialog,group", "--to", join(root, "kind"), "--json"],
+      environment,
+    )
+    const sealed = await max(
+      ["s-folder", "store", "export", "111", "--output", join(root, "111.sealed"), "--encrypt", "--json"],
+      password,
+    )
+    const opened = await max(
+      ["s-folder", "store", "decrypt", join(root, "111.sealed"), "--output", join(root, "111.jsonl"), "--json"],
+      again(),
+    )
+    const backup = await max(
+      ["s-folder", "store", "backup", join(root, "store.sealed"), "--encrypt", "--json"],
+      again(),
+    )
+
+    expect(JSON.parse(first.stdout).chats[0]).toMatchObject({ id: "111", messages: 70 })
+    expect(JSON.parse(second.stdout).chats[0]).toMatchObject({ file: null, messages: 0 })
+    expect(JSON.parse(all.stdout).chats.map((chat: { id: string }) => chat.id)).toContain("111")
+    expect(kind.code).toBe(0)
+    expect(JSON.parse(sealed.stdout)).toMatchObject({ count: 70, encrypted: true })
+    expect(readFileSync(join(root, "111.jsonl"), "utf8").trim().split("\n")).toHaveLength(70)
+    expect(opened.code).toBe(0)
+    expect(JSON.parse(backup.stdout)).toMatchObject({ encrypted: true })
+    expect(logins()).toBe(before)
+  })
+
+  it("**catches up on built chats** a bounded number at a time, says how fresh each is, and finds related ones", async () => {
+    const { environment } = await fetched("c-fresh")
+
+    const built = await max(["c-fresh", "conversations", "build", "--max-chats", "1", "--json"], environment)
+    const status = await max(
+      ["c-fresh", "conversations", "status", "--chat", "111", "--model", "e5-small", "--json"],
+      environment,
+    )
+    const related = await max(
+      ["c-fresh", "conversations", "related", "111", String(first), "--limit", "3", "--model", "e5-small", "--json"],
+      environment,
+    )
+
+    expect(built.code).toBe(0)
+    expect(JSON.parse(status.stdout)).toMatchObject({ model: expect.anything() })
+    expect(related.code).toBe(6)
+    expect(related.stderr).toMatch(/conversations (build|embed)/)
+  })
+
   it("**hands a chat to the user's agent in batches**, stores its answer from stdin, and clears it", async () => {
     const { environment, logins } = await fetched("c-batch")
     const before = logins()

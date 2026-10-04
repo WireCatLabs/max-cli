@@ -59,6 +59,7 @@ const inboxMax = (
       [Opcode.CHAT_HISTORY]: (request: Payload) => ({ messages: histories[Number(request.chatId)] ?? [] }),
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
       [Opcode.CHATS_LIST]: { chats: [] },
+      [Opcode.CHAT_MARK]: {},
     },
   })
   const keyring = memoryKeyring()
@@ -295,5 +296,43 @@ describe("max inbox --new", () => {
     expect(code).not.toBe(0)
     expect(stderr).toContain("nothing new")
     expect(max.sent).toEqual([])
+  })
+})
+
+describe("max inbox and review — by kind, and marking read", () => {
+  const marks = (max: ReturnType<typeof inboxMax>["max"]) =>
+    max.sent.filter((call) => call.opcode === Opcode.CHAT_MARK).map((call) => String(call.payload.chatId))
+
+  it("keeps the kinds asked for, and marks read only with --mark-read, never with --no-mark-read", async () => {
+    const { max, environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
+
+    const channels = await runWith(
+      ["k-inbox", "inbox", "--since-time", "2h", "--kind", "channel", "--json"],
+      environment,
+    )
+    const unmarked = await runWith(["k-inbox", "inbox", "--since-time", "2h", "--no-mark-read", "--json"], environment)
+    expect(marks(max)).toEqual([])
+    const marked = await runWith(["k-inbox", "inbox", "--since-time", "2h", "--mark-read", "--json"], environment)
+
+    expect(JSON.parse(channels.stdout).chats).toEqual([])
+    expect(JSON.parse(unmarked.stdout).chats).toHaveLength(1)
+    expect(JSON.parse(marked.stdout).markedRead).toHaveLength(1)
+    expect(marks(max)).toEqual(["111"])
+  })
+
+  it("review --new reads each chat once, by kind, and marks read only when asked", async () => {
+    const { max, environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
+
+    const none = await runWith(
+      ["k-review", "review", "--new", "--kind", "channel", "--no-mark-read", "--json"],
+      environment,
+    )
+    const first = await runWith(["k-review", "review", "--new", "--mark-read", "--json"], environment)
+    const second = await runWith(["k-review", "review", "--new", "--json"], environment)
+
+    expect(JSON.parse(none.stdout).chats).toEqual([])
+    expect(JSON.parse(first.stdout).chats.map((chat: { id: string }) => chat.id)).toEqual(["111"])
+    expect(JSON.parse(second.stdout).chats).toEqual([])
+    expect(marks(max)).toEqual(["111"])
   })
 })

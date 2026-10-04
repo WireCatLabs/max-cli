@@ -10,6 +10,14 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  ...["conversations status", "conversations related"].flatMap((command) =>
+    ["--provider", "--base-url", "--dims"].map((option) => ({
+      command,
+      option,
+      reason:
+        "names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in",
+    })),
+  ),
   {
     command: "store fetch",
     option: "--background",
