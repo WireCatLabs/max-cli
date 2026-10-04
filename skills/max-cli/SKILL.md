@@ -108,7 +108,8 @@ description: Читать и отправлять сообщения в личн
    Для прежних filters/discovery — `--language legacy`; --regex — отдельный JS iu mode с пределами.
    Для version/coverage используйте --json; пустая выдача не доказывает отсутствие сообщения.
    `--timezone` задаёт календарную zone; kind:bot и in:bots имеют разные смыслы.
-   Term/body regex различаются. Примеры и поддержанные поля: [search guide](https://github.com/leemour/max-cli/blob/main/docs/search.md).
+   Term/body regex различаются. Файл — `filename:*.pdf`, `size>10MB`; ссылка — `has:link AND "github.com"`.
+   Примеры и поддержанные поля: [search guide](https://github.com/leemour/max-cli/blob/main/docs/search.md).
 5a. **Substring-поиску имён нужны три символа:** --search у chats/contacts list. Строгие message
    terms могут быть короче; не заменяйте strict zero hits fuzzy discovery автоматически.
 
