@@ -1,7 +1,13 @@
 import { existsSync } from "node:fs"
 import { CliError, configFilePath, loadConfigFile, resolvePaths, saveConfigFile } from "@leemour/cli-core"
 import { settingsFor } from "@leemour/cli-messaging/cli"
-import { fromOldSettings, type Level, PERMISSIONS, type Permission } from "@leemour/cli-messaging/sends"
+import {
+  fromOldSettings,
+  type Level,
+  layerPermissions,
+  PERMISSIONS,
+  type Permission,
+} from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
 import { DEFAULT_PROFILE, usableProfileName } from "./profile.js"
@@ -352,16 +358,15 @@ export const resolveSettings = (
         )
       : first(fromFile("sendsPerHour"), DEFAULT_SENDS_PER_HOUR)
 
-  const permissions = fromOldSettings(readOnly.value, allow.value, { bot: kind === "bot" })
-  const permissionSources: Record<string, string> = Object.fromEntries(
-    Object.keys(permissions).map((key) => [key, readOnly.value ? readOnly.from : allow.from]),
+  const oldFrom = readOnly.value ? readOnly.from : allow.from
+  const oldLevels = fromOldSettings(readOnly.value, allow.value, { bot: kind === "bot" })
+  // The old settings sit in the layer they were written in, under that layer's own `permissions`.
+  const { levels: permissions, sources: permissionSources } = layerPermissions(
+    layers.flatMap(([from, layer]): [string, Record<string, Level> | undefined][] => [
+      [from, layer?.permissions],
+      ...(from === oldFrom ? [[from, oldLevels] as [string, Record<string, Level>]] : []),
+    ]),
   )
-  for (const [from, layer] of [...layers].reverse()) {
-    for (const [key, level] of Object.entries(layer?.permissions ?? {})) {
-      permissions[key] = level
-      permissionSources[key] = from
-    }
-  }
   const mcpTools = first<readonly McpToolGroup[]>(fromFile("mcpTools"), [])
   const readOtherBots = first<boolean | readonly string[]>(
     kind === "bot"
