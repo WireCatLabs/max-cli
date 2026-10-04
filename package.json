@@ -1,7 +1,7 @@
 {
   "name": "@leemour/max-cli",
   "version": "0.27.0",
-  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal — built for agents and scripts",
+  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal \u2014 built for agents and scripts",
   "license": "MIT",
   "author": "Viacheslav Ptsarev",
   "repository": {
@@ -19,6 +19,7 @@
   "files": [
     "dist",
     "skills",
+    "install",
     "README.md",
     "LICENSE"
   ],
@@ -77,7 +78,8 @@
     "probe:voice": "pnpm build && node --experimental-strip-types scripts/probe-voice.ts",
     "probe:polls": "pnpm build && node --experimental-strip-types scripts/probe-polls.ts",
     "probe:profile": "pnpm build && node --experimental-strip-types scripts/probe-profile.ts",
-    "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts"
+    "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts",
+    "postinstall": "node install/postinstall.mjs"
   },
   "dependencies": {
     "@leemour/cli-core": "0.17.0",
