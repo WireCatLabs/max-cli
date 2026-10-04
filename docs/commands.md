@@ -773,6 +773,26 @@ max messages links <chat> <message>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the message id. |
 
+### `max messages stats`
+
+how many stored messages match, by chat, sender, day or hour — the local store only; never asks the messenger
+
+```sh
+max messages stats [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | a strict Lucene query, as for messages search; none counts every stored message. |
+
+| Опция | Что делает |
+|---|---|
+| `--by <chat\|sender\|day\|hour>` | what to count by (default: chat). |
+| `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
+| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
+| `--limit <n>` | how many rows. |
+| `--timezone <zone>` | the IANA timezone for calendar days and hours. |
+
 ### `max messages link`
 
 a message permalink when supported, and its account-scoped locator
