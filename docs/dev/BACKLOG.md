@@ -204,4 +204,6 @@ which; the plan for it starts by saying so.
 
 - Completed 2026-10-03: MAX poll.already.voted refusal explains explicit retract before a new vote when the poll permits changing votes (CLI-61). Provider error identity and one attempted write are preserved; wire refusal regressions cover other errors and an explicit retract refusal.
 
-- Release coordination · 🚧 `release/coordinated-027` prepares MAX and TG together, aggregates parallel PR evidence, and keeps publication/sign-off pending. Handoff: `docs_ai/plans/2026-10-04-coordinated-release.md`. Avoid competing version/changelog bumps.
+- Completed 2026-10-04: coordinated MAX0.27.0/TG0.26.0 published, provenance and installed CLI versions verified; core0.17/shared0.140.
+
+- MCP parity · 🚧 `feat/mcp-parity` adopts shared personal tool factories/schemas and missing MAX bindings, preserving canonical permissions and explicit provider differences. Plan: `docs_ai/plans/2026-10-04-mcp-parity.md`; shared prerequisite `feat/personal-mcp-factories`.
