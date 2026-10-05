@@ -25,6 +25,8 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+- **CLI-69** · P2 · 🚧 `feat/sdk148-adoption` · Adopt published cli-messaging0.148, shared local tags/saved searches/flood controls, corrected coverage/history contract, and aligned MAX/TG docs.
+
 
 
 - **CLI-58** · P2 · 🟡 `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
