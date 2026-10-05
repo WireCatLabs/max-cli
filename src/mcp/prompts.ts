@@ -16,20 +16,48 @@ export const registerPrompts = (server: McpServer): void => {
     "catch-up",
     {
       title: "Catch up on MAX",
-      description: "What came in, summarised per chat. Reads only.",
+      description:
+        "What came in, summarised per chat, for one kind of chat or all. Reads only, unless asked to mark read.",
       argsSchema: toStandardJsonSchema(
-        v.object({ since: v.optional(v.pipe(v.string(), v.description("an ISO 8601 time or a duration"))) }),
+        v.object({
+          kind: v.optional(
+            v.pipe(v.string(), v.description("dialog, group or channel, comma-separated; every kind if not given")),
+          ),
+          mode: v.optional(
+            v.pipe(
+              v.string(),
+              v.description(
+                "unread (the messenger's read marks, the default), new (since the last catch-up with new), " +
+                  "or a time: ISO 8601, or 2h / 1d ago",
+              ),
+            ),
+          ),
+        }),
       ),
     },
-    ({ since }) =>
-      asked(
+    ({ kind, mode }) => {
+      const kinds = kind
+        ?.split(",")
+        .map((one) => one.trim())
+        .filter((one) => one.length > 0)
+      const how = [
+        ...(kinds?.length ? [`kinds ${JSON.stringify(kinds)}`] : []),
+        ...(mode === undefined || mode === "unread"
+          ? []
+          : mode === "new"
+            ? ["new true"]
+            : [`since_time ${JSON.stringify(mode)}`]),
+      ]
+      return asked(
         [
-          `Catch me up on MAX. Call max_inbox once${since ? ` with since_time ${JSON.stringify(since)}` : ""}.`,
+          `Catch me up on MAX. Call max_inbox once${how.length ? ` with ${how.join(" and ")}` : ""}.`,
           "Summarise per chat, busiest first: who wrote, what they want, and whether it needs my answer.",
-          "Do not send, react, forward or mark anything read.",
+          "Do not send, react or forward anything. Mark nothing read unless I ask; then, for each chat shown, call",
+          "max_chats_mark_read with until set to the newest message shown in it — never further.",
           DATA,
         ].join(" "),
-      ),
+      )
+    },
   )
 
   server.registerPrompt(

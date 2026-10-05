@@ -1587,7 +1587,13 @@ describe("MCP prompts and resources", () => {
     expect(
       prompts.map(({ name, arguments: args }) => [name, args?.map(({ name, required }) => [name, required])]),
     ).toEqual([
-      ["catch-up", [["since", false]]],
+      [
+        "catch-up",
+        [
+          ["kind", false],
+          ["mode", false],
+        ],
+      ],
       ["reply", [["chat", true]]],
       [
         "review",
