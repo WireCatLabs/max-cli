@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**558 ✅ · 98 ⛔ · 0 ❌** — 232 commands, 424 options.
+**558 ✅ · 102 ⛔ · 0 ❌** — 233 commands, 427 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -37,6 +37,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats events` |  | ✅ |  |
 | `chats events` | `--since-time` | ✅ |  |
 | `chats events` | `--type` | ✅ |  |
+| `chats stats` |  | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `chats stats` | `--since-time` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `chats stats` | `--by` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `chats stats` | `--timezone` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
 | `chats inspect` |  | ✅ |  |
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
