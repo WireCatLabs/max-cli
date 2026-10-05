@@ -245,7 +245,7 @@ describe("max inbox --new", () => {
 
     expect(new Set(historiesAsked()).size).toBe(20)
     expect(JSON.parse(stdout).skipped.map((chat: { id: string }) => chat.id)).toEqual(["1001", "1000"])
-    expect(stderr).toContain("too many chats at once")
+    expect(stderr).toContain("skipped 2 chats — too many at once")
   })
 
   it("keeps the saved point through the next login of any command", async () => {

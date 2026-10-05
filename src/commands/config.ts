@@ -9,9 +9,17 @@ import {
   writeSecurely,
 } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
-import { migratePermissionConfig, refuseUnknownKey } from "@leemour/cli-messaging/cli"
+import {
+  changeStoreSetting,
+  isStoreSetting,
+  migratePermissionConfig,
+  refuseUnknownKey,
+  STORE_SETTINGS,
+  storeSettings,
+} from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import * as v from "valibot"
+import { MAX_APP } from "../app.js"
 import {
   ALL_SETTINGS,
   BOT_ONLY_SETTINGS,
@@ -60,7 +68,7 @@ export const configCommand = (): Command => {
     .command("show")
     .description("the profile, the profiles that exist, and each setting with where it came from")
     .option("--bot", "the settings a `max bot` command on this profile gets, rather than the personal account's")
-    .action(function (this: Command, options: { bot?: boolean }) {
+    .action(async function (this: Command, options: { bot?: boolean }) {
       const context = forCommand(this)
       const { renderer } = context
       const settings = options.bot
@@ -78,6 +86,7 @@ export const configCommand = (): Command => {
         configFile: settings.configPath,
         configFound: settings.configFound,
         pathsOverridden: overridden,
+        storeSettings: await storeSettings(process.env),
         settings: SHOWN.filter((setting) =>
           settings.kind === "personal"
             ? !(BOT_ONLY_SETTINGS as readonly string[]).includes(setting)
@@ -145,7 +154,7 @@ export const configCommand = (): Command => {
 
   for (const action of ["set", "unset"] as const) {
     const sub = annotate(command.command(action), { mutates: true, local: true })
-      .argument("<setting>", `one of: ${ALL_SETTINGS.join(", ")}`)
+      .argument("<setting>", `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`)
       .option("--defaults", "change what every profile gets, rather than this profile")
       .option("--personal", "only for personal accounts — the personal section of the file")
       .option("--bot", "only for bots — the bot section of the file")
@@ -155,12 +164,22 @@ export const configCommand = (): Command => {
         .description("save a setting to the configuration file")
     else sub.description("remove a setting from the configuration file")
 
-    sub.action(function (this: Command, setting: string, given: unknown) {
+    sub.action(async function (this: Command, setting: string, given: unknown) {
       const value = action === "set" ? String(given) : undefined
       const { settings, renderer } = forCommand(this)
       const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
       if (flags.personal && flags.bot) {
         throw new CliError("validation_error", "--personal and --bot name different sections; use one")
+      }
+      if (isStoreSetting(setting)) {
+        if (flags.defaults || flags.personal || flags.bot)
+          throw new CliError("validation_error", `${setting} is store-wide; profile-scope flags do not apply`)
+        if (process.env.MAX_PROFILE_LOCK)
+          throw new CliError("permission_error", `${setting} changes every profile; run outside MAX_PROFILE_LOCK`)
+        const { result, note } = await changeStoreSetting(MAX_APP, process.env, setting, value)
+        renderer.result(result)
+        renderer.note(note)
+        return
       }
       const kind: ProfileKind | undefined = flags.bot ? "bot" : flags.personal ? "personal" : undefined
       const defaults = flags.defaults === true

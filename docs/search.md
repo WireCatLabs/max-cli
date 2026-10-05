@@ -19,10 +19,10 @@ max messages search 'has:file' --json
 
 ## Поля и операторы
 
-Поддержаны поля `text/body/from/chat/date/kind/has/topic/in/preset/filename/mime/size`, логические
+Поддержаны поля `text/body/from/chat/date/kind/has/topic/in/preset/filename/mime/size/tag`, логические
 группы и группы значений поля, включающие и исключающие диапазоны, ограниченные wildcard и Lucene regex.
 `topic` требует одного обязательного чата. `kind:bot` выбирает собеседника, `in:bots` — аккаунты
-Bot API. `tag` пока не поддержан; fuzzy/proximity/boost/intervals также дают ошибку. Неизвестные
+Bot API. fuzzy/proximity/boost/intervals дают ошибку. Неизвестные
 поля не становятся текстом.
 
 Файлы ищутся по имени и размеру, текст сообщения не нужен: `filename:*.pdf`, `filename:*договор*`
@@ -87,3 +87,26 @@ Legacy сохраняет прежние фильтры и поиск с исп�
 `wordsReady` сообщает готовность словесного индекса и для запросов только по фильтрам или regex.
 При `false` завершите `max store migrate`; строгий поиск по словам до этого отказывает,
 а legacy использует поиск по частям слов.
+
+## Метки и сохранённые запросы
+
+```sh
+max tags add work --chat <чат>
+max tags list --tag work --type chat --json
+max messages search 'tag:work AND invoice' --json
+max searches create invoices invoice --chat <чат>
+max messages search --saved invoices --json
+max messages stats --saved invoices --by day --json
+max searches history --json
+max searches clear
+```
+
+Метки ставятся чату, контакту или сообщению только в локальном архиве; в MAX они не отправляются.
+`tag:work` находит сообщения с этой меткой, в помеченном чате или от помеченного человека;
+`NOT tag:work` исключает их точно. `tags remove` снимает метки.
+Сохранённый запрос проверяется заново; дополнительные слова соединяются через AND, заданные опции
+заменяют сохранённые. `searches list`, `show` и `delete` управляют именованными запросами.
+Успешный поиск или подсчёт по умолчанию сохраняет запрос и опции в отдельную историю, без результатов
+и текста сообщений. Хранятся последние 1000 запусков. `--no-record` или явное `record: false`
+отключает историю, в CLI и MCP. `searches clear` очищает историю, сохраняя именованные запросы.
+Это отдельная история, а не диагностические записи `runs`.

@@ -696,6 +696,48 @@ max contacts import <file>
 |---|---|---|
 | `file` | обязательный | one person per line: number, then a comma, a tab or a semicolon, then the name. |
 
+### `max contacts context`
+
+what the store holds about one person, in every messenger linked to them: shared chats, the last messages each way, their recent messages, where others mentioned them — never connects
+
+```sh
+max contacts context <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | their id, @username, or part of their name. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | at most this many messages in each list; 10 if not given. |
+| `--since-time <time>` | nothing older than this ISO 8601 time, or 2h / 1d ago. |
+
+### `max contacts link`
+
+record that two people in the store are one person — the same name is never enough
+
+```sh
+max contacts link <person> <other>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | their id, @username, or part of their name. |
+| `other` | обязательный | the same in another messenger of the store, as <messenger>:<person> — max:Ana. |
+
+### `max contacts unlink`
+
+undo contacts link for one identity: it is a person of its own again
+
+```sh
+max contacts unlink <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | their id, @username, or part of their name; <messenger>:<person> for another messenger. |
+
 ## `max messages`
 
 read and send messages in a chat
@@ -728,12 +770,12 @@ max messages list <chat> [options]
 search the local store — what was read, fetched or kept by serve; never asks the messenger
 
 ```sh
-max messages search <query> [options]
+max messages search [query] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | обязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges; --language legacy keeps discovery. |
+| `query` | необязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges; --language legacy keeps discovery; with --saved, more words AND-ed to it. |
 
 | Опция | Что делает |
 |---|---|
@@ -745,6 +787,7 @@ max messages search <query> [options]
 | `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
+| `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
 ### `max messages show`
 
@@ -800,7 +843,7 @@ max messages stats [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | a strict Lucene query, as for messages search; none counts every stored message. |
+| `query` | необязательный | a strict Lucene query, as for messages search; none counts every stored message; with --saved, more words AND-ed to it. |
 
 | Опция | Что делает |
 |---|---|
@@ -809,6 +852,7 @@ max messages stats [query] [options]
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many rows. |
 | `--timezone <zone>` | the IANA timezone for calendar days and hours. |
+| `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
 
 ### `max messages link`
 
@@ -1141,7 +1185,7 @@ max store check
 
 ### `max store migrate`
 
-bring the store up to this build's schema, then normalize the messages stored before it
+bring the store up to this build's schema, then normalize, index and stem the messages stored before it
 
 ```sh
 max store migrate
@@ -1149,7 +1193,7 @@ max store migrate
 
 ### `max store reindex`
 
-rebuild the word index and its typo vocabulary from the stored messages; loses no message
+rebuild the word index, its typo vocabulary and the stems from the stored messages; loses no message
 
 ```sh
 max store reindex
@@ -1198,6 +1242,34 @@ max store decrypt <file> [options]
 | Опция | Что делает |
 |---|---|
 | `--output <file>` | the new file, readable only by you. |
+
+### `max store repair`
+
+bring every table to this build's shape, deleting nothing: a table of the wrong shape is kept as a copy beside a new one
+
+```sh
+max store repair [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--dry-run` | say what it would do, and change nothing. |
+
+### `max store copies`
+
+the tables `store repair` kept as copies
+
+#### `max store copies delete`
+
+delete one copy `store repair` kept, named exactly; refuses any other table
+
+```sh
+max store copies delete <name>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | обязательный | the copy's name, as `store repair` printed it. |
 
 ## `max conversations`
 
@@ -1417,6 +1489,153 @@ max conversations embed clear [options]
 | `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+
+## `max tags`
+
+your own labels on chats, people and messages, kept in the local store and never sent; tag: in a search finds them
+
+### `max tags add`
+
+put tags on one chat, person or message
+
+```sh
+max tags add <tag> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `tag` | обязательный | one or more tags: 1–32 letters a–z, digits and hyphens; upper case is lowered. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | the chat to tag, or the chat of --message; a chat: its id, or part of its title. |
+| `--contact <person>` | the person to tag: their id, @username or name, as the local store knows them. |
+| `--message <message>` | the message to tag: its id in --chat, or a msg: locator alone. |
+
+### `max tags remove`
+
+take tags off one chat, person or message
+
+```sh
+max tags remove <tag> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `tag` | обязательный | one or more tags: 1–32 letters a–z, digits and hyphens; upper case is lowered. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | the chat to untag, or the chat of --message; a chat: its id, or part of its title. |
+| `--contact <person>` | the person to untag: their id, @username or name, as the local store knows them. |
+| `--message <message>` | the message to untag: its id in --chat, or a msg: locator alone. |
+
+### `max tags list`
+
+what is tagged: this account's chats and messages, and the people of its messenger
+
+```sh
+max tags list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--tag <tag>` | only this tag. |
+| `--type <names>` | only what is tagged of this type: chat, contact or message. |
+
+## `max searches`
+
+saved searches and the history of messages search and messages stats, kept in the local store; --saved runs one
+
+### `max searches create`
+
+save a search under a name without running it; messages search --saved <name> runs it
+
+```sh
+max searches create <name> [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | обязательный | up to 64 letters a–z, digits and hyphens, not only digits. |
+| `query` | необязательный | the query, as for messages search; none matches every stored message. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
+| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
+| `--limit <n>` | how many. |
+| `--newest` | newest first instead of best first. |
+| `--context <n>` | messages before and after each hit. |
+| `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
+| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
+| `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
+| `--by <chat\|sender\|day\|hour>` | what messages stats --saved counts by. |
+| `--replace` | overwrite a saved search of the same name. |
+
+### `max searches show`
+
+one saved search or earlier run: its query, options and how often it ran
+
+```sh
+max searches show <name|id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name\|id` | обязательный | a saved search's name, or the id of any row of searches history. |
+
+### `max searches list`
+
+the saved searches, by name
+
+```sh
+max searches list
+```
+
+### `max searches history`
+
+the searches and counts that ran, newest first — saved ones included; never their results
+
+```sh
+max searches history [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many. |
+
+### `max searches delete`
+
+delete a saved search, or one run from the history
+
+```sh
+max searches delete <name|id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name\|id` | обязательный | a saved search's name, or the id of any row of searches history. |
+
+### `max searches clear`
+
+empty the history; saved searches stay
+
+```sh
+max searches clear
+```
+
+## `max flood`
+
+the waits MAX asked this profile to keep, and a hold on its writes
+
+### `max flood clear`
+
+forget them and lift the hold, once MAX no longer limits the account; changes nothing there
+
+```sh
+max flood clear
+```
 
 ## `max models`
 
@@ -1859,7 +2078,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -1880,7 +2099,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 
 | Опция | Что делает |
 |---|---|
