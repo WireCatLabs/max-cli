@@ -106,9 +106,11 @@ const connect = async (
     form,
     era = "legacy",
     http = false,
+    record,
   }: {
     /** Over `max mcp --http` on 127.0.0.1, logged in through the owner login. */
     http?: boolean
+    record?: boolean
     token?: boolean
     answers?: MockMaxOptions["answers"]
     profile?: string
@@ -121,7 +123,7 @@ const connect = async (
   const keyring = memoryKeyring()
   const streams = captureStreams()
   const context = contextFor(
-    { profile },
+    { profile, record },
     {
       streams,
       tty: false,
@@ -445,6 +447,17 @@ describe("the MCP server", () => {
     expect(tools.some(({ annotations }) => annotations?.readOnlyHint === false)).toBe(true)
   })
 
+  it.each([false, true])("native MCP search history honors explicit recording %s", async (record) => {
+    const { client } = await connect({}, { record })
+    await call(client, "max_messages_list", { chat: "111" })
+    const found = await call(client, "max_messages_search", { text: "hi" })
+    const counted = await call(client, "max_messages_stats", { text: "hi" })
+    expect(found.isError).toBe(false)
+    expect(counted.body).toMatchObject({ total: 1 })
+    const history = await call(client, "max_searches_history", {})
+    expect(history.body.items).toHaveLength(record ? 2 : 0)
+  })
+
   it("marks messenger mutations as destructive and local refresh as a local write", async () => {
     const { client } = await connect({ allowSend: true })
     const { tools } = await client.listTools()
@@ -459,8 +472,9 @@ describe("the MCP server", () => {
         "max_chats_create",
       ]),
     )
+    const localWrites = new Set(["max_conversations_refresh", "max_tags_add", "max_searches_create"])
     for (const { name, annotations } of writing)
-      expect(annotations).toMatchObject({ destructiveHint: name !== "max_conversations_refresh" })
+      expect(annotations).toMatchObject({ destructiveHint: !localWrites.has(name) })
     expect(writing.find(({ name }) => name === "max_messages_delete")?._meta).toMatchObject({
       "anthropic/requiresUserInteraction": true,
     })

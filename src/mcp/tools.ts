@@ -48,6 +48,7 @@ interface Options {
   allowModerate?: boolean
   store: SessionStore
   defaultLimit: number
+  history?: boolean
   profile: string
   transcribeModel?: string
   permitted?: readonly Permission[]
@@ -71,6 +72,7 @@ export const registerTools = (
     allowDangerous = false,
     store,
     defaultLimit,
+    history,
     profile,
     transcribeModel = DEFAULT_MODEL,
     warn = () => {},
@@ -187,6 +189,7 @@ export const registerTools = (
     messenger: maxMessenger,
     defaults: {
       limit: defaultLimit,
+      history: history ?? settings().keepFailedRuns,
       guard: PASS,
       settings: {
         profile,

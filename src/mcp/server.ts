@@ -77,6 +77,7 @@ export const createMaxServer = (
       allowModerate,
       store: context.store,
       defaultLimit: context.settings.limit,
+      history: context.settings.keepFailedRuns,
       profile: context.settings.profile,
       transcribeModel: context.settings.transcribeModel,
       permitted,

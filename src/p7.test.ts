@@ -67,16 +67,21 @@ describe("P7 permissions", () => {
     expect(JSON.parse(shown.stdout).permissionSources["messages.delete"]).toBe("config file: profiles.work")
   })
 
-  it.each([["messages", "list", "111"], ["inbox"], ["review"], ["watch"], ["serve"], ["store", "fetch", "111"]])(
-    "refuses message reads through %j before any MAX request",
-    async (...args) => {
-      save({ profiles: { work: { permissions: { messages: "deny" } } } })
-      const { max, environment } = scripted()
-      const result = await cli(["work", ...args, "--json"], environment)
-      expect(result.code, result.stderr).toBe(5)
-      expect(max.sent).toEqual([])
-    },
-  )
+  it.each([
+    ["messages", "list", "111"],
+    ["inbox"],
+    ["review"],
+    ["watch"],
+    ["serve"],
+    ["store", "fetch", "111"],
+    ["contacts", "context", "synthetic-person"],
+  ])("refuses message reads through %j before any MAX request", async (...args) => {
+    save({ profiles: { work: { permissions: { messages: "deny" } } } })
+    const { max, environment } = scripted()
+    const result = await cli(["work", ...args, "--json"], environment)
+    expect(result.code, result.stderr).toBe(5)
+    expect(max.sent).toEqual([])
+  })
 
   it.each([false, true])("ask uses an explicit terminal answer %s and does not send on no", async (accepted) => {
     save({ profiles: { work: { permissions: { "messages.send": "ask" } } } })

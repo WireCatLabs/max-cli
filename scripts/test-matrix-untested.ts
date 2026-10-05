@@ -10,6 +10,149 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  {
+    command: "contacts context",
+    option: "--limit",
+    reason:
+      "cli-messaging src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and archive gaps; this consumer mounts the shared command",
+  },
+  {
+    command: "contacts context",
+    option: "--since-time",
+    reason:
+      "cli-messaging src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing",
+  },
+  {
+    command: "messages stats",
+    option: "--saved",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters",
+  },
+  {
+    command: "store repair",
+    option: "--dry-run",
+    reason:
+      "cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover preview rollback and retained data",
+  },
+  {
+    command: "tags add",
+    option: "--contact",
+    reason:
+      "cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions",
+  },
+  {
+    command: "tags add",
+    option: "--message",
+    reason:
+      "cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions",
+  },
+  {
+    command: "tags remove",
+    option: "--contact",
+    reason:
+      "cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions",
+  },
+  {
+    command: "tags remove",
+    option: "--message",
+    reason:
+      "cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions",
+  },
+  {
+    command: "searches create",
+    option: "--source",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--limit",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--newest",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--context",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--language",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--timezone",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--regex",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--by",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches create",
+    option: "--replace",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
+  },
+  {
+    command: "searches history",
+    option: "--limit",
+    reason:
+      "cli-messaging src/services/searches.test.ts covers bounded newest history and pruning; consumer integration tests cover no-record and named-query preservation",
+  },
+  {
+    command: "contacts context",
+    reason:
+      "cli-messaging src/cli/messenger/messenger.test.ts drives the local identity context; consumer permission tests reject message reads before connecting",
+  },
+  {
+    command: "contacts link",
+    reason:
+      "cli-messaging src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation",
+  },
+  {
+    command: "contacts unlink",
+    reason:
+      "cli-messaging src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command",
+  },
+  {
+    command: "store repair",
+    reason:
+      "cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover structural repair and retained data",
+  },
+  {
+    command: "store copies delete",
+    reason:
+      "cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion",
+  },
+  {
+    command: "searches show",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts drives saved-query lookup and deletion; consumer mounts the shared command",
+  },
+  {
+    command: "searches delete",
+    reason:
+      "cli-messaging src/cli/messenger/searches.test.ts drives saved-query lookup and deletion; consumer mounts the shared command",
+  },
   ...["", "--budget", "--min-score"].map((option) => ({
     command: "chats members audit",
     ...(option ? { option } : {}),

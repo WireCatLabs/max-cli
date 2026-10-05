@@ -4,6 +4,7 @@ import { metaOf } from "@leemour/cli-core/commands"
 import {
   conversationsCommand,
   createProgram as createSharedProgram,
+  floodCommand,
   inboxCommand,
   type ProgramDefinition,
   type ProgramOptions,
@@ -12,7 +13,9 @@ import {
   reactionsCommand,
   reviewCommand,
   run as runShared,
+  searchesCommand,
   storeCommand as sharedStoreCommand,
+  tagsCommand,
 } from "@leemour/cli-messaging/cli"
 import { levelFor } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
@@ -71,6 +74,9 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     messagesCommand(),
     sharedStoreCommand(maxMessenger),
     conversationsCommand(maxMessenger),
+    tagsCommand(maxMessenger),
+    searchesCommand(maxMessenger),
+    floodCommand(maxMessenger),
     modelsCommand(),
     pollsCommand(maxMessenger),
     reactionsCommand(maxMessenger),
