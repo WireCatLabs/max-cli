@@ -39,6 +39,9 @@ max config show --json     # то же одним объектом
 она прочитана, например `config file: bot.profiles.test`. Против профиля — `first word`,
 `MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: defaultProfile` или `default`.
 
+С `--json` в ответе есть и `storeSettings` — настройки общего архива (`searchStemmers.*`) и
+откуда они взяты: `store` или `default`.
+
 `max test config show --bot` показывает настройки так, как их получит `max test bot …`: у бота свой
 раздел и свой лимит отправок. `configFound: false` значит, что файла
 нет и всё встроенное. Если задана одна из переменных `MAX_*_DIR`, команда скажет об этом в stderr:
@@ -181,6 +184,12 @@ max config set defaultProfile work      # какой профиль без пе�
 откажет, и файл останется прежним. `serve`, `senderColors`, `catchUpMarksRead` и `mcpTools` с `--bot` не
 принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного, а старое `mcpTools` относится
 только к личному аккаунту.
+
+`searchStemmers.cyrillic` (`russian` или `none`) и `searchStemmers.latin` (`spanish`, `english` или
+`none`) хранятся не в файле настроек, а в общем архиве сообщений: они одни на все профили и на оба
+мессенджера. Поэтому `--defaults`, `--personal` и `--bot` с ними не принимаются, а под
+`MAX_PROFILE_LOCK` их менять нельзя. `config unset` возвращает встроенное значение. После смены
+выполните `max store reindex` — см. [Обслуживание архива](archive.md#обслуживание-архива).
 
 ## Опечатка — это ошибка, а не умолчание
 

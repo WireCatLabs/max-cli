@@ -157,12 +157,15 @@ claude mcp add max -- max mcp --confirm-send
 | `max_chats_update`, `max_chats_settings` | `max chats update`, `settings` | название и настройки группы |
 | `max_polls_show` | `max polls show` | опрос и варианты ответа |
 | `max_messages_evidence` | `max messages evidence` | пакет сообщений из архива текущей учётной записи, без подключения |
-| `max_messages_stats` | `max messages stats` | число совпадений запроса в локальном архиве |
+| `max_messages_stats` | `max messages stats` | число совпадений запроса в локальном архиве; `saved` — запустить сохранённый запрос или прошлый запуск |
 | `max_conversations_status`, `max_conversations_refresh` | `max conversations status`, `search --refresh` | состояние индекса и локальное обновление; запись по `conversations.embed` |
 | `max_conversations_related` | `max conversations related` | похожие беседы по сохранённым векторам, без запуска модели |
 | `max_conversations_list`, `max_conversations_show`, `max_conversations_search` | `max conversations …` | беседы из построенного локального архива; поиск по словам и установленной модели |
 | `max_messages_list` | `max messages list` | сообщения чата; с `transcribe` расшифровывает голосовые; ничего не отмечает прочитанным |
-| `max_messages_search` | `max messages search` | поиск по уже прочитанному на этой машине |
+| `max_messages_search` | `max messages search` | поиск по уже прочитанному на этой машине; `saved` — запустить сохранённый запрос или прошлый запуск |
+| `max_contacts_context` | `max contacts context` | что архив знает об одном человеке во всех связанных мессенджерах; права как у чтения сообщений |
+| `max_tags_list`, `max_tags_add`, `max_tags_remove` | `max tags …` | свои метки на чатах, людях и сообщениях; хранятся только на этой машине |
+| `max_searches_list`, `max_searches_history`, `max_searches_create`, `max_searches_delete`, `max_searches_clear` | `max searches …` | сохранённые запросы и история поиска; результаты не хранятся |
 | `max_messages_link` | `max messages link` | locator сообщения из архива без подключения и текста |
 | `max_messages_context` | `max messages show`, `context` | одно сообщение и соседние |
 | `max_messages_photo` | `max messages download` | фото из сообщения как картинка, до 512 КБ; файл, видео, голосовое или фото крупнее — отказ с командой, которая их сохранит. ссылку на фото этот инструмент не отдаёт |
