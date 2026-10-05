@@ -32,6 +32,9 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 - [usage.md](usage.md) — личный аккаунт: вход, профили, чтение, страницы, отправка, машинный режим — по порядку
 - [sessions.md](sessions.md) — откуда берётся токен, ключница, профили, `MAX_TOKEN`
 - [configuration.md](configuration.md) — каждая настройка, каждая переменная, порядок разрешения
+- [search.md](search.md) — поиск сообщений: слова, люди, даты, файлы, ссылки, метки, сохранённые поиски, подсчёт
+- [topic-search.md](topic-search.md) — поиск по темам: разговоры, векторы, свежесть, что уходит внешней модели
+- [query-language.md](query-language.md) — язык запросов: поля, операторы, preset, пределы, ответ JSON
 - [mcp.md](mcp.md) — MCP-сервер для клиентов без терминала: подключение, отправка, соединение с MAX
 - [remote.md](remote.md) — ChatGPT или Claude в браузере: вход по паролю и публичный адрес без своего домена
 - [groups.md](groups.md) — группы, которые вы ведёте: сценарии с агентом, правила, проверка по ним

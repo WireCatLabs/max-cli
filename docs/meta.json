@@ -9,6 +9,8 @@
     "sessions",
     "archive",
     "search",
+    "topic-search",
+    "query-language",
     "bot",
     "groups",
     "mcp",
