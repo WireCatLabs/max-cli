@@ -1,112 +1,153 @@
 # Поиск сообщений
 
-`max messages search` ищет только в общем локальном архиве, без сети и отметок о прочтении.
+`max messages search` ищет сообщения в локальном архиве — копии ваших чатов, которую `max` хранит на
+этом компьютере. Он не подключается к MAX и ничего не помечает прочитанным. Сообщение, которое `max`
+ещё не скачал, найти нельзя, поэтому сначала скачайте историю: `max store fetch <чат>`
+([архив](archive.md)).
 
-## Быстрый старт
+Здесь — поиск на каждый день. Дальше ведут ещё три страницы:
 
-```sh
-max messages search 'invoice AND (kind:group OR kind:private)' --json
-max messages search 'from:"Alice Synthetic" date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid --json
-max messages search 'preset:secret kind:saved' --json
-max messages search 'text:/pass(port)?/' --json
-max messages search 'chat:"Работа" AND body:/.*invoice.*/' --json
-max messages search 'has:file' --json
-```
+- [Поиск по темам](topic-search.md) — найти обсуждение по тому, о чём оно было, когда слов не помните.
+- [Язык запросов](query-language.md) — каждое поле, оператор, предел и ответ в JSON.
+- [Как устроен поиск](https://wirecat.dev/ru/docs/search-architecture) — техническая страница: индекс
+  слов, граф разговоров, векторы и порядок результатов.
 
-Имена в примерах замените своими. Слова и фразы сопоставляются строго, без автоматических
-исправлений и подстрочного поиска. `alpha OR beta gamma` означает `(alpha OR beta) AND gamma`;
-`alpha OR beta AND gamma` — `alpha OR (beta AND gamma)`. Для ясности ставьте скобки.
+Запрос пишите в одинарных кавычках, чтобы оболочка не трогала кавычки и скобки внутри. Имена в
+примерах замените своими чатами и людьми.
 
-## Поля и операторы
-
-Поддержаны поля `text/body/from/chat/date/kind/has/topic/in/preset/filename/mime/size/tag`, логические
-группы и группы значений поля, включающие и исключающие диапазоны, ограниченные wildcard и Lucene regex.
-`topic` требует одного обязательного чата. `kind:bot` выбирает собеседника, `in:bots` — аккаунты
-Bot API. fuzzy/proximity/boost/intervals дают ошибку. Неизвестные
-поля не становятся текстом.
-
-Файлы ищутся по имени и размеру, текст сообщения не нужен: `filename:*.pdf`, `filename:*договор*`
-(имя целиком, без учёта регистра и ё), `size>10MB`, `size:[1KB TO 300KB]` (KB/MB/GB по 1024).
-MAX не сообщает тип файла, поэтому `mime:` здесь ничего не находит — ищите по расширению.
-Ссылку на сайт находит фраза: `has:link AND "github.com"`.
-
-## Даты и regex
-
-`--timezone` задаёт часовой пояс IANA; дата без времени означает календарный день. Включающая
-верхняя граница включает день целиком, исключающая исключает его; из-за перехода на летнее время
-день может длиться не 24 часа. Точное время пишите в кавычках, с секундами и смещением от UTC.
-
-Regex поля `text` совпадает с целым нормализованным словом; `body` — с полным исходным текстом,
-с учётом регистра. Для подстроки в `body` используйте `.*`. Поддержана часть Lucene regex,
-без JS lookaround/backreferences/flags. Превышение пределов строк, байтов, состояний автомата,
-работы или времени — явная ошибка; сузьте область поиска.
-
-## Архив и машинный ответ
-
-Пустая выдача не доказывает отсутствие сообщения в мессенджере. JSON сообщает версию запроса,
-полноту и охват аккаунтов/чатов и готовность индекса даже без совпадений. `lastSyncedAt` — самый старый момент загрузки чата в охвате,
-`null`, если хотя бы один чат ещё не загружался. `inventoryComplete` означает, что каждый аккаунт
-в охвате хотя бы раз передал полный список чатов; это не обещает полноту истории. После обновления
-старый архив сохраняет `false` и `null` до следующего полного списка и `store fetch`. JSONL содержит только `items`;
-для охвата используйте `--json`.
-Неготовый word index требует `max store migrate`; историю дочитывают через `max store fetch`.
-Готовые предикаты находят кандидатов, а не подтверждают действительность учётных данных.
-
-## Миграция legacy
+## Слова и фразы
 
 ```sh
-max messages search 'from:alice after:7d invoice -draft' --language legacy --json
-max messages search --regex 'invoice\s+\d+' --json
+max messages search счёт
+max messages search '"счёт оплачен"'             # точная фраза
+max messages search 'кафе OR библиотека'
+max messages search '(кафе OR библиотека) NOT шумно'
+max messages search 'квартир*'                   # все слова, которые начинаются на «квартир»
 ```
 
-Legacy сохраняет прежние фильтры и поиск с исправлениями. `--regex` — отдельный режим JS `iu`
-по полному тексту с изолированным worker и пределами; сочетание `--regex --language lucene`
-отвергается. Программный контракт сохранённого запроса содержит `language/version`;
-предпросмотр миграции не обещает сохранить результаты поиска с исправлениями.
+Слова рядом должны быть в сообщении все. Слово находит это же слово в любом регистре, с ударениями
+и без, `ё` и `е` не различаются. Другая форма слова — другое слово: `квартира` не найдёт «квартиру»;
+начало слова, `квартир*`, найдёт обе. Ничего не угадывается: ни исправления опечаток, ни похожих слов.
 
-## Полная справка
-
-[Основная справка языка](https://github.com/leemour/cli-messaging/blob/main/docs/search/query-language.md)
-содержит таблицы полей и операторов, Unicode и экранирование, готовые предикаты, пределы,
-ошибки и десять проверяемых рецептов.
-[Техническая спецификация](https://github.com/leemour/cli-messaging/blob/main/docs/search/query-language-spec.md)
-описывает зафиксированную грамматику, AST/schema, эталонные примеры и компилятор.
-[Архив](archive.md) объясняет fetch и полноту; [команды](commands.md) перечисляют текущие параметры.
-
-## Поиск через MCP
-
-`max_messages_search` использует тот же язык и service, что `messages search`. Запрос содержит
-`text` или versioned `ast`; `language` выбирает `lucene` или `legacy`, `timezone` задаёт календарный
-часовой пояс. `chat` принимает id или имя из локальной копии; `source`, `newest`, `context` и `limit`
-выбирают охват и представление результата.
-
-Ответ сохраняет `query`, `coverage`, `completeness`, `wordsReady` и `corrections` рядом с обычной
-страницей `items/page/limit/hasMore`, в том числе при нуле совпадений. Metadata описывает локальный
-архив, а не полноту удалённого чата. Права инструмента и его имя при этом сохраняются.
-
-`wordsReady` сообщает готовность словесного индекса и для запросов только по фильтрам или regex.
-При `false` завершите `max store migrate`; строгий поиск по словам до этого отказывает,
-а legacy использует поиск по частям слов.
-
-## Метки и сохранённые запросы
+## Люди и чаты
 
 ```sh
-max tags add work --chat <чат>
-max tags list --tag work --type chat --json
-max messages search 'tag:work AND invoice' --json
-max searches create invoices invoice --chat <чат>
-max messages search --saved invoices --json
-max messages stats --saved invoices --by day --json
-max searches history --json
-max searches clear
+max messages search 'from:"Алиса Тестова" счёт'
+max messages search 'from:("Алиса Тестова" OR "Борис Тестов") библиотека'
+max messages search 'from:me date:7d'            # что вы писали за неделю
+max messages search 'chat:"Книжный клуб" библиотека'
+max messages search библиотека --chat "Книжный клуб"   # то же, опцией
+max messages search 'паспорт kind:private'       # только личные переписки
 ```
 
-Метки ставятся чату, контакту или сообщению только в локальном архиве; в MAX они не отправляются.
-`tag:work` находит сообщения с этой меткой, в помеченном чате или от помеченного человека;
-`NOT tag:work` исключает их точно. `tags remove` снимает метки.
-Сохранённый запрос проверяется заново; дополнительные слова соединяются через AND, заданные опции
-заменяют сохранённые. `searches list`, `show` и `delete` управляют именованными запросами.
-Успешный поиск или подсчёт по умолчанию сохраняет запрос и опции в отдельную историю, без результатов
-и текста сообщений. Хранятся последние 1000 запусков. `--no-record` или явное `record: false`
-отключает историю, в CLI и MCP. `searches clear` очищает историю, сохраняя именованные запросы.
-Это отдельная история, а не диагностические записи `runs`.
+`kind:` принимает `private` (личные), `group`, `channel`, `saved` (Избранное) и `bot`.
+
+## Даты
+
+```sh
+max messages search 'date:today'
+max messages search 'библиотека date:yesterday'
+max messages search 'счёт date:7d'               # от 7 дней назад до сейчас; также 30m, 2h
+max messages search 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid
+```
+
+`today`, `yesterday` и календарные даты — это дни в часовом поясе компьютера; `--timezone` выбирает
+другой. В диапазоне `[` и `]` включают этот день, `{` и `}` исключают.
+
+## Файлы и ссылки
+
+```sh
+max messages search 'has:file'
+max messages search 'filename:*.pdf'
+max messages search 'filename:*договор*'         # часть имени
+max messages search 'size>10MB'
+max messages search 'size:[1KB TO 300KB]'
+max messages search 'has:photo chat:"Книжный клуб"'
+max messages search 'has:link AND "github.com"'  # ссылка на сайт
+```
+
+Файл находится по имени и размеру, даже если в сообщении нет текста. `filename:` сравнивает имя
+целиком, без учёта регистра, ударений и `ё`. Размеры — в KB, MB и GB по 1024. MAX не сообщает тип
+файла, поэтому ищите по расширению: `filename:*.pdf`, а не `mime:`. `has:` принимает ещё `attachment`,
+`video`, `audio`, `voice`, `sticker`, `contact`, `location` и `poll`. Ссылка считается, если она в
+тексте или только в карточке ссылки.
+
+## Пароли, коды и карты
+
+```sh
+max messages search 'preset:secret kind:saved'   # что-то похожее на пароль или токен в Избранном
+max messages search 'preset:card'
+```
+
+Preset находит сообщения, которые *похожи* на пароль, код входа, ключ API, номер карты или IBAN,
+паспорт, телефон, email или ссылку. Проверяется только вид: это не доказывает, что пароль работает
+или карта настоящая. Полный список — в [языке запросов](query-language.md#preset).
+
+## Метки
+
+```sh
+max tags add work --chat "Книжный клуб"
+max tags add work --contact "Борис Тестов"
+max tags list --tag work --type chat
+max messages search 'tag:work счёт'
+max messages search 'счёт NOT tag:work'
+max tags remove work --chat "Книжный клуб"
+```
+
+Метка — ваша собственная пометка на чате, человеке или одном сообщении (`--message <id> --chat <чат>`).
+Она хранится только в локальном архиве и в MAX не отправляется. `tag:work` находит сообщения с меткой
+`work`, сообщения в чате с этой меткой и сообщения от человека с этой меткой. Метка — 1–32 символа: латинские
+буквы a–z, цифры и дефис.
+
+## Сохранённые поиски и история
+
+```sh
+max searches create meetings 'библиотека OR кафе' --chat "Книжный клуб"
+max messages search --saved meetings
+max messages search --saved meetings 'date:today'   # слова добавляются через AND
+max messages stats --saved meetings --by day
+max searches list
+max searches history --limit 10
+max messages search --saved 42                   # строка истории, по её номеру
+```
+
+`searches create` сохраняет запрос с опциями и ничего не запускает; занятое имя — только с
+`--replace`. Опции, набранные вместе с `--saved`, заменяют сохранённые. Сохранённый текст разбирается
+заново при каждом запуске, поэтому `date:7d` всегда значит последние 7 дней. `searches show` печатает
+один поиск, `searches delete` удаляет.
+
+Каждый успешный поиск и подсчёт попадает в историю: запрос и опции, но не найденные сообщения.
+Хранятся последние 1000 запусков. `--no-record` не записывает один запуск, в MCP — `record: false`;
+`searches clear` очищает историю, сохранённые поиски остаются. Эта история отдельна от записей
+`max runs`.
+
+## Подсчёт: `messages stats`
+
+```sh
+max messages stats счёт                          # сколько в каждом чате
+max messages stats 'date:7d' --by sender
+max messages stats 'from:me' --by day --timezone Europe/Madrid
+max messages stats --by hour                     # все сохранённые сообщения
+```
+
+`messages stats` считает сообщения, которые нашёл бы `messages search` с тем же запросом, каждое один
+раз. `--by chat` (по умолчанию) и `--by sender` — больше всего сверху; `--by day` и `--by hour` — по
+порядку. Если часть чатов сохранена не целиком, числа — нижняя граница, и stderr говорит, сколько
+таких чатов.
+
+## Если ничего не нашлось
+
+Пустой ответ значит «нет в архиве, где искали», а не «никогда не отправлялось». Что сохранено,
+покажет `max store status`, дополнить — `max store fetch`. С `--json` ответ говорит, какие чаты
+просмотрены и насколько они полны, даже без совпадений. Если `max` просит `max store migrate`, индекс
+слов ещё строится; поиск без слов (`has:file`, `date:today`) работает уже сейчас.
+
+Искать во всех аккаунтах архива — `--source all`. `--newest` упорядочивает по времени, а не по
+близости, а `--context 2` показывает по два сообщения вокруг каждого найденного.
+
+## Для скриптов и агентов
+
+`--json` возвращает один объект с сообщениями и тем, где искали; `--jsonl` — только сообщения,
+построчно. В MCP `max_messages_search` и `max_messages_stats` принимают те же запросы, а `max_tags_*`
+и `max_searches_*` управляют метками и сохранёнными поисками. Поля ответа, прежний режим
+`--language legacy` и `--regex` — в [языке запросов](query-language.md).
