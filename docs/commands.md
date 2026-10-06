@@ -2815,7 +2815,7 @@ max mcp [options]
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
 | `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
+| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
 | `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
 | `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
@@ -2838,7 +2838,7 @@ max mcp config [options]
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
 | `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
+| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
 | `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
 | `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
@@ -2863,7 +2863,7 @@ max mcp setup <client> [options]
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
 | `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
+| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
 | `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
 | `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
@@ -2881,7 +2881,7 @@ max mcp doctor [options]
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
 | `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
+| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
 | `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
 | `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |

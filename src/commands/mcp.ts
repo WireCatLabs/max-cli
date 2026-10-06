@@ -59,10 +59,7 @@ const withFlags = (command: Command): Command =>
     )
     .option("--allow-dangerous", "no longer used — writes show no form; the profile's permissions decide")
     .option("--allow-send", "deprecated: use permissions.messages.send in config; does not grant access")
-    .option(
-      "--confirm-send",
-      "show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first",
-    )
+    .option("--confirm-send", "no longer used — writes show no form; the profile's permissions decide")
     .option("--allow-mark-read", "deprecated: use permissions.chats.mark-read in config; does not grant access")
     .option("--allow-delete", "deprecated: use permissions.messages.delete in config; does not grant access")
     .option("--allow-moderate", "deprecated: use permissions.chats.moderate and group rules; does not grant access")
