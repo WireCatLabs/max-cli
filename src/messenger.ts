@@ -1,4 +1,5 @@
 import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@leemour/cli-messaging/cli"
+import { AI_SETTING_KEYS } from "@leemour/cli-messaging/cli"
 import type { GuardRequest, SendGuard } from "@leemour/cli-messaging/sends"
 import { moderationService } from "@leemour/cli-messaging/services"
 import type { Command } from "commander"
@@ -93,9 +94,12 @@ export const maxMessenger: Messenger = {
     return {
       ...own,
       offline: offline === true,
-      configured: {},
+      configured: Object.fromEntries(AI_SETTING_KEYS.map((key) => [key, own[key]])),
       // The shared hearing reads its model as `speechModel`; max's setting is `transcribeModel`.
-      shared: { speechModel: own.transcribeModel },
+      shared: {
+        ...Object.fromEntries(AI_SETTING_KEYS.map((key) => [key, own[key]])),
+        speechModel: own.transcribeModel,
+      },
       permissions: own.permissions,
       permissionSources: own.permissionSources,
     }

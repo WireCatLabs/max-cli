@@ -2,6 +2,7 @@ import { appendFileSync } from "node:fs"
 import { CliError, processStreams } from "@leemour/cli-core"
 import { metaOf } from "@leemour/cli-core/commands"
 import {
+  attachmentsCommand,
   conversationsCommand,
   createProgram as createSharedProgram,
   floodCommand,
@@ -74,6 +75,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     messagesCommand(),
     sharedStoreCommand(maxMessenger),
     conversationsCommand(maxMessenger),
+    attachmentsCommand(maxMessenger),
     tagsCommand(maxMessenger),
     searchesCommand(maxMessenger),
     floodCommand(maxMessenger),

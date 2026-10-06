@@ -66,6 +66,33 @@ describe("the MAX messenger's settings", () => {
     for (const key of SHARED) expect([key, shared[key]]).toEqual([key, own[key]])
   })
 
+  it("passes configured AI choices to shared commands with the owner's profile layers", () => {
+    const configDir = mkdtempSync(join(tmpdir(), "max-ai-"))
+    writeFileSync(
+      join(configDir, "config.json"),
+      JSON.stringify({
+        profiles: {
+          work: {
+            embeddingProvider: "openai",
+            embeddingModel: "synthetic-model",
+            embeddingBaseUrl: "https://example.test/v1",
+            embeddingDims: 128,
+            analysisProvider: "anthropic",
+          },
+        },
+      }),
+    )
+    const shared = maxMessenger.resolveSettings({ profile: "work" }, { configDir, env: {} })
+    expect(shared).toMatchObject({
+      embeddingProvider: "openai",
+      embeddingModel: "synthetic-model",
+      embeddingBaseUrl: "https://example.test/v1",
+      embeddingDims: 128,
+      analysisProvider: "anthropic",
+    })
+    expect(shared.configured.embeddingModel).toBe("synthetic-model")
+  })
+
   it("carries --offline, which max's settings leave to the command", () => {
     const configDir = mkdtempSync(join(tmpdir(), "max-messenger-"))
     expect(maxMessenger.resolveSettings({ offline: true }, { configDir }).offline).toBe(true)

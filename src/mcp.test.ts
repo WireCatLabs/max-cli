@@ -288,6 +288,17 @@ const legacyFor = (profile: string, values: Record<string, unknown>) => {
 }
 
 describe("the MCP server", () => {
+  it("offers the shared linking prompt without connecting to MAX", async () => {
+    const { client, logins } = await connect({}, { token: false })
+    expect((await client.listPrompts()).prompts.map(({ name }) => name)).toContain("link-conversations")
+    const [first] = (await client.getPrompt({ name: "link-conversations" })).messages
+    expect(first?.content).toMatchObject({
+      type: "text",
+      text: expect.stringContaining("max_conversations_batches_status"),
+    })
+    expect(logins()).toBe(0)
+  })
+
   it("mounts every supported shared schema, retains compatibility names and omits unsupported topics", async () => {
     const { client, logins } = await connect()
     const { tools } = await client.listTools()
@@ -472,7 +483,14 @@ describe("the MCP server", () => {
         "max_chats_create",
       ]),
     )
-    const localWrites = new Set(["max_conversations_refresh", "max_tags_add", "max_searches_create"])
+    const localWrites = new Set([
+      "max_conversations_refresh",
+      "max_conversations_build",
+      "max_conversations_links_add",
+      "max_attachments_text_set",
+      "max_tags_add",
+      "max_searches_create",
+    ])
     for (const { name, annotations } of writing)
       expect(annotations).toMatchObject({ destructiveHint: !localWrites.has(name) })
     expect(writing.find(({ name }) => name === "max_messages_delete")?._meta).toMatchObject({
@@ -1578,7 +1596,7 @@ describe("what the MCP server offers beyond the basics", () => {
 })
 
 describe("MCP prompts and resources", () => {
-  it("lists four prompts with their arguments, and builds one without asking MAX for anything", async () => {
+  it("lists the prompts with their arguments, and builds one without asking MAX for anything", async () => {
     const { client, max } = await connect()
 
     const { prompts } = await client.listPrompts()
@@ -1587,6 +1605,7 @@ describe("MCP prompts and resources", () => {
     expect(
       prompts.map(({ name, arguments: args }) => [name, args?.map(({ name, required }) => [name, required])]),
     ).toEqual([
+      ["link-conversations", undefined],
       [
         "catch-up",
         [

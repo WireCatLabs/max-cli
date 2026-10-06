@@ -1,5 +1,6 @@
 import { CliError } from "@leemour/cli-core"
 import {
+  AI_SETTING_KEYS,
   answerMcpTool,
   failMcpTool,
   type PersonalMcpDefaults,
@@ -184,6 +185,8 @@ export const registerTools = (
     delete metadata["anthropic/requiresUserInteraction"]
     offered[name] = { ...rest, ...(Object.keys(metadata).length ? { _meta: metadata } : {}) }
   }
+  const currentSettings = settings()
+  const ai = Object.fromEntries(AI_SETTING_KEYS.map((key) => [key, currentSettings[key]]))
   registerPersonalMcpTools(server, offered, {
     command: "max",
     messenger: maxMessenger,
@@ -192,9 +195,10 @@ export const registerTools = (
       history: history ?? settings().keepFailedRuns,
       guard: PASS,
       settings: {
+        ...ai,
         profile,
-        configured: {},
-        shared: { speechModel: transcribeModel },
+        configured: ai,
+        shared: { ...ai, speechModel: transcribeModel },
         get permissions() {
           return settings().permissions
         },

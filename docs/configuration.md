@@ -125,6 +125,13 @@ max config migrate
 | Поле | Что делает | Что перекрывает на один запуск | По умолчанию |
 |---|---|---|---|
 | `defaultProfile` | какой профиль, если первым словом ничего не названо и `MAX_PROFILE` не задан | первое слово (`max work …`), `MAX_PROFILE` | `default` |
+| `embeddingProvider` | локальная модель (`local`, по умолчанию) или `openai` | `--provider` | `local` |
+| `embeddingModel` | модель векторов | `--model` | по сервису |
+| `embeddingBaseUrl` | адрес API векторов | `--base-url` | по сервису |
+| `embeddingDims` | размер вектора, целое 1–65 536 | `--dims` | по модели |
+| `analysisProvider` | агент (`agent`), `openai` или `anthropic` | `build --provider` | `agent` |
+| `analysisModel` | модель анализа | `build --model` | по сервису |
+| `analysisBaseUrl` | адрес API анализа | `build --base-url` | по сервису |
 | `limit` | сколько записей показывать, когда `--limit` не передан | `--limit` | `20` |
 | `timeoutMs` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
@@ -268,3 +275,10 @@ max chats list
 `MAX_CACHE_DIR` относится только к прежнему кэшу: `max doctor` ищет там оставшийся файл.
 Для совместимости эта переменная всё ещё меняет запись в ключнице; для новой общей копии
 используйте `MESSAGING_STORE`.
+
+Настройки векторов и анализа независимы и могут различаться по профилям. Переменные `MAX_EMBEDDING_PROVIDER`,
+`MAX_EMBEDDING_MODEL`, `MAX_EMBEDDING_BASE_URL`, `MAX_EMBEDDING_DIMS`, `MAX_ANALYSIS_PROVIDER`,
+`MAX_ANALYSIS_MODEL`, `MAX_ANALYSIS_BASE_URL` перекрывают конфиг; флаги перекрывают настройки. Адрес — HTTP/S без
+встроенного пароля, query и fragment. Внешний сервис векторов получает и вопрос из MCP-поиска. Ключи задаются через
+`models text key set openai|anthropic` и не записываются в `config.json`. Обычный `build` внешнего анализа не
+запускает: нужен явный `--analyze`.

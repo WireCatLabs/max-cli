@@ -451,3 +451,35 @@ describe("the serve setting", () => {
     expect(resolveSettings({ serve: false }).serve).toBe(false)
   })
 })
+
+describe("shared AI provider configuration", () => {
+  it("keeps profile/kind/default precedence, validates endpoints and lets environment override", () => {
+    withConfig(
+      JSON.stringify({
+        defaults: { embeddingModel: "default-model" },
+        profiles: { work: { embeddingModel: "profile-model", analysisProvider: "anthropic" } },
+        personal: { profiles: { work: { embeddingModel: "kind-model" } } },
+      }),
+    )
+    const own = settings({ profile: "work" })
+    expect(own.embeddingProvider).toBe("local")
+    expect(own.embeddingModel).toBe("kind-model")
+    expect(own.analysisProvider).toBe("anthropic")
+    expect(own.sources.embeddingModel).toBe("config file: personal.profiles.work")
+    expect(settings({ profile: "work" }, { MAX_EMBEDDING_MODEL: "env-model" }).embeddingModel).toBe("env-model")
+    expect(() => settings({}, { MAX_EMBEDDING_DIMS: "0" })).toThrow("embeddingDims")
+    changeSetting(join(configDir, "config.json"), {
+      profile: "work",
+      setting: "embeddingBaseUrl",
+      value: "https://example.test/v1",
+    })
+    expect(settings({ profile: "work" }).embeddingBaseUrl).toBe("https://example.test/v1")
+    expect(() =>
+      changeSetting(join(configDir, "config.json"), {
+        profile: "work",
+        setting: "analysisBaseUrl",
+        value: "https://user:secret@example.test",
+      }),
+    ).toThrow()
+  })
+})

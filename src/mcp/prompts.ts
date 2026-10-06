@@ -1,3 +1,4 @@
+import { registerLinkConversationsPrompt } from "@leemour/cli-messaging/cli"
 import type { GetPromptResult, McpServer } from "@modelcontextprotocol/server"
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
@@ -12,6 +13,7 @@ const asked = (text: string): GetPromptResult => ({ messages: [{ role: "user", c
  * no message text is ever part of a prompt. The owner's own argument goes in quoted, as data.
  */
 export const registerPrompts = (server: McpServer): void => {
+  registerLinkConversationsPrompt(server, { command: "max", name: "MAX" })
   server.registerPrompt(
     "catch-up",
     {

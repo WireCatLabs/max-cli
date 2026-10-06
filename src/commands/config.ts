@@ -10,6 +10,7 @@ import {
 } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import {
+  AI_SETTING_KEYS,
   changeStoreSetting,
   isStoreSetting,
   migratePermissionConfig,
@@ -38,6 +39,7 @@ import { permissionKeyOf } from "../permissions.js"
 import { forCommand } from "./context.js"
 
 const SHOWN: SourcedSetting[] = [
+  ...AI_SETTING_KEYS,
   "limit",
   "timeoutMs",
   "commandTimeoutMs",

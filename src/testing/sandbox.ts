@@ -44,6 +44,9 @@ delete process.env.MAX_TOKEN
 delete process.env.MAX_PROFILE_LOCK
 process.env.MAX_TEST_SANDBOX = "1"
 process.env.MAX_TEST_ARGV_LOG = ARGV_LOG
+for (const key of Object.keys(process.env)) {
+  if (/^MAX_(EMBEDDING|ANALYSIS)_/.test(key)) delete process.env[key]
+}
 // A terminal running the suite must not make it ask npm; the tests that want the check pass their own env.
 process.env.MAX_NO_UPDATE_CHECK = "1"
 // An agent running the suite would get the skill hint on stderr in whichever test came first.
