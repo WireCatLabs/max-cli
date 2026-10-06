@@ -783,6 +783,22 @@ max contacts context <person> [options]
 | `--chat <chat>` | a chat, by id or name; repeat it for more — then their newest messages in each, 20 unless --limit, short unless -v. |
 | `--refresh` | with --chat, read their newest messages in each from the messenger first. |
 
+### `max contacts check`
+
+whether one person looks like a bot, a fake or a spammer: their profile, what they wrote in the store, and the public ban lists (Combot Anti-Spam (CAS), lols.bot), which are sent their id — a hint, never a verdict
+
+```sh
+max contacts check <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | their id, @username, or part of their name. |
+
+| Опция | Что делает |
+|---|---|
+| `--no-registries` | do not ask the public ban lists; nothing about them leaves this machine. |
+
 ### `max contacts link`
 
 record that two people in the store are one person — the same name is never enough

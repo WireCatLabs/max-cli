@@ -80,7 +80,7 @@ export const contactsCommand = (): Command => {
       })
     })
 
-  for (const name of ["add", "remove", "block", "unblock", "rename", "import", "context", "link", "unlink"]) {
+  for (const name of ["add", "remove", "block", "unblock", "rename", "import", "context", "check", "link", "unlink"]) {
     command.addCommand(sharedSubcommand(shared, name))
   }
 

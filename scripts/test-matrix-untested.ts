@@ -181,7 +181,7 @@ export const UNTESTED: Untested[] = [
     reason:
       "shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts",
   })),
-  ...["", "--budget", "--min-score"].map((option) => ({
+  ...["", "--budget", "--min-score", "--deep"].map((option) => ({
     command: "chats members audit",
     ...(option ? { option } : {}),
     reason:
