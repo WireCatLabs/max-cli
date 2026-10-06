@@ -354,7 +354,6 @@ max chats members fetch <chat> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--track` | also fetch it daily while serve runs; chats tracking lists and edits those chats. |
 | `--budget <pages>` | at most this many pages of 200 members, a pause between them (default: 10). |
 
 #### `max chats members add`
@@ -1359,6 +1358,30 @@ max store copies delete <name>
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | обязательный | the copy's name, as `store repair` printed it. |
+
+## `max stats`
+
+charts from the account's statistics
+
+### `max stats charts`
+
+a chart's data from a chat's statistics, and optionally a dark SVG image
+
+```sh
+max stats charts <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--chart-kind <messages\|active\|membership>` | what to draw: messages, active authors, or joins and leaves. По умолчанию: `messages`. |
+| `--by <day\|week>` | one point per calendar day or week (weeks start on Monday). По умолчанию: `day`. |
+| `--since-time <time>` | ISO 8601, or 2h / 1d ago; 7 days ago if not given. |
+| `--timezone <zone>` | the IANA timezone for calendar days. |
+| `--output <file>` | write a dark SVG image to a new .svg file. |
 
 ## `max conversations`
 

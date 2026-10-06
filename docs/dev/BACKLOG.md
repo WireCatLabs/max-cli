@@ -25,6 +25,7 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+
 - **CLI-58** · P2 · 🟡 `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
   third-party proxy. Done: Streamable HTTP on `127.0.0.1` behind the owner's tunnel, a one-owner OAuth login
   (one-time terminal code, PKCE S256, 1 h access / 30-day rotating refresh, hashes only), every write through

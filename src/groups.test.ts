@@ -626,14 +626,14 @@ describe("changing a group", () => {
   describe("chats members list", () => {
     const member = (id: number) => ({ contact: { id, names: [{ name: `P${id}`, type: "FULL_NAME" }] }, presence: {} })
 
-    it("fetches the whole list into the store, tracks the chat, and shows the history it recorded", async () => {
+    it("fetches the whole list into the store and shows the history it recorded", async () => {
       const { environment } = messenger({
         [Opcode.CHAT_MEMBERS]: () => ({ members: [member(1), member(2)] }),
       })
 
       rememberAccount(MAX_APP, "gr-history", "10000001", process.env)
       const fetched = await runWith(
-        ["gr-history", "chats", "members", "fetch", "Team", "--track", "--budget", "1", "--json"],
+        ["gr-history", "chats", "members", "fetch", "Team", "--budget", "1", "--json"],
         environment,
       )
       const history = await runWith(
@@ -643,7 +643,7 @@ describe("changing a group", () => {
 
       expect(fetched.code, fetched.stderr).toBe(0)
       expect(history.code, history.stderr).toBe(0)
-      expect(JSON.parse(fetched.stdout)).toMatchObject({ read: 2, complete: true, joined: ["1", "2"], tracked: true })
+      expect(JSON.parse(fetched.stdout)).toMatchObject({ read: 2, complete: true, joined: ["1", "2"], tracked: false })
       expect(JSON.parse(history.stdout).items.map((one: { event: string; id: string }) => [one.event, one.id])).toEqual(
         [
           ["joined", "1"],
@@ -813,6 +813,51 @@ describe("changing a group", () => {
     // Offline, a member list is read from the store, which this profile has never filled.
     expect(JSON.parse(result.stderr).error.code).toBe(name === "members" ? "not_found" : "validation_error")
     expect(max.sent).toEqual([])
+  })
+
+  it("fetches a synthetic roster, then reads its recorded history offline", async () => {
+    const { environment, max, sent } = messenger({
+      [Opcode.LOGIN]: { profile: { contact: { id: 10000009 } }, chats: [GROUP] },
+      [Opcode.CHAT_MEMBERS]: {
+        members: [
+          { contact: { id: 30999993, names: [{ name: "Synthetic member one", type: "FULL_NAME" }] } },
+          { contact: { id: 30999994, names: [{ name: "Synthetic member two", type: "FULL_NAME" }] } },
+        ],
+      },
+    })
+    const profile = "gr-roster-adoption"
+    expect((await runWith([profile, "chats", "list", "--json"], environment)).code).toBe(0)
+    const fetched = await runWith(
+      [profile, "chats", "members", "fetch", "Team", "--budget", "1", "--json"],
+      environment,
+    )
+    expect(fetched.code).toBe(0)
+    expect(JSON.parse(fetched.stdout)).toMatchObject({
+      chatId: String(GROUP.id),
+      read: 2,
+      complete: true,
+      tracked: false,
+    })
+    expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(1)
+    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([])
+    const before = max.sent.length
+    const history = await runWith(
+      [profile, "chats", "members", "history", "Team", "--since-time", "2026-01-01", "--offline", "--json"],
+      environment,
+    )
+    expect(history.code).toBe(0)
+    expect(JSON.parse(history.stdout)).toMatchObject({
+      chatId: String(GROUP.id),
+      hasMore: false,
+      items: [
+        { event: "joined", id: "30999993" },
+        { event: "joined", id: "30999994" },
+      ],
+    })
+    expect(max.sent).toHaveLength(before)
+    const unsupported = await runWith([profile, "chats", "members", "fetch", "Team", "--track"], environment)
+    expect(unsupported.code).toBe(1)
+    expect(max.sent).toHaveLength(before)
   })
 
   it("shows the invite link, and says so when there is none to see", async () => {

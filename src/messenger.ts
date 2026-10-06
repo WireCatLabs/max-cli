@@ -57,6 +57,7 @@ export const maxMessenger: Messenger = {
   fetching: { page: 30, pause: "5s", jitter: true, maxPages: 40, orderBy: "time" },
 
   permissionKey: permissionKeyOf,
+  tracksMembers: false,
 
   guard: (command, { profile }, warn) => {
     const client = () => clients.get(rootOf(command))
