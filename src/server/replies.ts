@@ -1,9 +1,12 @@
+import { CliError } from "@leemour/cli-core"
 import type { ChatKind, Id, Message } from "@leemour/cli-messaging"
 import {
   NO_RULES,
+  openRequestTask,
   type Replied,
   repliesPathFor,
   repliesStatePathFor,
+  replyRenderer,
   replyTo,
   senderFacts,
 } from "@leemour/cli-messaging/cli"
@@ -32,13 +35,15 @@ export interface RepliesOptions {
  */
 export const serverReplies = ({ profile, env = process.env, since, owner, client, guard, note }: RepliesOptions) => {
   let queue = Promise.resolve()
+  const controller = new AbortController()
   let opened: Promise<MessageStore> | undefined
   const sent: Record<string, number> = {}
   const skipped: Record<string, number> = {}
+  const tasks: Record<string, number> = {}
 
   const handle = async (hit: MessageHit) => {
     const open = client()
-    if (!open) return
+    if (!open || controller.signal.aborted) return
     const answer: Replied = await replyTo(
       {
         rulesPath: repliesPathFor(MAX_APP, profile, env),
@@ -46,10 +51,11 @@ export const serverReplies = ({ profile, env = process.env, since, owner, client
         provider: "max",
         owner: { id: owner() ?? null },
         since,
-        allowed: () => levelFor(resolveSettings({ profile }).permissions ?? {}, "replies.send").level === "allow",
+        allowed: () =>
+          levelFor(resolveSettings({ profile }, { env }).permissions ?? {}, "replies.send").level === "allow",
         chatOf: async (chat) => {
           const found = (await open.chats.list()).items.find((one) => one.id === chat)
-          return { id: chat, kind: (found?.kind ?? "unknown") as ChatKind }
+          return { id: chat, kind: (found?.kind ?? "unknown") as ChatKind, title: found?.title ?? null }
         },
         senderOf: async (person) => {
           const account = owner()
@@ -74,9 +80,21 @@ export const serverReplies = ({ profile, env = process.env, since, owner, client
             (message) => ({ messageId: message.id }),
           ),
         newSendId: () => open.newSendId(),
+        render: replyRenderer(MAX_APP, profile, () => resolveSettings({ profile }, { env }), env, note, {
+          ai: true,
+          signal: controller.signal,
+        }),
+        openTask: async (message) => {
+          const account = owner()
+          if (account === undefined)
+            throw new CliError("authentication_error", "the account is not known for reply tasks")
+          opened ??= openStore({ env })
+          return openRequestTask(await opened, { provider: "max", account }, message)
+        },
       },
       asShared(hit),
     )
+    if (answer.task !== undefined) tasks[answer.task] = (tasks[answer.task] ?? 0) + 1
     if ("sent" in answer) sent[answer.sent] = (sent[answer.sent] ?? 0) + 1
     else if (answer.skip !== NO_RULES) skipped[answer.skip] = (skipped[answer.skip] ?? 0) + 1
   }
@@ -89,11 +107,13 @@ export const serverReplies = ({ profile, env = process.env, since, owner, client
       )
     },
     settled: () => queue,
+    stop: () => controller.abort(),
     close: async () => {
+      controller.abort()
       await queue
       if (opened) await (await opened).close()
     },
-    summary: () => ({ sent, skipped }),
+    summary: () => ({ sent, skipped, ...(Object.keys(tasks).length ? { tasks } : {}) }),
   }
 }
 

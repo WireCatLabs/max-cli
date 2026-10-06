@@ -241,7 +241,7 @@ describe("the program", () => {
 
     for (const argv of renamed) {
       const { code, stdout, stderr } = await runWith([...argv, "--json"], environment)
-      expect({ argv, code, stdout }).toEqual({ argv, code: 1, stdout: "" })
+      expect({ argv, code, stdout }).toEqual({ argv, code: 2, stdout: "" })
       expect(stderr).toMatch(/unknown (command|option)/)
     }
     expect(max.sent).toEqual([])
@@ -900,7 +900,7 @@ describe("the program", () => {
     const { stderr, code } = await runWith(["chat", "list"])
 
     expect(stderr).toContain("unknown command 'list'")
-    expect(stderr).toContain('"chat" is not a command, so it was read as a profile name')
+    expect(JSON.parse(stderr).error.message).toContain('"chat" is not a command, so it was read as a profile name')
     expect(code).not.toBe(0)
   })
 

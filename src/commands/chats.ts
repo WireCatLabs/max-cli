@@ -10,7 +10,6 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "show"))
 
   command.addCommand(sharedSubcommand(shared, "events"))
-  command.addCommand(sharedSubcommand(shared, "stats"))
   command.addCommand(sharedSubcommand(shared, "inspect"))
 
   command.addCommand(sharedSubcommand(shared, "join"))

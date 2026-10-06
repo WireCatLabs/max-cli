@@ -78,7 +78,19 @@ describe("shared search adoption", () => {
   })
   it.each([
     ["messages", "search", "кафе", "--sync-first", "--max-chats", "1", "--sync-time", "1s", "--max-messages", "2"],
-    ["messages", "stats", "кафе", "--sync-first", "--max-chats", "1", "--sync-time", "1s", "--max-messages", "2"],
+    [
+      "stats",
+      "messages",
+      "show",
+      "кафе",
+      "--sync-first",
+      "--max-chats",
+      "1",
+      "--sync-time",
+      "1s",
+      "--max-messages",
+      "2",
+    ],
     ["conversations", "search", "кафе", "--sync-first", "--sync-time", "1s", "--max-messages", "2"],
   ])("reports incomplete refresh and retains local results in offline mode: %j", async (...argv) => {
     const result = await invoke(argv)

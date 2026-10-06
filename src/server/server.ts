@@ -201,6 +201,7 @@ export class MaxServer {
       if (process.platform !== "win32") rmSync(this.#options.store.socketPath(), { force: true })
     }
     try {
+      this.#replies.stop()
       await this.#handing
       await this.#replies.settled()
       await this.#client?.close()

@@ -492,7 +492,7 @@ describe("the MCP server", () => {
     const { client } = await connect({}, { record })
     await call(client, "max_messages_list", { chat: "111" })
     const found = await call(client, "max_messages_search", { text: "hi" })
-    const counted = await call(client, "max_messages_stats", { text: "hi" })
+    const counted = await call(client, "max_stats_messages_show", { text: "hi" })
     expect(found.isError).toBe(false)
     expect(counted.body).toMatchObject({ total: 1 })
     const history = await call(client, "max_searches_history", {})

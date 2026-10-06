@@ -85,7 +85,17 @@ beforeAll(async () => {
 
 describe("shared local message statistics", () => {
   it("counts strict query matches only for the profile's account and resolves stored chat names", async () => {
-    const result = await cli(["messages", "stats", "invoice", "--by", "chat", "--chat", "Synthetic Work", "--json"])
+    const result = await cli([
+      "stats",
+      "messages",
+      "show",
+      "invoice",
+      "--by",
+      "chat",
+      "--chat",
+      "Synthetic Work",
+      "--json",
+    ])
     expect(result.code, result.stderr).toBe(0)
     expect(result.stdout.trim().split("\n")).toHaveLength(1)
     expect(JSON.parse(result.stdout)).toMatchObject({
@@ -99,7 +109,7 @@ describe("shared local message statistics", () => {
   })
 
   it("counts every local message without a query and limits grouped rows, not the total", async () => {
-    const result = await cli(["messages", "stats", "--by", "sender", "--limit", "1", "--json"])
+    const result = await cli(["stats", "messages", "show", "--by", "sender", "--limit", "1", "--json"])
     expect(result.code, result.stderr).toBe(0)
     expect(JSON.parse(result.stdout)).toMatchObject({
       by: "sender",
@@ -112,10 +122,10 @@ describe("shared local message statistics", () => {
   })
 
   it("groups by calendar day and hour in the requested timezone, and emits JSONL rows", async () => {
-    const day = await cli(["messages", "stats", "--by", "day", "--timezone", "Europe/Madrid", "--json"])
+    const day = await cli(["stats", "messages", "show", "--by", "day", "--timezone", "Europe/Madrid", "--json"])
     expect(day.code, day.stderr).toBe(0)
     expect(JSON.parse(day.stdout)).toMatchObject({ total: 3, items: [{ key: "2026-10-04", count: 3 }] })
-    const hour = await cli(["messages", "stats", "--by", "hour", "--timezone", "UTC", "--jsonl"])
+    const hour = await cli(["stats", "messages", "show", "--by", "hour", "--timezone", "UTC", "--jsonl"])
     expect(hour.code, hour.stderr).toBe(0)
     const rows = hour.stdout
       .trim()
@@ -126,7 +136,7 @@ describe("shared local message statistics", () => {
   })
 
   it("widens to other accounts only when explicitly asked with source", async () => {
-    const result = await cli(["messages", "stats", "invoice", "--source", "max", "--json"])
+    const result = await cli(["stats", "messages", "show", "invoice", "--source", "max", "--json"])
     expect(result.code, result.stderr).toBe(0)
     expect(JSON.parse(result.stdout).total).toBe(3)
   })
@@ -136,17 +146,17 @@ describe("shared local message statistics", () => {
       ["--by", "week"],
       ["--timezone", "Imaginary/Zone"],
     ]) {
-      const result = await cli(["messages", "stats", ...options, "--json"])
+      const result = await cli(["stats", "messages", "show", ...options, "--json"])
       expect(result.code).toBe(2)
       expect(result.stdout).toBe("")
     }
   })
 
   it("allows readonly statistics and refuses an exact deny before reading the archive", async () => {
-    expect((await cli(["config", "set", "permissions.messages.stats", "readonly"])).code).toBe(0)
-    expect((await cli(["messages", "stats", "--json"])).code).toBe(0)
-    expect((await cli(["config", "set", "permissions.messages.stats", "deny"])).code).toBe(0)
-    const denied = await cli(["messages", "stats", "--json"])
+    expect((await cli(["config", "set", "permissions.stats.messages.show", "readonly"])).code).toBe(0)
+    expect((await cli(["stats", "messages", "show", "--json"])).code).toBe(0)
+    expect((await cli(["config", "set", "permissions.stats.messages.show", "deny"])).code).toBe(0)
+    const denied = await cli(["stats", "messages", "show", "--json"])
     expect(denied.code).toBe(5)
     expect(denied.stdout).toBe("")
     expect(denied.stderr).toContain("permission_error")

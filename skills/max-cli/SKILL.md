@@ -116,7 +116,7 @@ remove|admins|update|link reset` видят другие люди. Ссылка-
    `--timezone` задаёт календарную zone; kind:bot и in:bots имеют разные смыслы.
    Term/body regex различаются. Даты — `date:today`, `date:7d`; файл — `filename:*.pdf`, `size>10MB`
    (типа файла MAX не сообщает); ссылка — `has:link AND "github.com"`; метки владельца — `tag:work`.
-   Подсчёт — `max messages stats`. Руководства: [поиск](https://github.com/leemour/max-cli/blob/main/docs/search.md),
+   Подсчёт — `max stats messages show`. Руководства: [поиск](https://github.com/leemour/max-cli/blob/main/docs/search.md),
    [поиск по темам](https://github.com/leemour/max-cli/blob/main/docs/topic-search.md) (разговоры по смыслу),
    [язык запросов](https://github.com/leemour/max-cli/blob/main/docs/query-language.md).
 5a. **Substring-поиску имён нужны три символа:** --search у chats/contacts list. Строгие message
@@ -282,12 +282,12 @@ MAX-боту; личный протокол явно отказывает неп
 пользователя не меняет уже работающий процесс. Если npm пропустил сценарий, следуй восстановлению
 из раздела установки. Убедись, что установленная команда доступна по имени.
 
-Для количества совпадений в архиве используй `max messages stats [запрос] --by chat|sender|day|hour --json`: одна
+Для количества совпадений в архиве используй `max stats messages show [запрос] --by chat|sender|day|hour --json`: одна
 запись считается один раз. Проверяй completeness: неполный архив даёт нижнюю границу. `--source max` явно включает
 другие сохранённые профили; обычный вызов остаётся в текущей учётной записи.
 
 MCP `max_chats_stats` считает активность группы или канала из архива без запроса вступлений и выходов;
-`members` отсутствует, неполный архив даёт нижнюю границу. Команды `chats stats` в CLI MAX нет.
+`members` отсутствует, неполный архив даёт нижнюю границу. Команды `stats chats show` в CLI MAX нет.
 MCP `inbox`/`review` принимают `kinds` и `new`; отметки новых сообщений отдельны от CLI.
 
 `max chats members audit <чат> --json` читает участников и причины оценки, никого не удаляя.
@@ -334,3 +334,10 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 пути и состояние текста, а не сам текст.
 
 Графики: `max stats charts <chat> --json` возвращает нейтральный JSON; `--output activity.svg` или `--output activity.png` также пишет новое изображение с тёмной темой. `--chart-kind messages|active|membership`, `--by day|week`, `--since-time`, `--timezone` задают вид и период. Пропуски — null, partial означает неполные данные. Membership недоступен offline; MCP `max_stats_charts` отдаёт JSON без файлов и подключения; `format: "png"` добавляет PNG image content и JSON с данными и размером.
+
+Автоответы: `max replies add|edit|on|off` редактируют локальные правила; `replies audience` — общую
+аудиторию, где deny побеждает allow. Шаблоны Liquid читают только имена и факты чата; входящий
+текст доступен лишь модели внутри `ai`. `replies test` показывает инструкцию и fallback без
+модели; `--ai` передаёт сохранённые данные только после `replies consents grant`. Согласие
+выдаётся на профиль и endpoint, `consents deny|allow` управляют запретами для чатов. Не расширяйте
+`testers` и не запускайте реальные проверки без отдельного согласия владельца.

@@ -98,6 +98,13 @@ export const configCommand = (): Command => {
           // No list is every action, and `null` would read as none.
           value: setting === "allow" ? (settings.allow ?? "all") : (settings[setting] ?? null),
           from: settings.sources[setting],
+          ...(setting === "models"
+            ? {
+                sources: Object.fromEntries(
+                  Object.entries(settings.sources).filter(([key]) => key.startsWith("models.")),
+                ),
+              }
+            : {}),
         })),
       })
 

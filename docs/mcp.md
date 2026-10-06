@@ -162,7 +162,7 @@ claude mcp add max -- max mcp --confirm-send
 | `max_chats_update`, `max_chats_settings` | `max chats update`, `settings` | название и настройки группы |
 | `max_polls_show` | `max polls show` | опрос и варианты ответа |
 | `max_messages_evidence` | `max messages evidence` | пакет сообщений из архива текущей учётной записи, без подключения |
-| `max_messages_stats` | `max messages stats` | число совпадений запроса в локальном архиве; `saved` — запустить сохранённый запрос или прошлый запуск |
+| `max_stats_messages_show` | `max stats messages show` | число совпадений запроса в локальном архиве; `saved` — запустить сохранённый запрос или прошлый запуск |
 | `max_conversations_batches_status`, `max_conversations_batches_next` | `max conversations batches …` | объём и ограниченные пачки для агента; чтение после согласия владельца |
 | `max_conversations_links_add`, `max_conversations_links_clear`, `max_conversations_build` | `max conversations links …`, `build` | сохранить связи агента, убрать их, перестроить граф; `conversations.links` |
 | `max_attachments_list`, `max_attachments_text_set` | `max attachments list`, `text set` | пути и состояние текста; запись текста агента для `content:` |

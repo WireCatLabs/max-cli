@@ -121,7 +121,7 @@ max tasks list --state open                               # что ждёт от
 max tasks list --chat "Поход" --type question,mention
 max tasks add msg:max/<вы>/<чат>/<сообщение> --type promise   # то, чего правила не видят
 max tasks close <задача> --as dismissed --reason no-reply-needed
-max tasks stats                                           # открытые по чатам, самая старая, медиана до закрытия
+max stats tasks show                                           # открытые по чатам, самая старая, медиана до закрытия
 ```
 
 Закрытая задача остаётся закрытой, отклонённая не возвращается. Задачу закрывает только ваш ответ —

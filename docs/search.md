@@ -105,7 +105,7 @@ max tags remove work --chat "Книжный клуб"
 max searches create meetings 'библиотека OR кафе' --chat "Книжный клуб"
 max messages search --saved meetings
 max messages search --saved meetings 'date:today'   # слова добавляются через AND
-max messages stats --saved meetings --by day
+max stats messages show --saved meetings --by day
 max searches list
 max searches history --limit 10
 max messages search --saved 42                   # строка истории, по её номеру
@@ -124,16 +124,16 @@ max messages search --saved 42                   # строка истории, 
 Сохранённые поиски и история лежат в архиве, общем для `max` и `tg`: обе программы видят одни и те
 же, и `delete` или `clear` в одной меняет их и в другой. Метки остаются при своём аккаунте.
 
-## Подсчёт: `messages stats`
+## Подсчёт: `stats messages show`
 
 ```sh
-max messages stats счёт                          # сколько в каждом чате
-max messages stats 'date:7d' --by sender
-max messages stats 'from:me' --by day --timezone Europe/Madrid
-max messages stats --by hour                     # все сохранённые сообщения
+max stats messages show счёт                          # сколько в каждом чате
+max stats messages show 'date:7d' --by sender
+max stats messages show 'from:me' --by day --timezone Europe/Madrid
+max stats messages show --by hour                     # все сохранённые сообщения
 ```
 
-`messages stats` считает сообщения, которые нашёл бы `messages search` с тем же запросом, каждое один
+`stats messages show` считает сообщения, которые нашёл бы `messages search` с тем же запросом, каждое один
 раз. `--by chat` (по умолчанию) и `--by sender` — больше всего сверху; `--by day` и `--by hour` — по
 порядку. Если часть чатов сохранена не целиком, числа — нижняя граница, и stderr говорит, сколько
 таких чатов.
