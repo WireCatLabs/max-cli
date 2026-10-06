@@ -1400,7 +1400,7 @@
   ([installation.md](docs/installation.md#обновление-и-удаление)).
 - **Дополнение по Tab в zsh, bash, fish и PowerShell:** `source <(max complete zsh)`. Предлагает
   команды, флаги, их значения, а также чаты и людей из локальной копии — без подключения к MAX
-  ([installation.md](docs/installation.md#автодополнение)).
+  ([commands.md](docs/commands.md#max-complete)).
 - **`max mcp` — тот же профиль для агентов по MCP**, для клиентов без терминала (Claude Desktop,
   Cursor). Подключение — [docs/mcp.md](docs/mcp.md).
   Что учесть: сервер только читает, пока не запущен с `--allow-send`; отправка проходит те же

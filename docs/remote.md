@@ -31,7 +31,7 @@ ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max 
 
 | Приложение | Тарифы | Документация |
 |---|---|---|
-| ChatGPT | Plus, Pro, Business, Enterprise, Education — в режиме разработчика | [developer mode](https://developers.openai.com/api/docs/guides/developer-mode) |
+| ChatGPT | Plus, Pro, Business, Enterprise, Education — в режиме разработчика | [developer mode](https://developers.openai.com/api/docs/guides/custom-mcp-server) |
 | Claude | любой; на бесплатном — один свой коннектор | [custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) |
 | Gemini | только взрослым в США с личным аккаунтом Google — из России и Европы недоступно | [connected apps](https://support.google.com/gemini/answer/17209137?hl=en) |
 
@@ -65,7 +65,7 @@ max mcp --http --public-url https://<устройство>.<сеть>.ts.net
 Адрес для приложения — ваш адрес Funnel с `/mcp` на конце: `https://<устройство>.<сеть>.ts.net/mcp`.
 
 - **ChatGPT:** включите режим разработчика и добавьте коннектор с этим адресом, как описано в
-  [developer mode](https://developers.openai.com/api/docs/guides/developer-mode).
+  [developer mode](https://developers.openai.com/api/docs/guides/custom-mcp-server).
 - **Claude:** добавьте свой коннектор с этим адресом, как описано в
   [custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
   В настройках коннектора можно ещё задать каждому инструменту: всегда разрешено, нужно
