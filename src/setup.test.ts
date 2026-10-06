@@ -196,8 +196,11 @@ describe("MAX guided setup", () => {
     h.environment.interactive = true
     h.environment.ask = async () => "none"
     expect(await h.setup()).toBe(0)
-    expect(h.streams.stdout.join("\n")).toContain("For your agent: max setup-test skill show")
-    expect(h.streams.stdout.join("\n")).toContain("Install later: max setup-test skill install")
+    expect(h.streams.stdout.join("\n")).toMatch(/For an agent +max setup-test skill show/)
+    expect(h.streams.stdout.join("\n")).toContain("install later: max setup-test skill install")
+    const screen = h.streams.stderr.join("\n")
+    for (let step = 1; step <= 4; step++) expect(screen).toMatch(new RegExp(`\n\\[${step}/4\\] `))
+    expect(screen).toContain("\n      ✓ local directories ready")
   })
 
   it("keeps an npm exec runner in next commands", async () => {

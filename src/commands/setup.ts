@@ -1,5 +1,5 @@
 import { accessSync, constants, mkdirSync } from "node:fs"
-import { CliError, resolvePaths } from "@leemour/cli-core"
+import { CliError, indent, renderPretty, resolvePaths } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { installSkill, type SkillTarget } from "@leemour/cli-core/skill"
 import { runtime } from "@leemour/cli-messaging/cli"
@@ -14,12 +14,43 @@ import { type Method, startSession, TERMS_NOTICE } from "./session.js"
 const AGENTS = ["none", "codex", "cursor", "claude", "gemini", "all"] as const
 type Agent = (typeof AGENTS)[number]
 
-const agentFor = async (context: CommandContext, given?: Agent): Promise<Agent> => {
+const STEPS = 4
+const DETAIL = 6
+const chatCount = (count: number) => `${count} ${count === 1 ? "chat" : "chats"}`
+
+/**
+ * A person sees each step as a heading with its details indented under it. `--quiet` hides both, as it
+ * hides notes; a machine mode keeps the plain notes it always had, since stderr there is a log.
+ */
+const screenFor = (context: CommandContext, quiet: boolean) => {
+  const person = context.format === "pretty"
+  const say = (text: string) => {
+    if (!quiet) context.streams.diagnostic(text)
+  }
+  return {
+    title: (text: string) => (person ? say(text) : context.renderer.note(text)),
+    step: (index: number, title: string) =>
+      person ? say(`\n[${index}/${STEPS}] ${title}`) : context.renderer.note(`${index}/${STEPS} — ${title}`),
+    detail: (text: string) => (person ? say(indent(text, DETAIL)) : context.renderer.note(text)),
+    indent: person ? DETAIL : 0,
+  }
+}
+
+/** The login's messages, questions and QR code, shifted to sit under their step. */
+const underStep = (context: CommandContext, screen: ReturnType<typeof screenFor>): CommandContext => ({
+  ...context,
+  renderer: { ...context.renderer, note: screen.detail },
+  ask: (prompt, options) => context.ask(`${" ".repeat(screen.indent)}${prompt}`, options),
+  streams: { ...context.streams, diagnostic: (text) => context.streams.diagnostic(indent(text, screen.indent)) },
+  ...(context.columns === undefined ? {} : { columns: context.columns - screen.indent }),
+})
+
+const agentFor = async (context: CommandContext, given: Agent | undefined, pad: number): Promise<Agent> => {
   if (given) return given
   if (context.format !== "pretty" || !context.interactive) return "none"
   const answer =
     (
-      await context.ask("Agent [codex/cursor/claude/gemini/all/none] (none): ", {
+      await context.ask(`${" ".repeat(pad)}Agent [codex/cursor/claude/gemini/all/none] (none): `, {
         signal: context.signal,
       })
     )
@@ -88,29 +119,30 @@ export const setupCommand = (): Command =>
           ? `npm${process.platform === "win32" ? ".cmd" : ""} exec --yes --package=@leemour/max-cli -- ${prefix}`
           : prefix
       const paths = resolvePaths({ appName: "max-cli", prefix: "MAX" })
+      const screen = screenFor(context, this.optsWithGlobals().quiet === true)
       const answer = await context.run("setup", async (events) => {
-        renderer.note(
-          "Allow about 5 minutes for setup. Downloading chat history is a separate step and can take longer.",
+        screen.title(
+          `MAX setup — profile ${settings.profile}. Allow about 5 minutes; downloading chat history is a separate step.`,
         )
-        renderer.note("1/4 — checking this computer and the local directories")
+        screen.step(1, "This computer")
         for (const path of [paths.config, paths.state, paths.cache]) {
           mkdirSync(path, { recursive: true })
           accessSync(path, constants.W_OK)
         }
+        screen.detail("✓ local directories ready")
         if (process.platform === "win32")
-          renderer.note(
+          screen.detail(
             "Windows: use max.cmd or npm.cmd if PowerShell blocks scripts. Open a new terminal after installing Node.js.",
           )
-        renderer.note(
-          reused || store.hasLoggedIn()
-            ? "2/4 — checking your existing session; no new login"
-            : "2/4 — log in to your personal MAX account",
-        )
-        if (!reused && !store.hasLoggedIn()) {
-          const login = await startSession(context, options.method, events)
-          if (login.firstLogin) renderer.note(TERMS_NOTICE)
+        if (reused || store.hasLoggedIn()) {
+          screen.step(2, "Log in")
+          screen.detail("✓ existing session, no new login")
+        } else {
+          screen.step(2, "Log in: scan the QR code with MAX on your phone")
+          const login = await startSession(underStep(context, screen), options.method, events)
+          if (login.firstLogin) screen.detail(TERMS_NOTICE)
         }
-        renderer.note("3/4 — verifying the account and reading the first 5 chats")
+        screen.step(3, "Account")
         const client = context.createClient({ events }, { own: true })
         let account: Awaited<ReturnType<typeof client.account.me>>
         let chats: Awaited<ReturnType<typeof client.chats.list>>
@@ -120,8 +152,10 @@ export const setupCommand = (): Command =>
         } finally {
           await client.close()
         }
-        renderer.note("4/4 — connecting your agent")
-        const agent = await agentFor(context, options.agent)
+        screen.detail(`✓ verified, ${chatCount(chats.items.length)} read`)
+        screen.step(4, "Agent")
+        const agent = await agentFor(context, options.agent, screen.indent)
+        screen.detail(agent === "none" ? "✓ no agent skill installed" : `✓ ${agent}`)
         const targets: readonly SkillTarget[] =
           agent === "all" ? ["claude", "agents"] : [agent === "claude" ? "claude" : "agents"]
         context.signal.throwIfAborted()
@@ -132,9 +166,6 @@ export const setupCommand = (): Command =>
           history: `${runner}store fetch <chat> --last 100`,
           ...(agent === "none" ? { skill: `${runner}skill install` } : {}),
         }
-        renderer.note(
-          "Choose a chat and how much history to fetch before running store fetch. Setup starts no background service.",
-        )
         return {
           profile: settings.profile,
           runtime: runtime(),
@@ -147,16 +178,19 @@ export const setupCommand = (): Command =>
         }
       })
       if (context.format !== "pretty") renderer.result(answer)
-      else
-        context.streams.data(
-          [
-            `MAX is ready — profile ${settings.profile}, ${answer.chats.checked} chats checked.`,
+      else {
+        const rows = {
+          "Try now": answer.next.chats,
+          History: `${answer.next.history}  (choose the chat and the amount first)`,
+          "Agent skill":
             answer.agent.name === "none"
-              ? `Agent skill: skipped. Install later: ${answer.next.skill}`
-              : `Agent skill: installed for ${answer.agent.name}. Start a new agent session if it is not found.`,
-            `For your agent: ${answer.next.instructions}`,
-            `Next: ${answer.next.chats}`,
-            `History: ${answer.next.history}`,
-          ].join("\n"),
+              ? `skipped — install later: ${answer.next.skill}`
+              : `installed for ${answer.agent.name}; start a new agent session if it is not found`,
+          "For an agent": answer.next.instructions,
+        }
+        context.streams.data(
+          `\n✓ MAX is ready — profile ${settings.profile}, ${chatCount(answer.chats.checked)} checked\n\n` +
+            indent(renderPretty(rows, { color: context.color }), 2),
         )
+      }
     })
