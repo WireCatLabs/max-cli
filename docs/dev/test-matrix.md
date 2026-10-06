@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**683 ✅ · 104 ⛔ · 0 ❌** — 260 commands, 527 options.
+**689 ✅ · 107 ⛔ · 0 ❌** — 268 commands, 528 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -37,10 +37,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats events` |  | ✅ |  |
 | `chats events` | `--since-time` | ✅ |  |
 | `chats events` | `--type` | ✅ |  |
-| `chats stats` |  | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
-| `chats stats` | `--since-time` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
-| `chats stats` | `--by` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
-| `chats stats` | `--timezone` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
 | `chats inspect` |  | ✅ |  |
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
@@ -161,17 +157,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages context` | `--before-n` | ✅ |  |
 | `messages context` | `--after-n` | ✅ |  |
 | `messages links` |  | ✅ |  |
-| `messages stats` |  | ✅ |  |
-| `messages stats` | `--sync-first` | ✅ |  |
-| `messages stats` | `--max-chats` | ✅ |  |
-| `messages stats` | `--sync-time` | ✅ |  |
-| `messages stats` | `--max-messages` | ✅ |  |
-| `messages stats` | `--by` | ✅ |  |
-| `messages stats` | `--chat` | ✅ |  |
-| `messages stats` | `--source` | ✅ |  |
-| `messages stats` | `--limit` | ✅ |  |
-| `messages stats` | `--timezone` | ✅ |  |
-| `messages stats` | `--saved` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters |
 | `messages link` |  | ✅ |  |
 | `messages download` |  | ✅ |  |
 | `messages download` | `--output-dir` | ✅ |  |
@@ -244,6 +229,27 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store repair` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover structural repair and retained data |
 | `store repair` | `--dry-run` | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover preview rollback and retained data |
 | `store copies delete` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion |
+| `stats` |  | ⛔ | A command group with no action; its show command is exercised through the CLI |
+| `stats messages` |  | ⛔ | A command group with no action; its show command is exercised through the CLI |
+| `stats messages show` |  | ✅ |  |
+| `stats messages show` | `--sync-first` | ✅ |  |
+| `stats messages show` | `--max-chats` | ✅ |  |
+| `stats messages show` | `--sync-time` | ✅ |  |
+| `stats messages show` | `--max-messages` | ✅ |  |
+| `stats messages show` | `--by` | ✅ |  |
+| `stats messages show` | `--chat` | ✅ |  |
+| `stats messages show` | `--source` | ✅ |  |
+| `stats messages show` | `--limit` | ✅ |  |
+| `stats messages show` | `--timezone` | ✅ |  |
+| `stats messages show` | `--saved` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters |
+| `stats chats` |  | ⛔ | A command group with no action; its show command is exercised through the CLI |
+| `stats chats show` |  | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats chats show` | `--since-time` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats chats show` | `--by` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats chats show` | `--timezone` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats tasks show` |  | ✅ |  |
+| `stats tasks show` | `--chat` | ✅ |  |
+| `stats tasks show` | `--type` | ✅ |  |
 | `stats charts` |  | ✅ |  |
 | `stats charts` | `--chart-kind` | ✅ |  |
 | `stats charts` | `--by` | ✅ |  |
@@ -385,9 +391,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks close` |  | ✅ |  |
 | `tasks close` | `--as` | ✅ |  |
 | `tasks close` | `--reason` | ✅ |  |
-| `tasks stats` |  | ✅ |  |
-| `tasks stats` | `--chat` | ✅ |  |
-| `tasks stats` | `--type` | ✅ |  |
 | `flood clear` |  | ✅ |  |
 | `models audio list` |  | ✅ |  |
 | `models audio download` |  | ✅ |  |
@@ -469,8 +472,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `replies audience` | `--allow-chats` | ✅ |  |
 | `replies audience` | `--deny-people` | ✅ |  |
 | `replies audience` | `--deny-chats` | ✅ |  |
+| `replies consents show` |  | ✅ |  |
+| `replies consents grant` |  | ✅ |  |
+| `replies consents revoke` |  | ✅ |  |
+| `replies consents deny` |  | ✅ |  |
+| `replies consents allow` |  | ✅ |  |
 | `replies test` |  | ✅ |  |
 | `replies test` | `--since-time` | ✅ |  |
+| `replies test` | `--ai` | ✅ |  |
 | `replies pause` |  | ✅ |  |
 | `replies resume` |  | ✅ |  |
 | `replies status` |  | ✅ |  |

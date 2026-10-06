@@ -1973,19 +1973,6 @@ max tasks close <task> [options]
 | `--as <state>` | how it is closed: done, or dismissed — it needs no answer. |
 | `--reason <text>` | why, kept with the task — no-reply-needed, for example. |
 
-### `max tasks stats`
-
-per chat: how many tasks are open, the oldest open one, the median time to close
-
-```sh
-max tasks stats [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--type <name>` | only this type: question, request, mention or promise. |
-
 ## `max flood`
 
 the waits MAX asked this profile to keep, and a hold on its writes
