@@ -10,6 +10,50 @@ import { MaxServer } from "./server.js"
 
 afterEach(() => vi.useRealTimers())
 
+it("does not restart a stopped server when its pending reconnect times out", async () => {
+  const store = new SessionStore({ profile: "daily-reconnect-stop", keyring: memoryKeyring() })
+  await store.writeToken("synthetic-token")
+  const first = mockMax({
+    answers: {
+      [Opcode.SESSION_INIT]: {},
+      [Opcode.LOGIN]: { profile: { contact: { id: 900 } }, chats: [] },
+      [Opcode.FOLDERS_GET]: { folders: [] },
+      [Opcode.BANNERS_GET]: { banners: [] },
+      [Opcode.CALL_HISTORY]: { callHistoryItems: [] },
+      [Opcode.ASSETS_UPDATE]: { sections: [] },
+    },
+  })
+  const pending = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: () => undefined } })
+  let connections = 0
+  vi.useFakeTimers()
+  const server = new MaxServer({
+    store,
+    note: () => {},
+    retryAfterMs: () => 0,
+    connection: (hooks) =>
+      new Connection({
+        ...hooks,
+        live: true,
+        createSocket: connections++ === 0 ? first.createSocket : pending.createSocket,
+        timeoutMs: 100,
+      }),
+  })
+  try {
+    await server.start()
+    first.drop()
+    await vi.advanceTimersByTimeAsync(0)
+    expect(pending.sent.filter(({ opcode }) => opcode === Opcode.LOGIN)).toHaveLength(1)
+    await server.stop()
+    await vi.advanceTimersByTimeAsync(300)
+    expect(connections).toBe(2)
+    expect(pending.closed).toBe(true)
+    expect(vi.getTimerCount()).toBe(0)
+    expect(server.connected).toBe(false)
+  } finally {
+    await server.stop()
+  }
+})
+
 it("stops an unstarted worker when login fails", async () => {
   const store = new SessionStore({ profile: "daily-refused-login", keyring: memoryKeyring() })
   await store.writeToken("synthetic-token")

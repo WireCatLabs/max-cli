@@ -349,6 +349,7 @@ export class MaxServer {
   }
 
   #reconnectLater(error: Error): void {
+    if (this.#stopped) return
     const wait = (this.#options.retryAfterMs ?? backoff)(this.#attempt)
     this.#attempt += 1
     this.#options.note(`${error.message} — connecting again in ${Math.round(wait / 1000)}s`)
