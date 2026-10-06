@@ -17,6 +17,7 @@ import {
   run as runShared,
   searchesCommand,
   storeCommand as sharedStoreCommand,
+  statsCommand,
   tagsCommand,
 } from "@leemour/cli-messaging/cli"
 import { levelFor } from "@leemour/cli-messaging/sends"
@@ -75,6 +76,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     contactsCommand(),
     messagesCommand(),
     sharedStoreCommand(maxMessenger),
+    statsCommand(maxMessenger),
     conversationsCommand(maxMessenger),
     attachmentsCommand(maxMessenger),
     tagsCommand(maxMessenger),

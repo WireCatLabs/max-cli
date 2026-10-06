@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**626 ✅ · 98 ⛔ · 0 ❌** — 245 commands, 479 options.
+**631 ✅ · 98 ⛔ · 0 ❌** — 246 commands, 483 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -60,7 +60,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members history` |  | ✅ |  |
 | `chats members history` | `--since-time` | ✅ |  |
 | `chats members fetch` |  | ✅ |  |
-| `chats members fetch` | `--track` | ✅ |  |
 | `chats members fetch` | `--budget` | ✅ |  |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
@@ -239,6 +238,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store repair` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover structural repair and retained data |
 | `store repair` | `--dry-run` | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover preview rollback and retained data |
 | `store copies delete` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion |
+| `stats charts` |  | ✅ |  |
+| `stats charts` | `--chart-kind` | ✅ |  |
+| `stats charts` | `--by` | ✅ |  |
+| `stats charts` | `--since-time` | ✅ |  |
+| `stats charts` | `--timezone` | ✅ |  |
+| `stats charts` | `--output` | ✅ |  |
 | `conversations build` |  | ✅ |  |
 | `conversations build` | `--chat` | ✅ |  |
 | `conversations build` | `--analyze` | ✅ |  |

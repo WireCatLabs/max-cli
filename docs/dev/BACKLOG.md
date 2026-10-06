@@ -25,7 +25,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **CLI-70** · 🚧 `feat/stats-charts` · P2 · `stats charts`: JSON и SVG из статистики чата, тёмная тема, сменный рендерер в cli-messaging. План: `docs_ai/plans/2026-10-06-charts.md`.
 
 - **CLI-58** · P2 · 🟡 `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
   third-party proxy. Done: Streamable HTTP on `127.0.0.1` behind the owner's tunnel, a one-owner OAuth login

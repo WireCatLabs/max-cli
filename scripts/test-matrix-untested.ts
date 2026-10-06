@@ -28,12 +28,6 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "chats members fetch",
-    option: "--track",
-    reason:
-      "cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts",
-  },
-  {
-    command: "chats members fetch",
     option: "--budget",
     reason:
       "cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts",
