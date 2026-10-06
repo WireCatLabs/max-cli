@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**633 ✅ · 102 ⛔ · 0 ❌** — 251 commands, 484 options.
+**666 ✅ · 102 ⛔ · 0 ❌** — 256 commands, 512 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -422,6 +422,39 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `review` | `--new` | ✅ |  |
 | `review` | `--mark-read` | ✅ |  |
 | `review` | `--no-mark-read` | ✅ |  |
+| `replies add` |  | ✅ |  |
+| `replies on` |  | ✅ |  |
+| `replies off` |  | ✅ |  |
+| `replies edit` |  | ✅ |  |
+| `replies edit` | `--do` | ✅ |  |
+| `replies edit` | `--kinds` | ✅ |  |
+| `replies edit` | `--chats` | ✅ |  |
+| `replies edit` | `--not-chats` | ✅ |  |
+| `replies edit` | `--words` | ✅ |  |
+| `replies edit` | `--question` | ✅ |  |
+| `replies edit` | `--no-question` | ✅ |  |
+| `replies edit` | `--mentions-me` | ✅ |  |
+| `replies edit` | `--no-mentions-me` | ✅ |  |
+| `replies edit` | `--people` | ✅ |  |
+| `replies edit` | `--not-people` | ✅ |  |
+| `replies edit` | `--contacts-only` | ✅ |  |
+| `replies edit` | `--no-contacts-only` | ✅ |  |
+| `replies edit` | `--template` | ✅ |  |
+| `replies edit` | `--model` | ✅ |  |
+| `replies edit` | `--as-reply` | ✅ |  |
+| `replies edit` | `--no-as-reply` | ✅ |  |
+| `replies edit` | `--per-chat` | ✅ |  |
+| `replies edit` | `--per-person` | ✅ |  |
+| `replies edit` | `--outside` | ✅ |  |
+| `replies edit` | `--days` | ✅ |  |
+| `replies edit` | `--timezone` | ✅ |  |
+| `replies edit` | `--no-hours` | ✅ |  |
+| `replies audience` |  | ✅ |  |
+| `replies audience` | `--reply` | ✅ |  |
+| `replies audience` | `--allow-people` | ✅ |  |
+| `replies audience` | `--allow-chats` | ✅ |  |
+| `replies audience` | `--deny-people` | ✅ |  |
+| `replies audience` | `--deny-chats` | ✅ |  |
 | `replies test` |  | ✅ |  |
 | `replies test` | `--since-time` | ✅ |  |
 | `replies pause` |  | ✅ |  |

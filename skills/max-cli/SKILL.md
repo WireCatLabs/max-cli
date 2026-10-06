@@ -329,4 +329,4 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 `--download` требует `--output-dir`; без них извлечение читает уже скачанные файлы. `list` показывает сохранённые
 пути и состояние текста, а не сам текст.
 
-Графики: `max stats charts <chat> --json` возвращает нейтральный JSON; `--output activity.svg` также пишет новый SVG с тёмной темой. `--chart-kind messages|active|membership`, `--by day|week`, `--since-time`, `--timezone` задают вид и период. Пропуски — null, partial означает неполные данные. Membership недоступен offline; MCP `max_stats_charts` отдаёт JSON без файлов и подключения.
+Графики: `max stats charts <chat> --json` возвращает нейтральный JSON; `--output activity.svg` или `--output activity.png` также пишет новое изображение с тёмной темой. `--chart-kind messages|active|membership`, `--by day|week`, `--since-time`, `--timezone` задают вид и период. Пропуски — null, partial означает неполные данные. Membership недоступен offline; MCP `max_stats_charts` отдаёт JSON без файлов и подключения; `format: "png"` добавляет PNG image content и JSON с данными и размером.
