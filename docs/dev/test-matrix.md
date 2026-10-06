@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**633 ✅ · 98 ⛔ · 0 ❌** — 247 commands, 484 options.
+**633 ✅ · 102 ⛔ · 0 ❌** — 251 commands, 484 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -64,6 +64,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
+| `chats tracking list` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
+| `chats tracking show` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
+| `chats tracking add` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
+| `chats tracking remove` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
 | `chats admins add` |  | ✅ |  |
 | `chats admins add` | `--can` | ✅ |  |
 | `chats admins remove` |  | ✅ |  |

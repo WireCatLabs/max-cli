@@ -390,6 +390,54 @@ max chats members remove <chat> <person>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
 
+### `max chats tracking`
+
+tracked groups and recorded member counts; MAX rosters are fetched by explicit commands
+
+#### `max chats tracking list`
+
+every tracked chat: since when, and its last member count
+
+```sh
+max chats tracking list
+```
+
+#### `max chats tracking show`
+
+one chat: whether it is tracked, and its member count per day for the last 30 days
+
+```sh
+max chats tracking show <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+#### `max chats tracking add`
+
+track this group without fetching now; MAX requires explicit member fetches
+
+```sh
+max chats tracking add <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+#### `max chats tracking remove`
+
+stop tracking this group; the history already kept stays
+
+```sh
+max chats tracking remove <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
 ### `max chats admins`
 
 give or take back a member's admin rights

@@ -10,6 +10,11 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  ...["list", "show", "add", "remove"].map((verb) => ({
+    command: `chats tracking ${verb}`,
+    reason:
+      "shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group",
+  })),
   {
     command: "chats members history",
     reason:
