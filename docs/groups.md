@@ -126,7 +126,7 @@ max stats tasks show                                           # открыты�
 
 Закрытая задача остаётся закрытой, отклонённая не возвращается. Задачу закрывает только ваш ответ —
 ответ админа пока нет, — а упоминание через `@ник` не замечается. Агенту то же самое дают
-инструменты MCP: `max_tasks_list`, `max_tasks_add`, `max_tasks_close`, `max_tasks_stats` ([mcp.md](mcp.md)).
+инструменты MCP: `max_tasks_list`, `max_tasks_add`, `max_tasks_close`, `max_stats_tasks_show` ([mcp.md](mcp.md)).
 
 ## Правила
 
