@@ -5,9 +5,9 @@
 
 Язык — строгий профиль синтаксиса Apache Lucene: слова, фразы, AND/OR/NOT, группы, поля, диапазоны,
 ограниченные шаблоны и регулярные выражения.
-[Полная справка](https://github.com/leemour/cli-messaging/blob/v0.148.2/docs/search/query-language.md)
+[Полная справка](https://github.com/leemour/cli-messaging/blob/v0.149.0/docs/search/query-language.md)
 содержит генерируемые таблицы полей, операторов, preset и пределов и проверяемые примеры;
-[техническая спецификация](https://github.com/leemour/cli-messaging/blob/v0.148.2/docs/search/query-language-spec.md)
+[техническая спецификация](https://github.com/leemour/cli-messaging/blob/v0.149.0/docs/search/query-language-spec.md)
 описывает грамматику и компилятор.
 
 ## Операторы
