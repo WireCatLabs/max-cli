@@ -10,6 +10,72 @@ import { MaxServer } from "./server.js"
 
 afterEach(() => vi.useRealTimers())
 
+it.each([false, true])(
+  "closes a login that finishes after stop, including worker close failure=%s",
+  async (closeFails) => {
+    const store = new SessionStore({ profile: `daily-late-login-${closeFails}`, keyring: memoryKeyring() })
+    await store.writeToken("synthetic-token")
+    const answers = {
+      [Opcode.SESSION_INIT]: {},
+      [Opcode.LOGIN]: { profile: { contact: { id: 900 } }, chats: [] },
+      [Opcode.FOLDERS_GET]: { folders: [] },
+      [Opcode.BANNERS_GET]: { banners: [] },
+      [Opcode.CALL_HISTORY]: { callHistoryItems: [] },
+      [Opcode.ASSETS_UPDATE]: { sections: [] },
+    }
+    const first = mockMax({ answers })
+    const late = mockMax({ answers })
+    let release = () => {}
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    class DelayedLogin extends Connection {
+      override async invoke(...args: Parameters<Connection["invoke"]>) {
+        const answer = await super.invoke(...args)
+        if (args[0] === Opcode.LOGIN) await gate
+        return answer
+      }
+    }
+    const start = vi.fn()
+    const stop = vi.fn(async () => {
+      if (closeFails) throw new Error("synthetic.private.close-error")
+    })
+    const notes: string[] = []
+    let connections = 0
+    vi.useFakeTimers()
+    const server = new MaxServer({
+      store,
+      note: (line) => notes.push(line),
+      retryAfterMs: () => 0,
+      members: () => ({ start, stop }),
+      connection: (hooks) =>
+        connections++ === 0
+          ? new Connection({ ...hooks, live: true, createSocket: first.createSocket, timeoutMs: 100 })
+          : new DelayedLogin({ ...hooks, live: true, createSocket: late.createSocket, timeoutMs: 100 }),
+    })
+    try {
+      await server.start()
+      first.drop()
+      await vi.advanceTimersByTimeAsync(0)
+      expect(late.sent.filter(({ opcode }) => opcode === Opcode.LOGIN)).toHaveLength(1)
+      await server.stop()
+      await server.done
+      release()
+      await vi.advanceTimersByTimeAsync(0)
+      expect(server.connected).toBe(false)
+      expect(late.closed).toBe(true)
+      expect(start).toHaveBeenCalledTimes(1)
+      expect(stop).toHaveBeenCalledTimes(1)
+      expect(vi.getTimerCount()).toBe(0)
+      expect(notes.join("\n")).not.toContain("synthetic.private.close-error")
+      expect(notes.some((line) => line.includes("could not close its store"))).toBe(closeFails)
+    } finally {
+      release()
+      await server.stop()
+    }
+  },
+)
+
 it("does not restart a stopped server when its pending reconnect times out", async () => {
   const store = new SessionStore({ profile: "daily-reconnect-stop", keyring: memoryKeyring() })
   await store.writeToken("synthetic-token")
