@@ -153,6 +153,12 @@ export const UNTESTED: Untested[] = [
     reason:
       "cli-messaging src/cli/messenger/searches.test.ts drives saved-query lookup and deletion; consumer mounts the shared command",
   },
+  ...["", "--since-time", "--by", "--timezone"].map((option) => ({
+    command: "chats stats",
+    ...(option ? { option } : {}),
+    reason:
+      "shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts",
+  })),
   ...["", "--budget", "--min-score"].map((option) => ({
     command: "chats members audit",
     ...(option ? { option } : {}),

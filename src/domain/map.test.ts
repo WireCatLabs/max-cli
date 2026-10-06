@@ -93,6 +93,13 @@ describe("toMessage", () => {
     expect(message.timestamp).toBe("2026-09-19T00:00:00.000Z")
   })
 
+  it("keeps a channel post's views, and nothing where MAX sent none", () => {
+    expect(toMessage({ ...messageWire, type: "CHANNEL", stats: { views: 12 } }, "-7").providerMetadata).toEqual({
+      views: 12,
+    })
+    expect(toMessage(messageWire, "7268926")).not.toHaveProperty("providerMetadata")
+  })
+
   it("knows which messages are ours, and admits when it cannot tell", () => {
     expect(toMessage(messageWire, "7268926", { viewerId: "3260455" }).outgoing).toBe(true)
     expect(toMessage(messageWire, "7268926", { viewerId: "999" }).outgoing).toBe(false)
