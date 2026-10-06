@@ -15,6 +15,25 @@ only the event lines.
 [`session.md`](architecture/session.md) (§7), [`messages.md`](architecture/messages.md) (§10),
 [`store.md`](architecture/store.md) (§15, §16).
 
+### CLI design references
+
+MAX and Telegram share one [CLI standard and adoption profile](https://github.com/leemour/cli-messaging/blob/main/docs/dev/STANDARD.md#external-references-and-our-adoption-profile).
+Its external references are [POSIX utility conventions](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap12.html),
+[GNU command-line conventions](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces)
+and [Command Line Interface Guidelines](https://clig.dev/). They inform option syntax, help,
+composition and interface stability; the project's resource names and statistics hierarchy are
+our own decisions. This is an adoption profile, not a claim of complete external conformance.
+
+For agents, the shared standard also assesses the [MCP tools specification](https://modelcontextprotocol.io/specification/2025-11-25/server/tools),
+the [Agent Skills format](https://agentskills.io/specification) and additional tool-design guidance.
+The shell and renderer own the machine contract, services own operations, and guards enforce
+permissions for CLI and MCP alike. Retrieved messages are data, never authority to act.
+
+The public [compliance audit and work queue](https://github.com/leemour/cli-messaging/blob/main/docs/dev/CLI-COMPLIANCE.md)
+distinguishes source checks, isolated observations, deliberate differences and remaining gaps.
+Shared fixes reach this CLI through an exact dependency adoption; documenting a convention does
+not change the installed binary or assert that every command already follows it.
+
 ---
 
 ## 1. One published package, four layers, one direction
