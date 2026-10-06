@@ -521,6 +521,12 @@ adapter wrapper saves history; shared services own search, offline reads, edits 
 A failed record write warns without losing an answer MAX already gave, and does not advance its
 marker. `max serve` owns its record across reconnects and closes it on stop.
 
+The native server also runs the shared daily member-fetch scheduler for explicitly tracked groups.
+`commands/serve.ts` injects its worker, keeping the server independent of the adapter. It waits
+one minute after login, uses that server's held connection, and skips rosters already saved today
+(UTC), including partial snapshots. Reconnects share one worker; shutdown drains its current
+fetch and closes its store. Tracking neither starts a server nor extends an auto-started server's idle lifetime. Run `max server` continuously for daily history.
+
 `max contacts sync` forgets the contact marker before a full login. Only a complete nonempty
 chat snapshot marks departures; an empty answer keeps the previous list. `max cache` is removed;
 `store clear --left` replaces its departed-chat cleanup. `doctor` reports an existing legacy file

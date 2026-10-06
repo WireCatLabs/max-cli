@@ -20,13 +20,7 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "create"))
 
   command.addCommand(sharedSubcommand(shared, "members"))
-  const tracking = sharedSubcommand(shared, "tracking")
-  tracking.description("tracked groups and recorded member counts; MAX rosters are fetched by explicit commands")
-  sharedSubcommand(tracking, "add").description(
-    "track this group without fetching now; MAX requires explicit member fetches",
-  )
-  sharedSubcommand(tracking, "remove").description("stop tracking this group; the history already kept stays")
-  command.addCommand(tracking)
+  command.addCommand(sharedSubcommand(shared, "tracking"))
   command.addCommand(sharedSubcommand(shared, "admins"))
   command.addCommand(sharedSubcommand(shared, "update"))
   command.addCommand(sharedSubcommand(shared, "link"))

@@ -855,9 +855,28 @@ describe("changing a group", () => {
       ],
     })
     expect(max.sent).toHaveLength(before)
-    const unsupported = await runWith([profile, "chats", "members", "fetch", "Team", "--track"], environment)
-    expect(unsupported.code).toBe(2)
-    expect(max.sent).toHaveLength(before)
+    const tracked = await runWith([profile, "chats", "members", "fetch", "Team", "--track", "--json"], environment)
+    expect(tracked.code).toBe(0)
+    expect(JSON.parse(tracked.stdout)).toMatchObject({ tracked: true, complete: true })
+    expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(2)
+    const afterFetch = max.sent.length
+    const list = await runWith([profile, "chats", "tracking", "list", "--json"], environment)
+    expect(list.code).toBe(0)
+    expect(JSON.parse(list.stdout)).toMatchObject({
+      items: [{ chatId: String(GROUP.id), lastCount: { listed: 2, complete: true } }],
+    })
+    const show = await runWith([profile, "chats", "tracking", "show", "Team", "--json"], environment)
+    expect(show.code).toBe(0)
+    expect(JSON.parse(show.stdout)).toMatchObject({ chatId: String(GROUP.id), trackedAt: expect.any(String) })
+    for (const [verb, enabled] of [
+      ["remove", false],
+      ["add", true],
+    ] as const) {
+      const answer = await runWith([profile, "chats", "tracking", verb, "Team", "--json"], environment)
+      expect(answer.code).toBe(0)
+      expect(JSON.parse(answer.stdout)).toMatchObject({ chatId: String(GROUP.id), tracked: enabled })
+    }
+    expect(max.sent).toHaveLength(afterFetch)
   })
 
   it("shows the invite link, and says so when there is none to see", async () => {

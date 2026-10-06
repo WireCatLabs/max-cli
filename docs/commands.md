@@ -341,6 +341,7 @@ max chats members fetch <chat> [options]
 
 | Опция | Что делает |
 |---|---|
+| `--track` | also fetch it daily while serve runs; chats tracking lists and edits those chats. |
 | `--budget <pages>` | at most this many pages of 200 members, a pause between them (default: 10). |
 
 #### `max chats members add`
@@ -379,7 +380,7 @@ max chats members remove <chat> <person>
 
 ### `max chats tracking`
 
-tracked groups and recorded member counts; MAX rosters are fetched by explicit commands
+the chats whose member lists serve fetches daily into the local store — chats members fetch --track adds one
 
 #### `max chats tracking list`
 
@@ -403,7 +404,7 @@ max chats tracking show <chat>
 
 #### `max chats tracking add`
 
-track this group without fetching now; MAX requires explicit member fetches
+fetch this chat's member list daily while serve runs, from its next run
 
 ```sh
 max chats tracking add <chat>
@@ -415,7 +416,7 @@ max chats tracking add <chat>
 
 #### `max chats tracking remove`
 
-stop tracking this group; the history already kept stays
+stop fetching it daily; the history already kept stays
 
 ```sh
 max chats tracking remove <chat>

@@ -27,6 +27,7 @@ export type ServerEvent =
   | { event: "status"; connected: boolean; at: string; byHand?: boolean; pid?: number }
 
 export interface MaxServerOptions {
+  members?: (client: () => MaxClient | undefined) => { start(): void; stop(): Promise<void> }
   store: SessionStore
   timeoutMs?: number
   /** One line for a person, on stderr. */
@@ -121,12 +122,14 @@ export class MaxServer {
   #resume: ResumeFrom | undefined
   #handing: Promise<void> = Promise.resolve()
   readonly #replies: ReturnType<typeof serverReplies>
+  readonly #members: ReturnType<NonNullable<MaxServerOptions["members"]>> | undefined
   #finish: ((error?: Error) => void) | undefined
   /** Settles when the server stops — cleanly, or with the error that stopped it. */
   readonly done: Promise<void>
 
   constructor(options: MaxServerOptions) {
     this.#options = options
+    this.#members = options.members?.(() => (this.#stopped ? undefined : this.#client))
     this.#record = maxRecord({ account: () => options.store.readState().viewerId })
     this.#replies = serverReplies({
       profile: options.store.profile,
@@ -202,6 +205,7 @@ export class MaxServer {
     }
     try {
       this.#replies.stop()
+      await this.#members?.stop().catch(() => this.#options.note("daily member fetching could not close its store"))
       await this.#handing
       await this.#replies.settled()
       await this.#client?.close()
@@ -256,8 +260,13 @@ export class MaxServer {
     }
 
     const replaced = this.#client
+    if (this.#stopped) {
+      await client.close()
+      return
+    }
     mine = client
     this.#client = client
+    this.#members?.start()
     this.#markUp()
     this.#attempt = 0
     this.#lastRefresh = Date.now()
