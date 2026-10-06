@@ -11,6 +11,7 @@ import {
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
 import { type FetchLike, providerWaitMs, statusToCode } from "@leemour/cli-core/http"
 import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@leemour/cli-messaging/cli"
+import { guardedWrite, newOperationId } from "@leemour/cli-messaging/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
 import { VERSION } from "../version.js"
 import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"
@@ -128,7 +129,11 @@ export class BotTransport {
       const started = this.#now()
       this.#events({ event: "request", ...said })
       try {
-        const { answer, status, bytes } = await this.#once(operation, url, input.body, timeoutMs)
+        const send = () => this.#once(operation, url, input.body, timeoutMs)
+        // Permissions are checked by the caller; this also lets the command deadline see a write in flight.
+        const { answer, status, bytes } = await (reads
+          ? send()
+          : guardedWrite({ check: () => {}, record: () => {} }, { operationId: newOperationId(), chatId: null }, send))
         this.#events({ event: "response", ...said, status, bytes, durationMs: this.#now() - started, outcome: "ok" })
         return answer
       } catch (error) {
