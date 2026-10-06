@@ -61,11 +61,11 @@
 | список разрешённых получателей, если включён | `~/.local/share/max-cli/profiles/<профиль>.recipients.json` | `0600` |
 | правила модерации групп — после первого `chats rules set` | `~/.local/share/max-cli/profiles/<профиль>.moderation.json` | `0600` |
 | бот: чаты, которые он видел, журнал отправок, список получателей, отметка `watch` | `~/.local/share/max-cli/bots/…` | каталог `0700`, файлы `0600` |
-| общая локальная копия сообщений — личного аккаунта, бота и `tg`; с текстами и расшифровками голосовых | `~/.local/share/cli-messaging/messages.db` | каталог `0700`, файл `0600` |
+| общая локальная копия сообщений — личного аккаунта, бота и `tg`; с текстами, расшифровками голосовых, путями скачанных вложений и их извлечённым текстом | `~/.local/share/cli-messaging/messages.db` | каталог `0700`, файл `0600` |
 | сокет и журнал фонового сервера `max serve` | `~/.local/share/max-cli/profiles/<профиль>.sock`, `.serve.log` | `0600` |
 | прежняя локальная копия профиля; больше не открывается | `~/.cache/max-cli/<профиль>.db` и её `-wal`, `-shm` | каталог `0700`, файлы `0600` |
 | выгрузка переписки — **только `max store export --output`** | куда вы укажете | `0600` |
-| скачанные файлы из сообщений — **только `max messages download`** | текущий каталог или `--output` | `0600` |
+| скачанные файлы из сообщений — `max messages download` или `max attachments extract --download --output-dir` | текущий каталог или `--output` | `0600` |
 | отчёт о проблеме — **только `max doctor report create`** | текущий каталог или `--output` | `0600` |
 | модели распознавания речи — **только после `max models audio download`** | `~/.cache/cli-common/models/audio/…` | каталог `0700`, файлы `0600` |
 
@@ -181,6 +181,9 @@
 | серверы файлов MAX — адрес выдаёт сам MAX | `messages send --file`, `messages download` |
 | `https://web.max.ru` во временном профиле Chromium | `session start qr-chrome`, `session start sms`, `setup --method qr-chrome|sms` |
 | Hugging Face и GitHub — файлы модели распознавания речи | только `max models audio download`; голос туда не уходит — он распознаётся на этом компьютере |
+| Hugging Face — файлы текстовой модели | только `max models text download`; локальная модель не отправляет сообщения |
+| настроенный внешний сервис векторов | `conversations embed` отправляет текст бесед после согласия; `conversations search`, в том числе MCP, отправляет вопрос при выборе внешнего сервиса |
+| настроенный OpenAI-совместимый сервис или Anthropic | `conversations build --analyze --chat` отправляет ограниченные пачки после согласия для аккаунта, чата и сервиса |
 | `https://platform-api2.max.ru` — официальный Bot API, токен в заголовке `Authorization` | только команды `max bot` |
 | реестр npm — узнать номер последней версии | `max upgrade`; и раз в сутки, когда команду запускает человек в терминале. Выключается `updateCheck: false` |
 
