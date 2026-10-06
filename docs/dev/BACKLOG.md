@@ -25,9 +25,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **CLI-72** · 🚧 `feat/charts-png-mcp` · PNG chart export and MCP image responses,
-  reusing the replaceable SVG renderer and a separate encoder with a bundled font.
-
 - **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
   numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
   Starts in cli-messaging `src/charts/` and `src/cli/messenger/stats-command.ts`; plan the report

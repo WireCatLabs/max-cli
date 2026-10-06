@@ -111,6 +111,23 @@ describe("stats charts adoption", () => {
     const membership = await invoke("--chart-kind", "membership")
     expect(membership.code).toBe(2)
     expect(membership.stderr).toContain("unavailable")
-    expect((await invoke("--output", "chart.png")).code).toBe(2)
+    expect((await invoke("--output", "chart.jpg")).code).toBe(2)
+  })
+
+  it("exports a private PNG from the same offline data", async () => {
+    const output = join(tmpdir(), "synthetic-activity.png")
+    const result = await invoke("--since-time", "2026-10-01", "--timezone", "UTC", "--output", output)
+    expect(result.code).toBe(0)
+    const body = JSON.parse(result.stdout)
+    expect(body).toMatchObject({ chartFile: { path: output, format: "png", width: 800, height: 400 } })
+    expect(body.chart).toEqual(
+      JSON.parse((await invoke("--since-time", "2026-10-01", "--timezone", "UTC")).stdout).chart,
+    )
+    const png = readFileSync(output)
+    expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a")
+    expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([800, 400])
+    if (process.platform !== "win32") expect(statSync(output).mode & 0o777).toBe(0o600)
+    expect((await invoke("--output", output)).code).toBe(2)
+    expect(readFileSync(output)).toEqual(png)
   })
 })

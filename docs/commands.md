@@ -833,7 +833,7 @@ max contacts context <person> [options]
 
 ### `max contacts check`
 
-whether one person looks like a bot, a fake or a spammer: their profile, what they wrote in the store, and the public ban lists (Combot Anti-Spam (CAS), lols.bot), which are sent their id — a hint, never a verdict
+whether one person looks like a bot, a fake or a spammer: their profile and what they wrote in the store — a hint, never a verdict; the public ban lists cover Telegram only, so nothing is sent
 
 ```sh
 max contacts check <person> [options]
@@ -1429,7 +1429,7 @@ charts from the account's statistics
 
 ### `max stats charts`
 
-a chart's data from a chat's statistics, and optionally a dark SVG image
+a chart's data from a chat's statistics, and optionally a dark SVG or PNG image
 
 ```sh
 max stats charts <chat> [options]
@@ -1445,7 +1445,7 @@ max stats charts <chat> [options]
 | `--by <day\|week>` | one point per calendar day or week (weeks start on Monday). По умолчанию: `day`. |
 | `--since-time <time>` | ISO 8601, or 2h / 1d ago; 7 days ago if not given. |
 | `--timezone <zone>` | the IANA timezone for calendar days. |
-| `--output <file>` | write a dark SVG image to a new .svg file. |
+| `--output <file>` | write a dark image to a new .svg or .png file. |
 
 ## `max conversations`
 
@@ -2214,6 +2214,106 @@ max review [options]
 
 rules that answer messages for you, kept in a file of this profile
 
+### `max replies add`
+
+add a rule with every default written out, off until you edit and enable it
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies add <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | lower-case letters, digits and -; unique in this profile. |
+
+### `max replies on`
+
+enable one reply rule; its template must be ready
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies on <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | the rule's id. |
+
+### `max replies off`
+
+disable one reply rule
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies off <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | the rule's id. |
+
+### `max replies edit`
+
+change only the named fields of a reply rule; lists replace the whole list
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies edit <id> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | the rule's id. |
+
+| Опция | Что делает |
+|---|---|
+| `--do <actions>` | actions: reply, task, or both, comma-separated. |
+| `--kinds <kinds>` | chat kinds: dialog, group; comma-separated, empty for any. |
+| `--chats <ids>` | only these chat ids, comma-separated; empty for any. |
+| `--not-chats <ids>` | leave these chat ids out, comma-separated; empty clears. |
+| `--words <words>` | match any of these whole words, comma-separated; empty clears. |
+| `--question` | match only questions. |
+| `--no-question` | do not require a question. |
+| `--mentions-me` | require a mention of you or a reply to you. |
+| `--no-mentions-me` | do not require a mention of you or a reply to you. |
+| `--people <ids>` | only these sender ids, comma-separated; empty for any. |
+| `--not-people <ids>` | leave these sender ids out, comma-separated; empty clears. |
+| `--contacts-only` | match only contacts. |
+| `--no-contacts-only` | do not require a contact. |
+| `--template <text>` | the reply template. |
+| `--model <mode>` | template model mode: fill-only or may-reword; rewording is not yet available. |
+| `--as-reply` | send as a reply to the matched message. |
+| `--no-as-reply` | send without linking to the matched message. |
+| `--per-chat <limit>` | at most this many per chat, such as 1/12h. |
+| `--per-person <limit>` | at most this many per person, such as 1/1d. |
+| `--outside <hours>` | answer outside this 24-hour window, such as 09:00-19:00. |
+| `--days <days>` | days of the working window, such as mon-fri or sat,sun. |
+| `--timezone <zone>` | the IANA timezone for the working window. |
+| `--no-hours` | clear the working window. |
+
+### `max replies audience`
+
+show the profile's reply audience, or replace its named fields; testers still limit answers
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies audience [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--reply <mode>` | answer all or only listed senders and chats: all, listed. |
+| `--allow-people <ids>` | replace allowed sender ids, comma-separated; empty clears. |
+| `--allow-chats <ids>` | replace allowed chat ids, comma-separated; empty clears. |
+| `--deny-people <ids>` | replace denied sender ids, comma-separated; empty clears; deny wins. |
+| `--deny-chats <ids>` | replace denied chat ids, comma-separated; empty clears; deny wins. |
+
 ### `max replies test`
 
 what the rules would have answered in the stored messages, to whom and why — sends nothing, changes nothing, never connects
@@ -2392,7 +2492,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -2413,7 +2513,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 
 | Опция | Что делает |
 |---|---|

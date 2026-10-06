@@ -288,6 +288,28 @@ const legacyFor = (profile: string, values: Record<string, unknown>) => {
 }
 
 describe("the MCP server", () => {
+  it.each(["legacy", "modern"] as const)(
+    "offers stored chart PNGs over %s MCP without another MAX request",
+    async (era) => {
+      const { client, max } = await connect({}, { era })
+      await call(client, "max_messages_list", { chat: "111" })
+      const sent = max.sent.length
+      const result = await client.callTool({ name: "max_stats_charts", arguments: { chat: "111", format: "png" } })
+      expect(result.isError).not.toBe(true)
+      const content = result.content as { type: string; mimeType?: string; data?: string; text?: string }[]
+      expect(content[0]).toMatchObject({ type: "image", mimeType: "image/png" })
+      const png = Buffer.from(content[0]?.data ?? "", "base64")
+      expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a")
+      expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([800, 400])
+      expect(JSON.parse(content[1]?.text ?? "null")).toMatchObject({
+        chart: { version: 1, kind: "bar" },
+        image: { format: "png", width: 800, height: 400 },
+      })
+      expect((await call(client, "max_stats_charts", { chat: "111" })).body).toHaveProperty("chart")
+      expect(max.sent).toHaveLength(sent)
+    },
+  )
+
   it("offers the shared linking prompt without connecting to MAX", async () => {
     const { client, logins } = await connect({}, { token: false })
     expect((await client.listPrompts()).prompts.map(({ name }) => name)).toContain("link-conversations")
