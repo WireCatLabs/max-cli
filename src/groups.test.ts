@@ -782,7 +782,8 @@ describe("changing a group", () => {
     const { environment, max } = messenger()
     const args = name === "members" ? [name, "list", "Team"] : name === "inspect" ? [name, GROUP.link] : [name, "Team"]
     const result = await runWith([`gr-read-offline-${name}`, "chats", ...args, "--offline", "--json"], environment)
-    expect(JSON.parse(result.stderr).error.code).toBe("validation_error")
+    // Offline, a member list is read from the store, which this profile has never filled.
+    expect(JSON.parse(result.stderr).error.code).toBe(name === "members" ? "not_found" : "validation_error")
     expect(max.sent).toEqual([])
   })
 

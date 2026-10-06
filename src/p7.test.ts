@@ -1,8 +1,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { rememberAccount } from "@leemour/cli-messaging/cli"
 import { levelFor } from "@leemour/cli-messaging/sends"
+import { openStore } from "@leemour/cli-messaging/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { MAX_APP } from "./app.js"
 import { contextFor } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -205,4 +208,63 @@ it("refuses a readonly command child when the parent allows writes", async () =>
     5,
   )
   expect(max.sent).toEqual([])
+})
+
+describe("contacts context in named chats", () => {
+  it("reads the chat from MAX with --refresh and answers one person's messages, short unless -v", async () => {
+    const profile = "context-chats"
+    rememberAccount(MAX_APP, profile, "10000001", process.env)
+    const store = await openStore()
+    try {
+      await store.saveChats({ provider: "max", account: "10000001" }, [
+        { id: "111", title: "Synthetic", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
+      ])
+      await store.savePeople({ provider: "max", account: "10000001" }, [{ id: "20000002", name: "Synthetic Person" }])
+    } finally {
+      await store.close()
+    }
+    const max = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.LOGIN]: {
+          profile: { contact: { id: 10000001 } },
+          chats: [{ id: 111, type: "CHAT", title: "Synthetic" }],
+        },
+        [Opcode.CONTACT_INFO]: { contacts: [] },
+        [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
+        [Opcode.CHAT_HISTORY]: {
+          messages: [
+            { id: 116762160362694583n, time: 1789775000000, sender: 20000002, text: "synthetic first" },
+            { id: 116762160362694584n, time: 1789775060000, sender: 10000001, text: "synthetic reply" },
+          ],
+        },
+      },
+    })
+    const keyring = memoryKeyring()
+    const environment: RunOptions = {
+      store: (name) => {
+        const session = new SessionStore({ profile: name, keyring })
+        session.writeToken("synthetic-token")
+        session.writeState({ ...session.readState(), viewerId: "10000001" })
+        return session
+      },
+      connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 100 }),
+    }
+
+    const short = await cli(
+      [profile, "contacts", "context", "20000002", "--chat", "111", "--refresh", "--json"],
+      environment,
+    )
+    const detailed = await cli(
+      [profile, "contacts", "context", "20000002", "--chat", "111", "-v", "--json"],
+      environment,
+    )
+
+    expect(short.code, short.stderr).toBe(0)
+    expect(JSON.parse(short.stdout).chats[0].messages).toEqual([
+      { at: new Date(1789775000000).toISOString(), text: "synthetic first" },
+    ])
+    expect(detailed.code, detailed.stderr).toBe(0)
+    expect(JSON.parse(detailed.stdout).chats[0].messages[0]).toHaveProperty("locator")
+  })
 })
