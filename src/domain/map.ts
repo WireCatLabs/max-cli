@@ -81,7 +81,7 @@ export const toMessage = (raw: Payload, chatId: Id, lookup: NameLookup = {}): Me
     outgoing: lookup.viewerId === undefined || senderId === undefined ? null : senderId === lookup.viewerId,
     attachments: attachments(raw.attaches),
     ...linked(raw.link, lookup),
-    reactions: null,
+    reactions: historyReactions(raw.reactionInfo),
     ...scheduled(raw.delayedAttributes),
     ...counted(raw.stats),
   }
@@ -90,6 +90,12 @@ export const toMessage = (raw: Payload, chatId: Id, lookup: NameLookup = {}): Me
 const counted = (value: unknown): Pick<Message, "providerMetadata"> => {
   const views = asRecord(value)?.views
   return typeof views === "number" ? { providerMetadata: { views } } : {}
+}
+
+/** Only with `totalCount`: other chats' history sends `{}` whatever the reactions are (measured 2026-09-23). */
+const historyReactions = (value: unknown): Reactions | null => {
+  const info = asRecord(value)
+  return info?.totalCount === undefined ? null : toReactions(info)
 }
 
 const scheduled = (value: unknown): Pick<Message, "scheduledFor"> => {

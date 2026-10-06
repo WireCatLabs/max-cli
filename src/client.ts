@@ -2057,7 +2057,10 @@ export class MaxClient {
     return asArray(answer.messages).length > 0
   }
 
-  /** One request per page: history carries no reactions (measured 2026-09-23). */
+  /**
+   * One request per page, which also says which reaction is this account's. History carries the counts only in
+   * a channel (measured 2026-10-06); ~~history carries no reactions (measured 2026-09-23)~~ held for other chats.
+   */
   async #withReactions(chatId: Id, messages: Message[]): Promise<Message[]> {
     if (messages.length === 0) return messages
     try {
