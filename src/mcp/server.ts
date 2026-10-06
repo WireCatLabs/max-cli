@@ -1,8 +1,9 @@
 import { CliError } from "@leemour/cli-core"
 import {
+  type HttpConfirmation,
   type HttpOptions,
+  httpServerOptions,
   MCP_PATH,
-  OVER_HTTP,
   personalMcpConfirmer,
   serveOverHttp,
   warmEmbedders,
@@ -79,6 +80,9 @@ export const createMaxServer = (
       defaultLimit: context.settings.limit,
       history: context.settings.keepFailedRuns,
       profile: context.settings.profile,
+      permission: Object.entries(context.settings.permissions).flatMap(([key, level]) =>
+        context.settings.permissionSources[key] === "flag" ? [`${key}=${level}`] : [],
+      ),
       transcribeModel: context.settings.transcribeModel,
       permitted,
       toolGroups,
@@ -130,13 +134,13 @@ export const serveOverStdio = async (context: CommandContext, options: ServerOpt
 export const serveOverHttpUntilStopped = async (
   context: CommandContext,
   options: ServerOptions,
-  http: Omit<HttpOptions, "onCode" | "onError" | "appName">,
+  http: Omit<HttpOptions, "onCode" | "onError" | "appName"> & { confirmation?: HttpConfirmation },
   stopped: Promise<void> = new Promise<void>((resolve) => {
     process.once("SIGINT", resolve)
     process.once("SIGTERM", resolve)
   }),
 ): Promise<void> => {
-  const { session, build } = createMaxServer(context, { ...options, ...OVER_HTTP })
+  const { session, build } = createMaxServer(context, { ...options, ...httpServerOptions(http.confirmation) })
   const listening = await serveOverHttp(build, {
     ...http,
     appName: "max",

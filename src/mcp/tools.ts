@@ -51,6 +51,7 @@ interface Options {
   defaultLimit: number
   history?: boolean
   profile: string
+  permission?: string[]
   transcribeModel?: string
   permitted?: readonly Permission[]
   toolGroups?: readonly McpToolGroup[]
@@ -75,6 +76,7 @@ export const registerTools = (
     defaultLimit,
     history,
     profile,
+    permission,
     transcribeModel = DEFAULT_MODEL,
     warn = () => {},
     reach,
@@ -82,7 +84,7 @@ export const registerTools = (
     confirmed = personalMcpConfirmer(),
   }: Options,
 ): void => {
-  const settings = () => resolveSettings({ profile })
+  const settings = () => resolveSettings({ profile, permission })
   const adapters = new WeakMap<object, MaxClient>()
   const definitions = personalMcpTools(maxMessenger)
   const tracked = definitions.chats_tracking_list

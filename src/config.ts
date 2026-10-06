@@ -7,6 +7,7 @@ import {
   layerPermissions,
   PERMISSIONS,
   type Permission,
+  permissionOverrides,
 } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
@@ -156,6 +157,7 @@ export const ALL_SETTINGS: string[] = [
 
 /** Whatever the command line carried. Everything is optional: absent means "not given here". */
 export interface GlobalFlags {
+  permission?: string[]
   profile?: string
   json?: boolean
   jsonl?: boolean
@@ -364,12 +366,13 @@ export const resolveSettings = (
   const oldFrom = readOnly.value ? readOnly.from : allow.from
   const oldLevels = fromOldSettings(readOnly.value, allow.value, { bot: kind === "bot" })
   // The old settings sit in the layer they were written in, under that layer's own `permissions`.
-  const { levels: permissions, sources: permissionSources } = layerPermissions(
-    layers.flatMap(([from, layer]): [string, Record<string, Level> | undefined][] => [
+  const { levels: permissions, sources: permissionSources } = layerPermissions([
+    ["flag", permissionOverrides(flags.permission)],
+    ...layers.flatMap(([from, layer]): [string, Record<string, Level> | undefined][] => [
       [from, layer?.permissions],
       ...(from === oldFrom ? [[from, oldLevels] as [string, Record<string, Level>]] : []),
     ]),
-  )
+  ])
   const mcpTools = first<readonly McpToolGroup[]>(fromFile("mcpTools"), [])
   const readOtherBots = first<boolean | readonly string[]>(
     kind === "bot"
