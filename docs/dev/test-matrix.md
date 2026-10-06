@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**624 ✅ · 98 ⛔ · 0 ❌** — 244 commands, 478 options.
+**626 ✅ · 98 ⛔ · 0 ❌** — 245 commands, 479 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -101,6 +101,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--order` | ✅ |  |
 | `contacts list` | `--search` | ✅ |  |
 | `contacts show` |  | ✅ |  |
+| `contacts profile` |  | ✅ |  |
+| `contacts profile` | `--show-phone` | ✅ |  |
 | `contacts sync` |  | ✅ |  |
 | `contacts lookup` |  | ✅ |  |
 | `contacts add` |  | ✅ |  |

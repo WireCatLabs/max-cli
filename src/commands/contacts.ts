@@ -18,6 +18,7 @@ export const contactsCommand = (): Command => {
   const shared = sharedContactsCommand(maxMessenger)
   command.addCommand(sharedSubcommand(shared, "list"))
   command.addCommand(sharedSubcommand(shared, "show"))
+  command.addCommand(sharedSubcommand(shared, "profile"))
 
   /**
    * The repair tool of the contact store, and **not how contacts normally arrive**: every command

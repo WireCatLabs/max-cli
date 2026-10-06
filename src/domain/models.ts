@@ -31,6 +31,7 @@ export type {
   PersonCard,
   Pin,
   Profile,
+  ProfileFacts,
   Reactions,
   ReadMark,
 } from "@leemour/cli-messaging"

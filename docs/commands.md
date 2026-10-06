@@ -647,6 +647,22 @@ max contacts show <person>
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name. |
 
+### `max contacts profile`
+
+everything the messenger says about one person — handles, flags, last seen, when they registered — and how many of their messages the store holds in each chat you share, the first and the last
+
+```sh
+max contacts profile <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | their id, @username, or part of their name. |
+
+| Опция | Что делает |
+|---|---|
+| `--show-phone` | print the whole phone number. |
+
 ### `max contacts sync`
 
 forget where the last sync left off and take the whole list again
