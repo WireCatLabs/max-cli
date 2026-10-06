@@ -25,6 +25,11 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+- **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
+  numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
+  Starts in cli-messaging `src/charts/` and `src/cli/messenger/stats-command.ts`; plan the report
+  structure and command surface before implementation.
+
 
 - **CLI-58** · P2 · 🟡 `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
   third-party proxy. Done: Streamable HTTP on `127.0.0.1` behind the owner's tunnel, a one-owner OAuth login
