@@ -1385,6 +1385,18 @@ describe("auto-replies in max serve", () => {
     )
   })
 
+  it("keeps malformed reply rule text out of the server log", async () => {
+    const path = repliesPathFor(MAX_APP, "ar-invalid", process.env)
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, '{"private-template-marker": invalid}')
+    const { max, notes } = await serve("ar-invalid", withDialog())
+    arrive(max, TESTER, 116762160362694607n, 5)
+    await settle(100)
+    expect(replies(max)).toHaveLength(0)
+    expect(notes).toContain("a reply rule failed; check the replies file and send permissions")
+    expect(notes.join("\n")).not.toContain("private-template-marker")
+  })
+
   it("never answers anyone not named in testers", async () => {
     rules("ar-stranger", [TESTER])
     await allow("ar-stranger")
