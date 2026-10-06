@@ -174,6 +174,7 @@ claude mcp add max -- max mcp --confirm-send
 | `max_contacts_context` | `max contacts context` | что архив знает об одном человеке во всех связанных мессенджерах; права как у чтения сообщений |
 | `max_tags_list`, `max_tags_add`, `max_tags_remove` | `max tags …` | свои метки на чатах, людях и сообщениях; хранятся только на этой машине |
 | `max_searches_list`, `max_searches_history`, `max_searches_create`, `max_searches_delete`, `max_searches_clear` | `max searches …` | сохранённые запросы и история поиска; результаты не хранятся |
+| `max_tasks_list`, `max_tasks_add`, `max_tasks_close`, `max_tasks_stats` | `max tasks …` | что ждёт ответа владельца — вопросы без ответа, упоминания, просьбы, обещания; хранятся только на этой машине, каждая задача — со ссылкой на своё сообщение; `review` и `serve` их открывают и закрывают |
 | `max_messages_link` | `max messages link` | locator сообщения из архива без подключения и текста |
 | `max_messages_context` | `max messages show`, `context` | одно сообщение и соседние |
 | `max_messages_photo` | `max messages download` | фото из сообщения как картинка, до 512 КБ; файл, видео, голосовое или фото крупнее — отказ с командой, которая их сохранит. ссылку на фото этот инструмент не отдаёт |
