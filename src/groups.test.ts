@@ -1,6 +1,8 @@
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { rememberAccount } from "@leemour/cli-messaging/cli"
 import { RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
+import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -623,6 +625,32 @@ describe("changing a group", () => {
 
   describe("chats members list", () => {
     const member = (id: number) => ({ contact: { id, names: [{ name: `P${id}`, type: "FULL_NAME" }] }, presence: {} })
+
+    it("fetches the whole list into the store, tracks the chat, and shows the history it recorded", async () => {
+      const { environment } = messenger({
+        [Opcode.CHAT_MEMBERS]: () => ({ members: [member(1), member(2)] }),
+      })
+
+      rememberAccount(MAX_APP, "gr-history", "10000001", process.env)
+      const fetched = await runWith(
+        ["gr-history", "chats", "members", "fetch", "Team", "--track", "--budget", "1", "--json"],
+        environment,
+      )
+      const history = await runWith(
+        ["gr-history", "chats", "members", "history", "Team", "--since-time", "1d", "--json"],
+        environment,
+      )
+
+      expect(fetched.code, fetched.stderr).toBe(0)
+      expect(history.code, history.stderr).toBe(0)
+      expect(JSON.parse(fetched.stdout)).toMatchObject({ read: 2, complete: true, joined: ["1", "2"], tracked: true })
+      expect(JSON.parse(history.stdout).items.map((one: { event: string; id: string }) => [one.event, one.id])).toEqual(
+        [
+          ["joined", "1"],
+          ["joined", "2"],
+        ],
+      )
+    })
 
     it("reads every page by marker and lists each person once", async () => {
       const { environment, sent } = messenger({

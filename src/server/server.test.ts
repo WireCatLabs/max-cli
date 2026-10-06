@@ -3,6 +3,7 @@ import { createServer, type Server } from "node:net"
 import { dirname, join } from "node:path"
 import { type CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { thisMachine, unitScope } from "@leemour/cli-messaging/background"
+import { rememberAccount, repliesPathFor } from "@leemour/cli-messaging/cli"
 import { guardedWrite, RecipientList, SendJournal } from "@leemour/cli-messaging/sends"
 import { openStore } from "@leemour/cli-messaging/store"
 import { decode, ExtData } from "@msgpack/msgpack"
@@ -1300,4 +1301,139 @@ it("does not ask again on the server after the moderation layer approved the act
   } finally {
     await client.close()
   }
+})
+
+describe("auto-replies in max serve", () => {
+  const TESTER = 10000002
+  const STRANGER = 10000003
+  const DIALOG = 222
+
+  const withDialog = () =>
+    scripted({
+      [Opcode.LOGIN]: {
+        profile: { contact: { id: ME, names: [{ name: "Test Person", type: "FULL_NAME" }] } },
+        chats: [{ id: DIALOG, type: "DIALOG", lastEventTime: 1789776000000 }],
+        contacts: [
+          { id: TESTER, names: [{ name: "Tess Tester", type: "FULL_NAME" }] },
+          { id: STRANGER, names: [{ name: "Somebody Real", type: "FULL_NAME" }] },
+        ],
+      },
+    })
+
+  const rules = (profile: string, testers: number[]) => {
+    const path = repliesPathFor(MAX_APP, profile, process.env)
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(
+      path,
+      JSON.stringify({
+        testers: testers.map((id) => ({ id: String(id) })),
+        rules: [
+          {
+            id: "away",
+            on: true,
+            do: ["reply"],
+            where: { kinds: ["dialog"], chats: [], notChats: [] },
+            when: {
+              hours: null,
+              words: [],
+              question: false,
+              mentionsMe: false,
+              from: { people: [], notPeople: [], contactsOnly: false },
+            },
+            reply: { template: "Away, {firstName}.", model: "fill-only", asReply: true },
+            limits: { perChat: "1/1h", perPerson: "1/1h" },
+          },
+        ],
+      }),
+    )
+  }
+
+  const allow = async (profile: string, level = "allow") =>
+    expect(
+      await run([profile, "config", "set", "permissions.replies.send", level, "--json"], {
+        streams: captureStreams(),
+        tty: false,
+      }),
+    ).toBe(0)
+
+  const arrive = (
+    max: ReturnType<typeof scripted>,
+    sender: number,
+    id: bigint,
+    seq: number,
+    time = Date.now() + 1000,
+  ) => max.push(128, { chatId: DIALOG, message: { id, time, sender, text: "are you there" } }, seq)
+
+  const replies = (max: ReturnType<typeof scripted>) => max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)
+
+  it("answers a tester once, as a reply, and journals which rule sent it", async () => {
+    rules("ar-tester", [TESTER])
+    await allow("ar-tester")
+    const { store, max } = await serve("ar-tester", withDialog())
+
+    arrive(max, TESTER, 116762160362694601n, 5)
+    arrive(max, TESTER, 116762160362694602n, 6)
+    await settle(100)
+
+    expect(replies(max)).toHaveLength(1)
+    expect(replies(max)[0]?.payload).toMatchObject({
+      chatId: DIALOG,
+      message: { text: "Away, Tess.", link: { type: "REPLY" } },
+    })
+    expect(new SendJournal(sendsPathFor(store.profile)).entries()).toContainEqual(
+      expect.objectContaining({ origin: "rule:away", outcome: "sent", chatId: String(DIALOG) }),
+    )
+  })
+
+  it("never answers anyone not named in testers", async () => {
+    rules("ar-stranger", [TESTER])
+    await allow("ar-stranger")
+    const { max } = await serve("ar-stranger", withDialog())
+
+    arrive(max, STRANGER, 116762160362694603n, 5)
+    await settle(100)
+
+    expect(replies(max)).toHaveLength(0)
+  })
+
+  it("sends nothing while replies.send is not allow, or while paused", async () => {
+    rules("ar-deny", [TESTER])
+    const { max } = await serve("ar-deny", withDialog())
+    arrive(max, TESTER, 116762160362694604n, 5)
+    await settle(100)
+    expect(replies(max)).toHaveLength(0)
+
+    await allow("ar-deny")
+    expect(await run(["ar-deny", "replies", "pause", "--json"], { streams: captureStreams(), tty: false })).toBe(0)
+    arrive(max, TESTER, 116762160362694605n, 6)
+    await settle(100)
+    expect(replies(max)).toHaveLength(0)
+  })
+
+  it("`max replies` reads the rules, dry-runs them without connecting, and resumes after a pause", async () => {
+    rules("ar-commands", [TESTER])
+    rememberAccount(MAX_APP, "ar-commands", String(ME), process.env)
+    const json = async (...argv: string[]) => {
+      const streams = captureStreams()
+      const code = await run(["ar-commands", ...argv, "--json"], { streams, tty: false })
+      expect(code, `${argv.join(" ")}: ${streams.stderr.join("")}`).toBe(0)
+      return JSON.parse(streams.stdout.join(""))
+    }
+
+    expect(await json("replies", "status")).toMatchObject({ send: "deny", testers: 1, rules: [{ id: "away" }] })
+    expect(await json("replies", "test", "--since-time", "1d")).toMatchObject({ rules: [{ id: "away", would: [] }] })
+    expect(await json("replies", "pause")).toMatchObject({ paused: true })
+    expect(await json("replies", "resume")).toMatchObject({ paused: false })
+  })
+
+  it("never answers what arrived before it started", async () => {
+    rules("ar-old", [TESTER])
+    await allow("ar-old")
+    const { max } = await serve("ar-old", withDialog())
+
+    arrive(max, TESTER, 116762160362694606n, 5, Date.now() - 3_600_000)
+    await settle(100)
+
+    expect(replies(max)).toHaveLength(0)
+  })
 })
