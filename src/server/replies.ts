@@ -85,9 +85,7 @@ export const serverReplies = ({ profile, env = process.env, since, owner, client
     arrived: (hit: MessageHit) => {
       if (hit.outgoing !== false) return
       queue = queue.then(() =>
-        handle(hit).catch((error) =>
-          note(`a reply rule failed: ${error instanceof Error ? error.message : String(error)}`),
-        ),
+        handle(hit).catch(() => note("a reply rule failed; check the replies file and send permissions")),
       )
     },
     settled: () => queue,
