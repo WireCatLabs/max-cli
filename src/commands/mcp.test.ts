@@ -198,6 +198,16 @@ describe("max mcp --http", () => {
     expect(readFileSync(file, "utf8")).toBe(saved)
   })
 
+  it("retains startup permissions when generating the local client configuration", async () => {
+    const { code, stdout } = await cli(["mcp", "config", "--permission", "messages.send=allow", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).mcpServers.max.args).toEqual(
+      expect.arrayContaining(["--permission", "messages.send=allow"]),
+    )
+    expect(serveOverStdio).not.toHaveBeenCalled()
+    expect(serveOverHttpUntilStopped).not.toHaveBeenCalled()
+  })
+
   it.each([
     ["--http-confirmation", "permissions"],
     ["--http", "--http-confirmation", "automatic"],

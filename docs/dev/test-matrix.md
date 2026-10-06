@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**666 ✅ · 102 ⛔ · 0 ❌** — 256 commands, 512 options.
+**669 ✅ · 104 ⛔ · 0 ❌** — 256 commands, 517 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -505,6 +505,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `upgrade` | `--check` | ✅ |  |
 | `complete` |  | ✅ |  |
 | `mcp` |  | ✅ |  |
+| `mcp` | `--permission` | ✅ |  |
 | `mcp` | `--allow-dangerous` | ✅ |  |
 | `mcp` | `--allow-send` | ✅ |  |
 | `mcp` | `--confirm-send` | ✅ |  |
@@ -512,10 +513,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp` | `--allow-delete` | ✅ |  |
 | `mcp` | `--allow-moderate` | ✅ |  |
 | `mcp` | `--http` | ✅ |  |
+| `mcp` | `--http-confirmation` | ✅ |  |
 | `mcp` | `--port` | ✅ |  |
 | `mcp` | `--public-url` | ✅ |  |
 | `mcp` | `--revoke` | ✅ |  |
 | `mcp config` |  | ✅ |  |
+| `mcp config` | `--permission` | ✅ |  |
 | `mcp config` | `--allow-dangerous` | ✅ |  |
 | `mcp config` | `--allow-send` | ✅ |  |
 | `mcp config` | `--confirm-send` | ✅ |  |
@@ -524,6 +527,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp config` | `--allow-moderate` | ✅ |  |
 | `mcp setup` |  | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--permission` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-dangerous` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--confirm-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
@@ -531,6 +535,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp setup` | `--allow-delete` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-moderate` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--permission` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--allow-dangerous` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--allow-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--confirm-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
