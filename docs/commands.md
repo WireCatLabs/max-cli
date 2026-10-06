@@ -2107,6 +2107,50 @@ max review [options]
 | `--mark-read` | also mark each chat shown read, up to the newest message shown; the other side sees it. |
 | `--no-mark-read` | do not, whatever the catchUpMarksRead setting says. |
 
+## `max replies`
+
+rules that answer messages for you, kept in a file of this profile
+
+### `max replies test`
+
+what the rules would have answered in the stored messages, to whom and why — sends nothing, changes nothing, never connects
+
+```sh
+max replies test [rule] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `rule` | необязательный | only this rule, by its id; every rule in file order if not given. |
+
+| Опция | Что делает |
+|---|---|
+| `--since-time <time>` | from this ISO 8601 time, or 2h / 1d ago; 7d ago if not given. |
+
+### `max replies pause`
+
+stop every reply rule of this profile at once, a running serve too; resume undoes it
+
+```sh
+max replies pause
+```
+
+### `max replies resume`
+
+let the reply rules answer again after pause
+
+```sh
+max replies resume
+```
+
+### `max replies status`
+
+whether the rules may send, which are on, and who they may answer
+
+```sh
+max replies status
+```
+
 ## `max serve`
 
 stay connected to MAX and stream new messages to `max watch`, until Ctrl-C

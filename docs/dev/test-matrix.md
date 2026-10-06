@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**614 ✅ · 103 ⛔ · 0 ❌** — 240 commands, 477 options.
+**624 ✅ · 98 ⛔ · 0 ❌** — 244 commands, 478 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -57,11 +57,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members audit` | `--budget` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members audit` | `--min-score` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members audit` | `--deep` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
-| `chats members history` |  | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
-| `chats members history` | `--since-time` | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
-| `chats members fetch` |  | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
-| `chats members fetch` | `--track` | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
-| `chats members fetch` | `--budget` | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
+| `chats members history` |  | ✅ |  |
+| `chats members history` | `--since-time` | ✅ |  |
+| `chats members fetch` |  | ✅ |  |
+| `chats members fetch` | `--track` | ✅ |  |
+| `chats members fetch` | `--budget` | ✅ |  |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
@@ -409,6 +409,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `review` | `--new` | ✅ |  |
 | `review` | `--mark-read` | ✅ |  |
 | `review` | `--no-mark-read` | ✅ |  |
+| `replies test` |  | ✅ |  |
+| `replies test` | `--since-time` | ✅ |  |
+| `replies pause` |  | ✅ |  |
+| `replies resume` |  | ✅ |  |
+| `replies status` |  | ✅ |  |
 | `serve` |  | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
