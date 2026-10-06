@@ -110,6 +110,24 @@ max chats rules set "Поход" consent.delete ask        # но перед у�
 `max_chats_events`, `max_chats_members`, `max_chats_rules` и `max_chats_check`
 ([mcp.md](mcp.md)).
 
+## Что ждёт вашего ответа
+
+`review` и `serve` ведут в локальной копии список задач. Вопрос, на который никто не ответил, и
+сообщение, где вас упомянули по имени, открывают задачу; ваш ответ её закрывает. Задача ссылается на
+сообщение и не копирует его текст.
+
+```sh
+max tasks list --state open                               # что ждёт ответа, старые сверху
+max tasks list --chat "Поход" --type question,mention
+max tasks add msg:max/<вы>/<чат>/<сообщение> --type promise   # то, чего правила не видят
+max tasks close <задача> --as dismissed --reason no-reply-needed
+max tasks stats                                           # открытые по чатам, самая старая, медиана до закрытия
+```
+
+Закрытая задача остаётся закрытой, отклонённая не возвращается. Задачу закрывает только ваш ответ —
+ответ админа пока нет, — а упоминание через `@ник` не замечается. Агенту то же самое дают
+инструменты MCP: `max_tasks_list`, `max_tasks_add`, `max_tasks_close`, `max_tasks_stats` ([mcp.md](mcp.md)).
+
 ## Правила
 
 Правила хранятся на вашем компьютере, у каждой группы свои. Первое `set` записывает все правила

@@ -201,6 +201,8 @@ max inbox --json                               # непрочитанное во
 max inbox --new --json                         # что пришло с прошлой проверки, один раз
 max review --since-time 2026-09-23T09:00 --json    # всё, свои тоже, для обзора «кто кому должен»
 max review --chat -1000 --unanswered 4h --json # вопросы в группе, на которые 4 часа не ответили ни владелец, ни админы
+max tasks list --state open --json              # что ждёт ответа владельца; review и serve открывают и закрывают задачи
+max tasks close <задача> --as dismissed --reason no-reply-needed --json   # только когда владелец так решил
 max watch --jsonl                              # новые сообщения по мере прихода; `max serve` запустится сам
 max watch --events --jsonl                     # плюс правки, удаления, реакции; в каждой строке "event"
 max server status --json                       # работает ли фоновый сервер, какой версии, подключён ли

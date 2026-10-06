@@ -1895,6 +1895,72 @@ empty the history; saved searches stay
 max searches clear
 ```
 
+## `max tasks`
+
+what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; review and serve add them
+
+### `max tasks list`
+
+tasks, oldest first, with the message each points at
+
+```sh
+max tasks list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--state <state>` | only tasks in this state: open, done or dismissed. |
+| `--chat <chat>` | only this chat's tasks; a chat: its id, or part of its title. |
+| `--type <names>` | only these types, comma-separated: question, request, mention, promise. |
+| `--before-time <time>` | only tasks opened before this ISO 8601 time, or 2h / 1d ago. |
+| `--limit <n>` | how many. |
+
+### `max tasks add`
+
+add a task for a message the rules cannot see — a promise, a request
+
+```sh
+max tasks add <message> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `message` | обязательный | a message locator, msg:<provider>/<account>/<chat>/<message>, as review --json shows. |
+
+| Опция | Что делает |
+|---|---|
+| `--type <name>` | the task's type: question, request, mention or promise. |
+
+### `max tasks close`
+
+close a task: done, or dismissed when it needs no answer; a closed task stays closed
+
+```sh
+max tasks close <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--as <state>` | how it is closed: done, or dismissed — it needs no answer. |
+| `--reason <text>` | why, kept with the task — no-reply-needed, for example. |
+
+### `max tasks stats`
+
+per chat: how many tasks are open, the oldest open one, the median time to close
+
+```sh
+max tasks stats [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--type <name>` | only this type: question, request, mention or promise. |
+
 ## `max flood`
 
 the waits MAX asked this profile to keep, and a hold on its writes
