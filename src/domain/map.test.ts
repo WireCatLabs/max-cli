@@ -93,6 +93,15 @@ describe("toMessage", () => {
     expect(message.timestamp).toBe("2026-09-19T00:00:00.000Z")
   })
 
+  it("reads a channel post's reaction counts from history, and leaves them unknown where history sends an empty object", () => {
+    const post = {
+      ...messageWire,
+      reactionInfo: { counters: [{ reaction: "👍", count: 3 }], totalCount: 3 },
+    }
+    expect(toMessage(post, "-7").reactions).toEqual({ counts: [{ reaction: "👍", count: 3 }], mine: null, total: 3 })
+    expect(toMessage(messageWire, "7268926").reactions).toBeNull()
+  })
+
   it("keeps a channel post's views, and nothing where MAX sent none", () => {
     expect(toMessage({ ...messageWire, type: "CHANNEL", stats: { views: 12 } }, "-7").providerMetadata).toEqual({
       views: 12,

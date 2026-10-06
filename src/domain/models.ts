@@ -127,8 +127,9 @@ export interface Message {
   replyTo: QuotedMessage | null
   forwardedFrom: QuotedMessage | null
   /**
-   * `null` when nobody asked — `--offline`, or the request failed. History does not carry
-   * reactions; they come from a request of their own, and the cache does not keep them.
+   * `null` when nobody asked — `--offline`, or the request failed. ~~History does not carry
+   * reactions~~ **Correction 2026-10-06:** a channel's history carries `reactionInfo` with counts (measured
+   * with `pnpm probe:channel-posts`); elsewhere it is `{}` and they come from a request of their own.
    */
   reactions: Reactions | null
   /** ISO 8601 — when MAX will send it. Present only on a message still waiting in the queue. */
