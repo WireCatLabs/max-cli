@@ -188,24 +188,6 @@ max chats events <chat> [options]
 | `--since-time <time>` | ISO 8601, or 2h / 1d ago; 7 days ago if not given. |
 | `--type <names>` | only these, comma-separated: join, leave, add, remove, create, title, pin. |
 
-### `max chats stats`
-
-a group's or channel's numbers for a period: messages, active members, replies, reactions, questions answered, joins and leaves — counted from the local store; joins and leaves are asked of the messenger
-
-```sh
-max chats stats <chat> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный | a chat: its id, or part of its title. |
-
-| Опция | Что делает |
-|---|---|
-| `--since-time <time>` | ISO 8601, or 2h / 1d ago; 7 days ago if not given. |
-| `--by <day\|week>` | also one row per calendar day or week (weeks start on Monday). |
-| `--timezone <zone>` | the IANA timezone for calendar days. |
-
 ### `max chats inspect`
 
 what an invite or public link leads to, without joining it
@@ -981,31 +963,6 @@ max messages links <chat> <message>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the message id. |
 
-### `max messages stats`
-
-how many stored messages match, by chat, sender, day or hour — the local store only; optionally fetches new messages with --sync-first
-
-```sh
-max messages stats [query] [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `query` | необязательный | a strict Lucene query, as for messages search; none counts every stored message; with --saved, more words AND-ed to it. |
-
-| Опция | Что делает |
-|---|---|
-| `--sync-first` | first fetch new messages within the chat, time and message bounds. |
-| `--max-chats <n>` | refresh at most this many chats (default: 5). |
-| `--sync-time <duration>` | stop fetching after this long (default: 30s). |
-| `--max-messages <n>` | fetch at most this many messages total (default: 500). |
-| `--by <chat\|sender\|day\|hour>` | what to count by (default: chat). |
-| `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
-| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
-| `--limit <n>` | how many rows. |
-| `--timezone <zone>` | the IANA timezone for calendar days and hours. |
-| `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
-
 ### `max messages link`
 
 a message permalink when supported, and its account-scoped locator
@@ -1425,7 +1382,75 @@ max store copies delete <name>
 
 ## `max stats`
 
-charts from the account's statistics
+statistics about messages, chats and their authors
+
+### `max stats messages`
+
+message statistics from the local store
+
+#### `max stats messages show`
+
+how many stored messages match, by chat, sender, day or hour — the local store only; optionally fetches new messages with --sync-first
+
+```sh
+max stats messages show [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | a strict Lucene query, as for messages search; none counts every stored message; with --saved, more words AND-ed to it. |
+
+| Опция | Что делает |
+|---|---|
+| `--sync-first` | first fetch new messages within the chat, time and message bounds. |
+| `--max-chats <n>` | refresh at most this many chats (default: 5). |
+| `--sync-time <duration>` | stop fetching after this long (default: 30s). |
+| `--max-messages <n>` | fetch at most this many messages total (default: 500). |
+| `--by <chat\|sender\|day\|hour>` | what to count by (default: chat). |
+| `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
+| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
+| `--limit <n>` | how many rows. |
+| `--timezone <zone>` | the IANA timezone for calendar days and hours. |
+| `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
+
+### `max stats chats`
+
+statistics about one chat
+
+#### `max stats chats show`
+
+a group's or channel's numbers for a period: messages, active members, replies, reactions, questions answered, joins and leaves — counted from the local store; joins and leaves are asked of the messenger
+
+```sh
+max stats chats show <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--since-time <time>` | ISO 8601, or 2h / 1d ago; 7 days ago if not given. |
+| `--by <day\|week>` | also one row per calendar day or week (weeks start on Monday). |
+| `--timezone <zone>` | the IANA timezone for calendar days. |
+
+### `max stats tasks`
+
+task statistics
+
+#### `max stats tasks show`
+
+per chat: how many tasks are open, the oldest open one, the median time to close
+
+```sh
+max stats tasks show [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--type <name>` | only this type: question, request, mention or promise. |
 
 ### `max stats charts`
 
@@ -1815,7 +1840,7 @@ max tags list [options]
 
 ## `max searches`
 
-saved searches and the history of messages search and messages stats, kept in the local store; --saved runs one
+saved searches and the history of messages search and stats messages show, kept in the local store; --saved runs one
 
 ### `max searches create`
 
@@ -1840,7 +1865,7 @@ max searches create <name> [query] [options]
 | `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
-| `--by <chat\|sender\|day\|hour>` | what messages stats --saved counts by. |
+| `--by <chat\|sender\|day\|hour>` | what stats messages show --saved counts by. |
 | `--replace` | overwrite a saved search of the same name. |
 
 ### `max searches show`
@@ -2352,7 +2377,7 @@ max replies edit <id> [options]
 | `--contacts-only` | match only contacts. |
 | `--no-contacts-only` | do not require a contact. |
 | `--template <text>` | the reply template. |
-| `--model <mode>` | template model mode: fill-only or may-reword; rewording is not yet available. |
+| `--model <mode>` | legacy template mode: fill-only or may-reword; use ai blocks instead. |
 | `--as-reply` | send as a reply to the matched message. |
 | `--no-as-reply` | send without linking to the matched message. |
 | `--per-chat <limit>` | at most this many per chat, such as 1/12h. |
@@ -2380,6 +2405,66 @@ max replies audience [options]
 | `--deny-people <ids>` | replace denied sender ids, comma-separated; empty clears; deny wins. |
 | `--deny-chats <ids>` | replace denied chat ids, comma-separated; empty clears; deny wins. |
 
+### `max replies consents`
+
+consent for reply models once per profile and endpoint, with chat opt-outs
+
+#### `max replies consents show`
+
+show the reply model consent and chat opt-outs; never calls a model
+
+```sh
+max replies consents show
+```
+
+#### `max replies consents grant`
+
+allow incoming message data to go to the configured reply model for this profile; chat opt-outs remain
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies consents grant
+```
+
+#### `max replies consents revoke`
+
+revoke the profile's reply model consent immediately; chat opt-outs remain
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies consents revoke
+```
+
+#### `max replies consents deny`
+
+keep this chat's incoming data away from the reply model
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies consents deny <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | the native chat id, used as written; never resolved over the network. |
+
+#### `max replies consents allow`
+
+remove this chat's model opt-out; does not grant profile consent
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max replies consents allow <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | the native chat id, used as written; never resolved over the network. |
+
 ### `max replies test`
 
 what the rules would have answered in the stored messages, to whom and why — sends nothing, changes nothing, never connects
@@ -2395,6 +2480,7 @@ max replies test [rule] [options]
 | Опция | Что делает |
 |---|---|
 | `--since-time <time>` | from this ISO 8601 time, or 2h / 1d ago; 7d ago if not given. |
+| `--ai` | call the configured reply model with stored message data; requires reply consent, otherwise uses fallback. |
 
 ### `max replies pause`
 

@@ -248,6 +248,8 @@ export type Source =
   | `MAX_${string}`
   | `config file: ${string}`
   | "default"
+  | "resolved per purpose"
+  | `config defaults: ${string}`
 export type SourcedSetting =
   | keyof AISettings
   | "profile"
@@ -627,7 +629,8 @@ export const changeSetting = (
   { profile, kind, setting, value }: SettingScope & { setting: string; value: string | undefined },
 ): unknown => {
   const permission = setting.startsWith("permissions.") ? setting.slice("permissions.".length) : undefined
-  if (!ALL_SETTINGS.includes(setting) && permission === undefined) {
+  const modelField = /^models\.([a-z][a-z0-9-]*)\.(provider|model|baseUrl)$/.exec(setting)
+  if (!ALL_SETTINGS.includes(setting) && permission === undefined && !modelField) {
     throw new CliError("validation_error", `no setting called "${setting}" — one of: ${ALL_SETTINGS.join(", ")}`)
   }
   const config = readConfig(path)
@@ -658,7 +661,18 @@ export const changeSetting = (
   const section = kind === undefined ? config : { ...config[kind] }
   const table = (profile === undefined ? section.defaults : section.profiles?.[profile]) as Record<string, unknown>
   const scope = { ...table }
-  if (permission !== undefined) {
+  if (modelField) {
+    const purpose = modelField[1] as string
+    const field = modelField[2] as string
+    const models = { ...(scope.models as Record<string, Record<string, unknown>> | undefined) }
+    const target = { ...models[purpose] }
+    if (value === undefined) delete target[field]
+    else target[field] = parseValue(value)
+    if (Object.keys(target).length) models[purpose] = target
+    else delete models[purpose]
+    if (Object.keys(models).length) scope.models = models
+    else delete scope.models
+  } else if (permission !== undefined) {
     const levels = { ...(scope.permissions as Record<string, Level> | undefined) }
     if (value === undefined) delete levels[permission]
     else levels[permission] = value.trim() as Level
@@ -698,6 +712,12 @@ export const changeSetting = (
     )
   }
   saveConfigFile(path, checked.output)
+  if (modelField)
+    return (
+      (scope.models as Record<string, Record<string, unknown>> | undefined)?.[modelField[1] as string]?.[
+        modelField[2] as string
+      ] ?? null
+    )
   return permission === undefined
     ? (scope[setting] ?? null)
     : ((scope.permissions as Record<string, Level> | undefined)?.[permission] ?? null)

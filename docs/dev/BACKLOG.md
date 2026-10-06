@@ -25,10 +25,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **CLI-73** · P2 · 🚧 `feat/replies-models` · Adopt shared reply editors, purpose model settings
-  and Liquid templates; connect MAX's native reply renderer and task opener. Starts in
-  `src/server/replies.ts` and `src/config.ts`; approved replies/models handoff, consumer step.
-
 - **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
   numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
   Starts in cli-messaging `src/charts/` and `src/cli/messenger/stats-command.ts`; plan the report

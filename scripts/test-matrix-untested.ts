@@ -10,6 +10,10 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  ...["stats", "stats messages", "stats chats"].map((command) => ({
+    command,
+    reason: "A command group with no action; its show command is exercised through the CLI",
+  })),
   ...["list", "show", "add", "remove"].map((verb) => ({
     command: `chats tracking ${verb}`,
     reason:
@@ -50,7 +54,7 @@ export const UNTESTED: Untested[] = [
       "cli-messaging src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing",
   },
   {
-    command: "messages stats",
+    command: "stats messages show",
     option: "--saved",
     reason:
       "cli-messaging src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters",
@@ -181,7 +185,7 @@ export const UNTESTED: Untested[] = [
       "cli-messaging src/cli/messenger/searches.test.ts drives saved-query lookup and deletion; consumer mounts the shared command",
   },
   ...["", "--since-time", "--by", "--timezone"].map((option) => ({
-    command: "chats stats",
+    command: "stats chats show",
     ...(option ? { option } : {}),
     reason:
       "shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts",

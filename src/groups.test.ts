@@ -856,7 +856,7 @@ describe("changing a group", () => {
     })
     expect(max.sent).toHaveLength(before)
     const unsupported = await runWith([profile, "chats", "members", "fetch", "Team", "--track"], environment)
-    expect(unsupported.code).toBe(1)
+    expect(unsupported.code).toBe(2)
     expect(max.sent).toHaveLength(before)
   })
 

@@ -358,15 +358,15 @@ max messages send 42 "текст"
 
 ### Сколько сообщений совпало
 
-`max messages stats` считает сообщения из локального архива, не подключаясь к MAX.
+`max stats messages show` считает сообщения из локального архива, не подключаясь к MAX.
 Без запроса считает все сохранённые сообщения текущей учётной записи; с запросом — совпадения
 строгого Lucene, как `messages search`. Каждое сообщение считается один раз.
 
 ```sh
-max messages stats "договор" --by chat --json
-max messages stats --by sender --chat "Работа" --limit 10 --json
-max messages stats --by day --timezone Europe/Madrid --json
-max messages stats --by hour --timezone UTC --jsonl
+max stats messages show "договор" --by chat --json
+max stats messages show --by sender --chat "Работа" --limit 10 --json
+max stats messages show --by day --timezone Europe/Madrid --json
+max stats messages show --by hour --timezone UTC --jsonl
 ```
 
 `--by` выбирает чат, отправителя, календарный день или час. `--limit` ограничивает строки,
