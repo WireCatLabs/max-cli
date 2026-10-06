@@ -10,7 +10,7 @@ import { commandWords, liftProfile } from "./profile.js"
 import { createProgram, run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
-import { mockMax, pagedHistory } from "./testing/mock-max.js"
+import { type MockMaxOptions, mockMax, pagedHistory } from "./testing/mock-max.js"
 
 /** A MAX that answers a login and one history read, and a keyring that holds a token or not. */
 const scriptedMax = ({ token = true } = {}) => {
@@ -50,7 +50,7 @@ const scriptedMax = ({ token = true } = {}) => {
  * A login that carries a `time`, so the store takes its memberships, and a group and a dialog to
  * look into. Each test names its own profile: they share one sandboxed cache directory.
  */
-const acquaintedMax = () => {
+const acquaintedMax = (extra: MockMaxOptions["answers"] = {}) => {
   const max = mockMax({
     answers: {
       [Opcode.SESSION_INIT]: {},
@@ -87,6 +87,7 @@ const acquaintedMax = () => {
           { id: 116762160362694585n, time: 1781649175458, sender: 10000002, text: "latest", attaches: [] },
         ],
       },
+      ...extra,
     },
   })
   const keyring = memoryKeyring()
@@ -761,6 +762,47 @@ describe("the program", () => {
       const missing = await runWith(["t-show", "chats", "show", "999", "--json"], environment)
       expect(JSON.parse(missing.stderr).error.code).toBe("not_found")
       expect(missing.stdout).toBe("")
+    })
+
+    it("`contacts profile` adds when MAX says they registered, their photo, and their stored activity per chat", async () => {
+      const { max, environment } = acquaintedMax({
+        [Opcode.CONTACT_INFO]: {
+          contacts: [
+            {
+              id: 10000002,
+              names: [{ name: "Someone Else", type: "FULL_NAME" }],
+              link: "someone",
+              registrationTime: 1600000000000,
+              photoId: 77,
+              phone: "0123",
+            },
+            { id: 10000003, names: [{ name: "Another Person", type: "FULL_NAME" }] },
+          ],
+        },
+      })
+      const shown = await runWith(["t-profile", "contacts", "profile", "@someone", "--json"], environment)
+
+      expect(max.unexpected).toEqual([])
+      expect(shown.code).toBe(0)
+      const profile = JSON.parse(shown.stdout)
+      expect(profile).toMatchObject({
+        id: "10000002",
+        usernames: ["someone"],
+        registered: { at: "2020-09-13T12:26:40.000Z", source: "max", precision: "day" },
+        hasPhoto: true,
+        flags: {},
+      })
+      expect(profile.chats.map((one: { id: string; kind: string }) => [one.id, one.kind])).toEqual([
+        ["111", "group"],
+        ["222", "dialog"],
+      ])
+      expect(profile.chats[0]).toHaveProperty("theirMessages")
+      expect(profile.phone).toBe("***0123")
+      const whole = await runWith(
+        ["t-profile", "contacts", "profile", "@someone", "--show-phone", "--json"],
+        environment,
+      )
+      expect(JSON.parse(whole.stdout).phone).toBe("0123")
     })
 
     it("`contacts show` finds a person by @username, with every chat shared, and refuses an ambiguous name", async () => {

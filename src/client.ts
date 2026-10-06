@@ -23,6 +23,7 @@ import {
   toMessage,
   toPoll,
   toProfile,
+  toProfileFacts,
   toReactions,
   toSession,
 } from "./domain/map.js"
@@ -51,6 +52,7 @@ import type {
   Poll,
   PollMessage,
   Profile,
+  ProfileFacts,
   QuotedMessage,
   Reactions,
   ReadMark,
@@ -737,6 +739,18 @@ export class MaxClient {
         lastMessageAt,
       }))
       return { ...person, chats }
+    },
+
+    /**
+     * What MAX says about one person — one `CONTACT_INFO` — and the chats shared with them, from
+     * the store as `show` reads them.
+     */
+    profile: async (reference: string): Promise<ProfileFacts> => {
+      const card = await this.contacts.show(reference)
+      const answer = await this.#wire.contacts.info({ contactIds: [card.id] })
+      const raw = asArray(answer.contacts).find((one) => asId(one.id) === card.id)
+      if (!raw) throw new CliError("not_found", `MAX did not describe person ${card.id}`)
+      return toProfileFacts(raw, card.chats)
     },
 
     /**

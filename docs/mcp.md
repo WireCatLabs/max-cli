@@ -151,6 +151,7 @@ claude mcp add max -- max mcp --confirm-send
 | `max_chats_rules` | `max chats rules show` | правила модерации группы; менять их может только владелец, командой |
 | `max_contacts_list` | `max contacts list` | люди, с кем есть личная переписка |
 | `max_contacts_show` | `max contacts show` | один человек и общие чаты |
+| `max_contacts_profile` | `max contacts profile` | что MAX сообщает о человеке и сколько его сообщений в каждом общем чате; телефон — только последние четыре цифры |
 | `max_account_sessions` | `max account sessions list` | список устройств без секретов входа |
 | `max_contacts_lookup` | `max contacts lookup` | поиск по телефону без добавления контакта; телефон не возвращается |
 | `max_chats_members_list`, `max_chats_members_show` | `max chats members …` | участники с пагинацией и один участник |

@@ -177,6 +177,7 @@ export const maxAdapter = (
 
     chat: (reference) => client.chats.show(reference),
     contact: (reference) => client.contacts.show(reference),
+    profile: (reference) => client.contacts.profile(reference),
     lookup: async (phone) => toMember(await client.contacts.lookup(phone)),
 
     members: async (chat, window) => {

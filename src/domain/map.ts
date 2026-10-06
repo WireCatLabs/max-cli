@@ -13,6 +13,7 @@ import type {
   Message,
   Poll,
   Profile,
+  ProfileFacts,
   QuotedMessage,
   Reactions,
 } from "./models.js"
@@ -149,6 +150,26 @@ export const toGroupMember = (raw: Payload): GroupMember => {
     username,
     registeredAt: timestamp(inMilliseconds(contact.registrationTime)),
     lastSeenAt: timestamp(inMilliseconds(asRecord(raw.presence)?.seen)),
+  }
+}
+
+/**
+ * One `CONTACT_INFO` contact as `contacts profile` shows it. MAX tells when the account was made and
+ * whether it has a photo; what marks a bot on a personal account was never seen, so no flag is set.
+ */
+export const toProfileFacts = (raw: Payload, chats: ProfileFacts["chats"]): ProfileFacts => {
+  const { id, name, username, description } = toContact(raw)
+  const registered = timestamp(inMilliseconds(raw.registrationTime))
+  return {
+    id,
+    name,
+    usernames: username ? [username] : [],
+    bio: description,
+    ...(raw.phone === undefined || raw.phone === null ? {} : { phone: String(raw.phone) }),
+    flags: {},
+    ...(registered ? { registered: { at: registered, source: "max", precision: "day" } } : {}),
+    hasPhoto: raw.photoId !== undefined && raw.photoId !== null,
+    chats,
   }
 }
 
