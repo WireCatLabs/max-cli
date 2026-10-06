@@ -18,6 +18,7 @@ import type { Guarded } from "../spec/define.js"
 import { objectOf } from "../spec/guards.js"
 import { VERSION } from "../version.js"
 import { fromLine, lineReader, toLine } from "./lines.js"
+import { serverReplies } from "./replies.js"
 import { forwardedOperation, OPERATIONS_FINGERPRINT, stopServer } from "./server-connection.js"
 
 export type ServerEvent =
@@ -81,7 +82,8 @@ const REFRESH_EVERY_MS = 60_000
  *
  * It reopens REQUIREMENTS §3 and §18 on purpose and only here: every other command stays one-shot.
  * What it does on the wire copies web.max.ru — a ping every 30 s, MAX's pings answered, each new
- * message acknowledged (`Connection` with `live`). It never marks anything read and never sends.
+ * message acknowledged (`Connection` with `live`). It never marks anything read. It sends on its own
+ * only what the owner's reply rules answer, to test accounts alone (`NEED-601`, `NEED-645`).
  *
  * The socket answers `{"subscribe": true}` with a stream of `ServerEvent` lines and
  * `{"status": true}` with one. For a command reusing the connection (`ServerConnection`) it answers
@@ -118,6 +120,7 @@ export class MaxServer {
   /** The last connection's login, kept past a drop so the next login resumes it (`MAX-51`). */
   #resume: ResumeFrom | undefined
   #handing: Promise<void> = Promise.resolve()
+  readonly #replies: ReturnType<typeof serverReplies>
   #finish: ((error?: Error) => void) | undefined
   /** Settles when the server stops — cleanly, or with the error that stopped it. */
   readonly done: Promise<void>
@@ -125,6 +128,19 @@ export class MaxServer {
   constructor(options: MaxServerOptions) {
     this.#options = options
     this.#record = maxRecord({ account: () => options.store.readState().viewerId })
+    this.#replies = serverReplies({
+      profile: options.store.profile,
+      since: Date.parse(this.#startedAt),
+      owner: () => options.store.readState().viewerId,
+      client: () => this.#client,
+      guard: () =>
+        options.guard?.() ??
+        // A rule has nobody to ask: a level of `ask` is not a yes.
+        guardFor(resolveSettings({ profile: options.store.profile }), options.note, async (key) => {
+          throw new CliError("confirmation_required", `${key} asks before it acts — serve has nobody to ask`)
+        }),
+      note: options.note,
+    })
     this.#up = new Promise((resolve) => {
       this.#markUp = resolve
     })
@@ -185,10 +201,12 @@ export class MaxServer {
       if (process.platform !== "win32") rmSync(this.#options.store.socketPath(), { force: true })
     }
     try {
-      await this.#client?.close()
       await this.#handing
+      await this.#replies.settled()
+      await this.#client?.close()
     } finally {
       this.#client = undefined
+      await this.#replies.close()
       await this.#record.close()
       this.#finish?.(error)
     }
@@ -273,7 +291,10 @@ export class MaxServer {
     this.#handing = this.#handing.then(async () => {
       try {
         const message = await client.live.message(opcode, payload)
-        if (message) this.#broadcast({ event: "message", message })
+        if (message) {
+          this.#replies.arrived(message)
+          this.#broadcast({ event: "message", message })
+        }
         const change = await client.live.change(opcode, payload)
         if (change) this.#broadcast({ event: "change", change })
       } catch (error) {
