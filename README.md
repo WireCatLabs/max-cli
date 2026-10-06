@@ -471,6 +471,7 @@ max chats list --json
 - [docs/mcp.md](docs/mcp.md) — MCP-сервер: подключение, отправка, соединение с MAX
 - [docs/remote.md](docs/remote.md) — ChatGPT или Claude в браузере
 - [docs/groups.md](docs/groups.md) — группы, которые вы ведёте: сценарии с агентом, правила, проверка
+- [docs/people.md](docs/people.md) — один человек: профиль, его сообщения по чатам, похож ли на бота
 - [docs/recipes.md](docs/recipes.md) — рецепты для агентов: сводки, отчёты, долги, напоминания, расписание
 - [docs/diagnostics.md](docs/diagnostics.md) — `--trace`, `--record`, `max runs`
 - [docs/roadmap.md](docs/roadmap.md) — что планируется

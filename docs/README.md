@@ -38,6 +38,7 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 - [mcp.md](mcp.md) — MCP-сервер для клиентов без терминала: подключение, отправка, соединение с MAX
 - [remote.md](remote.md) — ChatGPT или Claude в браузере: вход по паролю и публичный адрес без своего домена
 - [groups.md](groups.md) — группы, которые вы ведёте: сценарии с агентом, правила, проверка по ним
+- [people.md](people.md) — один человек: профиль, его сообщения по чатам, похож ли на бота
 - [recipes.md](recipes.md) — рецепты для агентов: сводка, отчёт, долги, неотвеченное, запуск по расписанию
 - [diagnostics.md](diagnostics.md) — `--trace`, `--record`, `max runs` — и чего в записи нет
 - [security.md](security.md) — что попадает на диск, а что не попадает никогда
