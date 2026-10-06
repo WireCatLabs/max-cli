@@ -163,6 +163,17 @@ describe("MAX guided setup", () => {
     expect(h.streams.stdout).toEqual([])
   })
 
+  it("honors the environment deadline and closes a native connection", async () => {
+    const h = harness()
+    const silent = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: () => undefined } })
+    h.environment.env = { ...process.env, MAX_TIMEOUT: "100ms", CI: "" }
+    h.environment.connection = () => new Connection({ createSocket: silent.createSocket, timeoutMs: 5000 })
+    expect(await h.setup("--json")).toBe(9)
+    expect(silent.closed).toBe(true)
+    expect(h.streams.stdout).toEqual([])
+    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.code).toBe("timeout")
+  })
+
   it("refuses a first QR login without a terminal and does not contact MAX", async () => {
     const h = harness({ token: false })
     expect(await h.setup("--json")).toBe(2)

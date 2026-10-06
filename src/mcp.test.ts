@@ -1635,6 +1635,16 @@ describe("max_chats_check", () => {
     expect(deletes(max)).toEqual([])
   })
 
+  it("executes moderation permitted by the separate rules exactly once", async () => {
+    withRules("ck-mcp-allowed", "allow")
+    const { client, max, forms } = await connect({}, { profile: "ck-mcp-allowed", answers: groupAnswers })
+    const result = await call(client, "max_chats_check", { chat: "111" })
+    expect(result.isError).toBe(false)
+    expect(rows(result.body).map((row) => row.outcome)).toEqual(["done"])
+    expect(deletes(max)).toHaveLength(1)
+    expect(forms).toEqual([])
+  })
+
   it("plans actions requiring separate rule consent despite retired flags", async () => {
     withRules("ck-mcp-flag", "ask")
     const { client, max } = await connect({ allowDangerous: true }, { profile: "ck-mcp-flag", answers: groupAnswers })
