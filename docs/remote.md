@@ -1,7 +1,8 @@
 # ChatGPT или Claude в браузере
 
-**Статус:** собрано и проверено с локальным клиентом. Целиком с ChatGPT и Claude через настоящий
-туннель ещё не проверялось. Если шаг не работает так, как написано,
+**Статус:** HTTP и права проверены локально. Владелец подтвердил чтение и отправку через
+Claude web в Telegram 07.10.2026 с режимом `permissions`; отдельного браузерного прогона MAX
+и OpenAI web пока нет. Инструкции каждой ОС требуют проверки на этой ОС. Если шаг не работает,
 [откройте issue](https://github.com/leemour/max-cli/issues).
 
 `max mcp` говорит с ИИ-приложением через канал на вашем же компьютере. ChatGPT и Claude в браузере
@@ -36,30 +37,93 @@ ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max 
 | Claude | любой; на бесплатном — один свой коннектор | [custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) |
 | Gemini | только взрослым в США с личным аккаунтом Google — из России и Европы недоступно | [connected apps](https://support.google.com/gemini/answer/17209137?hl=en) |
 
-## 1. Дать компьютеру публичный адрес
+## 1. Подготовить Tailscale
 
-Установите [Tailscale](https://tailscale.com/download) и войдите. Для Funnel в вашей сети Tailscale
-должны быть включены MagicDNS, сертификаты HTTPS и разрешение на Funnel — как это сделать, написано
-на [странице Funnel](https://tailscale.com/kb/1223/funnel). Затем в терминале, который останется
-открытым:
+Установите CLI и войдите в MAX ([установка](installation.md)); для локальной настройки без
+агента используйте `max setup --agent none`. Сервер запускайте от того же пользователя и с
+тем же профилем. При необходимости поставьте профиль первым: `max work mcp`.
+Tailscale устанавливается отдельно; такой туннель поддерживают и MAX, и Telegram.
 
-```sh
-tailscale funnel 8765
+Установите [Tailscale](https://tailscale.com/download), войдите и разрешите
+[Funnel](https://tailscale.com/docs/features/tailscale-funnel): нужны MagicDNS, сертификаты HTTPS
+и разрешение Funnel в вашей сети. Первый запуск может напечатать ссылку для разрешения.
+Оставьте два окна терминала открытыми. В первом работает туннель; его адрес HTTPS скопируйте
+во второе по запросу. Нужен origin без `/mcp` и другого пути; порт вроде `:8443` сохраните.
+
+## 2. Запустить туннель и сервер
+
+Сервер слушает `127.0.0.1:8765`, печатает одноразовый код входа и запускается без прав
+администратора. Повышение прав может понадобиться только Tailscale. Команды ниже разрешают
+отправку на время работы процесса: `--http-confirmation permissions --permission messages.send=allow`.
+Остальные права описаны ниже.
+
+### Windows (PowerShell)
+
+Установите приложение Tailscale и войдите через меню в трее. После установки Node.js, CLI
+и Tailscale откройте новое окно PowerShell, чтобы обновился PATH. Суффикс `.cmd` обходит
+ошибку политики выполнения PowerShell для npm-команд. Если ещё не настроили MAX, выполните
+`max.cmd setup --agent none` в обычном PowerShell.
+
+Первое окно: PowerShell от администратора для Funnel. Оператор `&` нужен из-за пробела в
+стандартном пути установки; если выбрали другой каталог, замените путь.
+
+```powershell
+& "$env:ProgramFiles\Tailscale\tailscale.exe" funnel 8765
 ```
 
-Команда печатает адрес, `https://<устройство>.<сеть>.ts.net`. Ctrl-C закрывает его.
+Второе окно: обычный PowerShell от пользователя, который вошёл в MAX:
 
-## 2. Запустить `max` со входом
-
-Во втором терминале:
-
-```sh
-max mcp --http --public-url https://<устройство>.<сеть>.ts.net
+```powershell
+$mcpPublicUrl = Read-Host 'Вставьте HTTPS origin из Funnel (без /mcp)'
+max.cmd mcp --http --port 8765 --public-url $mcpPublicUrl --http-confirmation permissions --permission messages.send=allow
 ```
 
-`max` слушает только `127.0.0.1:8765`, так что достучаться до него может лишь Funnel на этом
-компьютере, и печатает **код входа** вида `K7QP-M2XD`. Код действует один раз и 10 минут; после
-каждого входа `max` печатает новый. `--port` выбирает другой порт — дайте Funnel тот же номер.
+Оба процесса запускайте в Windows. WSL — отдельная среда: нельзя считать, что туннель Windows
+на loopback Windows автоматически достанет сервер внутри WSL.
+
+### macOS (Terminal)
+
+Установите приложение Tailscale и войдите. Если `tailscale` нет в PATH, используйте встроенный
+CLI приложения ([руководство](https://tailscale.com/docs/reference/tailscale-cli?tab=macos)).
+Первое окно Terminal:
+
+```sh
+TAILSCALE_BE_CLI=1 /Applications/Tailscale.app/Contents/MacOS/Tailscale funnel 8765
+```
+
+Второе окно, от пользователя, который выполнил `max setup --agent none`. Подходит для zsh и bash:
+
+```sh
+printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
+IFS= read -r mcpPublicUrl
+max mcp --http --port 8765 --public-url "$mcpPublicUrl" --http-confirmation permissions --permission messages.send=allow
+```
+
+### Linux (Terminal)
+
+Установите Tailscale по [инструкции Linux](https://tailscale.com/download/linux) и войдите
+через `sudo tailscale up`. Первое окно терминала:
+
+```sh
+sudo tailscale funnel 8765
+```
+
+Второе окно: обычный пользователь без `sudo`, чтобы MAX нашёл сеанс из `max setup --agent none`:
+
+```sh
+printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
+IFS= read -r mcpPublicUrl
+max mcp --http --port 8765 --public-url "$mcpPublicUrl" --http-confirmation permissions --permission messages.send=allow
+```
+
+## MAX и Telegram одновременно
+
+Каждому серверу нужны отдельный локальный порт и публичный адрес HTTPS. Например, Telegram
+оставьте на локальном `8765` и публичном `443`; второй Funnel запустите с `--https=8443 8766`,
+а MAX — с `--port 8766`. Для `--public-url` MAX и адреса его коннектора с `/mcp` возьмите origin
+второго туннеля вместе с `:8443`. Для второго запуска Funnel используйте команду вашей ОС выше.
+Допустимые публичные порты Funnel: `443`, `8443`, `10000`
+([справочник](https://tailscale.com/docs/reference/tailscale-cli/funnel)).
 
 ## Права только на время работы сервера
 
@@ -83,9 +147,11 @@ max mcp --http --public-url https://<устройство>.<сеть>.ts.net
 
 Адрес для приложения — ваш адрес Funnel с `/mcp` на конце: `https://<устройство>.<сеть>.ts.net/mcp`.
 
-- **ChatGPT / Codex web:** добавьте свой MCP-сервер как плагин по
+- **ChatGPT / Codex web:** откройте **Plugins → + Add custom MCP server**, создайте плагин по
   [инструкции OpenAI](https://developers.openai.com/plugins/quickstart). Укажите адрес `/mcp`
-  и OAuth; при выборе способа регистрации клиента используйте DCR. Сервер объявляет DCR
+  и OAuth; подключите кодом из терминала, установите плагин и включите его в Work-чате
+  или упомяните через `@`. Локальный `config.toml` Codex не настраивает web-подключение.
+  Доступность зависит от аккаунта и рабочего пространства. При выборе регистрации используйте DCR. Сервер объявляет DCR
   и проверку S256, как требует [OAuth OpenAI](https://developers.openai.com/plugins/build/auth).
 - **Claude:** добавьте свой коннектор с этим адресом, как описано в
   [custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
@@ -98,8 +164,14 @@ max mcp --http --public-url https://<устройство>.<сеть>.ts.net
 
 ## Выключить
 
-Ctrl-C в обоих терминалах. Когда Funnel закрыт, открытым ничего не остаётся. Чтобы все приложения
-вошли заново:
+Ctrl-C в обоих окнах останавливает сервер и этот туннель, запущенные на переднем плане.
+Для повторного запуска используйте те же команды; входы приложений переживают перезапуск.
+Если Funnel запускали с `--bg`, Ctrl-C его не выключает: проверьте `tailscale funnel status`
+и выключите только его публичный порт, например `tailscale funnel --https=443 off`.
+Используйте команду Tailscale вашей ОС выше, при необходимости с повышением прав.
+Не используйте `funnel reset`, если работает второй сервер: сбросятся все маршруты.
+Если выключить только MCP, маршрут останется, но инструменты будут недоступны.
+Чтобы все приложения вошли заново:
 
 ```sh
 max mcp --revoke
