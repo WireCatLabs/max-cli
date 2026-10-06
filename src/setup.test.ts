@@ -32,6 +32,7 @@ const harness = ({ token = true, previous = false } = {}) => {
   const streams = captureStreams()
   const environment: Environment = {
     store: () => store,
+    env: { ...process.env, CI: "" },
     streams,
     tty: true,
     interactive: false,
@@ -167,6 +168,16 @@ describe("MAX guided setup", () => {
     expect(await h.setup("--json")).toBe(2)
     expect(h.streams.stderr.join("\n")).toContain("local terminal")
     expect(h.max.sent).toEqual([])
+  })
+
+  it("skips the optional agent question under CI even on a terminal", async () => {
+    const h = harness()
+    h.environment.env = { ...process.env, CI: "true" }
+    h.environment.interactive = true
+    const ask = vi.fn(async () => "must-not-be-used")
+    h.environment.ask = ask
+    expect(await h.setup()).toBe(0)
+    expect(ask).not.toHaveBeenCalled()
   })
 
   it.each(["--json", "--jsonl", "--no-input"])("refuses interactive setup with %s even on a terminal", async (flag) => {

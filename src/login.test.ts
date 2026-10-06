@@ -45,6 +45,7 @@ const setUp = (login: MockMax | undefined, adopt: MockMax, extra: Partial<Enviro
   const streams = captureStreams()
   const environment: Environment = {
     streams,
+    env: { ...process.env, CI: "" },
     tty: true,
     interactive: true,
     // Narrower than any QR code, so the browser path is the default here and nothing depends on
