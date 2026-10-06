@@ -188,7 +188,7 @@ moderate`. Он умеет то, чего не умеет личный акка�
 
 ## Статистика для админа группы
 
-`max chats stats` считает сообщения, активных отправителей, ответы, ветки, реакции и вопросы с ответами
+`max stats chats show` считает сообщения, активных отправителей, ответы, ветки, реакции и вопросы с ответами
 за выбранный период из локального хранилища. `--by day` или `--by week` добавляет разбивку по календарным
 дням или неделям; неделя начинается в понедельник, `--timezone` задаёт часовой пояс.
 Просмотры постов канала появляются, только если MAX передал их и они сохранены вместе с сообщениями.
@@ -246,7 +246,7 @@ moderate`. Он умеет то, чего не умеет личный акка�
 ```sh
 max chats tracking add "Поход" --json
 max chats members fetch "Поход" --json
-max chats stats "Поход" --since-time 7d --by day --timezone Europe/Madrid --json
+max stats chats show "Поход" --since-time 7d --by day --timezone Europe/Madrid --json
 max chats members history "Поход" --since-time 7d --offline --json
 max chats tracking show "Поход" --offline --json
 max chats members audit "Поход" --json
