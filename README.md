@@ -467,7 +467,9 @@ max chats list --json
 - [docs/bot.md](docs/bot.md) — бот: токен, несколько ботов, сообщения, чаты, список получателей, любая операция API
 - [docs/usage.md](docs/usage.md) — личный аккаунт: вход, чтение, отправка, машинный режим
 - [docs/sessions.md](docs/sessions.md) — токен, хранилище паролей, профили
-- [docs/configuration.md](docs/configuration.md) — настройки, переменные, порядок разрешения
+- [docs/configuration.md](docs/configuration.md) — настройка по шагам
+- [docs/configuration-reference.md](docs/configuration-reference.md) — все ключи, переменные и порядок разрешения
+- [docs/cli-contract.md](docs/cli-contract.md) — команды, JSON, ошибки, пределы и запуск агентом
 - [docs/mcp.md](docs/mcp.md) — MCP-сервер: подключение, отправка, соединение с MAX
 - [docs/remote.md](docs/remote.md) — ChatGPT или Claude в браузере
 - [docs/groups.md](docs/groups.md) — группы, которые вы ведёте: сценарии с агентом, правила, проверка

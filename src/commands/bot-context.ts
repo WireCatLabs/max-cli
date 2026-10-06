@@ -68,7 +68,9 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   })
   const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile })
   const recording = botRecordingOf(command)
-  const deadline = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
+  const timeout = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
+  const deadline =
+    timeout && environment.signal ? AbortSignal.any([timeout, environment.signal]) : (timeout ?? environment.signal)
   /** `events` is a shared command's own run, which max's group hooks do not start. */
   const client = (token: string, stop?: AbortSignal, events?: EventSink) => {
     const signal = deadline && stop ? AbortSignal.any([deadline, stop]) : (deadline ?? stop)

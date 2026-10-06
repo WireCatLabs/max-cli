@@ -33,7 +33,7 @@ const harness = ({ token = true, previous = false } = {}) => {
   const environment: Environment = {
     store: () => store,
     streams,
-    tty: false,
+    tty: true,
     interactive: false,
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
   }
@@ -71,7 +71,9 @@ describe("MAX guided setup", () => {
 
   it("fresh token import validates then stores the token, without printing it", async () => {
     const h = harness({ token: false })
-    h.environment.ask = async () => "new-setup-token"
+    const input = new PassThrough()
+    input.end("new-setup-token")
+    h.environment.stdin = input
     expect(await h.setup("--method", "token", "--agent", "none", "--json")).toBe(0)
     expect(h.store.readToken()).toBe("new-setup-token")
     expect(JSON.parse(h.streams.stdout.join("\n"))).toMatchObject({ session: { reused: false } })
@@ -83,7 +85,7 @@ describe("MAX guided setup", () => {
     h.environment.interactive = true
     const browser = vi.fn(async () => "browser-setup-token")
     h.environment.browser = { chromiumToken: browser, open: async () => {} }
-    expect(await h.setup("--method", method, "--agent", "none", "--json")).toBe(0)
+    expect(await h.setup("--method", method, "--agent", "none")).toBe(0)
     expect(browser).toHaveBeenCalledOnce()
     expect(h.store.readToken()).toBe("browser-setup-token")
   })
@@ -108,7 +110,7 @@ describe("MAX guided setup", () => {
       new Connection({ createSocket: (count++ === 0 ? qr : h.max).createSocket, timeoutMs: 50 })
     h.environment.interactive = true
     h.environment.columns = 200
-    expect(await h.setup("--agent", "none", "--json")).toBe(0)
+    expect(await h.setup("--agent", "none")).toBe(0)
     expect(h.store.readToken()).toBe("qr-setup-token")
     expect(qr.unexpected).toEqual([])
     expect(h.max.unexpected).toEqual([])
@@ -167,6 +169,26 @@ describe("MAX guided setup", () => {
     expect(h.max.sent).toEqual([])
   })
 
+  it.each(["--json", "--jsonl", "--no-input"])("refuses interactive setup with %s even on a terminal", async (flag) => {
+    const h = harness({ token: false })
+    h.environment.interactive = true
+    h.environment.tty = true
+    const browser = vi.fn(async () => "must-not-be-used")
+    const ask = vi.fn(async () => "must-not-be-used")
+    h.environment.browser = {
+      chromiumToken: browser,
+      open: async () => {
+        await browser()
+      },
+    }
+    h.environment.ask = ask
+    expect(await h.setup("--method", "qr-chrome", flag)).toBe(2)
+    expect(browser).not.toHaveBeenCalled()
+    expect(ask).not.toHaveBeenCalled()
+    expect(h.max.sent).toEqual([])
+    expect(h.store.readToken()).toBeUndefined()
+  })
+
   it.each([["--offline"], ["--agent", "invalid"], ["--method", "invalid"]].map((args) => [args]))(
     "refuses invalid setup %j before login",
     async (args) => {
@@ -211,6 +233,17 @@ describe("MAX guided setup", () => {
     expect(JSON.parse(h.streams.stdout.join("\n")).next.instructions).toContain(
       "exec --yes --package=@leemour/max-cli -- max setup-test skill show",
     )
+  })
+
+  it("bounds piped credentials before opening a session", async () => {
+    const h = harness({ token: false })
+    const input = new PassThrough()
+    input.end("synthetic-secret")
+    h.environment.stdin = input
+    expect(await h.setup("--method", "token", "--max-input-bytes", "4", "--json")).toBe(2)
+    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.reason).toBe("input_limit")
+    expect(h.max.sent).toEqual([])
+    expect(h.store.readToken()).toBeUndefined()
   })
 
   it("deadline cancels terminal input before a token or skill is stored", async () => {

@@ -1,5 +1,6 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
+import { Readable } from "node:stream"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
 import { SendJournal } from "@leemour/cli-messaging/sends"
 import { storePath } from "@leemour/cli-messaging/store"
@@ -68,7 +69,7 @@ const account = (answers: Record<number, unknown> = {}) => {
       return store
     },
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
-    ask: async () => PHONE,
+    stdin: Readable.from([PHONE]),
   }
   const sent = (opcode: number) => max.sent.filter((request) => request.opcode === opcode).map((one) => one.payload)
   return { max, environment, sent, stores }
@@ -194,7 +195,7 @@ describe("contacts", () => {
     for (const name of ["Carol", "Alice", "Bob"]) expect(synced.stdout + synced.stderr).not.toContain(name)
   })
 
-  it("`lookup` asks for the number and never lets it reach stderr, the send journal or the run log", async () => {
+  it("`lookup` reads a piped number and never lets it reach stderr, the send journal or the run log", async () => {
     const { environment, sent } = account()
     const found = await runWith(["a-lookup", "contacts", "lookup", "--record", "--trace"], environment)
 
@@ -228,7 +229,7 @@ describe("contacts", () => {
 
   it("`lookup` refuses what is not a number without repeating it", async () => {
     const { environment, sent } = account()
-    const refused = await runWith(["contacts", "lookup"], { ...environment, ask: async () => "call 555-mom" })
+    const refused = await runWith(["contacts", "lookup"], { ...environment, stdin: Readable.from(["call 555-mom"]) })
 
     expect(JSON.parse(refused.stderr).error.code).toBe("validation_error")
     expect(refused.stderr).not.toContain("555")

@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-core"
-import { type BotServerOptions, botInstructions, commandLookup, createBotServer } from "@leemour/cli-messaging/cli"
+import { botInstructions, commandLookup, createBotServer } from "@leemour/cli-messaging/cli"
+import { mcpCommandsClient } from "@leemour/cli-messaging/testing"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
 import type { Command } from "commander"
@@ -78,7 +79,7 @@ const owner = async (profile: string, argv: string[]) => {
   return run([profile, "bot", ...argv], { streams, tty: false, ...testEnvironment() })
 }
 
-type Options = Partial<Pick<BotServerOptions, "confirmSend" | "allowDangerous" | "yes">> & {
+type Options = Partial<Record<"confirmSend" | "allowDangerous" | "yes", boolean>> & {
   permissions?: Record<string, "deny" | "readonly" | "ask" | "allow">
   readOtherBots?: boolean | string[]
 }
@@ -118,7 +119,7 @@ const connect = async (
     await client.close()
     await server.close()
   })
-  return { client, profile, forms }
+  return { client: mcpCommandsClient(client, "max_bot"), rawClient: client, profile, forms }
 }
 
 const call = async (client: Client, name: string, args: Record<string, unknown> = {}) => {
@@ -181,7 +182,6 @@ describe("max bot mcp", () => {
       name: "MAX",
       profile: "a-profile-name-of-some-length",
       writes: ["max_bot_messages_send"],
-      confirmSend: true,
       skill: "`max skill install` installs it as an agent skill.",
     })
 
@@ -200,7 +200,7 @@ describe("max bot mcp", () => {
     const { client } = await connect()
     const { body } = await call(client, "max_bot_status")
     expect(body).toMatchObject({ kind: "bot", auth: { username: "helper_bot" } })
-    expect(body.writes).toContain("max_bot_messages_send")
+    expect(body.writes).toContain("messages send")
     expect(JSON.stringify(body)).not.toContain("bot-token")
   })
 
@@ -253,28 +253,27 @@ describe("max bot mcp", () => {
     expect(calls).toHaveLength(0)
   })
 
-  it("**deletes a comment only after the owner's form**: deleting is ask by default", async () => {
+  it("deletes a requested comment at ask without a server form", async () => {
     const declined = await connect({}, { form: () => ({ action: "decline" }) })
     expect((await call(declined.client, "max_bot_comments_delete", { message: "mid.2", comment: "c1" })).isError).toBe(
-      true,
+      false,
     )
-    expect(deletes()).toHaveLength(0)
+    expect(deletes()).toHaveLength(1)
+    expect(declined.forms).toEqual([])
   })
 
-  describe("with --confirm-send", () => {
-    it("shows the write first and sends once the owner agrees", async () => {
+  describe("MCP writes without server forms", () => {
+    it("executes a requested ask write without elicitation", async () => {
       const { client, forms } = await connect(
-        { confirmSend: true },
-        { form: () => ({ action: "accept", content: {} }) },
+        { permissions: { "bot.messages.send": "ask" } },
+        { form: () => ({ action: "decline" }) },
       )
-      const { isError } = await call(client, "max_bot_messages_send", { chat: "-100", text: "hello" })
-      expect(isError).toBe(false)
-      expect(forms).toEqual(['Send a message as the bot?\n\nchat: "-100" (-100)\n\nhello'])
+      expect((await call(client, "max_bot_messages_send", { chat: "-100", text: "hello" })).isError).toBe(false)
+      expect(forms).toEqual([])
       expect(posts()).toHaveLength(1)
     })
-
-    it("sends nothing when the owner declines", async () => {
-      const { client } = await connect({ confirmSend: true }, { form: () => ({ action: "decline" }) })
+    it.each(["deny", "readonly"] as const)("refuses an unavailable send under %s", async (level) => {
+      const { client } = await connect({ permissions: { "bot.messages.send": level } })
       expect((await call(client, "max_bot_messages_send", { chat: "-100", text: "hello" })).isError).toBe(true)
       expect(posts()).toHaveLength(0)
     })
@@ -288,22 +287,25 @@ describe("max bot mcp", () => {
     }
     const since = new Date(now - 3_600_000).toISOString()
 
-    it("shows the actions the rules want confirmed in one form, and does exactly those", async () => {
+    it("previews moderation without deleting messages", async () => {
+      const { client, profile } = await connect()
+      const rules = new ModerationRules(moderationPathFor(profile))
+      rules.set("-100", null, "invites", "delete")
+      rules.set("-100", null, "consent.delete", "allow")
+      const result = await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since, dry_run: true })
+      expect(result.isError).toBe(false)
+      expect(result.body.rows).toEqual([expect.objectContaining({ outcome: "planned" })])
+      expect(deletes()).toEqual([])
+    })
+
+    it("plans moderation actions requiring separate rule consent without a server form", async () => {
       const { client, profile, forms } = await connect({}, { form: () => ({ action: "accept", content: {} }) })
       confirmDeletes(profile)
       const { isError, body } = await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since })
       expect(isError).toBe(false)
-      expect(forms).toHaveLength(1)
-      expect(forms[0]).toContain("delete message mid.2")
-      expect(body.rows).toEqual([expect.objectContaining({ action: "delete", outcome: "done" })])
-      expect(deletes().map((one) => one.url)).toEqual(["/messages?message_id=mid.2"])
-    })
-
-    it("deletes nothing when the client cannot show the form", async () => {
-      const { client, profile } = await connect()
-      confirmDeletes(profile)
-      expect((await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since })).isError).toBe(true)
-      expect(deletes()).toHaveLength(0)
+      expect(forms).toEqual([])
+      expect(body.rows).toEqual([expect.objectContaining({ action: "delete", outcome: "planned" })])
+      expect(deletes()).toEqual([])
     })
   })
 })

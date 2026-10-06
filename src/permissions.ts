@@ -1,7 +1,13 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { CliError } from "@leemour/cli-core"
 import { metaOf } from "@leemour/cli-core/commands"
-import { type Asker, keyForCommand, levelFor } from "@leemour/cli-messaging/sends"
+import {
+  type Asker,
+  assertStatsPermissionsCurrent,
+  keyForCommand,
+  levelFor,
+  readKeysForCommand,
+} from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
 import { BOT_KEYS } from "./bot/permissions.js"
 import type { Environment } from "./commands/context.js"
@@ -33,6 +39,12 @@ export const assertReadable = (
   settings: Pick<Settings, "profile" | "permissions" | "permissionSources">,
   key: string,
 ): void => {
+  assertStatsPermissionsCurrent(key.split("."), settings.permissions)
+  for (const source of readKeysForCommand(key.split("."))) {
+    const resolved = levelFor(settings.permissions, source)
+    if (resolved.level === "deny")
+      throw new CliError("permission_error", `profile ${settings.profile} denies ${source}`, { permission: source })
+  }
   const resolved = levelFor(settings.permissions, key)
   if (resolved.level === "deny")
     throw new CliError(

@@ -4,9 +4,10 @@ import { createServer as createNetServer } from "node:net"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
-import { type HttpConfirmation, httpServerOptions, personalMcpTools, serveOverHttp } from "@leemour/cli-messaging/cli"
+import { personalMcpTools, serveOverHttp } from "@leemour/cli-messaging/cli"
 import { parseLucene, servicesFor, storedDeps } from "@leemour/cli-messaging/services"
 import { openStore } from "@leemour/cli-messaging/store"
+import { mcpCommandsClient } from "@leemour/cli-messaging/testing"
 import { Client, type ElicitResult, StreamableHTTPClientTransport } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
@@ -106,13 +107,12 @@ const connect = async (
     form,
     era = "legacy",
     http = false,
-    confirmation,
     permission,
     record,
   }: {
     /** Over `max mcp --http` on 127.0.0.1, logged in through the owner login. */
     http?: boolean
-    confirmation?: HttpConfirmation
+    confirmation?: "permissions"
     permission?: string[]
     record?: boolean
     token?: boolean
@@ -142,7 +142,6 @@ const connect = async (
   const { session, build } = createMaxServer(context, {
     allowSend: false,
     ...options,
-    ...(http ? httpServerOptions(confirmation) : {}),
   })
   if (http) {
     const codes: string[] = []
@@ -180,7 +179,7 @@ const connect = async (
       await session.close()
     })
     const logins = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGIN).length
-    return { client, session, max, streams, logins, forms }
+    return { client: mcpCommandsClient(client, "max"), rawClient: client, session, max, streams, logins, forms }
   }
   const [serverSide, clientSide] = InMemoryTransport.createLinkedPair()
   // The modern era is chosen by `serveStdio`, as in `max mcp`; a server connected directly only speaks the legacy one.
@@ -210,7 +209,7 @@ const connect = async (
   })
 
   const logins = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGIN).length
-  return { client, session, max, streams, logins, forms }
+  return { client: mcpCommandsClient(client, "max"), rawClient: client, session, max, streams, logins, forms }
 }
 
 describe("max mcp --http, served until stopped", () => {
@@ -324,13 +323,18 @@ describe("the MCP server", () => {
     const [first] = (await client.getPrompt({ name: "link-conversations" })).messages
     expect(first?.content).toMatchObject({
       type: "text",
-      text: expect.stringContaining("max_conversations_batches_status"),
+      text: expect.stringContaining("conversations batches status"),
     })
     expect(logins()).toBe(0)
   })
 
-  it("mounts every supported shared schema, retains compatibility names and omits unsupported topics", async () => {
-    const { client, logins } = await connect()
+  it("discovers supported command schemas through exactly three tools and omits unsupported topics", async () => {
+    const { client, rawClient, logins } = await connect()
+    expect((await rawClient.listTools()).tools.map(({ name }) => name).sort()).toEqual([
+      "max_read",
+      "max_tools_search",
+      "max_write",
+    ])
     const { tools } = await client.listTools()
     const catalogue = personalMcpTools(maxMessenger)
     const expected = Object.keys(catalogue)
@@ -342,7 +346,7 @@ describe("the MCP server", () => {
     for (const [name, definition] of Object.entries(catalogue)) {
       if (name.startsWith("topics_")) continue
       const schema = toStandardJsonSchema(definition.input)["~standard"].jsonSchema.input({ target: "draft-2020-12" })
-      expect(tools.find((tool) => tool.name === `max_${name}`)?.inputSchema).toEqual(schema)
+      expect(tools.find((tool) => tool.name === `max_${name}`)?.inputSchema.properties).toEqual(schema.properties)
     }
     expect(logins()).toBe(0)
   })
@@ -445,18 +449,17 @@ describe("the MCP server", () => {
       else {
         expect(names).toContain("max_conversations_refresh")
         const refused = await call(client, "max_conversations_refresh")
-        expect(refused.isError).toBe(true)
-        expect(refused.body).toMatchObject({ error: { code: "confirmation_required" } })
+        expect(refused.body.error).not.toMatchObject({ code: "confirmation_required" })
       }
       expect(max.sent).toEqual([])
     }
   })
 
-  it("refuses a local write under confirm-send without connecting", async () => {
+  it("ignores retired confirm-send on local writes and still requires a stored account", async () => {
     const { client, max } = await connect({ confirmSend: true }, { token: false })
     const refused = await call(client, "max_conversations_refresh")
     expect(refused.isError).toBe(true)
-    expect(refused.body).toMatchObject({ error: { code: "confirmation_required" } })
+    expect(refused.body.error).not.toMatchObject({ code: "confirmation_required" })
     expect(max.sent).toEqual([])
   })
 
@@ -476,7 +479,7 @@ describe("the MCP server", () => {
 
     expect(isError).toBe(false)
     expect(body).toMatchObject({ kind: "personal", token: "keyring", loggedInHere: false, permissions: {} })
-    expect(body.writes).toContain("max_messages_send")
+    expect(body.writes).toContain("messages send")
     expect(logins()).toBe(0)
   })
 
@@ -513,22 +516,14 @@ describe("the MCP server", () => {
         "max_chats_create",
       ]),
     )
-    const localWrites = new Set([
-      "max_conversations_refresh",
-      "max_conversations_build",
-      "max_conversations_links_add",
-      "max_attachments_text_set",
-      "max_tags_add",
-      "max_searches_create",
-      "max_tasks_add",
-      "max_tasks_close",
-    ])
-    for (const { name, annotations } of writing)
-      expect(annotations, name).toMatchObject({ destructiveHint: !localWrites.has(name) })
-    expect(writing.find(({ name }) => name === "max_messages_delete")?._meta).toMatchObject({
-      "anthropic/requiresUserInteraction": true,
+    const { rawClient } = await connect()
+    const macros = (await rawClient.listTools()).tools
+    expect(macros.find(({ name }) => name === "max_write")?.annotations).toMatchObject({
+      readOnlyHint: false,
+      destructiveHint: true,
+      idempotentHint: false,
     })
-    expect(writing.find(({ name }) => name === "max_messages_send")?._meta).toBeUndefined()
+    expect(macros.find(({ name }) => name === "max_read")?.annotations).toMatchObject({ readOnlyHint: true })
   })
 
   it("answers listings in the CLI's envelope, logs in once for several calls, and marks nothing read", async () => {
@@ -1102,7 +1097,7 @@ describe("the MCP server", () => {
     const { client, max } = await connect({ allowSend: true }, { profile })
 
     expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_messages_send")
-    await expect(call(client, "max_messages_send", { chat: "111", text: "hello" })).rejects.toThrow("not found")
+    expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(true)
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEND)
   })
 
@@ -1203,7 +1198,7 @@ describe("the MCP server", () => {
       await configure("mcp-block-ro", "readOnly", "true")
       const { client, max } = await connect({}, { profile: "mcp-block-ro" })
       expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_contacts_block")
-      await expect(call(client, "max_contacts_block", { person: "20000002" })).rejects.toThrow("not found")
+      expect((await call(client, "max_contacts_block", { person: "20000002" })).isError).toBe(true)
       expect(max.sent.filter(({ opcode }) => opcode === Opcode.CONTACT_UPDATE)).toEqual([])
     })
 
@@ -1266,179 +1261,52 @@ describe("the MCP server", () => {
     expect(max.closed).toBe(true)
   })
 
-  describe("with --confirm-send", () => {
-    const sendAnswer = {
-      [Opcode.MSG_SEND]: { message: { id: 116762160362694590n, time: 1789776000000, sender: 10000001, text: "hello" } },
-    }
-    const sends = (max: { sent: { opcode: number }[] }) =>
-      max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND).length
-
-    it.each(["legacy", "modern"] as const)(
-      "shows the chat the name resolved to and the text, and sends once confirmed (%s protocol)",
-      async (era) => {
+  describe("MCP writes without server forms", () => {
+    it.each(["legacy", "modern"] as const)("uses profile permissions over stdio and HTTP (%s)", async (era) => {
+      for (const http of [false, true]) {
         const { client, max, forms } = await connect(
-          { allowSend: true, confirmSend: true },
-          { answers: sendAnswer, era, form: () => ({ action: "accept", content: {} }) },
-        )
-
-        const { isError } = await call(client, "max_messages_send", { chat: "Alpha", text: "hello" })
-
-        expect(isError).toBe(false)
-        expect(forms).toEqual(['Send a message?\n\nchat: "Team Alpha" (111)\n\nhello'])
-        expect(sends(max)).toBe(1)
-      },
-    )
-
-    it.each([
-      ["declined", { action: "decline" }],
-      ["cancelled", { action: "cancel" }],
-    ] as const)("sends nothing when the owner %s", async (_, answer) => {
-      const { client, max } = await connect(
-        { allowSend: true, confirmSend: true },
-        { answers: sendAnswer, form: () => answer as ElicitResult },
-      )
-
-      const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "hello" })
-
-      expect(isError).toBe(true)
-      expect(body?.error ?? body).toBeDefined()
-      expect(sends(max)).toBe(0)
-    })
-
-    it.each(["legacy", "modern"] as const)(
-      "over mcp --http, asks through the form before a send even without --confirm-send (%s protocol)",
-      async (era) => {
-        const { client, max, forms } = await connect(
-          { allowSend: true },
-          { answers: sendAnswer, era, http: true, form: () => ({ action: "accept", content: {} }) },
-        )
-
-        const { isError } = await call(client, "max_messages_send", { chat: "Alpha", text: "hello" })
-
-        expect(isError).toBe(false)
-        expect(forms).toEqual(['Send a message?\n\nchat: "Team Alpha" (111)\n\nhello'])
-        expect(sends(max)).toBe(1)
-      },
-    )
-
-    it.each(["legacy", "modern"] as const)(
-      "HTTP permissions mode sends without elicitation with a startup override (%s)",
-      async (era) => {
-        const { client, max, forms } = await connect(
-          {},
+          { confirmSend: true },
           {
-            answers: sendAnswer,
-            http: true,
             era,
-            confirmation: "permissions",
-            permission: ["messages=readonly", "messages.send=allow"],
+            http,
+            permission: ["messages.send=ask"],
+            form: () => ({ action: "decline" }),
+            answers: {
+              [Opcode.MSG_SEND]: {
+                message: { id: 116762160362694590n, time: 1789776000000, sender: 10000001, text: "hello" },
+              },
+            },
           },
         )
-        expect((await client.listTools()).tools.map(({ name }) => name)).toContain("max_messages_send")
-        expect((await call(client, "max_chats_list")).isError).toBe(false)
-        expect((await call(client, "max_messages_send", { chat: "111", text: "synthetic send" })).isError).toBe(false)
-        expect(sends(max)).toBe(1)
+        expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(false)
         expect(forms).toEqual([])
-      },
-    )
-
-    it.each(["deny", "readonly"])("HTTP permissions mode does not offer a send overridden to %s", async (level) => {
-      const { client, max } = await connect(
+        expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)).toHaveLength(1)
+      }
+    })
+    it.each(["deny", "readonly"])("refuses a startup send permission of %s before connecting", async (level) => {
+      const { client, max } = await connect({}, { permission: [`messages.send=${level}`] })
+      expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(true)
+      expect(max.sent).toEqual([])
+    })
+    it("schedules exactly once without requesting a form", async () => {
+      const { client, max, forms } = await connect(
         {},
         {
-          answers: sendAnswer,
-          http: true,
-          confirmation: "permissions",
-          permission: [`messages.send=${level}`],
+          answers: {
+            [Opcode.MSG_SEND]: {
+              message: { id: 116762160362694590n, time: 1789776000000, sender: 10000001, text: "hello" },
+            },
+          },
         },
       )
-      expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_messages_send")
-      expect(sends(max)).toBe(0)
-    })
-
-    it("HTTP permissions mode still asks at level ask even with stdio bypass flags", async () => {
-      const { client, max } = await connect(
-        { yes: true, allowDangerous: true },
-        {
-          answers: sendAnswer,
-          http: true,
-          confirmation: "permissions",
-          permission: ["messages.send=ask"],
-        },
+      expect((await call(client, "max_messages_send", { chat: "111", text: "hello", at_time: "2h" })).isError).toBe(
+        false,
       )
-      await client
-        .callTool({ name: "max_messages_send", arguments: { chat: "111", text: "synthetic send" } })
-        .catch(() => undefined)
-      expect(sends(max)).toBe(0)
-    })
-
-    it("over mcp --http, sends nothing when the owner declines", async () => {
-      const { client, max } = await connect(
-        { allowSend: true },
-        { answers: sendAnswer, http: true, form: () => ({ action: "decline" }) },
-      )
-
-      expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(true)
-      expect(sends(max)).toBe(0)
-    })
-
-    it("sends nothing when the client cannot show a form", async () => {
-      const { client, max } = await connect({ allowSend: true, confirmSend: true }, { answers: sendAnswer })
-
-      const result = await client.callTool({ name: "max_messages_send", arguments: { chat: "111", text: "hello" } })
-
-      expect(result.isError).toBe(true)
-      expect(sends(max)).toBe(0)
-    })
-
-    it("shows when a scheduled message will go, and schedules it once confirmed", async () => {
-      const { client, max, forms } = await connect(
-        { allowSend: true, confirmSend: true },
-        { answers: sendAnswer, form: () => ({ action: "accept", content: {} }) },
-      )
-
-      const { isError } = await call(client, "max_messages_send", { chat: "111", text: "hello", at_time: "2h" })
-
-      expect(isError).toBe(false)
-      const payload = max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload as
-        | { message: { delayedAttributes: { timeToFire: number } } }
-        | undefined
-      const fire = payload?.message.delayedAttributes.timeToFire ?? 0
-      expect(forms).toEqual([
-        `Send a message?\n\nchat: "Team Alpha" (111)\nat_time: "2h" — sends at ${new Date(fire).toISOString()}\n\nhello`,
-      ])
-    })
-
-    it("asks before a forward too, and forwards nothing on a no", async () => {
-      const { client, max, forms } = await connect(
-        { allowSend: true, confirmSend: true },
-        { answers: sendAnswer, form: () => ({ action: "decline" }) },
-      )
-
-      const { isError } = await call(client, "max_messages_forward", {
-        chat: "111",
-        message: "116762160362694590",
-        to: "Alpha",
-      })
-
-      expect(isError).toBe(true)
-      expect(forms).toEqual([
-        'Forward a message?\n\nchat: "Team Alpha" (111)\nto: "Team Alpha" (111)\nmessage: "116762160362694590"',
-      ])
-      expect(sends(max)).toBe(0)
-    })
-
-    it("sends without a form when the flag is off", async () => {
-      const { client, max, forms } = await connect(
-        { allowSend: true },
-        { answers: sendAnswer, form: () => ({ action: "decline" }) },
-      )
-
-      const { isError } = await call(client, "max_messages_send", { chat: "111", text: "hello" })
-
-      expect(isError).toBe(false)
+      const payload = max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload as {
+        message: { delayedAttributes: { timeToFire: number } }
+      }
+      expect(payload.message.delayedAttributes.timeToFire).toBeGreaterThan(Date.now())
       expect(forms).toEqual([])
-      expect(sends(max)).toBe(1)
     })
   })
 })
@@ -1542,17 +1410,6 @@ describe("what the MCP server offers beyond the basics", () => {
     expect(message).toMatchObject({ text: "yes", elements: [{ type: "STRONG", from: 0, length: 3 }] })
   })
 
-  it("shows the reply in the confirmation form, so a yes is bound to it", async () => {
-    const { client, forms } = await connect(
-      { allowSend: true, confirmSend: true },
-      { form: () => ({ action: "decline" }) },
-    )
-
-    await call(client, "max_messages_send", { chat: "111", text: "yes", reply_to: "116762160362694583" })
-
-    expect(forms[0]).toContain('reply_to: "116762160362694583"')
-  })
-
   it("offers reactions with --allow-send, and not on a profile whose allow list lacks them", async () => {
     legacyFor("mcp-no-reactions", { allow: ["send"] })
     const names = async (profile?: string) =>
@@ -1643,23 +1500,6 @@ describe("what the MCP server offers beyond the basics", () => {
     expect(result.isError).toBe(true)
     expect(JSON.stringify(result)).toContain("max messages download 111 116762160362694583")
     expect(JSON.stringify(result)).not.toContain("secret-token")
-  })
-
-  it("asks the owner before a reaction, and reacts with nothing on a no", async () => {
-    const { client, max, forms } = await connect(
-      { allowSend: true, confirmSend: true },
-      { form: () => ({ action: "decline" }) },
-    )
-
-    const { isError } = await call(client, "max_reactions_add", {
-      chat: "111",
-      message: "116762160362694583",
-      emoji: "👍",
-    })
-
-    expect(isError).toBe(true)
-    expect(forms[0]).toContain('emoji: "👍"')
-    expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_REACTION)
   })
 
   it("keeps its instructions within the 2048 characters a client shows, with every flag on", () => {
@@ -1795,17 +1635,17 @@ describe("max_chats_check", () => {
     expect(deletes(max)).toEqual([])
   })
 
-  it("with --allow-moderate, does what consent level flag asks", async () => {
+  it("plans actions requiring separate rule consent despite retired flags", async () => {
     withRules("ck-mcp-flag", "ask")
     const { client, max } = await connect({ allowDangerous: true }, { profile: "ck-mcp-flag", answers: groupAnswers })
 
     const { body } = await call(client, "max_chats_check", { chat: "111" })
 
-    expect(rows(body).map((row) => row.outcome)).toEqual(["done"])
-    expect(deletes(max)).toHaveLength(1)
+    expect(rows(body).map((row) => row.outcome)).toEqual(["planned"])
+    expect(deletes(max)).toHaveLength(0)
   })
 
-  it("asks in one form at level confirm, and deletes only once the owner accepts", async () => {
+  it("plans moderation actions at rule ask without a server form", async () => {
     withRules("ck-mcp-yes", "ask")
     const { client, max, forms } = await connect(
       { allowModerate: true },
@@ -1814,22 +1654,9 @@ describe("max_chats_check", () => {
 
     const { body } = await call(client, "max_chats_check", { chat: "111" })
 
-    expect(forms[0]).toContain("delete message 5 from 30000003 for everyone (invites)")
-    expect(rows(body).map((row) => row.outcome)).toEqual(["done"])
-    expect(deletes(max)).toHaveLength(1)
-  })
-
-  it("deletes nothing when the owner declines the form", async () => {
-    withRules("ck-mcp-no", "ask")
-    const { client, max } = await connect(
-      { allowModerate: true },
-      { profile: "ck-mcp-no", answers: groupAnswers, form: () => ({ action: "decline" }) },
-    )
-
-    const { isError } = await call(client, "max_chats_check", { chat: "111" })
-
-    expect(isError).toBe(true)
-    expect(deletes(max)).toEqual([])
+    expect(forms).toEqual([])
+    expect(rows(body).map((row) => row.outcome)).toEqual(["planned"])
+    expect(deletes(max)).toHaveLength(0)
   })
 })
 
@@ -1920,12 +1747,12 @@ describe("P7 MCP policy", () => {
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
   })
 
-  it("uses a form for a default ask, and refuses without one before deleting", async () => {
+  it("executes default ask deletion without a server form", async () => {
     const noForm = await connect({}, { answers: { [Opcode.MSG_DELETE]: {} } })
     expect(
       (await call(noForm.client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })).isError,
-    ).toBe(true)
-    expect(noForm.max.sent.some(({ opcode }) => opcode === Opcode.MSG_DELETE)).toBe(false)
+    ).toBe(false)
+    expect(noForm.max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
     const accepted = await connect(
       {},
       { answers: { [Opcode.MSG_DELETE]: {} }, form: () => ({ action: "accept", content: {} }) },
@@ -1933,7 +1760,7 @@ describe("P7 MCP policy", () => {
     expect(
       (await call(accepted.client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })).isError,
     ).toBe(false)
-    expect(accepted.forms).toHaveLength(1)
+    expect(accepted.forms).toEqual([])
     expect(accepted.max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
   })
 
@@ -1948,7 +1775,7 @@ describe("P7 MCP policy", () => {
       names.some((name) => name.startsWith("max_messages_") || name === "max_inbox" || name === "max_review"),
     ).toBe(false)
     expect((await client.listResources()).resources).toEqual([])
-    await expect(call(client, "max_messages_list", { chat: "111" })).rejects.toThrow("not found")
+    expect((await call(client, "max_messages_list", { chat: "111" })).isError).toBe(true)
     expect(max.sent).toEqual([])
   })
 })

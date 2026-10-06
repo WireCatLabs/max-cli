@@ -32,6 +32,11 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--trace` | one line per request on stderr: ids and timings, never message content. |
 | `--timeout <duration>` | give up on the whole command after this — 30s, 2m, 500ms. |
 | `--offline` | answer from what was recorded and never connect; fails if nothing was. |
+| `--no-input` | never prompt or open interactive login; piped input remains available. |
+| `--max-input-bytes <bytes>` | maximum buffered input bytes (default: 16777216). |
+| `--max-output-bytes <bytes>` | maximum machine output bytes (default: 4194304; 0 disables). |
+| `--fields <paths>` | comma-separated item or object fields: id,text; preserve pagination and operation ids. |
+| `--dry-run` | preview parsed arguments and permissions before running the action. |
 | `--yes` | go ahead without the question an ask level puts before a write. |
 | `--record` | keep this run under `max runs` — ids and timings, never message content. |
 | `--no-record` | do not keep it, whatever the configuration says. |
@@ -1472,6 +1477,59 @@ max stats charts <chat> [options]
 | `--timezone <zone>` | the IANA timezone for calendar days. |
 | `--output <file>` | write a dark image to a new .svg or .png file. |
 
+## `max tasks`
+
+what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; review and serve add them
+
+### `max tasks list`
+
+tasks, oldest first, with the message each points at
+
+```sh
+max tasks list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--state <state>` | only tasks in this state: open, done or dismissed. |
+| `--chat <chat>` | only this chat's tasks; a chat: its id, or part of its title. |
+| `--type <names>` | only these types, comma-separated: question, request, mention, promise. |
+| `--before-time <time>` | only tasks opened before this ISO 8601 time, or 2h / 1d ago. |
+| `--limit <n>` | how many. |
+
+### `max tasks add`
+
+add a task for a message the rules cannot see — a promise, a request
+
+```sh
+max tasks add <message> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `message` | обязательный | a message locator, msg:<provider>/<account>/<chat>/<message>, as review --json shows. |
+
+| Опция | Что делает |
+|---|---|
+| `--type <name>` | the task's type: question, request, mention or promise. |
+
+### `max tasks close`
+
+close a task: done, or dismissed when it needs no answer; a closed task stays closed
+
+```sh
+max tasks close <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--as <state>` | how it is closed: done, or dismissed — it needs no answer. |
+| `--reason <text>` | why, kept with the task — no-reply-needed, for example. |
+
 ## `max conversations`
 
 the conversations inside a chat, found in the stored messages by replies, mentions and who wrote next
@@ -1919,59 +1977,6 @@ empty the history; saved searches stay
 ```sh
 max searches clear
 ```
-
-## `max tasks`
-
-what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; review and serve add them
-
-### `max tasks list`
-
-tasks, oldest first, with the message each points at
-
-```sh
-max tasks list [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--state <state>` | only tasks in this state: open, done or dismissed. |
-| `--chat <chat>` | only this chat's tasks; a chat: its id, or part of its title. |
-| `--type <names>` | only these types, comma-separated: question, request, mention, promise. |
-| `--before-time <time>` | only tasks opened before this ISO 8601 time, or 2h / 1d ago. |
-| `--limit <n>` | how many. |
-
-### `max tasks add`
-
-add a task for a message the rules cannot see — a promise, a request
-
-```sh
-max tasks add <message> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `message` | обязательный | a message locator, msg:<provider>/<account>/<chat>/<message>, as review --json shows. |
-
-| Опция | Что делает |
-|---|---|
-| `--type <name>` | the task's type: question, request, mention or promise. |
-
-### `max tasks close`
-
-close a task: done, or dismissed when it needs no answer; a closed task stays closed
-
-```sh
-max tasks close <task> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `task` | обязательный | the task's id, as tasks list shows it. |
-
-| Опция | Что делает |
-|---|---|
-| `--as <state>` | how it is closed: done, or dismissed — it needs no answer. |
-| `--reason <text>` | why, kept with the task — no-reply-needed, for example. |
 
 ## `max flood`
 
@@ -2761,13 +2766,17 @@ max skill install [options]
 
 commands, options and exit codes as JSON — inspect one command path per call
 
+### `max commands schema`
+
+one command's argv and result schemas, effects, permissions and retry guidance
+
 ```sh
-max commands [path]
+max commands schema <path>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `path` | необязательный | one command path, for example: messages search; inspect other groups in separate calls. |
+| `path` | обязательный | one command path, for example: stats messages show. |
 
 ## `max upgrade`
 
@@ -2804,14 +2813,14 @@ max mcp [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
 | `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
 | `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
-| `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; every write asks first by default. |
-| `--http-confirmation <mode>` | required: every write needs a server form (default); permissions: follow the profile levels. |
+| `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
+| `--http-confirmation <mode>` | no longer used — writes show no form; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
 | `--revoke` | forget every login given to a browser app; each must log in again. |
@@ -2827,7 +2836,7 @@ max mcp config [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
@@ -2852,7 +2861,7 @@ max mcp setup <client> [options]
 |---|---|
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
@@ -2870,7 +2879,7 @@ max mcp doctor [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | skip confirmation for messages.delete at level ask. |
+| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
 | `--confirm-send` | show the owner every write the server offers — sends, edits, reactions, mcpTools — in a form from the server first. |
 | `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
@@ -3562,8 +3571,8 @@ max bot mcp [options]
 
 | Опция | Что делает |
 |---|---|
-| `--confirm-send` | show the owner every write in a form from the server first. |
-| `--allow-dangerous` | no form before a deletion whose permission level is ask. |
+| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
+| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | no longer used — the profile's permissions decide; kept so an old setup still starts. |
 | `--allow-delete` | no longer used — the profile's permissions decide. |
 | `--allow-moderate` | no longer used — the profile's permissions decide. |
@@ -3578,8 +3587,8 @@ max bot mcp config [options]
 
 | Опция | Что делает |
 |---|---|
-| `--confirm-send` | show the owner every write in a form from the server first. |
-| `--allow-dangerous` | no form before a deletion whose permission level is ask. |
+| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
+| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
 | `--allow-send` | no longer used — the profile's permissions decide; kept so an old setup still starts. |
 | `--allow-delete` | no longer used — the profile's permissions decide. |
 | `--allow-moderate` | no longer used — the profile's permissions decide. |

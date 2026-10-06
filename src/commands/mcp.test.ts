@@ -100,10 +100,10 @@ describe("the config commands, through the CLI", () => {
     expect(code).toBe(0)
     const [name, server] = Object.entries(json.mcpServers)[0] as [string, { args: string[] }]
     expect(name).toBe("max-bot-shop")
-    expect(server.args.slice(-4)).toEqual(["shop", "bot", "mcp", "--confirm-send"])
+    expect(server.args.slice(-3)).toEqual(["shop", "bot", "mcp"])
 
     const dangerous = await cli(["shop", "bot", "mcp", "config", "--allow-dangerous", "--json"])
-    expect((Object.values(dangerous.json.mcpServers)[0] as { args: string[] }).args.at(-1)).toBe("--allow-dangerous")
+    expect((Object.values(dangerous.json.mcpServers)[0] as { args: string[] }).args.at(-1)).toBe("mcp")
   })
 
   it("`models audio list` names every model and marks the default, with none downloaded here", async () => {
@@ -138,7 +138,7 @@ it("starts MCP with explicit confirmation flags and warns about retired grants o
   )
   expect(code).toBe(0)
   expect(streams.stdout).toEqual([])
-  expect(streams.stderr.join("")).toContain("deprecated and does not grant access")
+  expect(streams.stderr.join("")).toContain("no longer changes MCP access or confirmation")
   expect(serveOverStdio).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({ settings: expect.objectContaining({ profile: "work" }) }),
     expect.objectContaining({ yes: true, allowDangerous: true, confirmSend: true }),
@@ -172,7 +172,7 @@ describe("max mcp --http", () => {
     )
   })
 
-  it("passes startup permissions and the explicit confirmation mode without changing saved config", async () => {
+  it("passes startup permissions and ignores retired confirmation mode without changing saved config", async () => {
     const file = join(process.env.MAX_CONFIG_DIR ?? "", "config.json")
     mkdirSync(dirname(file), { recursive: true })
     const saved = JSON.stringify({ defaults: { readOnly: true, permissions: { "messages.send": "deny" } } })
@@ -193,7 +193,7 @@ describe("max mcp --http", () => {
         settings: expect.objectContaining({ permissions: expect.objectContaining({ "messages.send": "allow" }) }),
       }),
       {},
-      expect.objectContaining({ confirmation: "permissions" }),
+      expect.objectContaining({ publicUrl: new URL("https://device.example") }),
     )
     expect(readFileSync(file, "utf8")).toBe(saved)
   })
@@ -209,7 +209,6 @@ describe("max mcp --http", () => {
   })
 
   it.each([
-    ["--http-confirmation", "permissions"],
     ["--http", "--http-confirmation", "automatic"],
     ["--http", "--http-confirmation", "permissions", "--confirm-send"],
     ["--http", "--permission", "messages.send=yes"],

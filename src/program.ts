@@ -78,11 +78,11 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     messagesCommand(),
     sharedStoreCommand(maxMessenger),
     statsCommand(maxMessenger),
+    tasksCommand(maxMessenger),
     conversationsCommand(maxMessenger),
     attachmentsCommand(maxMessenger),
     tagsCommand(maxMessenger),
     searchesCommand(maxMessenger),
-    tasksCommand(maxMessenger),
     floodCommand(maxMessenger),
     modelsCommand(),
     pollsCommand(maxMessenger),
@@ -143,7 +143,15 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
   },
   prepare: (program, environment) => {
-    provide(program, { ...options, streams: environment.streams ?? processStreams })
+    provide(program, {
+      ...options,
+      streams: environment.streams ?? processStreams,
+      signal: environment.signal,
+      commandSignal: environment.commandSignal,
+      trackCloseable: environment.trackCloseable,
+      answer: environment.answer,
+      env: environment.env,
+    })
     provideShared(program, environment)
   },
   onFailure: (error, program) => botRecordingOf(program)?.fail(error),

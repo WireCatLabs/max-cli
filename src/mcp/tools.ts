@@ -1,22 +1,19 @@
 import { CliError } from "@leemour/cli-core"
 import {
   AI_SETTING_KEYS,
-  answerMcpTool,
-  failMcpTool,
   type PersonalMcpDefaults,
   type PersonalMcpRegistration,
   type PersonalMcpTool,
-  personalMcpConfirmer,
+  personalMcpCommand,
   personalMcpToolKey,
   personalMcpTools,
-  registerPersonalMcpTools,
+  registerPersonalMcpSurface,
   rememberAccount,
   stored,
 } from "@leemour/cli-messaging/cli"
 import { levelFor, type Permission } from "@leemour/cli-messaging/sends"
 import { openStore } from "@leemour/cli-messaging/store"
 import type { McpServer } from "@modelcontextprotocol/server"
-import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import * as v from "valibot"
 import { maxAdapter } from "../adapter/max-adapter.js"
 import { MAX_APP } from "../app.js"
@@ -31,7 +28,7 @@ import type { SessionStore } from "../session/store.js"
 import { transcribe } from "../transcribe/index.js"
 import { modelsDirectory } from "../transcribe/install.js"
 import { DEFAULT_MODEL, speechModel } from "../transcribe/models.js"
-import { registerLegacyCheck } from "./legacy-check.js"
+import { legacyCheckTool } from "./legacy-check.js"
 import { photoForMcp } from "./photo.js"
 import type { MaxSession } from "./session.js"
 import { withShared } from "./shared.js"
@@ -62,16 +59,12 @@ interface Options {
    * One per server, shared by every instance its factory builds: over HTTP each request may meet a
    * fresh instance, and the form's answer must reach the one that issued it.
    */
-  confirmed?: ReturnType<typeof personalMcpConfirmer>
 }
 
 export const registerTools = (
   server: McpServer,
   session: MaxSession,
   {
-    confirmSend = false,
-    yes = false,
-    allowDangerous = false,
     store,
     defaultLimit,
     history,
@@ -81,7 +74,6 @@ export const registerTools = (
     warn = () => {},
     reach,
     embedders,
-    confirmed = personalMcpConfirmer(),
   }: Options,
 ): void => {
   const settings = () => resolveSettings({ profile, permission })
@@ -112,9 +104,11 @@ export const registerTools = (
   const rules = definitions.chats_rules_show
   if (rules) definitions.chats_rules = { ...rules, key: "chats.rules.show" }
 
-  const keyOf = (name: string, definition: PersonalMcpTool) => personalMcpToolKey(name, definition) ?? "messages"
+  const keyOf = (name: string, definition: PersonalMcpTool) =>
+    name === "status" ? null : (personalMcpToolKey(name, definition) ?? "messages")
   const writable = (name: string, definition: PersonalMcpTool) => {
     const key = keyOf(name, definition)
+    if (key === null) return null
     const own = settings()
     assertReadable(own, key)
     if (definition.annotations.readOnlyHint !== true && levelFor(own.permissions, key).level === "readonly")
@@ -123,6 +117,7 @@ export const registerTools = (
   }
   const inScope: NonNullable<PersonalMcpRegistration["around"]> = (name, definition, work) => {
     const key = writable(name, definition)
+    if (key === null) return work()
     if (key === "chats.moderate") migrateModerationPoints(store)
     return withPermissionApproval(key, () =>
       key === "chats.moderate"
@@ -147,7 +142,8 @@ export const registerTools = (
   }
   const offered = Object.fromEntries(
     Object.entries(definitions).filter(([name, definition]) => {
-      const level = levelFor(settings().permissions, keyOf(name, definition)).level
+      const key = keyOf(name, definition)
+      const level = key === null ? "allow" : levelFor(settings().permissions, key).level
       return level !== "deny" && (definition.annotations.readOnlyHint === true || level !== "readonly")
     }),
   )
@@ -197,20 +193,59 @@ export const registerTools = (
         }
       },
     }
-  const needsForm = (name: string, definition: PersonalMcpTool) =>
-    confirmSend ||
-    (levelFor(settings().permissions, keyOf(name, definition)).level === "ask" &&
-      !(keyOf(name, definition) === "messages.delete" ? allowDangerous : yes))
   for (const [name, definition] of Object.entries(offered)) {
-    if (!definition.permission || needsForm(name, definition) || !definition._meta) continue
-    const { _meta, ...rest } = definition
-    const metadata = { ..._meta }
+    if (!definition._meta) continue
+    const metadata = { ...definition._meta }
     delete metadata["anthropic/requiresUserInteraction"]
-    offered[name] = { ...rest, ...(Object.keys(metadata).length ? { _meta: metadata } : {}) }
+    offered[name] = { ...definition, _meta: metadata }
+  }
+  const moderation = definitions.chats_moderate
+  const level = levelFor(settings().permissions, "chats.moderate").level
+  if (moderation && ["allow", "ask"].includes(level))
+    offered.chats_check = legacyCheckTool(session, {
+      store,
+      profile,
+      allowDangerous: false,
+      yes: true,
+      confirmSend: false,
+      scope: (work) => inScope("chats_moderate", moderation, work),
+    })
+  offered.status = {
+    title: "This server's profile and login",
+    description:
+      "The profile, known account and offered writes. Reads local state only; never connects or prints a token.",
+    key: null,
+    input: v.strictObject({}),
+    annotations: { ...READ, idempotentHint: true },
+    local: async () => {
+      const account = store.readState().viewerId ?? null
+      let token: string
+      try {
+        token = store.tokenSource() ?? "none"
+      } catch {
+        token = "unreachable"
+      }
+      return {
+        profile,
+        account,
+        viewerId: account,
+        kind: store.isBot() ? "personal + bot" : "personal",
+        token,
+        loggedInHere: store.hasLoggedIn(),
+        hasToken: store.readToken() !== undefined,
+        hasLoggedIn: account !== null,
+        writes: [
+          ...Object.entries(offered)
+            .filter(([, one]) => one.annotations.readOnlyHint !== true)
+            .map(([name]) => personalMcpCommand(name)),
+        ],
+        permissions: settings().permissions,
+      }
+    },
   }
   const currentSettings = settings()
   const ai = Object.fromEntries(AI_SETTING_KEYS.map((key) => [key, currentSettings[key]]))
-  registerPersonalMcpTools(server, offered, {
+  registerPersonalMcpSurface(server, offered, {
     command: "max",
     messenger: maxMessenger,
     defaults: {
@@ -229,13 +264,6 @@ export const registerTools = (
       env: process.env,
       ...(embedders ? { embedders } : {}),
     },
-    confirmed,
-    resolveChat: (adapter, reference) => {
-      const client = adapters.get(adapter)
-      if (!client) throw new Error("MAX confirmation requires its held adapter")
-      return client.chats.show(reference)
-    },
-    confirms: needsForm,
     around: inScope,
     session: {
       use: (name, work) =>
@@ -298,57 +326,4 @@ export const registerTools = (
         ),
       ),
   })
-  const moderation = definitions.chats_moderate
-  const level = levelFor(settings().permissions, "chats.moderate").level
-  if (moderation && ["allow", "ask"].includes(level))
-    registerLegacyCheck(server, session, {
-      store,
-      profile,
-      allowDangerous,
-      yes,
-      confirmSend,
-      scope: (work) => inScope("chats_moderate", moderation, work),
-    })
-
-  server.registerTool(
-    "max_status",
-    {
-      title: "This server's profile and login",
-      description:
-        "The profile, known account and offered writes. Reads local state only; never connects or prints a token.",
-      inputSchema: toStandardJsonSchema(v.strictObject({})),
-      annotations: { ...READ, idempotentHint: true },
-    },
-    async () => {
-      try {
-        const account = store.readState().viewerId ?? null
-        let token: string
-        try {
-          token = store.tokenSource() ?? "none"
-        } catch {
-          token = "unreachable"
-        }
-        return answerMcpTool({
-          profile,
-          account,
-          viewerId: account,
-          kind: store.isBot() ? "personal + bot" : "personal",
-          token,
-          loggedInHere: store.hasLoggedIn(),
-          hasToken: store.readToken() !== undefined,
-          hasLoggedIn: account !== null,
-          writes: [
-            ...Object.entries(offered)
-              .filter(([, one]) => one.annotations.readOnlyHint !== true)
-              .map(([name]) => `max_${name}`),
-            ...(["allow", "ask"].includes(level) ? ["max_chats_check"] : []),
-          ],
-          confirmSend,
-          permissions: settings().permissions,
-        })
-      } catch (error) {
-        return failMcpTool(error)
-      }
-    },
-  )
 }

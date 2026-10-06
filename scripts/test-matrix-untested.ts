@@ -10,10 +10,6 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
-  ...["stats", "stats messages", "stats chats"].map((command) => ({
-    command,
-    reason: "A command group with no action; its show command is exercised through the CLI",
-  })),
   ...["list", "show", "add", "remove"].map((verb) => ({
     command: `chats tracking ${verb}`,
     reason:

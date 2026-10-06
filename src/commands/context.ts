@@ -2,7 +2,7 @@ import { existsSync } from "node:fs"
 import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@leemour/cli-core"
 import type { FetchLike } from "@leemour/cli-core/http"
 import type { ServerSystem } from "@leemour/cli-messaging/background"
-import { recorded } from "@leemour/cli-messaging/cli"
+import { type BaseEnvironment, inputPolicy, recorded, withAbort } from "@leemour/cli-messaging/cli"
 import { levelFor, sharedJournal } from "@leemour/cli-messaging/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
@@ -28,7 +28,7 @@ import type { UpdateEnvironment } from "../update.js"
  * What a command writes to and talks through, when it is not the real terminal, keyring and MAX.
  * `run` sets it on the program; without it everything is the real thing.
  */
-export interface Environment {
+export interface Environment extends Pick<BaseEnvironment, "env" | "signal" | "commandSignal" | "trackCloseable"> {
   streams?: Streams
   tty?: boolean
   /** A store over a memory keyring, so a test never touches the owner's. */
@@ -140,9 +140,10 @@ export const contextFor = (
   flags: GlobalFlags & { offline?: boolean; yes?: boolean; allowDangerous?: boolean },
   environment: Environment = {},
 ): CommandContext => {
-  const settings = resolveSettings(flags)
+  const settings = resolveSettings(flags, { env: environment.env ?? process.env })
   const { renderer, format, color, streams } = resolveOutput({
     ...settings,
+    env: environment.env ?? process.env,
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
@@ -151,7 +152,13 @@ export const contextFor = (
   // Every client this command builds, so the deadline can shut them. There is always one; relying
   // on that is what makes the second one, some day, the leak that keeps the process alive.
   const cancellation = new AbortController()
-  const clients: Closeable[] = [{ close: async () => cancellation.abort() }]
+  const clients: Closeable[] = []
+  const track = (closeable: Closeable) => {
+    clients.push(closeable)
+    environment.trackCloseable?.(closeable)
+  }
+  track({ close: async () => cancellation.abort() })
+  const signal = environment.signal ? AbortSignal.any([cancellation.signal, environment.signal]) : cancellation.signal
 
   // Only for the real thing: a test hands in its own store, and must never start a process.
   // A server does not take `MAX_TOKEN` along, so a token from there has no server to share.
@@ -196,42 +203,45 @@ export const contextFor = (
         reads: extra.reads ?? ((key) => assertReadable(settings, currentReadPermission() ?? key)),
         sends: extra.sends ?? sharedJournal(guardFor(settings, renderer.warn, askerFor(flags, environment)), wire),
       })
-      clients.push(client)
+      track(client)
       return client
     },
-    track: (closeable) => {
-      clients.push(closeable)
-    },
+    track,
     browser: environment.browser ?? realBrowser,
     reach: environment.reach ?? publicOnly,
     hearing: {
       fetchAudio: (link) => fetchBytes(link, environment.reach ?? publicOnly),
       ...(environment.recognizer ? { open: environment.recognizer } : {}),
     },
-    ask:
-      environment.ask ??
-      ((prompt, { secret = false, signal = cancellation.signal } = {}) =>
-        readSecret(prompt, { input: environment.stdin ?? process.stdin, echo: !secret, signal })),
-    signal: cancellation.signal,
-    interactive: environment.interactive ?? (process.stdin.isTTY === true && process.stderr.isTTY === true),
+    ask: (prompt, { secret = false, signal: stop = signal } = {}) => {
+      const input = environment.stdin ?? process.stdin
+      return !inputPolicy(input).noInput && environment.ask
+        ? environment.ask(prompt, { secret, signal: stop })
+        : readSecret(prompt, { input, echo: !secret, signal: stop })
+    },
+    signal,
+    interactive:
+      !inputPolicy(environment.stdin ?? process.stdin).noInput &&
+      (environment.interactive ?? (process.stdin.isTTY === true && process.stderr.isTTY === true)),
     columns: environment.columns ?? process.stderr.columns,
     run: (command, body) =>
       permissionScope(() =>
-        withDeadline(settings.commandTimeoutMs, clients, () =>
-          recorded(
-            {
-              app: MAX_APP,
-              command,
-              profile: settings.profile,
-              record: settings.record,
-              keepFailed: settings.keepFailedRuns,
-              trace: settings.trace,
-              format,
-              streams,
-              keepDays: settings.keepRunsForDays,
-            },
-            body,
-          ),
+        recorded(
+          {
+            app: MAX_APP,
+            command,
+            profile: settings.profile,
+            record: settings.record,
+            keepFailed: settings.keepFailedRuns,
+            trace: settings.trace,
+            format,
+            streams,
+            keepDays: settings.keepRunsForDays,
+          },
+          (events) =>
+            withAbort(environment.commandSignal, () =>
+              withDeadline(settings.commandTimeoutMs, clients, () => body(events)),
+            ),
         ),
       ),
   }

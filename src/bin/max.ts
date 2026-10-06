@@ -6,7 +6,10 @@ import { ensureSqlite } from "@leemour/cli-messaging/sqlite-runtime"
 // stopped reading is not an error: leave quietly, as every other Unix tool does.
 for (const stream of [process.stdout, process.stderr]) {
   stream.on("error", (error: NodeJS.ErrnoException) => {
-    if (error.code === "EPIPE") process.exit(0)
+    if (error.code === "EPIPE") {
+      if (stream.listenerCount("error") === 1) process.exit(0)
+      return
+    }
     throw error
   })
 }
