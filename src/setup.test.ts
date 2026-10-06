@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { PassThrough } from "node:stream"
+import { stripVTControlCharacters } from "node:util"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Environment } from "./commands/context.js"
@@ -196,7 +197,7 @@ describe("MAX guided setup", () => {
     h.environment.interactive = true
     h.environment.ask = async () => "none"
     expect(await h.setup()).toBe(0)
-    expect(h.streams.stdout.join("\n")).toMatch(/For an agent +max setup-test skill show/)
+    expect(stripVTControlCharacters(h.streams.stdout.join("\n"))).toMatch(/For an agent +max setup-test skill show/)
     expect(h.streams.stdout.join("\n")).toContain("install later: max setup-test skill install")
     const screen = h.streams.stderr.join("\n")
     for (let step = 1; step <= 4; step++) expect(screen).toMatch(new RegExp(`\n\\[${step}/4\\] `))
