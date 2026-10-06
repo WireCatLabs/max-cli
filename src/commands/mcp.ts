@@ -1,7 +1,7 @@
 import { CliError } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { installerOf } from "@leemour/cli-core/update"
-import { httpTokenFile, revokeAll } from "@leemour/cli-messaging/cli"
+import { httpConfirmationOf, httpTokenFile, revokeAll } from "@leemour/cli-messaging/cli"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { ownScript } from "../install.js"
@@ -15,6 +15,8 @@ interface Flags {
   allowMarkRead?: boolean
   allowDelete?: boolean
   allowModerate?: boolean
+  permission?: string[]
+  httpConfirmation?: string
   http?: boolean
   port?: string
   publicUrl?: string
@@ -50,6 +52,11 @@ const portOf = (given: string | undefined): number => {
 
 const withFlags = (command: Command): Command =>
   command
+    .option(
+      "--permission <key=level>",
+      "override a permission for this server only; repeat for more keys",
+      (value: string, previous: string[] = []) => [...previous, value],
+    )
     .option("--allow-dangerous", "skip confirmation for messages.delete at level ask")
     .option("--allow-send", "deprecated: use permissions.messages.send in config; does not grant access")
     .option(
@@ -70,14 +77,19 @@ export const mcpCommand = (): Command => {
   )
     .option(
       "--http",
-      "serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; every write asks first",
+      "serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; every write asks first by default",
+    )
+    .option(
+      "--http-confirmation <mode>",
+      "required: every write needs a server form (default); permissions: follow the profile levels",
     )
     .option("--port <port>", `the local port for --http (default ${DEFAULT_PORT})`)
     .option("--public-url <url>", "the tunnel's https address the browser apps use, e.g. https://<name>.ts.net")
     .option("--revoke", "forget every login given to a browser app; each must log in again")
   command.action(async function (this: Command) {
+    const own = this.optsWithGlobals<Flags>()
+    const confirmation = httpConfirmationOf(own)
     const context = forCommand(this)
-    const own = this.opts<Flags>()
     const tokenFile = httpTokenFile(MAX_APP, context.settings.profile, process.env)
     if (own.revoke) {
       revokeAll(tokenFile)
@@ -94,7 +106,7 @@ export const mcpCommand = (): Command => {
     if (own.http) {
       const publicUrl = publicUrlOf(own.publicUrl)
       const { serveOverHttpUntilStopped } = await import("../mcp/server.js")
-      await serveOverHttpUntilStopped(context, {}, { publicUrl, port: portOf(own.port), tokenFile })
+      await serveOverHttpUntilStopped(context, {}, { publicUrl, confirmation, port: portOf(own.port), tokenFile })
       return
     }
     // Loaded here, not at the top: every other command would otherwise pay for the SDK and zod.
@@ -230,6 +242,7 @@ export const serverEntry = ({
   scriptPath: string
   env: NodeJS.ProcessEnv
 }): { config: { mcpServers: Record<string, object> }; warning?: string } => {
+  httpConfirmationOf({ ...flags, http: false })
   if (installerOf(scriptPath) === "npx") {
     throw new CliError(
       "validation_error",
@@ -241,6 +254,7 @@ export const serverEntry = ({
     scriptPath,
     ...(profile === "default" ? [] : [profile]),
     "mcp",
+    ...(flags.permission ?? []).flatMap((entry) => ["--permission", entry]),
     ...FLAG_ARGS.filter(([key]) => flags[key] === true).map(([, flag]) => flag),
   ]
   const directories = Object.fromEntries(DIRECTORIES.flatMap((name) => (env[name] ? [[name, env[name]]] : [])))

@@ -4,7 +4,7 @@ import { createServer as createNetServer } from "node:net"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
-import { OVER_HTTP, personalMcpTools, serveOverHttp } from "@leemour/cli-messaging/cli"
+import { type HttpConfirmation, httpServerOptions, personalMcpTools, serveOverHttp } from "@leemour/cli-messaging/cli"
 import { parseLucene, servicesFor, storedDeps } from "@leemour/cli-messaging/services"
 import { openStore } from "@leemour/cli-messaging/store"
 import { Client, type ElicitResult, StreamableHTTPClientTransport } from "@modelcontextprotocol/client"
@@ -106,10 +106,14 @@ const connect = async (
     form,
     era = "legacy",
     http = false,
+    confirmation,
+    permission,
     record,
   }: {
     /** Over `max mcp --http` on 127.0.0.1, logged in through the owner login. */
     http?: boolean
+    confirmation?: HttpConfirmation
+    permission?: string[]
     record?: boolean
     token?: boolean
     answers?: MockMaxOptions["answers"]
@@ -123,7 +127,7 @@ const connect = async (
   const keyring = memoryKeyring()
   const streams = captureStreams()
   const context = contextFor(
-    { profile, record },
+    { profile, record, permission },
     {
       streams,
       tty: false,
@@ -135,7 +139,11 @@ const connect = async (
       connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     },
   )
-  const { session, build } = createMaxServer(context, { allowSend: false, ...options, ...(http ? OVER_HTTP : {}) })
+  const { session, build } = createMaxServer(context, {
+    allowSend: false,
+    ...options,
+    ...(http ? httpServerOptions(confirmation) : {}),
+  })
   if (http) {
     const codes: string[] = []
     const port = await freePort()
@@ -516,7 +524,7 @@ describe("the MCP server", () => {
       "max_tasks_close",
     ])
     for (const { name, annotations } of writing)
-      expect(annotations).toMatchObject({ destructiveHint: !localWrites.has(name) })
+      expect(annotations, name).toMatchObject({ destructiveHint: !localWrites.has(name) })
     expect(writing.find(({ name }) => name === "max_messages_delete")?._meta).toMatchObject({
       "anthropic/requiresUserInteraction": true,
     })
@@ -1312,6 +1320,57 @@ describe("the MCP server", () => {
         expect(sends(max)).toBe(1)
       },
     )
+
+    it.each(["legacy", "modern"] as const)(
+      "HTTP permissions mode sends without elicitation with a startup override (%s)",
+      async (era) => {
+        const { client, max, forms } = await connect(
+          {},
+          {
+            answers: sendAnswer,
+            http: true,
+            era,
+            confirmation: "permissions",
+            permission: ["messages=readonly", "messages.send=allow"],
+          },
+        )
+        expect((await client.listTools()).tools.map(({ name }) => name)).toContain("max_messages_send")
+        expect((await call(client, "max_chats_list")).isError).toBe(false)
+        expect((await call(client, "max_messages_send", { chat: "111", text: "synthetic send" })).isError).toBe(false)
+        expect(sends(max)).toBe(1)
+        expect(forms).toEqual([])
+      },
+    )
+
+    it.each(["deny", "readonly"])("HTTP permissions mode does not offer a send overridden to %s", async (level) => {
+      const { client, max } = await connect(
+        {},
+        {
+          answers: sendAnswer,
+          http: true,
+          confirmation: "permissions",
+          permission: [`messages.send=${level}`],
+        },
+      )
+      expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_messages_send")
+      expect(sends(max)).toBe(0)
+    })
+
+    it("HTTP permissions mode still asks at level ask even with stdio bypass flags", async () => {
+      const { client, max } = await connect(
+        { yes: true, allowDangerous: true },
+        {
+          answers: sendAnswer,
+          http: true,
+          confirmation: "permissions",
+          permission: ["messages.send=ask"],
+        },
+      )
+      await client
+        .callTool({ name: "max_messages_send", arguments: { chat: "111", text: "synthetic send" } })
+        .catch(() => undefined)
+      expect(sends(max)).toBe(0)
+    })
 
     it("over mcp --http, sends nothing when the owner declines", async () => {
       const { client, max } = await connect(

@@ -155,7 +155,10 @@ export const contextFor = (
 
   // Only for the real thing: a test hands in its own store, and must never start a process.
   // A server does not take `MAX_TOKEN` along, so a token from there has no server to share.
-  const starts = !environment.store && !environment.connection && settings.serve && !process.env.MAX_TOKEN
+  // The native server reads saved permissions; startup overrides belong to this connection.
+  const overridesPermissions = (flags.permission?.length ?? 0) > 0
+  const starts =
+    !overridesPermissions && !environment.store && !environment.connection && settings.serve && !process.env.MAX_TOKEN
 
   return {
     settings,
@@ -173,7 +176,7 @@ export const contextFor = (
       )
       const shares = starts && flags.offline !== true && snapshotAllowed
       const wire =
-        !own && snapshotAllowed && (shares || existsSync(store.socketPath()))
+        !own && !overridesPermissions && snapshotAllowed && (shares || existsSync(store.socketPath()))
           ? new ServerConnection({
               path: store.socketPath(),
               store,

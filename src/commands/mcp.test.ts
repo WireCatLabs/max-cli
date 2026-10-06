@@ -1,5 +1,5 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs"
-import { dirname } from "node:path"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { dirname, join } from "node:path"
 import { captureStreams } from "@leemour/cli-core"
 import { httpTokenFile } from "@leemour/cli-messaging/cli"
 import { describe, expect, it, vi } from "vitest"
@@ -170,6 +170,53 @@ describe("max mcp --http", () => {
       {},
       expect.objectContaining({ publicUrl: new URL("https://name.ts.net"), port: 9100 }),
     )
+  })
+
+  it("passes startup permissions and the explicit confirmation mode without changing saved config", async () => {
+    const file = join(process.env.MAX_CONFIG_DIR ?? "", "config.json")
+    mkdirSync(dirname(file), { recursive: true })
+    const saved = JSON.stringify({ defaults: { readOnly: true, permissions: { "messages.send": "deny" } } })
+    writeFileSync(file, saved)
+    const { code } = await cli([
+      "mcp",
+      "--http",
+      "--public-url",
+      "https://device.example",
+      "--http-confirmation",
+      "permissions",
+      "--permission",
+      "messages.send=allow",
+    ])
+    expect(code).toBe(0)
+    expect(serveOverHttpUntilStopped).toHaveBeenCalledWith(
+      expect.objectContaining({
+        settings: expect.objectContaining({ permissions: expect.objectContaining({ "messages.send": "allow" }) }),
+      }),
+      {},
+      expect.objectContaining({ confirmation: "permissions" }),
+    )
+    expect(readFileSync(file, "utf8")).toBe(saved)
+  })
+
+  it("retains startup permissions when generating the local client configuration", async () => {
+    const { code, stdout } = await cli(["mcp", "config", "--permission", "messages.send=allow", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).mcpServers.max.args).toEqual(
+      expect.arrayContaining(["--permission", "messages.send=allow"]),
+    )
+    expect(serveOverStdio).not.toHaveBeenCalled()
+    expect(serveOverHttpUntilStopped).not.toHaveBeenCalled()
+  })
+
+  it.each([
+    ["--http-confirmation", "permissions"],
+    ["--http", "--http-confirmation", "automatic"],
+    ["--http", "--http-confirmation", "permissions", "--confirm-send"],
+    ["--http", "--permission", "messages.send=yes"],
+  ])("refuses invalid startup options before opening the server: %j", async (...args) => {
+    const { code } = await cli(["mcp", ...args, "--json"])
+    expect(code).not.toBe(0)
+    expect(serveOverHttpUntilStopped).not.toHaveBeenCalled()
   })
 
   it("--revoke forgets every browser login of the profile", async () => {

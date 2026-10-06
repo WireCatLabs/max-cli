@@ -34,10 +34,14 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 - **CLI-58** · P2 · 🟡 `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
   third-party proxy. Done: Streamable HTTP on `127.0.0.1` behind the owner's tunnel, a one-owner OAuth login
   (one-time terminal code, PKCE S256, 1 h access / 30-day rotating refresh, hashes only), every write through
-  the form (NEED-593), `--revoke` — cli-messaging #527/#528/#543 (0.146.0), tg-cli #266, max-cli #398,
+  the form by default (NEED-593), `--revoke` — cli-messaging #527/#528/#543 (0.146.0), tg-cli #266, max-cli #398,
   `docs/remote.md` in both. Left: the live check with Claude.ai and ChatGPT through Tailscale Funnel (owner;
   tg-cli `bin/tg-remote`) — it also answers whether the apps show MCP forms at all, without which `--http`
-  only reads. MAX0.28.0 and TG0.27.0 are published with core0.17.0 and cli-messaging0.147.0;
+  only reads. Owner report 2026-10-06: Claude.ai reads worked, send and retry failed after app approval;
+  Claude attributed HTTP 400 to unsupported elicitation (raw error/capabilities unverified). Approved follow-up:
+  compatibility implemented in cli-messaging #627 (0.155.0): explicit `--http-confirmation permissions` and
+  repeatable `--permission key=level`; mandatory forms remain the default, ask/deny/readonly still apply.
+  Actual browser sends in the new mode and OpenAI web remain unchecked. MAX0.28.0 and TG0.27.0 are published with core0.17.0 and cli-messaging0.147.0;
   the reviewed search/history/service diagnostics work is included.
 - **CLI-68** · P3 · `mcp --http` as a background service: `server install` for it (systemd/launchd), so the
   browser apps reach a machine without an open terminal. Follows CLI-58's live check (NEED-595 A: foreground
