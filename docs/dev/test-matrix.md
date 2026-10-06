@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**558 ✅ · 102 ⛔ · 0 ❌** — 233 commands, 427 options.
+**611 ✅ · 98 ⛔ · 0 ❌** — 238 commands, 471 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -45,6 +45,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
 | `chats mark-read` | `--until` | ✅ |  |
+| `chats mark-read` | `--topic` | ✅ |  |
 | `chats leave` |  | ✅ |  |
 | `chats create` |  | ✅ |  |
 | `chats create` | `--channel` | ✅ |  |
@@ -117,6 +118,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages list` | `--model` | ✅ |  |
 | `messages list` | `--mark-read` | ✅ |  |
 | `messages search` |  | ✅ |  |
+| `messages search` | `--sync-first` | ✅ |  |
+| `messages search` | `--max-chats` | ✅ |  |
+| `messages search` | `--sync-time` | ✅ |  |
+| `messages search` | `--max-messages` | ✅ |  |
+| `messages search` | `--thread` | ✅ |  |
+| `messages search` | `--thread-hops` | ✅ |  |
+| `messages search` | `--thread-messages` | ✅ |  |
+| `messages search` | `--thread-bytes` | ✅ |  |
+| `messages search` | `--thread-within` | ✅ |  |
 | `messages search` | `--chat` | ✅ |  |
 | `messages search` | `--source` | ✅ |  |
 | `messages search` | `--limit` | ✅ |  |
@@ -128,10 +138,19 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages search` | `--saved` | ✅ |  |
 | `messages show` |  | ✅ |  |
 | `messages context` |  | ✅ |  |
+| `messages context` | `--thread` | ✅ |  |
+| `messages context` | `--thread-hops` | ✅ |  |
+| `messages context` | `--thread-messages` | ✅ |  |
+| `messages context` | `--thread-bytes` | ✅ |  |
+| `messages context` | `--thread-within` | ✅ |  |
 | `messages context` | `--before-n` | ✅ |  |
 | `messages context` | `--after-n` | ✅ |  |
 | `messages links` |  | ✅ |  |
 | `messages stats` |  | ✅ |  |
+| `messages stats` | `--sync-first` | ✅ |  |
+| `messages stats` | `--max-chats` | ✅ |  |
+| `messages stats` | `--sync-time` | ✅ |  |
+| `messages stats` | `--max-messages` | ✅ |  |
 | `messages stats` | `--by` | ✅ |  |
 | `messages stats` | `--chat` | ✅ |  |
 | `messages stats` | `--source` | ✅ |  |
@@ -212,6 +231,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store copies delete` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion |
 | `conversations build` |  | ✅ |  |
 | `conversations build` | `--chat` | ✅ |  |
+| `conversations build` | `--analyze` | ✅ |  |
+| `conversations build` | `--provider` | ✅ |  |
+| `conversations build` | `--model` | ✅ |  |
+| `conversations build` | `--base-url` | ✅ |  |
+| `conversations build` | `--size` | ✅ |  |
+| `conversations build` | `--max-tokens` | ✅ |  |
 | `conversations build` | `--max-chats` | ✅ |  |
 | `conversations list` |  | ✅ |  |
 | `conversations list` | `--chat` | ✅ |  |
@@ -230,17 +255,23 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations status` | `--provider` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
 | `conversations status` | `--base-url` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
 | `conversations status` | `--dims` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
-| `conversations search` |  | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations search` |  | ✅ |  |
 | `conversations search` | `--model` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--provider` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--base-url` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--dims` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations search` | `--max-chats` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations search` | `--max-chunks` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations search` | `--max-chats` | ✅ |  |
+| `conversations search` | `--max-chunks` | ✅ |  |
+| `conversations search` | `--sync-first` | ✅ |  |
+| `conversations search` | `--sync-time` | ✅ |  |
+| `conversations search` | `--max-messages` | ✅ |  |
 | `conversations search` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations search` | `--since-time` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations search` | `--filter` | ✅ |  |
+| `conversations search` | `--source` | ✅ |  |
+| `conversations search` | `--timezone` | ✅ |  |
 | `conversations search` | `--limit` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations search` | `--refresh` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations search` | `--refresh` | ✅ |  |
 | `conversations batches status` |  | ✅ |  |
 | `conversations batches status` | `--chat` | ✅ |  |
 | `conversations batches status` | `--size` | ✅ |  |
@@ -252,6 +283,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations links clear` |  | ✅ |  |
 | `conversations links clear` | `--chat` | ✅ |  |
 | `conversations links clear` | `--model` | ✅ |  |
+| `conversations consents list` |  | ✅ |  |
+| `conversations consents revoke` |  | ✅ |  |
+| `conversations consents revoke` | `--chat` | ✅ |  |
+| `conversations consents revoke` | `--provider` | ✅ |  |
 | `conversations embed` |  | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--model` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
@@ -276,6 +311,20 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations embed clear` | `--provider` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
 | `conversations embed clear` | `--base-url` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
 | `conversations embed clear` | `--dims` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
+| `attachments extract` |  | ✅ |  |
+| `attachments extract` | `--chat` | ✅ |  |
+| `attachments extract` | `--download` | ✅ |  |
+| `attachments extract` | `--output-dir` | ✅ |  |
+| `attachments extract` | `--limit` | ✅ |  |
+| `attachments list` |  | ✅ |  |
+| `attachments list` | `--chat` | ✅ |  |
+| `attachments list` | `--needs-text` | ✅ |  |
+| `attachments list` | `--limit` | ✅ |  |
+| `attachments list` | `--page` | ✅ |  |
+| `attachments list` | `--all` | ✅ |  |
+| `attachments text set` |  | ✅ |  |
+| `attachments text set` | `--attachment` | ✅ |  |
+| `attachments text set` | `--text-file` | ✅ |  |
 | `tags add` |  | ✅ |  |
 | `tags add` | `--chat` | ✅ |  |
 | `tags add` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |

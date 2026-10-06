@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import { CliError, configFilePath, loadConfigFile, resolvePaths, saveConfigFile } from "@leemour/cli-core"
-import { settingsFor } from "@leemour/cli-messaging/cli"
+import { AI_ENTRIES, type AISettings, resolveAISettings, settingsFor } from "@leemour/cli-messaging/cli"
 import {
   fromOldSettings,
   type Level,
@@ -68,6 +68,7 @@ const sharedEntries = {
   allow: v.optional(permissionList),
   permissions: settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries.permissions,
   sendsPerHour: v.optional(count),
+  ...AI_ENTRIES,
 }
 
 /** A bot has no server and no sender colours, so `bot.*` refuses these rather than ignoring them. */
@@ -170,7 +171,7 @@ export interface GlobalFlags {
   timeout?: string
 }
 
-export interface Settings {
+export interface Settings extends AISettings {
   profile: string
   /** Where the profile came from, decided here so nothing has to re-derive the order. */
   json: boolean
@@ -242,9 +243,11 @@ export type Source =
   | "MAX_PROFILE"
   | "MAX_PROFILE_LOCK"
   | "MAX_TIMEOUT"
+  | `MAX_${string}`
   | `config file: ${string}`
   | "default"
 export type SourcedSetting =
+  | keyof AISettings
   | "profile"
   | "limit"
   | "timeoutMs"
@@ -398,7 +401,9 @@ export const resolveSettings = (
     undefined,
   )
 
+  const ai = resolveAISettings("MAX", layers, env)
   const settings: Settings = {
+    ...ai.values,
     profile: usableProfileName(profile.value),
     json: flags.json === true,
     jsonl: flags.jsonl === true,
@@ -432,6 +437,7 @@ export const resolveSettings = (
     kind,
     configuredProfiles: namedProfiles(config),
     sources: {
+      ...(ai.sources as Record<keyof AISettings, Source>),
       profile: profile.from,
       limit: limit.from,
       timeoutMs: timeoutMs.from,

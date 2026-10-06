@@ -1,10 +1,12 @@
 # MCP-сервер
 
 `max mcp` отдаёт профиль агенту по [MCP](https://modelcontextprotocol.io) — по умолчанию через stdin и stdout;
-`--http --public-url` отдаёт инструменты на локальном порту за вашим HTTPS-туннелем. Сервер ставится вместе с `max`, отдельно ничего устанавливать не нужно.
+`--http --public-url` отдаёт инструменты на локальном порту за вашим HTTPS-туннелем. Сервер ставится вместе с
+`max`, отдельно ничего устанавливать не нужно.
 
 **Когда он нужен.** В Claude Code, Codex и других агентах с терминалом хватает самого `max` и
-[инструкции для агента](../README.md#для-скриптов-и-агентов): агент вызывает CLI напрямую. MCP нужен клиентам без терминала — Claude Desktop, чату Cursor — и тем, кто хочет, чтобы клиент
+[инструкции для агента](../README.md#для-скриптов-и-агентов): агент вызывает CLI напрямую. MCP нужен клиентам без
+терминала — Claude Desktop, чату Cursor — и тем, кто хочет, чтобы клиент
 спрашивал разрешения на каждую отправку. ChatGPT и Claude в браузере подключаются через `--http`: см.
 [remote.md](remote.md).
 
@@ -158,6 +160,9 @@ claude mcp add max -- max mcp --confirm-send
 | `max_polls_show` | `max polls show` | опрос и варианты ответа |
 | `max_messages_evidence` | `max messages evidence` | пакет сообщений из архива текущей учётной записи, без подключения |
 | `max_messages_stats` | `max messages stats` | число совпадений запроса в локальном архиве |
+| `max_conversations_batches_status`, `max_conversations_batches_next` | `max conversations batches …` | объём и ограниченные пачки для агента; чтение после согласия владельца |
+| `max_conversations_links_add`, `max_conversations_links_clear`, `max_conversations_build` | `max conversations links …`, `build` | сохранить связи агента, убрать их, перестроить граф; `conversations.links` |
+| `max_attachments_list`, `max_attachments_text_set` | `max attachments list`, `text set` | пути и состояние текста; запись текста агента для `content:` |
 | `max_conversations_status`, `max_conversations_refresh` | `max conversations status`, `search --refresh` | состояние индекса и локальное обновление; запись по `conversations.embed` |
 | `max_conversations_related` | `max conversations related` | похожие беседы по сохранённым векторам, без запуска модели |
 | `max_conversations_list`, `max_conversations_show`, `max_conversations_search` | `max conversations …` | беседы из построенного локального архива; поиск по словам и установленной модели |
@@ -202,12 +207,13 @@ claude mcp add max -- max mcp --confirm-send
 
 ## Команды и чаты по `@`
 
-Сервер даёт четыре готовых запроса — в Claude Code это команды через `/`:
+Сервер даёт пять готовых запросов — в Claude Code это команды через `/`:
 
 | Запрос | Аргумент | Что делает агент |
 |---|---|---|
 | `catch-up` | `kind`, `mode` — необязательно | вызывает `max_inbox`; `mode` — `unread` (по умолчанию), `new` или момент; `kind` выбирает вид чата; отметка прочитанного требует отдельного подтверждения |
 | `reply` | `chat` | читает чат, пишет черновик и отправляет только после вашего «да» на этот текст |
+| `link-conversations` | нет | сначала объём и согласие владельца, затем пачки, связи и перестройка графа |
 | `review` | `since`, `groups` — необязательно | один раз вызывает `max_review` и раскладывает на «я должен», «жду от других», «нужно уточнить» с id сообщений; перед «просрочено» ищет, не сделано ли это в группах; напоминания — только черновики до вашего «да»; в конце — `since` для следующего обзора |
 | `find` | `text` | ищет человека или слова и показывает сообщения вокруг найденного; ничего не отправляет |
 
@@ -242,4 +248,16 @@ HTTP работает до Ctrl-C.
 или `--allow-dangerous`. `max mcp --revoke` завершает входы приложений, сохраняя сессию MAX.
 См. [подключение из браузера](remote.md).
 
-Локальные записи tags/searches и обновления бесед при ask отказывают без формы. В режиме --confirm-send или HTTP они отказывают с confirmation_required, если форму нельзя связать с этим действием; ничего не меняется. Чтение этих данных доступно при readonly.
+Локальные записи tags/searches и обновления бесед при ask отказывают без формы. В режиме --confirm-send или HTTP
+они отказывают с confirmation_required, если форму нельзя связать с этим действием; ничего не меняется. Чтение этих
+данных доступно при readonly.
+
+Через MCP агент получает инструкцию `link-conversations`, оценивает объём инструментом
+`max_conversations_batches_status` и ждёт согласия владельца для этого чата. Затем читает
+`max_conversations_batches_next`, сохраняет ответы через `max_conversations_links_add` и перестраивает граф через
+`max_conversations_build`. `max_conversations_links_clear` удаляет ответы агента; после него граф также нужно
+перестроить. Запись требует `conversations.links`. Настройка внешних векторов действует и на MCP-поиск: вопрос
+отправляется выбранному сервису.
+
+`max_attachments_list` показывает пути и состояние текста; `max_attachments_text_set` сохраняет текст агента для
+`content:`. Извлечение — через CLI. `messages_context` принимает `offline: true`, чтобы читать только архив.

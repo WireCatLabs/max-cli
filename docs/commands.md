@@ -249,6 +249,7 @@ max chats mark-read <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--until <message>` | only up to this message id; the newest by default. |
+| `--topic <id>` | mark only this forum topic read; unsupported by messengers without topics. |
 
 ### `max chats leave`
 
@@ -785,7 +786,7 @@ max messages list <chat> [options]
 
 ### `max messages search`
 
-search the local store — what was read, fetched or kept by serve; never asks the messenger
+search the local store — what was read, fetched or kept by serve; optionally fetches new messages with --sync-first
 
 ```sh
 max messages search [query] [options]
@@ -797,6 +798,15 @@ max messages search [query] [options]
 
 | Опция | Что делает |
 |---|---|
+| `--sync-first` | first fetch new messages within the chat, time and message bounds. |
+| `--max-chats <n>` | refresh at most this many chats (default: 5). |
+| `--sync-time <duration>` | stop fetching after this long (default: 30s). |
+| `--max-messages <n>` | fetch at most this many messages total (default: 500). |
+| `--thread` | the stored reply chain and replies instead of time neighbours; falls back when no graph exists. |
+| `--thread-hops <n>` | at most this many links from the hit (default: 8). |
+| `--thread-messages <n>` | at most this many messages in each thread context (default: 50). |
+| `--thread-bytes <n>` | at most this many bytes of whole messages and links in each context (default: 65536). |
+| `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many. |
@@ -835,6 +845,11 @@ max messages context <chat> [message] [options]
 
 | Опция | Что делает |
 |---|---|
+| `--thread` | the stored reply chain and replies instead of time neighbours; falls back when no graph exists. |
+| `--thread-hops <n>` | at most this many links from the hit (default: 8). |
+| `--thread-messages <n>` | at most this many messages in each thread context (default: 50). |
+| `--thread-bytes <n>` | at most this many bytes of whole messages and links in each context (default: 65536). |
+| `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
 | `--before-n <n>` | how many before it. По умолчанию: `5`. |
 | `--after-n <n>` | how many after it. По умолчанию: `5`. |
 
@@ -853,7 +868,7 @@ max messages links <chat> <message>
 
 ### `max messages stats`
 
-how many stored messages match, by chat, sender, day or hour — the local store only; never asks the messenger
+how many stored messages match, by chat, sender, day or hour — the local store only; optionally fetches new messages with --sync-first
 
 ```sh
 max messages stats [query] [options]
@@ -865,6 +880,10 @@ max messages stats [query] [options]
 
 | Опция | Что делает |
 |---|---|
+| `--sync-first` | first fetch new messages within the chat, time and message bounds. |
+| `--max-chats <n>` | refresh at most this many chats (default: 5). |
+| `--sync-time <duration>` | stop fetching after this long (default: 30s). |
+| `--max-messages <n>` | fetch at most this many messages total (default: 500). |
 | `--by <chat\|sender\|day\|hour>` | what to count by (default: chat). |
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
@@ -1211,7 +1230,7 @@ max store migrate
 
 ### `max store reindex`
 
-rebuild the word index, its typo vocabulary and the stems from the stored messages; loses no message
+rebuild the word index, its typo vocabulary, the stems and the files' word index from the stored messages; loses no message
 
 ```sh
 max store reindex
@@ -1304,6 +1323,12 @@ max conversations build [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
+| `--analyze` | link batches using the configured analysis provider; requires --chat and remembers consent for this chat/provider. |
+| `--provider <provider>` | analysis: agent, openai or anthropic. |
+| `--model <model>` | analysis model; overrides analysisModel. |
+| `--base-url <url>` | analysis API endpoint; overrides analysisBaseUrl. |
+| `--size <n>` | analysis answer messages per batch, 10–200; default 50. |
+| `--max-tokens <n>` | analysis input/output reservation cap per run; default 100000. |
 | `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
 
 ### `max conversations list`
@@ -1350,7 +1375,7 @@ max conversations related <chat> <message> [options]
 |---|---|
 | `--limit <n>` | how many. |
 | `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
-| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 
@@ -1366,7 +1391,7 @@ max conversations status [options]
 |---|---|
 | `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
 | `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
-| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 
@@ -1385,13 +1410,19 @@ max conversations search <query> [options]
 | Опция | Что делает |
 |---|---|
 | `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
-| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
-| `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
+| `--max-chats <n>` | at most this many chats; 5 with --sync-first, 20 with --refresh if not given. |
 | `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given. |
+| `--sync-first` | first fetch new messages within the chat, time and message bounds. |
+| `--sync-time <duration>` | stop fetching after this long (default: 30s). |
+| `--max-messages <n>` | fetch at most this many messages total (default: 500). |
 | `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
 | `--since-time <time>` | only those still going at this ISO 8601 time, or 30m / 2h / 1d ago, or later. |
+| `--filter <query>` | strict Lucene filter: any message in a conversation must match; does not change the meaning query. |
+| `--source <source>` | accounts to search: personal, bots, all, or a provider; defaults to the active account. |
+| `--timezone <zone>` | IANA timezone for filter dates; system timezone by default. |
 | `--limit <n>` | how many. |
 | `--refresh` | first build and embed, on this machine, the chats in scope that changed or were never built — within --max-chats and --max-chunks. |
 
@@ -1454,6 +1485,31 @@ max conversations links clear [options]
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--model <model>` | only the answers this model gave. |
 
+### `max conversations consents`
+
+remembered analysis permissions for this account's chats and provider endpoints
+
+#### `max conversations consents list`
+
+
+
+```sh
+max conversations consents list
+```
+
+#### `max conversations consents revoke`
+
+
+
+```sh
+max conversations consents revoke [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | revoke only this chat's consents; defaults to every chat. |
+| `--provider <identity>` | exact provider identity from consents list; defaults to every provider. |
+
 ### `max conversations embed`
 
 compute a vector for each chunk of a chat's conversations for search by meaning — on this machine, or with --provider through a service and your key; resumes where it stopped; without --chat, every built chat with chunks left, on this machine only
@@ -1466,7 +1522,7 @@ max conversations embed [options]
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
-| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 | `--workers <n>` | local: sessions in parallel, each with its own copy of the model (\~0.7 GB each). |
@@ -1474,7 +1530,7 @@ max conversations embed [options]
 | `--concurrency <n>` | remote: requests at once (default: 4). |
 | `--max-tokens <n>` | remote: stop before a run that could send more tokens than this. |
 | `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
-| `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given. |
+| `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given, and no limit with --chat. |
 
 #### `max conversations embed status`
 
@@ -1488,7 +1544,7 @@ max conversations embed status [options]
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
-| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 
@@ -1504,9 +1560,66 @@ max conversations embed clear [options]
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--model <model>` | local: a model id from `models text list` (default: e5-small); remote: the provider's model. |
-| `--provider <provider>` | embed through a service with your key instead of on this machine: openai. |
+| `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+
+## `max attachments`
+
+the files of stored messages: their text in the local store, for content: in a search
+
+### `max attachments extract`
+
+read the text of downloaded files — plain text, Word, PDF with a text layer — into the local store, for content: in a search
+
+```sh
+max attachments extract [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat's files; a chat: its id, or part of its title. |
+| `--download` | first save the files no download saved yet, from the messenger, into --output-dir. |
+| `--output-dir <dir>` | with --download, where to save them; created if missing. |
+| `--limit <n>` | read at most this many files; run it again to continue. |
+
+### `max attachments list`
+
+files of stored messages, where each was saved and whether its text is held — never the text
+
+```sh
+max attachments list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat's files; a chat: its id, or part of its title. |
+| `--needs-text` | only files saved here whose text nobody has yet: what an agent reads and writes back. |
+| `--limit <n>` | how many to show. |
+| `--page <n>` | which page, starting at 1. |
+| `--all` | every row, no paging. |
+
+### `max attachments text`
+
+the text of one file, as an agent read it
+
+#### `max attachments text set`
+
+keep the text an agent read from a file — a scan, a photo — so content: finds it; nothing is sent
+
+```sh
+max attachments text set <chat> [message] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
+| `message` | необязательный | the message id. |
+
+| Опция | Что делает |
+|---|---|
+| `--attachment <n>` | which file of the message, from 1; needed when it has more than one. |
+| `--text-file <path>` | read the text from this file; - or none reads stdin. |
 
 ## `max tags`
 
@@ -1713,7 +1826,7 @@ max models text download <model> [options]
 
 #### `max models text key`
 
-the API key of an embedding service, for `conversations embed --provider`
+API keys for embedding and analysis providers
 
 #### `max models text key set`
 
@@ -1725,7 +1838,7 @@ max models text key set <provider>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `provider` | обязательный | openai, or the host of a --base-url server that wants a key. |
+| `provider` | обязательный | openai, anthropic, or the host of a --base-url server that wants a key. |
 
 #### `max models text key remove`
 
@@ -1737,7 +1850,7 @@ max models text key remove <provider>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `provider` | обязательный | openai, or a server's host. |
+| `provider` | обязательный | openai, anthropic, or a server's host. |
 
 ## `max polls`
 
@@ -2096,7 +2209,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -2117,7 +2230,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, senderColors, catchUpMarksRead, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 
 | Опция | Что делает |
 |---|---|

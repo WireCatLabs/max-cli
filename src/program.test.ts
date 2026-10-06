@@ -110,6 +110,15 @@ const runWith = async (argv: string[], environment: Environment = {}) => {
 }
 
 describe("the program", () => {
+  it("refuses a topic read without marking the whole chat read", async () => {
+    const { max, ...environment } = scriptedMax()
+    const result = await runWith(["chats", "mark-read", "111", "--topic", "12", "--json"], environment)
+    expect(result.code).toBe(2)
+    expect(result.stdout).toBe("")
+    expect(result.stderr).toContain("mark a forum topic read")
+    expect(max.sent.some(({ opcode }) => opcode === Opcode.CHAT_MARK)).toBe(false)
+  })
+
   it("refuses --topic for shared message and poll commands without sending", async () => {
     const { max, ...environment } = scriptedMax()
     const sent = await runWith(["messages", "send", "111", "hi", "--topic", "12", "--json"], environment)

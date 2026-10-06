@@ -25,7 +25,7 @@ export type MaxAdapter = MessengerAdapter &
   MessageEditing &
   MessagePins &
   MessageReactions &
-  ReadState &
+  Pick<ReadState, "markRead"> &
   MessagePolls &
   Required<
     Pick<
