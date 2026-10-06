@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**611 ✅ · 98 ⛔ · 0 ❌** — 238 commands, 471 options.
+**614 ✅ · 103 ⛔ · 0 ❌** — 240 commands, 477 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -56,6 +56,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members audit` |  | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members audit` | `--budget` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members audit` | `--min-score` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members audit` | `--deep` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members history` |  | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
+| `chats members history` | `--since-time` | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
+| `chats members fetch` |  | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
+| `chats members fetch` | `--track` | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
+| `chats members fetch` | `--budget` | ⛔ | cli-messaging src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
@@ -103,9 +109,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts unblock` |  | ✅ |  |
 | `contacts rename` |  | ✅ |  |
 | `contacts import` |  | ✅ |  |
-| `contacts context` |  | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts drives the local identity context; consumer permission tests reject message reads before connecting |
+| `contacts context` |  | ✅ |  |
 | `contacts context` | `--limit` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and archive gaps; this consumer mounts the shared command |
 | `contacts context` | `--since-time` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing |
+| `contacts context` | `--chat` | ✅ |  |
+| `contacts context` | `--refresh` | ✅ |  |
 | `contacts link` |  | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
 | `contacts unlink` |  | ⛔ | cli-messaging src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
 | `messages list` |  | ✅ |  |
