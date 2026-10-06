@@ -83,7 +83,7 @@
     "postinstall": "node install/postinstall.mjs"
   },
   "dependencies": {
-    "@leemour/cli-core": "0.17.1",
+    "@leemour/cli-core": "0.17.2",
     "@leemour/cli-messaging": "0.156.0",
     "@modelcontextprotocol/server": "2.1.0",
     "@msgpack/msgpack": "3.1.3",

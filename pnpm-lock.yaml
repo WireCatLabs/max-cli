@@ -9,11 +9,11 @@ importers:
   .:
     dependencies:
       '@leemour/cli-core':
-        specifier: 0.17.1
-        version: 0.17.1(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.17.2
+        version: 0.17.2(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
         specifier: 0.156.0
-        version: 0.156.0(@leemour/cli-core@0.17.1(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)
+        version: 0.156.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -615,8 +615,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
 
-  '@leemour/cli-core@0.17.1':
-    resolution: {integrity: sha512-4IqTHMsphq/9zABaCbG6dN90/QzDYXMtKphuUZW8u8g8uX6NM/mrLkmqLdWyPRlHCqB69fcsfKIBJRiuSt2P/g==}
+  '@leemour/cli-core@0.17.2':
+    resolution: {integrity: sha512-YHzCF3tmLSJhoXiBgb5WuSs83vTZqgCt6fmAgxAcXZqmGtJvHsRqGSpOaAxdUd7/URF1/vIi4Q+x2KpbBPNjGg==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -2191,7 +2191,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@leemour/cli-core@0.17.1(commander@15.0.0)(typescript@7.0.2)':
+  '@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       cli-table3: 0.6.5
       cross-spawn: 7.0.6
@@ -2211,12 +2211,12 @@ snapshots:
 
   '@leemour/cli-messaging-sqlite@1.0.0': {}
 
-  '@leemour/cli-messaging@0.156.0(@leemour/cli-core@0.17.1(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)':
+  '@leemour/cli-messaging@0.156.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)':
     dependencies:
       '@anthropic-ai/sdk': 0.131.0(zod@4.6.5)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@huggingface/tokenizers': 0.2.0
-      '@leemour/cli-core': 0.17.1(commander@15.0.0)(typescript@7.0.2)
+      '@leemour/cli-core': 0.17.2(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging-onnx': 1.0.0
       '@leemour/cli-messaging-sqlite': 1.0.0
       '@leemour/cli-tasks': 0.1.0

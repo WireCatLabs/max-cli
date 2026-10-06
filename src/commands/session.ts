@@ -1,4 +1,4 @@
-import { CliError } from "@leemour/cli-core"
+import { CliError, indent } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { Argument, Command } from "commander"
 import { type MaxClientOptions, refuseWhilePaused } from "../client.js"
@@ -134,6 +134,8 @@ export const startSession = async (context: CommandContext, method: Method, even
 /** Long enough to find the phone and type a number and a code; the profile dies with the wait. */
 const BROWSER_WAIT_MS = 5 * 60_000
 
+const QR_INDENT = 2
+
 const obtain = async (
   method: Exclude<Method, "token">,
   { createClient, renderer, browser, track, ask, streams, columns }: CommandContext,
@@ -155,8 +157,8 @@ const obtain = async (
       show: async (link) => {
         const drawn = terminalQr(link)
         // Straight to the diagnostic stream, not through the renderer: --quiet must not hide the code.
-        if (columns !== undefined && drawn.width <= columns) {
-          streams.diagnostic(drawn.text)
+        if (columns !== undefined && drawn.width + QR_INDENT <= columns) {
+          streams.diagnostic(`\n${indent(drawn.text, QR_INDENT)}`)
           renderer.note("scan this code with the MAX app on your phone")
           return
         }
