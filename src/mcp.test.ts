@@ -490,6 +490,8 @@ describe("the MCP server", () => {
       "max_attachments_text_set",
       "max_tags_add",
       "max_searches_create",
+      "max_tasks_add",
+      "max_tasks_close",
     ])
     for (const { name, annotations } of writing)
       expect(annotations).toMatchObject({ destructiveHint: !localWrites.has(name) })
