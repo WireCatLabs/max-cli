@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**793 ✅ · 106 ⛔ · 0 ❌** — 282 commands, 617 options.
+**794 ✅ · 105 ⛔ · 0 ❌** — 282 commands, 617 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -580,7 +580,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `replies pause` |  | ✅ |  |
 | `replies resume` |  | ✅ |  |
 | `replies status` |  | ✅ |  |
-| `serve` |  | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` |  | ✅ |  |
 | `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
 | `server start` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |

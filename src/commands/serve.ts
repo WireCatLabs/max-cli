@@ -1,4 +1,5 @@
 import { writeFileSync } from "node:fs"
+import { CliError } from "@leemour/cli-core"
 import { holdLock, lockPath, releaseLock } from "@leemour/cli-messaging/background"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
@@ -24,7 +25,7 @@ export const serveCommand = (): Command =>
     .addOption(new Option("--started-by-command").hideHelp())
     .action(async function (this: Command) {
       const { idle, startedByCommand = false } = this.opts<{ idle?: string; startedByCommand?: boolean }>()
-      const { renderer, settings, store, run, format, streams } = forCommand(this)
+      const { renderer, settings, store, run, format, streams, track } = forCommand(this)
       const idleMs = idle === undefined ? undefined : parseDuration(idle, "--idle")
 
       await run("serve", async (events) => {
@@ -41,6 +42,13 @@ export const serveCommand = (): Command =>
           ...(settings.timeoutMs ? { timeoutMs: settings.timeoutMs } : {}),
           ...(idleMs === undefined ? {} : { idleMs }),
           startedByCommand,
+        })
+        track({
+          close: async () => {
+            const settled = server.done.catch(() => {})
+            await server.stop(new CliError("cancelled", "serve stopped by command cancellation"))
+            await settled
+          },
         })
 
         const stop = () => void server.stop()

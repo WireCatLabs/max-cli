@@ -121,6 +121,7 @@ export class MaxServer {
   /** The last connection's login, kept past a drop so the next login resumes it (`MAX-51`). */
   #resume: ResumeFrom | undefined
   #handing: Promise<void> = Promise.resolve()
+  readonly #connecting = new Set<MaxClient>()
   readonly #replies: ReturnType<typeof serverReplies>
   readonly #members: ReturnType<NonNullable<MaxServerOptions["members"]>> | undefined
   #finish: ((error?: Error) => void) | undefined
@@ -170,6 +171,7 @@ export class MaxServer {
     } finally {
       rmSync(startingPath(this.#options.store), { force: true })
     }
+    if (this.#stopped) return
     this.#reportChatList(sessionId, Date.now() + CHAT_LIST_SHOWN_AFTER_MS)
     const { idleMs } = this.#options
     if (idleMs !== undefined) {
@@ -195,6 +197,7 @@ export class MaxServer {
     clearTimeout(this.#refresh)
     clearInterval(this.#idle)
     clearTimeout(this.#telemetry)
+    await Promise.all([...this.#connecting].map((client) => client.close()))
     for (const socket of this.#open) socket.destroy()
     this.#subscribers.clear()
     // Only the server that bound the socket removes it: one refused as "already running" would
@@ -223,6 +226,7 @@ export class MaxServer {
    * dropped: `Connection` has already acknowledged them, so MAX will not send them again.
    */
   async #connect(): Promise<void> {
+    if (this.#stopped) return
     const { store, timeoutMs, events } = this.#options
     let mine: MaxClient | undefined
     const early: [number, Record<string, unknown>][] = []
@@ -251,12 +255,15 @@ export class MaxServer {
       record: this.#record,
       ...(events ? { events } : {}),
     })
+    this.#connecting.add(client)
     try {
       await client.connect()
     } catch (error) {
       // A socket left open after a refused login keeps the process alive after it said it failed.
       await client.close()
       throw error
+    } finally {
+      this.#connecting.delete(client)
     }
 
     const replaced = this.#client
@@ -387,6 +394,7 @@ export class MaxServer {
     if ((await answers(path)) && !(!this.#options.startedByCommand && (await stopServer(path)) === "stopped")) {
       throw new CliError("validation_error", `a server is already running for profile "${this.#options.store.profile}"`)
     }
+    if (this.#stopped) return
     const pipe = process.platform === "win32"
     // macOS takes 104 bytes with the terminator, Linux 108; past that `listen` says only EINVAL.
     if (!pipe && Buffer.byteLength(path) > 103) {
@@ -410,6 +418,11 @@ export class MaxServer {
       listener.once("error", reject)
       listener.listen(path, () => resolve())
     })
+    if (this.#stopped) {
+      await new Promise<void>((resolve) => listener.close(() => resolve()))
+      if (!pipe) rmSync(path, { force: true })
+      return
+    }
     if (!pipe) chmodSync(path, 0o600)
     this.#listener = listener
   }
