@@ -79,7 +79,7 @@ export const registerTools = (
   const settings = () => resolveSettings({ profile, permission })
   const adapters = new WeakMap<object, MaxClient>()
   const definitions = personalMcpTools(maxMessenger)
-  for (const name of ["topics_list", "topics_enable", "topics_create"]) delete definitions[name]
+  for (const name of Object.keys(definitions)) if (name.startsWith("topics_")) delete definitions[name]
   const rules = definitions.chats_rules_show
   if (rules) definitions.chats_rules = { ...rules, key: "chats.rules.show" }
 

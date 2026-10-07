@@ -601,7 +601,7 @@ describe("the program", () => {
       expect(JSON.parse(capped.stdout).items).toHaveLength(1)
       expect(JSON.parse(all.stdout).items).toHaveLength(2)
       expect(JSON.parse(capped.stdout).query).toMatchObject({ language: "lucene-v1", timezone: "Europe/Madrid" })
-      const strict = await runWith(["t-search", "messages", "search", "lat", "--json"], environment)
+      const strict = await runWith(["t-search", "messages", "search", "exact:lat", "--json"], environment)
       const legacy = await runWith(
         ["t-search", "messages", "search", "lat", "--language", "legacy", "--json"],
         environment,

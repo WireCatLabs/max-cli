@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**722 ✅ · 100 ⛔ · 0 ❌** — 268 commands, 554 options.
+**722 ✅ · 106 ⛔ · 0 ❌** — 268 commands, 560 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -143,6 +143,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages search` | `--source` | ✅ |  |
 | `messages search` | `--limit` | ✅ |  |
 | `messages search` | `--newest` | ✅ |  |
+| `messages search` | `--exact` | ⛔ | cli-messaging src/services/messages-stemmed.test.ts covers exact matching against stemmed search; this consumer mounts the shared command (cli-messaging 0.163.0) |
 | `messages search` | `--context` | ✅ |  |
 | `messages search` | `--language` | ✅ |  |
 | `messages search` | `--timezone` | ✅ |  |
@@ -173,6 +174,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages send` |  | ✅ |  |
 | `messages send` | `--topic` | ✅ |  |
 | `messages send` | `--reply-to` | ✅ |  |
+| `messages send` | `--send-as` | ⛔ | cli-messaging src/services/send-as.test.ts covers sending, forwarding and polls as another identity, and refusing a messenger without it; this consumer mounts the shared commands (cli-messaging 0.164.0) |
 | `messages send` | `--send-id` | ✅ |  |
 | `messages send` | `--silent` | ✅ |  |
 | `messages send` | `--no-preview` | ✅ |  |
@@ -192,6 +194,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages forward` |  | ✅ |  |
 | `messages forward` | `--to` | ✅ |  |
 | `messages forward` | `--silent` | ✅ |  |
+| `messages forward` | `--send-as` | ⛔ | cli-messaging src/services/send-as.test.ts covers sending, forwarding and polls as another identity, and refusing a messenger without it; this consumer mounts the shared commands (cli-messaging 0.164.0) |
 | `messages forward` | `--send-id` | ✅ |  |
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |
@@ -260,6 +263,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats messages show` | `--source` | ✅ |  |
 | `stats messages show` | `--limit` | ✅ |  |
 | `stats messages show` | `--timezone` | ✅ |  |
+| `stats messages show` | `--exact` | ⛔ | cli-messaging src/services/messages-stemmed.test.ts covers exact matching against stemmed search; this consumer mounts the shared command (cli-messaging 0.163.0) |
 | `stats messages show` | `--saved` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters |
 | `stats chats show` |  | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
 | `stats chats show` | `--since-time` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
@@ -399,6 +403,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `searches create` | `--source` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--limit` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--newest` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches create` | `--exact` | ⛔ | cli-messaging src/services/messages-stemmed.test.ts covers exact matching against stemmed search; this consumer mounts the shared command (cli-messaging 0.163.0) |
 | `searches create` | `--context` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--language` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--timezone` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
@@ -429,6 +434,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `polls create` | `--anonymous` | ✅ |  |
 | `polls create` | `--revote` | ✅ |  |
 | `polls create` | `--silent` | ✅ |  |
+| `polls create` | `--send-as` | ⛔ | cli-messaging src/services/send-as.test.ts covers sending, forwarding and polls as another identity, and refusing a messenger without it; this consumer mounts the shared commands (cli-messaging 0.164.0) |
 | `polls create` | `--send-id` | ✅ |  |
 | `reactions add` |  | ✅ |  |
 | `reactions remove` |  | ✅ |  |

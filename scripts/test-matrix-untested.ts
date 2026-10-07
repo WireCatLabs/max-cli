@@ -413,4 +413,20 @@ export const UNTESTED: Untested[] = [
     reason:
       "removes a provider key from the real keyring; cli-messaging's src/cli/messenger/models-command.test.ts drives it with a memory keyring",
   },
+  ...[
+    ["messages search", "--exact"],
+    ["stats messages show", "--exact"],
+    ["searches create", "--exact"],
+  ].map(([command, option]) => ({
+    command: command as string,
+    option,
+    reason:
+      "cli-messaging src/services/messages-stemmed.test.ts covers exact matching against stemmed search; this consumer mounts the shared command (cli-messaging 0.163.0)",
+  })),
+  ...["messages send", "messages forward", "polls create"].map((command) => ({
+    command,
+    option: "--send-as",
+    reason:
+      "cli-messaging src/services/send-as.test.ts covers sending, forwarding and polls as another identity, and refusing a messenger without it; this consumer mounts the shared commands (cli-messaging 0.164.0)",
+  })),
 ]
