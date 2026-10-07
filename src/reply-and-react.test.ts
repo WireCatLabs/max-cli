@@ -48,6 +48,13 @@ describe("answering and reacting", () => {
     expect(message.elements).toEqual([])
   })
 
+  it("`messages send --comment-to` refuses on MAX, which has no channel comments here, and sends nothing", async () => {
+    const { code, max } = await runAgainst(["messages", "send", "0", "yes", "--comment-to", "42"])
+
+    expect(code).toBe(2)
+    expect(max.sent.some((call) => call.opcode === Opcode.MSG_SEND)).toBe(false)
+  })
+
   it("`messages send --send-id` sends the id it was given, so MAX can collapse a repeat", async () => {
     const { code, max } = await runAgainst(["messages", "send", "0", "yes", "--send-id", "4242"])
 
