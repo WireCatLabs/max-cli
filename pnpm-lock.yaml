@@ -12,8 +12,8 @@ importers:
         specifier: 0.17.2
         version: 0.17.2(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: 0.175.0
-        version: 0.175.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)
+        specifier: 0.176.0
+        version: 0.176.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -631,8 +631,8 @@ packages:
   '@leemour/cli-messaging-sqlite@1.0.0':
     resolution: {integrity: sha512-NFJMG+/2BWIb3JdOMgyV8SFsB7Fuv3wLtUmMt08GZ4KTpgu0WuA7qQmQE6appEgJJuF/97vHj6+AuXw2z3HMHw==}
 
-  '@leemour/cli-messaging@0.175.0':
-    resolution: {integrity: sha512-MEWZqvb5gPbH9k9XhQRQPio0e+9b9akplI+f2mUgxyzgio+DOLHqqVVAXqAVfpDUM5b1cJkaPeOMUqUzlz96PA==}
+  '@leemour/cli-messaging@0.176.0':
+    resolution: {integrity: sha512-Cqf2zKROuTWB16VpCxuw74n7rGsp6ZMmVK1sf4cE9uKx5MAT3b9joaRoAyKeltqJ0Iuu6QUM4PXv5/98M4/vNg==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
@@ -2213,7 +2213,7 @@ snapshots:
 
   '@leemour/cli-messaging-sqlite@1.0.0': {}
 
-  '@leemour/cli-messaging@0.175.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)':
+  '@leemour/cli-messaging@0.176.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)':
     dependencies:
       '@anthropic-ai/sdk': 0.131.0(zod@4.6.5)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)

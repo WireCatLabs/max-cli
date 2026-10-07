@@ -22,6 +22,8 @@ export const wireClient = (invoke: Invoke) => ({
     login: (request: RequestOf<(typeof OPERATIONS)["session.login"]>) => invoke(OPERATIONS["session.login"], request),
     ping: (request: RequestOf<(typeof OPERATIONS)["session.ping"]>) => invoke(OPERATIONS["session.ping"], request),
     log: (request: RequestOf<(typeof OPERATIONS)["session.log"]>) => invoke(OPERATIONS["session.log"], request),
+    logout: (request: RequestOf<(typeof OPERATIONS)["session.logout"]>) =>
+      invoke(OPERATIONS["session.logout"], request),
   },
   login: {
     qrRequest: (request: RequestOf<(typeof OPERATIONS)["login.qrRequest"]>) =>
@@ -58,6 +60,8 @@ export const wireClient = (invoke: Invoke) => ({
       invoke(OPERATIONS["folders.update"], request),
     delete: (request: RequestOf<(typeof OPERATIONS)["folders.delete"]>) =>
       invoke(OPERATIONS["folders.delete"], request),
+    reorder: (request: RequestOf<(typeof OPERATIONS)["folders.reorder"]>) =>
+      invoke(OPERATIONS["folders.reorder"], request),
   },
   banners: {
     list: (request: RequestOf<(typeof OPERATIONS)["banners.list"]>) => invoke(OPERATIONS["banners.list"], request),

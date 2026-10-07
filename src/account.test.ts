@@ -579,6 +579,40 @@ describe("folders", () => {
     expect(JSON.parse(byId.stdout)).toEqual({ operationId: expect.any(String), folderId: "folder.second" })
   })
 
+  it("`order` sends every folder's id, the named ones first, and the rest in their order after them", async () => {
+    const WORK = { ...FOLDER, id: "folder.work", title: "Work" }
+    const NEWS = { ...FOLDER, id: "folder.news", title: "News" }
+    const { environment, sent } = account({
+      [Opcode.FOLDERS_GET]: { folders: [FOLDER, WORK, NEWS], foldersOrder: [FOLDER.id, WORK.id, NEWS.id] },
+      [Opcode.FOLDERS_REORDER]: { foldersOrder: [NEWS.id, FOLDER.id, WORK.id], folderSync: 4 },
+    })
+    const result = await runWith(["chats", "folders", "order", "News"], environment)
+    expect(result.code).toBe(0)
+    expect(sent(Opcode.FOLDERS_REORDER)).toEqual([{ foldersOrder: ["folder.news", "folder.personal", "folder.work"] }])
+  })
+
+  it("`order` keeps the all-chats folder first, and sends nothing when the order would not change", async () => {
+    const ALL = { ...FOLDER, id: "all.chat.folder", title: "All" }
+    const { environment, sent } = account({
+      [Opcode.FOLDERS_GET]: { folders: [ALL, FOLDER], foldersOrder: [ALL.id, FOLDER.id] },
+      [Opcode.FOLDERS_REORDER]: { folderSync: 4 },
+    })
+    expect((await runWith(["chats", "folders", "order", "Personal"], environment)).code).toBe(0)
+    expect((await runWith(["chats", "folders", "order", "Personal", "All"], environment)).code).toBe(0)
+    expect(sent(Opcode.FOLDERS_REORDER)).toEqual([])
+  })
+
+  it("read-only folders order never writes and journals one refusal", async () => {
+    const { environment, sent } = account()
+    await runWith(["folder-readonly-order", "config", "set", "readOnly", "true"])
+    const result = await runWith(["folder-readonly-order", "chats", "folders", "order", "Personal"], environment)
+    expect(JSON.parse(result.stderr).error.code).toBe("permission_error")
+    expect(sent(Opcode.FOLDERS_REORDER)).toEqual([])
+    expect(new SendJournal(sendsPathFor("folder-readonly-order")).entries()).toMatchObject([
+      { kind: "account", action: "folder-order", outcome: "refused" },
+    ])
+  })
+
   it.each(["create", "update", "delete"])(
     "read-only folders %s never writes and journals one refusal",
     async (action) => {

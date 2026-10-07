@@ -13,10 +13,6 @@ export const Opcode = {
   AUTH_REQUEST: 17,
   AUTH: 18,
   LOGIN: 19,
-  /**
-   * **Declared, never sent.** `max session end` forgets the token locally and tells MAX nothing. Ending the session
-   * server-side would also end it for the browser tab the token came from, which is not what the command promises.
-   */
   LOGOUT: 20,
   SYNC: 21,
   ASSETS_UPDATE: 27,
@@ -64,6 +60,7 @@ export const Opcode = {
   MSG_GET_REACTIONS: 180,
   FOLDERS_GET: 272,
   FOLDERS_UPDATE: 274,
+  FOLDERS_REORDER: 275,
   FOLDERS_DELETE: 276,
   GET_QR: 288,
   GET_QR_STATUS: 289,

@@ -63,9 +63,9 @@ max session start [method]
 
 ### `max session end`
 
-forget the stored session for this profile
+log this profile out on MAX's side and forget the session here
 
-**Меняет что-то только на этом компьютере.**
+**Меняет что-то в MAX.**
 
 ```sh
 max session end
@@ -583,6 +583,20 @@ max chats folders delete <folder>
 | Аргумент | | Что это |
 |---|---|---|
 | `folder` | обязательный | folder id, or its title exactly. |
+
+#### `max chats folders order`
+
+put folders in this order; the ones not named keep theirs after them
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats folders order <folders>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `folders` | обязательный | folder ids, or titles exactly, first one first. |
 
 ### `max chats rules`
 

@@ -60,14 +60,14 @@ max account show                # номер телефона — только �
 max account show --show-phone   # номер целиком
 ```
 
-Забыть сессию на этой машине:
+Выйти из MAX и забыть сессию на этой машине:
 
 ```sh
 max session end
 ```
 
-`session end` стирает токен **локально** и ничего не говорит серверу MAX: сессия, открытая в
-браузере, продолжает жить. Это видно и в ответе — `revokedOnServer: false`.
+`session end` завершает сессию на сервере MAX (`revokedOnServer: true`). Если токен был скопирован
+из вкладки web.max.ru, вкладка тоже выйдет.
 
 ## Профиль — первое слово
 
@@ -580,6 +580,7 @@ max chats folders list
 max chats folders create "Работа" --chat -1000 --chat "Проект"
 max chats folders update "Работа" --title "Офис" --add -2000 --remove -1000
 max chats folders delete "Офис"             # чаты остаются
+max chats folders order "Офис" "Семья"      # эти две — первыми, остальные следом
 ```
 
 Номер телефона не пишется в строку команды — её видят `ps` и история оболочки. Добавленный

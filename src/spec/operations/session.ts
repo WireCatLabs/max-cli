@@ -1,5 +1,5 @@
 import * as v from "valibot"
-import { defineOperation, reserveOpcode } from "../define.js"
+import { defineOperation } from "../define.js"
 import { id } from "../scalars.js"
 
 /**
@@ -189,11 +189,22 @@ export const sessionLogin = defineOperation({
   },
 })
 
-export const logout = reserveOpcode({
+export const sessionLogout = defineOperation({
   name: "session.logout",
   constant: "LOGOUT",
   opcode: 20,
-  reason:
-    "`max session end` forgets the token locally and tells MAX nothing. Ending the session server-side would also end it for the browser tab the token came from, which is not what the command promises.",
-  provenance: { confidence: "observed", sources: ["max-api-docs/protocol/auth.md"] },
+  auth: true,
+  /** The web client adds its push subscription's `pushToken`; a session without one has nothing to add. */
+  request: v.strictObject({}),
+  response: v.looseObject({}),
+  // Ends this session and nobody else's — though a token copied from a browser tab is that tab's session.
+  guard: null,
+  provenance: {
+    confidence: "confirmed",
+    sources: [
+      "web.max.ru chunk `_app/immutable/chunks/Cdo8IOYe.js`, read 2026-10-08: `send(20, {pushToken})`",
+      "PyMax 53103f0 `logout` and rumax a9ecaf3 `logout`: `{}`",
+      "max-api-docs/protocol/auth.md",
+    ],
+  },
 })

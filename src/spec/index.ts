@@ -17,7 +17,7 @@ import {
   chatsUpdateMembers,
 } from "./operations/chats.js"
 import { contactsByPhone, contactsImport, contactsInfo, contactsUpdate, unidentified36 } from "./operations/contacts.js"
-import { foldersDelete, foldersList, foldersUpdate } from "./operations/folders.js"
+import { foldersDelete, foldersList, foldersReorder, foldersUpdate } from "./operations/folders.js"
 import {
   loginByQr,
   loginPassword,
@@ -37,7 +37,7 @@ import {
   messagesSend,
   messagesUnreact,
 } from "./operations/messages.js"
-import { logout, sessionInit, sessionLog, sessionLogin, sessionPing } from "./operations/session.js"
+import { sessionInit, sessionLog, sessionLogin, sessionLogout, sessionPing } from "./operations/session.js"
 import { uploadsFile, uploadsPhoto, uploadsVideo } from "./operations/uploads.js"
 
 export { checkResponse } from "./check.js"
@@ -56,7 +56,7 @@ export const spec: readonly Entry[] = [
   sessionLogin,
   sessionPing,
   sessionLog,
-  logout,
+  sessionLogout,
   loginQrRequest,
   loginQrStatus,
   loginByQr,
@@ -75,6 +75,7 @@ export const spec: readonly Entry[] = [
   foldersList,
   foldersUpdate,
   foldersDelete,
+  foldersReorder,
   bannersList,
   callsHistory,
   assetsUpdate,

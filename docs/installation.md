@@ -184,7 +184,7 @@ max upgrade --check   # только сказать, есть ли новее; �
 Удаление уносит команду, но не данные:
 
 ```sh
-max session end                        # забыть токен ДО удаления команды
+max session end                        # выйти и забыть токен ДО удаления команды
 max <бот> bot auth remove              # и токен каждого бота
 npm uninstall -g @leemour/max-cli
 rm -rf ~/.config/max-cli ~/.local/share/max-cli ~/.cache/max-cli ~/.local/share/cli-messaging
