@@ -705,6 +705,121 @@ max contacts profile <person> [options]
 |---|---|
 | `--show-phone` | print the whole phone number. |
 
+### `max contacts alias`
+
+a private local display name in the selected account
+
+#### `max contacts alias set`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts alias set <person> <alias>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `alias` | обязательный |  |
+
+#### `max contacts alias rm`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts alias rm <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+### `max contacts notes`
+
+your private notes on a stored contact, scoped to this account
+
+#### `max contacts notes list`
+
+
+
+```sh
+max contacts notes list <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+#### `max contacts notes show`
+
+
+
+```sh
+max contacts notes show <person> <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
+#### `max contacts notes add`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes add <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--file <path>` | read note text from a file; omitted or - reads stdin. |
+
+#### `max contacts notes edit`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes edit <person> <id> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--file <path>` | read note text from a file; omitted or - reads stdin. |
+| `--revision <number>` | the revision you read before editing. |
+
+#### `max contacts notes remove`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes remove <person> <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
 ### `max contacts sync`
 
 forget where the last sync left off and take the whole list again
@@ -1202,19 +1317,20 @@ max store status [chat]
 
 ### `max store fetch`
 
-fetch a chat's history into the local store, newest first; run it again to continue
+fetch a chat's history into the local store, newest first; run it again to continue; --all fetches every chat
 
 ```sh
-max store fetch <chat> [options]
+max store fetch [chat] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | a chat: its id, or part of its title. |
+| `chat` | необязательный | a chat: its id, or part of its title. |
 
 | Опция | Что делает |
 |---|---|
-| `--limit <n>` | at most this many messages in this run; 1200 if not given. |
+| `--all` | every chat, most recently active first — what search needs; the last 90d unless --since-time or --last. |
+| `--limit <n>` | at most this many messages in this run, per chat with --all; 1200 if not given. |
 | `--page-size <n>` | how many messages one request asks for; 30 if not given. |
 | `--pause <duration>` | the least pause between pages, to stay under the provider's limits; each is up to twice that. По умолчанию: `5s`. |
 | `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
@@ -2084,6 +2200,37 @@ max tags list [options]
 | `--tag <tag>` | only this tag. |
 | `--source <manual\|auto>` | only labels with this ownership claim. |
 | `--type <names>` | only what is tagged of this type: chat, contact or message. |
+
+## `max metadata`
+
+cached group/channel descriptions for local automatic tags
+
+### `max metadata get`
+
+
+
+```sh
+max metadata get [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a stored chat. |
+
+### `max metadata refresh`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max metadata refresh [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | stored group/channel; repeat for several. По умолчанию: ``. |
+| `--limit <number>` | process at most 1–500 chats. По умолчанию: `50`. |
 
 ## `max searches`
 

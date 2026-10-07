@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**773 ✅ · 108 ⛔ · 0 ❌** — 273 commands, 608 options.
+**773 ✅ · 124 ⛔ · 0 ❌** — 282 commands, 615 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -105,6 +105,16 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts show` | `--with-notes` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `contacts profile` |  | ✅ |  |
 | `contacts profile` | `--show-phone` | ✅ |  |
+| `contacts alias set` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts alias rm` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes list` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes show` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes add` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes add` | `--file` | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes edit` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes edit` | `--file` | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes edit` | `--revision` | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts notes remove` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
 | `contacts sync` |  | ✅ |  |
 | `contacts lookup` |  | ✅ |  |
 | `contacts add` |  | ✅ |  |
@@ -203,6 +213,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages unpin` |  | ✅ |  |
 | `store status` |  | ✅ |  |
 | `store fetch` |  | ✅ |  |
+| `store fetch` | `--all` | ⛔ | cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0) |
 | `store fetch` | `--limit` | ✅ |  |
 | `store fetch` | `--page-size` | ✅ |  |
 | `store fetch` | `--pause` | ✅ |  |
@@ -450,6 +461,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags list` | `--tag` | ✅ |  |
 | `tags list` | `--source` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `tags list` | `--type` | ✅ |  |
+| `metadata get` |  | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata get` | `--chat` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata refresh` |  | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata refresh` | `--chat` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata refresh` | `--limit` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
 | `searches create` |  | ✅ |  |
 | `searches create` | `--chat` | ✅ |  |
 | `searches create` | `--source` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |

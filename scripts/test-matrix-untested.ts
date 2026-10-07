@@ -10,6 +10,41 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  ...[
+    ["contacts alias set"],
+    ["contacts alias rm"],
+    ["contacts notes list"],
+    ["contacts notes show"],
+    ["contacts notes add"],
+    ["contacts notes add", "--file"],
+    ["contacts notes edit"],
+    ["contacts notes edit", "--file"],
+    ["contacts notes edit", "--revision"],
+    ["contacts notes remove"],
+  ].map(([command, option]) => ({
+    command: command as string,
+    ...(option ? { option } : {}),
+    reason:
+      "cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0)",
+  })),
+  ...[
+    ["metadata get"],
+    ["metadata get", "--chat"],
+    ["metadata refresh"],
+    ["metadata refresh", "--chat"],
+    ["metadata refresh", "--limit"],
+  ].map(([command, option]) => ({
+    command: command as string,
+    ...(option ? { option } : {}),
+    reason:
+      "cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0)",
+  })),
+  {
+    command: "store fetch",
+    option: "--all",
+    reason:
+      "cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0)",
+  },
   {
     command: "stats messages top",
     reason:
