@@ -353,18 +353,6 @@ describe("max session end", () => {
     expect(store("s-end").readToken()).toBeUndefined()
   })
 
-  it("with --local, forgets the token without contacting MAX", async () => {
-    const { store, end, max } = ending()
-    store("s-end").writeToken("a-token")
-
-    expect(await end("--local")).toEqual({
-      code: 0,
-      json: { profile: "s-end", forgotten: true, revokedOnServer: false },
-    })
-    expect(max.sent).toEqual([])
-    expect(store("s-end").readToken()).toBeUndefined()
-  })
-
   it("keeps the token when MAX refuses the logout, so it can be tried again", async () => {
     const { store, end } = ending({ refuse: "proto.state" })
     store("s-end").writeToken("a-token")

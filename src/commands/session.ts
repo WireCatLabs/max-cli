@@ -68,13 +68,10 @@ export const sessionCommand = (): Command => {
   /**
    * Ends the session on MAX's side (LOGOUT, opcode 20), then forgets it here, as `tg session end` does
    * (`NEED-821` A). A token copied from a browser tab is that tab's session, so the tab is logged out too.
-   * `--local` keeps the old behaviour — forget it here, tell MAX nothing — for a machine that cannot reach MAX.
    */
   annotate(command.command("end"), { mutates: true })
     .description("log this profile out on MAX's side and forget the session here")
-    .option("--local", "only forget the session on this machine; it stays live on MAX's side")
     .action(async function (this: Command) {
-      const { local } = this.opts<{ local?: boolean }>()
       const { renderer, store, run, createClient } = forCommand(this)
 
       await run("session end", async (events) => {
@@ -89,14 +86,10 @@ export const sessionCommand = (): Command => {
           renderer.note("a `max serve` you started by hand is still running with that session — Ctrl-C it")
         }
 
-        const revokedOnServer = local === true ? false : await logOut(createClient({ events }))
+        const revokedOnServer = await logOut(createClient({ events }))
         const had = store.forget()
         renderer.result({ profile: store.profile, forgotten: had, revokedOnServer })
-        renderer.success(
-          revokedOnServer
-            ? `logged "${store.profile}" out of MAX and forgot the session here`
-            : `forgot the session for "${store.profile}" on this machine; it is still live on MAX's side`,
-        )
+        renderer.success(`logged "${store.profile}" out of MAX and forgot the session here`)
       })
     })
 
@@ -112,7 +105,7 @@ const logOut = async (client: MaxClient): Promise<boolean> => {
     if (error instanceof CliError && error.code === "authentication_error") return true
     throw new CliError(
       error instanceof CliError ? error.code : "provider_error",
-      `MAX did not log the session out (${error instanceof Error ? error.message : String(error)}); nothing was forgotten — try again, or \`max session end --local\` to forget it here only`,
+      `MAX did not log the session out (${error instanceof Error ? error.message : String(error)}); nothing was forgotten — try again`,
     )
   } finally {
     await client.close()

@@ -64,11 +64,10 @@ max account show --show-phone   # номер целиком
 
 ```sh
 max session end
-max session end --local   # только забыть здесь, в MAX сессия остаётся
 ```
 
 `session end` завершает сессию на сервере MAX (`revokedOnServer: true`). Если токен был скопирован
-из вкладки web.max.ru, вкладка тоже выйдет; `--local` оставляет её.
+из вкладки web.max.ru, вкладка тоже выйдет.
 
 ## Профиль — первое слово
 

@@ -68,12 +68,8 @@ log this profile out on MAX's side and forget the session here
 **Меняет что-то в MAX.**
 
 ```sh
-max session end [options]
+max session end
 ```
-
-| Опция | Что делает |
-|---|---|
-| `--local` | only forget the session on this machine; it stays live on MAX's side. |
 
 ## `max setup`
 

@@ -26,8 +26,8 @@
 ### Изменено — может сломать скрипты
 
 - **`max session end` выходит из MAX, а не только забывает токен здесь** — как `tg session end`.
-  `revokedOnServer` теперь `true`. Если токен скопирован из вкладки web.max.ru, вкладка тоже выйдет; прежнее
-  поведение — `max session end --local` ([сессии](docs/sessions.md)).
+  `revokedOnServer` теперь `true`. Если токен скопирован из вкладки web.max.ru, вкладка тоже выйдет
+  ([сессии](docs/sessions.md)).
 
 ### Исправлено
 
