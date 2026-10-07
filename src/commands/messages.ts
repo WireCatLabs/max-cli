@@ -88,7 +88,9 @@ export const messagesCommand = (): Command => {
 
   const send = sendCommand(maxMessenger)
   Object.assign(send, {
-    options: send.options.filter((option) => !["spoiler", "captionAbove"].includes(option.attributeName())),
+    options: send.options.filter(
+      (option) => !["spoiler", "captionAbove", "commentTo"].includes(option.attributeName()),
+    ),
   })
   command.addCommand(send)
 

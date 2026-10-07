@@ -123,7 +123,7 @@ describe("the program", () => {
     expect(result.stderr).toContain("--send-as needs an id")
     expect(max.sent).toEqual([])
   })
-  it.each(["--spoiler", "--caption-above"])("refuses %s for a text-only send", async (flag) => {
+  it.each(["--spoiler", "--caption-above", "--comment-to"])("refuses %s, which MAX does not offer", async (flag) => {
     const { max, ...environment } = scriptedMax()
     const result = await runWith(["messages", "send", "111", "synthetic text", flag, "--json"], environment)
     expect(result.code).toBe(2)

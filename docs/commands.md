@@ -1059,7 +1059,6 @@ max messages send <chat> [text] [options]
 |---|---|
 | `--topic <id>` | send to this forum topic; unsupported by messengers without topics. |
 | `--reply-to <message>` | answer this message, by its id in the same chat. |
-| `--comment-to <post>` | comment on this post of the channel; it goes to the post's discussion group. |
 | `--send-as <id>` | post as one of the identities `chats send-as` lists; required where the chat posts as someone else by default. |
 | `--send-id <id>` | repeat a send whose outcome was unknown, without risking a second copy. |
 | `--silent` | deliver without a notification. |
