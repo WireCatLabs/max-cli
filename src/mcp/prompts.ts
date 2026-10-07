@@ -52,10 +52,11 @@ export const registerPrompts = (server: McpServer): void => {
       ]
       return asked(
         [
-          `Catch me up on MAX. Call max_inbox once${how.length ? ` with ${how.join(" and ")}` : ""}.`,
+          `Catch me up on MAX. Call max_read with command "inbox" once${how.length ? ` with ${how.join(" and ")}` : ""}.`,
+          "Use max_tools_search to discover command arguments and pass them in the arguments object.",
           "Summarise per chat, busiest first: who wrote, what they want, and whether it needs my answer.",
           "Do not send, react or forward anything. Mark nothing read unless I ask; then, for each chat shown, call",
-          "max_chats_mark_read with until set to the newest message shown in it — never further.",
+          'max_write with command "chats mark-read" with until set to the newest message shown in it — never further.',
           DATA,
         ].join(" "),
       )
@@ -75,10 +76,11 @@ export const registerPrompts = (server: McpServer): void => {
       asked(
         [
           `Help me reply in the MAX chat ${JSON.stringify(chat)}.`,
-          "1. If that is not an id, find it with max_chats_list; if several chats match, ask me which.",
-          "2. Read the recent messages with max_messages_list.",
+          "Use max_tools_search to discover command arguments and pass them in the arguments object.",
+          '1. If that is not an id, find it with max_read with command "chats list"; if several chats match, ask me which.',
+          '2. Read the recent messages with max_read with command "messages list".',
           "3. Draft a reply and show it to me.",
-          "4. Only after I approve that exact text, send it with max_messages_send, with reply_to when it answers one message.",
+          '4. Only after I approve that exact text, send it with max_write with command "messages send", with reply_to when it answers one message.',
           DATA,
         ].join("\n"),
       ),
@@ -106,20 +108,22 @@ export const registerPrompts = (server: McpServer): void => {
       asked(
         [
           "Review my commitments in MAX. Do not send, react, forward or mark anything read, except as step 5 allows.",
+          "Use max_tools_search to discover command arguments and pass them in the arguments object.",
           "If I gave you the open items of the previous review, check each of those first.",
-          `1. Call max_review once${since ? ` with since_time ${JSON.stringify(since)}` : ""}, with transcribe: true. It returns`,
+          `1. Call max_read with command "review" once${since ? ` with since_time ${JSON.stringify(since)}` : ""}, with transcribe: true. It returns`,
           "every message in each chat that changed, mine included (outgoing: true — most of what I owe is there).",
           "2. Sort what you find into three lists: I owe · Waiting on others · Needs clarifying. Each item: chat",
           "title and id, date, the ids of the messages it rests on, and a deadline only if one was stated. When a",
-          "message answers one from before the review, read around that one with max_messages_context.",
+          'message answers one from before the review, read around that one with max_read with command "messages context".',
           "3. Before calling anything overdue, look for it being done: later in the review, in " +
             (groups ? `these group chats: ${JSON.stringify(groups)}` : "the group chats in the review") +
-            " (max_messages_list for anything older), and with max_messages_search — which sees only what this" +
-            " machine has already read, so no hit is not proof.",
+            ' (max_read with command "messages list" for anything older), and with max_read with command "messages search". ' +
+            "Word search in one named chat also asks MAX; no hit is not proof when archive coverage is incomplete. " +
+            "If coverage.next is set, run it or ask me before concluding that a message does not exist.",
           "4. List the voice messages in unheard as not listened to, with chat, date and id; if transcribeProblem",
           "says the speech model is missing, tell me and do not download it.",
           "5. Draft at most five reminders, each with its chat and text. Send one only after I approve that exact",
-          "text and recipient, with max_messages_send and reply_to. Without that tool, show the drafts only.",
+          'text and recipient, with max_write with command "messages send" and reply_to. Without that tool, show the drafts only.',
           "6. If complete is false, say the review is incomplete, say why, and give no new boundary. Otherwise end",
           "with «Next review: since = <until>» and the open items, for the next review to check first.",
           DATA,
@@ -140,9 +144,11 @@ export const registerPrompts = (server: McpServer): void => {
       asked(
         [
           `Find ${JSON.stringify(text)} in MAX.`,
-          "For a person, use max_contacts_list and max_contacts_show; for words, max_messages_search — it searches only",
-          "what this machine has already read, so an empty answer is not proof it was never said.",
-          "Show each hit with max_messages_context for the messages around it. Send nothing.",
+          "Use max_tools_search to discover command arguments and pass them in the arguments object.",
+          'For a person, use max_read with command "contacts list" and max_read with command "contacts show"; for words, max_read with command "messages search".',
+          "Word search in one named chat also asks MAX; an empty answer is not proof it was never said. If coverage.next",
+          "is set, run it or ask me before concluding that a message does not exist.",
+          'Show each hit with max_read with command "messages context" for the messages around it. Send nothing.',
           DATA,
         ].join(" "),
       ),

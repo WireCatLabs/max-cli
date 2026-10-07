@@ -177,7 +177,7 @@ HTTP работает до Ctrl-C.
 отправляется выбранному сервису.
 
 `max_read` (`command: "attachments list"`) показывает пути и состояние текста; `max_write` (`command: "attachments text set"`) сохраняет текст агента для
-`content:`. Извлечение — через CLI. `messages_context` принимает `offline: true`, чтобы читать только архив.
+`content:`. Извлечение — через CLI. `max_read` с `command: "messages context"` и `arguments: { offline: true }` читает только архив.
 
 ## Графики статистики
 
