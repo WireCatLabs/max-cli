@@ -8,6 +8,7 @@ import { MaxServer, refusedLogin } from "../server/server.js"
 import { refusedPath } from "../server/start.js"
 import { VERSION } from "../version.js"
 import { forCommand } from "./context.js"
+import { serveMembers } from "./serve-members.js"
 
 /**
  * `max serve` — stays up, holding one logged-in connection, until Ctrl-C (`MAX-16`).
@@ -27,13 +28,15 @@ export const serveCommand = (): Command =>
       const idleMs = idle === undefined ? undefined : parseDuration(idle, "--idle")
 
       await run("serve", async (events) => {
+        const note = (line: string) =>
+          format === "pretty"
+            ? renderer.note(line)
+            : streams.diagnostic(JSON.stringify({ time: new Date().toISOString(), note: line }))
         const server = new MaxServer({
           store,
+          members: (client) => serveMembers({ client, store, note }),
           // Unwatched — a log file, systemd — each line says when, or "connecting again in 60s" means nothing.
-          note: (line) =>
-            format === "pretty"
-              ? renderer.note(line)
-              : streams.diagnostic(JSON.stringify({ time: new Date().toISOString(), note: line })),
+          note,
           ...(events ? { events } : {}),
           ...(settings.timeoutMs ? { timeoutMs: settings.timeoutMs } : {}),
           ...(idleMs === undefined ? {} : { idleMs }),

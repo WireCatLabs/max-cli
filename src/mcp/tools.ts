@@ -79,27 +79,6 @@ export const registerTools = (
   const settings = () => resolveSettings({ profile, permission })
   const adapters = new WeakMap<object, MaxClient>()
   const definitions = personalMcpTools(maxMessenger)
-  const tracked = definitions.chats_tracking_list
-  if (tracked)
-    definitions.chats_tracking_list = {
-      ...tracked,
-      title: "Tracked MAX groups",
-      description:
-        "The tracked MAX groups and their last saved member counts: { items: [{ chatId, title, trackedAt, " +
-        "lastCount: { day, participants, listed, complete } | null }] }. Reads the local store only. " +
-        "The owner adds one with max chats tracking add and records its roster with max chats members fetch. " +
-        "MAX serve does not fetch member lists daily.",
-    }
-  const counts = definitions.chats_tracking_show
-  if (counts)
-    definitions.chats_tracking_show = {
-      ...counts,
-      description:
-        "A MAX group's tracking state and saved member counts for the last 30 days: " +
-        "{ chatId, trackedAt | null, counts: [{ day, participants, listed, complete }] }. " +
-        "complete is false when the member list was not read whole. Reads the local store only. " +
-        "The owner records rosters with max chats members fetch; MAX serve does not fetch them daily.",
-    }
   for (const name of ["topics_list", "topics_enable", "topics_create"]) delete definitions[name]
   const rules = definitions.chats_rules_show
   if (rules) definitions.chats_rules = { ...rules, key: "chats.rules.show" }

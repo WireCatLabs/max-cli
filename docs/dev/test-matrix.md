@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**695 ✅ · 104 ⛔ · 0 ❌** — 266 commands, 533 options.
+**700 ✅ · 100 ⛔ · 0 ❌** — 266 commands, 534 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -56,14 +56,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members history` |  | ✅ |  |
 | `chats members history` | `--since-time` | ✅ |  |
 | `chats members fetch` |  | ✅ |  |
+| `chats members fetch` | `--track` | ✅ |  |
 | `chats members fetch` | `--budget` | ✅ |  |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
-| `chats tracking list` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
-| `chats tracking show` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
-| `chats tracking add` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
-| `chats tracking remove` |  | ⛔ | shared tracking commands; cli-messaging src/cli/messenger/messenger.test.ts drives list, src/services/members-fetch.test.ts covers tracking add/remove/show service behavior and retained member history; MAX mounts the shared group |
+| `chats tracking list` |  | ✅ |  |
+| `chats tracking show` |  | ✅ |  |
+| `chats tracking add` |  | ✅ |  |
+| `chats tracking remove` |  | ✅ |  |
 | `chats admins add` |  | ✅ |  |
 | `chats admins add` | `--can` | ✅ |  |
 | `chats admins remove` |  | ✅ |  |
