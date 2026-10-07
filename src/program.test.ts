@@ -821,6 +821,7 @@ describe("the program", () => {
         ["222", "dialog"],
       ])
       expect(profile.chats[0]).toHaveProperty("theirMessages")
+      expect(profile.aliases).toEqual([])
       expect(profile.phone).toBe("***0123")
       const whole = await runWith(
         ["t-profile", "contacts", "profile", "@someone", "--show-phone", "--json"],
