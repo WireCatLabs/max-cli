@@ -52,7 +52,7 @@ Tailscale устанавливается отдельно; такой тунне
 
 Сервер слушает `127.0.0.1:8765`, печатает одноразовый код входа и запускается без прав
 администратора. Повышение прав может понадобиться только Tailscale. Команды ниже разрешают
-отправку на время работы процесса: `--http-confirmation permissions --permission messages.send=allow`.
+отправку на время работы процесса: `--permission messages.send=allow`.
 Остальные права описаны ниже.
 
 ### Windows (PowerShell)
@@ -73,7 +73,7 @@ Tailscale устанавливается отдельно; такой тунне
 
 ```powershell
 $mcpPublicUrl = Read-Host 'Вставьте HTTPS origin из Funnel (без /mcp)'
-max.cmd mcp --http --port 8765 --public-url $mcpPublicUrl --http-confirmation permissions --permission messages.send=allow
+max.cmd mcp --http --port 8765 --public-url $mcpPublicUrl --permission messages.send=allow
 ```
 
 Оба процесса запускайте в Windows. WSL — отдельная среда: нельзя считать, что туннель Windows
@@ -94,7 +94,7 @@ TAILSCALE_BE_CLI=1 /Applications/Tailscale.app/Contents/MacOS/Tailscale funnel 8
 ```sh
 printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
 IFS= read -r mcpPublicUrl
-max mcp --http --port 8765 --public-url "$mcpPublicUrl" --http-confirmation permissions --permission messages.send=allow
+max mcp --http --port 8765 --public-url "$mcpPublicUrl" --permission messages.send=allow
 ```
 
 ### Linux (Terminal)
@@ -111,7 +111,7 @@ sudo tailscale funnel 8765
 ```sh
 printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
 IFS= read -r mcpPublicUrl
-max mcp --http --port 8765 --public-url "$mcpPublicUrl" --http-confirmation permissions --permission messages.send=allow
+max mcp --http --port 8765 --public-url "$mcpPublicUrl" --permission messages.send=allow
 ```
 
 ## MAX и Telegram одновременно
