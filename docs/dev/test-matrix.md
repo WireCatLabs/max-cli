@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**774 ✅ · 125 ⛔ · 0 ❌** — 282 commands, 617 options.
+**793 ✅ · 106 ⛔ · 0 ❌** — 282 commands, 617 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -102,19 +102,19 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--search` | ✅ |  |
 | `contacts list` | `--search-notes` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `contacts show` |  | ✅ |  |
-| `contacts show` | `--with-notes` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
+| `contacts show` | `--with-notes` | ✅ |  |
 | `contacts profile` |  | ✅ |  |
 | `contacts profile` | `--show-phone` | ✅ |  |
-| `contacts alias set` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts alias rm` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes list` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes show` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes add` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes add` | `--file` | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes edit` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes edit` | `--file` | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes edit` | `--revision` | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
-| `contacts notes remove` |  | ⛔ | cli-messaging src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-messaging 0.174.0) |
+| `contacts alias set` |  | ✅ |  |
+| `contacts alias rm` |  | ✅ |  |
+| `contacts notes list` |  | ✅ |  |
+| `contacts notes show` |  | ✅ |  |
+| `contacts notes add` |  | ✅ |  |
+| `contacts notes add` | `--file` | ✅ |  |
+| `contacts notes edit` |  | ✅ |  |
+| `contacts notes edit` | `--file` | ✅ |  |
+| `contacts notes edit` | `--revision` | ✅ |  |
+| `contacts notes remove` |  | ✅ |  |
 | `contacts sync` |  | ✅ |  |
 | `contacts lookup` |  | ✅ |  |
 | `contacts add` |  | ✅ |  |
@@ -445,11 +445,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments text set` |  | ✅ |  |
 | `attachments text set` | `--attachment` | ✅ |  |
 | `attachments text set` | `--text-file` | ✅ |  |
-| `tags auto` |  | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
-| `tags auto` | `--chat` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
-| `tags auto` | `--limit` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
+| `tags auto` |  | ✅ |  |
+| `tags auto` | `--chat` | ✅ |  |
+| `tags auto` | `--limit` | ✅ |  |
 | `tags auto` | `--refresh-metadata` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
-| `tags auto` | `--dry-run` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
+| `tags auto` | `--dry-run` | ✅ |  |
 | `tags add` |  | ✅ |  |
 | `tags add` | `--chat` | ✅ |  |
 | `tags add` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
@@ -458,13 +458,13 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags remove` | `--chat` | ✅ |  |
 | `tags remove` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags remove` | `--message` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
-| `tags remove` | `--source` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
+| `tags remove` | `--source` | ✅ |  |
 | `tags list` |  | ✅ |  |
 | `tags list` | `--tag` | ✅ |  |
-| `tags list` | `--source` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
+| `tags list` | `--source` | ✅ |  |
 | `tags list` | `--type` | ✅ |  |
-| `metadata get` |  | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
-| `metadata get` | `--chat` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata get` |  | ✅ |  |
+| `metadata get` | `--chat` | ✅ |  |
 | `metadata refresh` |  | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
 | `metadata refresh` | `--chat` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
 | `metadata refresh` | `--limit` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
