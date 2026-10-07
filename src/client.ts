@@ -853,6 +853,23 @@ export class MaxClient {
     },
 
     /**
+     * **MAX's own text search, in one chat**, newest first as the server answers. It matches a word's
+     * beginning, not another form of a Russian word (measured 2026-10-07): the caller treats the answer
+     * as candidates. No reactions, no read marks.
+     */
+    search: async (chatId: Id, query: string, limit: number): Promise<Page<Message>> => {
+      await this.#connectOnce()
+      const answer = await this.#wire.messages.search({ chatId, query, count: limit })
+      const lookup = { names: namesFrom(this.#session().contacts), ...viewer(this.#store) }
+      const raw = asArray(answer.result).flatMap((one) => {
+        const message = record(record(one)?.message)
+        return message === undefined ? [] : [message]
+      })
+      const items = await this.#nameSenders(raw.map((one) => toMessage(one, chatId, lookup)))
+      return { items, hasMore: items.length >= limit }
+    },
+
+    /**
      * **One message and a window either side of it**, oldest first, the one asked for marked
      * `anchor: true`.
      *

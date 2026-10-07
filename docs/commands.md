@@ -506,6 +506,26 @@ max chats link show <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+#### `max chats link create`
+
+make another invite link; nobody is told until you share it
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats link create <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--approval` | who joins by it asks first, and an admin lets them in. |
+| `--expire-time <time>` | it stops working then: 2026-09-25T09:00 (local time), or 30m, 2h, 7d from now. |
+| `--max-uses <n>` | at most this many people join by it, 1 to 99999. |
+
 #### `max chats link reset`
 
 replace the invite link; the old one stops working
@@ -583,6 +603,34 @@ max chats folders delete <folder>
 | Аргумент | | Что это |
 |---|---|---|
 | `folder` | обязательный | folder id, or its title exactly. |
+
+#### `max chats folders order`
+
+put folders in this order; the ones not named keep theirs after them
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats folders order <folders>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `folders` | обязательный | folder ids, or titles exactly, first one first. |
+
+#### `max chats folders join`
+
+add a folder someone shared by a link; joins every chat in it, and the others there see you joined
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats folders join <link>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `link` | обязательный | the folder's link, as t.me/addlist/…. |
 
 ### `max chats rules`
 
@@ -1005,13 +1053,14 @@ max messages list <chat> [options]
 | `--before-time <time>` | only messages older than this ISO 8601 time, or 2h / 1d ago. |
 | `--after-id <id>` | only messages newer than this message id. |
 | `--after-time <time>` | only messages newer than this ISO 8601 time, or 2h / 1d ago. |
+| `--topic <id>` | only this forum topic; read back from its newest message or --before-id. |
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 | `--mark-read` | also mark the chat read up to the newest message shown; the other person sees it. |
 
 ### `max messages search`
 
-search the local store — what was read, fetched or kept by serve; optionally fetches new messages with --sync-first
+search the local store and the messenger's server (--backend); optionally fetches new messages with --sync-first
 
 ```sh
 max messages search [query] [options]
@@ -1032,6 +1081,8 @@ max messages search [query] [options]
 | `--thread-messages <n>` | at most this many messages in each thread context (default: 50). |
 | `--thread-bytes <n>` | at most this many bytes of whole messages and links in each context (default: 65536). |
 | `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
+| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both). |
+| `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many. |
