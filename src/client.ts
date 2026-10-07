@@ -1470,10 +1470,19 @@ export class MaxClient {
         return toFolder(record(answer.folder) ?? {})
       }),
 
-    /** Every folder's id, in the new order. */
+    /**
+     * Every folder's id, in the new order. MAX keeps "all chats" first and refuses an order that
+     * changes nothing (`folder.order.all-folder-not-first`, `folder.order.same`, measured 2026-10-08),
+     * so the first is put back in front and the second is not sent.
+     */
     order: (ids: string[]): Promise<void> =>
       this.#change("folder-order", async () => {
-        await this.#wire.folders.reorder({ foldersOrder: ids })
+        const order = ids.includes(ALL_CHATS_FOLDER)
+          ? [ALL_CHATS_FOLDER, ...ids.filter((id) => id !== ALL_CHATS_FOLDER)]
+          : ids
+        const current = (await this.#folders()).map((folder) => String(folder.id))
+        if (order.join("\n") === current.join("\n")) return
+        await this.#wire.folders.reorder({ foldersOrder: order })
       }),
 
     /** The folder only — its chats stay where they are. */
@@ -2774,6 +2783,8 @@ export interface TabSync {
   calls: number
   assets: Partial<Record<(typeof ASSET_TYPES)[number], number>>
 }
+
+const ALL_CHATS_FOLDER = "all.chat.folder"
 
 export const FIRST_TAB_SYNC: TabSync = { folders: 0, calls: 0, assets: {} }
 

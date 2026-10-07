@@ -591,6 +591,17 @@ describe("folders", () => {
     expect(sent(Opcode.FOLDERS_REORDER)).toEqual([{ foldersOrder: ["folder.news", "folder.personal", "folder.work"] }])
   })
 
+  it("`order` keeps the all-chats folder first, and sends nothing when the order would not change", async () => {
+    const ALL = { ...FOLDER, id: "all.chat.folder", title: "All" }
+    const { environment, sent } = account({
+      [Opcode.FOLDERS_GET]: { folders: [ALL, FOLDER], foldersOrder: [ALL.id, FOLDER.id] },
+      [Opcode.FOLDERS_REORDER]: { folderSync: 4 },
+    })
+    expect((await runWith(["chats", "folders", "order", "Personal"], environment)).code).toBe(0)
+    expect((await runWith(["chats", "folders", "order", "Personal", "All"], environment)).code).toBe(0)
+    expect(sent(Opcode.FOLDERS_REORDER)).toEqual([])
+  })
+
   it("read-only folders order never writes and journals one refusal", async () => {
     const { environment, sent } = account()
     await runWith(["folder-readonly-order", "config", "set", "readOnly", "true"])

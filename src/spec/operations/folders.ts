@@ -89,8 +89,12 @@ export const foldersReorder = defineOperation({
   }),
   guard: () => ({ chatId: null, kind: "account", action: "folder-order" }),
   provenance: {
-    confidence: "confirmed",
-    sources: [webClientNow, "rumax a9ecaf3 `reorder_folders` (`src/api/chats.rs:362`)"],
+    confidence: "measured",
+    sources: [
+      webClientNow,
+      "rumax a9ecaf3 `reorder_folders` (`src/api/chats.rs:362`)",
+      "measured against MAX 2026-10-08 on test account B: `all.chat.folder` not first is refused `folder.order.all-folder-not-first`; the current order again is refused `folder.order.same`",
+    ],
     notes: "The web client applies the answer as a folder delta, the same shape `FOLDERS_GET` answers with.",
   },
 })
