@@ -580,7 +580,7 @@ max chats folders list
 max chats folders create "Работа" --chat -1000 --chat "Проект"
 max chats folders update "Работа" --title "Офис" --add -2000 --remove -1000
 max chats folders delete "Офис"             # чаты остаются
-max chats folders order "Офис" "Семья"      # эти две — первыми, остальные следом
+max chats folders order "Офис" "Семья"      # после «Все чаты»: эти две, затем остальные
 ```
 
 Номер телефона не пишется в строку команды — её видят `ps` и история оболочки. Добавленный

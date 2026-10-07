@@ -1552,7 +1552,7 @@ describe("what the MCP server offers beyond the basics", () => {
 
 describe("MCP prompts and resources", () => {
   it("lists the prompts with their arguments, and builds one without asking MAX for anything", async () => {
-    const { client, max } = await connect()
+    const { client, rawClient, max } = await connect()
 
     const { prompts } = await client.listPrompts()
     const reply = await client.getPrompt({ name: "reply", arguments: { chat: "Team Alpha" } })
@@ -1580,6 +1580,16 @@ describe("MCP prompts and resources", () => {
     ])
     expect(reply.messages).toHaveLength(1)
     expect(JSON.stringify(reply)).toContain('\\"Team Alpha\\"')
+    const { tools } = await rawClient.listTools()
+    const available = new Set(tools.map(({ name }) => name))
+    for (const name of ["catch-up", "reply", "review", "find"]) {
+      const args: Record<string, string> =
+        name === "reply" ? { chat: "Team Alpha" } : name === "find" ? { text: "invoice" } : {}
+      const prompt = await client.getPrompt({ name, arguments: args })
+      const references = JSON.stringify(prompt).match(/\bmax_[a-z_]+\b/g) ?? []
+      expect(references.length).toBeGreaterThan(0)
+      for (const tool of references) expect(available.has(tool), `${name} refers to unavailable ${tool}`).toBe(true)
+    }
     expect(max.sent).toEqual([])
   })
 
@@ -1595,7 +1605,7 @@ describe("MCP prompts and resources", () => {
 
     expect(text).toContain('since_time "2026-09-20T09:00:00Z"')
     expect(text).toContain('these group chats: "Team Beta"')
-    expect(text).toContain("max_review once")
+    expect(text).toContain('max_read with command "review" once')
     expect(text).toContain("outgoing: true")
     expect(text).toContain("only after I approve that exact")
     expect(text).toContain("give no new boundary")

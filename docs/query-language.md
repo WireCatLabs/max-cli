@@ -159,11 +159,12 @@ max messages search --regex 'invoice\s+\d+' --json
 `--thread-hops`, `--thread-messages`, `--thread-bytes`, `--thread-within`. Если графа нет, используется контекст по
 времени; устаревшие связи помечаются и не обходятся.
 
-По умолчанию поиск читает только архив. `--sync-first` сначала скачивает новые сообщения, ничего не помечая
+Поиск слов в одном названном чате по умолчанию спрашивает архив и сервер MAX; без чата — только архив.
+`--backend archive` оставляет поиск локальным. `--sync-first` сначала скачивает новые сообщения, ничего не помечая
 прочитанным: не больше 5 чатов, 500 сообщений и 30 секунд. Пределы меняют `--max-chats`, `--max-messages`,
 `--sync-time`. Неполное или неудачное обновление сохраняет локальную выдачу и сообщает об устаревшем покрытии и
 результате обновления.
 
 В MCP используются `thread`, `thread_hops`, `thread_messages`, `thread_bytes`, `thread_within` и `sync_first`.
-`sync_first` доступен только при `messages.sync-first: allow`. Обычный `messages_context` с `offline: true` читает
+`sync_first` доступен только при `messages.sync-first: allow`. `max_read` с `command: "messages context"` и `arguments: { offline: true }` читает
 сохранённое.

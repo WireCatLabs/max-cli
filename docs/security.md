@@ -92,8 +92,8 @@
   на то, что чтение её не отправляет, есть тест.
 - **Не отправляет ничего, чего не просили.** Что-то меняют только `messages send|edit|delete|forward|pin|unpin`,
   `reactions add|remove`, `polls vote|close|create`, `contacts add|remove|import|rename|block|unblock`,
-  `account update`, `account sessions end`, `chats join|leave|create|update`,
-  `chats members|admins …`, `chats link reset`, `chats folders create|update|delete`, `chats moderate`
+  `account update`, `account sessions end`, `session end`, `chats join|leave|create|update`,
+  `chats members|admins …`, `chats link reset`, `chats folders create|update|delete|order`, `chats moderate`
   (только то, что разрешают правила группы), `chats mark-read` и `messages list --mark-read` — и каждая делает
   только то, что написано в набранной строке. `max commands --json` помечает их `mutates`.
 - **Удаление по умолчанию требует подтверждения.** Уровень `ask` для `messages.delete` требует
