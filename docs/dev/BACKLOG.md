@@ -25,6 +25,22 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+- **MAX-65** · P2 · 🚧 `feat/client-gaps-a` · Gaps against other MAX clients, batch a: `chats folders order` (275
+  `{foldersOrder}`), `session end` logs out on MAX's side (20, NEED-821 A), `chats update --photo` (80 → 55
+  `{chatId, photoToken}`). Request shapes from web.max.ru's own code (FIND-939). Plan:
+  `docs_ai/plans/2026-10-08-client-gaps.md`.
+- **MAX-66** · P2 · Batch b, reads: `max calls list` (163), `max chats media` (51), `max account privacy show`.
+- **MAX-67** · P3 · Batch c: presence (35 + 132), read receipts (130), chat changes (135) in `watch --events`.
+  Needs the inbound shapes from the web capture (NEED-822 A).
+- **MAX-68** · P2 · Batch d, writes: `chats mute|unmute` (22 `dontDisturbUntil`), `account privacy set` (22
+  `settings.user`), stickers (`stickers list`, `messages send --sticker`).
+- **MAX-69** · P3 · Batch e, destructive: `chats clear` (54), `chats delete` (52, for this account only — `forAll`
+  measured not to delete for others), behind the `messages delete` guard.
+- **MAX-70** · P2 · Batch f, bots on the personal account: inline keyboards in messages, `messages press` (118),
+  `chats start` (64 `startPayload`), `chats app` (160; its init data is a credential).
+- **MAX-71** · P3 · Research: is 68 a message search or a chat-title search; public search (60); join requests —
+  PyMax/rumax send 59/77, our probe of 2026-09-24 got `{}` (FIND-249); retest with approval on, and on a channel.
+
 - **CLI-74** · P2 · 🚧 `refactor/mcp-run-entry` (cli-messaging) · MCP as three tools — `max_tools_search`,
   `max_read`, `max_write` — instead of 89, and no confirmation forms (NEED-766, 772–775). Plan:
   `docs_ai/plans/2026-10-06-mcp-search-surface.md`. Starts in cli-messaging `src/mcp/tool.ts` `registerTools`.
