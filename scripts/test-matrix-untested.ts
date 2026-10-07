@@ -11,6 +11,16 @@ export interface Untested {
 
 export const UNTESTED: Untested[] = [
   ...[
+    ["stats chats newcomers", "--saved"],
+    ["stats messages discussion", "--saved"],
+  ].map(([command, option]) => ({
+    command: command as string,
+    option,
+    reason:
+      "cli-messaging src/services/admin-statistics.test.ts covers shared report saved-run scope and typed overrides; native admin-statistics-adoption.test.ts checks mounted report paths and both evidence targets without connecting",
+  })),
+
+  ...[
     ["contacts alias set"],
     ["contacts alias rm"],
     ["contacts notes list"],
