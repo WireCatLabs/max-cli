@@ -80,11 +80,12 @@
     "probe:polls": "pnpm build && node --experimental-strip-types scripts/probe-polls.ts",
     "probe:profile": "pnpm build && node --experimental-strip-types scripts/probe-profile.ts",
     "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts",
-    "postinstall": "node install/postinstall.mjs"
+    "postinstall": "node install/postinstall.mjs",
+    "check:agent-docs": "pnpm build && node --experimental-strip-types scripts/check-agent-docs.ts"
   },
   "dependencies": {
     "@leemour/cli-core": "0.17.2",
-    "@leemour/cli-messaging": "0.156.0",
+    "@leemour/cli-messaging": "0.160.0",
     "@modelcontextprotocol/server": "2.1.0",
     "@msgpack/msgpack": "3.1.3",
     "@valibot/to-json-schema": "1.8.0",

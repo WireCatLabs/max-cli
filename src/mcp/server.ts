@@ -1,13 +1,5 @@
 import { CliError } from "@leemour/cli-core"
-import {
-  type HttpConfirmation,
-  type HttpOptions,
-  httpServerOptions,
-  MCP_PATH,
-  personalMcpConfirmer,
-  serveOverHttp,
-  warmEmbedders,
-} from "@leemour/cli-messaging/cli"
+import { type HttpOptions, MCP_PATH, serveOverHttp, warmEmbedders } from "@leemour/cli-messaging/cli"
 import { levelFor } from "@leemour/cli-messaging/sends"
 import { McpServer } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
@@ -49,7 +41,6 @@ export const createMaxServer = (
 ) => {
   const embedders = warmEmbedders()
   const session = new MaxSession(context, { ...sessionOptions, dispose: () => embedders.close() })
-  const confirmed = personalMcpConfirmer()
   const permitted = undefined
   const toolGroups = ["contacts", "polls", "groups", "profile"] as const
   const build = (): McpServer => {
@@ -89,7 +80,6 @@ export const createMaxServer = (
       warn: context.renderer.note,
       reach: context.reach,
       embedders,
-      confirmed,
     })
     if (levelFor(context.settings.permissions, "messages").level !== "deny") registerPrompts(server)
     if (
@@ -134,13 +124,13 @@ export const serveOverStdio = async (context: CommandContext, options: ServerOpt
 export const serveOverHttpUntilStopped = async (
   context: CommandContext,
   options: ServerOptions,
-  http: Omit<HttpOptions, "onCode" | "onError" | "appName"> & { confirmation?: HttpConfirmation },
+  http: Omit<HttpOptions, "onCode" | "onError" | "appName">,
   stopped: Promise<void> = new Promise<void>((resolve) => {
     process.once("SIGINT", resolve)
     process.once("SIGTERM", resolve)
   }),
 ): Promise<void> => {
-  const { session, build } = createMaxServer(context, { ...options, ...httpServerOptions(http.confirmation) })
+  const { session, build } = createMaxServer(context, options)
   const listening = await serveOverHttp(build, {
     ...http,
     appName: "max",

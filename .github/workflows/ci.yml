@@ -22,6 +22,7 @@ jobs:
         pnpm generate
         pnpm exec cli-dev test-matrix --program dist/program.js --untested scripts/test-matrix-untested.ts --name max --check
         git diff --exit-code
+        pnpm check:agent-docs
         pnpm docs:check
         pnpm parity:check
 

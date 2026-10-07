@@ -151,8 +151,8 @@ max stats messages show --by hour                     # все сохранён�
 ## Для скриптов и агентов
 
 `--json` возвращает один объект с сообщениями и тем, где искали; `--jsonl` — только сообщения,
-построчно. В MCP `max_messages_search` и `max_stats_messages_show` принимают те же запросы, а `max_tags_*`
-и `max_searches_*` управляют метками и сохранёнными поисками. Поля ответа, прежний режим
+построчно. В MCP `max_read` (`command: "messages search"`) и `max_read` (`command: "stats messages show"`) принимают те же запросы, а команды `tags`
+и `searches` через `max_read`/`max_write` управляют метками и сохранёнными поисками. Поля ответа, прежний режим
 `--language legacy` и `--regex` — в [языке запросов](query-language.md).
 
 По умолчанию поиск читает только архив. `--sync-first` сначала скачивает новые сообщения, ничего не помечая

@@ -45,7 +45,8 @@ const setUp = (login: MockMax | undefined, adopt: MockMax, extra: Partial<Enviro
   const streams = captureStreams()
   const environment: Environment = {
     streams,
-    tty: false,
+    env: { ...process.env, CI: "" },
+    tty: true,
     interactive: true,
     // Narrower than any QR code, so the browser path is the default here and nothing depends on
     // the width of whatever terminal runs the suite.
@@ -120,7 +121,7 @@ describe("max session start qr", () => {
     expect(adopt.sent.at(-1)?.payload.token).toBe("qr-token")
     expect(stored()).toBe("qr-token")
     expect(login.closed && adopt.closed).toBe(true)
-    expect(JSON.parse(streams.stdout.join(""))).toMatchObject({ stored: true, method: "qr" })
+    expect(streams.stdout.join(" ")).toContain("Test Person")
 
     const everything = [...streams.stdout, ...streams.stderr].join("\n")
     for (const secret of ["qr-token", "track-secret", "qr-link-secret"]) expect(everything).not.toContain(secret)

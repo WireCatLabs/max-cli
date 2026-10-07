@@ -21,6 +21,8 @@
     "---Справочник---",
     "commands",
     "configuration",
+    "configuration-reference",
+    "cli-contract",
     "---Если что-то не так---",
     "diagnostics",
     "troubleshooting",

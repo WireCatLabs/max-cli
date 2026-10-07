@@ -60,11 +60,10 @@ max chats rules set "Поход" consent.delete ask        # но перед у�
 
 ```text
 Вы:     Проверь «Поход».
-Агент:  (max_chats_check)
-        — форма: «delete message … from Олег for everyone (invites)?» —
-Вы:     Да.
-Агент:  Удалено одно сообщение с приглашением от Олега. Олег отмечен: аккаунту 2 дня.
-        Остальное в порядке.
+Агент:  (max_write, command: "chats check")
+        Найдено приглашение. Правила требуют отдельного согласия: действие оставлено планом.
+        Для выполнения в терминале: max chats moderate "Поход" --allow-dangerous --json
+Вы:     Выполняю эту команду.
 ```
 
 В терминале `max chats moderate "Поход"` задаёт тот же вопрос сам: `[y/N]`.
@@ -106,8 +105,8 @@ max chats rules set "Поход" consent.delete ask        # но перед у�
 | `max chats update` | настройки, название, описание; прочитать настройки — `max chats show` |
 | `max messages delete --for-everyone`, `pin`, `unpin` | удалить у всех, закрепить |
 
-Агенту без терминала то же самое дают инструменты MCP: `max_review` с `unanswered_after_hours`,
-`max_chats_events`, `max_chats_members`, `max_chats_rules` и `max_chats_check`
+Агенту без терминала то же самое дают инструменты MCP: `max_read` (`command: "review"`) с `unanswered_after_hours`,
+`max_read` (`command: "chats events"`), `max_read` (`command: "chats members"`), `max_read` (`command: "chats rules"`) и `max_write` (`command: "chats check"`)
 ([mcp.md](mcp.md)).
 
 ## Что ждёт вашего ответа
@@ -126,7 +125,7 @@ max stats tasks show                                           # открыты�
 
 Закрытая задача остаётся закрытой, отклонённая не возвращается. Задачу закрывает только ваш ответ —
 ответ админа пока нет, — а упоминание через `@ник` не замечается. Агенту то же самое дают
-инструменты MCP: `max_tasks_list`, `max_tasks_add`, `max_tasks_close`, `max_stats_tasks_show` ([mcp.md](mcp.md)).
+инструменты MCP: `max_read` (`command: "tasks list"`), `max_write` (`command: "tasks add"`), `max_write` (`command: "tasks close"`), `max_read` (`command: "stats tasks show"`) ([mcp.md](mcp.md)).
 
 ## Правила
 
@@ -159,7 +158,8 @@ max stats tasks show                                           # открыты�
 - `allow` — сразу.
 
 Старые файлы читаются: `forbid` становится `deny`, `flag` и `confirm` — `ask`.
-MCP сохраняет прежний инструмент `max_chats_check` и форму подтверждения.
+MCP вызывает `max_write` с `command: "chats check"`; действия при уровне согласия `ask`
+остаются планом, серверных форм нет.
 
 `chats moderate --json` возвращает `{ chatId, rows }`. `--since-time` принимает время ISO 8601
 или `30m`, `2h`, `1d`, а не номер сообщения, и не сдвигает сохранённое место.

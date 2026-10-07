@@ -146,12 +146,12 @@ API векторов OpenAI (`/v1/embeddings`), например Ollama или L
 
 ## Для агентов
 
-В MCP `max_conversations_list`, `max_conversations_show`, `max_conversations_search`,
-`max_conversations_related` и `max_conversations_status` читают построенное, а
-`max_conversations_refresh` догоняет на этом компьютере. Через MCP агент получает инструкцию `link-conversations`,
-оценивает объём инструментом `max_conversations_batches_status` и ждёт согласия владельца для этого чата. Затем
-читает `max_conversations_batches_next`, сохраняет ответы через `max_conversations_links_add` и перестраивает граф
-через `max_conversations_build`. `max_conversations_links_clear` удаляет ответы агента; после него граф также нужно
+В MCP `max_read` (`command: "conversations list"`), `max_read` (`command: "conversations show"`), `max_read` (`command: "conversations search"`),
+`max_read` (`command: "conversations related"`) и `max_read` (`command: "conversations status"`) читают построенное, а
+`max_write` (`command: "conversations refresh"`) догоняет на этом компьютере. Через MCP агент получает инструкцию `link-conversations`,
+оценивает объём инструментом `max_read` (`command: "conversations batches status"`) и ждёт согласия владельца для этого чата. Затем
+читает `max_read` (`command: "conversations batches next"`), сохраняет ответы через `max_write` (`command: "conversations links add"`) и перестраивает граф
+через `max_write` (`command: "conversations build"`). `max_write` (`command: "conversations links clear"`) удаляет ответы агента; после него граф также нужно
 перестроить. Запись требует `conversations.links`. Настройка внешних векторов действует и на MCP-поиск: вопрос
 отправляется выбранному сервису. Техническая сторона — правила, куски, векторы и порядок результатов — на странице
 [как устроен поиск](https://wirecat.dev/ru/docs/search-architecture).

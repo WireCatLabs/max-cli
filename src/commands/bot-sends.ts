@@ -2,7 +2,15 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { CliError } from "@leemour/cli-core"
 import type { ManifestOperation } from "@leemour/cli-core/codegen"
-import { newSendId, RecipientList, SendJournal, type SendKind, sendGuard } from "@leemour/cli-messaging/sends"
+import {
+  guardedWrite,
+  newOperationId,
+  newSendId,
+  RecipientList,
+  SendJournal,
+  type SendKind,
+  sendGuard,
+} from "@leemour/cli-messaging/sends"
 import { botOperations } from "../bot/client.js"
 import { BOT_JOURNAL_KINDS, BOT_KEYS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
@@ -84,31 +92,13 @@ const guarded = async <T>(
     ...(request.action ? { action: request.action } : {}),
     ...(length === undefined ? {} : { length }),
   }
-  try {
-    guard.check(request)
-  } catch (error) {
-    const code = (error as { code?: string }).code
-    guard.record({ ...base, outcome: "refused", ...(code ? { errorCode: code } : {}) })
-    throw error
-  }
-  try {
-    const { result, messageId } = await body(sendId)
-    guard.record({
-      ...base,
-      outcome: "sent",
-      ...(messageId ? { messageId } : {}),
-      ...(request.count ? { count: request.count } : {}),
-    })
-    return result
-  } catch (error) {
-    const code = (error as { code?: string }).code
-    guard.record({
-      ...base,
-      outcome: code === "outcome_unknown" ? "outcome_unknown" : "failed",
-      ...(code ? { errorCode: code } : {}),
-    })
-    throw error
-  }
+  const done = await guardedWrite(
+    guard,
+    { ...base, operationId: newOperationId(), ...(request.count === undefined ? {} : { count: request.count }) },
+    () => body(sendId),
+    ({ messageId }) => ({ ...(messageId ? { messageId } : {}), ...(request.count ? { count: request.count } : {}) }),
+  )
+  return done.result
 }
 
 const chatOfMessage = async (context: Context, messageId: string): Promise<string> => {

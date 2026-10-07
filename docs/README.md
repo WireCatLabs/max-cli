@@ -31,7 +31,9 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 - [bot.md](bot.md) — бот через официальный Bot API: токен, несколько ботов, сообщения, чаты, список получателей, `bot api`
 - [usage.md](usage.md) — личный аккаунт: вход, профили, чтение, страницы, отправка, машинный режим — по порядку
 - [sessions.md](sessions.md) — откуда берётся токен, ключница, профили, `MAX_TOKEN`
-- [configuration.md](configuration.md) — каждая настройка, каждая переменная, порядок разрешения
+- [configuration.md](configuration.md) — настройка по шагам
+- [configuration-reference.md](configuration-reference.md) — все ключи, переменные и порядок разрешения
+- [cli-contract.md](cli-contract.md) — команды, JSON, ошибки, пределы и запуск агентом
 - [search.md](search.md) — поиск сообщений: слова, люди, даты, файлы, ссылки, метки, сохранённые поиски, подсчёт
 - [topic-search.md](topic-search.md) — поиск по темам: разговоры, векторы, свежесть, что уходит внешней модели
 - [query-language.md](query-language.md) — язык запросов: поля, операторы, preset, пределы, ответ JSON
