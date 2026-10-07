@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams } from "@leemour/cli-core"
+import { validateSkill } from "@leemour/cli-messaging/skill-validation"
 import type { Command } from "commander"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createProgram, run } from "../program.js"
@@ -26,17 +27,7 @@ describe("the skill an agent is given", () => {
   })
 
   it("names only commands that exist", () => {
-    const paths = new Set(
-      program.commands.flatMap((command) => command.commands.map((sub) => `${command.name()} ${sub.name()}`)),
-    )
-    const named = [
-      ...skill.matchAll(
-        /max (?:[a-z]+ )?((?:session|account|chats|contacts|messages|store|cache|runs|skill) [a-z][a-z-]*)/g,
-      ),
-    ].map((match) => match[1] ?? "")
-
-    expect(named.length).toBeGreaterThan(5)
-    expect(named.filter((path) => !paths.has(path))).toEqual([])
+    expect(validateSkill(skill, { folder: "max-cli", program })).toEqual([])
   })
 })
 

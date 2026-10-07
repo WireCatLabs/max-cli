@@ -612,3 +612,8 @@ write that got no answer into `outcome_unknown`. It trusts the Минцифры 
 per request on Bun (`NEED-293`). The bot token is `bot:<profile>` in the keyring (`src/bot/auth.ts`).
 A Biome rule keeps `src/bot/` away from `src/protocol/`, `src/session/`, `src/spec/` and
 `src/client.ts`.
+
+Рейтинги архива и evidence реализованы в общих services/store cli-messaging; adapter
+сохраняет `providerMetadata.graph` v1 с доказанной reply-связью или известным отсутствием
+reply у полного сообщения. Неполный кадр оставляет связь неизвестной.
+[Пользовательский контракт](../rankings.md) описывает формулы, пределы и качество данных.

@@ -84,7 +84,20 @@ export const toMessage = (raw: Payload, chatId: Id, lookup: NameLookup = {}): Me
     ...linked(raw.link, lookup),
     reactions: historyReactions(raw.reactionInfo),
     ...scheduled(raw.delayedAttributes),
-    ...counted(raw.stats),
+    providerMetadata: { ...counted(raw.stats).providerMetadata, graph: rankingGraph(raw) },
+  }
+}
+
+const rankingGraph = (raw: Payload): NonNullable<Message["providerMetadata"]>["graph"] => {
+  const link = asRecord(raw.link)
+  if (link?.type === "REPLY") {
+    const messageId = asId(asRecord(link.message)?.id)
+    const chatId = asId(link.chatId)
+    return { version: 1, ...(messageId && chatId ? { reply: { chatId, messageId } } : {}) }
+  }
+  return {
+    version: 1,
+    ...(asId(raw.id) !== undefined && typeof raw.time === "number" ? { reply: null } : {}),
   }
 }
 

@@ -105,8 +105,9 @@ describe("toMessage", () => {
   it("keeps a channel post's views, and nothing where MAX sent none", () => {
     expect(toMessage({ ...messageWire, type: "CHANNEL", stats: { views: 12 } }, "-7").providerMetadata).toEqual({
       views: 12,
+      graph: { version: 1, reply: null },
     })
-    expect(toMessage(messageWire, "7268926")).not.toHaveProperty("providerMetadata")
+    expect(toMessage(messageWire, "7268926").providerMetadata).toEqual({ graph: { version: 1, reply: null } })
   })
 
   it("knows which messages are ours, and admits when it cannot tell", () => {
@@ -146,6 +147,7 @@ describe("toMessage", () => {
       attachments: [{ kind: "photo" }],
       outgoing: null,
     })
+    expect(reply.providerMetadata?.graph).toEqual({ version: 1, reply: { chatId: "1", messageId: "9" } })
     expect(reply.forwardedFrom).toBeNull()
     expect(forward.forwardedFrom?.id).toBe("9")
     expect(forward.replyTo).toBeNull()

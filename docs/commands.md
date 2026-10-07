@@ -670,19 +670,24 @@ max contacts list [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 | `--order <recent\|name>` | newest conversation first, or alphabetical. По умолчанию: `recent`. |
-| `--search <text>` | only people whose name or @username contains this. |
+| `--search <text>` | only people whose name, local alias or @username contains this. |
+| `--search-notes <text>` | only people whose private notes contain this text. |
 
 ### `max contacts show`
 
 one person and the chats you share with them
 
 ```sh
-max contacts show <person>
+max contacts show <person> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name. |
+
+| Опция | Что делает |
+|---|---|
+| `--with-notes` | include your private notes, subject to contacts.notes.list permission. |
 
 ### `max contacts profile`
 
@@ -774,7 +779,7 @@ max contacts unblock <person>
 
 ### `max contacts rename`
 
-give a person a name of your own — they do not see it
+rename the contact in the messenger address book; use contacts alias for a private local name
 
 **Меняет что-то в MAX.**
 
@@ -2008,9 +2013,28 @@ max attachments text set <chat> [message] [options]
 
 your own labels on chats, people and messages, kept in the local store and never sent; tag: in a search finds them
 
+### `max tags auto`
+
+derive local group/channel tags from cached metadata using keyword rules
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tags auto [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a stored group/channel; repeat to select several. По умолчанию: ``. |
+| `--limit <number>` | process at most 1–500 chats. По умолчанию: `50`. |
+| `--refresh-metadata` | read current descriptions from the messenger before classifying. |
+| `--dry-run` | preview cached classification without changing the store. |
+
 ### `max tags add`
 
 put tags on one chat, person or message
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max tags add <tag> [options]
@@ -2030,6 +2054,8 @@ max tags add <tag> [options]
 
 take tags off one chat, person or message
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max tags remove <tag> [options]
 ```
@@ -2043,6 +2069,7 @@ max tags remove <tag> [options]
 | `--chat <chat>` | the chat to untag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to untag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to untag: its id in --chat, or a msg: locator alone. |
+| `--source <manual\|auto>` | remove only this ownership claim. |
 
 ### `max tags list`
 
@@ -2055,6 +2082,7 @@ max tags list [options]
 | Опция | Что делает |
 |---|---|
 | `--tag <tag>` | only this tag. |
+| `--source <manual\|auto>` | only labels with this ownership claim. |
 | `--type <names>` | only what is tagged of this type: chat, contact or message. |
 
 ## `max searches`
