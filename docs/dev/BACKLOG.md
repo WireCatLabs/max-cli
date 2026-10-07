@@ -117,8 +117,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   is the only route to contacts who share no chat. Closes `PROTO-1`.
 - **PROTO-1** · 🟡 P3 · What opcode 36 returns: other clients call it `CONTACT_LIST`, the protocol
   notes call it `GET_BLOCKED`. Waits on `RES-7`.
-- **PROTO-2** · P2 · How long MAX remembers a `cid`. The send retry rests on deduplication measured
-  seconds apart; minutes apart is unproven (`ARCHITECTURE.md` §6).
 - **PROTO-3** · P3 · The upper bound on `chatsCount` in `LOGIN`: 100 works, 200 is refused. The spec
   caps it at 100 (`src/spec/operations/session.ts:109`).
 - **PROTO-6** · P3 · What the `messages` object in the `LOGIN` answer holds. Nothing reads it
@@ -146,24 +144,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   `type`), then offer `max chats members unban`.
 
 ## Foundation and risks
-
-- **CLI-60** · P1 · 🟡 Personal-account commands onto cli-messaging's shared commands, deleting max's
-  copy as each moves (T6). Done: delete, reactions, pin, mark-read, send/edit/forward, polls, chats
-  and contacts reads, `messages list|show|context|search|links` (#282), the `store` group (#307),
-  `conversations` (#308), transcripts into the shared store (item 5 step 2), `inbox`/`review` (step 3), MCP reads (step 4),
-  shared completion and store diagnostics in doctor (step 5), record-backed client/callers/serve (#340–#343),
-  removal of the cache command and storage code (steps 6–7), and contact writes
-  (`add|remove|block|unblock|rename|import`), the `chats folders` group, and
-  `account update`/`account sessions list|end`, and group administration
-  (`create|join|leave|update`, members/admin writes, invite links), and
-  group reads (`members list`, `events`, `inspect`), and shared moderation/rules with
-  legacy checkpoint migration. Left: a live check of
-  `messages list --transcribe`. MAX permission levels, config migration and MCP filtering are complete. **Correction 2026-10-03:** `models text` is shared since #322;
-  `models audio`, its catalogue and installer now use the shared package too. Plan and handoff: `docs_ai/plans/2026-10-02-t6-item5-cache-off.md`, `docs_ai/plans/2026-10-02-t6-item5-handoff.md`.
-  Shared runner and operational diagnostics: done (#347/#352).
-  **Correction 2026-10-03:** search read-only MCP bridge is merged (#357), as is the
-  shared package-upgrade workflow (#358). The permission-model move is complete.
-  Canonical permissions now govern CLI/native reads, server writes/reads and MCP; `config migrate` preserves legacy levels and group checkpoints.
 
 - **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
   names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
