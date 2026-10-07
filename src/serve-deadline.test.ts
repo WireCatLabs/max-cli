@@ -1,4 +1,5 @@
 import { existsSync } from "node:fs"
+import { Server } from "node:net"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { lockPath } from "@leemour/cli-messaging/background"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -38,9 +39,29 @@ afterEach(async () => {
   await fixture.server?.stop()
   fixture.server = undefined
   fixture.max = undefined
+  vi.restoreAllMocks()
 })
 
 describe("native serve command deadline", () => {
+  it("removes a listener whose bind completes after cancellation", async () => {
+    fixture.max = mockMax({ answers: {} })
+    const store = new SessionStore({ profile: "serve-cancelled-bind", keyring: memoryKeyring() })
+    await store.writeToken("synthetic-token")
+    const server = new MaxServer({ store, note: () => {} })
+    const emit = Server.prototype.emit as EventEmitter["emit"]
+    vi.spyOn(Server.prototype as EventEmitter, "emit").mockImplementation(function (this: Server, event, ...args) {
+      if (event === "listening") void server.stop()
+      return emit.call(this, event, ...args)
+    })
+
+    await server.start()
+    await server.done
+
+    expect(fixture.max.sent).toEqual([])
+    expect(server.connected).toBe(false)
+    expect(existsSync(store.socketPath())).toBe(false)
+  })
+
   it("does not reopen a socket or login after cancellation wins startup", async () => {
     fixture.max = mockMax({ answers: {} })
     const store = new SessionStore({ profile: "serve-cancelled-start", keyring: memoryKeyring() })
@@ -86,3 +107,5 @@ describe("native serve command deadline", () => {
     await Promise.all([fixture.server?.stop(), fixture.server?.stop()])
   })
 })
+
+import type { EventEmitter } from "node:events"
