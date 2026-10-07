@@ -436,7 +436,7 @@ describe("the MCP server", () => {
 
   it("exposes search follow-ups through MCP and refuses secondary preparation before connecting", async () => {
     const profile = "mcp-search-followups"
-    legacyFor(profile, { permissions: { conversations: "readonly" } })
+    legacyFor(profile, { permissions: { "conversations.links": "readonly", "conversations.embed": "allow" } })
     const state = new SessionStore({ profile, keyring: memoryKeyring() })
     state.writeState({ ...state.readState(), viewerId: "10000091" })
     const store = await openStore()
@@ -452,7 +452,7 @@ describe("the MCP server", () => {
     expect(planned.body).toMatchObject({ scope: "interior", ordering: "time", gaps: [{ from: 4, to: 6 }] })
     const repair = await call(client, "max_store_gaps_repair", { chat: "111", catch_up: true })
     expect(repair.isError).toBe(true)
-    expect(repair.body.error).toMatchObject({ code: "permission_error", permission: "conversations.build" })
+    expect(repair.body.error).toMatchObject({ code: "permission_error", permission: "conversations.links" })
     const extracted = await call(client, "max_attachments_extract", { chat: "111", limit: 1 })
     expect(extracted.isError).toBe(false)
     expect(extracted.body).toMatchObject({ extracted: 0 })
