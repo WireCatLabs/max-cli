@@ -180,5 +180,5 @@ which; the plan for it starts by saying so.
 
 ## Follow-ups after shared pacing
 
-- **DEBT-59** · 🚧 `test/serve-conditions` · Replace fixed sleeps in native server tests with bounded waits for observed events.
-- Settings resolver adoption · 🚧 `refactor/shared-settings` · Preserve MAX settings values, sources and errors while adopting the shared resolver.
+- **DEBT-59** · ✅ completed 2026-10-08 ([#465](https://github.com/leemour/max-cli/pull/465)) · Native server tests wait for observed events; negative checks retain explicit observation windows.
+- Settings resolver adoption · ✅ implemented 2026-10-08 · Common resolution uses cli-messaging; MAX settings values, sources, scope restrictions and errors stay compatible.
