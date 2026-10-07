@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
@@ -215,6 +215,35 @@ describe("shared search adoption", () => {
     ])
     expect(repair.code).toBe(2)
     expect(repair.stderr).toContain("gap plan changed")
+  })
+  it("honors protected graph links before fetch, repair or background preparation", async () => {
+    const config = process.env.MAX_CONFIG_DIR as string
+    mkdirSync(config, { recursive: true })
+    const path = join(config, "config.json")
+    const original = existsSync(path) ? readFileSync(path, "utf8") : '{"profiles":{}}'
+    try {
+      for (const level of ["readonly", "deny"]) {
+        writeFileSync(
+          path,
+          JSON.stringify({
+            profiles: { default: { permissions: { "conversations.links": level, "conversations.embed": "allow" } } },
+          }),
+        )
+        for (const argv of [
+          ["store", "fetch", "7", "--catch-up"],
+          ["store", "gaps", "repair", "19", "--catch-up"],
+          ["store", "gaps", "repair", "19", "--catch-up", "--background"],
+        ]) {
+          const result = await invoke(argv)
+          expect(result.code, result.stderr).toBe(5)
+        }
+      }
+      const skipped = await invoke(["store", "fetch", "7", "--no-catch-up"])
+      expect(skipped.code).toBe(2)
+      expect(skipped.stderr).toContain("--offline")
+    } finally {
+      writeFileSync(path, original)
+    }
   })
   it("refuses a stale background repair plan before queueing its explicit preparation budgets", async () => {
     const result = await invoke([
