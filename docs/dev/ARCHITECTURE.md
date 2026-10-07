@@ -453,6 +453,8 @@ starts, whole days by directory name. Rules not stated there:
 
 ## 14. Settings, and the order one is decided in
 
+**Correction 2026-10-08:** common settings resolve through cli-messaging `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve`, `mcpTools` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
+
 **Flag → environment → config file → built-in default**, decided once in `resolveSettings`
 (`src/config.ts`). Commands take what they are given; one that re-derived the order would disagree.
 Every field, variable and the file format: [`../configuration.md`](../configuration.md); profiles and

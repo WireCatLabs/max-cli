@@ -1,30 +1,10 @@
-import { existsSync } from "node:fs"
-import { CliError, configFilePath, loadConfigFile, resolvePaths, saveConfigFile } from "@leemour/cli-core"
-import {
-  AI_ENTRIES,
-  type AISettings,
-  ensureDefaultConfig,
-  resolveAISettings,
-  settingsFor,
-} from "@leemour/cli-messaging/cli"
-import {
-  fromOldSettings,
-  type Level,
-  layerPermissions,
-  PERMISSIONS,
-  type Permission,
-  permissionOverrides,
-} from "@leemour/cli-messaging/sends"
+import { CliError, loadConfigFile, saveConfigFile } from "@leemour/cli-core"
+import { AI_ENTRIES, type AISettings, first, settingsFor } from "@leemour/cli-messaging/cli"
+import { type Level, PERMISSIONS, type Permission } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
-import { DEFAULT_PROFILE, usableProfileName } from "./profile.js"
+import { usableProfileName } from "./profile.js"
 import { DEFAULT_MODEL, MODELS } from "./transcribe/models.js"
-
-const APP = "max-cli"
-const DEFAULT_LIMIT = 20
-const DEFAULT_KEEP_RUNS_FOR_DAYS = 30
-/** On by default (`NEED-159` answers): a limit that is off protects nobody from a loop. */
-const DEFAULT_SENDS_PER_HOUR = 30
 
 const plain =
   (rule: string) =>
@@ -34,12 +14,6 @@ const wholeNumber = plain("has to be a whole number, 1 or more")
 const count = v.pipe(v.number(wholeNumber), v.integer(wholeNumber), v.minValue(1, wholeNumber))
 const zeroOrMore = plain("has to be a whole number, 0 or more")
 const countOrZero = v.pipe(v.number(zeroOrMore), v.integer(zeroOrMore), v.minValue(0, zeroOrMore))
-const wholeOrZero = (text: string, name: string): number => {
-  const value = Number(text)
-  if (!Number.isInteger(value) || value < 0)
-    throw new CliError("validation_error", `${name} has to be a whole number, 0 or more`)
-  return value
-}
 const flag = v.boolean(plain("has to be true or false"))
 /** MCP tools that change the account beyond messages, each group off until named here (`NEED-350`). */
 export const MCP_TOOL_GROUPS = ["contacts", "polls", "groups", "profile"] as const
@@ -294,33 +268,6 @@ export type SourcedSetting =
   | "skillHint"
   | "transcribeModel"
 
-/**
- * `MAX_PROFILE_LOCK` pins a process to one profile: the owner sets it where an agent runs, and a
- * first word or `MAX_PROFILE` naming any other profile is refused rather than obeyed. What the
- * agent could otherwise do is pick the profile with fewer guards.
- */
-const locked = (
-  profile: { value: string; from: Source },
-  lock: string | undefined,
-): { value: string; from: Source } => {
-  if (lock === undefined) return profile
-  usableProfileName(lock)
-  if (profile.value === lock) return profile
-  if (profile.from === "first word" || profile.from === "MAX_PROFILE") {
-    throw new CliError(
-      "permission_error",
-      `this process is locked to profile ${lock} (MAX_PROFILE_LOCK) — profile ${profile.value} is refused`,
-    )
-  }
-  return { value: lock, from: "MAX_PROFILE_LOCK" }
-}
-
-/** The first given value wins, and says which it was. */
-const first = <T>(candidates: [Source, T | undefined][], fallback: T): { value: T; from: Source } => {
-  for (const [from, value] of candidates) if (value !== undefined) return { value, from }
-  return { value: fallback, from: "default" }
-}
-
 export interface ResolveOptions {
   env?: NodeJS.ProcessEnv
   /** Personal unless the command is under `max bot`. */
@@ -333,229 +280,26 @@ export interface ResolveOptions {
  * **Flag, then environment, then the configuration file, then the built-in default.** One place,
  * so no command can decide the order differently from another.
  *
- * ⚠ **Only two settings actually have the middle step** — `MAX_PROFILE` and `MAX_TIMEOUT` — and
- * that is deliberate rather than unfinished (`NEED-119`). They are the two an agent sets once for
- * a whole process. A variable for `--json` or `--color` would be worse than missing: one left set
- * in a shell silently changes the output of a command that never asked for it.
+ * Profile selection, the command budget and request pace accept environment overrides. Output
+ * flags remain per invocation: a variable for `--json` or `--color` would silently change the
+ * output of a command that never asked for it.
  *
  * Two things already jump this queue and are documented rather than re-litigated here:
  * `MAX_TOKEN` outranks the keyring (`cli-core`'s `Credentials.read`), and `MAX_CONFIG_DIR`,
  * `MAX_STATE_DIR` or `MAX_CACHE_DIR` move the whole installation — including which keyring entry
  * a profile means (`ARCHITECTURE.md` §14).
  */
-export const resolveSettings = (
-  flags: GlobalFlags = {},
-  { env = process.env, configDir, kind = "personal" }: ResolveOptions = {},
-) => {
-  const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
-  const configPath = configFilePath(configDir ?? paths.config)
-  try {
-    ensureDefaultConfig(configPath)
-  } catch (error) {
-    throw new CliError("configuration_error", error instanceof Error ? error.message : String(error))
-  }
-  const config = readConfig(configPath)
-
-  const profile = locked(
-    first(
-      [
-        ["first word", flags.profile],
-        ["MAX_PROFILE", given(env.MAX_PROFILE)],
-        ["config file: defaultProfile", config.defaultProfile],
-      ],
-      DEFAULT_PROFILE,
-    ),
-    given(env.MAX_PROFILE_LOCK),
-  )
-  const layers = layersFor(config, usableProfileName(profile.value), kind)
-  const fromFile = <K extends keyof Layer>(key: K, flag?: Layer[K]): [Source, Layer[K] | undefined][] => [
-    ["flag", flag],
-    ...layers.map(([from, layer]): [Source, Layer[K] | undefined] => [from, layer?.[key]]),
-  ]
-
-  const limit = first<number>(fromFile("limit", flags.limit), DEFAULT_LIMIT)
-  const timeoutMs = first<number | undefined>(fromFile("timeoutMs"), undefined)
-  const color = first<boolean | undefined>(fromFile("color"), undefined)
-  const senderColors = first(fromFile("senderColors"), false)
-  const catchUpMarksRead = first(fromFile("catchUpMarksRead"), false)
-  const searchCatchUp = first(fromFile("searchCatchUp"), false)
-  const record = first(fromFile("record", flags.record), false)
-  const serve = first(fromFile("serve", flags.serve), true)
-  const keepRunsForDays = first(fromFile("keepRunsForDays"), DEFAULT_KEEP_RUNS_FOR_DAYS)
-  const readOnly = first(fromFile("readOnly"), false)
-  const allow = first<readonly Permission[] | undefined>(fromFile("allow"), undefined)
-  // A bot has no hourly limit unless a `bot.*` section gives it one (`NEED-305`, `NEED-356`).
-  const sendsPerHour =
-    kind === "bot"
-      ? first(
-          fromFile("sendsPerHour").filter(([from]) => from.startsWith("config file: bot.")),
-          Number.POSITIVE_INFINITY,
-        )
-      : first(fromFile("sendsPerHour"), DEFAULT_SENDS_PER_HOUR)
-
-  const paceFromEnv = given(env.MAX_REQUESTS_PER_MINUTE)
-  const requestsPerMinute =
-    paceFromEnv === undefined
-      ? first<number | undefined>(fromFile("requestsPerMinute"), undefined)
-      : { value: wholeOrZero(paceFromEnv, "MAX_REQUESTS_PER_MINUTE"), from: "MAX_REQUESTS_PER_MINUTE" as const }
-
-  const oldFrom = readOnly.value ? readOnly.from : allow.from
-  const oldLevels = fromOldSettings(readOnly.value, allow.value, { bot: kind === "bot" })
-  // The old settings sit in the layer they were written in, under that layer's own `permissions`.
-  const { levels: permissions, sources: permissionSources } = layerPermissions([
-    ["flag", permissionOverrides(flags.permission)],
-    ...layers.flatMap(([from, layer]): [string, Record<string, Level> | undefined][] => [
-      [from, layer?.permissions],
-      ...(from === oldFrom ? [[from, oldLevels] as [string, Record<string, Level>]] : []),
-    ]),
-  ])
-  const mcpTools = first<readonly McpToolGroup[]>(fromFile("mcpTools"), [])
-  const readOtherBots = first<boolean | readonly string[]>(
-    kind === "bot"
-      ? [
-          [
-            `config file: bot.profiles.${usableProfileName(profile.value)}`,
-            config.bot?.profiles?.[profile.value]?.readOtherBots,
-          ],
-          ["config file: bot.defaults", config.bot?.defaults?.readOtherBots],
-        ]
-      : [],
-    false,
-  )
-  const shared = config.defaults ?? {}
-  const updateCheck = first([["config file: defaults", shared.updateCheck]], true)
-  const skillHint = first([["config file: defaults", shared.skillHint]], true)
-  const transcribeModel = first<string>([["config file: defaults", shared.transcribeModel]], DEFAULT_MODEL)
-
-  /**
-   * ⚠ **The only setting with no `config file` row, on purpose.** A budget for one command is
-   * about a particular run, not a habit, and a timeout written into a file is one somebody trips
-   * over months later without remembering they set it.
-   */
-  const timeout = first<string | undefined>(
-    [
-      ["flag", flags.timeout],
-      ["MAX_TIMEOUT", given(env.MAX_TIMEOUT)],
-    ],
-    undefined,
-  )
-
-  const ai = resolveAISettings("MAX", layers, env)
-  const settings: Settings = {
-    ...ai.values,
-    profile: usableProfileName(profile.value),
-    json: flags.json === true,
-    jsonl: flags.jsonl === true,
-    quiet: flags.quiet === true,
-    detail: Math.min(2, Math.max(0, flags.verbose ?? 0)) as 0 | 1 | 2,
-    trace: flags.trace === true,
-    color: color.value,
-    senderColors: senderColors.value,
-    catchUpMarksRead: catchUpMarksRead.value,
-    searchCatchUp: searchCatchUp.value,
-    limit: limit.value,
-    page: flags.page ?? 1,
-    all: flags.all === true,
-    timeoutMs: timeoutMs.value,
-    commandTimeoutMs: durationMs(timeout.value, timeout.from),
-    record: record.value,
-    keepFailedRuns: record.value || record.from === "default",
-    serve: serve.value,
-    keepRunsForDays: keepRunsForDays.value,
-    readOnly: readOnly.value,
-    allow: allow.value,
-    sendsPerHour: sendsPerHour.value,
-    ...(requestsPerMinute.value === undefined ? {} : { requestsPerMinute: requestsPerMinute.value }),
-    permissions,
-    permissionSources,
-    mcpTools: mcpTools.value,
-    readOtherBots: readOtherBots.value,
-    updateCheck: updateCheck.value,
-    skillHint: skillHint.value,
-    transcribeModel: transcribeModel.value,
-    configPath,
-    configFound: existsSync(configPath),
-    kind,
-    configuredProfiles: namedProfiles(config),
-    sources: {
-      ...(ai.sources as Record<keyof AISettings, Source>),
-      profile: profile.from,
-      limit: limit.from,
-      timeoutMs: timeoutMs.from,
-      commandTimeoutMs: timeout.from,
-      color: color.from,
-      senderColors: senderColors.from,
-      catchUpMarksRead: catchUpMarksRead.from,
-      searchCatchUp: searchCatchUp.from,
-      record: record.from,
-      serve: serve.from,
-      keepRunsForDays: keepRunsForDays.from,
-      readOnly: readOnly.from,
-      allow: allow.from,
-      sendsPerHour: sendsPerHour.from,
-      requestsPerMinute: requestsPerMinute.from,
-      mcpTools: mcpTools.from,
-      permissions: "default",
-      readOtherBots: readOtherBots.from,
-      updateCheck: updateCheck.from,
-      skillHint: skillHint.from,
-      transcribeModel: transcribeModel.from,
-    },
-  }
-
-  // The file was checked by the schema; a flag was not, and `--limit abc` is `NaN` by the time it
-  // gets here, which slices an array to nothing without complaining.
-  if (!Number.isInteger(settings.limit) || settings.limit < 1) {
-    throw new CliError("validation_error", `--limit takes a whole number from 1 upwards, not ${flags.limit}`)
-  }
-
-  if (!Number.isInteger(settings.page) || settings.page < 1) {
-    throw new CliError("validation_error", `--page takes a whole number from 1 upwards, not ${flags.page}`)
-  }
-
-  // Refused rather than resolved: one of the two would silently win, and which one is exactly the
-  // sort of thing a caller discovers from a wrong answer rather than from a message.
-  if (settings.all && flags.page !== undefined) {
-    throw new CliError("validation_error", "--all and --page ask for different things; use one or the other")
-  }
-
-  return settings
+export const resolveSettings = (flags: GlobalFlags = {}, options: ResolveOptions = {}): Settings => {
+  const {
+    configured: _configured,
+    shared: _shared,
+    offline: _offline,
+    ...settings
+  } = sharedSettings.resolveSettings(flags, options)
+  return settings as Settings
 }
 
-type Layer = Partial<v.InferOutput<typeof profileSettings>>
-
-/**
- * **The most specific entry wins** (`NEED-355`): this profile's personal or bot entry, then the
- * profile, then every personal account or every bot, then everyone. Naming one account says more
- * than naming all of them, so a profile beats a kind.
- */
-const layersFor = (config: Config, profile: string, kind: ProfileKind): [Source, Layer | undefined][] => [
-  [`config file: ${kind}.profiles.${profile}`, config[kind]?.profiles?.[profile]],
-  [`config file: profiles.${profile}`, config.profiles[profile]],
-  [`config file: ${kind}.defaults`, config[kind]?.defaults],
-  ["config file: defaults", config.defaults],
-]
-
-const namedProfiles = (config: Config): string[] =>
-  [
-    ...new Set([
-      ...Object.keys(config.profiles),
-      ...Object.keys(config.personal?.profiles ?? {}),
-      ...Object.keys(config.bot?.profiles ?? {}),
-    ]),
-  ].sort()
-
-/**
- * The profile names written in the configuration file.
- *
- * ⚠ **This is not every profile that works.** `max <name> session start` stores a token under any
- * name without writing anything to the file, so a profile can be in daily use and absent here.
- * Whoever prints this has to say so, or it reads as a complete list and quietly is not.
- */
-export const configuredProfiles = ({ env = process.env, configDir }: ResolveOptions = {}): string[] => {
-  const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
-  return namedProfiles(readConfig(configFilePath(configDir ?? paths.config)))
-}
+export const configuredProfiles = (options: ResolveOptions = {}): string[] => sharedSettings.configuredProfiles(options)
 
 /**
  * `30s`, `2m`, `500ms` — **the unit is required, and a bare number is refused.**
@@ -570,14 +314,6 @@ export const configuredProfiles = ({ env = process.env, configDir }: ResolveOpti
 const DURATION = /^(\d+)(ms|s|m)$/
 
 const UNIT_MS: Record<string, number> = { ms: 1, s: 1000, m: 60_000 }
-
-const durationMs = (value: string | undefined, from: Source): number | undefined => {
-  if (value === undefined) return undefined
-
-  // Named by where it came from, so somebody who set `MAX_TIMEOUT` in a shell profile weeks ago is
-  // told which thing is wrong rather than shown a flag they never typed.
-  return parseDuration(value, from === "MAX_TIMEOUT" ? "MAX_TIMEOUT" : "--timeout")
-}
 
 /** `30s`, `2m`, `500ms` — the one spelling of a duration, whatever it is for. */
 export const parseDuration = (value: string, source: string): number => {
@@ -800,12 +536,6 @@ const readConfig = (path: string): Config => {
   }
 }
 
-/** An environment variable set to the empty string is not a value; it is the shell being unset. */
-const given = (value: string | undefined): string | undefined => {
-  const trimmed = value?.trim()
-  return trimmed === undefined || trimmed === "" ? undefined : trimmed
-}
-
 export const hasPermissionConfig = (config: Config): boolean =>
   [
     config.defaults,
@@ -815,3 +545,29 @@ export const hasPermissionConfig = (config: Config): boolean =>
     config.bot?.defaults,
     ...Object.values(config.bot?.profiles ?? {}),
   ].some((scope) => scope?.permissions !== undefined)
+
+const sharedSettings = settingsFor(MAX_APP, {
+  schema: configSchema,
+  profile: { serve: personalEntries.serve, mcpTools: personalEntries.mcpTools },
+  defaults: { transcribeModel: defaultsEntries.transcribeModel },
+  sourcePaths: true,
+  parseDuration,
+  resolve: ({ flags, settings, fromLayers }) => {
+    const serveFlag = (flags as GlobalFlags).serve
+    const serve = serveFlag === undefined ? fromLayers("serve", true) : { value: serveFlag, from: "flag" }
+    const mcpTools = fromLayers<readonly McpToolGroup[]>("mcpTools", [])
+    const transcribeModel = first<string>(
+      [["config file: defaults", settings.shared.transcribeModel as string | undefined]],
+      DEFAULT_MODEL,
+    )
+    return {
+      values: { serve: serve.value, mcpTools: mcpTools.value, transcribeModel: transcribeModel.value },
+      sources: {
+        serve: serve.from,
+        mcpTools: mcpTools.from,
+        transcribeModel: transcribeModel.from,
+        permissions: "default",
+      },
+    }
+  },
+})
