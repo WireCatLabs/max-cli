@@ -142,8 +142,13 @@ export const chatsUpdate = defineOperation({
   opcode: 55,
   auth: true,
   request: v.union([
-    /** MAX calls the name `theme`. */
-    v.strictObject({ chatId: id(), theme: v.optional(v.string()), description: v.optional(v.string()) }),
+    /** MAX calls the name `theme`; `photoToken` is a photo uploaded through `PHOTO_UPLOAD`. */
+    v.strictObject({
+      chatId: id(),
+      theme: v.optional(v.string()),
+      description: v.optional(v.string()),
+      photoToken: v.optional(v.string()),
+    }),
     /** Only the flags that change. */
     v.strictObject({ chatId: id(), options: v.record(v.string(), v.boolean()) }),
     v.strictObject({ chatId: id(), revokePrivateLink: v.literal(true) }),
@@ -157,7 +162,7 @@ export const chatsUpdate = defineOperation({
       "pinMessageId" in request,
       "revokePrivateLink" in request,
       "options" in request,
-      "theme" in request || "description" in request,
+      "theme" in request || "description" in request || "photoToken" in request,
     ]
     if (changes.filter(Boolean).length !== 1) return ambiguous("chats.update")
     if (changes[0]) {
@@ -180,6 +185,7 @@ export const chatsUpdate = defineOperation({
       "measured against MAX 2026-09-24 (`pnpm probe:groups`, `pnpm probe:members`)",
       "PyMax change_group_profile, change_group_settings, rework_invite_link",
       "the pin: measured 2026-09-24 in a group the owner named (`pnpm probe:edit-pin-forward`, `PIN_CHAT`); web.max.ru `_app/immutable/chunks/5oCuRT0F.js`; PyMax `api/messages/payloads.py:95-98` (53103f0)",
+      "the photo: web.max.ru `_app/immutable/chunks/Cdo8IOYe.js` (2026-10-08) sends `{chatId, photoToken}` after `PHOTO_UPLOAD {count: 1}`; rumax a9ecaf3 `set_chat_photo`",
     ],
     notes:
       "A setting changed from false to true, measured 2026-09-24 (`pnpm probe:members`). max-api-docs calls 55 a no-op; it sent `{chatId}` alone. " +

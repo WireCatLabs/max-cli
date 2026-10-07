@@ -245,7 +245,8 @@ export class MaxClient {
           throw new CliError("validation_error", "MAX needs a first name, and the profile has none — pass --first-name")
         const lastName = change.lastName ?? current.lastName
 
-        const photoToken = change.photo === undefined ? undefined : await this.#profilePhoto(change.photo)
+        const photoToken =
+          change.photo === undefined ? undefined : await this.#photoToken(change.photo, { profile: true })
         const answer = await this.#wire.account.update({
           firstName,
           ...(lastName === undefined ? {} : { lastName }),
@@ -609,16 +610,21 @@ export class MaxClient {
         this.#updateMembers(reference, [person], "admins.remove", { operation: "remove", type: "ADMIN" }),
     },
 
-    update: async (reference: string, { title, description }: { title?: string; description?: string }) => {
-      if (title === undefined && description === undefined) {
-        throw new CliError("validation_error", "nothing to change — give --title, --description or both")
+    update: async (
+      reference: string,
+      { title, description, photo }: { title?: string; description?: string; photo?: SharedUpload },
+    ) => {
+      if (title === undefined && description === undefined && photo === undefined) {
+        throw new CliError("validation_error", "nothing to change — give --title, --description or --photo")
       }
       const chatId = await this.chats.resolve(reference)
       return this.#changeChat(chatId, "update", async () => {
+        const photoToken = photo === undefined ? undefined : await this.#photoToken(photo, { profile: false })
         const answer = await this.#wire.chats.update({
           chatId,
           ...(title === undefined ? {} : { theme: title }),
           ...(description === undefined ? {} : { description }),
+          ...(photoToken === undefined ? {} : { photoToken }),
         })
         return { chatId, result: toGroupCard(record(answer.chat) ?? {}) }
       })
@@ -2338,11 +2344,12 @@ export class MaxClient {
     }
   }
 
-  async #profilePhoto(photo: string | SharedUpload): Promise<string> {
+  /** A group's photo goes up as a message photo does; the web client asks `{count: 1}` for it (2026-10-08). */
+  async #photoToken(photo: string | SharedUpload, { profile }: { profile: boolean }): Promise<string> {
     const path = typeof photo === "string" ? photo : photo.name
     if (!isImage(path)) throw new CliError("validation_error", `${path} is not an image MAX takes as a photo`)
     const bytes = typeof photo === "string" ? await readUpload(photo) : Buffer.from(photo.bytes)
-    const { url } = await this.#wire.uploads.photo({ count: 1, type: 0, uploaderType: 0, profile: true })
+    const { url } = await this.#wire.uploads.photo({ count: 1, type: 0, uploaderType: 0, profile })
     if (typeof url !== "string") throw new CliError("provider_error", "MAX gave no address to upload the photo to")
     return uploadPhoto(url, path, bytes)
   }

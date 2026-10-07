@@ -668,6 +668,7 @@ max chats members remove "Поход" "Боря"
 max chats admins add "Поход" "Аня" --can members,pin
 max chats admins remove "Поход" "Аня"              # снять права; участником остаётся
 max chats update "Поход" --title "Поход-2026" --description "в июле"
+max chats update "Поход" --photo обложка.jpg    # новое фото группы
 max chats show "Поход"                           # настройки группы — в поле settings
 max chats update "Поход" --all-can-pin off       # поменять одну
 max chats link show "Поход"                      # ссылка-приглашение, если вам её видно

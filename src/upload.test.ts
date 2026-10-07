@@ -165,6 +165,44 @@ describe("the profile photo", () => {
   })
 })
 
+describe("a group's photo", () => {
+  it("uploads the image as a message photo and sends its token in CHAT_UPDATE, journaled as an update", async () => {
+    const max = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.LOGIN]: {
+          profile: { contact: { id: 10000001 } },
+          chats: [{ id: -70000000000001, type: "CHAT", title: "Book club", lastEventTime: 1789776000000 }],
+        },
+        [Opcode.PHOTO_UPLOAD]: { url: `${origin}/photo` },
+        [Opcode.CHAT_UPDATE]: { chat: { id: -70000000000001, type: "CHAT", title: "Book club" } },
+      },
+    })
+    const keyring = memoryKeyring()
+    const streams = captureStreams()
+    const code = await run(
+      ["chats", "update", "-70000000000001", "--photo", join(directory, "picture.png"), "--json"],
+      {
+        streams,
+        tty: false,
+        store: (profile: string) => {
+          const store = new SessionStore({ profile, keyring })
+          store.writeToken("a-token")
+          return store
+        },
+        connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+      },
+    )
+    const of = (opcode: number) => max.sent.filter((call) => call.opcode === opcode).map((call) => call.payload)
+
+    expect(code).toBe(0)
+    expect(of(Opcode.PHOTO_UPLOAD)).toEqual([{ count: 1, type: 0, uploaderType: 0, profile: false }])
+    expect(of(Opcode.CHAT_UPDATE).map((payload) => ({ ...payload, chatId: String(payload.chatId) }))).toEqual([
+      { chatId: "-70000000000001", photoToken: "photo-token" },
+    ])
+  })
+})
+
 describe("sending a video and a voice message", () => {
   it("sends an .mp4 as a video, uploaded with the bytes unit", async () => {
     const { code, sends, slots } = await send(["--file", join(directory, "clip.mp4")])
