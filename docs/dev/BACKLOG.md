@@ -35,17 +35,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   structure and command surface before implementation.
 
 
-- **CLI-58** · P2 · 🟡 `mcp --http`: ChatGPT and Claude in the browser reach the CLI without a
-  third-party proxy. Done: Streamable HTTP on `127.0.0.1` behind the owner's tunnel, a one-owner OAuth login
-  (one-time terminal code, PKCE S256, 1 h access / 30-day rotating refresh, hashes only), every write through
-  the form by default (NEED-593), `--revoke` — cli-messaging #527/#528/#543 (0.146.0), tg-cli #266, max-cli #398,
-  `docs/remote.md` in both. Correction 2026-10-07: the owner confirmed reading and sending in
-  Claude web after the compatibility change. Earlier sends failed after app approval; server forms
-  and app approval are separate. Compatibility shipped in cli-messaging #627 (0.155.0), TG#302 and
-  MAX#432: explicit `--http-confirmation permissions` and repeatable `--permission key=level`;
-  mandatory forms remain the default, ask/deny/readonly still apply. Left: OpenAI web, MAX browser
-  and native platform setup checks. MAX0.30.0 includes compatibility; TG0.29.0 does not, so the next
-  TG release is needed. Both consumer main branches pin cli-messaging0.156.0/core0.17.1.
 - **CLI-68** · P3 · `mcp --http` as a background service: `server install` for it (systemd/launchd), so the
   browser apps reach a machine without an open terminal. Follows CLI-58's live check (NEED-595 A: foreground
   first).
