@@ -25,9 +25,9 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **MAX-65** · P2 · 🚧 `feat/client-gaps-a` · Gaps against other MAX clients, batch a: `chats folders order` (275
-  `{foldersOrder}`), `session end` logs out on MAX's side (20, NEED-821 A), `chats update --photo` (80 → 55
-  `{chatId, photoToken}`). Request shapes from web.max.ru's own code (FIND-939). Plan:
+- **MAX-65** · P2 · 🟡 🚧 `feat/client-gaps-a` · Gaps against other MAX clients, batch a. Done: `chats folders
+  order` (275 `{foldersOrder}`), `session end` logs out on MAX's side (20, NEED-821 A). Left: `chats update
+  --photo` (80 → 55 `{chatId, photoToken}`), which needs the option in cli-messaging's shared `chats update`. Request shapes from web.max.ru's own code (FIND-939). Plan:
   `docs_ai/plans/2026-10-08-client-gaps.md`.
 - **MAX-66** · P2 · Batch b, reads: `max calls list` (163), `max chats media` (51), `max account privacy show`.
 - **MAX-67** · P3 · Batch c: presence (35 + 132), read receipts (130), chat changes (135) in `watch --events`.

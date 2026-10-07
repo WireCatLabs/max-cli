@@ -1,7 +1,7 @@
 import { CliError, indent } from "@leemour/cli-core"
 import { annotate } from "@leemour/cli-core/commands"
 import { Argument, Command } from "commander"
-import { type MaxClientOptions, refuseWhilePaused } from "../client.js"
+import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { maskedProfile } from "../domain/map.js"
 import { commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { stopServer } from "../server/server-connection.js"
@@ -66,35 +66,57 @@ export const sessionCommand = (): Command => {
     })
 
   /**
-   * Local only, for now: it forgets the token and the device identity on this machine.
-   *
-   * It does **not** send LOGOUT (opcode 20), which would end the session on MAX's side too — and
-   * with it the browser tab the token came from. That distinction is in the output rather than
-   * glossed over: a forgotten token that is still live elsewhere is a different thing from a
-   * revoked one.
+   * Ends the session on MAX's side (LOGOUT, opcode 20), then forgets it here, as `tg session end` does
+   * (`NEED-821` A). A token copied from a browser tab is that tab's session, so the tab is logged out too.
+   * `--local` keeps the old behaviour — forget it here, tell MAX nothing — for a machine that cannot reach MAX.
    */
-  annotate(command.command("end"), { mutates: true, local: true })
-    .description("forget the stored session for this profile")
+  annotate(command.command("end"), { mutates: true })
+    .description("log this profile out on MAX's side and forget the session here")
+    .option("--local", "only forget the session on this machine; it stays live on MAX's side")
     .action(async function (this: Command) {
-      const { renderer, store, run } = forCommand(this)
+      const { local } = this.opts<{ local?: boolean }>()
+      const { renderer, store, run, createClient } = forCommand(this)
 
-      // It contacts nobody, so the run holds no events — but forgetting a session is an action, and
-      // "when did this profile stop working" is a question the record is kept to answer.
-      await run("session end", async () => {
+      await run("session end", async (events) => {
+        if (store.readToken() === undefined) {
+          renderer.result({ profile: store.profile, forgotten: false, revokedOnServer: false })
+          renderer.note(`there was no session for "${store.profile}"`)
+          return
+        }
         // A server still logged in with the forgotten session would keep using it.
         const server = await stopServer(store.socketPath())
-        const had = store.forget()
         if (server === "refused") {
           renderer.note("a `max serve` you started by hand is still running with that session — Ctrl-C it")
         }
 
-        renderer.result({ profile: store.profile, forgotten: had, revokedOnServer: false })
-        if (had) renderer.success(`forgot the session for "${store.profile}" on this machine`)
-        else renderer.note(`there was no session for "${store.profile}"`)
+        const revokedOnServer = local === true ? false : await logOut(createClient({ events }))
+        const had = store.forget()
+        renderer.result({ profile: store.profile, forgotten: had, revokedOnServer })
+        renderer.success(
+          revokedOnServer
+            ? `logged "${store.profile}" out of MAX and forgot the session here`
+            : `forgot the session for "${store.profile}" on this machine; it is still live on MAX's side`,
+        )
       })
     })
 
   return command
+}
+
+/** A token MAX no longer accepts is as logged out as it gets; anything else keeps the session, to try again. */
+const logOut = async (client: MaxClient): Promise<boolean> => {
+  try {
+    await client.logout()
+    return true
+  } catch (error) {
+    if (error instanceof CliError && error.code === "authentication_error") return true
+    throw new CliError(
+      error instanceof CliError ? error.code : "provider_error",
+      `MAX did not log the session out (${error instanceof Error ? error.message : String(error)}); nothing was forgotten — try again, or \`max session end --local\` to forget it here only`,
+    )
+  } finally {
+    await client.close()
+  }
 }
 
 const METHODS = ["token", "qr", "qr-chrome", "sms"] as const

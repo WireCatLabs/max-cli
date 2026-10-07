@@ -1470,6 +1470,12 @@ export class MaxClient {
         return toFolder(record(answer.folder) ?? {})
       }),
 
+    /** Every folder's id, in the new order. */
+    order: (ids: string[]): Promise<void> =>
+      this.#change("folder-order", async () => {
+        await this.#wire.folders.reorder({ foldersOrder: ids })
+      }),
+
     /** The folder only — its chats stay where they are. */
     delete: (reference: string): Promise<Folder> =>
       this.#change("folder-delete", async () => {
@@ -2047,6 +2053,13 @@ export class MaxClient {
   #participantsOf(chat: Payload, viewerId: string | undefined): Id[] | undefined {
     const participants = record(chat.participants)
     return participants === undefined ? undefined : Object.keys(participants).filter((id) => id !== viewerId)
+  }
+
+  /** Ends this session on MAX's side; the token stops working everywhere it was copied to. */
+  async logout(): Promise<void> {
+    if (this.#offline) throw new CliError("validation_error", "`--offline` cannot log out on MAX's side")
+    await this.#connectOnce()
+    await this.#wire.session.logout({})
   }
 
   async close(): Promise<void> {

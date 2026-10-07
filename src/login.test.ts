@@ -315,31 +315,76 @@ describe("max session start without a person at the terminal", () => {
 })
 
 describe("max session end", () => {
-  it("forgets the stored token without contacting MAX, and says it was not revoked there", async () => {
+  const ending = (logout: { answer?: Payload; refuse?: string; loginRefused?: string } = {}) => {
     const keyring = memoryKeyring()
     const store = (profile: string) => new SessionStore({ profile, keyring })
-    store("s-end").writeToken("a-token")
-    let connections = 0
+    const max = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, chats: [] },
+        [Opcode.LOGOUT]: logout.answer ?? {},
+      },
+      refuse: {
+        [Opcode.LOGOUT]: () => logout.refuse,
+        [Opcode.LOGIN]: () => logout.loginRefused,
+      },
+    })
     const environment: Environment = {
       tty: false,
       store,
-      connection: () => {
-        connections++
-        throw new Error("`session end` must not connect")
-      },
+      connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     }
-    const end = async () => {
+    const end = async (...flags: string[]) => {
       const streams = captureStreams()
-      const code = await run(["s-end", "session", "end", "--json"], { ...environment, streams })
-      return { code, json: JSON.parse(streams.stdout.join("")) }
+      const code = await run(["s-end", "session", "end", ...flags, "--json"], { ...environment, streams })
+      const out = streams.stdout.join("")
+      return { code, json: out === "" ? undefined : JSON.parse(out) }
     }
+    const logouts = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGOUT)
+    return { store, end, logouts, max }
+  }
 
-    const first = await end()
-    const again = await end()
+  it("logs the session out on MAX's side, then forgets the token here", async () => {
+    const { store, end, logouts } = ending()
+    store("s-end").writeToken("a-token")
 
-    expect(first).toEqual({ code: 0, json: { profile: "s-end", forgotten: true, revokedOnServer: false } })
+    expect(await end()).toEqual({ code: 0, json: { profile: "s-end", forgotten: true, revokedOnServer: true } })
+    expect(logouts().map(({ payload }) => payload)).toEqual([{}])
     expect(store("s-end").readToken()).toBeUndefined()
-    expect(again.json.forgotten).toBe(false)
-    expect(connections).toBe(0)
+  })
+
+  it("with --local, forgets the token without contacting MAX", async () => {
+    const { store, end, max } = ending()
+    store("s-end").writeToken("a-token")
+
+    expect(await end("--local")).toEqual({
+      code: 0,
+      json: { profile: "s-end", forgotten: true, revokedOnServer: false },
+    })
+    expect(max.sent).toEqual([])
+    expect(store("s-end").readToken()).toBeUndefined()
+  })
+
+  it("keeps the token when MAX refuses the logout, so it can be tried again", async () => {
+    const { store, end } = ending({ refuse: "proto.state" })
+    store("s-end").writeToken("a-token")
+
+    expect((await end()).code).not.toBe(0)
+    expect(store("s-end").readToken()).toBe("a-token")
+  })
+
+  it("forgets a token MAX no longer accepts: there is nothing left to log out", async () => {
+    const { store, end, logouts } = ending({ loginRefused: "login.token" })
+    store("s-end").writeToken("a-token")
+
+    expect((await end()).json).toEqual({ profile: "s-end", forgotten: true, revokedOnServer: true })
+    expect(logouts()).toEqual([])
+    expect(store("s-end").readToken()).toBeUndefined()
+  })
+
+  it("says there was nothing to end, and contacts nobody", async () => {
+    const { end, max } = ending()
+    expect((await end()).json).toEqual({ profile: "s-end", forgotten: false, revokedOnServer: false })
+    expect(max.sent).toEqual([])
   })
 })

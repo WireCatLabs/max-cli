@@ -3,6 +3,7 @@ import { defineOperation } from "../define.js"
 import { id } from "../scalars.js"
 
 const webClient = "web.max.ru chunk `_app/immutable/chunks/5oCuRT0F.js`, read 2026-09-24"
+const webClientNow = "web.max.ru chunk `_app/immutable/chunks/Cdo8IOYe.js`, read 2026-10-08"
 
 const Folder = {
   id: v.pipe(v.string(), v.minLength(1)),
@@ -71,5 +72,25 @@ export const foldersDelete = defineOperation({
     confidence: "measured",
     sources: ["measured against MAX 2026-09-24 (`pnpm probe:account`)", webClient, "PyMax 53103f0 `delete_folder`"],
     notes: "Deletes the folder, not the chats in it.",
+  },
+})
+
+export const foldersReorder = defineOperation({
+  name: "folders.reorder",
+  constant: "FOLDERS_REORDER",
+  opcode: 275,
+  auth: true,
+  /** Every folder, in the new order — the web client sends them all, never a moved one alone. */
+  request: v.strictObject({ foldersOrder: v.array(v.pipe(v.string(), v.minLength(1))) }),
+  response: v.looseObject({
+    folders: v.optional(v.array(v.looseObject({}))),
+    foldersOrder: v.optional(v.array(v.unknown())),
+    folderSync: v.optional(v.number()),
+  }),
+  guard: () => ({ chatId: null, kind: "account", action: "folder-order" }),
+  provenance: {
+    confidence: "confirmed",
+    sources: [webClientNow, "rumax a9ecaf3 `reorder_folders` (`src/api/chats.rs:362`)"],
+    notes: "The web client applies the answer as a folder delta, the same shape `FOLDERS_GET` answers with.",
   },
 })
