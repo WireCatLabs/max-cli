@@ -1,6 +1,12 @@
 import { existsSync } from "node:fs"
 import { CliError, configFilePath, loadConfigFile, resolvePaths, saveConfigFile } from "@leemour/cli-core"
-import { AI_ENTRIES, type AISettings, resolveAISettings, settingsFor } from "@leemour/cli-messaging/cli"
+import {
+  AI_ENTRIES,
+  type AISettings,
+  ensureDefaultConfig,
+  resolveAISettings,
+  settingsFor,
+} from "@leemour/cli-messaging/cli"
 import {
   fromOldSettings,
   type Level,
@@ -330,6 +336,11 @@ export const resolveSettings = (
 ) => {
   const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
   const configPath = configFilePath(configDir ?? paths.config)
+  try {
+    ensureDefaultConfig(configPath)
+  } catch (error) {
+    throw new CliError("configuration_error", error instanceof Error ? error.message : String(error))
+  }
   const config = readConfig(configPath)
 
   const profile = locked(

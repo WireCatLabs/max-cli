@@ -111,6 +111,26 @@ const runWith = async (argv: string[], environment: Environment = {}) => {
 }
 
 describe("the program", () => {
+  it.each([
+    ["messages", "send", "111", "synthetic text"],
+    ["messages", "forward", "111", "42", "--to", "222"],
+    ["polls", "create", "111", "Synthetic question?", "yes", "no"],
+  ])("refuses a blank posting identity before connecting: %j", async (...argv) => {
+    const { max, ...environment } = scriptedMax()
+    const result = await runWith([...argv, "--send-as", " ", "--json"], environment)
+    expect(result.code).toBe(2)
+    expect(result.stdout).toBe("")
+    expect(result.stderr).toContain("--send-as needs an id")
+    expect(max.sent).toEqual([])
+  })
+  it.each(["--spoiler", "--caption-above"])("refuses %s for a text-only send", async (flag) => {
+    const { max, ...environment } = scriptedMax()
+    const result = await runWith(["messages", "send", "111", "synthetic text", flag, "--json"], environment)
+    expect(result.code).toBe(2)
+    expect(result.stderr).toContain(`unknown option '${flag}'`)
+    expect(max.sent.some(({ opcode }) => opcode === Opcode.MSG_SEND)).toBe(false)
+  })
+
   it("refuses a topic read without marking the whole chat read", async () => {
     const { max, ...environment } = scriptedMax()
     const result = await runWith(["chats", "mark-read", "111", "--topic", "12", "--json"], environment)
@@ -364,7 +384,7 @@ describe("the program", () => {
     it("`config show --json` answers one object on stdout", async () => {
       const { stdout, code } = await runWith(["config", "show", "--json"])
       expect(code).toBe(0)
-      expect(JSON.parse(stdout)).toMatchObject({ profile: "default", configFound: false })
+      expect(JSON.parse(stdout)).toMatchObject({ profile: "default", configFound: true })
     })
 
     it("`config show` includes the speech model", async () => {
@@ -386,7 +406,11 @@ describe("the program", () => {
 
       await runWith(["work", "config", "unset", "limit"])
       const after = await runWith(["work", "config", "show", "--json"])
-      expect(JSON.parse(after.stdout).settings).toContainEqual({ setting: "limit", value: 20, from: "default" })
+      expect(JSON.parse(after.stdout).settings).toContainEqual({
+        setting: "limit",
+        value: 20,
+        from: "config file: defaults",
+      })
     })
 
     it("`config set --bot` writes the bot side, and `config show --bot` reads it back", async () => {
@@ -402,7 +426,7 @@ describe("the program", () => {
         from: "config file: bot.profiles.test",
       })
       const personal = JSON.parse((await runWith(["test", "config", "show", "--json"])).stdout)
-      expect(personal.settings).toContainEqual({ setting: "sendsPerHour", value: 30, from: "default" })
+      expect(personal.settings).toContainEqual({ setting: "sendsPerHour", value: 30, from: "config file: defaults" })
     })
 
     it("`config set --personal` writes the personal section, which a bot on the same profile does not read", async () => {
@@ -414,7 +438,7 @@ describe("the program", () => {
           (row: { setting: string }) => row.setting === "limit",
         )
       expect(await limitOf([])).toEqual({ setting: "limit", value: 40, from: "config file: personal.profiles.t-side" })
-      expect(await limitOf(["--bot"])).toMatchObject({ value: 20, from: "default" })
+      expect(await limitOf(["--bot"])).toMatchObject({ value: 20, from: "config file: defaults" })
     })
 
     it("`config unset --personal` and `--bot` each remove only their own section's value", async () => {
@@ -427,7 +451,7 @@ describe("the program", () => {
 
       const unset = await runWith(["t-unset", "config", "unset", "--personal", "sendsPerHour", "--json"])
       expect(JSON.parse(unset.stdout)).toMatchObject({ scope: "personal.profiles.t-unset", value: null })
-      expect(await sendsPerHour([])).toBe("default")
+      expect(await sendsPerHour([])).toBe("config file: defaults")
       expect(await sendsPerHour(["--bot"])).toBe("config file: bot.profiles.t-unset")
 
       await runWith(["t-unset", "config", "unset", "--bot", "sendsPerHour"])
@@ -606,7 +630,7 @@ describe("the program", () => {
         ["t-search", "messages", "search", "lat", "--language", "legacy", "--json"],
         environment,
       )
-      expect(JSON.parse(strict.stdout).items).toHaveLength(0)
+      expect(JSON.parse(strict.stdout).items.map((message: { text: string }) => message.text)).toEqual(["later"])
       expect(JSON.parse(legacy.stdout).items).toHaveLength(2)
     })
 

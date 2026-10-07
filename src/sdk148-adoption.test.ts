@@ -74,6 +74,23 @@ beforeAll(async () => {
   )
 })
 describe("SDK148 local commands through the consumer", () => {
+  it("keeps exact queries distinct from word-form searches and saves the choice", async () => {
+    const forms = await cli(["messages", "search", "invoices", "--json"])
+    const exact = await cli(["messages", "search", "invoices", "--exact", "--json"])
+    expect(forms.code, forms.err).toBe(0)
+    expect(exact.code, exact.err).toBe(0)
+    expect(JSON.parse(forms.out).items).toHaveLength(1)
+    expect(JSON.parse(exact.out).items).toEqual([])
+    const count = await cli(["stats", "messages", "show", "invoices", "--exact", "--json"])
+    expect(count.code, count.err).toBe(0)
+    const saved = await cli(["searches", "create", "exact-invoices", "invoices", "--exact", "--json"])
+    expect(saved.code, saved.err).toBe(0)
+    const reused = await cli(["messages", "search", "--saved", "exact-invoices", "--json"])
+    expect(reused.code, reused.err).toBe(0)
+    expect(JSON.parse(reused.out).items).toEqual([])
+    expect((await cli(["searches", "delete", "exact-invoices", "--json"])).code).toBe(0)
+  })
+
   it("tags one account's chat and searches it without a network connection", async () => {
     const added = await cli(["tags", "add", "Work", "--chat", "7", "--json"])
     expect(added.code, added.err).toBe(0)

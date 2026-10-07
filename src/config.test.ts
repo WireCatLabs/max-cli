@@ -266,10 +266,14 @@ describe("what a flag is checked for", () => {
 })
 
 describe("where each setting came from", () => {
-  it("says default for everything when nothing is configured, and that no file was found", () => {
+  it("creates common defaults on first run and identifies the starter file", () => {
     const resolved = settings()
-    expect(resolved.configFound).toBe(false)
-    expect(Object.values(resolved.sources).every((from) => from === "default")).toBe(true)
+    expect(resolved.configFound).toBe(true)
+    expect(JSON.parse(readFileSync(resolved.configPath, "utf8"))).toMatchObject({
+      defaults: { limit: 20 },
+      profiles: {},
+    })
+    expect(resolved.sources).toMatchObject({ limit: "config file: defaults", profile: "default", record: "default" })
   })
 
   it("tells a flag from the file from the built-in value", () => {

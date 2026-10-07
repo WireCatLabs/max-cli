@@ -5,6 +5,8 @@
 Справочник: каждая команда, каждая опция, каждый код возврата. Страница **собирается из самой
 программы**, поэтому описать версию, которой не существует, она не может.
 
+`chats send-as` и `--send-as` пока недоступны для MAX: команда откажет до отправки.
+
 Как устроена строка:
 
 ```sh
@@ -914,6 +916,7 @@ max messages search [query] [options]
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many. |
 | `--newest` | newest first instead of best first. |
+| `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
 | `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
@@ -1056,6 +1059,7 @@ max messages send <chat> [text] [options]
 |---|---|
 | `--topic <id>` | send to this forum topic; unsupported by messengers without topics. |
 | `--reply-to <message>` | answer this message, by its id in the same chat. |
+| `--send-as <id>` | post as one of the identities `chats send-as` lists. |
 | `--send-id <id>` | repeat a send whose outcome was unknown, without risking a second copy. |
 | `--silent` | deliver without a notification. |
 | `--no-preview` | no preview card for a link in the text. |
@@ -1138,6 +1142,7 @@ max messages forward <chat> <message> [options]
 |---|---|
 | `--to <chat>` | where it goes: a chat: its id, or part of its title. |
 | `--silent` | deliver it without a notification. |
+| `--send-as <id>` | post as one of the identities `chats send-as` lists for the --to chat. |
 | `--send-id <id>` | repeat a forward whose outcome was unknown, without risking a second copy. |
 
 ### `max messages pin`
@@ -1466,6 +1471,7 @@ max stats messages show [query] [options]
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many rows. |
 | `--timezone <zone>` | the IANA timezone for calendar days and hours. |
+| `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
 
 ### `max stats chats`
@@ -1971,6 +1977,7 @@ max searches create <name> [query] [options]
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many. |
 | `--newest` | newest first instead of best first. |
+| `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit. |
 | `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
@@ -2201,6 +2208,7 @@ max polls create <chat> <question> <answers> [options]
 | `--anonymous` | nobody sees who voted for what. |
 | `--revote` | people may change their vote. |
 | `--silent` | send without a notification. |
+| `--send-as <id>` | post as one of the identities `chats send-as` lists. |
 | `--send-id <id>` | repeat a create whose outcome was unknown, without risking a second poll. |
 
 ## `max reactions`
