@@ -424,3 +424,10 @@ max tags remove news --chat CHAT_ID --source auto
 Оценка правила не является вероятностью. Ручные метки сохраняются при повторной классификации.
 Без `--source` удаление метки убирает оба источника; следующий явный запуск `tags auto` может
 создать автоматическую метку снова. Связывание людей не объединяет их личные заметки.
+
+Рейтинги архива: `max stats messages top` / `max stats contacts top` — метрика `--measure` или
+`--score helpful|active|engaging`; оценки используют всю допустимую выборку до limit.
+Читай coverage/quality и исключения: неизвестные счётчики не равны нулю, свежесть снимков
+неизвестна. Используй drilldown.selection для `stats messages evidence` / `stats contacts evidence`,
+продолжай через nextCursor; при изменении данных начни без cursor.
+Руководство: [рейтинги](https://github.com/leemour/max-cli/blob/main/docs/rankings.md).

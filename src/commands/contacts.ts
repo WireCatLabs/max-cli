@@ -19,6 +19,8 @@ export const contactsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "list"))
   command.addCommand(sharedSubcommand(shared, "show"))
   command.addCommand(sharedSubcommand(shared, "profile"))
+  command.addCommand(sharedSubcommand(shared, "alias"))
+  command.addCommand(sharedSubcommand(shared, "notes"))
 
   /**
    * The repair tool of the contact store, and **not how contacts normally arrive**: every command
@@ -80,20 +82,7 @@ export const contactsCommand = (): Command => {
       })
     })
 
-  for (const name of [
-    "add",
-    "remove",
-    "block",
-    "unblock",
-    "rename",
-    "import",
-    "context",
-    "check",
-    "link",
-    "unlink",
-    "alias",
-    "notes",
-  ]) {
+  for (const name of ["add", "remove", "block", "unblock", "rename", "import", "context", "check", "link", "unlink"]) {
     command.addCommand(sharedSubcommand(shared, name))
   }
 

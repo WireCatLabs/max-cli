@@ -100,7 +100,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--all` | ✅ |  |
 | `contacts list` | `--order` | ✅ |  |
 | `contacts list` | `--search` | ✅ |  |
-| `contacts list` | `--search-notes` | ⛔ | Shared private-people.test.ts covers account-scoped notes search. |
+| `contacts list` | `--search-notes` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `contacts show` |  | ✅ |  |
 | `contacts show` | `--with-notes` | ✅ |  |
 | `contacts profile` |  | ✅ |  |
@@ -213,7 +213,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages unpin` |  | ✅ |  |
 | `store status` |  | ✅ |  |
 | `store fetch` |  | ✅ |  |
-| `store fetch` | `--all` | ⛔ | cli-messaging src/cli/messenger/backfill.test.ts cover archive preparation; this consumer mounts the shared bounded fetch command. |
+| `store fetch` | `--all` | ⛔ | cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0) |
 | `store fetch` | `--limit` | ✅ |  |
 | `store fetch` | `--page-size` | ✅ |  |
 | `store fetch` | `--pause` | ✅ |  |
@@ -446,7 +446,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags auto` |  | ✅ |  |
 | `tags auto` | `--chat` | ✅ |  |
 | `tags auto` | `--limit` | ✅ |  |
-| `tags auto` | `--refresh-metadata` | ⛔ | Shared private-people.test.ts covers explicit provider refresh and failures. |
+| `tags auto` | `--refresh-metadata` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `tags auto` | `--dry-run` | ✅ |  |
 | `tags add` |  | ✅ |  |
 | `tags add` | `--chat` | ✅ |  |
@@ -463,9 +463,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags list` | `--type` | ✅ |  |
 | `metadata get` |  | ✅ |  |
 | `metadata get` | `--chat` | ✅ |  |
-| `metadata refresh` |  | ⛔ | Shared cli-messaging src/services/private-people.test.ts covers metadata refresh and snapshot retention; this consumer mounts the shared command. |
-| `metadata refresh` | `--chat` | ⛔ | Shared private-people.test.ts covers chat resolution for metadata reads. |
-| `metadata refresh` | `--limit` | ⛔ | Shared private-people.test.ts covers bounded refresh and invalid limits. |
+| `metadata refresh` |  | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata refresh` | `--chat` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata refresh` | `--limit` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
 | `searches create` |  | ✅ |  |
 | `searches create` | `--chat` | ✅ |  |
 | `searches create` | `--source` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |

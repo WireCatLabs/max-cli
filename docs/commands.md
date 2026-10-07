@@ -705,6 +705,121 @@ max contacts profile <person> [options]
 |---|---|
 | `--show-phone` | print the whole phone number. |
 
+### `max contacts alias`
+
+a private local display name in the selected account
+
+#### `max contacts alias set`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts alias set <person> <alias>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `alias` | обязательный |  |
+
+#### `max contacts alias rm`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts alias rm <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+### `max contacts notes`
+
+your private notes on a stored contact, scoped to this account
+
+#### `max contacts notes list`
+
+
+
+```sh
+max contacts notes list <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+#### `max contacts notes show`
+
+
+
+```sh
+max contacts notes show <person> <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
+#### `max contacts notes add`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes add <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--file <path>` | read note text from a file; omitted or - reads stdin. |
+
+#### `max contacts notes edit`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes edit <person> <id> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--file <path>` | read note text from a file; omitted or - reads stdin. |
+| `--revision <number>` | the revision you read before editing. |
+
+#### `max contacts notes remove`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes remove <person> <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
 ### `max contacts sync`
 
 forget where the last sync left off and take the whole list again
@@ -866,121 +981,6 @@ max contacts unlink <person>
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name; <messenger>:<person> for another messenger. |
-
-### `max contacts alias`
-
-a private local display name in the selected account
-
-#### `max contacts alias set`
-
-
-
-**Меняет что-то только на этом компьютере.**
-
-```sh
-max contacts alias set <person> <alias>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный |  |
-| `alias` | обязательный |  |
-
-#### `max contacts alias rm`
-
-
-
-**Меняет что-то только на этом компьютере.**
-
-```sh
-max contacts alias rm <person>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный |  |
-
-### `max contacts notes`
-
-your private notes on a stored contact, scoped to this account
-
-#### `max contacts notes list`
-
-
-
-```sh
-max contacts notes list <person>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный |  |
-
-#### `max contacts notes show`
-
-
-
-```sh
-max contacts notes show <person> <id>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный |  |
-| `id` | обязательный |  |
-
-#### `max contacts notes add`
-
-
-
-**Меняет что-то только на этом компьютере.**
-
-```sh
-max contacts notes add <person> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--file <path>` | read note text from a file; omitted or - reads stdin. |
-
-#### `max contacts notes edit`
-
-
-
-**Меняет что-то только на этом компьютере.**
-
-```sh
-max contacts notes edit <person> <id> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный |  |
-| `id` | обязательный |  |
-
-| Опция | Что делает |
-|---|---|
-| `--file <path>` | read note text from a file; omitted or - reads stdin. |
-| `--revision <number>` | the revision you read before editing. |
-
-#### `max contacts notes remove`
-
-
-
-**Меняет что-то только на этом компьютере.**
-
-```sh
-max contacts notes remove <person> <id>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный |  |
-| `id` | обязательный |  |
 
 ## `max messages`
 

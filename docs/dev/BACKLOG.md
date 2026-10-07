@@ -25,7 +25,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-
 - **CLI-74** · P2 · 🚧 `refactor/mcp-run-entry` (cli-messaging) · MCP as three tools — `max_tools_search`,
   `max_read`, `max_write` — instead of 89, and no confirmation forms (NEED-766, 772–775). Plan:
   `docs_ai/plans/2026-10-06-mcp-search-surface.md`. Starts in cli-messaging `src/mcp/tool.ts` `registerTools`.
