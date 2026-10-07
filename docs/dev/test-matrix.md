@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**700 ✅ · 100 ⛔ · 0 ❌** — 266 commands, 534 options.
+**722 ✅ · 100 ⛔ · 0 ❌** — 268 commands, 554 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -163,6 +163,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages download` | `--output-dir` | ✅ |  |
 | `messages download` | `--all` | ✅ |  |
 | `messages download` | `--pause` | ✅ |  |
+| `messages download` | `--extract` | ✅ |  |
 | `messages download` | `--output` | ✅ |  |
 | `messages evidence` |  | ✅ |  |
 | `messages evidence` | `--limit` | ✅ |  |
@@ -202,8 +203,27 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store fetch` | `--pause` | ✅ |  |
 | `store fetch` | `--since-time` | ✅ |  |
 | `store fetch` | `--last` | ✅ |  |
+| `store fetch` | `--catch-up` | ✅ |  |
+| `store fetch` | `--no-catch-up` | ✅ |  |
+| `store fetch` | `--catch-up-chunks` | ✅ |  |
+| `store fetch` | `--catch-up-messages` | ✅ |  |
+| `store fetch` | `--catch-up-time` | ✅ |  |
 | `store fetch` | `--background` | ⛔ | starts a detached `max` that outlives the test; cli-messaging src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6 |
 | `store fetch` | `--estimate` | ✅ |  |
+| `store gaps plan` |  | ✅ |  |
+| `store gaps repair` |  | ✅ |  |
+| `store gaps repair` | `--limit` | ✅ |  |
+| `store gaps repair` | `--max-gaps` | ✅ |  |
+| `store gaps repair` | `--repair-time` | ✅ |  |
+| `store gaps repair` | `--page-size` | ✅ |  |
+| `store gaps repair` | `--pause` | ✅ |  |
+| `store gaps repair` | `--fingerprint` | ✅ |  |
+| `store gaps repair` | `--catch-up` | ✅ |  |
+| `store gaps repair` | `--no-catch-up` | ✅ |  |
+| `store gaps repair` | `--catch-up-chunks` | ✅ |  |
+| `store gaps repair` | `--catch-up-messages` | ✅ |  |
+| `store gaps repair` | `--catch-up-time` | ✅ |  |
+| `store gaps repair` | `--background` | ✅ |  |
 | `store jobs list` |  | ✅ |  |
 | `store jobs show` |  | ✅ |  |
 | `store jobs cancel` |  | ✅ |  |
@@ -349,6 +369,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations embed clear` | `--dims` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
 | `attachments extract` |  | ✅ |  |
 | `attachments extract` | `--chat` | ✅ |  |
+| `attachments extract` | `--from-dir` | ✅ |  |
+| `attachments extract` | `--cursor` | ✅ |  |
 | `attachments extract` | `--download` | ✅ |  |
 | `attachments extract` | `--output-dir` | ✅ |  |
 | `attachments extract` | `--limit` | ✅ |  |

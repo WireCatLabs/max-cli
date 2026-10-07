@@ -234,6 +234,7 @@ export const registerTools = (
       settings: {
         ...ai,
         profile,
+        searchCatchUp: currentSettings.searchCatchUp,
         configured: ai,
         shared: { ...ai, speechModel: transcribeModel },
         get permissions() {
