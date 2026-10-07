@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**731 ✅ · 141 ⛔ · 0 ❌** — 272 commands, 600 options.
+**750 ✅ · 147 ⛔ · 0 ❌** — 282 commands, 615 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -100,7 +100,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--all` | ✅ |  |
 | `contacts list` | `--order` | ✅ |  |
 | `contacts list` | `--search` | ✅ |  |
+| `contacts list` | `--search-notes` | ⛔ | Shared private-people.test.ts covers account-scoped notes search. |
 | `contacts show` |  | ✅ |  |
+| `contacts show` | `--with-notes` | ✅ |  |
 | `contacts profile` |  | ✅ |  |
 | `contacts profile` | `--show-phone` | ✅ |  |
 | `contacts sync` |  | ✅ |  |
@@ -120,6 +122,16 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts check` | `--no-registries` | ✅ |  |
 | `contacts link` |  | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
 | `contacts unlink` |  | ⛔ | cli-messaging src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
+| `contacts alias set` |  | ✅ |  |
+| `contacts alias rm` |  | ✅ |  |
+| `contacts notes list` |  | ✅ |  |
+| `contacts notes show` |  | ✅ |  |
+| `contacts notes add` |  | ✅ |  |
+| `contacts notes add` | `--file` | ✅ |  |
+| `contacts notes edit` |  | ✅ |  |
+| `contacts notes edit` | `--file` | ✅ |  |
+| `contacts notes edit` | `--revision` | ✅ |  |
+| `contacts notes remove` |  | ✅ |  |
 | `messages list` |  | ✅ |  |
 | `messages list` | `--limit` | ✅ |  |
 | `messages list` | `--before-id` | ✅ |  |
@@ -201,6 +213,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages unpin` |  | ✅ |  |
 | `store status` |  | ✅ |  |
 | `store fetch` |  | ✅ |  |
+| `store fetch` | `--all` | ⛔ | cli-messaging src/cli/messenger/backfill.test.ts cover archive preparation; this consumer mounts the shared bounded fetch command. |
 | `store fetch` | `--limit` | ✅ |  |
 | `store fetch` | `--page-size` | ✅ |  |
 | `store fetch` | `--pause` | ✅ |  |
@@ -430,6 +443,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments text set` |  | ✅ |  |
 | `attachments text set` | `--attachment` | ✅ |  |
 | `attachments text set` | `--text-file` | ✅ |  |
+| `tags auto` |  | ✅ |  |
+| `tags auto` | `--chat` | ✅ |  |
+| `tags auto` | `--limit` | ✅ |  |
+| `tags auto` | `--refresh-metadata` | ⛔ | Shared private-people.test.ts covers explicit provider refresh and failures. |
+| `tags auto` | `--dry-run` | ✅ |  |
 | `tags add` |  | ✅ |  |
 | `tags add` | `--chat` | ✅ |  |
 | `tags add` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
@@ -438,9 +456,16 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags remove` | `--chat` | ✅ |  |
 | `tags remove` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags remove` | `--message` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags remove` | `--source` | ✅ |  |
 | `tags list` |  | ✅ |  |
 | `tags list` | `--tag` | ✅ |  |
+| `tags list` | `--source` | ✅ |  |
 | `tags list` | `--type` | ✅ |  |
+| `metadata get` |  | ✅ |  |
+| `metadata get` | `--chat` | ✅ |  |
+| `metadata refresh` |  | ⛔ | Shared cli-messaging src/services/private-people.test.ts covers metadata refresh and snapshot retention; this consumer mounts the shared command. |
+| `metadata refresh` | `--chat` | ⛔ | Shared private-people.test.ts covers chat resolution for metadata reads. |
+| `metadata refresh` | `--limit` | ⛔ | Shared private-people.test.ts covers bounded refresh and invalid limits. |
 | `searches create` |  | ✅ |  |
 | `searches create` | `--chat` | ✅ |  |
 | `searches create` | `--source` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
