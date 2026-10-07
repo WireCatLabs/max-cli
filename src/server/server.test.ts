@@ -123,7 +123,16 @@ const ask = async (store: SessionStore, request: Record<string, unknown>): Promi
   return answer
 }
 
-const settle = (ms = 30) => new Promise((resolve) => setTimeout(resolve, ms))
+const waitUntil = (condition: () => boolean, message: string) =>
+  expect.poll(condition, { timeout: 2000, interval: 10, message }).toBe(true)
+
+const observeFor = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const tabReads = (max: ReturnType<typeof scripted>, logins = 1) =>
+  waitUntil(
+    () => max.sent.filter((call) => call.opcode === Opcode.ASSETS_UPDATE).length >= 4 * logins,
+    `reads after ${logins} login(s)`,
+  )
 
 describe("max serve", () => {
   it("logs in once and listens on a socket only its owner can open", async () => {
@@ -153,14 +162,17 @@ describe("max serve", () => {
   it("hands a new message to every watcher in the shape `messages list` prints, and acknowledges it", async () => {
     const { store, max } = await serve("s-message")
     const watch = watching(store)
-    await settle()
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
 
     max.push(
       128,
       { chatId: 111, message: { id: 116762160362694583n, time: 1789776000000, sender: 10000002, text: "hi" } },
       5,
     )
-    await settle()
+    await waitUntil(
+      () => watch.events.length === 2 && max.answered.some((call) => call.seq === 5),
+      "message and acknowledgement",
+    )
     watch.stop()
     await watch.listening
 
@@ -180,7 +192,7 @@ describe("max serve", () => {
   it("hands on an edit, a deletion and a reaction as changes, never as new messages (MAX-34)", async () => {
     const { store, max } = await serve("s-changes")
     const watch = watching(store)
-    await settle()
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
 
     const message = { id: 116762160362694583n, time: 1789776000000, sender: 10000002, text: "hi" }
     max.push(128, { chatId: 111, message: { ...message, text: "hi!", status: "EDITED", updateTime: 1789776005000 } }, 5)
@@ -190,7 +202,7 @@ describe("max serve", () => {
       6,
     )
     max.push(128, { chatId: 111, message: { ...message, status: "REMOVED", updateTime: 1789776009000 } }, 7)
-    await settle()
+    await waitUntil(() => watch.events.length === 4, "edit, reaction and deletion")
     watch.stop()
     await watch.listening
 
@@ -205,7 +217,7 @@ describe("max serve", () => {
 
   it("pings on its own interval", async () => {
     const { max } = await serve("s-ping", scripted(), { pingEveryMs: 10 })
-    await settle(150)
+    await waitUntil(() => max.sent.filter((call) => call.opcode === Opcode.PING).length >= 2, "two pings")
 
     expect(max.sent.filter((call) => call.opcode === Opcode.PING).length).toBeGreaterThanOrEqual(2)
     expect(max.sent.find((call) => call.opcode === Opcode.PING)?.payload).toEqual({ interactive: false })
@@ -214,9 +226,9 @@ describe("max serve", () => {
   it("reports the chat list once, as a hidden web tab does, and not again after a reconnect", async () => {
     const started = Date.now()
     const { max } = await serve("s-telemetry", scripted(), { telemetryAfterMs: 20 })
-    await settle(80)
+    await waitUntil(() => max.sent.some((call) => call.opcode === Opcode.LOG), "telemetry sent")
     max.drop()
-    await settle(80)
+    await tabReads(max, 2)
 
     const logs = max.sent.filter((call) => call.opcode === Opcode.LOG)
     expect(max.sent.filter((call) => call.opcode === Opcode.LOGIN)).toHaveLength(2)
@@ -245,7 +257,7 @@ describe("max serve", () => {
   it("keeps running when MAX does not answer the telemetry", async () => {
     const silent = scripted({ [Opcode.LOG]: () => undefined })
     const { server, notes } = await serve("s-telemetry-silent", silent, { telemetryAfterMs: 0 })
-    await settle(300)
+    await waitUntil(() => notes.some((line) => line.startsWith("telemetry was not sent")), "telemetry timeout reported")
 
     expect(notes.some((line) => line.startsWith("telemetry was not sent"))).toBe(true)
     expect(server.connected).toBe(true)
@@ -253,16 +265,16 @@ describe("max serve", () => {
 
   it("does not report the chat list before its time", async () => {
     const { max } = await serve("s-telemetry-wait", scripted(), { telemetryAfterMs: 60_000 })
-    await settle(50)
+    await observeFor(50)
 
     expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.LOG)
   })
 
   it("reads what a web tab reads after its login, and after the next one sends back the sync each answer gave", async () => {
     const { max } = await serve("s-tab-reads")
-    await settle(60)
+    await tabReads(max)
     max.drop()
-    await settle(80)
+    await tabReads(max, 2)
 
     const sentAs = (opcode: number) => max.sent.filter((call) => call.opcode === opcode).map((call) => call.payload)
     expect(sentAs(Opcode.FOLDERS_GET)).toEqual([{ folderSync: 0 }, { folderSync: 1_789_000_000_000 }])
@@ -278,7 +290,10 @@ describe("max serve", () => {
   it("keeps running when MAX refuses the reads after login", async () => {
     const refusing = scripted({}, { [Opcode.ASSETS_UPDATE]: "some.error" })
     const { server, notes } = await serve("s-tab-reads-refused", refusing)
-    await settle(60)
+    await waitUntil(
+      () => notes.some((line) => line.startsWith("the reads after login were not all answered")),
+      "post-login refusal reported",
+    )
 
     expect(notes.some((line) => line.startsWith("the reads after login were not all answered"))).toBe(true)
     expect(server.connected).toBe(true)
@@ -312,7 +327,6 @@ describe("max serve", () => {
     const failure = server.done.catch((error: CliError) => error)
 
     max.drop()
-    await settle(60)
 
     await stopped
     expect(max.sent.filter((call) => call.opcode === Opcode.LOGIN)).toHaveLength(2)
@@ -329,7 +343,6 @@ describe("max serve", () => {
     const stopped = expect(server.done).rejects.toThrow("error.limit.violate")
 
     max.push(142, { chatId: 111, messageIds: [1] }, 9)
-    await settle(60)
 
     await stopped
     expect(max.sent.filter((call) => call.opcode === Opcode.LOGIN)).toHaveLength(2)
@@ -367,7 +380,8 @@ describe("max serve", () => {
   it("stays up while a watcher listens, however long it is idle", async () => {
     const { server, store } = await serve("s-idle-watched", scripted(), { idleMs: 40 })
     const watch = watching(store)
-    await settle(120)
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
+    await observeFor(120)
 
     expect(server.connected).toBe(true)
     watch.stop()
@@ -507,7 +521,7 @@ describe("a command through max serve", () => {
     })
     const { store } = await serve("c-resume", max)
     max.drop()
-    await settle(80)
+    await tabReads(max, 2)
     const { client } = commandClient(store)
     const chats = await client.chats.list()
     await client.close()
@@ -526,7 +540,7 @@ describe("a command through max serve", () => {
     const { store, max } = await serve("c-send")
     // The reads after login first: sharing the 200 ms budget with them, the send timed out on CI and
     // was retried with its cid — two MSG_SEND for one message.
-    await settle()
+    await tabReads(max)
     const { client, opened } = commandClient(store)
 
     const sent = await client.messages.send("111", "sent")
@@ -541,13 +555,13 @@ describe("a command through max serve", () => {
   it("hands a message sent through it to the watchers, once, since MAX does not push it back", async () => {
     const { store } = await serve("c-send-watched")
     const watch = watching(store)
-    await settle()
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
     const { client } = commandClient(store)
 
     await client.messages.send("111", "sent")
     await client.messages.send("111", "sent", { cid: 1 })
     await client.close()
-    await settle()
+    await waitUntil(() => watch.events.some((event) => event.event === "message"), "sent message delivered")
     watch.stop()
     await watch.listening
 
@@ -598,7 +612,7 @@ describe("a command through max serve", () => {
   it("still hands out a login a deletion made stale, rather than send the command to log in itself", async () => {
     const { store, max } = await serve("c-stale")
     max.push(142, { chatId: 111, messageIds: [1] }, 9)
-    await settle()
+    await ask(store, { status: true })
     const { client, opened } = commandClient(store)
 
     await client.chats.list()
@@ -610,7 +624,7 @@ describe("a command through max serve", () => {
   it("logs in again in the background once its login went stale, and hands that one out", async () => {
     const { store, max } = await serve("c-refresh", scripted(), { refreshEveryMs: 0 })
     max.push(142, { chatId: 111, messageIds: [1] }, 9)
-    await settle(60)
+    await tabReads(max, 2)
     const { client, opened } = commandClient(store)
 
     await client.chats.list()
@@ -626,7 +640,7 @@ describe("a command through max serve", () => {
 
     await withPermissionApproval("messages.delete", () => client.messages.delete("111", ["116762160362694583"]))
     await client.close()
-    await settle(60)
+    await tabReads(max, 2)
 
     expect(max.sent.filter((call) => call.opcode === Opcode.MSG_DELETE)).toHaveLength(1)
     expect(max.sent.filter((call) => call.opcode === Opcode.LOGIN)).toHaveLength(2)
@@ -635,7 +649,7 @@ describe("a command through max serve", () => {
   it("shows the owner's own rename to the next command, since MAX does not push that back (MAX-63)", async () => {
     const renamed = { id: 111, title: "Renamed", type: "CHAT", lastEventTime: 1789776000000 }
     const { store } = await serve("c-rename", scripted({ [Opcode.CHAT_UPDATE]: { chat: renamed } }))
-    await settle()
+
     const first = commandClient(store)
     await first.client.chats.update("111", { title: "Renamed" })
     await first.client.close()
@@ -659,7 +673,7 @@ describe("a command through max serve", () => {
       [Opcode.CONTACT_UPDATE]: { contact: renamed },
     })
     const { store } = await serve("c-rename-contact", max)
-    await settle()
+
     const first = commandClient(store)
     await first.client.contacts.rename("10000002", "Neighbour")
     await first.client.close()
@@ -679,7 +693,7 @@ describe("a command through max serve", () => {
       3,
     )
     max.push(130, { chatId: 111, userId: ME, mark: 1789776500000, unread: 0 }, 4)
-    await settle()
+    await ask(store, { status: true })
     const { client, opened } = commandClient(store)
 
     const [chat] = (await client.chats.list()).items
@@ -696,7 +710,7 @@ describe("a command through max serve", () => {
       { chatId: 111, message: { id: 116762160362694590n, time: 1789776500000, sender: 10000002, text: "new" } },
       3,
     )
-    await settle()
+    await waitUntil(() => max.answered.some((call) => call.seq === 3), "new message acknowledged")
     const { client } = commandClient(store)
 
     const [chat] = (await client.chats.list()).items
@@ -1373,7 +1387,13 @@ describe("auto-replies in max serve", () => {
 
     arrive(max, TESTER, 116762160362694601n, 5)
     arrive(max, TESTER, 116762160362694602n, 6)
-    await settle(100)
+    await waitUntil(
+      () =>
+        new SendJournal(sendsPathFor(store.profile))
+          .entries()
+          .some((entry) => entry.origin === "rule:away" && entry.outcome === "sent"),
+      "reply journaled",
+    )
 
     expect(replies(max)).toHaveLength(1)
     expect(replies(max)[0]?.payload).toMatchObject({
@@ -1391,7 +1411,10 @@ describe("auto-replies in max serve", () => {
     writeFileSync(path, '{"private-template-marker": invalid}')
     const { max, notes } = await serve("ar-invalid", withDialog())
     arrive(max, TESTER, 116762160362694607n, 5)
-    await settle(100)
+    await waitUntil(
+      () => notes.includes("a reply rule failed; check the replies file and send permissions"),
+      "malformed rule reported",
+    )
     expect(replies(max)).toHaveLength(0)
     expect(notes).toContain("a reply rule failed; check the replies file and send permissions")
     expect(notes.join("\n")).not.toContain("private-template-marker")
@@ -1403,7 +1426,7 @@ describe("auto-replies in max serve", () => {
     const { max } = await serve("ar-stranger", withDialog())
 
     arrive(max, STRANGER, 116762160362694603n, 5)
-    await settle(100)
+    await observeFor(100)
 
     expect(replies(max)).toHaveLength(0)
   })
@@ -1412,13 +1435,13 @@ describe("auto-replies in max serve", () => {
     rules("ar-deny", [TESTER])
     const { max } = await serve("ar-deny", withDialog())
     arrive(max, TESTER, 116762160362694604n, 5)
-    await settle(100)
+    await observeFor(100)
     expect(replies(max)).toHaveLength(0)
 
     await allow("ar-deny")
     expect(await run(["ar-deny", "replies", "pause", "--json"], { streams: captureStreams(), tty: false })).toBe(0)
     arrive(max, TESTER, 116762160362694605n, 6)
-    await settle(100)
+    await observeFor(100)
     expect(replies(max)).toHaveLength(0)
   })
 
@@ -1444,7 +1467,7 @@ describe("auto-replies in max serve", () => {
     const { max } = await serve("ar-old", withDialog())
 
     arrive(max, TESTER, 116762160362694606n, 5, Date.now() - 3_600_000)
-    await settle(100)
+    await observeFor(100)
 
     expect(replies(max)).toHaveLength(0)
   })
