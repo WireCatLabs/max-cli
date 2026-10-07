@@ -391,3 +391,10 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 В MCP найдите `store gaps plan` и `store gaps repair` и `store jobs show` и `store jobs list` через `max_tools_search`,
 затем используйте `max_read` или `max_write` для соответствующей команды. Не трактуйте неизвестные края или
 пропущенные номера сообщений как доказательство потерянной истории.
+
+Рейтинги архива: `max stats messages top` / `max stats contacts top` — метрика `--measure` или
+`--score helpful|active|engaging`; оценки используют всю допустимую выборку до limit.
+Читай coverage/quality и исключения: неизвестные счётчики не равны нулю, свежесть снимков
+неизвестна. Используй drilldown.selection для `stats messages evidence` / `stats contacts evidence`,
+продолжай через nextCursor; при изменении данных начни без cursor.
+Руководство: [рейтинги](https://github.com/leemour/max-cli/blob/main/docs/rankings.md).

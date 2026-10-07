@@ -136,7 +136,7 @@ export interface Message {
   /** ISO 8601 — when MAX will send it. Present only on a message still waiting in the queue. */
   scheduledFor?: string
   /** A channel post's `stats.views`, where MAX sends it (measured 2026-10-05, `pnpm probe:channel-posts`). */
-  providerMetadata?: { views: number }
+  providerMetadata?: { views?: number; graph?: { version: 1; reply?: { chatId: Id; messageId: Id } | null } }
 }
 
 /**
