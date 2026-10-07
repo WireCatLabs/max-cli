@@ -45,7 +45,7 @@ export const UNTESTED: Untested[] = [
     reason:
       "cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0)",
   },
-  ...["--backend", "--server-time"].map((option) => ({
+  ...["--server-time"].map((option) => ({
     command: "messages search",
     option,
     reason:
