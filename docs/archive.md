@@ -210,8 +210,7 @@ max watch --events --jsonl  # ещё правки, удаления и реак�
 ## Обслуживание архива
 
 `max store migrate` достраивает индексы; `max store reindex` перестраивает их. `store info` и
-`store check` показывают готовность словесного и stem-индексов. Наличие stem-индекса само по себе
-не меняет сопоставление строгого поиска. `config set searchStemmers.cyrillic` принимает `russian`
+`store check` показывают готовность словесного и stem-индексов. Строгий поиск использует основы для форм слов; `exact:` и `--exact` выбирают точную форму. `config set searchStemmers.cyrillic` принимает `russian`
 или `none`, `config set searchStemmers.latin` — `spanish`, `english` или `none`; `none` отключает
 основы для этого алфавита. Затем выполните `store reindex`. Настройка общая для всех профилей и
 обоих мессенджеров, поэтому `--defaults`, `--personal` и `--bot` к ней не применяются, а под

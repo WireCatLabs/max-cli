@@ -182,6 +182,9 @@ remove|admins|update|link reset` видят другие люди. Ссылка-
    Через MCP — параметр `at_time` у `max_write` (`command: "messages send"`) и инструмент `max_read` (`command: "messages scheduled"`).
    Отменить можно только в приложении MAX.
 
+Поиск слов и фраз допускает формы слов. Для точных форм используй `exact:` или `--exact`;
+явное поле `text:` продолжает искать формы.
+
 ## Ссылки на сообщения
 
 `messages link <chat> <message>` или `messages link <msg:locator>` проверяет сообщение в
