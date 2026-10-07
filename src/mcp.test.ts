@@ -434,6 +434,31 @@ describe("the MCP server", () => {
     expect(logins()).toBe(0)
   })
 
+  it("exposes search follow-ups through MCP and refuses secondary preparation before connecting", async () => {
+    const profile = "mcp-search-followups"
+    legacyFor(profile, { permissions: { conversations: "readonly" } })
+    const state = new SessionStore({ profile, keyring: memoryKeyring() })
+    state.writeState({ ...state.readState(), viewerId: "10000091" })
+    const store = await openStore()
+    try {
+      await store.markRange({ provider: "max", account: "10000091" }, "111", 1, 3)
+      await store.markRange({ provider: "max", account: "10000091" }, "111", 7, 9)
+    } finally {
+      await store.close()
+    }
+    const { client, logins } = await connect({}, { profile, token: false })
+    const planned = await call(client, "max_store_gaps_plan", { chat: "111" })
+    expect(planned.isError).toBe(false)
+    expect(planned.body).toMatchObject({ scope: "interior", ordering: "time", gaps: [{ from: 4, to: 6 }] })
+    const repair = await call(client, "max_store_gaps_repair", { chat: "111", catch_up: true })
+    expect(repair.isError).toBe(true)
+    expect(repair.body.error).toMatchObject({ code: "permission_error", permission: "conversations.build" })
+    const extracted = await call(client, "max_attachments_extract", { chat: "111", limit: 1 })
+    expect(extracted.isError).toBe(false)
+    expect(extracted.body).toMatchObject({ extracted: 0 })
+    expect(logins()).toBe(0)
+  })
+
   it("applies readonly and ask to local archive writes without connecting", async () => {
     for (const level of ["readonly", "ask"] as const) {
       const profile = `mcp-local-refresh-${level}`

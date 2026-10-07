@@ -1,4 +1,4 @@
-import { writeFileSync } from "node:fs"
+import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
@@ -180,6 +180,126 @@ describe("shared search adoption", () => {
     const extracted = await invoke(["attachments", "extract", "--chat", "7", "--limit", "1"])
     expect(extracted.code).toBe(0)
     expect(JSON.parse(extracted.stdout).extracted).toBe(0)
+  })
+  it("plans recorded gaps locally and validates preparation bounds before connecting", async () => {
+    await db.markRange(account, "19", 1, 3)
+    await db.markRange(account, "19", 7, 9)
+    const plan = await invoke(["store", "gaps", "plan", "19"])
+    expect(plan.code, plan.stderr).toBe(0)
+    expect(JSON.parse(plan.stdout)).toMatchObject({
+      scope: "interior",
+      gaps: [{ from: 4, to: 6 }],
+      unknown: { older: true, newer: true },
+    })
+    const invalid = await invoke(["store", "fetch", "7", "--no-catch-up", "--catch-up-chunks", "1"])
+    expect(invalid.code).toBe(2)
+    expect(invalid.stderr).toContain("catch-up budgets need")
+    const repair = await invoke([
+      "store",
+      "gaps",
+      "repair",
+      "19",
+      "--fingerprint",
+      "stale",
+      "--limit",
+      "1",
+      "--max-gaps",
+      "1",
+      "--repair-time",
+      "1s",
+      "--page-size",
+      "1",
+      "--pause",
+      "1ms",
+      "--no-catch-up",
+    ])
+    expect(repair.code).toBe(2)
+    expect(repair.stderr).toContain("gap plan changed")
+  })
+  it("refuses a stale background repair plan before queueing its explicit preparation budgets", async () => {
+    const result = await invoke([
+      "store",
+      "gaps",
+      "repair",
+      "19",
+      "--fingerprint",
+      "stale",
+      "--background",
+      "--catch-up",
+      "--catch-up-chunks",
+      "1",
+      "--catch-up-messages",
+      "1",
+      "--catch-up-time",
+      "1s",
+    ])
+    expect(result.code).toBe(2)
+    expect(result.stderr).toContain("gap plan changed")
+  })
+  it("recognizes download extraction and preparation bounds without connecting offline", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "search-download-"))
+    const single = await invoke(["messages", "download", "7", "105", "--extract", "--output-dir", folder])
+    expect(single.code).toBe(2)
+    expect(single.stderr).toContain("--offline")
+    const all = await invoke([
+      "messages",
+      "download",
+      "7",
+      "--all",
+      "--extract",
+      "--output-dir",
+      folder,
+      "--pause",
+      "1ms",
+    ])
+    expect(all.code).toBe(2)
+    expect(all.stderr).toContain("--offline")
+    const fetch = await invoke([
+      "store",
+      "fetch",
+      "7",
+      "--catch-up",
+      "--catch-up-chunks",
+      "1",
+      "--catch-up-messages",
+      "1",
+      "--catch-up-time",
+      "1s",
+    ])
+    expect(fetch.code).toBe(2)
+    expect(fetch.stderr).toContain("--offline")
+  })
+  it("validates directory extraction scope and preserves agent text", async () => {
+    const folder = mkdtempSync(join(tmpdir(), "search-directory-"))
+    const missing = await invoke(["attachments", "extract", "--from-dir", folder])
+    expect(missing.code).toBe(2)
+    expect(missing.stderr).toContain("--chat")
+    const scoped = await invoke([
+      "attachments",
+      "extract",
+      "--chat",
+      "7",
+      "--from-dir",
+      folder,
+      "--limit",
+      "1",
+      "--cursor",
+      "1",
+    ])
+    expect(scoped.code, scoped.stderr).toBe(0)
+    expect(JSON.parse(scoped.stdout).extracted).toBe(0)
+    const mixed = await invoke([
+      "attachments",
+      "extract",
+      "--chat",
+      "7",
+      "--from-dir",
+      folder,
+      "--download",
+      "--output-dir",
+      folder,
+    ])
+    expect(mixed.code).toBe(2)
   })
   it("requires a download destination before attempting extraction", async () => {
     expect((await invoke(["attachments", "extract", "--download"])).stderr).toContain("--output-dir")

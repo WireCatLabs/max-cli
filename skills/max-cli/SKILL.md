@@ -361,3 +361,15 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 модели; `--ai` передаёт сохранённые данные только после `replies consents grant`. Согласие
 выдаётся на профиль и endpoint, `consents deny|allow` управляют запретами для чатов. Не расширяйте
 `testers` и не запускайте реальные проверки без отдельного согласия владельца.
+
+Файлы: `attachments extract --chat <чат> --from-dir ./files`, в MCP — команда `attachments extract` через `max_write`
+(ограниченный обход с `cursor`, без текста в ответе), `messages download <чат> <id> --extract`.
+Подготовка после явно разрешённой загрузки: `store fetch <чат> --catch-up` с
+`--catch-up-chunks`, `--catch-up-messages`, `--catch-up-time`; `--no-catch-up` отменяет
+настройку `searchCatchUp`. Модели не скачиваются, удалённый провайдер не вызывается.
+Разрывы: сначала локальный `store gaps plan <чат>`, затем только по слову владельца
+`store gaps repair <чат> --fingerprint <хеш>`; ограничивайте `--max-gaps`, `--limit`,
+`--repair-time`, `--page-size`, `--pause`. `--background` использует обычные задания.
+В MCP найдите `store gaps plan` и `store gaps repair` и `store jobs show` и `store jobs list` через `max_tools_search`,
+затем используйте `max_read` или `max_write` для соответствующей команды. Не трактуйте неизвестные края или
+пропущенные номера сообщений как доказательство потерянной истории.

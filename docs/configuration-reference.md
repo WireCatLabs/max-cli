@@ -145,6 +145,7 @@ max config migrate
 | `timeoutMs` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
 | `senderColors` | в `max messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
+| `searchCatchUp` | После `store fetch` или ремонта разрывов подготавливает граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются | `--catch-up`, `--no-catch-up` | `false` |
 | `catchUpMarksRead` | `max inbox` и `max review` отмечают прочитанным каждый показанный чат — до последнего показанного сообщения. Собеседник видит отметку. Только для личного аккаунта | `--mark-read`, `--no-mark-read` | `false` |
 | `record` | записывать ли каждый запуск, как будто передан `--record` | `--record`, `--no-record` | `false` |
 | `permissions` | уровни прав по ресурсам и командам: `deny`, `readonly`, `ask`, `allow`; более точный ключ имеет приоритет | —; `--yes` и `--allow-dangerous` только отвечают на `ask`, `deny` они не снимают | почти всё `allow`; удаление сообщений и завершение других сессий — `ask`, автоответы `replies.send` — `deny` |
@@ -194,7 +195,7 @@ max config set defaultProfile work      # какой профиль без пе�
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max config set limit 0`
-откажет, и файл останется прежним. `serve`, `senderColors`, `catchUpMarksRead` и `mcpTools` с `--bot` не
+откажет, и файл останется прежним. `serve`, `senderColors`, `catchUpMarksRead`, `searchCatchUp` и `mcpTools` с `--bot` не
 принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного, а старое `mcpTools` относится
 только к личному аккаунту.
 
@@ -309,7 +310,7 @@ max chats list
 | `defaultProfile` | строка с именем профиля | корень файла |
 | `limit`, `timeoutMs`, `keepRunsForDays`, `sendsPerHour` | целое число ≥ 1 | профиль |
 | `color`, `record`, `readOnly` | boolean | профиль |
-| `senderColors`, `catchUpMarksRead`, `serve` | boolean | личный аккаунт |
+| `senderColors`, `catchUpMarksRead`, `searchCatchUp`, `serve` | boolean | личный аккаунт |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |
 | `allow` | массив разрешённых действий; старый формат | профиль |
 | `mcpTools` | массив `contacts`, `polls`, `groups`, `profile`; старый формат | личный аккаунт |

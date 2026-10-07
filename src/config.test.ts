@@ -483,3 +483,15 @@ describe("shared AI provider configuration", () => {
     ).toThrow()
   })
 })
+
+describe("local search catch-up setting", () => {
+  it("defaults off and honors the personal profile's explicit override", () => {
+    expect(settings().searchCatchUp).toBe(false)
+    withConfig(JSON.stringify({ defaults: { searchCatchUp: true }, profiles: { work: { searchCatchUp: false } } }))
+    expect(settings()).toMatchObject({ searchCatchUp: true, sources: { searchCatchUp: "config file: defaults" } })
+    expect(settings({ profile: "work" })).toMatchObject({
+      searchCatchUp: false,
+      sources: { searchCatchUp: "config file: profiles.work" },
+    })
+  })
+})
