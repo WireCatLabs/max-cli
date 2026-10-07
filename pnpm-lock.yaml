@@ -12,8 +12,8 @@ importers:
         specifier: 0.17.2
         version: 0.17.2(commander@15.0.0)(typescript@7.0.2)
       '@leemour/cli-messaging':
-        specifier: 0.167.0
-        version: 0.167.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)
+        specifier: 0.168.0
+        version: 0.168.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -631,16 +631,19 @@ packages:
   '@leemour/cli-messaging-sqlite@1.0.0':
     resolution: {integrity: sha512-NFJMG+/2BWIb3JdOMgyV8SFsB7Fuv3wLtUmMt08GZ4KTpgu0WuA7qQmQE6appEgJJuF/97vHj6+AuXw2z3HMHw==}
 
-  '@leemour/cli-messaging@0.167.0':
-    resolution: {integrity: sha512-pWgOtj9FLYEilTw5XaOa5CEZ9zpXU61qs/y6uC/ceJ6PP10bht9dsjWowncgZAbh1JEmtkiilgLlOgHniYhORg==}
+  '@leemour/cli-messaging@0.168.0':
+    resolution: {integrity: sha512-FeqEVyLjJfBAdTJ+agkYG+m8M9jahBoYpReshOKZYTi+3RG+7TkYaXvmrrCudRyy1DFVTb/MpPyYr1GX/4TF4w==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
       '@leemour/cli-core': '>=0.16.0 <0.18.0'
+      '@napi-rs/canvas': '>=0.1.69 <2'
       commander: '>=15'
       mammoth: '>=1.8.0 <2'
       unpdf: '>=1.0.0 <2'
     peerDependenciesMeta:
+      '@napi-rs/canvas':
+        optional: true
       mammoth:
         optional: true
       unpdf:
@@ -1384,6 +1387,11 @@ packages:
   global-directory@5.0.0:
     resolution: {integrity: sha512-1pgFdhK3J2LeM+dVf2Pd424yHx2ou338lC0ErNP2hPx4j8eW1Sp0XqSjNxtk6Tc4Kr5wlWtSvz8cn2yb7/SG/w==}
     engines: {node: '>=20'}
+
+  image-size@2.0.4:
+    resolution: {integrity: sha512-QRUkFFsRV/6fuESxb9Vkq+a0LkSrgKXuc2NEqfikiXxxN/G3tjWt5EVUlMaImRBZRZK/jRBEbYvpPYZL8t08Zw==}
+    engines: {node: '>=18'}
+    hasBin: true
 
   import-fresh@4.0.1:
     resolution: {integrity: sha512-/XFeXYgkuWgbtqPC7qPKvciXTvhtz7WMNQKQsAM1Kz+j0I5OWJDrybfiya6QtHF9oEvPkLwTHmC9+4OR/MmfIA==}
@@ -2205,7 +2213,7 @@ snapshots:
 
   '@leemour/cli-messaging-sqlite@1.0.0': {}
 
-  '@leemour/cli-messaging@0.167.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)':
+  '@leemour/cli-messaging@0.168.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)':
     dependencies:
       '@anthropic-ai/sdk': 0.131.0(zod@4.6.5)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
@@ -2219,6 +2227,7 @@ snapshots:
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       commander: 15.0.0
       echarts: 6.1.0
+      image-size: 2.0.4
       liquidjs: 10.30.0
       lossless-json: 4.3.0
       ogg-opus-decoder: 1.7.5
@@ -2801,6 +2810,8 @@ snapshots:
   global-directory@5.0.0:
     dependencies:
       ini: 6.0.0
+
+  image-size@2.0.4: {}
 
   import-fresh@4.0.1: {}
 
