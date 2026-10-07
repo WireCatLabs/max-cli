@@ -10,6 +10,8 @@
     "archive",
     "search",
     "attachments",
+    "audio-recognition",
+    "external-models",
     "rankings",
     "topic-search",
     "query-language",
