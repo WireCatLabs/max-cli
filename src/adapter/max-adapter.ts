@@ -220,13 +220,14 @@ export const maxAdapter = (
       return { chatId }
     },
     group: (chat) => client.chats.settings(chat),
-    updateGroup: async (chat, { title, description, settings }) => {
+    updateGroup: async (chat, { title, description, photo, settings }) => {
       // Sending a title and settings together was never measured for MAX.
       const renamed =
-        title !== undefined || description !== undefined
+        title !== undefined || description !== undefined || photo !== undefined
           ? await client.chats.update(chat, {
               ...(title === undefined ? {} : { title }),
               ...(description === undefined ? {} : { description }),
+              ...(photo === undefined ? {} : { photo }),
             })
           : undefined
       if (settings && Object.keys(settings).length > 0) {

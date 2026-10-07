@@ -484,6 +484,7 @@ max chats update <chat> [options]
 |---|---|
 | `--title <title>` | the new name. |
 | `--description <text>` | the new description. |
+| `--photo <file>` | a new photo for it — an image file. |
 | `--all-can-pin <on\|off>` | every member may pin messages. |
 | `--only-admins-add <on\|off>` | only admins may add members. |
 | `--only-admins-call <on\|off>` | only admins may start a call. |
