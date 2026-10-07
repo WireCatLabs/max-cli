@@ -86,7 +86,11 @@ export const messagesCommand = (): Command => {
       })
     })
 
-  command.addCommand(sendCommand(maxMessenger))
+  const send = sendCommand(maxMessenger)
+  Object.assign(send, {
+    options: send.options.filter((option) => !["spoiler", "captionAbove"].includes(option.attributeName())),
+  })
+  command.addCommand(send)
 
   command.addCommand(sharedSubcommand(shared, "scheduled"))
 
