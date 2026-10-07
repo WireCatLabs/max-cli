@@ -32,6 +32,7 @@ import {
   messagesPollVote,
   messagesReact,
   messagesReactions,
+  messagesSearch,
   messagesSend,
   messagesUnreact,
 } from "../spec/operations/messages.js"
@@ -78,6 +79,7 @@ export const OPERATIONS = {
   "messages.unreact": messagesUnreact,
   "messages.pollVote": messagesPollVote,
   "messages.reactions": messagesReactions,
+  "messages.search": messagesSearch,
   "messages.delete": messagesDelete,
   "attachments.video": attachmentsVideo,
   "attachments.file": attachmentsFile,

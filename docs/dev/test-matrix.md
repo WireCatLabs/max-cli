@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**792 ✅ · 105 ⛔ · 0 ❌** — 282 commands, 615 options.
+**793 ✅ · 106 ⛔ · 0 ❌** — 282 commands, 617 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -151,6 +151,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages search` | `--thread-messages` | ✅ |  |
 | `messages search` | `--thread-bytes` | ✅ |  |
 | `messages search` | `--thread-within` | ✅ |  |
+| `messages search` | `--backend` | ✅ |  |
+| `messages search` | `--server-time` | ⛔ | cli-messaging src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcode 73 |
 | `messages search` | `--chat` | ✅ |  |
 | `messages search` | `--source` | ✅ |  |
 | `messages search` | `--limit` | ✅ |  |

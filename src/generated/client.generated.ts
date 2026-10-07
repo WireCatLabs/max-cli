@@ -91,6 +91,8 @@ export const wireClient = (invoke: Invoke) => ({
       invoke(OPERATIONS["messages.pollVote"], request),
     reactions: (request: RequestOf<(typeof OPERATIONS)["messages.reactions"]>) =>
       invoke(OPERATIONS["messages.reactions"], request),
+    search: (request: RequestOf<(typeof OPERATIONS)["messages.search"]>) =>
+      invoke(OPERATIONS["messages.search"], request),
     delete: (request: RequestOf<(typeof OPERATIONS)["messages.delete"]>) =>
       invoke(OPERATIONS["messages.delete"], request),
   },

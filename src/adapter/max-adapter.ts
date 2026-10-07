@@ -121,6 +121,17 @@ export const maxAdapter = (
       return { ...page, items: items.map(toMessage) }
     },
 
+    searchMessages: async (query, { limit }) => {
+      if (query.chat === undefined)
+        throw new CliError("validation_error", "MAX's server searches one chat at a time — name the chat")
+      const page = await client.messages.search(await chatId(query.chat), query.text, limit)
+      return {
+        items: page.items.map((message) => ({ ...toMessage(message), chatTitle: null })),
+        hasMore: page.hasMore,
+        chats: [],
+      }
+    },
+
     historyBefore: async (chat, { limit, time }) => {
       const page = await client.messages.list(await chatId(chat), { limit, before: time - 1 })
       return { ...page, items: page.items.map(toMessage) }

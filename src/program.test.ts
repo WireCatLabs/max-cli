@@ -350,7 +350,7 @@ describe("the program", () => {
     const sent = max.sent.length
 
     const found = await runWith(
-      ["t-search-name", "messages", "search", "latest", "--chat", "First", "--json"],
+      ["t-search-name", "messages", "search", "latest", "--chat", "First", "--backend", "archive", "--json"],
       environment,
     )
 
