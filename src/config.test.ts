@@ -22,7 +22,9 @@ it("uses the shared request pace setting and its environment override, with zero
   expect(settings().requestsPerMinute).toBe(12)
   expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" }).requestsPerMinute).toBe(0)
   expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" }).sources.requestsPerMinute).toBe("MAX_REQUESTS_PER_MINUTE")
-  expect(() => settings({}, { MAX_REQUESTS_PER_MINUTE: "no" })).toThrow("whole number from 0")
+  expect(() => settings({}, { MAX_REQUESTS_PER_MINUTE: "no" })).toThrowError(
+    expect.objectContaining({ code: "validation_error" }),
+  )
 })
 
 describe("where a setting came from", () => {

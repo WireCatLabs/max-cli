@@ -11,6 +11,13 @@ export interface Untested {
 
 export const UNTESTED: Untested[] = [
   {
+    command: "store fetch",
+    option: "--all",
+    reason:
+      "cli-messaging src/cli/messenger/backfill.test.ts cover archive preparation; this consumer mounts the shared bounded fetch command.",
+  },
+
+  {
     command: "metadata refresh",
     reason:
       "Shared cli-messaging src/services/private-people.test.ts covers metadata refresh and snapshot retention; this consumer mounts the shared command.",

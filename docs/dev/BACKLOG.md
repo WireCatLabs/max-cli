@@ -25,7 +25,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **CLI-75** · P2 · 🚧 `feat/people-local-metadata` · Private contact notes, local aliases, cached channel metadata and deterministic automatic tags. Shared L7 storage/services; consumer starts in `src/program.ts` and `src/commands/contacts.ts`.
 
 - **CLI-74** · P2 · 🚧 `refactor/mcp-run-entry` (cli-messaging) · MCP as three tools — `max_tools_search`,
   `max_read`, `max_write` — instead of 89, and no confirmation forms (NEED-766, 772–775). Plan:
