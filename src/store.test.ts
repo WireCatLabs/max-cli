@@ -1,9 +1,9 @@
-import { existsSync, readFileSync, statSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { Readable } from "node:stream"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -59,6 +59,11 @@ const setup = ({ leftAfter = Number.POSITIVE_INFINITY } = {}) => {
   const sent = (opcode: number) => max.sent.filter((call) => call.opcode === opcode).map((call) => call.payload)
   return { environment, sent }
 }
+
+// Every test fetches chat 111 as the same account, so one shared store would let a test resume from another's.
+beforeEach(() => {
+  process.env.MESSAGING_STORE = join(mkdtempSync(join(tmpdir(), "max-store-")), "messages.db")
+})
 
 const max = async (argv: string[], environment: Environment = {}) => {
   const streams = captureStreams()
@@ -122,8 +127,9 @@ describe("max store", () => {
     )
 
     expect(fetched.code).toBe(0)
+    expect(JSON.parse(fetched.stdout)).toMatchObject({ fetched: 20 })
     const pages = sent(Opcode.CHAT_HISTORY).filter((request) => request?.backward !== 1)
-    expect(pages.every((request) => request?.backward === 10)).toBe(true)
+    expect(pages.map((request) => request?.backward)).toEqual([10, 10])
   })
 
   it("refuses --estimate: MAX's ids do not count the messages missing", async () => {
@@ -159,6 +165,8 @@ describe("max store", () => {
   it("looks after the store file without connecting: info, check, migrate, backup, restore and reindex", async () => {
     const { environment, sent } = setup()
     const backup = join(tmpdir(), "s-backup.db")
+    await max(["s-care", "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    const logins = sent(Opcode.LOGIN).length
 
     expect((await max(["s-care", "store", "info", "--json"], environment)).code).toBe(0)
     expect((await max(["s-care", "store", "check", "--json"], environment)).code).toBe(0)
@@ -167,7 +175,7 @@ describe("max store", () => {
     expect(existsSync(backup)).toBe(true)
     expect((await max(["s-care", "store", "restore", backup, "--json"], environment)).code).toBe(0)
     expect((await max(["s-care", "store", "reindex", "--json"], environment)).code).toBe(0)
-    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(sent(Opcode.LOGIN)).toHaveLength(logins)
   })
 
   it("`store clear --left` deletes a chat the account left, only with --allow-dangerous, and connects to nothing", async () => {
