@@ -554,15 +554,14 @@ transcripts retain native callbacks under the shared input schemas. Legacy `chat
 - **Profile permissions govern discovery and execution.** The mounting scope rechecks the exact
   key, including local reads. Native write guards retain recipient checks and the journal.
   Retired access flags grant no permissions.
-- **Confirmation uses the shared one-use HMAC form**, bound to tool, resolved chat and parameters,
-  with a five-minute lifetime. `ask` requires consent unless its skip flag applies; `--confirm-send`
-  applies to every write. Scheduled writes execute the absolute time shown in the form.
+- **MCP writes use effective profile permissions.** `ask` and `allow` execute without a server
+  confirmation form; `readonly` rejects writes and `deny` rejects access. Retired confirmation
+  flags emit a diagnostic and change nothing. Native recipient and send-journal guards still apply.
 - **Local inference releases the connection.** Warm embedding models are disposed on shutdown;
   speech models are never downloaded by a tool. Native transcription retains same-model cache reuse.
-- **Discovery is the client's.** Clients that defer tools keep only the names and the server's
-  `instructions` in context; `instructions` is `max --help` plus the skill's boundaries, under the
-  2048 characters Claude Code keeps. No meta-tools, no tool with an `action` parameter: approval is
-  per tool name, and one tool for reading and sending would share one approval.
+- **Discovery uses search, read and write tools.** `max_tools_search` finds command definitions;
+  `max_read` and `max_write` execute a command path with its argument object. Exact command
+  permissions are rechecked during execution; a client permitting `max_write` does not bypass them.
 - **stdout is the protocol.** Nothing in `src/mcp/` writes data through the renderer; notes go to
   stderr. The process exits on stdin EOF — measured 110 ms under Node and Bun, 2026-09-24.
 - `serveStdio` may build a probe server before settling on the protocol era, so the server is a
