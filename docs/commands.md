@@ -569,7 +569,7 @@ max chats folders update <folder> [options]
 |---|---|
 | `--title <title>` | a new name. |
 | `--add <chat>` | put a chat in it; repeat it for more. |
-| `--remove <chat>` | take a chat out of it; repeat it for more. |
+| `--remove <chat>` | take a chat out of it, and off its excluded and pinned lists; repeat it for more. |
 
 #### `max chats folders delete`
 
@@ -1612,6 +1612,52 @@ max stats messages show [query] [options]
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
 
+#### `max stats messages unanswered`
+
+oldest detected questions without an observed qualifying explicit reply
+
+```sh
+max stats messages unanswered [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | a strict Lucene query; none selects every stored message. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--exact` | bare words match exact forms rather than stems. |
+| `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
+| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
+| `--limit <n>` | report rows, 1–100; 20 if not given. |
+| `--answerer <id>` | a scoped human identity whose explicit reply qualifies; repeat it for more. |
+| `--older-than <duration>` | minimum age of a question without an observed qualifying answer. |
+
+#### `max stats messages discussion`
+
+viewed posts with little recorded discussion
+
+```sh
+max stats messages discussion [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | a strict Lucene query; none selects every stored message. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--exact` | bare words match exact forms rather than stems. |
+| `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
+| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
+| `--limit <n>` | report rows, 1–100; 20 if not given. |
+| `--min-views <n>` | minimum known cumulative views. |
+| `--max-replies <n>` | maximum observed discussion replies. |
+
 #### `max stats messages top`
 
 rank stored messages by a measure or explainable score; counters are snapshots and freshness is unknown
@@ -1663,6 +1709,28 @@ max stats messages evidence <message> [options]
 ### `max stats contacts`
 
 statistics about human authors
+
+#### `max stats contacts responses`
+
+counts and median/p90 latency for selected human answering identities
+
+```sh
+max stats contacts responses [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | a strict Lucene query; none selects every stored message. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--exact` | bare words match exact forms rather than stems. |
+| `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
+| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
+| `--limit <n>` | report rows, 1–100; 20 if not given. |
+| `--answerer <id>` | a scoped human identity whose explicit reply qualifies; repeat it for more. |
 
 #### `max stats contacts top`
 
@@ -1734,6 +1802,28 @@ max stats chats show <chat> [options]
 | `--since-time <time>` | ISO 8601, or 2h / 1d ago; 7 days ago if not given. |
 | `--by <day\|week>` | also one row per calendar day or week (weeks start on Monday). |
 | `--timezone <zone>` | the IANA timezone for calendar days. |
+
+#### `max stats chats newcomers`
+
+known-join members and their help within a join window
+
+```sh
+max stats chats newcomers <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--since-time <time>` | from this ISO 8601 time, or 2h / 1d ago; 30d ago if not given. |
+| `--until-time <time>` | through this ISO 8601 time, or 2h / 1d ago. |
+| `--within <duration>` | the help window after a known newcomer join. |
+| `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
+| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
+| `--limit <n>` | report rows, 1–100; 20 if not given. |
+| `--answerer <id>` | a scoped human identity whose explicit reply qualifies; repeat it for more. |
 
 ### `max stats tasks`
 

@@ -436,3 +436,10 @@ max tags remove news --chat CHAT_ID --source auto
 неизвестна. Используй drilldown.selection для `stats messages evidence` / `stats contacts evidence`,
 продолжай через nextCursor; при изменении данных начни без cursor.
 Руководство: [рейтинги](https://github.com/leemour/max-cli/blob/main/docs/rankings.md).
+
+Для вопросов без наблюдаемого ответа используй `stats messages unanswered`; время ответа явно
+выбранных людей — `stats contacts responses --answerer <id>`. Помощь новичкам с известной датой
+вступления — `stats chats newcomers <chat>`, посты каналов с просмотрами и малым обсуждением —
+`stats messages discussion`. Проверяй качество архива и reply-графа, копируй точные drilldown-аргументы
+с `--component report`. Неизвестные история и дата вступления не равны нулю. Отчёты читают только
+сохранённые данные; не выводи из выбранных id, кто был админом в прошлом.
