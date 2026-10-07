@@ -55,6 +55,8 @@ export const maxMessenger: Messenger = {
   // As web.max.ru pages a chat scrolled up: 30 back from the oldest shown (`RES-9`), a person's 5–10 s
   // apart (`NEED-216` A). MAX's ids pass 2^53, so held stretches are kept by send time.
   fetching: { page: 30, pause: "5s", jitter: true, maxPages: 40, orderBy: "time", beforeInclusive: true },
+  // A tab makes a handful of requests at a time, then one every few seconds; MAX's limits are unpublished.
+  pace: { perMinute: 20, burst: 10 },
 
   permissionKey: permissionKeyOf,
   tracksMembers: true,

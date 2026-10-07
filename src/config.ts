@@ -32,6 +32,14 @@ const plain =
     `${rule}, not ${issue.received}`
 const wholeNumber = plain("has to be a whole number, 1 or more")
 const count = v.pipe(v.number(wholeNumber), v.integer(wholeNumber), v.minValue(1, wholeNumber))
+const zeroOrMore = plain("has to be a whole number, 0 or more")
+const countOrZero = v.pipe(v.number(zeroOrMore), v.integer(zeroOrMore), v.minValue(0, zeroOrMore))
+const wholeOrZero = (text: string, name: string): number => {
+  const value = Number(text)
+  if (!Number.isInteger(value) || value < 0)
+    throw new CliError("validation_error", `${name} has to be a whole number, 0 or more`)
+  return value
+}
 const flag = v.boolean(plain("has to be true or false"))
 /** MCP tools that change the account beyond messages, each group off until named here (`NEED-350`). */
 export const MCP_TOOL_GROUPS = ["contacts", "polls", "groups", "profile"] as const
@@ -75,6 +83,7 @@ const sharedEntries = {
   allow: v.optional(permissionList),
   permissions: settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries.permissions,
   sendsPerHour: v.optional(count),
+  requestsPerMinute: v.optional(countOrZero),
   ...AI_ENTRIES,
 }
 
@@ -225,6 +234,8 @@ export interface Settings extends AISettings {
   /** `undefined` is every action, as before `CLI-37`; a list is only those. */
   allow: readonly Permission[] | undefined
   sendsPerHour: number
+  /** Calls a minute across every process of the profile; 0 is no pace. Unset: MAX's default. */
+  requestsPerMinute?: number
   permissions: Record<string, Level>
   permissionSources: Record<string, string>
   mcpTools: readonly McpToolGroup[]
@@ -251,6 +262,7 @@ export type Source =
   | "first word"
   | "flag"
   | "MAX_PROFILE"
+  | "MAX_REQUESTS_PER_MINUTE"
   | "MAX_PROFILE_LOCK"
   | "MAX_TIMEOUT"
   | `MAX_${string}`
@@ -274,6 +286,7 @@ export type SourcedSetting =
   | "readOnly"
   | "allow"
   | "sendsPerHour"
+  | "requestsPerMinute"
   | "mcpTools"
   | "permissions"
   | "readOtherBots"
@@ -380,6 +393,12 @@ export const resolveSettings = (
         )
       : first(fromFile("sendsPerHour"), DEFAULT_SENDS_PER_HOUR)
 
+  const paceFromEnv = given(env.MAX_REQUESTS_PER_MINUTE)
+  const requestsPerMinute =
+    paceFromEnv === undefined
+      ? first<number | undefined>(fromFile("requestsPerMinute"), undefined)
+      : { value: wholeOrZero(paceFromEnv, "MAX_REQUESTS_PER_MINUTE"), from: "MAX_REQUESTS_PER_MINUTE" as const }
+
   const oldFrom = readOnly.value ? readOnly.from : allow.from
   const oldLevels = fromOldSettings(readOnly.value, allow.value, { bot: kind === "bot" })
   // The old settings sit in the layer they were written in, under that layer's own `permissions`.
@@ -446,6 +465,7 @@ export const resolveSettings = (
     readOnly: readOnly.value,
     allow: allow.value,
     sendsPerHour: sendsPerHour.value,
+    ...(requestsPerMinute.value === undefined ? {} : { requestsPerMinute: requestsPerMinute.value }),
     permissions,
     permissionSources,
     mcpTools: mcpTools.value,
@@ -473,6 +493,7 @@ export const resolveSettings = (
       readOnly: readOnly.from,
       allow: allow.from,
       sendsPerHour: sendsPerHour.from,
+      requestsPerMinute: requestsPerMinute.from,
       mcpTools: mcpTools.from,
       permissions: "default",
       readOtherBots: readOtherBots.from,

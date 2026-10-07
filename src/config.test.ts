@@ -499,3 +499,17 @@ describe("local search catch-up setting", () => {
     })
   })
 })
+
+describe("the request pace", () => {
+  it("is MAX's own unless the file or MAX_REQUESTS_PER_MINUTE sets it, and refuses a negative", () => {
+    withConfig(JSON.stringify({ defaults: {} }))
+    expect(settings().requestsPerMinute).toBeUndefined()
+    withConfig(JSON.stringify({ defaults: { requestsPerMinute: 10 } }))
+    expect(settings().requestsPerMinute).toBe(10)
+    expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" })).toMatchObject({
+      requestsPerMinute: 0,
+      sources: { requestsPerMinute: "MAX_REQUESTS_PER_MINUTE" },
+    })
+    expect(() => settings({}, { MAX_REQUESTS_PER_MINUTE: "-1" })).toThrow(/0 or more/)
+  })
+})

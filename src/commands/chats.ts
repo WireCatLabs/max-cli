@@ -23,10 +23,14 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "tracking"))
   command.addCommand(sharedSubcommand(shared, "admins"))
   command.addCommand(sharedSubcommand(shared, "update"))
-  command.addCommand(sharedSubcommand(shared, "link"))
-  command.addCommand(sharedSubcommand(shared, "folders"))
+  command.addCommand(without(sharedSubcommand(shared, "link"), ["create"]))
+  command.addCommand(without(sharedSubcommand(shared, "folders"), ["order", "join"]))
   command.addCommand(sharedSubcommand(shared, "rules"))
   command.addCommand(sharedSubcommand(shared, "moderate"))
 
   return command
 }
+
+/** The shared subcommands max's adapter cannot do yet: listed, they would only refuse. */
+const without = (command: Command, names: string[]): Command =>
+  Object.assign(command, { commands: command.commands.filter((one) => !names.includes(one.name())) })

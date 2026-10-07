@@ -21,6 +21,9 @@ export const messagesCommand = (): Command => {
 
   const shared = sharedMessagesCommand(maxMessenger)
   for (const name of ["list", "search", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
+  const list = command.commands.find((one) => one.name() === "list")
+  // MAX has no forum topics.
+  if (list) Object.assign(list, { options: list.options.filter((option) => option.attributeName() !== "topic") })
 
   const localLinks = sharedMessagesCommand({ ...maxMessenger, history: "store" })
   command.addCommand(sharedSubcommand(localLinks, "link"))

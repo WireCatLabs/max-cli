@@ -1474,6 +1474,107 @@ max stats messages show [query] [options]
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
 
+#### `max stats messages top`
+
+rank stored messages by a measure or explainable score; counters are snapshots and freshness is unknown
+
+```sh
+max stats messages top [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | a strict Lucene query; none selects every stored message. |
+
+| Опция | Что делает |
+|---|---|
+| `--sync-first` | first fetch new messages within the chat, time and message bounds. |
+| `--max-chats <n>` | refresh at most this many chats (default: 5). |
+| `--sync-time <duration>` | stop fetching after this long (default: 30s). |
+| `--max-messages <n>` | fetch at most this many messages total (default: 500). |
+| `--measure <name>` | the ranking metric; not with score or weights. Одно из: `views`, `reactions`, `forwards`, `comments`, `replies`, `thread-size`. |
+| `--score <preset>` | helpful/active for authors; engaging for either target. Одно из: `helpful`, `active`, `engaging`. |
+| `--weights <json>` | the complete component weights; replaces preset weights. |
+| `--message-kind <kind>` | select proven all, posts or comments before ranking. Одно из: `all`, `posts`, `comments`. |
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--timezone <zone>` | the IANA timezone for dates and active days. |
+| `--exact` | bare words match exact forms rather than stems. |
+| `--limit <n>` | ranked rows, 1–100. |
+| `--saved <name\|id>` | run a saved query or ranking run; typed options replace stored options. |
+
+#### `max stats messages evidence`
+
+a bounded page of messages or answer pairs contributing to one ranking component
+
+```sh
+max stats messages evidence <message> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `message` | обязательный | the canonical message locator from the ranking row. |
+
+| Опция | Что делает |
+|---|---|
+| `--selection <json>` | the resolved ranking selection returned in drilldown. |
+| `--component <name>` | the exposed ranking component. |
+| `--limit <n>` | evidence rows, 1–100; 20 if not given. |
+| `--cursor <cursor>` | continue the same component and stored-evidence fingerprint. |
+
+### `max stats contacts`
+
+statistics about human authors
+
+#### `max stats contacts top`
+
+rank the human authors of stored messages by a measure or explainable score; counters are snapshots and freshness is unknown
+
+```sh
+max stats contacts top [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | a strict Lucene query; none selects every stored message. |
+
+| Опция | Что делает |
+|---|---|
+| `--sync-first` | first fetch new messages within the chat, time and message bounds. |
+| `--max-chats <n>` | refresh at most this many chats (default: 5). |
+| `--sync-time <duration>` | stop fetching after this long (default: 30s). |
+| `--max-messages <n>` | fetch at most this many messages total (default: 500). |
+| `--measure <name>` | the ranking metric; not with score or weights. Одно из: `messages`, `words`, `reactions`, `replies`, `answers`, `answer-time`, `threads`, `active-days`. |
+| `--score <preset>` | helpful/active for authors; engaging for either target. Одно из: `helpful`, `active`, `engaging`. |
+| `--weights <json>` | the complete component weights; replaces preset weights. |
+| `--message-kind <kind>` | select proven all, posts or comments before ranking. Одно из: `all`, `posts`, `comments`. |
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--timezone <zone>` | the IANA timezone for dates and active days. |
+| `--exact` | bare words match exact forms rather than stems. |
+| `--limit <n>` | ranked rows, 1–100. |
+| `--saved <name\|id>` | run a saved query or ranking run; typed options replace stored options. |
+| `--min-messages <n>` | minimum selected messages per author; 1, or 5 for engaging. |
+
+#### `max stats contacts evidence`
+
+a bounded page of messages or answer pairs contributing to one ranking component
+
+```sh
+max stats contacts evidence <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | the exact native person id from the ranking row. |
+
+| Опция | Что делает |
+|---|---|
+| `--selection <json>` | the resolved ranking selection returned in drilldown. |
+| `--component <name>` | the exposed ranking component. |
+| `--limit <n>` | evidence rows, 1–100; 20 if not given. |
+| `--cursor <cursor>` | continue the same component and stored-evidence fingerprint. |
+
 ### `max stats chats`
 
 statistics about one chat
@@ -1985,6 +2086,7 @@ max searches create <name> [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 | `--by <chat\|sender\|day\|hour>` | what stats messages show --saved counts by. |
+| `--selection <json>` | save the resolved parent ranking query and options from a drilldown. |
 | `--replace` | overwrite a saved search of the same name. |
 
 ### `max searches show`
@@ -2045,7 +2147,7 @@ the waits MAX asked this profile to keep, and a hold on its writes
 
 ### `max flood clear`
 
-forget them and lift the hold, once MAX no longer limits the account; changes nothing there
+forget them, lift the hold and the profile's pace, once MAX no longer limits the account; changes nothing there
 
 ```sh
 max flood clear
@@ -2698,7 +2800,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, requestsPerMinute, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -2719,7 +2821,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, requestsPerMinute, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
 
 | Опция | Что делает |
 |---|---|
