@@ -153,6 +153,7 @@ max config migrate
 | `keepRunsForDays` | сколько дней хранятся записи запусков | — | `30` |
 | `readOnly`, `allow`, `mcpTools` | старые настройки, читаются для совместимости; `config migrate` переводит их в `permissions` | — | после миграции изменять их нельзя |
 | `sendsPerHour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями и добавленными в группы людьми; сверх — отказ с кодом `8`. **Боту** лимит задаётся только в разделе `bot`; без него бот не ограничен | — | `30`, у бота — нет |
+| `requestsPerMinute` | сколько запросов в минуту профиль делает к MAX — после первых 10 подряд, вместе во всех процессах этого профиля; `0` — без ограничения. Переменная `MAX_REQUESTS_PER_MINUTE` действует сильнее файла ([limits.md](limits.md)) | `MAX_REQUESTS_PER_MINUTE` | `20` |
 | `readOtherBots` | может ли бот читать копии других ботов, когда команда просит это `--all-bots` или `--bots`: `false`, `true` — всех, или список профилей ботов. **Только в разделе `bot`** | —; `--all-bots` и `--bots` просят, поле разрешает | `false` |
 | `updateCheck` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | —; выключают `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER`, `CI` | `true` |
 | `skillHint` | раз в сутки говорить агенту в stderr, что навыка `max` у него нет или он старше программы и что его ставит `max skill install`. Агента узнаём по переменной `AI_AGENT` или `CLAUDECODE`. **Только в `defaults`** | — | `true` |
@@ -309,6 +310,7 @@ max chats list
 |---|---|---|
 | `defaultProfile` | строка с именем профиля | корень файла |
 | `limit`, `timeoutMs`, `keepRunsForDays`, `sendsPerHour` | целое число ≥ 1 | профиль |
+| `requestsPerMinute` | целое число ≥ 0 | профиль |
 | `color`, `record`, `readOnly` | boolean | профиль |
 | `senderColors`, `catchUpMarksRead`, `searchCatchUp`, `serve` | boolean | личный аккаунт |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |

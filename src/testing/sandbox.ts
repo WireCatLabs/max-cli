@@ -30,6 +30,8 @@ const sandbox = mkdtempSync(join(process.platform === "darwin" ? "/tmp" : tmpdir
 
 process.env.MAX_CONFIG_DIR = join(sandbox, "config")
 process.env.MAX_STATE_DIR = join(sandbox, "state")
+// One profile's pace file is shared by every test: paced, a file of tests would wait on each other's calls.
+process.env.MAX_REQUESTS_PER_MINUTE = "0"
 process.env.MAX_CACHE_DIR = join(sandbox, "cache")
 // cli-messaging's store is one file for every messenger, outside all three.
 process.env.MESSAGING_STORE = join(sandbox, "messages.db")
