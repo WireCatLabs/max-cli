@@ -1011,7 +1011,7 @@ max messages list <chat> [options]
 
 ### `max messages search`
 
-search the local store — what was read, fetched or kept by serve; optionally fetches new messages with --sync-first
+search the local store and the messenger's server (--backend); optionally fetches new messages with --sync-first
 
 ```sh
 max messages search [query] [options]
@@ -1032,6 +1032,8 @@ max messages search [query] [options]
 | `--thread-messages <n>` | at most this many messages in each thread context (default: 50). |
 | `--thread-bytes <n>` | at most this many bytes of whole messages and links in each context (default: 65536). |
 | `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
+| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both). |
+| `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many. |

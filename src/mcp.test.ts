@@ -625,6 +625,7 @@ describe("the MCP server", () => {
       language: "lucene",
       timezone: "Europe/Madrid",
       limit: 5,
+      backend: "archive",
     })
     expect(result.isError).toBe(false)
     expect(result.body).toMatchObject({
@@ -748,7 +749,7 @@ describe("the MCP server", () => {
     const context = await call(client, "max_messages_context", { chat: "111", message: id, before_n: 0, after_n: 0 })
     expect(context.isError).toBe(false)
     expect(context.body).toMatchObject({ items: [{ id, anchor: true, text: "context archive" }] })
-    const search = await call(client, "max_messages_search", { text: "context", chat: "111" })
+    const search = await call(client, "max_messages_search", { text: "context", chat: "111", backend: "archive" })
     expect(search.isError).toBe(false)
     expect(search.body).toMatchObject({ items: [{ id, text: "context archive" }] })
   })
@@ -770,12 +771,18 @@ describe("the MCP server", () => {
     expect(
       (await call(client, "max_messages_edit", { chat: "111", message: id, text: "updated archived" })).isError,
     ).toBe(false)
-    expect((await call(client, "max_messages_search", { text: "updated", chat: "111" })).body).toMatchObject({
+    expect(
+      (await call(client, "max_messages_search", { text: "updated", chat: "111", backend: "archive" })).body,
+    ).toMatchObject({
       items: [{ id, text: "updated archived" }],
     })
-    expect((await call(client, "max_messages_search", { text: "original", chat: "111" })).body.items).toEqual([])
+    expect(
+      (await call(client, "max_messages_search", { text: "original", chat: "111", backend: "archive" })).body.items,
+    ).toEqual([])
     expect((await call(client, "max_messages_delete", { chat: "111", messages: [id] })).isError).toBe(false)
-    expect((await call(client, "max_messages_search", { text: "updated", chat: "111" })).body.items).toEqual([])
+    expect(
+      (await call(client, "max_messages_search", { text: "updated", chat: "111", backend: "archive" })).body.items,
+    ).toEqual([])
   })
 
   it("keeps another account's stored messages and resources out of this profile", async () => {

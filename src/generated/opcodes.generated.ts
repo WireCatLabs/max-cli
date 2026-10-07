@@ -47,6 +47,7 @@ export const Opcode = {
   MSG_SEND: 64,
   MSG_DELETE: 66,
   MSG_EDIT: 67,
+  MSG_SEARCH: 73,
   CHAT_MEMBERS_UPDATE: 77,
   PHOTO_UPLOAD: 80,
   VIDEO_UPLOAD: 82,

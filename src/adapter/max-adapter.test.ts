@@ -159,6 +159,25 @@ describe("the MAX adapter", () => {
     expect(page.items[0]?.attachments[0]).not.toHaveProperty("providerRef")
   })
 
+  it("searches one chat on MAX's server with opcode 73, and refuses a search without a chat", async () => {
+    const { adapter, sent } = connected({
+      [Opcode.MSG_SEARCH]: {
+        result: [
+          { message: { id: BigInt(MESSAGE), time: 1789776000000, sender: OWNER, text: "invoice" }, highlights: [] },
+        ],
+        total: 1,
+      },
+    })
+
+    const found = await adapter.searchMessages?.({ text: "invoice", chat: "Friends" }, { limit: 10 })
+
+    expect(found).toMatchObject({ items: [{ id: MESSAGE, chatId: "111", text: "invoice" }], hasMore: false })
+    expect(sent(Opcode.MSG_SEARCH)).toEqual([{ chatId: 111, query: "invoice", count: 10 }])
+    await expect(adapter.searchMessages?.({ text: "invoice" }, { limit: 10 })).rejects.toMatchObject({
+      code: "validation_error",
+    })
+  })
+
   it("resolves a title to its chat, and an id as it is, without connecting", async () => {
     const { adapter, sent } = connected()
 

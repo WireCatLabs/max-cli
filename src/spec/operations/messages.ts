@@ -199,6 +199,26 @@ export const messagesReactions = defineOperation({
   },
 })
 
+export const messagesSearch = defineOperation({
+  name: "messages.search",
+  constant: "MSG_SEARCH",
+  opcode: 73,
+  auth: true,
+  request: v.strictObject({ chatId: id(), query: v.pipe(v.string(), v.minLength(1)), count: v.number() }),
+  response: v.looseObject({ result: v.optional(v.array(v.looseObject({}))), total: v.optional(v.number()) }),
+  guard: null,
+  provenance: {
+    confidence: "measured",
+    sources: [
+      "measured against MAX 2026-10-07 on a second account, in Saved messages (`pnpm probe:search`)",
+      "PyMax 53103f0 `MSG_SEARCH` (`src/pymax/protocol/enums.py:72`), named only",
+      "pr0bel1230/max-api-docs 82ff271 `protocol/messaging.md:946-989`",
+    ],
+    notes:
+      "Answers `{result: [{message, highlights}], total}`, or `{result: [], ucpQId}` when nothing matched. One chat only: without `chatId` it is refused (`proto.payload`). Matches a word's beginning, not other forms of a Russian word.",
+  },
+})
+
 export const messagesReact = defineOperation({
   name: "messages.react",
   constant: "MSG_REACTION",

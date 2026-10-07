@@ -33,6 +33,7 @@ import {
   messagesPollVote,
   messagesReact,
   messagesReactions,
+  messagesSearch,
   messagesSend,
   messagesUnreact,
 } from "./operations/messages.js"
@@ -93,6 +94,7 @@ export const spec: readonly Entry[] = [
   messagesUnreact,
   messagesPollVote,
   messagesReactions,
+  messagesSearch,
   messagesDelete,
   attachmentsVideo,
   attachmentsFile,

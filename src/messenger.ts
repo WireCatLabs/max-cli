@@ -62,6 +62,8 @@ export const maxMessenger: Messenger = {
 
   permissionKey: permissionKeyOf,
   tracksMembers: true,
+  // Opcode 73 answers in one chat only (measured 2026-10-07).
+  serverSearch: "chat",
 
   guard: (command, { profile }, warn) => {
     const client = () => clients.get(rootOf(command))
