@@ -7,7 +7,13 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
+<<<<<<< HEAD
 **731 ✅ · 141 ⛔ · 0 ❌** — 272 commands, 600 options.
+||||||| parent of 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
+**731 ✅ · 99 ⛔ · 0 ❌** — 268 commands, 562 options.
+=======
+**750 ✅ · 153 ⛔ · 0 ❌** — 285 commands, 618 options.
+>>>>>>> 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -77,6 +83,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats update` | `--only-owner-edits-info` | ✅ |  |
 | `chats update` | `--members-see-link` | ✅ |  |
 | `chats link show` |  | ✅ |  |
+| `chats link create` |  | ⛔ | Shared cli-messaging src/cli/messenger/admin-commands.test.ts covers invite-link approval, expiry, limits and guarded requests; the consumer uses its adapter capability. |
+| `chats link create` | `--approval` | ⛔ | Shared cli-messaging src/cli/messenger/admin-commands.test.ts covers invite-link approval, expiry, limits and guarded requests; the consumer uses its adapter capability. |
+| `chats link create` | `--expire-time` | ⛔ | Shared cli-messaging src/cli/messenger/admin-commands.test.ts covers invite-link approval, expiry, limits and guarded requests; the consumer uses its adapter capability. |
+| `chats link create` | `--max-uses` | ⛔ | Shared cli-messaging src/cli/messenger/admin-commands.test.ts covers invite-link approval, expiry, limits and guarded requests; the consumer uses its adapter capability. |
 | `chats link reset` |  | ✅ |  |
 | `chats folders list` |  | ✅ |  |
 | `chats folders create` |  | ✅ |  |
@@ -86,6 +96,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats folders update` | `--add` | ✅ |  |
 | `chats folders update` | `--remove` | ✅ |  |
 | `chats folders delete` |  | ✅ |  |
+| `chats folders order` |  | ⛔ | Shared cli-messaging src/services/folders.test.ts and src/cli/messenger/admin-commands.test.ts cover folder ordering and invite-link joining; absent adapter capabilities refuse explicitly. |
+| `chats folders join` |  | ⛔ | Shared cli-messaging src/services/folders.test.ts and src/cli/messenger/admin-commands.test.ts cover folder ordering and invite-link joining; absent adapter capabilities refuse explicitly. |
 | `chats rules show` |  | ✅ |  |
 | `chats rules set` |  | ✅ |  |
 | `chats rules unset` |  | ✅ |  |
@@ -100,7 +112,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--all` | ✅ |  |
 | `contacts list` | `--order` | ✅ |  |
 | `contacts list` | `--search` | ✅ |  |
+| `contacts list` | `--search-notes` | ⛔ | Account-scoped notes search is covered in cli-messaging src/services/private-people.test.ts; consumer authors notes through its offline fixture |
 | `contacts show` |  | ✅ |  |
+| `contacts show` | `--with-notes` | ✅ |  |
 | `contacts profile` |  | ✅ |  |
 | `contacts profile` | `--show-phone` | ✅ |  |
 | `contacts sync` |  | ✅ |  |
@@ -120,12 +134,23 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts check` | `--no-registries` | ✅ |  |
 | `contacts link` |  | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
 | `contacts unlink` |  | ⛔ | cli-messaging src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
+| `contacts alias set` |  | ✅ |  |
+| `contacts alias rm` |  | ✅ |  |
+| `contacts notes list` |  | ✅ |  |
+| `contacts notes show` |  | ✅ |  |
+| `contacts notes add` |  | ✅ |  |
+| `contacts notes add` | `--file` | ✅ |  |
+| `contacts notes edit` |  | ✅ |  |
+| `contacts notes edit` | `--file` | ✅ |  |
+| `contacts notes edit` | `--revision` | ✅ |  |
+| `contacts notes remove` |  | ✅ |  |
 | `messages list` |  | ✅ |  |
 | `messages list` | `--limit` | ✅ |  |
 | `messages list` | `--before-id` | ✅ |  |
 | `messages list` | `--before-time` | ✅ |  |
 | `messages list` | `--after-id` | ✅ |  |
 | `messages list` | `--after-time` | ✅ |  |
+| `messages list` | `--topic` | ⛔ | Shared cli-messaging src/services/messages.test.ts covers topic history and unsupported-capability refusal; this consumer mounts the shared message command. |
 | `messages list` | `--transcribe` | ✅ |  |
 | `messages list` | `--model` | ✅ |  |
 | `messages list` | `--mark-read` | ✅ |  |
@@ -265,6 +290,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats messages show` | `--timezone` | ✅ |  |
 | `stats messages show` | `--exact` | ✅ |  |
 | `stats messages show` | `--saved` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters |
+<<<<<<< HEAD
 | `stats messages top` |  | ⛔ | cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store |
 | `stats messages top` | `--sync-first` | ⛔ | cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store |
 | `stats messages top` | `--max-chats` | ⛔ | cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store |
@@ -306,6 +332,50 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats contacts evidence` | `--component` | ⛔ | cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store |
 | `stats contacts evidence` | `--limit` | ⛔ | cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store |
 | `stats contacts evidence` | `--cursor` | ⛔ | cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store |
+||||||| parent of 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
+=======
+| `stats messages top` |  | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--sync-first` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--max-chats` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--sync-time` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--max-messages` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--measure` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--score` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--weights` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--message-kind` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--chat` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--source` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--timezone` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--exact` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--limit` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages top` | `--saved` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages evidence` |  | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages evidence` | `--selection` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages evidence` | `--component` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages evidence` | `--limit` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats messages evidence` | `--cursor` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` |  | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--sync-first` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--max-chats` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--sync-time` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--max-messages` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--measure` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--score` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--weights` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--message-kind` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--chat` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--source` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--timezone` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--exact` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--limit` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--saved` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts top` | `--min-messages` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts evidence` |  | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts evidence` | `--selection` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts evidence` | `--component` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts evidence` | `--limit` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+| `stats contacts evidence` | `--cursor` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+>>>>>>> 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
 | `stats chats show` |  | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
 | `stats chats show` | `--since-time` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
 | `stats chats show` | `--by` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
@@ -430,6 +500,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments text set` |  | ✅ |  |
 | `attachments text set` | `--attachment` | ✅ |  |
 | `attachments text set` | `--text-file` | ✅ |  |
+| `tags auto` |  | ✅ |  |
+| `tags auto` | `--chat` | ✅ |  |
+| `tags auto` | `--limit` | ✅ |  |
+| `tags auto` | `--refresh-metadata` | ⛔ | Shared refresh explicitly uses the adapter group capability; cli-messaging src/services/private-people.test.ts checks offline refresh preservation |
+| `tags auto` | `--dry-run` | ✅ |  |
 | `tags add` |  | ✅ |  |
 | `tags add` | `--chat` | ✅ |  |
 | `tags add` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
@@ -438,9 +513,16 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags remove` | `--chat` | ✅ |  |
 | `tags remove` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags remove` | `--message` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags remove` | `--source` | ✅ |  |
 | `tags list` |  | ✅ |  |
 | `tags list` | `--tag` | ✅ |  |
+| `tags list` | `--source` | ✅ |  |
 | `tags list` | `--type` | ✅ |  |
+| `metadata get` |  | ✅ |  |
+| `metadata get` | `--chat` | ✅ |  |
+| `metadata refresh` |  | ⛔ | cli-messaging src/services/private-people.test.ts covers offline refresh failures, limits and cached metadata; this consumer uses the existing group-card capability |
+| `metadata refresh` | `--chat` | ⛔ | Shared metadata command parsing and bounded processing are covered in cli-messaging src/services/private-people.test.ts |
+| `metadata refresh` | `--limit` | ⛔ | Shared metadata command limit validation is covered in cli-messaging src/services/private-people.test.ts |
 | `searches create` |  | ✅ |  |
 | `searches create` | `--chat` | ✅ |  |
 | `searches create` | `--source` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
@@ -452,7 +534,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `searches create` | `--timezone` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--regex` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--by` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+<<<<<<< HEAD
 | `searches create` | `--selection` | ⛔ | cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store |
+||||||| parent of 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
+=======
+| `searches create` | `--selection` | ⛔ | Shared cli-messaging src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover ranking options, selection evidence and paging; this consumer mounts that shared command. |
+>>>>>>> 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
 | `searches create` | `--replace` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches show` |  | ⛔ | cli-messaging src/cli/messenger/searches.test.ts drives saved-query lookup and deletion; consumer mounts the shared command |
 | `searches list` |  | ✅ |  |

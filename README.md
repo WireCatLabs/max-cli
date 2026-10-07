@@ -512,3 +512,18 @@ MIT — см. [LICENSE](LICENSE).
 Пулл-реквесты, сообщения об ошибках и предложения приветствуются —
 [issues](https://github.com/leemour/max-cli/issues). Как устроен код и как его проверять —
 [docs/dev/ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) и [docs/dev/TESTING.md](docs/dev/TESTING.md).
+
+### Private contact notes and automatic tags
+
+`max contacts alias set <person> <alias>` задаёт локальное имя для выбранного аккаунта;
+`contacts rename` меняет запись в адресной книге мессенджера. Собственные заметки:
+`contacts notes add <person> --file <path>`, затем `list`, `show`, `edit --revision <n>` и `remove`.
+`contacts show --with-notes` включает заметки явно; `contacts list --search-notes <text>` ищет в них.
+Обновление контактов сохраняет заметки и псевдонимы. Связывание людей не объединяет эти данные.
+
+`max metadata refresh --chat <id>` сохраняет описание группы или канала локально;
+`metadata get --chat <id>` читает сохранённые данные. `tags auto --chat <id> --dry-run`
+показывает метки по ключевым словам. Для актуального описания добавьте `--refresh-metadata`
+без `--dry-run`. Команда обрабатывает не более 500 чатов за запуск, по умолчанию 50.
+Автоматические метки не удаляют ручные; `tags list|remove --source auto` выбирает только
+автоматические метки. Текст сообщений и внешние модели при классификации не используются.

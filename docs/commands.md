@@ -506,6 +506,26 @@ max chats link show <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+#### `max chats link create`
+
+make another invite link; nobody is told until you share it
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats link create <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--approval` | who joins by it asks first, and an admin lets them in. |
+| `--expire-time <time>` | it stops working then: 2026-09-25T09:00 (local time), or 30m, 2h, 7d from now. |
+| `--max-uses <n>` | at most this many people join by it, 1 to 99999. |
+
 #### `max chats link reset`
 
 replace the invite link; the old one stops working
@@ -583,6 +603,34 @@ max chats folders delete <folder>
 | Аргумент | | Что это |
 |---|---|---|
 | `folder` | обязательный | folder id, or its title exactly. |
+
+#### `max chats folders order`
+
+put folders in this order; the ones not named keep theirs after them
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats folders order <folders>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `folders` | обязательный | folder ids, or titles exactly, first one first. |
+
+#### `max chats folders join`
+
+add a folder someone shared by a link; joins every chat in it, and the others there see you joined
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats folders join <link>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `link` | обязательный | the folder's link, as t.me/addlist/…. |
 
 ### `max chats rules`
 
@@ -670,19 +718,24 @@ max contacts list [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 | `--order <recent\|name>` | newest conversation first, or alphabetical. По умолчанию: `recent`. |
-| `--search <text>` | only people whose name or @username contains this. |
+| `--search <text>` | only people whose name, local alias or @username contains this. |
+| `--search-notes <text>` | only people whose private notes contain this text. |
 
 ### `max contacts show`
 
 one person and the chats you share with them
 
 ```sh
-max contacts show <person>
+max contacts show <person> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name. |
+
+| Опция | Что делает |
+|---|---|
+| `--with-notes` | include your private notes, subject to contacts.notes.list permission. |
 
 ### `max contacts profile`
 
@@ -774,7 +827,7 @@ max contacts unblock <person>
 
 ### `max contacts rename`
 
-give a person a name of your own — they do not see it
+rename the contact in the messenger address book; use contacts alias for a private local name
 
 **Меняет что-то в MAX.**
 
@@ -862,6 +915,121 @@ max contacts unlink <person>
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name; <messenger>:<person> for another messenger. |
 
+### `max contacts alias`
+
+a private local display name in the selected account
+
+#### `max contacts alias set`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts alias set <person> <alias>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `alias` | обязательный |  |
+
+#### `max contacts alias rm`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts alias rm <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+### `max contacts notes`
+
+your private notes on a stored contact, scoped to this account
+
+#### `max contacts notes list`
+
+
+
+```sh
+max contacts notes list <person>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+#### `max contacts notes show`
+
+
+
+```sh
+max contacts notes show <person> <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
+#### `max contacts notes add`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes add <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--file <path>` | read note text from a file; omitted or - reads stdin. |
+
+#### `max contacts notes edit`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes edit <person> <id> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
+| Опция | Что делает |
+|---|---|
+| `--file <path>` | read note text from a file; omitted or - reads stdin. |
+| `--revision <number>` | the revision you read before editing. |
+
+#### `max contacts notes remove`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max contacts notes remove <person> <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный |  |
+| `id` | обязательный |  |
+
 ## `max messages`
 
 read and send messages in a chat
@@ -885,6 +1053,7 @@ max messages list <chat> [options]
 | `--before-time <time>` | only messages older than this ISO 8601 time, or 2h / 1d ago. |
 | `--after-id <id>` | only messages newer than this message id. |
 | `--after-time <time>` | only messages newer than this ISO 8601 time, or 2h / 1d ago. |
+| `--topic <id>` | only this forum topic; read back from its newest message or --before-id. |
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 | `--mark-read` | also mark the chat read up to the newest message shown; the other person sees it. |
@@ -2008,9 +2177,28 @@ max attachments text set <chat> [message] [options]
 
 your own labels on chats, people and messages, kept in the local store and never sent; tag: in a search finds them
 
+### `max tags auto`
+
+derive local group/channel tags from cached metadata using keyword rules
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tags auto [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a stored group/channel; repeat to select several. По умолчанию: ``. |
+| `--limit <number>` | process at most 1–500 chats. По умолчанию: `50`. |
+| `--refresh-metadata` | read current descriptions from the messenger before classifying. |
+| `--dry-run` | preview cached classification without changing the store. |
+
 ### `max tags add`
 
 put tags on one chat, person or message
+
+**Меняет что-то только на этом компьютере.**
 
 ```sh
 max tags add <tag> [options]
@@ -2030,6 +2218,8 @@ max tags add <tag> [options]
 
 take tags off one chat, person or message
 
+**Меняет что-то только на этом компьютере.**
+
 ```sh
 max tags remove <tag> [options]
 ```
@@ -2043,6 +2233,7 @@ max tags remove <tag> [options]
 | `--chat <chat>` | the chat to untag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to untag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to untag: its id in --chat, or a msg: locator alone. |
+| `--source <manual\|auto>` | remove only this ownership claim. |
 
 ### `max tags list`
 
@@ -2055,7 +2246,39 @@ max tags list [options]
 | Опция | Что делает |
 |---|---|
 | `--tag <tag>` | only this tag. |
+| `--source <manual\|auto>` | only labels with this ownership claim. |
 | `--type <names>` | only what is tagged of this type: chat, contact or message. |
+
+## `max metadata`
+
+cached group/channel descriptions for local automatic tags
+
+### `max metadata get`
+
+
+
+```sh
+max metadata get [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a stored chat. |
+
+### `max metadata refresh`
+
+
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max metadata refresh [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | stored group/channel; repeat for several. По умолчанию: ``. |
+| `--limit <number>` | process at most 1–500 chats. По умолчанию: `50`. |
 
 ## `max searches`
 
@@ -2800,7 +3023,13 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
+<<<<<<< HEAD
 | `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, requestsPerMinute, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+||||||| parent of 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+=======
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, requestsPerMinute, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+>>>>>>> 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
 | `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
 
 | Опция | Что делает |
@@ -2821,7 +3050,13 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
+<<<<<<< HEAD
 | `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, requestsPerMinute, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+||||||| parent of 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+=======
+| `setting` | обязательный | one of: limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, embeddingProvider, embeddingModel, embeddingBaseUrl, embeddingDims, analysisProvider, analysisModel, analysisBaseUrl, models, requestsPerMinute, senderColors, catchUpMarksRead, searchCatchUp, serve, mcpTools, readOtherBots, updateCheck, skillHint, transcribeModel, defaultProfile, searchStemmers.cyrillic, searchStemmers.latin. |
+>>>>>>> 529b1f9f (feat(people): expose private notes, aliases and automatic channel tags)
 
 | Опция | Что делает |
 |---|---|

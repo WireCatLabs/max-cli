@@ -391,3 +391,36 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 В MCP найдите `store gaps plan` и `store gaps repair` и `store jobs show` и `store jobs list` через `max_tools_search`,
 затем используйте `max_read` или `max_write` для соответствующей команды. Не трактуйте неизвестные края или
 пропущенные номера сообщений как доказательство потерянной истории.
+
+## Личные заметки, псевдонимы и метки каналов
+
+Псевдонимы и заметки хранятся локально для выбранного аккаунта. Обновление контактов их не
+затирает. `contacts rename` меняет запись в адресной книге мессенджера; `contacts alias` —
+только локальное имя. Если псевдоним неоднозначен, укажите id. Личные заметки отделены от
+публичного описания человека. Показывайте и ищите их, когда это нужно для запроса владельца.
+
+```sh
+max contacts alias set 101 'Project lead'
+max contacts alias rm 101
+max contacts notes add 101 --file /path/to/own-note.md
+max contacts notes list 101 --json
+max contacts notes show 101 NOTE_ID --json
+max contacts notes edit 101 NOTE_ID --revision 1 --file /path/to/own-note.md
+max contacts notes remove 101 NOTE_ID
+max contacts show 101 --with-notes --json
+max contacts list --search-notes 'follow up' --json
+max metadata get --chat CHAT_ID --json
+max metadata refresh --chat CHAT_ID --limit 1 --json
+max tags auto --chat CHAT_ID --dry-run --json
+max tags auto --chat CHAT_ID --refresh-metadata --limit 1 --json
+max tags list --source auto --json
+max tags remove news --chat CHAT_ID --source auto
+```
+
+Автоматические метки определяются по ключевым словам в сохранённых названиях, адресах и
+описаниях групп и каналов. Модель и тексты сообщений не используются. Обновление описания
+запрашивается явно; удалённый чат не меняется. `--dry-run` читает только сохранённые данные
+и не сочетается с `--refresh-metadata`. За запуск обрабатывается не более 500 чатов.
+Оценка правила не является вероятностью. Ручные метки сохраняются при повторной классификации.
+Без `--source` удаление метки убирает оба источника; следующий явный запуск `tags auto` может
+создать автоматическую метку снова. Связывание людей не объединяет их личные заметки.

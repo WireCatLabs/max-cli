@@ -17,6 +17,14 @@ beforeEach(() => {
   configDir = mkdtempSync(join(tmpdir(), "max-config-"))
 })
 
+it("uses the shared request pace setting and its environment override, with zero disabling pacing", () => {
+  withConfig(JSON.stringify({ profiles: { default: { requestsPerMinute: 12 } } }))
+  expect(settings().requestsPerMinute).toBe(12)
+  expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" }).requestsPerMinute).toBe(0)
+  expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" }).sources.requestsPerMinute).toBe("MAX_REQUESTS_PER_MINUTE")
+  expect(() => settings({}, { MAX_REQUESTS_PER_MINUTE: "no" })).toThrow("whole number from 0")
+})
+
 describe("where a setting came from", () => {
   it("names the layer that decided the profile, so nobody has to re-derive the order", () => {
     expect(settings().sources.profile).toBe("default")

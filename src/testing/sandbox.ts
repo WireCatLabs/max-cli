@@ -56,3 +56,6 @@ delete process.env.AI_AGENT
 delete process.env.CLAUDECODE
 
 afterAll(() => rmSync(sandbox, { recursive: true, force: true }))
+
+// Unit tests use scripted adapters; request pacing must never introduce a real wait.
+process.env.MAX_REQUESTS_PER_MINUTE = "0"
