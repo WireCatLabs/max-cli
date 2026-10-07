@@ -182,7 +182,10 @@ message id** and **one** copy, also across two connections and logins — the ca
 - A lost send is retried **once, with the same `cid`**. If that fails too, the result is
   `outcome_unknown` (neither failed nor sent) and names the `cid` as `sendId`; `max messages send --send-id <n>`
   repeats it without risking a second copy.
-- ⚠ Unmeasured: how long MAX remembers a `cid`. Both probes were seconds apart.
+- ~~⚠ Unmeasured: how long MAX remembers a `cid`. Both probes were seconds apart.~~ **Correction 2026-10-07
+  (`PROTO-2`):** measured in Saved messages — the same `cid` resent 5 and 15 minutes after the first send got
+  the first message's id back each time, and one copy stayed. Fifteen minutes is the longest gap measured; beyond
+  it is unproven, and `--send-id` reuse hours later should not be relied on.
 - `cid` is monotonic per process. `Date.now()` alone gave two sends in one millisecond the same
   `cid`, and deduplication would have silently dropped the second. A test caught it.
 - `--silent` sends `notify: false` (normally `true`). ⚠ **Only `true` is measured**; what MAX does
