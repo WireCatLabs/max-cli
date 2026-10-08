@@ -10,6 +10,192 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  {
+    command: "chats folders show",
+    reason:
+      "Shared SDK190 folders-capabilities.test.ts covers folder show and stored names; this consumer mounts the same service factory.",
+  },
+  {
+    command: "store jobs retry",
+    reason:
+      "Shared SDK190 records-command.test.ts covers retry/clear over isolated job files; this consumer mounts the same factory without overriding its execution.",
+  },
+  {
+    command: "store jobs retry",
+    option: "--failed",
+    reason:
+      "Shared SDK190 records-command.test.ts covers retry/clear over isolated job files; this consumer mounts the same factory without overriding its execution.",
+  },
+  {
+    command: "store jobs clear",
+    reason:
+      "Shared SDK190 records-command.test.ts covers retry/clear over isolated job files; this consumer mounts the same factory without overriding its execution.",
+  },
+  {
+    command: "stats messages counters show",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--chat",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--source",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--exact",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--timezone",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--selection",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--counters",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--limit",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters show",
+    option: "--max-age",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--chat",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--source",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--exact",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--timezone",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--selection",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--counters",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--limit",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--max-messages",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--sync-time",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats messages counters refresh",
+    option: "--dry-run",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    option: "--since-time",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    option: "--until-time",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    option: "--checkpoints",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    option: "--within",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    option: "--by",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    option: "--timezone",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
+  {
+    command: "stats chats retention",
+    option: "--limit",
+    reason:
+      "Shared SDK190 observations-command.test.ts and services/counters.test.ts / retention.test.ts cover exact scopes, bounds, dry-run permissions, freshness and cohorts; native command discovery verifies the mounted local-write metadata. No live account is needed.",
+  },
   ...[
     ["stats chats newcomers", "--saved"],
     ["stats messages discussion", "--saved"],

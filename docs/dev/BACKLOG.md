@@ -189,6 +189,6 @@ which; the plan for it starts by saying so.
 
 ## Remote retained attachments
 
-- Remote AI file transfer · 🚧 `feat/remote-attachment-transfer` · Shared SDK744 implements
+- Remote AI file transfer · ✅ implemented on `feat/remote-attachment-transfer` · Shared SDK744 implements
   account/message-owned retained bytes, bounded chunks and SHA256; adopt published SDK190,
   document agent OCR ingestion and verify CLI/MCP with synthetic files. No live/model calls.

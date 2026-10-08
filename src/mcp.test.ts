@@ -434,6 +434,69 @@ describe("the MCP server", () => {
     expect(logins()).toBe(0)
   })
 
+  it("delivers retained PDF resources through native MAX MCP without login", async () => {
+    const profile = "mcp-retained-pdf"
+    const state = new SessionStore({ profile, keyring: memoryKeyring() })
+    state.writeState({ ...state.readState(), viewerId: "10000091" })
+    const root = mkdtempSync(join(tmpdir(), "max-retained-pdf-"))
+    const path = join(root, "fixture.pdf")
+    const bytes = Buffer.from("%PDF-1.7\nsynthetic PDF transfer fixture")
+    writeFileSync(path, bytes)
+    const store = await openStore()
+    try {
+      const account = { provider: "max", account: "10000091" }
+      await store.saveChats(account, [
+        {
+          id: "111",
+          title: "Transfer fixture",
+          kind: "group",
+          unreadCount: 0,
+          lastMessageAt: null,
+          participantsCount: null,
+        },
+      ])
+      await store.saveMessages(
+        account,
+        "111",
+        [
+          {
+            id: "908",
+            chatId: "111",
+            senderId: "10",
+            senderName: "Fixture",
+            timestamp: "2026-10-08T00:00:00Z",
+            editedAt: null,
+            text: "",
+            outgoing: false,
+            attachments: [{ kind: "file", name: "fixture.pdf" }],
+            replyTo: null,
+            forwardedFrom: null,
+            reactions: null,
+          },
+        ],
+        { via: "test" },
+      )
+      await store.keepDownloads(account, "111", "908", [{ kind: "file", position: 0, path }])
+    } finally {
+      await store.close()
+    }
+    const { client, logins } = await connect({}, { profile, token: false })
+    const answer = await client.callTool({
+      name: "max_attachments_show",
+      arguments: { message: "msg:max/10000091/111/908" },
+    })
+    expect(answer.isError).not.toBe(true)
+    expect(answer.content[0]).toMatchObject({
+      type: "resource",
+      resource: {
+        mimeType: "application/pdf",
+        blob: bytes.toString("base64"),
+      },
+    })
+    expect(answer.structuredContent).toMatchObject({ complete: true, totalBytes: bytes.length })
+    expect(logins()).toBe(0)
+  })
+
   it("exposes search follow-ups through MCP and refuses secondary preparation before connecting", async () => {
     const profile = "mcp-search-followups"
     legacyFor(profile, { permissions: { "conversations.links": "readonly", "conversations.embed": "allow" } })

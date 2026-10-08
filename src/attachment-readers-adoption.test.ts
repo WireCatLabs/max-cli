@@ -73,6 +73,29 @@ const invoke = async (...args: string[]) => {
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
 describe("shared local attachment readers", () => {
+  it("transfers retained chunks with a whole-file hash without connecting", async () => {
+    const first = await invoke("attachments", "show", "7", "1", "--attachment", "1", "--chunk-bytes", "8")
+    expect(first.code, first.stderr).toBe(0)
+    const part = JSON.parse(first.stdout)
+    expect(Buffer.from(part.base64, "base64")).toEqual(Buffer.from(readerText()).subarray(0, 8))
+    expect(part).toMatchObject({ complete: false, readBytes: 8, nextOffsetBytes: 8 })
+    const next = await invoke(
+      "attachments",
+      "show",
+      "msg:max/511/7/1",
+      "--offset-bytes",
+      "8",
+      "--if-sha256",
+      part.sha256,
+    )
+    expect(next.code, next.stderr).toBe(0)
+    expect(
+      Buffer.concat([Buffer.from(part.base64, "base64"), Buffer.from(JSON.parse(next.stdout).base64, "base64")]),
+    ).toEqual(Buffer.from(readerText()))
+    const refused = await invoke("attachments", "show", "7", "1", "--if-sha256", "0".repeat(64))
+    expect(refused.code).not.toBe(0)
+  })
+
   it("reads real UTF-16/ODT fixtures through the CLI and indexes content without a model", async () => {
     const fetcher = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("no network in local reader adoption"))
     try {
