@@ -49,6 +49,8 @@ export const wireClient = (invoke: Invoke) => ({
   account: {
     update: (request: RequestOf<(typeof OPERATIONS)["account.update"]>) =>
       invoke(OPERATIONS["account.update"], request),
+    settings: (request: RequestOf<(typeof OPERATIONS)["account.settings"]>) =>
+      invoke(OPERATIONS["account.settings"], request),
     sessions: (request: RequestOf<(typeof OPERATIONS)["account.sessions"]>) =>
       invoke(OPERATIONS["account.sessions"], request),
     closeSessions: (request: RequestOf<(typeof OPERATIONS)["account.closeSessions"]>) =>

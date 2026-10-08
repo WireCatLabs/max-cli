@@ -11,6 +11,7 @@ import {
 } from "@leemour/cli-messaging/sends"
 import { delayMs } from "./config.js"
 import {
+  fromPrivacy,
   namesFrom,
   POLL_CLOSED,
   pollSettings,
@@ -243,6 +244,22 @@ export class MaxClient {
       await this.#connectOnce()
       return toPrivacy(record(record(this.#session().config)?.user) ?? {})
     },
+
+    /** Only the owner's notifications change; `forever`, an ISO time, or null to hear the chat again. */
+    mute: (chatId: Id, until: string | null): Promise<void> =>
+      this.#change("chat-mute", async () => {
+        const dontDisturbUntil = until === null ? 0 : until === "forever" ? -1 : Date.parse(until)
+        await this.#wire.account.settings({ settings: { chats: { [chatId]: { dontDisturbUntil } } } })
+      }),
+
+    /** Only the settings named go out, under MAX's names; the answer is read back as `privacy` reads the login. */
+    updatePrivacy: (change: PrivacySettings): Promise<PrivacySettings> =>
+      this.#change("privacy", async () => {
+        const user = fromPrivacy(change)
+        const answer = await this.#wire.account.settings({ settings: { user } })
+        const current = record(record(this.#session().config)?.user) ?? {}
+        return toPrivacy({ ...current, ...user, ...(record(answer.user) ?? {}) })
+      }),
 
     /** Newest first. The web tab asks the same with the sync value it last kept; 0 is the whole history. */
     calls: async (limit: number): Promise<Page<CallRecord>> => {

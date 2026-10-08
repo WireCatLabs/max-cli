@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**835 ✅ · 107 ⛔ · 0 ❌** — 290 commands, 652 options.
+**844 ✅ · 107 ⛔ · 0 ❌** — 293 commands, 658 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -27,6 +27,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `account sessions end` |  | ✅ |  |
 | `account sessions end` | `--others` | ✅ |  |
 | `account privacy show` |  | ✅ |  |
+| `account privacy set` |  | ✅ |  |
+| `account privacy set` | `--find-by-phone` | ✅ |  |
+| `account privacy set` | `--phone-number` | ✅ |  |
+| `account privacy set` | `--calls` | ✅ |  |
+| `account privacy set` | `--chat-invites` | ✅ |  |
+| `account privacy set` | `--hide-online` | ✅ |  |
 | `calls list` |  | ✅ |  |
 | `calls list` | `--limit` | ✅ |  |
 | `chats list` |  | ✅ |  |
@@ -103,6 +109,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats media` | `--type` | ✅ |  |
 | `chats media` | `--limit` | ✅ |  |
 | `chats media` | `--before-id` | ✅ |  |
+| `chats mute` |  | ✅ |  |
+| `chats mute` | `--until` | ✅ |  |
+| `chats unmute` |  | ✅ |  |
 | `contacts list` |  | ✅ |  |
 | `contacts list` | `--limit` | ✅ |  |
 | `contacts list` | `--page` | ✅ |  |

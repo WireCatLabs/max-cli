@@ -72,3 +72,40 @@ export const accountCloseSessions = defineOperation({
       "Ends every session but this one — the owner's phone included. Never measured by us: the first real run is the owner's own (`NEED-202`).",
   },
 })
+
+const webClientNow = "web.max.ru chunk `_app/immutable/chunks/Cdo8IOYe.js`, read 2026-10-08"
+
+/**
+ * The owner's own settings. The web tab sends 22 for three things — its push subscription, a chat's
+ * mute, and the privacy settings — and only the last two go out from here.
+ */
+export const accountSettings = defineOperation({
+  name: "account.settings",
+  constant: "CONFIG",
+  opcode: 22,
+  auth: true,
+  request: v.strictObject({
+    settings: v.union([
+      /** `dontDisturbUntil`: -1 for good, 0 to hear the chat again, else epoch milliseconds. */
+      v.strictObject({ chats: v.record(v.string(), v.strictObject({ dontDisturbUntil: v.number() })) }),
+      v.strictObject({ user: v.record(v.string(), v.union([v.string(), v.boolean()])) }),
+    ]),
+  }),
+  response: v.looseObject({ user: v.optional(v.looseObject({})), hash: v.optional(v.unknown()) }),
+  guard: (request) => {
+    const settings = request.settings as { chats?: Record<string, unknown> }
+    const chats = Object.keys(settings.chats ?? {})
+    return chats.length === 1
+      ? { chatId: chats[0] ?? null, kind: "account", action: "chat-mute" }
+      : { chatId: null, kind: "account", action: "privacy" }
+  },
+  provenance: {
+    confidence: "confirmed",
+    sources: [
+      `${webClientNow}: mute \`send(22, {settings: {chats: {[id]: {dontDisturbUntil}}}})\`, privacy \`send(22, {settings: {user}})\`; \`isMuted\` reads -1 as for good, 0 as not muted`,
+      "PyMax 53103f0 `change_profile_settings`, rumax a9ecaf3 `set_chat_mute`, `update_user_settings`",
+    ],
+    notes:
+      "Privacy values as the web client reads them: `ALL`, `CONTACTS`, `NOBODY` (PyMax's `_NONE_` is not one); `SEARCH_BY_PHONE` takes only `ALL` or `CONTACTS`; `HIDDEN` is a boolean.",
+  },
+})

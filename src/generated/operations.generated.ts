@@ -1,6 +1,6 @@
 // Generated from src/spec/ by scripts/generate.ts. Do not edit; run `pnpm generate`.
 
-import { accountCloseSessions, accountSessions, accountUpdate } from "../spec/operations/account.js"
+import { accountCloseSessions, accountSessions, accountSettings, accountUpdate } from "../spec/operations/account.js"
 import { assetsUpdate } from "../spec/operations/assets.js"
 import { attachmentsFile, attachmentsVideo } from "../spec/operations/attachments.js"
 import { bannersList } from "../spec/operations/banners.js"
@@ -58,6 +58,7 @@ export const OPERATIONS = {
   "contacts.update": contactsUpdate,
   "contacts.import": contactsImport,
   "account.update": accountUpdate,
+  "account.settings": accountSettings,
   "account.sessions": accountSessions,
   "account.closeSessions": accountCloseSessions,
   "folders.list": foldersList,

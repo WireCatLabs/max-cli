@@ -1,5 +1,5 @@
 import type { Entry, Operation, Reservation } from "./define.js"
-import { accountCloseSessions, accountSessions, accountUpdate } from "./operations/account.js"
+import { accountCloseSessions, accountSessions, accountSettings, accountUpdate } from "./operations/account.js"
 import { assetsUpdate } from "./operations/assets.js"
 import { attachmentsFile, attachmentsVideo } from "./operations/attachments.js"
 import { bannersList } from "./operations/banners.js"
@@ -71,6 +71,7 @@ export const spec: readonly Entry[] = [
   contactsImport,
   unidentified36,
   accountUpdate,
+  accountSettings,
   accountSessions,
   accountCloseSessions,
   foldersList,
