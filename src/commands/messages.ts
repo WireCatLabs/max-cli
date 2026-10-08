@@ -104,6 +104,7 @@ export const messagesCommand = (): Command => {
   command.addCommand(forwardCommand(maxMessenger))
   command.addCommand(pinCommand(maxMessenger))
   command.addCommand(unpinCommand(maxMessenger))
+  command.addCommand(sharedSubcommand(shared, "press"))
 
   return command
 }

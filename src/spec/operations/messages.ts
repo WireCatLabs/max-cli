@@ -269,6 +269,36 @@ export const messagesReact = defineOperation({
   },
 })
 
+export const messagesPress = defineOperation({
+  name: "messages.press",
+  constant: "MSG_CALLBACK",
+  opcode: 118,
+  auth: true,
+  request: v.strictObject({
+    /** The keyboard attach's own `callbackId`, not the button's. */
+    callbackId: v.string(),
+    type: v.literal("CALLBACK"),
+    payload: v.optional(v.string()),
+    timestamp: v.number(),
+  }),
+  response: v.looseObject({
+    chat: v.optional(v.looseObject({})),
+    message: v.optional(v.looseObject({})),
+    unread: v.optional(v.number()),
+    mark: v.optional(v.number()),
+  }),
+  // The request names no chat: the web client sends only what is above.
+  guard: () => ({ chatId: null, kind: "reaction", key: "messages.press" }),
+  provenance: {
+    confidence: "observed",
+    sources: [
+      "web.max.ru code, chunk `Cdo8IOYe` (2026-10-08): `send(118, {callbackId, type, payload, timestamp: Date.now()})`, the answer read for `chat`, `message`, `unread`, `mark`",
+      "the keyboard attach measured 2026-10-08 (`pnpm probe:keyboard`): `{_type: INLINE_KEYBOARD, callbackId, keyboard: {buttons: [[{type, text, payload, url, intent}]]}}`",
+    ],
+    notes: "Only CALLBACK buttons are sent; the web client opens the other kinds itself.",
+  },
+})
+
 export const messagesUnreact = defineOperation({
   name: "messages.unreact",
   constant: "MSG_CANCEL_REACTION",

@@ -31,6 +31,8 @@ export type MaxAdapter = MessengerAdapter &
   Required<
     Pick<
       MessengerAdapter,
+      | "buttons"
+      | "pressButton"
       | "people"
       | "addContact"
       | "removeContact"
@@ -398,6 +400,8 @@ export const maxAdapter = (
 
     poll: async (chatId, messageId) => toPoll(await client.polls.show(chatId, messageId)),
     vote: async (chatId, messageId, answerIds) => toPoll(await client.polls.vote(chatId, messageId, answerIds)),
+    buttons: (chatId, messageId) => client.messages.buttons(chatId, messageId),
+    pressButton: (chatId, messageId, row, column) => client.messages.press(chatId, messageId, row, column),
     closePoll: async (chatId, messageId) => toPoll(await client.polls.close(chatId, messageId)),
     createPoll: async (
       chatId,

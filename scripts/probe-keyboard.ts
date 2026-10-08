@@ -6,7 +6,8 @@
  * The bot sends one message with three buttons — callback, link, message — to <chat> (an id the
  * bot and the personal profile share). The personal profile reads that chat's newest messages and
  * prints the structure of every attach that is not text: key names, value types and `type` values.
- * Never button text, payloads, urls or ids. Then the bot deletes its message.
+ * Never button text, payloads, urls or ids. Then the bot deletes its message, unless MAX_PROBE_KEEP=1
+ * leaves it for a live press.
  */
 import { BotTokenStore } from "../dist/bot/auth.js"
 import { BotApiClient, botOperations } from "../dist/bot/client.js"
@@ -110,7 +111,7 @@ try {
   }
 } finally {
   await connection.close()
-  if (typeof mid === "string") {
+  if (typeof mid === "string" && process.env.MAX_PROBE_KEEP !== "1") {
     await api.call(operation("deleteMessage"), { query: { message_id: mid } })
     console.log("\nbot deleted its message")
   }

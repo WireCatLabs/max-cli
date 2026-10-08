@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**884 ✅ · 112 ⛔ · 0 ❌** — 303 commands, 693 options.
+**885 ✅ · 112 ⛔ · 0 ❌** — 304 commands, 693 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -239,6 +239,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |
 | `messages unpin` |  | ✅ |  |
+| `messages press` |  | ✅ |  |
 | `store status` |  | ✅ |  |
 | `store fetch` |  | ✅ |  |
 | `store fetch` | `--all` | ⛔ | cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0) |

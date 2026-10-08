@@ -1477,6 +1477,22 @@ max messages unpin <chat> <message>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the message id. |
 
+### `max messages press`
+
+press a bot's button under a message; the bot sees that you pressed it
+
+**Меняет что-то в MAX.**
+
+```sh
+max messages press <chat> <message> <button>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `message` | обязательный | the id of the message with the buttons. |
+| `button` | обязательный | its number as `messages show` prints it, or its exact text. |
+
 ## `max store`
 
 the local store of messages

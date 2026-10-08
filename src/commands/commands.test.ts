@@ -93,6 +93,7 @@ describe("max commands", () => {
       "messages forward",
       "messages pin",
       "messages unpin",
+      "messages press",
       "polls vote",
       "polls close",
       "polls create",

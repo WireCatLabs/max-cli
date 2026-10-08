@@ -16,6 +16,7 @@ import {
   POLL_CLOSED,
   pollSettings,
   SETTING_FLAGS,
+  toButtons,
   toCallRecord,
   toChat,
   toContact,
@@ -36,6 +37,7 @@ import {
 import type {
   AccountSession,
   AttachmentLink,
+  Button,
   CallRecord,
   Chat,
   ChatCard,
@@ -858,6 +860,45 @@ export class MaxClient {
   }
 
   readonly messages = {
+    /** A bot's keyboard under one message, row by row; `[]` for a message without one. */
+    buttons: async (chatId: Id, messageId: Id): Promise<Button[][]> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; ask MAX instead")
+      await this.#connectOnce()
+      const keyboard = keyboardOf(await this.#rawMessage(chatId, messageId))
+      return keyboard ? toButtons(keyboard) : []
+    },
+
+    /** Presses one callback button; the bot learns who pressed it. Only the attach's handle and the button's payload go. */
+    press: async (chatId: Id, messageId: Id, row: number, column: number): Promise<void> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot press")
+      await this.#guard({ chatId, kind: "reaction", key: "messages.press" }, messageId)
+      try {
+        await this.#connectOnce()
+        const keyboard = keyboardOf(await this.#rawMessage(chatId, messageId))
+        const rows = record(keyboard?.keyboard)?.buttons
+        const button = record(Array.isArray(rows) && Array.isArray(rows[row]) ? rows[row][column] : undefined)
+        if (!keyboard || typeof keyboard.callbackId !== "string" || !button)
+          throw new CliError("not_found", `message ${messageId} has no such button`)
+        if (button.type !== "CALLBACK") throw new CliError("validation_error", "only a callback button can be pressed")
+        await this.#wire.messages.press({
+          callbackId: keyboard.callbackId,
+          type: "CALLBACK",
+          ...(typeof button.payload === "string" && button.payload !== "" ? { payload: button.payload } : {}),
+          timestamp: Date.now(),
+        })
+        this.#sends?.record({ chatId, kind: "reaction", outcome: "sent", messageId })
+      } catch (error) {
+        this.#sends?.record({
+          chatId,
+          kind: "reaction",
+          outcome: "failed",
+          messageId,
+          errorCode: asCliError(error).code,
+        })
+        throw error
+      }
+    },
+
     /**
      * The chat's queue of scheduled messages, soonest first. Read-only: cancelling is `MSG_DELETE`,
      * which nothing here sends. Never cached — the queue empties by itself as messages go out.
@@ -3014,6 +3055,9 @@ const CONFIG_CHANGED = 134
 const CHAT_FACTS = ["title", "description", "participantsCount", "status", "type", "baseIconUrl", "owner"]
 /** Messages deleted (140 in PyMax, 142 in the web client): the snapshot cannot follow them. */
 const CHANGES_CHATS = new Set([140, 142])
+
+const keyboardOf = (raw: Payload): Payload | undefined =>
+  asArray(raw.attaches).find((attach) => attach._type === "INLINE_KEYBOARD")
 
 const isPresent = <T>(value: T | null | undefined): value is T => value !== null && value !== undefined
 

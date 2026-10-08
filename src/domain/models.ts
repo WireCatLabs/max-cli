@@ -4,7 +4,7 @@
  * Everything above the adapter speaks these types.
  */
 
-import type { Chat, Contact, Id, Member, Reactions, ChatCard as SharedChatCard } from "@leemour/cli-messaging"
+import type { Button, Chat, Contact, Id, Member, Reactions, ChatCard as SharedChatCard } from "@leemour/cli-messaging"
 
 /**
  * The shared model where MAX says the same thing; below, only what MAX says differently or alone.
@@ -20,6 +20,8 @@ export type {
   AccountSession,
   AttachmentLink,
   Audience,
+  Button,
+  ButtonKind,
   CallRecord,
   Chat,
   ChatEvent,
@@ -66,6 +68,8 @@ export interface Attachment {
   userIds?: Id[]
   /** Absent on a `poll` newer than the version measured (`version` above 2). */
   poll?: Poll
+  /** A bot's keyboard, row by row (`inline_keyboard`). */
+  buttons?: Button[][]
 }
 
 /** A poll as the owner sees it. The settings bits are unpacked here and nowhere else. */

@@ -96,6 +96,7 @@ export const wireClient = (invoke: Invoke) => ({
     send: (request: RequestOf<(typeof OPERATIONS)["messages.send"]>) => invoke(OPERATIONS["messages.send"], request),
     edit: (request: RequestOf<(typeof OPERATIONS)["messages.edit"]>) => invoke(OPERATIONS["messages.edit"], request),
     react: (request: RequestOf<(typeof OPERATIONS)["messages.react"]>) => invoke(OPERATIONS["messages.react"], request),
+    press: (request: RequestOf<(typeof OPERATIONS)["messages.press"]>) => invoke(OPERATIONS["messages.press"], request),
     unreact: (request: RequestOf<(typeof OPERATIONS)["messages.unreact"]>) =>
       invoke(OPERATIONS["messages.unreact"], request),
     pollVote: (request: RequestOf<(typeof OPERATIONS)["messages.pollVote"]>) =>

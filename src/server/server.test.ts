@@ -739,6 +739,33 @@ describe("a command through max serve", () => {
     ])
   })
 
+  it("passes a button press on, though its request names no chat", async () => {
+    const keyboard = {
+      _type: "INLINE_KEYBOARD",
+      callbackId: "cb-1",
+      keyboard: { buttons: [[{ type: "CALLBACK", text: "Yes", payload: "yes" }]] },
+    }
+    const { store, max } = await serve(
+      "c-press",
+      scripted({
+        [Opcode.CHAT_HISTORY]: {
+          messages: [
+            { id: 116762160362694583n, time: 1789776000000, sender: 10000002, text: "?", attaches: [keyboard] },
+          ],
+        },
+        [Opcode.MSG_CALLBACK]: {},
+      }),
+    )
+
+    const { client } = commandClient(store)
+    await client.messages.press("111", "116762160362694583", 0, 0)
+    await client.close()
+
+    expect(max.sent.filter((call) => call.opcode === Opcode.MSG_CALLBACK).map((call) => call.payload)).toMatchObject([
+      { callbackId: "cb-1", type: "CALLBACK", payload: "yes" },
+    ])
+  })
+
   it("does not add a group looked at by its link to the chat list, nor tell watchers it changed", async () => {
     const elsewhere = { id: 222, title: "Elsewhere", type: "CHAT", participantsCount: 5 }
     const { store } = await serve("c-inspect", scripted({ [Opcode.LINK_INFO]: { chat: elsewhere } }))
