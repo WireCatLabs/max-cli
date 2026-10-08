@@ -29,6 +29,8 @@ import {
   toProfileFacts,
   toReactions,
   toSession,
+  toSticker,
+  toStickerSet,
 } from "./domain/map.js"
 import type {
   AccountSession,
@@ -62,6 +64,8 @@ import type {
   QuotedMessage,
   Reactions,
   ReadMark,
+  Sticker,
+  StickerSet,
   WindowedMessage,
 } from "./domain/models.js"
 import { type Invoke, wireClient } from "./generated/client.generated.js"
@@ -1058,6 +1062,8 @@ export class MaxClient {
         asFile?: boolean
         /** An Ogg Opus file sent as a voice message, alone in its message. */
         voice?: string
+        /** A sticker's id, sent alone as web.max.ru sends one: `{_type: "STICKER", stickerId}`. */
+        sticker?: Id
         anyFile?: boolean
         at?: number
         /** Files already read and checked by the caller — the shared services read their own. */
@@ -1071,6 +1077,8 @@ export class MaxClient {
         // MAX kept a caption beside a voice message (measured 2026-09-27), but web.max.ru never sends one; §34.
         throw new CliError("validation_error", "a voice message goes alone — no text and no --file beside it")
       }
+      if (options.sticker !== undefined && (text !== "" || (options.files ?? []).length > 0 || options.voice))
+        throw new CliError("validation_error", "a sticker goes alone — no text, no file, no photo")
       if (options.at !== undefined && options.notify === false) {
         // The web client always sends a scheduled message with `notify: true`; §34.
         throw new CliError(
@@ -1126,7 +1134,8 @@ export class MaxClient {
         ...(options.at === undefined ? {} : { scheduledFor: new Date(options.at).toISOString() }),
       }
       try {
-        const sent = await this.#deliver(chatId, text, cid, { ...options, files })
+        const sticker = options.sticker === undefined ? [] : [{ _type: "STICKER", stickerId: Number(options.sticker) }]
+        const sent = await this.#deliver(chatId, text, cid, { ...options, files, attaches: sticker })
         this.#sends?.record({ chatId, outcome: "sent", messageId: sent.id, sendId, length: text.length, ...summary })
         return sent
       } catch (error) {
@@ -1499,6 +1508,29 @@ export class MaxClient {
     if (poll.closed) throw new CliError("validation_error", `the poll of message ${messageId} is closed`)
     const lookup = { names: namesFrom(this.#session().contacts), ...viewer(this.#store) }
     return { attach, poll, outgoing: toMessage(raw, chatId, lookup).outgoing === true }
+  }
+
+  /** What the account has added, as web.max.ru reads it: the sections' set ids, then the sets, then their stickers. */
+  readonly stickers = {
+    sets: async (): Promise<StickerSet[]> => {
+      await this.#connectOnce()
+      const sections = asArray((await this.#wire.assets.update({ type: "STICKER", sync: 0 })).sections)
+      const ids = [...new Set(sections.flatMap((section) => numbers(record(section)?.stickerSets)))]
+      if (ids.length === 0) return []
+      const answer = await this.#wire.assets.byIds({ type: "STICKER_SET", ids })
+      return asArray(answer.stickerSets).map((raw) => toStickerSet(record(raw) ?? {}))
+    },
+
+    list: async (setId: Id): Promise<Sticker[]> => {
+      await this.#connectOnce()
+      const [set] = asArray((await this.#wire.assets.byIds({ type: "STICKER_SET", ids: [Number(setId)] })).stickerSets)
+      if (set === undefined)
+        throw new CliError("not_found", `no sticker set ${setId} — \`stickers list\` names the sets`)
+      const ids = numbers(record(set)?.stickers)
+      if (ids.length === 0) return []
+      const answer = await this.#wire.assets.byIds({ type: "STICKER", ids })
+      return asArray(answer.stickers).map((raw) => toSticker(record(raw) ?? {}))
+    },
   }
 
   readonly folders = {
@@ -3111,5 +3143,8 @@ const pickFolder = (reference: string, folders: Payload[]): Payload => {
   }
   throw new CliError("not_found", `no folder "${wanted}" — \`max chats folders list\` shows them`)
 }
+
+/** A list of ids MAX sends as plain numbers; `asArray` keeps only objects. */
+const numbers = (value: unknown): number[] => (Array.isArray(value) ? value.map(Number).filter(Number.isFinite) : [])
 
 const MEDIA_TYPES = { photo: "PHOTO", video: "VIDEO", file: "FILE", audio: "AUDIO", link: "SHARE" } as const

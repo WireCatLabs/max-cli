@@ -47,6 +47,7 @@ import { serverCommand } from "./commands/server.js"
 import { sessionCommand } from "./commands/session.js"
 import { setupCommand } from "./commands/setup.js"
 import { skillCommand } from "./commands/skill.js"
+import { stickersCommand } from "./commands/stickers.js"
 import { upgradeCommand } from "./commands/upgrade.js"
 import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
@@ -76,6 +77,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     setupCommand(),
     accountCommand(),
     callsCommand(),
+    stickersCommand(),
     chatsCommand(),
     contactsCommand(),
     messagesCommand(),

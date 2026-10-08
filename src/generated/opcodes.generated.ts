@@ -17,6 +17,7 @@ export const Opcode = {
   SYNC: 21,
   CONFIG: 22,
   ASSETS_UPDATE: 27,
+  ASSETS_GET_BY_IDS: 28,
   CONTACT_INFO: 32,
   CONTACT_UPDATE: 34,
   /**

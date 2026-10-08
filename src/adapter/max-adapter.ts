@@ -44,6 +44,8 @@ export type MaxAdapter = MessengerAdapter &
       | "calls"
       | "privacy"
       | "media"
+      | "stickerSets"
+      | "stickers"
       | "mute"
       | "updatePrivacy"
       | "orderFolders"
@@ -276,6 +278,8 @@ export const maxAdapter = (
     mute: (chatId, until) => client.account.mute(chatId, until),
     updatePrivacy: (change) => client.account.updatePrivacy(change),
     media: (chatId, { kinds, limit, before }) => client.messages.media(chatId, kinds, limit, before),
+    stickerSets: () => client.stickers.sets(),
+    stickers: (setId) => client.stickers.list(setId),
 
     people: (references) => client.people(references),
     addContact: async (id) => toMember(await client.contacts.add(id)),
@@ -298,7 +302,18 @@ export const maxAdapter = (
       })),
 
     send: async (to, text, options: SendOptions & { threadId?: string }) => {
-      const { sendId, replyTo, silent, noPreview, markup = [], formatting, at, attachments = [], threadId } = options
+      const {
+        sendId,
+        replyTo,
+        silent,
+        noPreview,
+        markup = [],
+        formatting,
+        at,
+        attachments = [],
+        threadId,
+        sticker,
+      } = options
       if (threadId !== undefined) throw new CliError("validation_error", "MAX does not support forum topic addressing")
       if (noPreview) {
         throw new CliError("validation_error", "MAX's own client has no way to send a link without its preview")
@@ -314,6 +329,7 @@ export const maxAdapter = (
         ...(attachments.length === 0
           ? {}
           : { uploads: attachments.map((upload) => ({ ...upload, kind: uploadKind(upload) })) }),
+        ...(sticker === undefined ? {} : { sticker }),
       })
       return { message: toMessage(message), sendId }
     },

@@ -576,6 +576,8 @@ max account update --description "о себе"   # имя остаётся пр�
 max account update --photo портрет.png      # новое фото профиля
 max account sessions list                   # где ещё выполнен вход
 max account privacy show                    # кто находит по номеру, звонит, добавляет в чаты
+max stickers list                           # наборы стикеров; --set <id> — стикеры набора с их id
+max messages send 0 --sticker 51            # стикер, один, без текста
 max account privacy set --calls contacts    # звонить могут только контакты; остальное не меняется
 max account privacy set --hide-online on    # скрыть «в сети» и «был недавно»
 max chats mute "Поход"                      # без уведомлений из чата, насовсем

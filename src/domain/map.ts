@@ -20,6 +20,8 @@ import type {
   ProfileFacts,
   QuotedMessage,
   Reactions,
+  Sticker,
+  StickerSet,
 } from "./models.js"
 
 /**
@@ -281,6 +283,20 @@ export const fromPrivacy = (change: PrivacySettings): Record<string, string | bo
     }).filter(([, value]) => value !== undefined),
   ) as Record<string, string | boolean>
 }
+
+export const toStickerSet = (raw: Payload): StickerSet => ({
+  id: asId(raw.id) ?? "",
+  title: typeof raw.name === "string" ? raw.name : "",
+  count: Array.isArray(raw.stickers) ? raw.stickers.length : 0,
+  link: typeof raw.link === "string" && raw.link !== "" ? raw.link : null,
+})
+
+export const toSticker = (raw: Payload): Sticker => ({
+  id: asId(raw.id) ?? "",
+  setId: asId(raw.setId) ?? null,
+  emoji: Array.isArray(raw.tags) ? raw.tags.filter((tag): tag is string => typeof tag === "string") : [],
+  url: typeof raw.url === "string" && raw.url !== "" ? raw.url : null,
+})
 
 /** The names a login response carries, so a message can name its sender without another request. */
 export const namesFrom = (contacts: unknown): Map<Id, string> => {

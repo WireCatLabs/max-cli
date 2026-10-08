@@ -73,6 +73,7 @@ export const wireClient = (invoke: Invoke) => ({
   },
   assets: {
     update: (request: RequestOf<(typeof OPERATIONS)["assets.update"]>) => invoke(OPERATIONS["assets.update"], request),
+    byIds: (request: RequestOf<(typeof OPERATIONS)["assets.byIds"]>) => invoke(OPERATIONS["assets.byIds"], request),
   },
   chats: {
     history: (request: RequestOf<(typeof OPERATIONS)["chats.history"]>) => invoke(OPERATIONS["chats.history"], request),

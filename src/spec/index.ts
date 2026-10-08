@@ -1,6 +1,6 @@
 import type { Entry, Operation, Reservation } from "./define.js"
 import { accountCloseSessions, accountSessions, accountSettings, accountUpdate } from "./operations/account.js"
-import { assetsUpdate } from "./operations/assets.js"
+import { assetsByIds, assetsUpdate } from "./operations/assets.js"
 import { attachmentsFile, attachmentsVideo } from "./operations/attachments.js"
 import { bannersList } from "./operations/banners.js"
 import { callsHistory } from "./operations/calls.js"
@@ -81,6 +81,7 @@ export const spec: readonly Entry[] = [
   bannersList,
   callsHistory,
   assetsUpdate,
+  assetsByIds,
   chatsHistory,
   chatsMark,
   chatsList,
