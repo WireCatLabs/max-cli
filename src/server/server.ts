@@ -304,6 +304,8 @@ export class MaxServer {
   }
 
   #pushed(client: MaxClient, opcode: number, payload: Record<string, unknown>): void {
+    const whole = objectOf(payload.chat)
+    const news = whole.id === undefined || client.live.news(whole)
     if (!client.live.patch(opcode, payload)) this.#goneStale()
     // In arrival order: an edit waits on a name lookup, and must not reach a watcher after the deletion behind it.
     this.#handing = this.#handing.then(async () => {
@@ -314,7 +316,7 @@ export class MaxServer {
           this.#broadcast({ event: "message", message })
         }
         const change = await client.live.change(opcode, payload)
-        if (change) this.#broadcast({ event: "change", change })
+        if (change && (change.event !== "chat" || news)) this.#broadcast({ event: "change", change })
       } catch (error) {
         this.#options.note(`a pushed message could not be read: ${(error as Error).message}`)
       }
