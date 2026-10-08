@@ -145,13 +145,37 @@ describe("the MAX adapter", () => {
     expect(sent(Opcode.MSG_SEND)).toEqual([])
   })
 
+  it("refreshes counters by exact message with no send or read mark", async () => {
+    const { adapter, sent, client } = connected({
+      [Opcode.CHAT_HISTORY]: {
+        messages: [
+          {
+            id: BigInt(MESSAGE),
+            time: 1789776000000,
+            sender: OWNER,
+            text: "Synthetic",
+            attaches: [],
+            stats: { views: 0 },
+          },
+        ],
+      },
+    })
+    const counters = await adapter.fetchCounters?.("111", MESSAGE, ["views", "reactions"])
+    expect(counters).toMatchObject({ views: { value: 0, source: "remote_fetch", observedAt: expect.any(String) } })
+    expect(sent(Opcode.MSG_SEND)).toEqual([])
+    expect(sent(Opcode.CHAT_MARK)).toEqual([])
+    await client.close()
+  })
+
   it("answers history as the client does, MAX's own attachment ids kept as the provider's", async () => {
     const { adapter, client } = connected()
 
     const page = await adapter.history("Friends", { limit: 5 })
     const direct = await client.messages.list("111", { limit: 5 })
 
-    expect(page.items).toEqual(direct.items.map(toMessage))
+    expect(page.items.map(({ counterObservations: _observations, ...message }) => message)).toEqual(
+      direct.items.map(toMessage),
+    )
     expect(page.items[0]?.attachments).toMatchObject([
       { kind: "photo" },
       { kind: "file", name: "notes.pdf", providerRef: { fileId: "77" } },

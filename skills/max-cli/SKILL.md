@@ -437,8 +437,7 @@ max tags remove news --chat CHAT_ID --source auto
 
 Рейтинги архива: `max stats messages top` / `max stats contacts top` — метрика `--measure` или
 `--score helpful|active|engaging`; оценки используют всю допустимую выборку до limit.
-Читай coverage/quality и исключения: неизвестные счётчики не равны нулю, свежесть снимков
-неизвестна. Используй drilldown.selection для `stats messages evidence` / `stats contacts evidence`,
+Читай coverage/quality и исключения: неизвестные счётчики не равны нулю, свежесть наблюдений показана по полям; старые значения остаются unknown. Используй drilldown.selection для `stats messages evidence` / `stats contacts evidence`,
 продолжай через nextCursor; при изменении данных начни без cursor.
 Руководство: [рейтинги](https://github.com/leemour/max-cli/blob/main/docs/rankings.md).
 
@@ -461,3 +460,15 @@ max tags remove news --chat CHAT_ID --source auto
 Целые изображения возвращаются как image, прочие файлы — resource; format:base64 — запасной путь.
 Приём байтов не делает OCR и не индексирует текст: прочитайте все страницы своими средствами,
 затем attachments text set и проверка content:. PDF/сохранение файлов зависят от возможностей клиента.
+
+Удержание: `max stats chats retention <chat> --checkpoints 1d,7d,30d --within 7d --json`.
+Используй только известные joinedAt; partial absence и пропущенные снимки — unknown, будущие окна — pending.
+Показывай observable знаменатель, неизвестные и фактическую дату снимка; не называй это непрерывным участием.
+Cohort drilldown идёт через `stats messages evidence --component report` с точной selection.
+
+Счётчики: `max stats messages counters show --chat <chat> --counters views,reactions --json`.
+Проверяй observedAt/source/freshness каждого поля (24h по умолчанию). Refresh — remote read + local write:
+`stats messages counters refresh --chat <chat> --max-messages 20 --sync-time 30s --dry-run --json`.
+Предпросмотр не подключается. Реальный refresh требует разрешённой записи и явного chat или pinned selection;
+никогда не освежай весь аккаунт неявно. MAX поддерживает views/reactions; comments unsupported.
+Не отправляй, не отмечай прочтение и не вызывай increment views. Сохранённые значения без наблюдения — unknown.
