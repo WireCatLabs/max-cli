@@ -8,6 +8,8 @@
 
 ### Что нового
 
+- **Стикеры: `max stickers list` и `max messages send --sticker <id>`.** Список — ваши наборы, с `--set <id>` — стикеры
+  набора с их id. Стикер уходит один, без текста и файлов, как в MAX.
 - **`max chats mute` и `max chats unmute` — уведомления из чата**: насовсем или `--until 8h`. Меняется только у
   вас, участники ничего не видят.
 - **`max account privacy set`** меняет приватность: `--find-by-phone`, `--phone-number`, `--calls`,

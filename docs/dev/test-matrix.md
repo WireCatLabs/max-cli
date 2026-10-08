@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**844 ✅ · 107 ⛔ · 0 ❌** — 293 commands, 658 options.
+**847 ✅ · 107 ⛔ · 0 ❌** — 294 commands, 660 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -35,6 +35,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `account privacy set` | `--hide-online` | ✅ |  |
 | `calls list` |  | ✅ |  |
 | `calls list` | `--limit` | ✅ |  |
+| `stickers list` |  | ✅ |  |
+| `stickers list` | `--set` | ✅ |  |
 | `chats list` |  | ✅ |  |
 | `chats list` | `--limit` | ✅ |  |
 | `chats list` | `--page` | ✅ |  |
@@ -217,6 +219,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages send` | `--voice` | ✅ |  |
 | `messages send` | `--allow-any-file` | ✅ |  |
 | `messages send` | `--at-time` | ✅ |  |
+| `messages send` | `--sticker` | ✅ |  |
 | `messages scheduled` |  | ✅ |  |
 | `messages edit` |  | ✅ |  |
 | `messages edit` | `--md` | ✅ |  |

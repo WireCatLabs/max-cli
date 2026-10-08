@@ -191,6 +191,22 @@ max calls list [options]
 |---|---|
 | `--limit <n>` | how many to show. |
 
+## `max stickers`
+
+the stickers the account has added
+
+### `max stickers list`
+
+sticker sets, or with --set the stickers in one; reading changes nothing
+
+```sh
+max stickers list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--set <id>` | the stickers in this set. |
+
 ## `max chats`
 
 the chats this account is in
@@ -1303,6 +1319,7 @@ max messages send <chat> [text] [options]
 | `--voice <file>` | send an Ogg Opus file as a voice message, alone, with no text. |
 | `--allow-any-file` | send a file even from a hidden folder, \~/.ssh or this CLI's own folders. |
 | `--at-time <time>` | let the messenger send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now. |
+| `--sticker <id>` | send this sticker, alone; `stickers list` finds its id. |
 
 ### `max messages scheduled`
 

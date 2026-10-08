@@ -38,6 +38,8 @@ export type {
   ProfileFacts,
   Reactions,
   ReadMark,
+  Sticker,
+  StickerSet,
 } from "@leemour/cli-messaging"
 
 export interface Attachment {
