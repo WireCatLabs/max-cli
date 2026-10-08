@@ -803,6 +803,7 @@ describe("the program", () => {
             { id: 10000003, names: [{ name: "Another Person", type: "FULL_NAME" }] },
           ],
         },
+        [Opcode.CONTACT_PRESENCE]: { presence: { "10000002": { seen: 1789776000 } }, time: 1789776100 },
       })
       const shown = await runWith(["t-profile", "contacts", "profile", "@someone", "--json"], environment)
 
@@ -815,6 +816,10 @@ describe("the program", () => {
         registered: { at: "2020-09-13T12:26:40.000Z", source: "max", precision: "day" },
         hasPhoto: true,
         flags: {},
+        seen: "2026-09-19T00:00:00.000Z",
+      })
+      expect(max.sent.find((call) => call.opcode === Opcode.CONTACT_PRESENCE)?.payload).toEqual({
+        contactIds: [10000002],
       })
       expect(profile.chats.map((one: { id: string; kind: string }) => [one.id, one.kind])).toEqual([
         ["111", "group"],

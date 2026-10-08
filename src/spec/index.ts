@@ -17,7 +17,14 @@ import {
   chatsUpdate,
   chatsUpdateMembers,
 } from "./operations/chats.js"
-import { contactsByPhone, contactsImport, contactsInfo, contactsUpdate, unidentified36 } from "./operations/contacts.js"
+import {
+  contactsByPhone,
+  contactsImport,
+  contactsInfo,
+  contactsPresence,
+  contactsUpdate,
+  unidentified36,
+} from "./operations/contacts.js"
 import { foldersDelete, foldersList, foldersReorder, foldersUpdate } from "./operations/folders.js"
 import {
   loginByQr,
@@ -67,6 +74,7 @@ export const spec: readonly Entry[] = [
   loginSmsCode,
   loginPassword,
   contactsInfo,
+  contactsPresence,
   contactsByPhone,
   contactsUpdate,
   contactsImport,

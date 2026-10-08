@@ -20,6 +20,7 @@ export const Opcode = {
   ASSETS_GET_BY_IDS: 28,
   CONTACT_INFO: 32,
   CONTACT_UPDATE: 34,
+  CONTACT_PRESENCE: 35,
   /**
    * **Declared, never sent.** Nobody agrees what it is: tsmax and PyMax call it `CONTACT_LIST`; the protocol
    * documentation calls it `GET_BLOCKED`. Sent once with the owner's permission on 2026-09-20 and it exists — but it

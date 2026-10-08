@@ -192,6 +192,12 @@ export const toProfileFacts = (raw: Payload, chats: ProfileFacts["chats"]): Prof
   }
 }
 
+/** One person's entry of opcode 35 `{seen, status?}`; `status` 1 is online in the tab's code, never measured. */
+export const toSeen = (raw: Payload | undefined): ProfileFacts["seen"] => {
+  if (raw?.status === 1) return "online"
+  return timestamp(inMilliseconds(raw?.seen)) ?? undefined
+}
+
 /** Seconds and milliseconds since 1970 differ by three orders: before 2001 in ms is a time in seconds. */
 const inMilliseconds = (value: unknown): number | null => {
   const n = count(value)

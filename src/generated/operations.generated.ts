@@ -18,7 +18,13 @@ import {
   chatsUpdate,
   chatsUpdateMembers,
 } from "../spec/operations/chats.js"
-import { contactsByPhone, contactsImport, contactsInfo, contactsUpdate } from "../spec/operations/contacts.js"
+import {
+  contactsByPhone,
+  contactsImport,
+  contactsInfo,
+  contactsPresence,
+  contactsUpdate,
+} from "../spec/operations/contacts.js"
 import { foldersDelete, foldersList, foldersReorder, foldersUpdate } from "../spec/operations/folders.js"
 import {
   loginByQr,
@@ -56,6 +62,7 @@ export const OPERATIONS = {
   "login.smsCode": loginSmsCode,
   "login.password": loginPassword,
   "contacts.info": contactsInfo,
+  "contacts.presence": contactsPresence,
   "contacts.byPhone": contactsByPhone,
   "contacts.update": contactsUpdate,
   "contacts.import": contactsImport,

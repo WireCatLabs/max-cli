@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { namesFrom, toChat, toGroupMember, toMessage, toProfile } from "./map.js"
+import { namesFrom, toChat, toGroupMember, toMessage, toProfile, toSeen } from "./map.js"
 
 /**
  * Field names are from a real MAX response, observed 2026-09-19; every **value** here is invented.
@@ -250,5 +250,14 @@ describe("namesFrom", () => {
 
   it("is empty rather than broken when there are no contacts", () => {
     expect(namesFrom(undefined).size).toBe(0)
+  })
+})
+
+describe("toSeen", () => {
+  it("reads seen in seconds, takes status 1 as online, and says nothing when MAX did not", () => {
+    expect(toSeen({ seen: 1789776000 })).toBe("2026-09-19T00:00:00.000Z")
+    expect(toSeen({ seen: 1789776000, status: 1 })).toBe("online")
+    expect(toSeen({})).toBeUndefined()
+    expect(toSeen(undefined)).toBeUndefined()
   })
 })
