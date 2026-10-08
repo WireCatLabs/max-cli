@@ -2440,7 +2440,7 @@ the files of stored messages: their text in the local store, for content: in a s
 
 ### `max attachments extract`
 
-read the text of downloaded files — plain text, Word, PDF with a text layer — into the local store, for content: in a search
+read the text of downloaded files — text, PDF/DOCX text layers, ODT/ODS/XLSX/PPTX/EPUB — into the local store, for content: in a search
 
 ```sh
 max attachments extract [options]
@@ -2472,6 +2472,26 @@ max attachments list [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
+
+### `max attachments show`
+
+read a bounded chunk of one retained attachment; JSON includes base64 bytes
+
+```sh
+max attachments show <chat> [message] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator alone. |
+| `message` | необязательный | the message id. |
+
+| Опция | Что делает |
+|---|---|
+| `--attachment <n>` | file position from 1; required for several files. |
+| `--offset-bytes <n>` | byte offset from 0. |
+| `--chunk-bytes <n>` | bytes to return, 1–1048576 (default524288). |
+| `--if-sha256 <hash>` | require the whole file SHA-256 from the preceding chunk. |
 
 ### `max attachments text`
 
