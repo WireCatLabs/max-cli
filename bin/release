@@ -47,6 +47,14 @@ git merge -q --ff-only origin/main
 [ "$(git rev-parse HEAD)" = "$before" ] || exec ./bin/release "$@"
 # The workflow publishes origin/main, so a local commit not pushed yet would silently not ship.
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main is ahead of origin/main — push first" >&2; exit 1; }
+# One release at a time on this machine, across every package: two sessions published at once on 2026-10-08.
+lock="${XDG_RUNTIME_DIR:-/tmp}/leemour-release.lock"; exec 9>"$lock"; flock -n 9 || { echo "another release is running: $(cat "$lock.who" 2>/dev/null)" >&2; exit 1; }; echo "$(basename "$PWD") pid $$ since $(date -u +%H:%M)" > "$lock.who"
+# Two hours between releases, so a broken one is noticed before the next lands on top of it.
+times=$(npm view "@leemour/max-cli" time --json --prefer-online 2>/dev/null || echo '{}')
+opens=$(node -e 'const t = JSON.parse(process.argv[1]); delete t.created; delete t.modified
+  const opens = Math.max(0, ...Object.values(t).map(Date.parse)) + 2 * 3600e3
+  if (Date.now() < opens) console.log(new Date(opens).toISOString().slice(11, 16) + " UTC")' "$times")
+[ -z "$opens" ] || { echo "the last release was under two hours ago — the next may start at $opens" >&2; exit 1; }
 
 version=$(node -p 'require("./package.json").version')
 # `npm view` rather than a curl of the registry document: that document is served through a CDN
