@@ -9,7 +9,7 @@ import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
-import { mockMax } from "./testing/mock-max.js"
+import { type MockMaxOptions, mockMax } from "./testing/mock-max.js"
 
 const OWNER = 10000001
 const BOT = 234377933
@@ -35,8 +35,9 @@ const keyboard = {
   },
 }
 
-const messenger = () => {
+const messenger = (extra: MockMaxOptions["answers"] = {}, refuse: MockMaxOptions["refuse"] = {}) => {
   const max = mockMax({
+    refuse,
     answers: {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: {
@@ -63,6 +64,7 @@ const messenger = () => {
           : { user: { contact: { id: 10000002, options: ["ONEME"] } } },
       [Opcode.CONTACT_INFO]: { contacts: [] },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
+      ...extra,
     },
   })
   const keyring = memoryKeyring()
@@ -139,6 +141,51 @@ describe("a bot's buttons on the personal account", () => {
           attaches: [{ _type: "CONTROL", event: "botStarted", startPayload: "ref1" }],
         },
       },
+    ])
+  })
+
+  it("reports a lost bot-start answer as unknown without repeating the write", async () => {
+    const { environment, sentWith } = messenger({ [Opcode.MSG_SEND]: () => undefined })
+    const lost = await runWith(["b-start-lost", "chats", "start", "111"], environment)
+
+    expect(lost.code).toBe(14)
+    const { error } = JSON.parse(lost.stderr)
+    expect(error).toMatchObject({ code: "outcome_unknown", retryable: false })
+    expect(sentWith(Opcode.MSG_SEND)).toHaveLength(1)
+    expect(new SendJournal(sendsPathFor("b-start-lost")).entries()).toMatchObject([
+      { kind: "message", outcome: "outcome_unknown", sendId: expect.any(String) },
+    ])
+  })
+
+  it("reports a lost callback answer as unknown and never automatically presses twice", async () => {
+    const { environment, sentWith } = messenger({ [Opcode.MSG_CALLBACK]: () => undefined })
+    const lost = await runWith(["b-press-lost", "messages", "press", "111", MESSAGE, "Yes"], environment)
+
+    expect(lost.code).toBe(14)
+    expect(JSON.parse(lost.stderr).error).toMatchObject({ code: "outcome_unknown", retryable: false })
+    expect(sentWith(Opcode.MSG_CALLBACK)).toHaveLength(1)
+    expect(new SendJournal(sendsPathFor("b-press-lost")).entries()).toMatchObject([
+      { kind: "reaction", outcome: "outcome_unknown", messageId: MESSAGE },
+    ])
+  })
+
+  it("keeps a failed keyboard read as timeout when no button press was attempted", async () => {
+    const { environment, sentWith } = messenger({ [Opcode.CHAT_HISTORY]: () => undefined })
+    const failed = await runWith(["b-read-lost", "messages", "press", "111", MESSAGE, "Yes"], environment)
+
+    expect(JSON.parse(failed.stderr).error.code).toBe("timeout")
+    expect(sentWith(Opcode.MSG_CALLBACK)).toEqual([])
+  })
+
+  it("keeps an explicit callback rejection as a known failure", async () => {
+    const { environment, sentWith } = messenger({}, { [Opcode.MSG_CALLBACK]: "proto.payload" })
+    const failed = await runWith(["b-press-rejected", "messages", "press", "111", MESSAGE, "Yes"], environment)
+
+    expect(failed.code).not.toBe(0)
+    expect(JSON.parse(failed.stderr).error.code).not.toBe("outcome_unknown")
+    expect(sentWith(Opcode.MSG_CALLBACK)).toHaveLength(1)
+    expect(new SendJournal(sendsPathFor("b-press-rejected")).entries()).toMatchObject([
+      { kind: "reaction", outcome: "failed" },
     ])
   })
 

@@ -634,10 +634,21 @@ export class MaxClient {
           event: "botStarted",
           ...(payload === undefined ? {} : { startPayload: payload }),
         }
-        await this.#wire.messages.send({ chatId, message: { cid, attaches: [control] } })
-        this.#sends?.record({ chatId, kind: "message", outcome: "sent" })
+        await this.#botWrite(
+          () => this.#wire.messages.send({ chatId, message: { cid, attaches: [control] } }),
+          "the bot may already have started",
+          { sendId: cid },
+        )
+        this.#sends?.record({ chatId, kind: "message", sendId: String(cid), outcome: "sent" })
       } catch (error) {
-        this.#sends?.record({ chatId, kind: "message", outcome: "failed", errorCode: asCliError(error).code })
+        const failure = asCliError(error)
+        this.#sends?.record({
+          chatId,
+          kind: "message",
+          sendId: String(cid),
+          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
+          errorCode: failure.code,
+        })
         throw error
       }
     },
@@ -938,20 +949,27 @@ export class MaxClient {
         if (!keyboard || typeof keyboard.callbackId !== "string" || !button)
           throw new CliError("not_found", `message ${messageId} has no such button`)
         if (button.type !== "CALLBACK") throw new CliError("validation_error", "only a callback button can be pressed")
-        await this.#wire.messages.press({
-          callbackId: keyboard.callbackId,
-          type: "CALLBACK",
-          ...(typeof button.payload === "string" && button.payload !== "" ? { payload: button.payload } : {}),
-          timestamp: Date.now(),
-        })
+        const callbackId = keyboard.callbackId
+        await this.#botWrite(
+          () =>
+            this.#wire.messages.press({
+              callbackId,
+              type: "CALLBACK",
+              ...(typeof button.payload === "string" && button.payload !== "" ? { payload: button.payload } : {}),
+              timestamp: Date.now(),
+            }),
+          "the bot may already have received this button press",
+          { messageId },
+        )
         this.#sends?.record({ chatId, kind: "reaction", outcome: "sent", messageId })
       } catch (error) {
+        const failure = asCliError(error)
         this.#sends?.record({
           chatId,
           kind: "reaction",
-          outcome: "failed",
+          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
           messageId,
-          errorCode: asCliError(error).code,
+          errorCode: failure.code,
         })
         throw error
       }
@@ -1763,6 +1781,20 @@ export class MaxClient {
         errorCode: asCliError(error).code,
       })
       throw error
+    }
+  }
+
+  async #botWrite(action: () => Promise<unknown>, uncertain: string, details: Record<string, unknown>): Promise<void> {
+    try {
+      await action()
+    } catch (error) {
+      const failure = asCliError(error)
+      if (failure.code !== "timeout" && failure.code !== "network_error") throw error
+      throw new CliError(
+        "outcome_unknown",
+        `${uncertain} (${failure.message}) — check the bot's reply before repeating this action`,
+        { ...details, retryable: false },
+      )
     }
   }
 
