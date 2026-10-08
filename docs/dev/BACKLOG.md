@@ -185,3 +185,10 @@ which; the plan for it starts by saying so.
 
 - **DEBT-59** · ✅ completed 2026-10-08 ([#465](https://github.com/leemour/max-cli/pull/465)) · Native server tests wait for observed events; negative checks retain explicit observation windows.
 - Settings resolver adoption · ✅ implemented 2026-10-08 · Common resolution uses cli-messaging; MAX settings values, sources, scope restrictions and errors stay compatible.
+
+
+## Remote retained attachments
+
+- Remote AI file transfer · 🚧 `feat/remote-attachment-transfer` · Shared SDK744 implements
+  account/message-owned retained bytes, bounded chunks and SHA256; adopt published SDK190,
+  document agent OCR ingestion and verify CLI/MCP with synthetic files. No live/model calls.
