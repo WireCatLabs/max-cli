@@ -29,7 +29,8 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   dialog in the chat list today. The web client resolves the link and opens the chat before 64; measure that flow,
   and live-check `chats start` and `chats app` on a bot with a mini app.
 - **MAX-71** · P3 · Research: is 68 a message search or a chat-title search; public search (60); join requests —
-  PyMax/rumax send 59/77, our probe of 2026-09-24 got `{}` (FIND-249); retest with approval on, and on a channel.
+  a private group ignores `JOIN_REQUEST` and joins by link at once (measured 2026-10-08, `pnpm probe:join-requests`);
+  left: a public group and a channel.
 
 - **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
   numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
