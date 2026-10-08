@@ -215,6 +215,38 @@ describe("max serve", () => {
     ])
   })
 
+  it("hands on a read and a chat change, and not a mark-unread or a plain message (MAX-67)", async () => {
+    const { store, max } = await serve("s-chat-events")
+    const watch = watching(store)
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
+
+    max.push(130, { chatId: 111, userId: 10000002, mark: 1789776000000, unread: 0, setAsUnread: false }, 5)
+    max.push(130, { chatId: 111, userId: ME, mark: 1789776000000, unread: 1, setAsUnread: true }, 6)
+    max.push(
+      128,
+      { chatId: 111, message: { id: 116762160362694590n, time: 1789776002000, sender: 10000002, text: "x" } },
+      7,
+    )
+    max.push(135, { chat: { id: 111, title: "First", type: "CHAT", participantsCount: 1 } }, 8)
+    await waitUntil(() => watch.events.length === 4, "read, message and chat change")
+    await observeFor(50)
+    watch.stop()
+    await watch.listening
+
+    const changes = watch.events.filter((event) => event.event === "change")
+    expect(changes.map((event) => event.event === "change" && event.change)).toEqual([
+      {
+        event: "read",
+        chatId: "111",
+        chatTitle: "First",
+        userId: "10000002",
+        upToTime: new Date(1789776000000).toISOString(),
+        unreadCount: 0,
+      },
+      { event: "chat", chat: expect.objectContaining({ id: "111", participantsCount: 1, kind: "group" }) },
+    ])
+  })
+
   it("pings on its own interval", async () => {
     const { max } = await serve("s-ping", scripted(), { pingEveryMs: 10 })
     await waitUntil(() => max.sent.filter((call) => call.opcode === Opcode.PING).length >= 2, "two pings")
@@ -659,6 +691,47 @@ describe("a command through max serve", () => {
     await second.client.close()
 
     expect(chat).toMatchObject({ id: "111", title: "Renamed" })
+  })
+
+  it("takes a rename pushed as a service message as a chat change, and shows it to the next command", async () => {
+    const { store, max } = await serve("s-rename-push")
+    const watch = watching(store)
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
+
+    const renamed = { id: 111, title: "Renamed", type: "CHAT", lastEventTime: 1789776004000 }
+    const control = { id: 116762160362694591n, time: 1789776004000, sender: 10000002, attaches: [{ _type: "CONTROL" }] }
+    max.push(128, { chatId: 111, message: control, chat: renamed }, 5)
+    await waitUntil(() => watch.events.some((event) => event.event === "change"), "chat change")
+    watch.stop()
+    await watch.listening
+    const { client } = commandClient(store)
+    const [chat] = (await client.chats.list()).items
+    await client.close()
+
+    expect(watch.events.find((event) => event.event === "change")).toMatchObject({
+      change: { event: "chat", chat: { id: "111", title: "Renamed" } },
+    })
+    expect(chat).toMatchObject({ id: "111", title: "Renamed" })
+  })
+
+  it("does not add a group looked at by its link to the chat list, nor tell watchers it changed", async () => {
+    const elsewhere = { id: 222, title: "Elsewhere", type: "CHAT", participantsCount: 5 }
+    const { store } = await serve("c-inspect", scripted({ [Opcode.LINK_INFO]: { chat: elsewhere } }))
+    const watch = watching(store)
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
+
+    const first = commandClient(store)
+    await first.client.chats.inspect("https://max.ru/join/abc")
+    await first.client.close()
+    const second = commandClient(store)
+    const chats = (await second.client.chats.list()).items
+    await second.client.close()
+    await observeFor(50)
+    watch.stop()
+    await watch.listening
+
+    expect(chats.map((chat) => chat.id)).toEqual(["111"])
+    expect(watch.events.filter((event) => event.event === "change")).toEqual([])
   })
 
   it("shows the owner's own settings change to the next command: MAX pushes it only to other sessions", async () => {

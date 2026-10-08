@@ -1845,6 +1845,9 @@ export class MaxClient {
       if (opcode === NEW_MESSAGE) {
         const raw = record(payload.message)
         if (!raw || !chat) return false
+        // A rename arrives as a service message that carries the chat whole (measured 2026-10-08).
+        const whole = record(payload.chat)
+        if (whole && asId(whole.id) === chatId) Object.assign(chat, whole)
         const ours = viewerId !== undefined && asId(raw.sender) === viewerId
         chat.lastMessage = raw
         chat.lastEventTime = raw.time
@@ -1907,8 +1910,25 @@ export class MaxClient {
 
     /** An edit, a deletion or a reaction pushed by MAX, or `undefined` for anything else. */
     change: async (opcode: number, payload: Payload): Promise<MessageChange | undefined> => {
+      const whole = record(payload.chat)
+      if (opcode === CHAT_CHANGED || (opcode === NEW_MESSAGE && whole)) {
+        return whole && asId(whole.id) !== undefined ? { event: "chat", chat: toChat(whole) } : undefined
+      }
       const chatId = asId(payload.chatId)
       if (chatId === undefined) return undefined
+      if (opcode === READ_MARK) {
+        const userId = asId(payload.userId)
+        // The same opcode marks a chat unread again; that is not somebody reading it.
+        if (userId === undefined || payload.setAsUnread === true) return undefined
+        return {
+          event: "read",
+          chatId,
+          chatTitle: await this.#chatTitle(chatId),
+          userId,
+          upToTime: typeof payload.mark === "number" && payload.mark > 0 ? new Date(payload.mark).toISOString() : null,
+          unreadCount: typeof payload.unread === "number" ? payload.unread : null,
+        }
+      }
       const raw = record(payload.message)
       if (opcode === NEW_MESSAGE && raw?.status === "EDITED") {
         const message = await this.#messageHit(payload)

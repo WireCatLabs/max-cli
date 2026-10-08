@@ -13,14 +13,18 @@ import { forCommand } from "./context.js"
  * `--jsonl` gives one message per line in the shape `messages list` uses, which is what a script,
  * an n8n node or an agent reads. It never marks anything read: the server only listens.
  *
- * `--events` adds edits, deletions and reactions (`MAX-34`), and then every line names its event —
+ * `--events` adds edits, deletions and reactions (`MAX-34`), reads and chat changes (`MAX-67`), and then
+ * every line names its event —
  * `{"event": "message", "message": …}` among them — so a reader of the plain stream, whose lines
  * are bare messages, never meets a line of another shape.
  */
 export const watchCommand = (): Command =>
   new Command("watch")
     .description("print new messages as they arrive, from a running `max serve`")
-    .option("--events", "also print edits, deletions and reactions; every line then names its event")
+    .option(
+      "--events",
+      "also print edits, deletions, reactions, reads and chat changes; every line then names its event",
+    )
     .action(async function (this: Command, options: { events?: boolean }) {
       const context = forCommand(this)
       const { renderer, settings, format, streams, store, run } = context
@@ -101,7 +105,11 @@ export const watchLine = (
 
 const describeChange = (change: MessageChange, render: (message: MessageHit) => string): string => {
   if (change.event === "edit") return `edited:\n${render(change.message)}`
+  if (change.event === "chat") return `chat changed: ${change.chat.title ?? change.chat.id}\n`
   const where = change.chatTitle ?? change.chatId
+  if (change.event === "read") {
+    return `read in ${where} by ${change.userId}${change.upToTime ? ` up to ${change.upToTime}` : ""}\n`
+  }
   if (change.event === "delete") return `deleted in ${where}: message ${change.messageId}\n`
   const counts = change.reactions.counts.map(({ reaction, count }) => `${reaction} ${count}`).join(", ")
   return `reactions in ${where} on message ${change.messageId}: ${counts || "none"}\n`

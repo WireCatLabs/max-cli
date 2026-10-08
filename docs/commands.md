@@ -3322,7 +3322,7 @@ max watch [options]
 
 | Опция | Что делает |
 |---|---|
-| `--events` | also print edits, deletions and reactions; every line then names its event. |
+| `--events` | also print edits, deletions, reactions, reads and chat changes; every line then names its event. |
 
 ## `max config`
 

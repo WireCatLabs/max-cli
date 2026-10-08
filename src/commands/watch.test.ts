@@ -17,4 +17,32 @@ describe("max watch lines", () => {
     expect(JSON.parse(watchLine({ event: "message", message }, events) ?? "")).toEqual({ event: "message", message })
     expect(JSON.parse(watchLine(edit, events) ?? "")).toMatchObject({ event: "edit", message: { text: "hi!" } })
   })
+
+  it("prints a read and a chat change in words, never as a new message", () => {
+    const pretty = { events: true, pretty: true, render: () => "" }
+    const read = {
+      event: "read",
+      chatId: "111",
+      chatTitle: "First",
+      userId: "7",
+      upToTime: "2026-10-08T09:00:00.000Z",
+      unreadCount: 0,
+    } as const
+    const chat = {
+      id: "111",
+      title: "Renamed",
+      kind: "group" as const,
+      unreadCount: 0,
+      lastMessageAt: null,
+      participantsCount: 3,
+    }
+
+    expect(watchLine({ event: "change", change: read }, pretty)).toBe(
+      "read in First by 7 up to 2026-10-08T09:00:00.000Z\n",
+    )
+    expect(watchLine({ event: "change", change: { event: "chat", chat } as const }, pretty)).toBe(
+      "chat changed: Renamed\n",
+    )
+    expect(watchLine({ event: "change", change: read }, { ...pretty, events: false })).toBeUndefined()
+  })
 })

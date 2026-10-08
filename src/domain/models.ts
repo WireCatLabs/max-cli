@@ -165,6 +165,20 @@ export type MessageChange =
   | { event: "edit"; message: MessageHit }
   | { event: "delete"; chatId: Id; chatTitle: string | null; messageId: Id }
   | { event: "reaction"; chatId: Id; chatTitle: string | null; messageId: Id; reactions: Reactions }
+  /**
+   * Somebody read a chat up to a message — the owner on another device too. MAX names the message by
+   * its time, not its id (opcode 130, measured 2026-10-08).
+   */
+  | {
+      event: "read"
+      chatId: Id
+      chatTitle: string | null
+      userId: Id
+      upToTime: string | null
+      unreadCount: number | null
+    }
+  /** A chat's title, members or the owner's membership changed; MAX sends the chat whole (135, or a 128 with it). */
+  | { event: "chat"; chat: Chat }
 
 /** A group's member as MAX lists them (`max chats members list`). */
 export interface GroupMember extends Member {

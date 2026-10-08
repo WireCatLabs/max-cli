@@ -25,7 +25,8 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **MAX-67** · P3 · Batch c: presence (35 + 132), read receipts (130), chat changes (135) in `watch --events`.
+- **MAX-67** · P3 · 🟡 · Batch c: reads and chat changes in `watch --events` shipped (#483); left: presence
+  (`online`, `lastSeenAt` on `contacts show`, from 35).
   Needs the inbound shapes from the web capture (NEED-822 A).
 - **MAX-70** · P2 · Batch f, bots on the personal account: inline keyboards in messages, `messages press` (118),
   `chats start` (64 `startPayload`), `chats app` (160; its init data is a credential).
