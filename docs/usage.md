@@ -718,7 +718,7 @@ max messages send 0 "встреча **в 15:00**, не _в 14_" --md
 
 ```sh
 max chats inspect https://max.ru/join/…          # что за ссылкой; не вступает
-max chats join https://max.ru/join/…             # вступить в группу или канал
+max chats join https://max.ru/join/…             # вступить; канал с одобрением ответит requested: true
 max chats leave "Семья"                          # выйти
 max chats create "Поход" "Аня" 20000002          # создать группу с людьми (имя или id)
 max chats create "Новости" --channel            # закрытый канал; люди входят по ссылке-приглашению

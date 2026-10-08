@@ -544,11 +544,16 @@ export class MaxClient {
       return toGroupCard(record(answer.chat) ?? {})
     },
 
-    join: (link: string): Promise<GroupCard> => {
+    /**
+     * `requested` where the chat takes join requests: MAX answers the chat with `joinRequestTime` and
+     * without the owner among its participants (measured 2026-10-08 on a channel), and the owner is not in it yet.
+     */
+    join: (link: string): Promise<GroupCard | { requested: true }> => {
       const wire = wireLink(link)
       return this.#changeChat(null, "join", async () => {
-        const chat = toGroupCard(record((await this.#wire.chats.join({ link: wire }).catch(deadLink(link))).chat) ?? {})
-        return { chatId: chat.id, result: chat }
+        const raw = record((await this.#wire.chats.join({ link: wire }).catch(deadLink(link))).chat) ?? {}
+        const chat = toGroupCard(raw)
+        return { chatId: chat.id, result: isJoinRequest(raw) ? { requested: true as const } : chat }
       })
     },
 
@@ -3158,6 +3163,10 @@ const CONFIG_CHANGED = 134
 const CHAT_FACTS = ["title", "description", "participantsCount", "status", "type", "baseIconUrl", "owner"]
 /** Messages deleted (140 in PyMax, 142 in the web client): the snapshot cannot follow them. */
 const CHANGES_CHATS = new Set([140, 142])
+
+/** A join that only asked: MAX stamps the request and leaves the owner out of the participants. */
+export const isJoinRequest = (chat: Payload): boolean =>
+  chat.joinRequestTime !== undefined && chat.joinRequestTime !== null
 
 const keyboardOf = (raw: Payload): Payload | undefined =>
   asArray(raw.attaches).find((attach) => attach._type === "INLINE_KEYBOARD")

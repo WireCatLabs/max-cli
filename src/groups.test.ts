@@ -89,6 +89,24 @@ describe("joining and leaving", () => {
     ])
   })
 
+  it("says a join only asked when the channel approves who joins, and lists nothing", async () => {
+    const asked = {
+      id: -70000000000002,
+      type: "CHANNEL",
+      title: "Gated",
+      access: "PRIVATE",
+      participants: {},
+      joinRequestTime: 1789776000000,
+    }
+    const { environment } = messenger({ [Opcode.CHAT_JOIN]: { chat: asked } })
+    const joined = await runWith(["gr-asked", "chats", "join", "https://max.ru/join/gated", "--json"], environment)
+    const listed = await runWith(["gr-asked", "chats", "list", "--json"], environment)
+
+    expect(joined.code).toBe(0)
+    expect(JSON.parse(joined.stdout)).toMatchObject({ requested: true })
+    expect(JSON.stringify(JSON.parse(listed.stdout))).not.toContain("-70000000000002")
+  })
+
   it("refuses what is not a MAX link before anything is sent", async () => {
     const { environment, max } = messenger()
     const refused = await runWith(["gr-bad-link", "chats", "join", "Team"], environment)

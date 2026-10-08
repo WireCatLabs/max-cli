@@ -227,11 +227,9 @@ export const chatsMembers = defineOperation({
       "PyMax get_join_requests, get_chat_members (53103f0)",
     ],
     notes:
-      "Join requests are not sent: a private MAX group has no join approval, so nothing can make one (owner, 2026-09-27, " +
-      "`FIND-249`; measured again 2026-10-08). web.max.ru's code sets a `JOIN_REQUEST` chat option, so a public group " +
-      "or a channel may take one — not measured. " +
-      'The web client\'s server config still carries `"join-requests": true` (capture 2026-09-25): they may exist for ' +
-      "channels or in a later MAX — if one ever shows up, bring the feature back after measuring it. " +
+      "Join requests are not read here yet. A private group ignores the `JOIN_REQUEST` option (`FIND-249`, measured again " +
+      "2026-10-08); a channel keeps it, and then 57 only asks and `JOIN_REQUEST` answers `{members: [{contact, presence}]}` " +
+      "with no request time (measured 2026-10-08, `pnpm probe:join-requests`, MAX-73). " +
       "Paging by `marker` is PyMax's claim: one page of two members carried none.",
   },
 })

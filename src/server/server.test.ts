@@ -766,6 +766,20 @@ describe("a command through max serve", () => {
     ])
   })
 
+  it("does not list a channel the owner only asked to join", async () => {
+    const asked = { id: 333, title: "Gated", type: "CHANNEL", participants: {}, joinRequestTime: 1789776000000 }
+    const { store } = await serve("c-asked", scripted({ [Opcode.CHAT_JOIN]: { chat: asked } }))
+
+    const first = commandClient(store)
+    expect(await first.client.chats.join("https://max.ru/join/gated")).toEqual({ requested: true })
+    await first.client.close()
+    const second = commandClient(store)
+    const chats = (await second.client.chats.list()).items
+    await second.client.close()
+
+    expect(chats.map((chat) => chat.id)).toEqual(["111"])
+  })
+
   it("does not add a group looked at by its link to the chat list, nor tell watchers it changed", async () => {
     const elsewhere = { id: 222, title: "Elsewhere", type: "CHAT", participantsCount: 5 }
     const { store } = await serve("c-inspect", scripted({ [Opcode.LINK_INFO]: { chat: elsewhere } }))
