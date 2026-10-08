@@ -30,6 +30,7 @@ export type {
   Contact,
   Deletion,
   Id,
+  JoinRequest,
   MediaKind,
   Member,
   Page,

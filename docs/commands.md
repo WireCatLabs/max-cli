@@ -591,6 +591,68 @@ max chats link reset <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+### `max chats requests`
+
+requests to join a group that needs an admin's approval
+
+#### `max chats requests list`
+
+who asked to join, newest first; only admins see them, and reading tells nobody
+
+```sh
+max chats requests list <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many. |
+| `--search <text>` | only people whose name or @username has this. |
+| `--link <link>` | only people who asked through this invite link; not with --search. |
+
+#### `max chats requests accept`
+
+let them in; the group sees them join
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats requests accept <chat> [person] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `person` | необязательный | who asked: an id from `chats requests list`. |
+
+| Опция | Что делает |
+|---|---|
+| `--all` | every pending request, counted against the hourly limit first. |
+| `--link <link>` | with --all: only the requests made by this invite link. |
+
+#### `max chats requests decline`
+
+turn the request away
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats requests decline <chat> [person] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `person` | необязательный | who asked: an id from `chats requests list`. |
+
+| Опция | Что делает |
+|---|---|
+| `--all` | every pending request, counted against the hourly limit first. |
+| `--link <link>` | with --all: only the requests made by this invite link. |
+
 ### `max chats folders`
 
 your chat folders

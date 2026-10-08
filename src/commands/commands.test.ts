@@ -72,6 +72,8 @@ describe("max commands", () => {
       "chats admins remove",
       "chats update",
       "chats link reset",
+      "chats requests accept",
+      "chats requests decline",
       "chats folders create",
       "chats folders update",
       "chats folders delete",

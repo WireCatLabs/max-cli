@@ -24,6 +24,7 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "admins"))
   command.addCommand(sharedSubcommand(shared, "update"))
   command.addCommand(without(sharedSubcommand(shared, "link"), ["create", "list", "revoke"]))
+  command.addCommand(sharedSubcommand(shared, "requests"))
   command.addCommand(without(sharedSubcommand(shared, "folders"), ["join"]))
   command.addCommand(sharedSubcommand(shared, "rules"))
   command.addCommand(sharedSubcommand(shared, "moderate"))
