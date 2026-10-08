@@ -25,7 +25,7 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **MAX-70** · P2 · Batch f, bots on the personal account: inline keyboards in messages, `messages press` (118),
+- **MAX-70** · P2 · 🚧 `feat/client-gaps-bots` · Batch f, bots on the personal account: inline keyboards in messages, `messages press` (118),
   `chats start` (64 `startPayload`), `chats app` (160; its init data is a credential).
 - **MAX-71** · P3 · Research: is 68 a message search or a chat-title search; public search (60); join requests —
   PyMax/rumax send 59/77, our probe of 2026-09-24 got `{}` (FIND-249); retest with approval on, and on a channel.
