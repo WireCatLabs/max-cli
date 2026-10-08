@@ -90,6 +90,14 @@ max setup [options]
 
 the logged-in account
 
+### `max account list`
+
+every profile on this computer, and the account each is logged in as; asks the messenger nothing
+
+```sh
+max account list
+```
+
 ### `max account show`
 
 who this profile is logged in as; the phone number shows its last four digits
@@ -839,11 +847,11 @@ max chats start <bot> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `bot` | обязательный | the chat with the bot: its id or its name. |
+| `bot` | обязательный | the chat with the bot — its id or its name — or the bot's link, even one never opened. |
 
 | Опция | Что делает |
 |---|---|
-| `--payload <text>` | the start parameter the bot reads, as a ?start= link carries it. |
+| `--payload <text>` | the start parameter the bot reads; a link's own ?start= when not given. |
 
 ### `max chats app`
 

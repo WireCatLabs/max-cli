@@ -784,3 +784,21 @@ describe("sessions", () => {
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([])
   })
 })
+
+describe("account list", () => {
+  it("lists the profiles on this computer without asking MAX", async () => {
+    const streams = captureStreams()
+    const code = await run(["a-list", "account", "list", "--json"], {
+      streams,
+      tty: false,
+      connection: () => {
+        throw new Error("account list asked MAX")
+      },
+    })
+
+    expect(streams.stderr.join("\n")).toBe("")
+    expect(code).toBe(0)
+    const listed = JSON.parse(streams.stdout.join("\n"))
+    expect(JSON.stringify(listed)).toContain("a-list")
+  })
+})

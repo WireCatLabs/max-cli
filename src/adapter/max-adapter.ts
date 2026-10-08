@@ -35,6 +35,7 @@ export type MaxAdapter = MessengerAdapter &
       | "pressButton"
       | "startBot"
       | "botApp"
+      | "botByLink"
       | "people"
       | "addContact"
       | "removeContact"
@@ -405,6 +406,7 @@ export const maxAdapter = (
     buttons: (chatId, messageId) => client.messages.buttons(chatId, messageId),
     startBot: (chatId, { sendId, payload }) => client.chats.startBot(chatId, cidOf(sendId), payload),
     botApp: (chatId, { startParam }) => client.chats.app(chatId, startParam),
+    botByLink: (reference) => client.chats.botLink(reference),
     pressButton: (chatId, messageId, row, column) => client.messages.press(chatId, messageId, row, column),
     closePoll: async (chatId, messageId) => toPoll(await client.polls.close(chatId, messageId)),
     createPoll: async (

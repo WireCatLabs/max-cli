@@ -14,6 +14,8 @@ import { mockMax } from "./testing/mock-max.js"
 const OWNER = 10000001
 const BOT = 234377933
 const MESSAGE = "116762160362694583"
+const DIALOG = OWNER ^ BOT
+const NEW_BOT = 220000001
 const APP_URL = "https://app.example/#tgWebAppData=SIGNED-SECRET"
 
 const keyboard = {
@@ -41,7 +43,7 @@ const messenger = () => {
         profile: { contact: { id: OWNER } },
         chats: [
           {
-            id: 111,
+            id: DIALOG,
             title: "Bot",
             type: "DIALOG",
             lastEventTime: 1789776000000,
@@ -55,6 +57,10 @@ const messenger = () => {
       [Opcode.MSG_CALLBACK]: {},
       [Opcode.MSG_SEND]: { message: { id: 116762160362694599n, time: 1789776100000, sender: OWNER, attaches: [] } },
       [Opcode.BOT_WEB_APP]: { url: APP_URL },
+      [Opcode.LINK_INFO]: (payload: Record<string, unknown>) =>
+        String(payload.link).endsWith("/somebot")
+          ? { user: { contact: { id: NEW_BOT, options: ["ONEME", "BOT"] }, presence: { seen: 1789776000 } } }
+          : { user: { contact: { id: 10000002, options: ["ONEME"] } } },
       [Opcode.CONTACT_INFO]: { contacts: [] },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
     },
@@ -81,7 +87,7 @@ const runWith = async (argv: string[], environment: Environment) => {
 describe("a bot's buttons on the personal account", () => {
   it("shows the keyboard in `messages show`, with the link of a link button only", async () => {
     const { environment } = messenger()
-    const shown = await runWith(["b-show", "messages", "show", "111", MESSAGE], environment)
+    const shown = await runWith(["b-show", "messages", "show", String(DIALOG), MESSAGE], environment)
 
     expect(shown.code).toBe(0)
     const [attachment] = JSON.parse(shown.stdout).attachments
@@ -100,7 +106,7 @@ describe("a bot's buttons on the personal account", () => {
 
   it("presses a callback button with the attach's handle and the button's payload, and journals it", async () => {
     const { environment, sentWith } = messenger()
-    const pressed = await runWith(["b-press", "messages", "press", "111", MESSAGE, "No"], environment)
+    const pressed = await runWith(["b-press", "messages", "press", String(DIALOG), MESSAGE, "No"], environment)
 
     expect(pressed.code).toBe(0)
     expect(
@@ -113,7 +119,7 @@ describe("a bot's buttons on the personal account", () => {
 
   it("never presses a button that would hand the owner's phone to the bot", async () => {
     const { environment, sentWith } = messenger()
-    const refused = await runWith(["b-phone", "messages", "press", "111", MESSAGE, "4"], environment)
+    const refused = await runWith(["b-phone", "messages", "press", String(DIALOG), MESSAGE, "4"], environment)
 
     expect(refused.code).not.toBe(0)
     expect(refused.stderr).toContain("phone number")
@@ -122,12 +128,12 @@ describe("a bot's buttons on the personal account", () => {
 
   it("starts a bot with the web client's service message, guarded as a send", async () => {
     const { environment, sentWith } = messenger()
-    const started = await runWith(["b-start", "chats", "start", "111", "--payload", "ref1"], environment)
+    const started = await runWith(["b-start", "chats", "start", String(DIALOG), "--payload", "ref1"], environment)
 
     expect(started.code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
       {
-        chatId: 111,
+        chatId: DIALOG,
         message: {
           cid: expect.any(Number),
           attaches: [{ _type: "CONTROL", event: "botStarted", startPayload: "ref1" }],
@@ -138,12 +144,12 @@ describe("a bot's buttons on the personal account", () => {
 
   it("prints the mini app's address and leaves it in no trace, run log, journal or store", async () => {
     const { environment, sentWith } = messenger()
-    const opened = await runWith(["b-app", "--trace", "chats", "app", "111", "--start", "p"], environment)
+    const opened = await runWith(["b-app", "--trace", "chats", "app", String(DIALOG), "--start", "p"], environment)
 
     expect(opened.code).toBe(0)
-    expect(JSON.parse(opened.stdout)).toMatchObject({ chatId: "111", url: APP_URL })
+    expect(JSON.parse(opened.stdout)).toMatchObject({ chatId: String(DIALOG), url: APP_URL })
     expect(sentWith(Opcode.BOT_WEB_APP).map(({ payload }) => payload)).toEqual([
-      { botId: BOT, chatId: 111, startParam: "p" },
+      { botId: BOT, chatId: DIALOG, startParam: "p" },
     ])
     expect(opened.stderr).not.toContain("SIGNED-SECRET")
     const roots = [process.env.MAX_STATE_DIR, process.env.MAX_CACHE_DIR, process.env.MAX_CONFIG_DIR]
@@ -158,5 +164,31 @@ describe("a bot's buttons on the personal account", () => {
     ]
     expect(kept.length).toBeGreaterThan(0)
     expect(kept.filter((path) => readFileSync(path).includes("SIGNED-SECRET"))).toEqual([])
+  })
+
+  it("starts a bot never written to from its link, in the chat whose id is the two ids XORed", async () => {
+    const { environment, sentWith } = messenger()
+    const started = await runWith(["b-link", "chats", "start", "https://max.ru/somebot?start=ref9"], environment)
+
+    expect(started.code).toBe(0)
+    expect(sentWith(Opcode.LINK_INFO).map(({ payload }) => payload)).toEqual([{ link: "https://max.ru/somebot" }])
+    expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
+      {
+        chatId: OWNER ^ NEW_BOT,
+        message: {
+          cid: expect.any(Number),
+          attaches: [{ _type: "CONTROL", event: "botStarted", startPayload: "ref9" }],
+        },
+      },
+    ])
+  })
+
+  it("refuses a person's link: only a bot is started", async () => {
+    const { environment, sentWith } = messenger()
+    const refused = await runWith(["b-person", "chats", "start", "max.ru/someone"], environment)
+
+    expect(refused.code).not.toBe(0)
+    expect(refused.stderr).toContain("is not a bot's link")
+    expect(sentWith(Opcode.MSG_SEND)).toEqual([])
   })
 })

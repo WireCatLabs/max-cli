@@ -96,12 +96,18 @@ export const chatsLinkInfo = defineOperation({
   opcode: 89,
   auth: true,
   request: v.strictObject({ link: link() }),
-  response: v.looseObject({ chat: v.optional(v.looseObject({})) }),
+  response: v.looseObject({ chat: v.optional(v.looseObject({})), user: v.optional(v.looseObject({})) }),
   guard: null,
   provenance: {
     confidence: "measured",
-    sources: ["measured against MAX 2026-09-24 (`pnpm probe:groups`)", "PyMax resolve_group_by_link"],
-    notes: "Joins nothing. Answers for a group the account has left, with `participants` empty.",
+    sources: [
+      "measured against MAX 2026-09-24 (`pnpm probe:groups`)",
+      "a bot's link measured 2026-10-08 (`pnpm probe:bot-link`): `{user: {contact, summary, presence: {seen, status}}}`, `contact.options` with `BOT`",
+      "PyMax resolve_group_by_link",
+    ],
+    notes:
+      "Joins nothing. Answers for a group the account has left, with `participants` empty. A person's or a bot's link " +
+      "answers `user` instead of `chat`.",
   },
 })
 
