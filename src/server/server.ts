@@ -618,7 +618,8 @@ export class MaxServer {
       }
       // Nor a chat we changed: the answer carries it whole, as a 135 push would. Without this the
       // owner's own rename showed the old title until something else touched the chat.
-      if (answer.chat) this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
+      // Not a group looked at by its link: the owner is not in it.
+      if (answer.chat && opcode !== Opcode.LINK_INFO) this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
       // The same for a contact we renamed: commands keep the login's contacts in the shared store.
       if (objectOf(answer.contact).id !== undefined) client.live.contact(objectOf(answer.contact))
       // Nor our own settings change, which other sessions hear as 134 (measured 2026-10-08): without
