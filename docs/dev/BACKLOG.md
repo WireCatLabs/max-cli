@@ -27,8 +27,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 - **MAX-67** · P3 · Batch c: presence (35 + 132), read receipts (130), chat changes (135) in `watch --events`.
   Needs the inbound shapes from the web capture (NEED-822 A).
-- **MAX-68** · P2 · 🚧 `feat/client-gaps-d` · Batch d, writes: `chats mute|unmute` (22 `dontDisturbUntil`), `account privacy set` (22
-  `settings.user`), stickers (`stickers list`, `messages send --sticker`).
 - **MAX-69** · P3 · Batch e, destructive: `chats clear` (54), `chats delete` (52, for this account only — `forAll`
   measured not to delete for others), behind the `messages delete` guard.
 - **MAX-70** · P2 · Batch f, bots on the personal account: inline keyboards in messages, `messages press` (118),
