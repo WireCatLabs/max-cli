@@ -4,7 +4,14 @@ import { dirname } from "node:path"
 import { CliError } from "@leemour/cli-core"
 import type { SendGuard } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
-import { FIRST_TAB_SYNC, MaxClient, type MaxClientOptions, type ResumeFrom, type TabSync } from "../client.js"
+import {
+  FIRST_TAB_SYNC,
+  isJoinRequest,
+  MaxClient,
+  type MaxClientOptions,
+  type ResumeFrom,
+  type TabSync,
+} from "../client.js"
 import { resolveSettings } from "../config.js"
 import type { MessageChange, MessageHit } from "../domain/models.js"
 import { Opcode } from "../generated/opcodes.generated.js"
@@ -620,8 +627,10 @@ export class MaxServer {
       }
       // Nor a chat we changed: the answer carries it whole, as a 135 push would. Without this the
       // owner's own rename showed the old title until something else touched the chat.
-      // Not a group looked at by its link: the owner is not in it.
-      if (answer.chat && opcode !== Opcode.LINK_INFO) this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
+      // Not a group looked at by its link, nor one the owner only asked to join: the owner is not in it.
+      const joinRequest = opcode === Opcode.CHAT_JOIN && isJoinRequest(objectOf(answer.chat))
+      if (answer.chat && opcode !== Opcode.LINK_INFO && !joinRequest)
+        this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
       // The same for a contact we renamed: commands keep the login's contacts in the shared store.
       if (objectOf(answer.contact).id !== undefined) client.live.contact(objectOf(answer.contact))
       // Nor our own settings change, which other sessions hear as 134 (measured 2026-10-08): without

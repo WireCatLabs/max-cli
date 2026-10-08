@@ -25,9 +25,12 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **MAX-71** · P3 · Research left: join requests on a public group and on a channel (a private group ignores
-  `JOIN_REQUEST`, measured 2026-10-08); what 60 (`{query, count, type: ALL}`, public search) returns for a query that
-  finds something. 68 is answered: a message search across all chats (`pnpm probe:search-ops`, IDEA in the journal).
+- **MAX-73** · P3 · `chats requests list|approve|decline` for a channel that approves who joins. Measured
+  2026-10-08 (`pnpm probe:join-requests`): 59 `{type: JOIN_REQUEST}` lists `{contact, presence}` with no request
+  time; 77 `{userIds, type: JOIN_REQUEST, operation: add|remove}` answers (web.max.ru's code; `remove` measured).
+  The shared `JoinRequest.requestedAt` is required — MAX has no such time, so the shared type needs a ruling first.
+- **MAX-71** · P3 · Research left: join requests on a public group (a private group ignores `JOIN_REQUEST`; a
+  channel keeps it — MAX-73).
 
 - **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
   numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
