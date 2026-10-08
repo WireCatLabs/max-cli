@@ -25,7 +25,7 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **MAX-72** · P3 · Start a bot never chatted with, from its link (`max.ru/<bot>?start=…`): `chats start` needs the
+- **MAX-72** · P3 · 🚧 `feat/start-bot-by-link` · Start a bot never chatted with, from its link (`max.ru/<bot>?start=…`): `chats start` needs the
   dialog in the chat list today. The web client resolves the link and opens the chat before 64; measure that flow,
   and live-check `chats start` and `chats app` on a bot with a mini app.
 - **MAX-71** · P3 · Research: is 68 a message search or a chat-title search; public search (60); join requests —
