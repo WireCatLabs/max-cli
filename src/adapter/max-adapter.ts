@@ -1,5 +1,6 @@
 import { CliError, singleLine } from "@leemour/cli-core"
 import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@leemour/cli-messaging"
+import { observedCounters } from "@leemour/cli-messaging"
 import type {
   MessageEditing,
   MessagePins,
@@ -128,7 +129,7 @@ export const maxAdapter = (
         ...(reactions === false ? { reactions: false } : {}),
       })
       const items = page.items.filter((message) => message.id !== before).slice(-limit)
-      return { ...page, items: items.map(toMessage) }
+      return { ...page, items: items.map(remoteMessage) }
     },
 
     searchMessages: async (query, { limit }) => {
@@ -136,7 +137,7 @@ export const maxAdapter = (
         throw new CliError("validation_error", "MAX's server searches one chat at a time — name the chat")
       const page = await client.messages.search(await chatId(query.chat), query.text, limit)
       return {
-        items: page.items.map((message) => ({ ...toMessage(message), chatTitle: null })),
+        items: page.items.map((message) => ({ ...remoteMessage(message), chatTitle: null })),
         hasMore: page.hasMore,
         chats: [],
       }
@@ -144,7 +145,7 @@ export const maxAdapter = (
 
     historyBefore: async (chat, { limit, time }) => {
       const page = await client.messages.list(await chatId(chat), { limit, before: time - 1 })
-      return { ...page, items: page.items.map(toMessage) }
+      return { ...page, items: page.items.map(remoteMessage) }
     },
 
     historyAfter: async (chat, { limit, after }) => {
@@ -153,7 +154,7 @@ export const maxAdapter = (
         after: "id" in after ? client.messages.moment(after.id, "--after") : after.time,
         ...(options.reactions === undefined ? {} : { reactions: options.reactions }),
       })
-      return { ...page, items: page.items.map(toMessage) }
+      return { ...page, items: page.items.map(remoteMessage) }
     },
 
     download: async (chat, messageId) => {
@@ -303,9 +304,22 @@ export const maxAdapter = (
     renameContact: async (id, firstName, lastName) => toMember(await client.contacts.rename(id, firstName, lastName)),
     importContacts: async (entries) => (await client.contacts.import(entries)).contacts.map(toMember),
 
+    fetchCounters: async (chat, messageId, fields, signal) => {
+      signal?.throwIfAborted()
+      const messages = await client.messages.around(await chatId(chat), messageId, {
+        before: 0,
+        after: 0,
+        reactions: fields.includes("reactions"),
+      })
+      signal?.throwIfAborted()
+      const message = messages.find((one) => one.id === messageId)
+      return message
+        ? (observedCounters(toMessage(message), new Date().toISOString(), fields).counterObservations ?? {})
+        : {}
+    },
     around: async (chat, messageId, window): Promise<WindowedMessage[]> =>
       (await client.messages.around(await chatId(chat), messageId, window)).map(({ anchor, ...message }) => ({
-        ...toMessage(message),
+        ...remoteMessage(message),
         ...(anchor ? { anchor } : {}),
       })),
 
@@ -481,3 +495,6 @@ const toAttachment = ({ fileId, videoId, event, userIds, poll, kind, ...shared }
 }
 
 const toMember = ({ id, name, username }: Max.Contact): Max.Member => ({ id, name, username })
+
+const remoteMessage = (message: Max.Message): Message =>
+  observedCounters(toMessage(message), new Date().toISOString(), ["views", "reactions"])

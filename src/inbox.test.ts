@@ -115,7 +115,9 @@ describe("max inbox — unread", () => {
     const first = await runWith(["u-twice", "inbox", "--all", "--json"], environment)
     const second = await runWith(["u-twice", "inbox", "--json"], environment)
 
-    expect(JSON.parse(second.stdout).chats).toEqual(JSON.parse(first.stdout).chats)
+    const facts = (output: string) =>
+      JSON.parse(output, (key, value: unknown) => (key === "observedAt" ? undefined : value)).chats
+    expect(facts(second.stdout)).toEqual(facts(first.stdout))
     expect(savedPoint("u-twice")).toBeUndefined()
   })
 

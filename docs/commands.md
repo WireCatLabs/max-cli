@@ -595,6 +595,18 @@ your chat folders, in the order the app shows them
 max chats folders list
 ```
 
+#### `max chats folders show`
+
+one chat folder, with the names of the chats in it
+
+```sh
+max chats folders show <folder>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `folder` | обязательный | the folder's id, or its title exactly. |
+
 #### `max chats folders create`
 
 create a chat folder
@@ -1588,6 +1600,32 @@ max store jobs cancel <job>
 |---|---|---|
 | `job` | обязательный | the job id. |
 
+#### `max store jobs retry`
+
+start a failed or died job again, as a new job; the fetch resumes where the store stopped
+
+```sh
+max store jobs retry [job] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `job` | необязательный | the job id. |
+
+| Опция | Что делает |
+|---|---|
+| `--failed` | every chat whose newest job failed or died. |
+
+#### `max store jobs clear`
+
+forget finished jobs and remove their logs; a running job is kept
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max store jobs clear
+```
+
 ### `max store export`
 
 a chat's stored messages as JSON lines, oldest first; never asks the messenger
@@ -1761,6 +1799,60 @@ max stats messages show [query] [options]
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
 
+#### `max stats messages counters`
+
+per-counter observations and bounded remote refresh
+
+#### `max stats messages counters show`
+
+show saved counter values and their observation freshness
+
+```sh
+max stats messages counters show [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | strict Lucene query over stored messages. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--source <messenger>` | held accounts of this messenger; refresh uses the active account. |
+| `--exact` | bare words match exact forms. |
+| `--timezone <zone>` | IANA timezone for query dates. |
+| `--selection <json>` | pinned counter-targets selection from counters show; conflicts with query and scope. |
+| `--counters <names>` | distinct views,reactions,comments fields; all three by default. |
+| `--limit <n>` | messages, 1–100; 20 by default. |
+| `--max-age <duration>` | maximum fresh observation age; 24h by default. |
+
+#### `max stats messages counters refresh`
+
+read authoritative counters for bounded messages and update their local observations
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max stats messages counters refresh [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | strict Lucene query over stored messages. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--source <messenger>` | held accounts of this messenger; refresh uses the active account. |
+| `--exact` | bare words match exact forms. |
+| `--timezone <zone>` | IANA timezone for query dates. |
+| `--selection <json>` | pinned counter-targets selection from counters show; conflicts with query and scope. |
+| `--counters <names>` | distinct views,reactions,comments fields; all three by default. |
+| `--limit <n>` | messages, 1–100; 20 by default. |
+| `--max-messages <n>` | maximum messages to refresh, 1–100. |
+| `--sync-time <duration>` | remote refresh budget; 30s by default, maximum 5m. |
+| `--dry-run` | preview exact stored targets and counter capabilities without connecting. |
+
 #### `max stats messages unanswered`
 
 oldest detected questions without an observed qualifying explicit reply
@@ -1809,7 +1901,7 @@ max stats messages discussion [query] [options]
 
 #### `max stats messages top`
 
-rank stored messages by a measure or explainable score; counters are snapshots and freshness is unknown
+rank stored messages by a measure or explainable score; counters are snapshots with per-field observation freshness
 
 ```sh
 max stats messages top [query] [options]
@@ -1838,7 +1930,7 @@ max stats messages top [query] [options]
 
 #### `max stats messages evidence`
 
-a bounded page of messages or answer pairs contributing to one ranking component
+bounded messages, answer pairs or retention members from an exact drilldown selection
 
 ```sh
 max stats messages evidence <message> [options]
@@ -1846,7 +1938,7 @@ max stats messages evidence <message> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `message` | обязательный | the canonical message locator from the ranking row. |
+| `message` | обязательный | the canonical message locator, or retention cohort reference, from drilldown. |
 
 | Опция | Что делает |
 |---|---|
@@ -1883,7 +1975,7 @@ max stats contacts responses [query] [options]
 
 #### `max stats contacts top`
 
-rank the human authors of stored messages by a measure or explainable score; counters are snapshots and freshness is unknown
+rank the human authors of stored messages by a measure or explainable score; counters are snapshots with per-field observation freshness
 
 ```sh
 max stats contacts top [query] [options]
@@ -1913,7 +2005,7 @@ max stats contacts top [query] [options]
 
 #### `max stats contacts evidence`
 
-a bounded page of messages or answer pairs contributing to one ranking component
+bounded messages, answer pairs or retention members from an exact drilldown selection
 
 ```sh
 max stats contacts evidence <person> [options]
@@ -1973,6 +2065,28 @@ max stats chats newcomers <chat> [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--limit <n>` | report rows, 1–100; 20 if not given. |
 | `--answerer <id>` | a scoped human identity whose explicit reply qualifies; repeat it for more. |
+
+#### `max stats chats retention`
+
+joining cohorts and observed checkpoint membership from saved roster observations
+
+```sh
+max stats chats retention <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--since-time <time>` | joining period starts at ISO 8601 or a relative time; last 90 days by default. |
+| `--until-time <time>` | joining period ends at this time; now by default. |
+| `--checkpoints <durations>` | up to 10 increasing joining ages, comma separated; 1d,7d,30d by default. |
+| `--within <duration>` | activity and early departure window after joining; 7d by default. |
+| `--by <day\|week>` | group joining dates by calendar day or Monday week. Одно из: `day`, `week`. |
+| `--timezone <zone>` | IANA timezone for joining cohorts. |
+| `--limit <n>` | cohorts and member evidence, 1–100. |
 
 ### `max stats tasks`
 
@@ -2486,6 +2600,7 @@ max metadata refresh [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | stored group/channel; repeat for several. По умолчанию: ``. |
+| `--only-missing` | only chats with no metadata yet; without --chat, every stored group/channel. |
 | `--limit <number>` | process at most 1–500 chats. По умолчанию: `50`. |
 
 ## `max searches`

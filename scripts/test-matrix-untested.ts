@@ -10,6 +10,17 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  {
+    command: "chats folders show",
+    reason:
+      "cli-messaging src/cli/messenger/admin-commands.test.ts tests folder show with cached and remote chat names plus pinned/excluded entries; MAX mounts the same shared handler (SDK0.189.0)",
+  },
+  ...[["store jobs retry"], ["store jobs retry", "--failed"], ["store jobs clear"]].map(([command, option]) => ({
+    command: command as string,
+    ...(option ? { option } : {}),
+    reason:
+      "cli-messaging src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0)",
+  })),
   ...[
     ["stats chats newcomers", "--saved"],
     ["stats messages discussion", "--saved"],

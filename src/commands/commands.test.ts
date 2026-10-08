@@ -156,6 +156,8 @@ describe("max commands", () => {
       "contacts notes add",
       "contacts notes edit",
       "contacts notes remove",
+      "store jobs clear",
+      "stats messages counters refresh",
       "tags auto",
       "tags add",
       "tags remove",

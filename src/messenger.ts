@@ -54,6 +54,7 @@ export const maxMessenger: Messenger = {
   stickers: true,
   app: MAX_APP,
   provider: "max",
+  counterFields: ["views", "reactions"],
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
   partnerOf: (chat) =>
