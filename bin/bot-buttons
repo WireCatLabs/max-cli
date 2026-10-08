@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# A bot sends one message with test buttons — two callbacks, a link, a message, a phone request — so
+# `max messages press` can be tried by hand. It sends: only to the chat or person named.
+#
+#   bin/bot-buttons test2 user:34871122     # to a person; they must have started the bot first
+#   bin/bot-buttons test2 -79381375561810   # to a group the bot is in
+#
+# Prints the bot's message id; `max <bot profile> bot messages delete <chat> <id>` removes it.
+set -eu
+
+root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+[ -f "$root/dist/bin/max.js" ] || { echo "no build in $root — run pnpm build first" >&2; exit 1; }
+[ $# -eq 2 ] || { echo "usage: bin/bot-buttons <bot profile> <chat id | user:<id>>" >&2; exit 2; }
+exec node --experimental-strip-types "$root/scripts/send-keyboard.ts" "$1" "$2"
