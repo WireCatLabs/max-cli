@@ -6,6 +6,7 @@ import { attachmentsFile, attachmentsVideo } from "../spec/operations/attachment
 import { bannersList } from "../spec/operations/banners.js"
 import { callsHistory } from "../spec/operations/calls.js"
 import {
+  chatsApp,
   chatsClear,
   chatsDelete,
   chatsHistory,
@@ -90,6 +91,7 @@ export const OPERATIONS = {
   "chats.updateMembers": chatsUpdateMembers,
   "chats.delete": chatsDelete,
   "chats.clear": chatsClear,
+  "chats.app": chatsApp,
   "messages.send": messagesSend,
   "messages.edit": messagesEdit,
   "messages.react": messagesReact,

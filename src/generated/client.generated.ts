@@ -91,6 +91,7 @@ export const wireClient = (invoke: Invoke) => ({
       invoke(OPERATIONS["chats.updateMembers"], request),
     delete: (request: RequestOf<(typeof OPERATIONS)["chats.delete"]>) => invoke(OPERATIONS["chats.delete"], request),
     clear: (request: RequestOf<(typeof OPERATIONS)["chats.clear"]>) => invoke(OPERATIONS["chats.clear"], request),
+    app: (request: RequestOf<(typeof OPERATIONS)["chats.app"]>) => invoke(OPERATIONS["chats.app"], request),
   },
   messages: {
     send: (request: RequestOf<(typeof OPERATIONS)["messages.send"]>) => invoke(OPERATIONS["messages.send"], request),

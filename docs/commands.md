@@ -827,6 +827,42 @@ max chats clear <chat> [options]
 |---|---|
 | `--allow-dangerous` | go ahead without the question an ask level puts before a deletion. |
 
+### `max chats start`
+
+start a bot, as its Start button does; the bot sees that you started it
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats start <bot> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `bot` | обязательный | the chat with the bot: its id or its name. |
+
+| Опция | Что делает |
+|---|---|
+| `--payload <text>` | the start parameter the bot reads, as a ?start= link carries it. |
+
+### `max chats app`
+
+the address that opens a bot's mini app, signed in as you — keep it to yourself
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats app <bot> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `bot` | обязательный | the chat with the bot: its id or its name. |
+
+| Опция | Что делает |
+|---|---|
+| `--start <param>` | the start parameter the app reads. |
+
 ## `max contacts`
 
 people you have a one-to-one chat with

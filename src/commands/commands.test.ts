@@ -81,6 +81,8 @@ describe("max commands", () => {
       "chats unmute",
       "chats delete",
       "chats clear",
+      "chats start",
+      "chats app",
       "contacts add",
       "contacts remove",
       "contacts block",

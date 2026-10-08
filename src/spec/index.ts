@@ -5,6 +5,7 @@ import { attachmentsFile, attachmentsVideo } from "./operations/attachments.js"
 import { bannersList } from "./operations/banners.js"
 import { callsHistory } from "./operations/calls.js"
 import {
+  chatsApp,
   chatsClear,
   chatsDelete,
   chatsHistory,
@@ -103,6 +104,7 @@ export const spec: readonly Entry[] = [
   chatsUpdateMembers,
   chatsDelete,
   chatsClear,
+  chatsApp,
   messagesSend,
   messagesEdit,
   messagesReact,

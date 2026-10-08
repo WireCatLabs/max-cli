@@ -46,7 +46,8 @@ export const messagesSend = defineOperation({
          */
         delayedAttributes: v.optional(v.strictObject({ timeToFire: v.pipe(v.number(), v.integer()) })),
       }),
-      notify: v.boolean(),
+      /** Left out when starting a bot, as the web client does. */
+      notify: v.optional(v.boolean()),
     }),
     /**
      * Creating a group is a message too: a CONTROL attachment with no chat to send it to. Measured
@@ -85,6 +86,10 @@ export const messagesSend = defineOperation({
       }
     }
     const chatId = chatOf(request)
+    // Starting a bot is a message to it, as the web client's Start button sends it (chunk `Cdo8IOYe`, 2026-10-08).
+    const only = Array.isArray(message.attaches) && message.attaches.length === 1
+    if (only && control?._type === "CONTROL" && control.event === "botStarted")
+      return { chatId, kind: "message", key: "chats.start", ...cid }
     // A control attachment changes a chat; in a message it would pass as a plain send.
     if (Array.isArray(message.attaches) && message.attaches.some((attach) => objectOf(attach)._type === "CONTROL")) {
       return ambiguous("messages.send")

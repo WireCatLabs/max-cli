@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**885 ✅ · 112 ⛔ · 0 ❌** — 304 commands, 693 options.
+**889 ✅ · 112 ⛔ · 0 ❌** — 306 commands, 695 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -119,6 +119,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats delete` | `--allow-dangerous` | ✅ |  |
 | `chats clear` |  | ✅ |  |
 | `chats clear` | `--allow-dangerous` | ✅ |  |
+| `chats start` |  | ✅ |  |
+| `chats start` | `--payload` | ✅ |  |
+| `chats app` |  | ✅ |  |
+| `chats app` | `--start` | ✅ |  |
 | `contacts list` |  | ✅ |  |
 | `contacts list` | `--limit` | ✅ |  |
 | `contacts list` | `--page` | ✅ |  |

@@ -1,3 +1,5 @@
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
+import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { SendJournal } from "@leemour/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
@@ -12,6 +14,7 @@ import { mockMax } from "./testing/mock-max.js"
 const OWNER = 10000001
 const BOT = 234377933
 const MESSAGE = "116762160362694583"
+const APP_URL = "https://app.example/#tgWebAppData=SIGNED-SECRET"
 
 const keyboard = {
   _type: "INLINE_KEYBOARD",
@@ -36,12 +39,22 @@ const messenger = () => {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: {
         profile: { contact: { id: OWNER } },
-        chats: [{ id: 111, title: "Bot", type: "DIALOG", lastEventTime: 1789776000000 }],
+        chats: [
+          {
+            id: 111,
+            title: "Bot",
+            type: "DIALOG",
+            lastEventTime: 1789776000000,
+            participants: { [OWNER]: 0, [BOT]: 0 },
+          },
+        ],
       },
       [Opcode.CHAT_HISTORY]: {
         messages: [{ id: BigInt(MESSAGE), time: 1789776000000, sender: BOT, text: "Pick", attaches: [keyboard] }],
       },
       [Opcode.MSG_CALLBACK]: {},
+      [Opcode.MSG_SEND]: { message: { id: 116762160362694599n, time: 1789776100000, sender: OWNER, attaches: [] } },
+      [Opcode.BOT_WEB_APP]: { url: APP_URL },
       [Opcode.CONTACT_INFO]: { contacts: [] },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
     },
@@ -105,5 +118,45 @@ describe("a bot's buttons on the personal account", () => {
     expect(refused.code).not.toBe(0)
     expect(refused.stderr).toContain("phone number")
     expect(sentWith(Opcode.MSG_CALLBACK)).toEqual([])
+  })
+
+  it("starts a bot with the web client's service message, guarded as a send", async () => {
+    const { environment, sentWith } = messenger()
+    const started = await runWith(["b-start", "chats", "start", "111", "--payload", "ref1"], environment)
+
+    expect(started.code).toBe(0)
+    expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
+      {
+        chatId: 111,
+        message: {
+          cid: expect.any(Number),
+          attaches: [{ _type: "CONTROL", event: "botStarted", startPayload: "ref1" }],
+        },
+      },
+    ])
+  })
+
+  it("prints the mini app's address and leaves it in no trace, run log, journal or store", async () => {
+    const { environment, sentWith } = messenger()
+    const opened = await runWith(["b-app", "--trace", "chats", "app", "111", "--start", "p"], environment)
+
+    expect(opened.code).toBe(0)
+    expect(JSON.parse(opened.stdout)).toMatchObject({ chatId: "111", url: APP_URL })
+    expect(sentWith(Opcode.BOT_WEB_APP).map(({ payload }) => payload)).toEqual([
+      { botId: BOT, chatId: 111, startParam: "p" },
+    ])
+    expect(opened.stderr).not.toContain("SIGNED-SECRET")
+    const roots = [process.env.MAX_STATE_DIR, process.env.MAX_CACHE_DIR, process.env.MAX_CONFIG_DIR]
+    const files = (dir: string): string[] =>
+      readdirSync(dir).flatMap((name) => {
+        const path = join(dir, name)
+        return statSync(path).isDirectory() ? files(path) : [path]
+      })
+    const kept = [
+      ...roots.flatMap((root) => (root && existsSync(root) ? files(root) : [])),
+      ...[process.env.MESSAGING_STORE ?? ""].filter(existsSync),
+    ]
+    expect(kept.length).toBeGreaterThan(0)
+    expect(kept.filter((path) => readFileSync(path).includes("SIGNED-SECRET"))).toEqual([])
   })
 })

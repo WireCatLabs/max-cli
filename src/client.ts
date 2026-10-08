@@ -597,6 +597,40 @@ export class MaxClient {
       })
     },
 
+    /** Starts the bot in a one-to-one chat, as its Start button does: a service message to it. */
+    startBot: async (chatId: Id, cid: number, payload?: string): Promise<void> => {
+      if (this.#offline)
+        throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot start a bot")
+      await this.#guard({ chatId, kind: "message", key: "chats.start" })
+      try {
+        await this.#connectOnce()
+        await this.#botOf(chatId)
+        const control = {
+          _type: "CONTROL",
+          event: "botStarted",
+          ...(payload === undefined ? {} : { startPayload: payload }),
+        }
+        await this.#wire.messages.send({ chatId, message: { cid, attaches: [control] } })
+        this.#sends?.record({ chatId, kind: "message", outcome: "sent" })
+      } catch (error) {
+        this.#sends?.record({ chatId, kind: "message", outcome: "failed", errorCode: asCliError(error).code })
+        throw error
+      }
+    },
+
+    /** The address of the bot's mini app. ⚠ It signs the owner in: returned to the caller, logged nowhere. */
+    app: async (chatId: Id, startParam?: string): Promise<{ url: string }> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; ask MAX instead")
+      await this.#guard({ chatId, kind: "reaction", key: "chats.app" })
+      await this.#connectOnce()
+      const botId = await this.#botOf(chatId)
+      const answer = await this.#wire.chats.app({ botId, chatId, ...(startParam ? { startParam } : {}) })
+      if (typeof answer.url !== "string" || answer.url === "")
+        throw new CliError("not_found", `the bot in chat ${chatId} has no mini app`)
+      this.#sends?.record({ chatId, kind: "reaction", outcome: "sent" })
+      return { url: answer.url }
+    },
+
     /** Every message, for this account only. */
     clear: async (reference: string): Promise<ChatChange> => {
       const chatId = await this.chats.resolve(reference)
@@ -1706,6 +1740,14 @@ export class MaxClient {
       })
       throw error
     }
+  }
+
+  /** The other side of a one-to-one chat; a group has no single bot to start. */
+  async #botOf(chatId: Id): Promise<Id> {
+    const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)
+    const partner = raw && this.#partnerOf(raw)
+    if (!partner) throw new CliError("validation_error", `chat ${chatId} is not a one-to-one chat with a bot`)
+    return partner
   }
 
   /** One message as MAX sends it, for what the domain model drops — its attachments whole, its link. */
