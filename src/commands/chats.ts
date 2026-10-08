@@ -24,7 +24,18 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "admins"))
   command.addCommand(sharedSubcommand(shared, "update"))
   command.addCommand(without(sharedSubcommand(shared, "link"), ["create", "list", "revoke"]))
-  command.addCommand(sharedSubcommand(shared, "requests"))
+  const requests = sharedSubcommand(shared, "requests")
+  for (const request of requests.commands) {
+    if (request.name() === "list")
+      request.description("pending requests to join a MAX channel needing approval; admins only; requestedAt is null")
+    for (const option of request.options)
+      if (option.long === "--all" || option.long === "--link")
+        option.description =
+          request.name() === "list"
+            ? "not supported by MAX; use name search instead"
+            : "not supported by MAX; select one person from chats requests list"
+  }
+  command.addCommand(requests)
   command.addCommand(without(sharedSubcommand(shared, "folders"), ["join"]))
   command.addCommand(sharedSubcommand(shared, "rules"))
   command.addCommand(sharedSubcommand(shared, "moderate"))

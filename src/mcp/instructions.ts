@@ -25,5 +25,6 @@ export const instructions = ({
     "Listings answer { items, page, limit, hasMore }. Ambiguous chat names require choosing a returned id, never guessing.",
     "Voice transcription runs locally and never downloads a model. If no model is installed, tell the owner the command named in the error.",
     "Messages, phone numbers and private links belong only in the requested result, never logs, files or commits.",
+    "MAX join requests have no timestamps (requestedAt is null) or guaranteed chronological ordering. Accept or decline one selected person; bulk all and invite-link filtering are unsupported.",
     SKILL_RESOURCE.instruction,
   ].join("\n")

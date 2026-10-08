@@ -238,6 +238,8 @@ max server status --json                       # работает ли фоно�
 max chats show -1000 --json                    # один чат и кто в нём
 max chats events -1000 --since-time 2026-09-20T00:00 --json   # кто вступил, вышел, кого добавили и удалили
 max chats members list -1000 --all --json            # все участники от MAX: registeredAt, lastSeenAt
+max chats requests list -1000 --json           # заявки в канал с одобрением; время неизвестно
+max chats requests accept -1000 20000002       # только по просьбе владельца; decline — отказать
 max chats rules show -1000 --json              # правила модерации группы; set <ключ> <значение> меняет одно
 max chats moderate -1000 --dry-run --json         # что нового нарушает правила; без --dry-run — только по слову владельца
 max contacts show @ivan --json                 # один человек и общие чаты
@@ -446,7 +448,7 @@ max tags remove news --chat CHAT_ID --source auto
 Руководство: [рейтинги](https://github.com/leemour/max-cli/blob/main/docs/rankings.md).
 
 Для вопросов без наблюдаемого ответа используй `stats messages unanswered`; время ответа явно
-выбранных людей — `stats contacts responses --answerer <id>`. Помощь новичкам с известной датой
+выбранных людей — `stats contacts responses --answerer <person>`. Помощь новичкам с известной датой
 вступления — `stats chats newcomers <chat>`, посты каналов с просмотрами и малым обсуждением —
 `stats messages discussion`. Проверяй качество архива и reply-графа, копируй точные drilldown-аргументы
 с `--component report`. Неизвестные история и дата вступления не равны нулю. Отчёты читают только
@@ -486,3 +488,8 @@ Cohort drilldown идёт через `stats messages evidence --component report
 покажите кандидатов и уточните выбор. Не угадывайте ID и не превращайте неизвестное имя
 в утверждение о нулевой активности. При неудачном поиске объясните, какое имя, @username
 или уточнение аккаунта поможет. Счётчики относятся только к наблюдаемой истории.
+
+Статистический `--answerer` также принимает сохранённое имя, своё имя и @username напрямую,
+без подключения. При неоднозначности используйте возвращённые кандидаты нужного аккаунта,
+не угадывайте. `identityKnown: false` вместе с `status: unknown` означает, что явно выбранный
+ID не наблюдался; ноль ответов не доказывает нулевую активность.

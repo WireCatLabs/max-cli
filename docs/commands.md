@@ -597,7 +597,7 @@ requests to join a group that needs an admin's approval
 
 #### `max chats requests list`
 
-who asked to join, newest first; only admins see them, and reading tells nobody
+pending requests to join a MAX channel needing approval; admins only; requestedAt is null
 
 ```sh
 max chats requests list <chat> [options]
@@ -611,7 +611,7 @@ max chats requests list <chat> [options]
 |---|---|
 | `--limit <n>` | how many. |
 | `--search <text>` | only people whose name or @username has this. |
-| `--link <link>` | only people who asked through this invite link; not with --search. |
+| `--link <link>` | not supported by MAX; use name search instead. |
 
 #### `max chats requests accept`
 
@@ -630,8 +630,8 @@ max chats requests accept <chat> [person] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--all` | every pending request, counted against the hourly limit first. |
-| `--link <link>` | with --all: only the requests made by this invite link. |
+| `--all` | not supported by MAX; select one person from chats requests list. |
+| `--link <link>` | not supported by MAX; select one person from chats requests list. |
 
 #### `max chats requests decline`
 
@@ -650,8 +650,8 @@ max chats requests decline <chat> [person] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--all` | every pending request, counted against the hourly limit first. |
-| `--link <link>` | with --all: only the requests made by this invite link. |
+| `--all` | not supported by MAX; select one person from chats requests list. |
+| `--link <link>` | not supported by MAX; select one person from chats requests list. |
 
 ### `max chats folders`
 
@@ -1999,7 +1999,7 @@ max stats messages unanswered [query] [options]
 | `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--limit <n>` | report rows, 1–100; 20 if not given. |
-| `--answerer <id>` | a scoped human identity whose explicit reply qualifies; repeat it for more. |
+| `--answerer <person>` | stored name, alias, @username, ID or person:provider/account/id; ambiguous names require a choice; repeat for more. |
 | `--older-than <duration>` | minimum age of a question without an observed qualifying answer. |
 
 #### `max stats messages discussion`
@@ -2097,7 +2097,7 @@ max stats contacts responses [query] [options]
 | `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--limit <n>` | report rows, 1–100; 20 if not given. |
-| `--answerer <id>` | a scoped human identity whose explicit reply qualifies; repeat it for more. |
+| `--answerer <person>` | stored name, alias, @username, ID or person:provider/account/id; ambiguous names require a choice; repeat for more. |
 
 #### `max stats contacts top`
 
@@ -2190,7 +2190,7 @@ max stats chats newcomers <chat> [options]
 | `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--limit <n>` | report rows, 1–100; 20 if not given. |
-| `--answerer <id>` | a scoped human identity whose explicit reply qualifies; repeat it for more. |
+| `--answerer <person>` | stored name, alias, @username, ID or person:provider/account/id; ambiguous names require a choice; repeat for more. |
 
 #### `max stats chats retention`
 

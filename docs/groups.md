@@ -101,6 +101,8 @@ max chats rules set "Поход" consent.delete ask        # но перед у�
 | `max chats rules show\|set\|unset <чат>` | правила группы |
 | `max chats moderate <чат>` | проверка по правилам; делает то, что правила разрешают |
 | `max chats members add\|remove`, `admins add\|remove` | участники и админы |
+| `max chats requests list <чат>` | заявки в канал с одобрением; видят админы, время заявки неизвестно |
+| `max chats requests accept\|decline <чат> <человек>` | принять или отклонить одну заявку; `--all` и `--link` не поддерживаются |
 | `max chats link show\|reset <чат>` | ссылка-приглашение; `reset` — новая, старая перестаёт работать |
 | `max chats requests list\|accept\|decline <чат>` | заявки на вступление в канал с одобрением: кто просится, впустить, отказать |
 | `max chats update` | настройки, название, описание, фото; прочитать настройки — `max chats show` |
