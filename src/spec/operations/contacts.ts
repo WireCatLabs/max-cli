@@ -17,6 +17,30 @@ export const contactsInfo = defineOperation({
   },
 })
 
+export const contactsPresence = defineOperation({
+  name: "contacts.presence",
+  constant: "CONTACT_PRESENCE",
+  opcode: 35,
+  auth: true,
+  request: v.strictObject({ contactIds: v.array(id()) }),
+  response: v.looseObject({
+    presence: v.optional(v.record(v.string(), v.looseObject({}))),
+    time: v.optional(v.number()),
+  }),
+  guard: null,
+  provenance: {
+    confidence: "measured",
+    sources: [
+      "web.max.ru tab, recorded 2026-09-25 (`docs_ai/captures/2026-09-25-web-tab-3.jsonl`): sent on opening a profile",
+      "answer measured 2026-10-08 on test account B (FIND-971): `{presence: {<id>: {seen}}, time}`",
+    ],
+    notes:
+      "`seen` is in seconds: the recorder rewrites epoch milliseconds and left it a number (FIND-988). The web client " +
+      "re-asks every 300 s rather than wait for the 132 push. Its `status` is read only as `1` online, from the tab's " +
+      "code (chunk `Cdo8IOYe`, 2026-10-08) — no answer carrying it was measured.",
+  },
+})
+
 const CONTACT_ACTIONS = {
   ADD: "contact-add",
   REMOVE: "contact-remove",

@@ -28,6 +28,7 @@ import {
   toProfile,
   toProfileFacts,
   toReactions,
+  toSeen,
   toSession,
   toSticker,
   toStickerSet,
@@ -817,7 +818,9 @@ export class MaxClient {
       const answer = await this.#wire.contacts.info({ contactIds: [card.id] })
       const raw = asArray(answer.contacts).find((one) => asId(one.id) === card.id)
       if (!raw) throw new CliError("not_found", `MAX did not describe person ${card.id}`)
-      return toProfileFacts(raw, card.chats)
+      const presence = record((await this.#wire.contacts.presence({ contactIds: [card.id] })).presence)
+      const seen = toSeen(record(presence?.[card.id]))
+      return { ...toProfileFacts(raw, card.chats), ...(seen ? { seen } : {}) }
     },
 
     /**

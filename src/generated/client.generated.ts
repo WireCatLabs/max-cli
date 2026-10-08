@@ -39,6 +39,8 @@ export const wireClient = (invoke: Invoke) => ({
   },
   contacts: {
     info: (request: RequestOf<(typeof OPERATIONS)["contacts.info"]>) => invoke(OPERATIONS["contacts.info"], request),
+    presence: (request: RequestOf<(typeof OPERATIONS)["contacts.presence"]>) =>
+      invoke(OPERATIONS["contacts.presence"], request),
     byPhone: (request: RequestOf<(typeof OPERATIONS)["contacts.byPhone"]>) =>
       invoke(OPERATIONS["contacts.byPhone"], request),
     update: (request: RequestOf<(typeof OPERATIONS)["contacts.update"]>) =>
