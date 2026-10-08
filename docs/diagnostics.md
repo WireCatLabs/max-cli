@@ -169,7 +169,7 @@ max runs list --json | jq '.items[] | select(.status=="failed") | {runId, comman
 ## Справочник для скриптов
 
 `max commands --json` перечисляет команды, глобальные опции и коды завершения без подключения
-к аккаунту. Для одной команды используйте `max commands messages search --json`, для группы —
+к аккаунту. Для одной команды используйте `max commands search messages --json`, для группы —
 `max commands messages --json`: глобальные опции и коды завершения остаются в ответе.
 Слова после `commands` задают один путь; разные группы смотрите отдельными вызовами.
 `cli` — имя инструмента, `version` — версия установленного пакета, `contract` — версия

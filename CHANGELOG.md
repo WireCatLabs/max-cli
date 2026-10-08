@@ -4,6 +4,35 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Что нового
+
+- **`max search all "<слова>"` ищет сразу во всём, что хранится на этой машине**: сообщения MAX и Telegram, почту,
+  импортированную memo, и заметки. У каждой находки указан вид: сообщение, письмо или заметка. `--only notes`
+  (или `messages`, `mail`) сужает поиск.
+- **`max search mail` и `max search notes`** ищут в одном виде. Заметки находятся по словам и, если скачана
+  локальная текстовая модель, по смыслу; `--type internal` (написанные в memo) или `file` (из папки заметок).
+- **`max search messages --type voice`** (или `text`, `file`) находит только такие сообщения.
+
+### Изменено — может сломать скрипты
+
+- **Весь поиск переехал в `max search`.** Старых команд больше нет:
+
+  | Было | Стало |
+  |---|---|
+  | `max messages search` | `max search messages` |
+  | `max messages search --source email` | `max search mail` |
+  | `max conversations search` | `max search conversations` |
+  | `max bot messages search` | `max bot search messages` |
+
+  Для агентов инструменты переехали так же: `search messages`, `search conversations` и новый `search all`,
+  с которого стоит начинать.
+- **`max search messages` больше не возвращает почту.** Сохранённый поиск с `in:email` теперь просит
+  `max search mail`.
+- **Права со старыми путями** (`messages.search`, `conversations.search`) останавливают `max search`, пока
+  `max config migrate` не переименует их с теми же уровнями.
+
 ## 0.38.1 — 08.10.2026
 
 ### Что нового

@@ -30,8 +30,8 @@
 max conversations build --chat "Книжный клуб"   # найти разговоры; ещё раз — после того, как скачано больше
 max models text download e5-small               # один раз: 135 МБ, общая папка с tg
 max conversations embed --chat "Книжный клуб"   # продолжает с места, где остановился
-max conversations search "где встречаемся" --chat "Книжный клуб"
-max conversations search "аренда квартиры"      # во всех построенных чатах
+max search conversations "где встречаемся" --chat "Книжный клуб"
+max search conversations "аренда квартиры"      # во всех построенных чатах
 ```
 
 1. **Build** находит разговоры чата. Новый `build` заменяет прошлый, поэтому номер разговора берите из
@@ -77,7 +77,7 @@ max messages links "Книжный клуб" 204           # почему соо
 max conversations status                         # что отстало, по чатам
 max conversations build                          # все изменившиеся чаты и группы, ни разу не построенные
 max conversations embed                          # все построенные чаты, где остались куски
-max conversations search "аренда квартиры" --refresh   # сначала догнать, потом искать
+max search conversations "аренда квартиры" --refresh   # сначала догнать, потом искать
 ```
 
 `status` считает для каждого построенного чата сообщения, которых `build` ещё не видел (новые,
@@ -135,7 +135,7 @@ max models text download embeddinggemma --accept-terms
 ```sh
 max models text key set openai
 max conversations embed --chat "Книжный клуб" --provider openai
-max conversations search "аренда квартиры" --provider openai
+max search conversations "аренда квартиры" --provider openai
 ```
 
 Тогда текст разговоров чата уходит этому сервису, а каждый поиск отправляет ему ваш вопрос. Прежде
@@ -146,7 +146,7 @@ API векторов OpenAI (`/v1/embeddings`), например Ollama или L
 
 ## Для агентов
 
-В MCP `max_read` (`command: "conversations list"`), `max_read` (`command: "conversations show"`), `max_read` (`command: "conversations search"`),
+В MCP `max_read` (`command: "conversations list"`), `max_read` (`command: "conversations show"`), `max_read` (`command: "search conversations"`),
 `max_read` (`command: "conversations related"`) и `max_read` (`command: "conversations status"`) читают построенное, а
 `max_write` (`command: "conversations refresh"`) догоняет на этом компьютере. Через MCP агент получает инструкцию `link-conversations`,
 оценивает объём инструментом `max_read` (`command: "conversations batches status"`) и ждёт согласия владельца для этого чата. Затем

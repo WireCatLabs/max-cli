@@ -132,7 +132,7 @@ describe("the local copy", () => {
     expect(one).toMatchObject({ id: "mid.2", outgoing: true })
     expect((await max(["copy", "bot", "messages", "show", "-100", "mid.404", "--offline", "--json"])).code).not.toBe(0)
 
-    const found = JSON.parse((await max(["copy", "bot", "messages", "search", "second", "--json"])).stdout).items
+    const found = JSON.parse((await max(["copy", "bot", "search", "messages", "second", "--json"])).stdout).items
     expect(found).toMatchObject([{ id: "mid.2", locator: expect.stringContaining("max-bot") }])
     expect(requests).toHaveLength(0)
   })

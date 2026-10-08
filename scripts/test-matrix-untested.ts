@@ -11,6 +11,12 @@ export interface Untested {
 
 export const UNTESTED: Untested[] = [
   {
+    command: "attachments show",
+    option: "--page",
+    reason:
+      "cli-messaging 0.207.0 src/cli/messenger/attachments.test.ts renders a retained PDF page and refuses non-PDFs; it needs the optional unpdf and @napi-rs/canvas, which max does not install",
+  },
+  {
     command: "chats folders show",
     reason:
       "cli-messaging src/cli/messenger/admin-commands.test.ts tests folder show with cached and remote chat names plus pinned/excluded entries; MAX mounts the same shared handler (SDK0.189.0)",
@@ -67,7 +73,7 @@ export const UNTESTED: Untested[] = [
       "cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0)",
   },
   ...["--server-time"].map((option) => ({
-    command: "messages search",
+    command: "search messages",
     option,
     reason:
       "cli-messaging src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcode 73",
@@ -572,48 +578,48 @@ export const UNTESTED: Untested[] = [
     reason: "logs in to MAX and starts `max mcp` as a child; src/online.test.ts covers both steps, live X3",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     option: "--model",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     option: "--provider",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     option: "--base-url",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     option: "--dims",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     option: "--chat",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     option: "--since-time",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations search",
+    command: "search conversations",
     option: "--limit",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model",

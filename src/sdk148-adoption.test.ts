@@ -75,8 +75,8 @@ beforeAll(async () => {
 })
 describe("SDK148 local commands through the consumer", () => {
   it("keeps exact queries distinct from word-form searches and saves the choice", async () => {
-    const forms = await cli(["messages", "search", "invoices", "--json"])
-    const exact = await cli(["messages", "search", "invoices", "--exact", "--json"])
+    const forms = await cli(["search", "messages", "invoices", "--json"])
+    const exact = await cli(["search", "messages", "invoices", "--exact", "--json"])
     expect(forms.code, forms.err).toBe(0)
     expect(exact.code, exact.err).toBe(0)
     expect(JSON.parse(forms.out).items).toHaveLength(1)
@@ -85,7 +85,7 @@ describe("SDK148 local commands through the consumer", () => {
     expect(count.code, count.err).toBe(0)
     const saved = await cli(["searches", "create", "exact-invoices", "invoices", "--exact", "--json"])
     expect(saved.code, saved.err).toBe(0)
-    const reused = await cli(["messages", "search", "--saved", "exact-invoices", "--json"])
+    const reused = await cli(["search", "messages", "--saved", "exact-invoices", "--json"])
     expect(reused.code, reused.err).toBe(0)
     expect(JSON.parse(reused.out).items).toEqual([])
     expect((await cli(["searches", "delete", "exact-invoices", "--json"])).code).toBe(0)
@@ -97,7 +97,7 @@ describe("SDK148 local commands through the consumer", () => {
     expect(JSON.parse(added.out)).toMatchObject({ added: ["work"] })
     const listed = await cli(["tags", "list", "--tag", "work", "--type", "chat", "--json"])
     expect(JSON.parse(listed.out).items).toHaveLength(1)
-    const found = await cli(["messages", "search", "tag:work", "--json"])
+    const found = await cli(["search", "messages", "tag:work", "--json"])
     expect(found.code, found.err).toBe(0)
     expect(JSON.parse(found.out).items.map((m: { id: string }) => m.id)).toEqual(["101"])
     const store = await openStore()
@@ -115,7 +115,7 @@ describe("SDK148 local commands through the consumer", () => {
   it("runs saved query parameters and honors no-record without deleting named searches", async () => {
     expect((await cli(["searches", "create", "invoices", "invoice", "--chat", "7", "--json"])).code).toBe(0)
     expect((await cli(["searches", "clear", "--json"])).code).toBe(0)
-    const found = await cli(["messages", "search", "--saved", "invoices", "--no-record", "--json"])
+    const found = await cli(["search", "messages", "--saved", "invoices", "--no-record", "--json"])
     expect(found.code, found.err).toBe(0)
     expect(JSON.parse(found.out).items).toHaveLength(1)
     expect(JSON.parse((await cli(["searches", "history", "--json"])).out).items).toEqual([])

@@ -96,7 +96,7 @@ describe("max bot messages send", () => {
       length: 11,
     })
     expect(JSON.stringify(journal)).not.toContain("hello there")
-    const kept = JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items
+    const kept = JSON.parse((await max(["bot", "search", "messages", "hello there", "--json"])).stdout).items
     expect(kept).toMatchObject([{ id: "mid.9", chatId: "-100", outgoing: true }])
   })
 
@@ -193,7 +193,7 @@ describe("max bot messages edit and delete", () => {
     expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--json"])).code).toBe(7)
     expect((await max(["bot", "messages", "delete", "-100", "mid.9", "--allow-dangerous", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/messages?message_id=mid.9" })
-    expect(JSON.parse((await max(["bot", "messages", "search", "hello there", "--json"])).stdout).items).toEqual([])
+    expect(JSON.parse((await max(["bot", "search", "messages", "hello there", "--json"])).stdout).items).toEqual([])
     await max(["team", "bot", "recipients", "clear"])
     await max(["team", "bot", "recipients", "add", "-200"])
     expect(
