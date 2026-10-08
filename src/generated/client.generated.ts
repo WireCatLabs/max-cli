@@ -91,11 +91,13 @@ export const wireClient = (invoke: Invoke) => ({
       invoke(OPERATIONS["chats.updateMembers"], request),
     delete: (request: RequestOf<(typeof OPERATIONS)["chats.delete"]>) => invoke(OPERATIONS["chats.delete"], request),
     clear: (request: RequestOf<(typeof OPERATIONS)["chats.clear"]>) => invoke(OPERATIONS["chats.clear"], request),
+    app: (request: RequestOf<(typeof OPERATIONS)["chats.app"]>) => invoke(OPERATIONS["chats.app"], request),
   },
   messages: {
     send: (request: RequestOf<(typeof OPERATIONS)["messages.send"]>) => invoke(OPERATIONS["messages.send"], request),
     edit: (request: RequestOf<(typeof OPERATIONS)["messages.edit"]>) => invoke(OPERATIONS["messages.edit"], request),
     react: (request: RequestOf<(typeof OPERATIONS)["messages.react"]>) => invoke(OPERATIONS["messages.react"], request),
+    press: (request: RequestOf<(typeof OPERATIONS)["messages.press"]>) => invoke(OPERATIONS["messages.press"], request),
     unreact: (request: RequestOf<(typeof OPERATIONS)["messages.unreact"]>) =>
       invoke(OPERATIONS["messages.unreact"], request),
     pollVote: (request: RequestOf<(typeof OPERATIONS)["messages.pollVote"]>) =>

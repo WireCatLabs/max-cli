@@ -16,6 +16,7 @@ import {
   POLL_CLOSED,
   pollSettings,
   SETTING_FLAGS,
+  toButtons,
   toCallRecord,
   toChat,
   toContact,
@@ -36,6 +37,7 @@ import {
 import type {
   AccountSession,
   AttachmentLink,
+  Button,
   CallRecord,
   Chat,
   ChatCard,
@@ -595,6 +597,40 @@ export class MaxClient {
       })
     },
 
+    /** Starts the bot in a one-to-one chat, as its Start button does: a service message to it. */
+    startBot: async (chatId: Id, cid: number, payload?: string): Promise<void> => {
+      if (this.#offline)
+        throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot start a bot")
+      await this.#guard({ chatId, kind: "message", key: "chats.start" })
+      try {
+        await this.#connectOnce()
+        await this.#botOf(chatId)
+        const control = {
+          _type: "CONTROL",
+          event: "botStarted",
+          ...(payload === undefined ? {} : { startPayload: payload }),
+        }
+        await this.#wire.messages.send({ chatId, message: { cid, attaches: [control] } })
+        this.#sends?.record({ chatId, kind: "message", outcome: "sent" })
+      } catch (error) {
+        this.#sends?.record({ chatId, kind: "message", outcome: "failed", errorCode: asCliError(error).code })
+        throw error
+      }
+    },
+
+    /** The address of the bot's mini app. ⚠ It signs the owner in: returned to the caller, logged nowhere. */
+    app: async (chatId: Id, startParam?: string): Promise<{ url: string }> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; ask MAX instead")
+      await this.#guard({ chatId, kind: "reaction", key: "chats.app" })
+      await this.#connectOnce()
+      const botId = await this.#botOf(chatId)
+      const answer = await this.#wire.chats.app({ botId, chatId, ...(startParam ? { startParam } : {}) })
+      if (typeof answer.url !== "string" || answer.url === "")
+        throw new CliError("not_found", `the bot in chat ${chatId} has no mini app`)
+      this.#sends?.record({ chatId, kind: "reaction", outcome: "sent" })
+      return { url: answer.url }
+    },
+
     /** Every message, for this account only. */
     clear: async (reference: string): Promise<ChatChange> => {
       const chatId = await this.chats.resolve(reference)
@@ -858,6 +894,45 @@ export class MaxClient {
   }
 
   readonly messages = {
+    /** A bot's keyboard under one message, row by row; `[]` for a message without one. */
+    buttons: async (chatId: Id, messageId: Id): Promise<Button[][]> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; ask MAX instead")
+      await this.#connectOnce()
+      const keyboard = keyboardOf(await this.#rawMessage(chatId, messageId))
+      return keyboard ? toButtons(keyboard) : []
+    },
+
+    /** Presses one callback button; the bot learns who pressed it. Only the attach's handle and the button's payload go. */
+    press: async (chatId: Id, messageId: Id, row: number, column: number): Promise<void> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot press")
+      await this.#guard({ chatId, kind: "reaction", key: "messages.press" }, messageId)
+      try {
+        await this.#connectOnce()
+        const keyboard = keyboardOf(await this.#rawMessage(chatId, messageId))
+        const rows = record(keyboard?.keyboard)?.buttons
+        const button = record(Array.isArray(rows) && Array.isArray(rows[row]) ? rows[row][column] : undefined)
+        if (!keyboard || typeof keyboard.callbackId !== "string" || !button)
+          throw new CliError("not_found", `message ${messageId} has no such button`)
+        if (button.type !== "CALLBACK") throw new CliError("validation_error", "only a callback button can be pressed")
+        await this.#wire.messages.press({
+          callbackId: keyboard.callbackId,
+          type: "CALLBACK",
+          ...(typeof button.payload === "string" && button.payload !== "" ? { payload: button.payload } : {}),
+          timestamp: Date.now(),
+        })
+        this.#sends?.record({ chatId, kind: "reaction", outcome: "sent", messageId })
+      } catch (error) {
+        this.#sends?.record({
+          chatId,
+          kind: "reaction",
+          outcome: "failed",
+          messageId,
+          errorCode: asCliError(error).code,
+        })
+        throw error
+      }
+    },
+
     /**
      * The chat's queue of scheduled messages, soonest first. Read-only: cancelling is `MSG_DELETE`,
      * which nothing here sends. Never cached — the queue empties by itself as messages go out.
@@ -1665,6 +1740,14 @@ export class MaxClient {
       })
       throw error
     }
+  }
+
+  /** The other side of a one-to-one chat; a group has no single bot to start. */
+  async #botOf(chatId: Id): Promise<Id> {
+    const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)
+    const partner = raw && this.#partnerOf(raw)
+    if (!partner) throw new CliError("validation_error", `chat ${chatId} is not a one-to-one chat with a bot`)
+    return partner
   }
 
   /** One message as MAX sends it, for what the domain model drops — its attachments whole, its link. */
@@ -3014,6 +3097,9 @@ const CONFIG_CHANGED = 134
 const CHAT_FACTS = ["title", "description", "participantsCount", "status", "type", "baseIconUrl", "owner"]
 /** Messages deleted (140 in PyMax, 142 in the web client): the snapshot cannot follow them. */
 const CHANGES_CHATS = new Set([140, 142])
+
+const keyboardOf = (raw: Payload): Payload | undefined =>
+  asArray(raw.attaches).find((attach) => attach._type === "INLINE_KEYBOARD")
 
 const isPresent = <T>(value: T | null | undefined): value is T => value !== null && value !== undefined
 

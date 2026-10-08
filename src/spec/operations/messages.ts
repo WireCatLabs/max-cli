@@ -46,7 +46,8 @@ export const messagesSend = defineOperation({
          */
         delayedAttributes: v.optional(v.strictObject({ timeToFire: v.pipe(v.number(), v.integer()) })),
       }),
-      notify: v.boolean(),
+      /** Left out when starting a bot, as the web client does. */
+      notify: v.optional(v.boolean()),
     }),
     /**
      * Creating a group is a message too: a CONTROL attachment with no chat to send it to. Measured
@@ -85,6 +86,10 @@ export const messagesSend = defineOperation({
       }
     }
     const chatId = chatOf(request)
+    // Starting a bot is a message to it, as the web client's Start button sends it (chunk `Cdo8IOYe`, 2026-10-08).
+    const only = Array.isArray(message.attaches) && message.attaches.length === 1
+    if (only && control?._type === "CONTROL" && control.event === "botStarted")
+      return { chatId, kind: "message", key: "chats.start", ...cid }
     // A control attachment changes a chat; in a message it would pass as a plain send.
     if (Array.isArray(message.attaches) && message.attaches.some((attach) => objectOf(attach)._type === "CONTROL")) {
       return ambiguous("messages.send")
@@ -266,6 +271,36 @@ export const messagesReact = defineOperation({
     ],
     notes:
       "Answers `{reactionInfo: {counters: [{count, reaction}], yourReaction, totalCount}}`. Allowed by the owner (`NEED-141`).",
+  },
+})
+
+export const messagesPress = defineOperation({
+  name: "messages.press",
+  constant: "MSG_CALLBACK",
+  opcode: 118,
+  auth: true,
+  request: v.strictObject({
+    /** The keyboard attach's own `callbackId`, not the button's. */
+    callbackId: v.string(),
+    type: v.literal("CALLBACK"),
+    payload: v.optional(v.string()),
+    timestamp: v.number(),
+  }),
+  response: v.looseObject({
+    chat: v.optional(v.looseObject({})),
+    message: v.optional(v.looseObject({})),
+    unread: v.optional(v.number()),
+    mark: v.optional(v.number()),
+  }),
+  // The request names no chat: the web client sends only what is above.
+  guard: () => ({ chatId: null, kind: "reaction", key: "messages.press" }),
+  provenance: {
+    confidence: "observed",
+    sources: [
+      "web.max.ru code, chunk `Cdo8IOYe` (2026-10-08): `send(118, {callbackId, type, payload, timestamp: Date.now()})`, the answer read for `chat`, `message`, `unread`, `mark`",
+      "the keyboard attach measured 2026-10-08 (`pnpm probe:keyboard`): `{_type: INLINE_KEYBOARD, callbackId, keyboard: {buttons: [[{type, text, payload, url, intent}]]}}`",
+    ],
+    notes: "Only CALLBACK buttons are sent; the web client opens the other kinds itself.",
   },
 })
 

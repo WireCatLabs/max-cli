@@ -4,6 +4,8 @@ import type {
   AccountSession,
   Attachment,
   Audience,
+  Button,
+  ButtonKind,
   CallRecord,
   Chat,
   ChatKind,
@@ -415,6 +417,7 @@ const attachments = (value: unknown): Attachment[] => {
           : [entry.userId]
       const userIds = people?.map(asId).filter((id): id is Id => id !== undefined)
       const poll = entry._type === "POLL" ? toPoll(entry) : undefined
+      const buttons = entry._type === "INLINE_KEYBOARD" ? toButtons(entry) : undefined
       return {
         kind: typeof entry._type === "string" ? entry._type.toLowerCase() : "unknown",
         ...(url ? { url } : {}),
@@ -428,8 +431,33 @@ const attachments = (value: unknown): Attachment[] => {
         ...(event ? { event } : {}),
         ...(userIds ? { userIds } : {}),
         ...(poll ? { poll } : {}),
+        ...(buttons ? { buttons } : {}),
       }
     })
+}
+
+const BUTTON_KINDS: Record<string, ButtonKind> = {
+  CALLBACK: "callback",
+  LINK: "link",
+  MESSAGE: "message",
+  CHAT: "chat",
+  REQUEST_CONTACT: "contact",
+  REQUEST_GEO_LOCATION: "location",
+  OPEN_APP: "app",
+  CLIPBOARD: "clipboard",
+}
+
+/** A bot's keyboard: `{callbackId, keyboard: {buttons: [[{type, text, payload, url, intent}]]}}` (measured 2026-10-08). */
+export const toButtons = (entry: Payload): Button[][] => {
+  const rows = asRecord(entry.keyboard)?.buttons
+  return (Array.isArray(rows) ? rows : []).map((row) =>
+    (Array.isArray(row) ? row : []).map((raw) => {
+      const button = asRecord(raw) ?? {}
+      const kind = BUTTON_KINDS[String(button.type)] ?? "other"
+      const url = kind === "link" ? text(button.url) : null
+      return { kind, text: text(button.text) ?? "", ...(url ? { url } : {}) }
+    }),
+  )
 }
 
 /** The bits of a poll's `settings`, as web.max.ru names them (bundle read 2026-09-24, `FIND-140`). */

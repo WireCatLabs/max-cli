@@ -317,3 +317,22 @@ export const chatsClear = defineOperation({
     ],
   },
 })
+
+export const chatsApp = defineOperation({
+  name: "chats.app",
+  constant: "BOT_WEB_APP",
+  opcode: 160,
+  auth: true,
+  request: v.strictObject({ botId: id(), chatId: id(), startParam: v.optional(v.string()) }),
+  /** ⚠ `url` signs the owner in to the bot's app: a credential. Nothing may log it or keep it in a fixture. */
+  response: v.looseObject({ url: v.optional(v.string()) }),
+  guard: (request) => ({ chatId: chatOf(request), kind: "reaction", key: "chats.app" }),
+  provenance: {
+    confidence: "observed",
+    sources: [
+      "web.max.ru code, chunk `Cdo8IOYe` (2026-10-08): `send(160, {botId, chatId, startParam: t || void 0})`, the answer handed on as the app's `{url}`",
+    ],
+    notes:
+      'Asked when the owner opens a bot\'s mini app; the web client falls back to `{url: ""}` for a bot without one.',
+  },
+})
