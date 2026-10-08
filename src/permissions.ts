@@ -82,13 +82,16 @@ export const permissionKeyOf = (command: Command): string | null | undefined => 
   }
 }
 
+/** The deletions nobody gets back: their skip word is `--allow-dangerous`, never `--yes`. */
+const DANGEROUS = new Set(["messages.delete", "bot.messages.delete", "chats.delete", "chats.clear"])
+
 export const askerFor =
   (
     flags: { yes?: boolean; allowDangerous?: boolean; json?: boolean; jsonl?: boolean },
     environment: Environment = {},
   ): Asker =>
   async (key, request) => {
-    const flag = key === "messages.delete" || key === "bot.messages.delete" ? "--allow-dangerous" : "--yes"
+    const flag = DANGEROUS.has(key) ? "--allow-dangerous" : "--yes"
     if (!approvals.getStore()?.forced.has(key) && !(flag === "--yes" ? flags.yes : flags.allowDangerous)) {
       const question = `${key}${request.chatId === null ? "" : ` in chat ${request.chatId}`}${request.count === undefined ? "" : ` (${request.count} items)`}${request.forEveryone ? " for everyone" : ""} — go ahead? [y/N] `
       const answer =

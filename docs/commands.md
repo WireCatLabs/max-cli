@@ -779,6 +779,42 @@ max chats unmute <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+### `max chats delete`
+
+delete a chat from this account; the others in it keep it and its messages
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats delete <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--allow-dangerous` | go ahead without the question an ask level puts before a deletion. |
+
+### `max chats clear`
+
+delete every message in a chat for this account; the others in it keep theirs
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats clear <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--allow-dangerous` | go ahead without the question an ask level puts before a deletion. |
+
 ## `max contacts`
 
 people you have a one-to-one chat with

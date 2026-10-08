@@ -583,6 +583,8 @@ max account privacy set --hide-online on    # скрыть «в сети» и «
 max chats mute "Поход"                      # без уведомлений из чата, насовсем
 max chats mute "Поход" --until 8h           # на 8 часов; или до даты: --until 2026-10-09T09:00
 max chats unmute "Поход"
+max chats clear "Поход" --allow-dangerous   # удалить все сообщения у себя; у остальных останутся
+max chats delete "Поход" --allow-dangerous  # удалить чат у себя; у остальных он останется
 max calls list                              # звонки, новые сверху
 max account sessions end --others --yes     # выйти везде, кроме этого сеанса — и на телефоне
 max chats folders list

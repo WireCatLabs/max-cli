@@ -79,6 +79,8 @@ describe("max commands", () => {
       "chats moderate",
       "chats mute",
       "chats unmute",
+      "chats delete",
+      "chats clear",
       "contacts add",
       "contacts remove",
       "contacts block",

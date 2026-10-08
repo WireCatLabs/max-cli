@@ -1,6 +1,6 @@
 import type { ChatAction } from "@leemour/cli-messaging/sends"
 import * as v from "valibot"
-import { defineOperation, reserveOpcode } from "../define.js"
+import { defineOperation } from "../define.js"
 import { ambiguous, chatOf, countOf, messageOf, peopleOf } from "../guards.js"
 import { id } from "../scalars.js"
 
@@ -275,19 +275,45 @@ export const chatsUpdateMembers = defineOperation({
   },
 })
 
-export const chatDelete = reserveOpcode({
+/**
+ * Both of these act for this account only: `forAll` is pinned to `false`. The owner asked for deleting a
+ * chat on 2026-10-08, correcting `NEED-32` for chats; a tool that clears a conversation for everyone in it
+ * stays out.
+ */
+const forMe = { chatId: id(), lastEventTime: v.number(), forAll: v.literal(false) }
+
+export const chatsDelete = defineOperation({
   name: "chats.delete",
   constant: "CHAT_DELETE",
   opcode: 52,
-  reason:
-    "Deleting a chat is left out of MAX-31 for the reason of `NEED-32`: a tool that can destroy a conversation for everyone in it is a poor trade for tidiness. " +
-    "Measured 2026-10-01: `forAll: true` does not delete it for everyone anyway — the sender leaves, a control message says so, and the chat stays for the other members.",
+  auth: true,
+  request: v.strictObject(forMe),
+  response: v.looseObject({}),
+  guard: (request) => ({ chatId: chatOf(request), kind: "chat", action: "delete" }),
   provenance: {
     confidence: "measured",
     sources: [
+      "web.max.ru chunk `_app/immutable/chunks/Cdo8IOYe.js`, read 2026-10-08: `send(52, {chatId, lastEventTime, forAll})`",
       "PyMax delete_chat",
       "tsmax",
-      "measured against MAX 2026-10-01 on two throwaway test chats: `{ chatId, lastEventTime, forAll: true }` answered `{}`",
+      "measured against MAX 2026-10-01 on two throwaway test chats: `{ chatId, lastEventTime, forAll: true }` answered `{}` — the sender left, a control message said so, and the chat stayed for the other members",
+    ],
+  },
+})
+
+export const chatsClear = defineOperation({
+  name: "chats.clear",
+  constant: "CHAT_CLEAR",
+  opcode: 54,
+  auth: true,
+  request: v.strictObject(forMe),
+  response: v.looseObject({}),
+  guard: (request) => ({ chatId: chatOf(request), kind: "chat", action: "clear" }),
+  provenance: {
+    confidence: "confirmed",
+    sources: [
+      "web.max.ru chunk `_app/immutable/chunks/Cdo8IOYe.js`, read 2026-10-08: `send(54, {chatId, forAll, lastEventTime})`, the chat's last message then null",
+      "rumax a9ecaf3 `clear_chat_history`",
     ],
   },
 })

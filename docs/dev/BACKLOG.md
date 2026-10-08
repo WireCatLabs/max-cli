@@ -27,8 +27,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 - **MAX-67** · P3 · Batch c: presence (35 + 132), read receipts (130), chat changes (135) in `watch --events`.
   Needs the inbound shapes from the web capture (NEED-822 A).
-- **MAX-69** · P3 · Batch e, destructive: `chats clear` (54), `chats delete` (52, for this account only — `forAll`
-  measured not to delete for others), behind the `messages delete` guard.
 - **MAX-70** · P2 · Batch f, bots on the personal account: inline keyboards in messages, `messages press` (118),
   `chats start` (64 `startPayload`), `chats app` (160; its init data is a credential).
 - **MAX-71** · P3 · Research: is 68 a message search or a chat-title search; public search (60); join requests —
