@@ -627,3 +627,14 @@ Question roots use compiled Lucene selection; explicit reply context extends thr
 cutoff in the same SQLite read snapshot. Membership stays preserve actual join versus first-seen.
 CLI and the three-tool MCP frontend call the same shared service; report evidence uses a separate
 versioned selection inside the existing evidence commands. See the [user guide](../rankings.md).
+
+### Retention and counter freshness
+
+`cli-messaging` migration 24 stores explicit roster batches with member/stay references and independent
+latest counter observations. Known joining dates define cohorts; firstSeenAt is not substituted.
+Retention uses the first roster within 24 hours after each checkpoint, disclosing observed/unknown/pending
+denominators and interval departures. The shared service and existing MCP frontend reuse bounded evidence.
+MAX's adapter marks authoritative history/context counter reads and refreshes views/reactions through
+exact `messages.around` reads. Comments are unsupported. Counter-only refresh updates the local store,
+preserves message bodies/attachments/tombstones and makes no send or read-mark request. Legacy differing
+values lose freshness. See [user statistics guide](../rankings.md).
