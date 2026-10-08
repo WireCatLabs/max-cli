@@ -7,7 +7,7 @@
 #
 # Steps 3–7 of docs_ai/releasing.md. Run on a clean, up-to-date `main`, after the release skill has
 # written and the owner signed docs_ai/releases/<version>.md for this commit. docs_ai/ is a clone of
-# the private repository leemour/max-cli-private; a fork without it passes its own report. When npm already has
+# the private repository leemour/cli-private; a fork without it passes its own report. When npm already has
 # that version, or a higher one, it merges the next free version into `main` through a pull request,
 # carries the report to it and publishes that. The npm token is never printed — not on success, not
 # in an error.
@@ -62,7 +62,7 @@ if [ -n "$custom" ]; then
 elif [ -d docs_ai ]; then
   report="docs_ai/releases/$version.md"
 else
-  echo "no docs_ai/ — release reports live in the private repository leemour/max-cli-private, cloned into" \
+  echo "no docs_ai/ — release reports live in the private repository leemour/cli-private, cloned into" \
     "docs_ai/, as releases/$version.md. A fork passes its own signed report: bin/release --report <path>" >&2
   exit 1
 fi

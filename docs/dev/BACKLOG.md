@@ -149,7 +149,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   single-file build (G4 §3.9: Bun only). Lowest priority.
 
 - ~~**RES-12**~~ moved 2026-10-05 to the search stream: search items live in `docs_ai/SEARCH.md` (private
-  repository `leemour/max-cli-private`), not in this backlog.
+  repository `leemour/cli-private`), not in this backlog.
 
 ## Later — each reopens a ruling
 
