@@ -593,11 +593,11 @@ max chats link reset <chat>
 
 ### `max chats requests`
 
-requests to join a group that needs an admin's approval
+requests to join a MAX channel needing approval
 
 #### `max chats requests list`
 
-who asked to join, newest first; only admins see them, and reading tells nobody
+pending requests to join a MAX channel needing approval; admins only; requestedAt is null
 
 ```sh
 max chats requests list <chat> [options]
@@ -611,7 +611,7 @@ max chats requests list <chat> [options]
 |---|---|
 | `--limit <n>` | how many. |
 | `--search <text>` | only people whose name or @username has this. |
-| `--link <link>` | only people who asked through this invite link; not with --search. |
+| `--link <link>` | not supported by MAX; use name search instead. |
 
 #### `max chats requests accept`
 
@@ -630,8 +630,8 @@ max chats requests accept <chat> [person] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--all` | every pending request, counted against the hourly limit first. |
-| `--link <link>` | with --all: only the requests made by this invite link. |
+| `--all` | not supported by MAX; select one person from chats requests list. |
+| `--link <link>` | not supported by MAX; select one person from chats requests list. |
 
 #### `max chats requests decline`
 
@@ -650,8 +650,8 @@ max chats requests decline <chat> [person] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--all` | every pending request, counted against the hourly limit first. |
-| `--link <link>` | with --all: only the requests made by this invite link. |
+| `--all` | not supported by MAX; select one person from chats requests list. |
+| `--link <link>` | not supported by MAX; select one person from chats requests list. |
 
 ### `max chats folders`
 

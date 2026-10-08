@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**923 ✅ · 113 ⛔ · 0 ❌** — 313 commands, 723 options.
+**924 ✅ · 112 ⛔ · 0 ❌** — 313 commands, 723 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -513,7 +513,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments list` | `--all` | ✅ |  |
 | `attachments show` |  | ✅ |  |
 | `attachments show` | `--attachment` | ✅ |  |
-| `attachments show` | `--page` | ⛔ | cli-messaging 0.207.0 src/cli/messenger/attachments.test.ts renders a retained PDF page and refuses non-PDFs; it needs the optional unpdf and @napi-rs/canvas, which max does not install |
+| `attachments show` | `--page` | ✅ |  |
 | `attachments show` | `--offset-bytes` | ✅ |  |
 | `attachments show` | `--chunk-bytes` | ✅ |  |
 | `attachments show` | `--if-sha256` | ✅ |  |
