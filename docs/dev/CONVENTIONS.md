@@ -176,3 +176,12 @@ Headings, only these, each at most once: `Что нового`, `Изменен�
 option, a permission or a config key goes under `Изменено — может сломать скрипты`. No backlog,
 journal or decision ids, no file paths, no internal names; a link to the doc page that describes it.
 `pnpm release:check` checks the shape; the content is the release skill's job and the owner's.
+
+
+## Documentation authoring
+
+Before documentation work, read the [shared authoring rules](https://github.com/leemour/cli-docs/blob/main/docs/AUTHORING.md).
+Every user guide starts with a brief explanation of when to use it and what result the reader
+will get; mention a prerequisite only when it changes the next step. Keep titles short and
+task-specific. A new sidebar page needs a relevant icon and a contextual incoming link.
+Preserve released command facts and existing URLs/anchors.
