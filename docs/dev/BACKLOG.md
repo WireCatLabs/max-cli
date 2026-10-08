@@ -67,9 +67,11 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   `status: EDITED`), deletions (128 with `status: REMOVED`) and reactions (155); the plain stream is
   unchanged. Left: typing — MAX pushes 129 only after `75 {chatId, subscribe: true}`, which the tab
   sends for the chat it has open and repeats every 60 s; `max serve` subscribes to nothing.
+  Done 2026-10-08 (`MAX-67`): reads (130) and chat changes (135, or a 128 carrying the chat).
 - **MAX-4** · 🟡 P3 · Chat addressing. Done: an id, or a title matched exactly then as a fragment,
   an ambiguous one refused (`resolve`, `src/client.ts:325`; `pickChat`, `src/resolve.ts:13`). Left: `@username`, a phone number, a chat the
-  account is not in.
+  account is not in. Correction 2026-10-08: a bot the account is not in yet is reached by its link in `chats start`
+  (`MAX-72`); a chat with a person is `myId ^ theirId`, as web.max.ru computes it.
 - **CLI-36** · P3 · The local copy made optional: a setting under which `max` writes no chats or
   messages to disk and answers everything from MAX (`--offline` and `messages search` then refuse).
   Owner, 2026-09-24: «я бы сделал хранение опциональным в P3».
