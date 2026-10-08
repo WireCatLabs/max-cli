@@ -597,6 +597,30 @@ export class MaxClient {
       })
     },
 
+    /**
+     * A bot's link to the chat with it — one never opened included — and the `?start=` it carries.
+     * `undefined` for anything that is not a link to a bot. Asks MAX only for a link.
+     */
+    botLink: async (reference: string): Promise<{ chatId: Id; payload?: string } | undefined> => {
+      if (!/^(https:\/\/)?max\.ru\/[\w.-]+\/?(\?.*)?$/.test(reference.trim())) return undefined
+      if (this.#offline)
+        throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot read a link")
+      const url = new URL(reference.trim().startsWith("https://") ? reference.trim() : `https://${reference.trim()}`)
+      await this.#connectOnce()
+      const answer = await this.#wire.chats
+        .linkInfo({ link: `https://max.ru${url.pathname.replace(/\/$/, "")}` })
+        .catch(deadLink(reference))
+      const contact = record(record(answer.user)?.contact)
+      const botId = asId(contact?.id)
+      const options = Array.isArray(contact?.options) ? contact.options : []
+      if (botId === undefined || !options.includes("BOT"))
+        throw new CliError("validation_error", `${reference.trim()} is not a bot's link`)
+      const viewerId = this.#store.readState().viewerId
+      if (viewerId === undefined) throw new CliError("not_found", "this login does not say whose account it is")
+      const payload = url.searchParams.get("start")
+      return { chatId: String(BigInt(viewerId) ^ BigInt(botId)), ...(payload ? { payload } : {}) }
+    },
+
     /** Starts the bot in a one-to-one chat, as its Start button does: a service message to it. */
     startBot: async (chatId: Id, cid: number, payload?: string): Promise<void> => {
       if (this.#offline)
@@ -604,7 +628,7 @@ export class MaxClient {
       await this.#guard({ chatId, kind: "message", key: "chats.start" })
       try {
         await this.#connectOnce()
-        await this.#botOf(chatId)
+        this.#botOf(chatId)
         const control = {
           _type: "CONTROL",
           event: "botStarted",
@@ -623,7 +647,7 @@ export class MaxClient {
       if (this.#offline) throw new CliError("validation_error", "`--offline` reads what was recorded; ask MAX instead")
       await this.#guard({ chatId, kind: "reaction", key: "chats.app" })
       await this.#connectOnce()
-      const botId = await this.#botOf(chatId)
+      const botId = this.#botOf(chatId)
       const answer = await this.#wire.chats.app({ botId, chatId, ...(startParam ? { startParam } : {}) })
       if (typeof answer.url !== "string" || answer.url === "")
         throw new CliError("not_found", `the bot in chat ${chatId} has no mini app`)
@@ -1743,11 +1767,16 @@ export class MaxClient {
   }
 
   /** The other side of a one-to-one chat; a group has no single bot to start. */
-  async #botOf(chatId: Id): Promise<Id> {
-    const raw = asArray(this.#session().chats).find((chat) => asId(chat.id) === chatId)
-    const partner = raw && this.#partnerOf(raw)
-    if (!partner) throw new CliError("validation_error", `chat ${chatId} is not a one-to-one chat with a bot`)
-    return partner
+  /**
+   * The other side of a one-to-one chat. Its id is the two people's ids XORed (web.max.ru's
+   * `resolveChatId`, and it matches the dialogs measured), so a chat the login has not listed yet —
+   * a bot started from its link — still names its bot. A group's id is negative.
+   */
+  #botOf(chatId: Id): Id {
+    const viewerId = this.#store.readState().viewerId
+    if (chatId.startsWith("-") || viewerId === undefined)
+      throw new CliError("validation_error", `chat ${chatId} is not a one-to-one chat with a bot`)
+    return String(BigInt(viewerId) ^ BigInt(chatId))
   }
 
   /** One message as MAX sends it, for what the domain model drops — its attachments whole, its link. */
