@@ -340,6 +340,7 @@ max chats list --search иван             # чаты, в названии к�
 max chats list --search work --kind group # только группы
 max chats list --unread --kind dialog    # личные чаты, где есть непрочитанное
 max contacts list --search петров        # люди по имени или @username
+max search all "договор"                 # сообщения, почта и заметки на этом компьютере
 max search messages "договор"            # по тексту сообщений, которые уже прочитаны
 max search messages "договор" --chat 42  # в одном чате
 ```
