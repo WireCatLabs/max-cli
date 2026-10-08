@@ -203,6 +203,9 @@ describe("max store", () => {
     expect(JSON.parse((await max(["s-jobs", "store", "jobs", "list", "--json"], environment)).stdout)).toMatchObject({
       items: [],
     })
+    const running = await max(["s-jobs", "store", "jobs", "list", "--state", "running", "--json"], environment)
+    expect(JSON.parse(running.stdout)).toMatchObject({ items: [] })
+    expect((await max(["s-jobs", "store", "jobs", "list", "--state", "stuck", "--json"], environment)).code).toBe(2)
     expect((await max(["s-jobs", "store", "jobs", "show", "nope", "--json"], environment)).code).toBe(6)
     expect((await max(["s-jobs", "store", "jobs", "cancel", "nope", "--json"], environment)).code).toBe(6)
   })
