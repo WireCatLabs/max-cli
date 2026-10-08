@@ -20,7 +20,7 @@ export const messagesCommand = (): Command => {
   const command = new Command("messages").description("read and send messages in a chat")
 
   const shared = sharedMessagesCommand(maxMessenger)
-  for (const name of ["list", "search", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
+  for (const name of ["list", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
   const list = command.commands.find((one) => one.name() === "list")
   // MAX has no forum topics.
   if (list) Object.assign(list, { options: list.options.filter((option) => option.attributeName() !== "topic") })

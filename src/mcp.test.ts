@@ -582,7 +582,7 @@ describe("the MCP server", () => {
   it.each([false, true])("native MCP search history honors explicit recording %s", async (record) => {
     const { client } = await connect({}, { record })
     await call(client, "max_messages_list", { chat: "111" })
-    const found = await call(client, "max_messages_search", { text: "hi" })
+    const found = await call(client, "max_search_messages", { text: "hi" })
     const counted = await call(client, "max_stats_messages_show", { text: "hi" })
     expect(found.isError).toBe(false)
     expect(counted.body).toMatchObject({ total: 1 })
@@ -654,7 +654,7 @@ describe("the MCP server", () => {
     const before = max.sent.length
     // A fresh server answers the archived search without logging in.
     const reopened = await connect({}, { profile })
-    const result = await call(reopened.client, "max_messages_search", { text: "searchable" })
+    const result = await call(reopened.client, "max_search_messages", { text: "searchable" })
     expect(result.isError).toBe(false)
     expect(result.body).toMatchObject({ items: [{ id: "116762160362694583", text: "searchable history" }] })
     expect(reopened.logins()).toBe(0)
@@ -682,7 +682,7 @@ describe("the MCP server", () => {
     await call(original.client, "max_messages_list", { chat: "111" })
     await original.session.close()
     const reopened = await connect({}, { profile })
-    const result = await call(reopened.client, "max_messages_search", {
+    const result = await call(reopened.client, "max_search_messages", {
       text: "x",
       chat: "Team Alpha",
       language: "lucene",
@@ -704,12 +704,12 @@ describe("the MCP server", () => {
     expect(result.body.completeness).toEqual(
       expect.arrayContaining([expect.objectContaining({ chatId: "111", fetchedAt: null })]),
     )
-    const legacy = await call(reopened.client, "max_messages_search", { text: "invoice", language: "legacy" })
+    const legacy = await call(reopened.client, "max_search_messages", { text: "invoice", language: "legacy" })
     expect(legacy.isError).toBe(false)
-    const ast = await call(reopened.client, "max_messages_search", { ast: parseLucene("invoice") })
+    const ast = await call(reopened.client, "max_search_messages", { ast: parseLucene("invoice") })
     expect(ast.isError).toBe(false)
     expect(ast.body).toMatchObject({ items: [{ id: "116762160362694599" }], query: { language: "lucene-v1" } })
-    const missing = await call(reopened.client, "max_messages_search", {})
+    const missing = await call(reopened.client, "max_search_messages", {})
     expect(missing.isError).toBe(true)
     expect(reopened.logins()).toBe(0)
     expect(reopened.max.sent).toEqual([])
@@ -812,7 +812,7 @@ describe("the MCP server", () => {
     const context = await call(client, "max_messages_context", { chat: "111", message: id, before_n: 0, after_n: 0 })
     expect(context.isError).toBe(false)
     expect(context.body).toMatchObject({ items: [{ id, anchor: true, text: "context archive" }] })
-    const search = await call(client, "max_messages_search", { text: "context", chat: "111", backend: "archive" })
+    const search = await call(client, "max_search_messages", { text: "context", chat: "111", backend: "archive" })
     expect(search.isError).toBe(false)
     expect(search.body).toMatchObject({ items: [{ id, text: "context archive" }] })
   })
@@ -835,16 +835,16 @@ describe("the MCP server", () => {
       (await call(client, "max_messages_edit", { chat: "111", message: id, text: "updated archived" })).isError,
     ).toBe(false)
     expect(
-      (await call(client, "max_messages_search", { text: "updated", chat: "111", backend: "archive" })).body,
+      (await call(client, "max_search_messages", { text: "updated", chat: "111", backend: "archive" })).body,
     ).toMatchObject({
       items: [{ id, text: "updated archived" }],
     })
     expect(
-      (await call(client, "max_messages_search", { text: "original", chat: "111", backend: "archive" })).body.items,
+      (await call(client, "max_search_messages", { text: "original", chat: "111", backend: "archive" })).body.items,
     ).toEqual([])
     expect((await call(client, "max_messages_delete", { chat: "111", messages: [id] })).isError).toBe(false)
     expect(
-      (await call(client, "max_messages_search", { text: "updated", chat: "111", backend: "archive" })).body.items,
+      (await call(client, "max_search_messages", { text: "updated", chat: "111", backend: "archive" })).body.items,
     ).toEqual([])
   })
 
@@ -866,7 +866,7 @@ describe("the MCP server", () => {
     } finally {
       await store.close()
     }
-    const search = await call(client, "max_messages_search", { text: "foreign" })
+    const search = await call(client, "max_search_messages", { text: "foreign" })
     expect(search.isError).toBe(false)
     expect(search.body.items).toEqual([])
     expect((await client.listResources()).resources.map(({ uri }) => uri)).not.toContain("max://chat/333")
@@ -888,7 +888,7 @@ describe("the MCP server", () => {
 
   it("refuses a local search for an unknown account without logging in", async () => {
     const { client, logins } = await connect()
-    const result = await call(client, "max_messages_search", { text: "searchable" })
+    const result = await call(client, "max_search_messages", { text: "searchable" })
     expect(result.isError).toBe(true)
     expect(logins()).toBe(0)
   })

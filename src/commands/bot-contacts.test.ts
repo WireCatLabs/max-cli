@@ -142,14 +142,14 @@ describe("max bot contacts show", () => {
   })
 
   it("searches every allowed bot's copy with --all-bots", async () => {
-    const found = await json(["first", "bot", "messages", "search", "alone", "--all-bots"])
+    const found = await json(["first", "bot", "search", "messages", "alone", "--all-bots"])
     expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a3"])
   })
 
   it("searches another bot's copy with --bots when allowed", async () => {
-    const own = await json(["first", "bot", "messages", "search", "alone"])
+    const own = await json(["first", "bot", "search", "messages", "alone"])
     expect(own.items).toEqual([])
-    const both = await json(["first", "bot", "messages", "search", "alone", "--bots", "second"])
+    const both = await json(["first", "bot", "search", "messages", "alone", "--bots", "second"])
     expect(both.items.map((message: { id: string }) => message.id)).toEqual(["mid.a3"])
   })
 
@@ -187,17 +187,17 @@ describe("max bot contacts show", () => {
   })
 })
 
-describe("max bot messages search --from", () => {
+describe("max bot search messages --from", () => {
   it("finds what one person wrote, with or without text", async () => {
-    const all = (await json(["first", "bot", "messages", "search", "--from", "@ann"])).items
+    const all = (await json(["first", "bot", "search", "messages", "--from", "@ann"])).items
     expect(all.map((message: { id: string }) => message.id)).toEqual(["mid.a1", "mid.d1"])
-    const some = (await json(["first", "bot", "messages", "search", "team", "--from", "@ann", "--from", "Bob"])).items
+    const some = (await json(["first", "bot", "search", "messages", "team", "--from", "@ann", "--from", "Bob"])).items
     expect(some.map((message: { id: string }) => message.id)).toEqual(["mid.b1", "mid.a1"])
   })
 
   it("**ranks by words** and takes the query language; --newest puts the newest first", async () => {
     const ids = async (...argv: string[]) =>
-      (await json(["first", "bot", "messages", "search", ...argv])).items.map((message: { id: string }) => message.id)
+      (await json(["first", "bot", "search", "messages", ...argv])).items.map((message: { id: string }) => message.id)
 
     expect((await ids("team", "--newest")).length).toBeGreaterThan(0)
     expect(await ids("team", "from:@ann")).toEqual(["mid.a1"])
@@ -206,16 +206,16 @@ describe("max bot messages search --from", () => {
 
   it("never reads past the bots it may read, whatever the query says", async () => {
     for (const query of ["team in:all", "team in:max", "team in:max-bot"]) {
-      const { code, stderr } = await max(["first", "bot", "messages", "search", query, "--json"])
+      const { code, stderr } = await max(["first", "bot", "search", "messages", query, "--json"])
       expect(code).toBe(2)
       expect(JSON.parse(stderr).error.message).toMatch(/not with in: or --source|in: takes/)
     }
-    const empty = await max(["first", "bot", "messages", "search", "--json"])
+    const empty = await max(["first", "bot", "search", "messages", "--json"])
     expect(JSON.parse(empty.stderr).error.message).toBe("say what to find: some text, or who wrote it with --from")
   })
 
   it("stops at --limit and says there is more", async () => {
-    const found = await json(["first", "bot", "messages", "search", "--from", "@ann", "--limit", "1"])
+    const found = await json(["first", "bot", "search", "messages", "--from", "@ann", "--limit", "1"])
     expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a1"])
     expect(found).toMatchObject({ limit: 1, hasMore: true })
   })

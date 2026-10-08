@@ -1,6 +1,6 @@
 # Поиск сообщений
 
-`max messages search` ищет сообщения в локальном архиве — копии ваших чатов, которую `max` хранит на
+`max search messages` ищет сообщения в локальном архиве — копии ваших чатов, которую `max` хранит на
 этом компьютере. Поиск в одном чате спрашивает ещё и сервер MAX ([ниже](#поиск-на-сервере-max---backend)).
 Прочитанным он ничего не помечает.
 
@@ -44,11 +44,11 @@ searched 12,430 messages in 37 chats — 5 never fetched; `max store fetch --all
 ## Слова и фразы
 
 ```sh
-max messages search счёт
-max messages search '"счёт оплачен"'             # слова подряд
-max messages search 'кафе OR библиотека'
-max messages search '(кафе OR библиотека) NOT шумно'
-max messages search 'квартир*'                   # все слова, которые начинаются на «квартир»
+max search messages счёт
+max search messages '"счёт оплачен"'             # слова подряд
+max search messages 'кафе OR библиотека'
+max search messages '(кафе OR библиотека) NOT шумно'
+max search messages 'квартир*'                   # все слова, которые начинаются на «квартир»
 ```
 
 Слова рядом должны быть в сообщении все. Поиск находит формы слов: `квартира` найдёт «квартиру».
@@ -59,9 +59,9 @@ max messages search 'квартир*'                   # все слова, к�
 ## Поиск на сервере MAX: `--backend`
 
 ```sh
-max messages search 'счёт' --chat "Книжный клуб"                    # архив и сервер MAX
-max messages search 'счёт' --chat "Книжный клуб" --backend server   # только то, что нашёл сервер
-max messages search 'счёт' --backend archive                        # только архив
+max search messages 'счёт' --chat "Книжный клуб"                    # архив и сервер MAX
+max search messages 'счёт' --chat "Книжный клуб" --backend server   # только то, что нашёл сервер
+max search messages 'счёт' --backend archive                        # только архив
 ```
 
 Сервер MAX ищет только в одном чате. Поэтому, когда в запросе назван один чат (`--chat` или `chat:`) и есть
@@ -81,12 +81,12 @@ max messages search 'счёт' --backend archive                        # тол
 ## Люди и чаты
 
 ```sh
-max messages search 'from:"Алиса Тестова" счёт'
-max messages search 'from:("Алиса Тестова" OR "Борис Тестов") библиотека'
-max messages search 'from:me date:7d'            # что вы писали за неделю
-max messages search 'chat:"Книжный клуб" библиотека'
-max messages search библиотека --chat "Книжный клуб"   # то же, опцией
-max messages search 'паспорт kind:private'       # только личные переписки
+max search messages 'from:"Алиса Тестова" счёт'
+max search messages 'from:("Алиса Тестова" OR "Борис Тестов") библиотека'
+max search messages 'from:me date:7d'            # что вы писали за неделю
+max search messages 'chat:"Книжный клуб" библиотека'
+max search messages библиотека --chat "Книжный клуб"   # то же, опцией
+max search messages 'паспорт kind:private'       # только личные переписки
 ```
 
 `kind:` принимает `private` (личные), `group`, `channel`, `saved` (Избранное) и `bot`.
@@ -94,10 +94,10 @@ max messages search 'паспорт kind:private'       # только личн�
 ## Даты
 
 ```sh
-max messages search 'date:today'
-max messages search 'библиотека date:yesterday'
-max messages search 'счёт date:7d'               # от 7 дней назад до сейчас; также 30m, 2h
-max messages search 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid
+max search messages 'date:today'
+max search messages 'библиотека date:yesterday'
+max search messages 'счёт date:7d'               # от 7 дней назад до сейчас; также 30m, 2h
+max search messages 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid
 ```
 
 `today`, `yesterday` и календарные даты — это дни в часовом поясе компьютера; `--timezone` выбирает
@@ -106,13 +106,13 @@ max messages search 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe
 ## Файлы и ссылки
 
 ```sh
-max messages search 'has:file'
-max messages search 'filename:*.pdf'
-max messages search 'filename:*договор*'         # часть имени
-max messages search 'size>10MB'
-max messages search 'size:[1KB TO 300KB]'
-max messages search 'has:photo chat:"Книжный клуб"'
-max messages search 'has:link AND "github.com"'  # ссылка на сайт
+max search messages 'has:file'
+max search messages 'filename:*.pdf'
+max search messages 'filename:*договор*'         # часть имени
+max search messages 'size>10MB'
+max search messages 'size:[1KB TO 300KB]'
+max search messages 'has:photo chat:"Книжный клуб"'
+max search messages 'has:link AND "github.com"'  # ссылка на сайт
 ```
 
 Файл находится по имени и размеру, даже если в сообщении нет текста. `filename:` сравнивает имя
@@ -124,8 +124,8 @@ max messages search 'has:link AND "github.com"'  # ссылка на сайт
 ## Пароли, коды и карты
 
 ```sh
-max messages search 'preset:secret kind:saved'   # что-то похожее на пароль или токен в Избранном
-max messages search 'preset:card'
+max search messages 'preset:secret kind:saved'   # что-то похожее на пароль или токен в Избранном
+max search messages 'preset:card'
 ```
 
 Preset находит сообщения, которые *похожи* на пароль, код входа, ключ API, номер карты или IBAN,
@@ -138,8 +138,8 @@ Preset находит сообщения, которые *похожи* на п�
 max tags add work --chat "Книжный клуб"
 max tags add work --contact "Борис Тестов"
 max tags list --tag work --type chat
-max messages search 'tag:work счёт'
-max messages search 'счёт NOT tag:work'
+max search messages 'tag:work счёт'
+max search messages 'счёт NOT tag:work'
 max tags remove work --chat "Книжный клуб"
 ```
 
@@ -165,12 +165,12 @@ max tags list --source auto                  # только автоматиче
 
 ```sh
 max searches create meetings 'библиотека OR кафе' --chat "Книжный клуб"
-max messages search --saved meetings
-max messages search --saved meetings 'date:today'   # слова добавляются через AND
+max search messages --saved meetings
+max search messages --saved meetings 'date:today'   # слова добавляются через AND
 max stats messages show --saved meetings --by day
 max searches list
 max searches history --limit 10
-max messages search --saved 42                   # строка истории, по её номеру
+max search messages --saved 42                   # строка истории, по её номеру
 ```
 
 `searches create` сохраняет запрос с опциями и ничего не запускает; занятое имя — только с
@@ -195,7 +195,7 @@ max stats messages show 'from:me' --by day --timezone Europe/Madrid
 max stats messages show --by hour                     # все сохранённые сообщения
 ```
 
-`stats messages show` считает сообщения, которые нашёл бы `messages search` с тем же запросом, каждое один
+`stats messages show` считает сообщения, которые нашёл бы `search messages` с тем же запросом, каждое один
 раз. `--by chat` (по умолчанию) и `--by sender` — больше всего сверху; `--by day` и `--by hour` — по
 порядку. Если часть чатов сохранена не целиком, числа — нижняя граница, и stderr говорит, сколько
 таких чатов.
@@ -213,7 +213,7 @@ max stats messages show --by hour                     # все сохранён�
 ## Для скриптов и агентов
 
 `--json` возвращает один объект с сообщениями и тем, где искали; `--jsonl` — только сообщения,
-построчно. В MCP `max_read` (`command: "messages search"`) и `max_read` (`command: "stats messages show"`) принимают те же запросы, а команды `tags`
+построчно. В MCP `max_read` (`command: "search messages"`) и `max_read` (`command: "stats messages show"`) принимают те же запросы, а команды `tags`
 и `searches` через `max_read`/`max_write` управляют метками и сохранёнными поисками. Поля ответа, прежний режим
 `--language legacy` и `--regex` — в [языке запросов](query-language.md).
 
@@ -234,7 +234,7 @@ PDF с текстовым слоем. Фото и сканы читает ваш
 
 ```sh
 max attachments extract --chat "Книжный клуб" --download --output-dir ./files
-max messages search 'content:договор'
+max search messages 'content:договор'
 max attachments list --chat "Книжный клуб" --needs-text
 max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 ```

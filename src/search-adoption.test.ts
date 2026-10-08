@@ -44,8 +44,8 @@ const invoke = async (argv: string[]) => {
 describe("shared search adoption", () => {
   it("uses strict defaults and applies graph packet bounds", async () => {
     const result = await invoke([
-      "messages",
       "search",
+      "messages",
       'from:("Alice Synthetic" OR "Bob Synthetic")',
       "--thread",
       "--thread-hops",
@@ -77,7 +77,7 @@ describe("shared search adoption", () => {
     expect(JSON.parse(context.stdout).items.some((row: { id: string }) => row.id === "101")).toBe(true)
   })
   it.each([
-    ["messages", "search", "кафе", "--sync-first", "--max-chats", "1", "--sync-time", "1s", "--max-messages", "2"],
+    ["search", "messages", "кафе", "--sync-first", "--max-chats", "1", "--sync-time", "1s", "--max-messages", "2"],
     [
       "stats",
       "messages",
@@ -91,7 +91,7 @@ describe("shared search adoption", () => {
       "--max-messages",
       "2",
     ],
-    ["conversations", "search", "кафе", "--sync-first", "--sync-time", "1s", "--max-messages", "2"],
+    ["search", "conversations", "кафе", "--sync-first", "--sync-time", "1s", "--max-messages", "2"],
   ])("reports incomplete refresh and retains local results in offline mode: %j", async (...argv) => {
     const result = await invoke(argv)
     expect(result.code).toBe(0)
@@ -100,8 +100,8 @@ describe("shared search adoption", () => {
   it("filters word-only conversations without loading a model", async () => {
     expect((await invoke(["conversations", "build", "--chat", "7"])).code).toBe(0)
     const result = await invoke([
-      "conversations",
       "search",
+      "conversations",
       "кафе",
       "--filter",
       "from:me",
@@ -115,8 +115,8 @@ describe("shared search adoption", () => {
   })
   it("refuses scoped filters during local graph refresh", async () => {
     const result = await invoke([
-      "conversations",
       "search",
+      "conversations",
       "кафе",
       "--filter",
       "from:me",
@@ -171,7 +171,7 @@ describe("shared search adoption", () => {
       textPath,
     ])
     expect(result.code).toBe(0)
-    const found = await invoke(["messages", "search", "content:agentfiletoken"])
+    const found = await invoke(["search", "messages", "content:agentfiletoken"])
     expect(JSON.parse(found.stdout).items.map((row: { id: string }) => row.id)).toEqual(["105"])
     const listed = await invoke(["attachments", "list", "--chat", "7", "--needs-text", "--limit", "1", "--page", "1"])
     expect(listed.code).toBe(0)

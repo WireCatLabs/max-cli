@@ -183,7 +183,7 @@
 | `https://web.max.ru` во временном профиле Chromium | `session start qr-chrome`, `session start sms`, `setup --method qr-chrome|sms` |
 | Hugging Face и GitHub — файлы модели распознавания речи | только `max models audio download`; голос туда не уходит — он распознаётся на этом компьютере |
 | Hugging Face — файлы текстовой модели | только `max models text download`; локальная модель не отправляет сообщения |
-| настроенный внешний сервис векторов | `conversations embed` отправляет текст бесед после согласия; `conversations search`, в том числе MCP, отправляет вопрос при выборе внешнего сервиса |
+| настроенный внешний сервис векторов | `conversations embed` отправляет текст бесед после согласия; `search conversations`, в том числе MCP, отправляет вопрос при выборе внешнего сервиса |
 | настроенный OpenAI-совместимый сервис или Anthropic | `conversations build --analyze --chat` отправляет ограниченные пачки после согласия для аккаунта, чата и сервиса |
 | `https://platform-api2.max.ru` — официальный Bot API, токен в заголовке `Authorization` | только команды `max bot` |
 | реестр npm — узнать номер последней версии | `max upgrade`; и раз в сутки, когда команду запускает человек в терминале. Выключается `updateCheck: false` |

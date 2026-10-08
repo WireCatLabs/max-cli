@@ -1,6 +1,6 @@
 # Язык поисковых запросов
 
-Справка по запросам `max messages search`, `max stats messages show` и сохранённых поисков. Примеры на
+Справка по запросам `max search messages`, `max stats messages show` и сохранённых поисков. Примеры на
 каждый день — в [поиске сообщений](search.md).
 
 Язык — строгий профиль синтаксиса Apache Lucene: слова, фразы, AND/OR/NOT, группы, поля, диапазоны,
@@ -130,7 +130,7 @@ Preset сообщает кандидата по виду. Он не провер
 
 ## В MCP
 
-`max_read` (`command: "messages search"`) принимает запрос как `text` или как синтаксическое дерево с версией в `ast` (не
+`max_read` (`command: "search messages"`) принимает запрос как `text` или как синтаксическое дерево с версией в `ast` (не
 оба сразу); `language` выбирает `lucene` или `legacy`, `timezone` — календарный пояс. `chat`
 принимает id или сохранённое название; `source`, `newest`, `context` и `limit` работают как опции
 команды. `record: false` не записывает вызов в историю запросов. Ответ содержит те же поля, что
@@ -139,8 +139,8 @@ Preset сообщает кандидата по виду. Он не провер
 ## Прежние режимы
 
 ```sh
-max messages search 'from:alice after:7d invoice -draft' --language legacy --json
-max messages search --regex 'invoice\s+\d+' --json
+max search messages 'from:alice after:7d invoice -draft' --language legacy --json
+max search messages --regex 'invoice\s+\d+' --json
 ```
 
 `--language legacy` сохраняет прежние фильтры и исправление опечаток. `--regex` — отдельный режим:

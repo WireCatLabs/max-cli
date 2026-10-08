@@ -72,7 +72,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   account is not in. Correction 2026-10-08: a bot the account is not in yet is reached by its link in `chats start`
   (`MAX-72`); a chat with a person is `myId ^ theirId`, as web.max.ru computes it.
 - **CLI-36** · P3 · The local copy made optional: a setting under which `max` writes no chats or
-  messages to disk and answers everything from MAX (`--offline` and `messages search` then refuse).
+  messages to disk and answers everything from MAX (`--offline` and `search messages` then refuse).
   Owner, 2026-09-24: «я бы сделал хранение опциональным в P3».
   **Correction 2026-10-03 (T6):** the per-profile cache is removed; this option would now need
   to control shared adapter recording and the login record (`src/record.ts`).

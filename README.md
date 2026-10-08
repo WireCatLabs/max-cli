@@ -57,7 +57,7 @@ max bot list --check                                     # все боты на 
   (`bot chats rules`) и удаляет спам и людей — с запретом вернуться по ссылке. Вступления видит
   `bot watch`, который печатает всё, что происходит в чатах бота.
 - **Копия переписки на этом компьютере.** `bot contacts show <кто>` — где человек писал и его личный
-  чат с ботом; `bot messages search --from <кто>` и `bot messages between <кто> <кто>` — без
+  чат с ботом; `bot search messages --from <кто>` и `bot messages between <кто> <кто>` — без
   запросов к MAX.
 - **Бот для агента.** `max sales bot mcp` — MCP-сервер бота: агенту доступно то, что разрешают
   `permissions` профиля бота; `ask` и `allow` разрешают действие без формы, а `readonly` запрещает запись.
@@ -365,7 +365,7 @@ max chats moderate "Поход" --dry-run                 # спам, чужие
 **Найти и сохранить:**
 
 ```sh
-max messages search "договор"                     # по всему прочитанному, без сети
+max search messages "договор"                     # по всему прочитанному, без сети
 max store fetch "Проект Альфа" --last 500
 max store export "Проект Альфа" --format markdown --output alfa.md
 ```

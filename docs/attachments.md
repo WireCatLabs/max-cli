@@ -137,7 +137,7 @@ npm install -g unpdf mammoth @napi-rs/canvas
 max attachments list --chat "Учебная группа" --needs-text --json
 # Агент открывает localPath, читает все страницы и сохраняет буквальный текст в scan.txt.
 max attachments text set "Учебная группа" 204 --attachment 1 --text-file ./scan.txt --json
-max messages search 'content:умножение' --chat "Учебная группа" --offline --json
+max search messages 'content:умножение' --chat "Учебная группа" --offline --json
 ```
 
 `--attachment` нумеруется с 1. Сохраняйте исходный язык и порядок страниц, не подменяйте

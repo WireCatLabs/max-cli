@@ -7,7 +7,7 @@ holds, and what an attachment carries.
 
 ## The feed
 
-`messages list` and `messages search` print a feed, not a table (`src/rendering/messages.ts`):
+`messages list` and `search messages` print a feed, not a table (`src/rendering/messages.ts`):
 
 - a date line when the day changes; `hh:mm:ss  sender` and the text below, aligned;
 - `↳` for what a reply answers, `↪` for a forward, `📎` per attachment, and a line of reactions;

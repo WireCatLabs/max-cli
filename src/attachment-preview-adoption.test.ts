@@ -110,7 +110,7 @@ describe("shared PDF page-preview adoption", () => {
     const saved = await invoke("attachments", "text", "set", "7", "1", "--text-file", textFile)
     expect(saved.code, saved.stderr).toBe(0)
     expect(JSON.parse(saved.stdout)).toMatchObject({ origin: "agent", chars: 16 })
-    const found = await invoke("messages", "search", "content:pdfpreviewneedle", "--chat", "7", "--backend", "archive")
+    const found = await invoke("search", "messages", "content:pdfpreviewneedle", "--chat", "7", "--backend", "archive")
     expect(found.code, found.stderr).toBe(0)
     expect(JSON.parse(found.stdout).items.map((item: { id: string }) => item.id)).toEqual(["1"])
     const outside = await invoke("attachments", "show", "7", "1", "--page", "2")

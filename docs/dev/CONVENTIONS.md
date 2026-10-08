@@ -150,7 +150,7 @@ follows the language of the file it lands in. Do not mix languages inside one fi
 ## The changelog
 
 `CHANGELOG.md` is read by someone deciding whether to upgrade, and by the GitHub release built from
-it. **A line that only names the change is not an entry.** «`bot messages search --limit` говорил
+it. **A line that only names the change is not an entry.** «`bot search messages --limit` говорил
 `hasMore: false`» leaves the reader asking what that broke, whether it touched them, and what to do.
 
 Every entry answers, in plain Russian, in this order:

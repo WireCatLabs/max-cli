@@ -117,7 +117,7 @@ export const registerPrompts = (server: McpServer): void => {
           'message answers one from before the review, read around that one with max_read with command "messages context".',
           "3. Before calling anything overdue, look for it being done: later in the review, in " +
             (groups ? `these group chats: ${JSON.stringify(groups)}` : "the group chats in the review") +
-            ' (max_read with command "messages list" for anything older), and with max_read with command "messages search". ' +
+            ' (max_read with command "messages list" for anything older), and with max_read with command "search messages". ' +
             "Word search in one named chat also asks MAX; no hit is not proof when archive coverage is incomplete. " +
             "If coverage.next is set, run it or ask me before concluding that a message does not exist.",
           "4. List the voice messages in unheard as not listened to, with chat, date and id; if transcribeProblem",
@@ -145,7 +145,7 @@ export const registerPrompts = (server: McpServer): void => {
         [
           `Find ${JSON.stringify(text)} in MAX.`,
           "Use max_tools_search to discover command arguments and pass them in the arguments object.",
-          'For a person, use max_read with command "contacts list" and max_read with command "contacts show"; for words, max_read with command "messages search".',
+          'For a person, use max_read with command "contacts list" and max_read with command "contacts show"; for words, max_read with command "search messages".',
           "Word search in one named chat also asks MAX; an empty answer is not proof it was never said. If coverage.next",
           "is set, run it or ask me before concluding that a message does not exist.",
           'Show each hit with max_read with command "messages context" for the messages around it. Send nothing.',
