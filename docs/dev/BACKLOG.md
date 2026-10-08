@@ -25,7 +25,7 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **MAX-73** · P3 · `chats requests list|approve|decline` for a channel that approves who joins. Measured
+- **MAX-73** · P3 · 🚧 `feat/join-requests` · `chats requests list|approve|decline` for a channel that approves who joins. Measured
   2026-10-08 (`pnpm probe:join-requests`): 59 `{type: JOIN_REQUEST}` lists `{contact, presence}` with no request
   time; 77 `{userIds, type: JOIN_REQUEST, operation: add|remove}` answers (web.max.ru's code; `remove` measured).
   The shared `JoinRequest.requestedAt` is required — MAX has no such time, so the shared type needs a ruling first.
