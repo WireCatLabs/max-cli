@@ -8,7 +8,7 @@ else.
 brief (`REQUIREMENTS.md`), rulings (`DECISIONS.md`), closed items (`BACKLOG_DONE.md`) and release
 steps (`releasing.md`), plus captures of the real web client (`captures/`) — and it is **not in
 this repository**. **Correction 2026-09-25:** it is its own private repository,
-`leemour/max-cli-private`; clone it into `docs_ai/` (`secrets/` inside it is ignored and never
+`leemour/cli-private`; clone it into `docs_ai/` (`secrets/` inside it is ignored and never
 pushed). A fresh clone of this repository does not have it. When it is absent, start from
 [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md) and [`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md)
 instead. Commit and push `docs_ai/` like any other repository — it is the only copy of the rulings.

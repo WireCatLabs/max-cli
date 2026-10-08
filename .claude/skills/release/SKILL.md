@@ -10,7 +10,7 @@ decide) and **the release report** `docs_ai/releases/<version>.md` (everything t
 signed by the owner). `bin/release` refuses to publish without both. The publishing steps themselves
 are in `docs_ai/releasing.md` — follow them from there, do not restate them.
 
-`docs_ai/` is the private repository `leemour/max-cli-private`, cloned into the main checkout. A
+`docs_ai/` is the private repository `leemour/cli-private`, cloned into the main checkout. A
 fresh clone of this repository does not have it: without it there are no live scenarios and no
 report, so stop and say so. **Correction 2026-10-01:** `bin/release` stops there too, naming that
 repository. A fork with its own signed report passes it as `bin/release --report <path>`: the same
