@@ -139,4 +139,19 @@ describe("reads only MAX's server answers", () => {
     expect(json).toMatchObject({ items: [{ id: "116762160362694580" }], hasMore: false })
     expect(sent(Opcode.CHAT_MARK)).toEqual([])
   })
+
+  it("`calls list --limit` keeps the newest and says more remain", async () => {
+    const { environment } = messenger()
+    const { json } = await runWith(["calls", "list", "--limit", "1"], environment)
+    expect(json).toMatchObject({ items: [{ id: "2" }], hasMore: true, limit: 1 })
+  })
+
+  it("`chats media --before-id` reads back from that message, needs no history, and leaves it out", async () => {
+    const { environment, sent } = messenger()
+    const { code } = await runWith(["chats", "media", "111", "--before-id", "116762160362694585"], environment)
+
+    expect(code).toBe(0)
+    expect(sent(Opcode.CHAT_HISTORY)).toEqual([])
+    expect(sent(Opcode.CHAT_MEDIA).map((one) => String(one.messageId))).toEqual(["116762160362694585"])
+  })
 })
