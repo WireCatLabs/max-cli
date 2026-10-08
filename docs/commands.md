@@ -2615,6 +2615,7 @@ max attachments show <chat> [message] [options]
 | Опция | Что делает |
 |---|---|
 | `--attachment <n>` | file position from 1; required for several files. |
+| `--page <n>` | render one PDF page as PNG, from 1; optional unpdf/canvas, no OCR. |
 | `--offset-bytes <n>` | byte offset from 0. |
 | `--chunk-bytes <n>` | bytes to return, 1–1048576 (default524288). |
 | `--if-sha256 <hash>` | require the whole file SHA-256 from the preceding chunk. |

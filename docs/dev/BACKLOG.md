@@ -191,7 +191,10 @@ which; the plan for it starts by saying so.
   bounded chunks and SHA256 are available over CLI/MCP. An isolated HTTP client with no access
   to the server file completed a four-page PDF transfer, agent recognition, text ingestion and
   content-search verification on 2026-10-08. The owner index was untouched; no messenger or OCR
-  gateway calls. Physical remote machines and individual web connectors still need their own checks.
+  gateway calls. The owner also passed the hosted ChatGPT MAX test using all four rendered pages,
+  independent agent transcription and the Base64 image fallback. PDF page previews are in the
+  prepared MAX0.39/TG0.40 candidates. Hosted Telegram/Tailscale repetition was deferred by the owner;
+  isolated consumer CLI and modern HTTP MCP checks remain separate from hosted vision evidence.
 - Bot write outcomes · ✅ review follow-up on 2026-10-08 · Lost replies after starting a bot or
   pressing a callback return non-retryable outcome_unknown; pre-write reads and explicit provider
   rejections retain their errors. Four regression cases cover the distinction without live calls.
