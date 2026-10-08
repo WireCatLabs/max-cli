@@ -30,6 +30,8 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "media"))
   command.addCommand(sharedSubcommand(shared, "mute"))
   command.addCommand(sharedSubcommand(shared, "unmute"))
+  command.addCommand(sharedSubcommand(shared, "delete"))
+  command.addCommand(sharedSubcommand(shared, "clear"))
 
   return command
 }

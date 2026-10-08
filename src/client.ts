@@ -585,6 +585,24 @@ export class MaxClient {
       })
     },
 
+    /** For this account only: the others in it keep the chat and its messages. */
+    delete: async (reference: string): Promise<ChatChange> => {
+      const chatId = await this.chats.resolve(reference)
+      return this.#changeChat(chatId, "delete", async () => {
+        await this.#wire.chats.delete({ chatId, lastEventTime: this.#lastEventOf(chatId), forAll: false })
+        return { chatId, result: { chatId, action: "delete", people: [], chat: null } }
+      })
+    },
+
+    /** Every message, for this account only. */
+    clear: async (reference: string): Promise<ChatChange> => {
+      const chatId = await this.chats.resolve(reference)
+      return this.#changeChat(chatId, "clear", async () => {
+        await this.#wire.chats.clear({ chatId, lastEventTime: this.#lastEventOf(chatId), forAll: false })
+        return { chatId, result: { chatId, action: "clear", people: [], chat: null } }
+      })
+    },
+
     /**
      * Not retried, unlike a message: a second attempt with a new `cid` is a second group, and
      * whether MAX deduplicates a creation by `cid` is not measured.
@@ -2792,6 +2810,12 @@ export class MaxClient {
       ...(sent.user ? { user: { ...(record(config.user) ?? {}), ...sent.user, ...(record(answer.user) ?? {}) } } : {}),
       ...(sent.chats ? { chats: { ...(record(config.chats) ?? {}), ...sent.chats } } : {}),
     }
+  }
+
+  /** What the web client sends as the chat's `syncTime`: up to where this account has the chat. */
+  #lastEventOf(chatId: Id): number {
+    const chat = asArray(this.#session().chats).find((one) => asId(one.id) === chatId)
+    return eventTime(chat) || Date.now()
   }
 
   #session(): Payload {

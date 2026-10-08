@@ -780,12 +780,12 @@ describe("a command through max serve", () => {
   })
 
   it("refuses an opcode no command sends, whoever asks the socket directly", async () => {
-    const { store, max } = await serve("c-raw-52")
+    const { store, max } = await serve("c-raw-290")
 
-    const answer = await ask(store, { id: 1, opcode: 52, payload: { chatId: 111n } })
+    const answer = await ask(store, { id: 1, opcode: 290, payload: { qrLink: "x" } })
 
     expect(answer.error).toMatchObject({ code: "not_allowed" })
-    expect(max.sent.map((call) => call.opcode)).not.toContain(52)
+    expect(max.sent.map((call) => call.opcode)).not.toContain(290)
   })
 
   it("a token being tried out goes to MAX itself, not to the server's login", async () => {
