@@ -80,6 +80,7 @@
     "probe:voice": "pnpm build && node --experimental-strip-types scripts/probe-voice.ts",
     "probe:polls": "pnpm build && node --experimental-strip-types scripts/probe-polls.ts",
     "probe:profile": "pnpm build && node --experimental-strip-types scripts/probe-profile.ts",
+    "probe:join-requests": "pnpm build && node --experimental-strip-types scripts/probe-join-requests.ts",
     "probe:keyboard": "pnpm build && node --experimental-strip-types scripts/probe-keyboard.ts",
     "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts",
     "postinstall": "node install/postinstall.mjs",
