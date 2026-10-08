@@ -15,6 +15,7 @@ export const Opcode = {
   LOGIN: 19,
   LOGOUT: 20,
   SYNC: 21,
+  CONFIG: 22,
   ASSETS_UPDATE: 27,
   CONTACT_INFO: 32,
   CONTACT_UPDATE: 34,

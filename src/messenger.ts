@@ -49,6 +49,7 @@ export const maxMessenger: Messenger = {
   groupPhoto: true,
   chatMedia: true,
   privacy: true,
+  chatMute: true,
   app: MAX_APP,
   provider: "max",
   name: "MAX",

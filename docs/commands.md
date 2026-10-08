@@ -157,6 +157,24 @@ the account's privacy settings; reading changes nothing
 max account privacy show
 ```
 
+#### `max account privacy set`
+
+change who may find, call or add the account; the settings not named stay
+
+**Меняет что-то в MAX.**
+
+```sh
+max account privacy set [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--find-by-phone <who>` | who finds the account by its number: everyone, contacts or nobody. |
+| `--phone-number <who>` | who sees the number: everyone, contacts or nobody. |
+| `--calls <who>` | who may call: everyone, contacts or nobody. |
+| `--chat-invites <who>` | who may add the account to groups and channels: everyone, contacts or nobody. |
+| `--hide-online <on\|off>` | hide online status and last seen. |
+
 ## `max calls`
 
 the account's calls
@@ -712,6 +730,38 @@ max chats media <chat> [options]
 | `--type <names>` | only these kinds, comma-separated: photo, video, file, audio, link. |
 | `--limit <n>` | how many to show. |
 | `--before-id <id>` | read what came before this message id. |
+
+### `max chats mute`
+
+stop notifications from a chat, for good or until a time; nobody in it is told
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats mute <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--until <time>` | only until then: 2026-09-25T09:00 (local time), or 30m, 2h, 7d from now. |
+
+### `max chats unmute`
+
+hear a muted chat again
+
+**Меняет что-то в MAX.**
+
+```sh
+max chats unmute <chat>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
 
 ## `max contacts`
 

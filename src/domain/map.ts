@@ -1,3 +1,4 @@
+import { CliError } from "@leemour/cli-core"
 import { asId, type Payload } from "../protocol/frame.js"
 import type {
   AccountSession,
@@ -260,6 +261,26 @@ export const toPrivacy = (user: Payload): PrivacySettings => ({
   chatInvites: audience(user.CHATS_INVITE, "everyone"),
   hideOnline: user.HIDDEN === true,
 })
+
+const MAX_AUDIENCE = { everyone: "ALL", contacts: "CONTACTS", nobody: "NOBODY" } as const
+
+/** The other way: only the settings named, as MAX names them. MAX finds an account by number for everyone or contacts only. */
+export const fromPrivacy = (change: PrivacySettings): Record<string, string | boolean> => {
+  if (change.findByPhone === "nobody")
+    throw new CliError(
+      "validation_error",
+      "MAX lets everyone or only contacts find the account by its number, not nobody",
+    )
+  return Object.fromEntries(
+    Object.entries({
+      SEARCH_BY_PHONE: change.findByPhone && MAX_AUDIENCE[change.findByPhone],
+      PHONE_NUMBER_PRIVACY: change.phoneNumber && MAX_AUDIENCE[change.phoneNumber],
+      INCOMING_CALL: change.calls && MAX_AUDIENCE[change.calls],
+      CHATS_INVITE: change.chatInvites && MAX_AUDIENCE[change.chatInvites],
+      HIDDEN: change.hideOnline,
+    }).filter(([, value]) => value !== undefined),
+  ) as Record<string, string | boolean>
+}
 
 /** The names a login response carries, so a message can name its sender without another request. */
 export const namesFrom = (contacts: unknown): Map<Id, string> => {

@@ -11,6 +11,7 @@ import {
 } from "@leemour/cli-messaging/sends"
 import { delayMs } from "./config.js"
 import {
+  fromPrivacy,
   namesFrom,
   POLL_CLOSED,
   pollSettings,
@@ -243,6 +244,22 @@ export class MaxClient {
       await this.#connectOnce()
       return toPrivacy(record(record(this.#session().config)?.user) ?? {})
     },
+
+    /** Only the owner's notifications change; `forever`, an ISO time, or null to hear the chat again. */
+    mute: (chatId: Id, until: string | null): Promise<void> =>
+      this.#change("chat-mute", async () => {
+        const dontDisturbUntil = until === null ? 0 : until === "forever" ? -1 : Date.parse(until)
+        const chats = { [chatId]: { dontDisturbUntil } }
+        this.#keepSettings({ chats }, await this.#wire.account.settings({ settings: { chats } }))
+      }),
+
+    /** Only the settings named go out, under MAX's names; the answer is read back as `privacy` reads the login. */
+    updatePrivacy: (change: PrivacySettings): Promise<PrivacySettings> =>
+      this.#change("privacy", async () => {
+        const user = fromPrivacy(change)
+        this.#keepSettings({ user }, await this.#wire.account.settings({ settings: { user } }))
+        return toPrivacy(record(record(this.#session().config)?.user) ?? {})
+      }),
 
     /** Newest first. The web tab asks the same with the sync value it last kept; 0 is the whole history. */
     calls: async (limit: number): Promise<Page<CallRecord>> => {
@@ -1765,6 +1782,8 @@ export class MaxClient {
      * - 130, read up to a point: when we are the reader, the chat's unread becomes `unread`;
      *   somebody else reading changes nothing here.
      * - 135, a chat changed: MAX sends the whole chat, and it replaces ours.
+     * - 134, the settings changed elsewhere — a mute, the privacy: `{config: {hash, user | chats}}`, folded in
+     *   as our own change's answer is (measured 2026-10-08 with a second connection).
      * Anything else that touches the chats — a deletion — cannot be followed.
      */
     patch: (opcode: number, payload: Payload): boolean => {
@@ -1786,6 +1805,12 @@ export class MaxClient {
         if (asId(payload.userId) !== viewerId) return true
         if (!chat || typeof payload.unread !== "number") return false
         chat.newMessages = payload.unread
+        return true
+      }
+      if (opcode === CONFIG_CHANGED) {
+        const config = record(payload.config)
+        if (!config) return false
+        this.#keepSettings({ user: record(config.user), chats: record(config.chats) }, config)
         return true
       }
       if (opcode === CHAT_CHANGED) {
@@ -2721,6 +2746,22 @@ export class MaxClient {
     return [...folders].sort((a, b) => rank(a) - rank(b))
   }
 
+  /**
+   * What a settings change sent, and what MAX answered, folded into the login held — as web.max.ru folds
+   * the answer into its config. A `max serve` hands that login to the next command, so without this the
+   * next read shows the old setting (measured 2026-10-08), and the next resume would send a stale hash.
+   */
+  #keepSettings(sent: { user?: Payload; chats?: Payload }, answer: Payload): void {
+    const login = this.#session()
+    const config = record(login.config) ?? {}
+    login.config = {
+      ...config,
+      ...(typeof answer.hash === "string" ? { hash: answer.hash } : {}),
+      ...(sent.user ? { user: { ...(record(config.user) ?? {}), ...sent.user, ...(record(answer.user) ?? {}) } } : {}),
+      ...(sent.chats ? { chats: { ...(record(config.chats) ?? {}), ...sent.chats } } : {}),
+    }
+  }
+
   #session(): Payload {
     if (!this.#login) throw new CliError("configuration_error", "connect() was never called")
     return this.#login
@@ -2879,6 +2920,7 @@ export const DELETE_AT_ONCE = 10
 const READ_MARK = 130
 /** A chat changed; MAX sends it whole. */
 const CHAT_CHANGED = 135
+const CONFIG_CHANGED = 134
 /** Messages deleted (140 in PyMax, 142 in the web client): the snapshot cannot follow them. */
 const CHANGES_CHATS = new Set([140, 142])
 

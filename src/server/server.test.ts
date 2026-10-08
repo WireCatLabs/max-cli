@@ -661,6 +661,26 @@ describe("a command through max serve", () => {
     expect(chat).toMatchObject({ id: "111", title: "Renamed" })
   })
 
+  it("shows the owner's own settings change to the next command: MAX pushes it only to other sessions", async () => {
+    const { store } = await serve(
+      "c-settings",
+      scripted({ [Opcode.CONFIG]: { hash: "after", user: { HIDDEN: true } } }),
+    )
+
+    const first = commandClient(store)
+    await first.client.account.updatePrivacy({ hideOnline: true })
+    await first.client.account.mute("111", "forever")
+    await first.client.close()
+    const second = commandClient(store)
+
+    const privacy = await second.client.account.privacy()
+    const config = second.client.live.snapshot().config
+    await second.client.close()
+
+    expect(privacy.hideOnline).toBe(true)
+    expect(config).toMatchObject({ hash: "after", chats: { "111": { dontDisturbUntil: -1 } } })
+  })
+
   it("shows the owner's own name for a contact to the next command: MAX does not push a rename back", async () => {
     const dialog = { id: 222, type: "DIALOG", participants: { [ME]: 0, 10000002: 0 }, lastEventTime: 1789776000000 }
     const renamed = { id: 10000002, names: [{ name: "Neighbour", type: "CUSTOM" }] }

@@ -44,6 +44,8 @@ export type MaxAdapter = MessengerAdapter &
       | "calls"
       | "privacy"
       | "media"
+      | "mute"
+      | "updatePrivacy"
       | "orderFolders"
       | "updateProfile"
       | "endOtherSessions"
@@ -271,6 +273,8 @@ export const maxAdapter = (
 
     calls: ({ limit }) => client.account.calls(limit),
     privacy: () => client.account.privacy(),
+    mute: (chatId, until) => client.account.mute(chatId, until),
+    updatePrivacy: (change) => client.account.updatePrivacy(change),
     media: (chatId, { kinds, limit, before }) => client.messages.media(chatId, kinds, limit, before),
 
     people: (references) => client.people(references),
