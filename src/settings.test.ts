@@ -1,6 +1,7 @@
 import { captureStreams, memoryKeyring } from "@leemour/cli-core"
 import { SendJournal } from "@leemour/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
+import { MaxClient } from "./client.js"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -101,5 +102,40 @@ describe("the owner's own settings", () => {
     )
     expect(code).toBe(0)
     expect(settings()).toEqual([{ user: { PHONE_NUMBER_PRIVACY: "NOBODY", CHATS_INVITE: "CONTACTS" } }])
+  })
+
+  it("a change, ours or pushed from another session, shows in the next read of the same login", async () => {
+    const max = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, config: { user: { HIDDEN: false }, hash: "old" } },
+        [Opcode.CONFIG]: { hash: "new" },
+      },
+    })
+    const store = new SessionStore({ profile: "settings-held", keyring: memoryKeyring() })
+    store.writeToken("a-token")
+    const client = new MaxClient({
+      sends: "caller",
+      store,
+      connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+      warn: () => {},
+    })
+    try {
+      await client.account.updatePrivacy({ hideOnline: true })
+      await client.account.mute("111", "forever")
+      expect((await client.account.privacy()).hideOnline).toBe(true)
+      expect(client.live.snapshot().config).toMatchObject({ hash: "new", chats: { "111": { dontDisturbUntil: -1 } } })
+
+      expect(
+        client.live.patch(134, { config: { hash: "elsewhere", user: { HIDDEN: false, INCOMING_CALL: "NOBODY" } } }),
+      ).toBe(true)
+      expect(await client.account.privacy()).toMatchObject({ hideOnline: false, calls: "nobody" })
+      expect(client.live.snapshot().config).toMatchObject({
+        hash: "elsewhere",
+        chats: { "111": { dontDisturbUntil: -1 } },
+      })
+    } finally {
+      await client.close()
+    }
   })
 })

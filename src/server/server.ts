@@ -70,6 +70,7 @@ const CHAT_LIST_SHOWN_AFTER_MS = 500
 /** A message arrived — what MAX pushes, and what a send through this server is handed on as. */
 const NEW_MESSAGE = 128
 const CHAT_CHANGED = 135
+const CONFIG_CHANGED = 134
 
 /** A request is a command's payload; a message with its markup is a few kilobytes. */
 const MAX_REQUEST_LENGTH = 1024 * 1024
@@ -620,6 +621,14 @@ export class MaxServer {
       if (answer.chat) this.#pushed(client, CHAT_CHANGED, { chat: answer.chat })
       // The same for a contact we renamed: commands keep the login's contacts in the shared store.
       if (objectOf(answer.contact).id !== undefined) client.live.contact(objectOf(answer.contact))
+      // Nor our own settings change, which other sessions hear as 134 (measured 2026-10-08): without
+      // this, `account privacy show` after `set` read the setting from before it.
+      if (opcode === Opcode.CONFIG) {
+        const sent = objectOf(request.settings)
+        this.#pushed(client, CONFIG_CHANGED, {
+          config: { hash: answer.hash, user: answer.user ?? sent.user, chats: sent.chats },
+        })
+      }
       // Nor does it push our own deletion back; the chat's last message may be the one deleted.
       if (opcode === Opcode.MSG_DELETE) this.#goneStale()
       return { payload: answer }
