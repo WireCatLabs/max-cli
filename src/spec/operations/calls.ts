@@ -15,5 +15,13 @@ export const callsHistory = defineOperation({
     callHistoryItems: v.optional(v.array(v.unknown())),
     callHistorySync: v.optional(v.number()),
   }),
-  provenance: { confidence: "observed", sources: [recorded] },
+  provenance: {
+    confidence: "measured",
+    sources: [
+      recorded,
+      "answer measured 2026-10-08 on test account B: `{callHistoryItems, callHistorySync, reset}`; an item is `{historyId, callId, callerId, chatId, messageId, callType, hangupType, time, durationMs}`",
+    ],
+    notes:
+      "`callHistorySync: 0` answers the history from the start. `hangupType` is `HUNGUP`, `MISSED`, `REJECTED` or `CANCELED`, as web.max.ru names them (chunk `Cdo8IOYe`, 2026-10-08).",
+  },
 })

@@ -575,6 +575,8 @@ max contacts import книжка.csv              # строка: номер, з
 max account update --description "о себе"   # имя остаётся прежним
 max account update --photo портрет.png      # новое фото профиля
 max account sessions list                   # где ещё выполнен вход
+max account privacy show                    # кто находит по номеру, звонит, добавляет в чаты
+max calls list                              # звонки, новые сверху
 max account sessions end --others --yes     # выйти везде, кроме этого сеанса — и на телефоне
 max chats folders list
 max chats folders create "Работа" --chat -1000 --chat "Проект"
@@ -607,6 +609,17 @@ max chats folders order "Офис" "Семья"      # после «Все ча�
 `account sessions end --others --yes` возвращает `{operationId, sessions}` — сеансы,
 которые остались. Если завершение прошло, а сохранение нового токена или чтение оставшихся
 сеансов не удалось, команда сообщает ошибку, но журнал отмечает уже выполненное действие.
+
+### Медиа чата
+
+```sh
+max chats media "Поход"                           # фото, видео, файлы, аудио и ссылки, как галерея в MAX
+max chats media "Поход" --type photo,video        # только фото и видео
+max chats media "Поход" --before-id <id>          # то, что старше этого сообщения
+```
+
+Список берётся с сервера MAX, поэтому в нём есть и то, что ещё не скачано на этот компьютер. Чтение
+ничего не отмечает прочитанным.
 
 ### Фото, видео, файлы и голосовые
 

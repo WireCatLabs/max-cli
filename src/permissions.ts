@@ -64,7 +64,7 @@ export const commandPermission = (command: Command): string | null => {
   const shared = keyForCommand(words)
   if (shared !== undefined) return shared
   if (["setup"].includes(words[0] ?? "")) return null
-  if (["messages", "chats", "contacts", "account", "polls", "reactions", "bot"].includes(words[0] ?? ""))
+  if (["messages", "chats", "contacts", "account", "calls", "polls", "reactions", "bot"].includes(words[0] ?? ""))
     return words.join(".")
   throw new Error(`unmapped permission path: ${words.join(" ")}`)
 }
