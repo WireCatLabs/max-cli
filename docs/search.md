@@ -4,6 +4,32 @@
 этом компьютере. Поиск в одном чате спрашивает ещё и сервер MAX ([ниже](#поиск-на-сервере-max---backend)).
 Прочитанным он ничего не помечает.
 
+## Попробуйте поиск в одном чате
+
+Начните с фразы и одного чата. В примере поиск читает сохранённую историю, не обращаясь к мессенджеру.
+
+Пустой результат не доказывает, что сообщения никогда не было. Проверьте пробелы в истории, прежде чем расширять поиск. Все примеры на странице вымышлены.
+
+**Ваш запрос:**
+
+> Найди сообщение «счёт оплачен» в чате Книжный клуб. Покажи совпадение и пробелы в истории.
+
+**Команда:**
+
+```sh
+max search messages '"счёт оплачен"' --chat "Книжный клуб" --backend archive --json
+```
+
+**Пример ответа агента:**
+
+> **Найдено одно сообщение в сохранённой истории.**
+>
+> | Участник | Сообщение |
+> | --- | --- |
+> | Алиса Тестова | Счёт оплачен вчера. |
+>
+> История неполная: другие совпадения могут отсутствовать. Могу открыть это сообщение и переписку вокруг него.
+
 ## Сначала подготовьте архив
 
 Хороший поиск возможен, только когда чаты скачаны. Сервер MAX ищет лишь в одном названном чате, а всё
@@ -12,6 +38,9 @@ regex, presets, метки и формы слов. Начните со скач�
 
 ```sh
 max store fetch --all --background     # последние 90 дней каждого чата, в фоне
+```
+
+```sh
 max store jobs show                    # сколько уже скачано
 ```
 
@@ -45,9 +74,21 @@ searched 12,430 messages in 37 chats — 5 never fetched; `max store fetch --all
 
 ```sh
 max search messages счёт
+```
+
+```sh
 max search messages '"счёт оплачен"'             # слова подряд
+```
+
+```sh
 max search messages 'кафе OR библиотека'
+```
+
+```sh
 max search messages '(кафе OR библиотека) NOT шумно'
+```
+
+```sh
 max search messages 'квартир*'                   # все слова, которые начинаются на «квартир»
 ```
 
@@ -60,7 +101,13 @@ max search messages 'квартир*'                   # все слова, к�
 
 ```sh
 max search messages 'счёт' --chat "Книжный клуб"                    # архив и сервер MAX
+```
+
+```sh
 max search messages 'счёт' --chat "Книжный клуб" --backend server   # только то, что нашёл сервер
+```
+
+```sh
 max search messages 'счёт' --backend archive                        # только архив
 ```
 
@@ -82,10 +129,25 @@ max search messages 'счёт' --backend archive                        # тол
 
 ```sh
 max search messages 'from:"Алиса Тестова" счёт'
+```
+
+```sh
 max search messages 'from:("Алиса Тестова" OR "Борис Тестов") библиотека'
+```
+
+```sh
 max search messages 'from:me date:7d'            # что вы писали за неделю
+```
+
+```sh
 max search messages 'chat:"Книжный клуб" библиотека'
+```
+
+```sh
 max search messages библиотека --chat "Книжный клуб"   # то же, опцией
+```
+
+```sh
 max search messages 'паспорт kind:private'       # только личные переписки
 ```
 
@@ -95,8 +157,17 @@ max search messages 'паспорт kind:private'       # только личн�
 
 ```sh
 max search messages 'date:today'
+```
+
+```sh
 max search messages 'библиотека date:yesterday'
+```
+
+```sh
 max search messages 'счёт date:7d'               # от 7 дней назад до сейчас; также 30m, 2h
+```
+
+```sh
 max search messages 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid
 ```
 
@@ -107,11 +178,29 @@ max search messages 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe
 
 ```sh
 max search messages 'has:file'
+```
+
+```sh
 max search messages 'filename:*.pdf'
+```
+
+```sh
 max search messages 'filename:*договор*'         # часть имени
+```
+
+```sh
 max search messages 'size>10MB'
+```
+
+```sh
 max search messages 'size:[1KB TO 300KB]'
+```
+
+```sh
 max search messages 'has:photo chat:"Книжный клуб"'
+```
+
+```sh
 max search messages 'has:link AND "github.com"'  # ссылка на сайт
 ```
 
@@ -125,6 +214,9 @@ max search messages 'has:link AND "github.com"'  # ссылка на сайт
 
 ```sh
 max search messages 'preset:secret kind:saved'   # что-то похожее на пароль или токен в Избранном
+```
+
+```sh
 max search messages 'preset:card'
 ```
 
@@ -136,10 +228,25 @@ Preset находит сообщения, которые *похожи* на п�
 
 ```sh
 max tags add work --chat "Книжный клуб"
+```
+
+```sh
 max tags add work --contact "Борис Тестов"
+```
+
+```sh
 max tags list --tag work --type chat
+```
+
+```sh
 max search messages 'tag:work счёт'
+```
+
+```sh
 max search messages 'счёт NOT tag:work'
+```
+
+```sh
 max tags remove work --chat "Книжный клуб"
 ```
 
@@ -153,8 +260,17 @@ max tags remove work --chat "Книжный клуб"
 
 ```sh
 max metadata refresh --chat "Книжный клуб"   # прочитать описание чата из MAX (сам чат не меняется)
+```
+
+```sh
 max tags auto --dry-run                      # что получилось бы, без записи
+```
+
+```sh
 max tags auto                                # записать автоматические метки
+```
+
+```sh
 max tags list --source auto                  # только автоматические
 ```
 
@@ -165,11 +281,29 @@ max tags list --source auto                  # только автоматиче
 
 ```sh
 max searches create meetings 'библиотека OR кафе' --chat "Книжный клуб"
+```
+
+```sh
 max search messages --saved meetings
+```
+
+```sh
 max search messages --saved meetings 'date:today'   # слова добавляются через AND
+```
+
+```sh
 max stats messages show --saved meetings --by day
+```
+
+```sh
 max searches list
+```
+
+```sh
 max searches history --limit 10
+```
+
+```sh
 max search messages --saved 42                   # строка истории, по её номеру
 ```
 
@@ -190,8 +324,17 @@ max search messages --saved 42                   # строка истории, 
 
 ```sh
 max stats messages show счёт                          # сколько в каждом чате
+```
+
+```sh
 max stats messages show 'date:7d' --by sender
+```
+
+```sh
 max stats messages show 'from:me' --by day --timezone Europe/Madrid
+```
+
+```sh
 max stats messages show --by hour                     # все сохранённые сообщения
 ```
 
@@ -234,8 +377,17 @@ PDF с текстовым слоем. Фото и сканы читает ваш
 
 ```sh
 max attachments extract --chat "Книжный клуб" --download --output-dir ./files
+```
+
+```sh
 max search messages 'content:договор'
+```
+
+```sh
 max attachments list --chat "Книжный клуб" --needs-text
+```
+
+```sh
 max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 ```
 
@@ -248,8 +400,17 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 
 ```sh
 max config set models.ocr.provider openai
+```
+
+```sh
 max config set models.ocr.model your-vision-model
+```
+
+```sh
 max models text key set openai
+```
+
+```sh
 max attachments extract --chat "Книжный клуб" --ocr --concurrency 4 --limit 100 --json
 ```
 
