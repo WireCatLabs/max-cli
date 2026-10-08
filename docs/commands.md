@@ -2221,7 +2221,7 @@ what waits on you — unanswered questions, mentions, requests, promises — kep
 
 ### `max tasks list`
 
-tasks, oldest first, with the message each points at
+tasks, oldest first, with their message or note source
 
 ```sh
 max tasks list [options]
@@ -2237,7 +2237,7 @@ max tasks list [options]
 
 ### `max tasks add`
 
-add a task for a message the rules cannot see — a promise, a request
+add a task for a stored message or note — a promise, a request
 
 ```sh
 max tasks add <message> [options]
@@ -2245,7 +2245,7 @@ max tasks add <message> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `message` | обязательный | a message locator, msg:<provider>/<account>/<chat>/<message>, as review --json shows. |
+| `message` | обязательный | a message locator, msg:<provider>/<account>/<chat>/<message>, or note:<id>. |
 
 | Опция | Что делает |
 |---|---|
