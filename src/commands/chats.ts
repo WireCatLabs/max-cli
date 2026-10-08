@@ -24,7 +24,7 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "admins"))
   command.addCommand(sharedSubcommand(shared, "update"))
   command.addCommand(without(sharedSubcommand(shared, "link"), ["create", "list", "revoke"]))
-  const requests = sharedSubcommand(shared, "requests")
+  const requests = sharedSubcommand(shared, "requests").description("requests to join a MAX channel needing approval")
   for (const request of requests.commands) {
     if (request.name() === "list")
       request.description("pending requests to join a MAX channel needing approval; admins only; requestedAt is null")

@@ -593,7 +593,7 @@ max chats link reset <chat>
 
 ### `max chats requests`
 
-requests to join a group that needs an admin's approval
+requests to join a MAX channel needing approval
 
 #### `max chats requests list`
 
