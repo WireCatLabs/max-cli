@@ -4,6 +4,7 @@
  *
  *   MAX_BOT_PROFILE=test2 MAX_PROFILE=mila pnpm probe:bot-link link    # 89 {link: https://max.ru/<bot>}
  *   MAX_BOT_PROFILE=test2 MAX_PROFILE=mila pnpm probe:bot-link start   # 64 botStarted to viewer ^ bot
+ *   MAX_BOT_PROFILE=test2 MAX_PROFILE=mila pnpm probe:bot-link info    # 32 {contactIds: [bot]}
  *
  * The bot's name and id come from its own `me`. Prints key names, value types, `type`/`status`
  * values, and whether ids line up — never a name, a link or an id.
@@ -17,8 +18,8 @@ import { SessionStore } from "../dist/session/store.js"
 import { buildRequest } from "../dist/spec/define.js"
 
 const step = process.argv[2]
-if (step !== "link" && step !== "start") {
-  console.error("usage: pnpm probe:bot-link link|start")
+if (step !== "link" && step !== "start" && step !== "info") {
+  console.error("usage: pnpm probe:bot-link link|start|info")
   process.exit(2)
 }
 const bot = new BotTokenStore({ profile: process.env.MAX_BOT_PROFILE ?? "test2" }).read()
@@ -57,7 +58,11 @@ try {
     (chat) => String((chat as { id?: unknown }).id) === String(dialog),
   )
   console.log(`the dialog viewer ^ bot is in the login's chat list: ${listed}`)
-  if (step === "link") {
+  if (step === "info") {
+    const answer = await connection.invoke(32, { contactIds: [botId] })
+    for (const line of shape(answer, "32").filter((line) => line.includes("options") || line.includes("flags")))
+      console.log(`  ${line}`)
+  } else if (step === "link") {
     const answer = await connection.invoke(89, { link: `https://max.ru/${username}` })
     const contactId = (answer.user as { contact?: { id?: unknown } } | undefined)?.contact?.id
     console.log(`user.contact.id is the bot's id: ${contactId !== undefined && BigInt(String(contactId)) === botId}`)

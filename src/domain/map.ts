@@ -176,7 +176,7 @@ export const toGroupMember = (raw: Payload): GroupMember => {
 
 /**
  * One `CONTACT_INFO` contact as `contacts profile` shows it. MAX tells when the account was made and
- * whether it has a photo; what marks a bot on a personal account was never seen, so no flag is set.
+ * whether it has a photo; `options` naming `BOT` marks a bot (measured 2026-10-08, `pnpm probe:bot-link info`).
  */
 export const toProfileFacts = (raw: Payload, chats: ProfileFacts["chats"]): ProfileFacts => {
   const { id, name, username, description } = toContact(raw)
@@ -187,7 +187,7 @@ export const toProfileFacts = (raw: Payload, chats: ProfileFacts["chats"]): Prof
     usernames: username ? [username] : [],
     bio: description,
     ...(raw.phone === undefined || raw.phone === null ? {} : { phone: String(raw.phone) }),
-    flags: {},
+    flags: Array.isArray(raw.options) ? { bot: raw.options.includes("BOT") } : {},
     ...(registered ? { registered: { at: registered, source: "max", precision: "day" } } : {}),
     hasPhoto: raw.photoId !== undefined && raw.photoId !== null,
     chats,
