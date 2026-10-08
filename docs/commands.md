@@ -959,7 +959,7 @@ max contacts alias rm <person>
 
 ### `max contacts notes`
 
-your private notes on a stored contact, scoped to this account
+your private notes on a stored contact, the same in every account that sees them
 
 #### `max contacts notes list`
 
@@ -1633,8 +1633,12 @@ background fetch jobs
 background fetch jobs, newest first
 
 ```sh
-max store jobs list
+max store jobs list [options]
 ```
+
+| Опция | Что делает |
+|---|---|
+| `--state <state>` | only jobs in this state. Одно из: `running`, `done`, `failed`, `cancelled`, `died`. |
 
 #### `max store jobs show`
 
@@ -1739,7 +1743,7 @@ max store check
 
 ### `max store migrate`
 
-bring the store up to this build's schema, then normalize, index and stem the messages stored before it
+bring the store up to this build's schema, then normalize, index and stem the messages and notes stored before it
 
 ```sh
 max store migrate
@@ -1747,7 +1751,7 @@ max store migrate
 
 ### `max store reindex`
 
-rebuild the word index, its typo vocabulary, the stems and the files' word index from the stored messages; loses no message
+rebuild the word index, its typo vocabulary, the stems, the files' word index and the notes' indexes from what is stored; loses nothing
 
 ```sh
 max store reindex

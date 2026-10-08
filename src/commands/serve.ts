@@ -10,6 +10,7 @@ import { refusedPath } from "../server/start.js"
 import { VERSION } from "../version.js"
 import { forCommand } from "./context.js"
 import { serveMembers } from "./serve-members.js"
+import { serveStems } from "./serve-stems.js"
 
 /**
  * `max serve` — stays up, holding one logged-in connection, until Ctrl-C (`MAX-16`).
@@ -57,8 +58,10 @@ export const serveCommand = (): Command =>
         // Not how max finds its server — the socket is — but what the shared store commands look for.
         const lock = lockPath(MAX_APP, store.profile, process.env)
         const startedAt = new Date().toISOString()
+        const stems = serveStems({ note })
         try {
           await server.start()
+          stems.start()
           holdLock(lock, { pid: process.pid, startedAt, listeningAt: new Date().toISOString(), version: VERSION })
           renderer.note(
             `connected — \`max ${asFirstWord(settings.profile)}watch\` in another terminal shows new messages`,
@@ -71,6 +74,7 @@ export const serveCommand = (): Command =>
           }
           throw error
         } finally {
+          await stems.stop().catch(() => note("filling search stems could not close its store"))
           releaseLock(lock)
           process.off("SIGINT", stop)
           process.off("SIGTERM", stop)

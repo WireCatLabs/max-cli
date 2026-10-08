@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**890 ✅ · 112 ⛔ · 0 ❌** — 307 commands, 695 options.
+**891 ✅ · 112 ⛔ · 0 ❌** — 307 commands, 696 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -275,6 +275,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store gaps repair` | `--catch-up-time` | ✅ |  |
 | `store gaps repair` | `--background` | ✅ |  |
 | `store jobs list` |  | ✅ |  |
+| `store jobs list` | `--state` | ✅ |  |
 | `store jobs show` |  | ✅ |  |
 | `store jobs cancel` |  | ✅ |  |
 | `store jobs retry` |  | ⛔ | cli-messaging src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
