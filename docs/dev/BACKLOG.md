@@ -186,6 +186,11 @@ which; the plan for it starts by saying so.
 
 ## Remote retained attachments
 
-- Remote AI file transfer · ✅ implemented on `feat/remote-attachment-transfer` · Shared SDK744 implements
-  account/message-owned retained bytes, bounded chunks and SHA256; adopt published SDK190,
-  document agent OCR ingestion and verify CLI/MCP with synthetic files. No live/model calls.
+- Remote AI file transfer · ✅ released in MAX 0.36.0 and Telegram 0.37.0 · Retained bytes,
+  bounded chunks and SHA256 are available over CLI/MCP. An isolated HTTP client with no access
+  to the server file completed a four-page PDF transfer, agent recognition, text ingestion and
+  content-search verification on 2026-10-08. The owner index was untouched; no messenger or OCR
+  gateway calls. Physical remote machines and individual web connectors still need their own checks.
+- Bot write outcomes · ✅ review follow-up on 2026-10-08 · Lost replies after starting a bot or
+  pressing a callback return non-retryable outcome_unknown; pre-write reads and explicit provider
+  rejections retain their errors. Four regression cases cover the distinction without live calls.
