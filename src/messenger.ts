@@ -50,6 +50,7 @@ export const maxMessenger: Messenger = {
   chatMedia: true,
   privacy: true,
   chatMute: true,
+  chatDeletion: true,
   stickers: true,
   app: MAX_APP,
   provider: "max",

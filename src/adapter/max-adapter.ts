@@ -56,6 +56,8 @@ export type MaxAdapter = MessengerAdapter &
       | "createGroup"
       | "join"
       | "leave"
+      | "deleteChat"
+      | "clearHistory"
       | "group"
       | "updateGroup"
       | "resetInviteLink"
@@ -225,6 +227,12 @@ export const maxAdapter = (
     leave: async (chat) => {
       const { chatId } = await client.chats.leave(chat)
       return { chatId }
+    },
+    deleteChat: async (chatId) => {
+      await client.chats.delete(chatId)
+    },
+    clearHistory: async (chatId) => {
+      await client.chats.clear(chatId)
     },
     group: (chat) => client.chats.settings(chat),
     updateGroup: async (chat, { title, description, photo, settings }) => {
