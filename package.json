@@ -82,6 +82,7 @@
     "probe:profile": "pnpm build && node --experimental-strip-types scripts/probe-profile.ts",
     "probe:join-requests": "pnpm build && node --experimental-strip-types scripts/probe-join-requests.ts",
     "probe:bot-link": "pnpm build && node --experimental-strip-types scripts/probe-bot-link.ts",
+    "probe:search-ops": "pnpm build && node --experimental-strip-types scripts/probe-search-ops.ts",
     "probe:keyboard": "pnpm build && node --experimental-strip-types scripts/probe-keyboard.ts",
     "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts",
     "postinstall": "node install/postinstall.mjs",
