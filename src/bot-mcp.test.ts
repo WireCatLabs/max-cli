@@ -136,7 +136,7 @@ const READS = [
   "max_bot_chats_show",
   "max_bot_messages_list",
   "max_bot_messages_show",
-  "max_bot_messages_search",
+  "max_bot_search_messages",
   "max_bot_messages_between",
   "max_bot_contacts_show",
   "max_bot_chats_members_list",

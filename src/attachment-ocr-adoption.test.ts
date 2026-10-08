@@ -97,7 +97,7 @@ describe("shared attachment OCR adoption", () => {
       expect(api.code).toBe(0)
       expect(JSON.parse(api.stdout)).toMatchObject({ extracted: 1 })
       expect(api.stdout + api.stderr).not.toContain("consumerocrneedle")
-      const found = await invoke("messages", "search", "content:consumerocrneedle", "--chat", "7", "--offline")
+      const found = await invoke("search", "messages", "content:consumerocrneedle", "--chat", "7", "--offline")
       expect(found.code).toBe(0)
       expect(JSON.parse(found.stdout).items.map((one: { id: string }) => one.id)).toEqual(["1"])
       const repeated = await invoke("attachments", "extract", "--chat", "7", "--ocr")

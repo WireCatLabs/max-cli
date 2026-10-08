@@ -104,7 +104,7 @@ describe("max bot watch", () => {
     expect(polls[0]).not.toContain("marker")
     expect(polls[1]).toContain("marker=7")
 
-    const kept = JSON.parse((await max(["bot", "messages", "search", "hello bot", "--json"])).stdout).items
+    const kept = JSON.parse((await max(["bot", "search", "messages", "hello bot", "--json"])).stdout).items
     expect(kept).toMatchObject([{ id: "mid.1" }])
   })
 
@@ -154,7 +154,7 @@ describe("max bot watch", () => {
     script = [BATCH, removed]
     const { code } = await max(["tidy", "bot", "watch", "--jsonl"])
     expect(code).toBe(0)
-    expect(JSON.parse((await max(["tidy", "bot", "messages", "search", "hello bot", "--json"])).stdout).items).toEqual(
+    expect(JSON.parse((await max(["tidy", "bot", "search", "messages", "hello bot", "--json"])).stdout).items).toEqual(
       [],
     )
   })

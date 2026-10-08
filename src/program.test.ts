@@ -321,20 +321,21 @@ describe("the program", () => {
     expect(stderr).toContain("dialog, group, channel")
   })
 
-  it("offers searching as an action under `messages`, with the same shape as the rest", async () => {
+  it("offers every search under `search`, and none under `messages`", async () => {
     const { stdout } = await runWith(["messages", "--help"])
-    expect(stdout).toContain("search")
+    expect(stdout).not.toMatch(/^\s+search\b/m)
+    expect((await runWith(["search", "--help"])).stdout).toMatch(/all .*\n[\s\S]*messages[\s\S]*mail[\s\S]*notes/)
 
-    const search = await runWith(["messages", "search", "--help"])
+    const search = await runWith(["search", "messages", "--help"])
     expect(search.stdout).toContain("--chat")
     expect(search.stdout).toContain("local store")
   })
 
-  it("`messages search --regex` tests one pattern against what the store holds", async () => {
+  it("`search messages --regex` tests one pattern against what the store holds", async () => {
     const { environment } = acquaintedMax()
     await runWith(["t-regex", "messages", "list", "111", "--json"], environment)
 
-    const found = await runWith(["t-regex", "messages", "search", "^lat", "--regex", "--json"], environment)
+    const found = await runWith(["t-regex", "search", "messages", "^lat", "--regex", "--json"], environment)
 
     expect(found.code).toBe(0)
     expect(
@@ -350,7 +351,7 @@ describe("the program", () => {
     const sent = max.sent.length
 
     const found = await runWith(
-      ["t-search-name", "messages", "search", "latest", "--chat", "First", "--backend", "archive", "--json"],
+      ["t-search-name", "search", "messages", "latest", "--chat", "First", "--backend", "archive", "--json"],
       environment,
     )
 
@@ -599,15 +600,15 @@ describe("the program", () => {
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
     })
 
-    it("`messages search --limit` caps what the local copy answers and says more matched", async () => {
+    it("`search messages --limit` caps what the local copy answers and says more matched", async () => {
       const { environment } = acquaintedMax()
       await runWith(["t-search", "messages", "list", "111", "--json"], environment)
 
       const capped = await runWith(
         [
           "t-search",
-          "messages",
           "search",
+          "messages",
           "lat*",
           "--language",
           "lucene",
@@ -619,28 +620,28 @@ describe("the program", () => {
         ],
         environment,
       )
-      const all = await runWith(["t-search", "messages", "search", "lat*", "--json"], environment)
+      const all = await runWith(["t-search", "search", "messages", "lat*", "--json"], environment)
 
       expect(JSON.parse(capped.stdout)).toMatchObject({ hasMore: true })
       expect(JSON.parse(capped.stdout).items).toHaveLength(1)
       expect(JSON.parse(all.stdout).items).toHaveLength(2)
       expect(JSON.parse(capped.stdout).query).toMatchObject({ language: "lucene-v1", timezone: "Europe/Madrid" })
-      const strict = await runWith(["t-search", "messages", "search", "lat", "--json"], environment)
+      const strict = await runWith(["t-search", "search", "messages", "lat", "--json"], environment)
       const legacy = await runWith(
-        ["t-search", "messages", "search", "lat", "--language", "legacy", "--json"],
+        ["t-search", "search", "messages", "lat", "--language", "legacy", "--json"],
         environment,
       )
       expect(JSON.parse(strict.stdout).items.map((message: { text: string }) => message.text)).toEqual(["later"])
       expect(JSON.parse(legacy.stdout).items).toHaveLength(2)
     })
 
-    it("`messages search --newest` orders hits newest first, and `--context` brings the messages around each", async () => {
+    it("`search messages --newest` orders hits newest first, and `--context` brings the messages around each", async () => {
       const { environment } = acquaintedMax()
       await runWith(["t-search-order", "messages", "list", "111", "--json"], environment)
 
-      const newest = await runWith(["t-search-order", "messages", "search", "lat*", "--newest", "--json"], environment)
+      const newest = await runWith(["t-search-order", "search", "messages", "lat*", "--newest", "--json"], environment)
       const around = await runWith(
-        ["t-search-order", "messages", "search", "lat*", "--context", "1", "--limit", "1", "--json"],
+        ["t-search-order", "search", "messages", "lat*", "--context", "1", "--limit", "1", "--json"],
         environment,
       )
 
@@ -648,7 +649,7 @@ describe("the program", () => {
       expect(times).toEqual([...times].sort().reverse())
       expect(JSON.parse(around.stdout).items[0].context.length).toBeGreaterThan(0)
       const everywhere = await runWith(
-        ["t-search-order", "messages", "search", "lat*", "--source", "all", "--json"],
+        ["t-search-order", "search", "messages", "lat*", "--source", "all", "--json"],
         environment,
       )
       expect(JSON.parse(everywhere.stdout).items.length).toBeGreaterThan(0)

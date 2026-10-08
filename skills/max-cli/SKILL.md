@@ -10,7 +10,7 @@ description: >-
 живому человеку. Один вызов — одно действие: подключиться, сделать, напечатать, выйти.
 
 Прочитайте этот навык, затем откройте только команды, нужные для задачи.
-**`max commands messages search --json`** описывает одну команду;
+**`max commands search messages --json`** описывает одну команду;
 **`max commands messages --json`** — всю группу. Оба ответа содержат аргументы, флаги,
 глобальные флаги и коды выхода. Для короткой справки — `max <команда> --help`.
 Слова после `commands` задают один путь, а не список групп: разные группы смотрите отдельными
@@ -131,7 +131,10 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    при подтверждённой дедупликации провайдера и с теми же чатом, темой, содержимым и `--send-id`;
    никакой автоматической повторной записи только по коду ошибки.
 
-5. **`max messages search` читает локальный архив; с одним чатом (`--chat` или `chat:`) спрашивает и сервер MAX**
+5. **Искать начинайте с `max search all`**: сообщения, почта и заметки на этой машине одним ответом, у каждой
+   находки её вид (`message`, `mail`, `note`). Уже: `max search messages`, `search mail`, `search notes`,
+   `search conversations` (по смыслу); весь поиск — под `max search`.
+   **`max search messages` читает локальный архив; с одним чатом (`--chat` или `chat:`) спрашивает и сервер MAX**
    (`--backend archive` — только архив). Хороший поиск требует скачанных чатов: если ничего не нашлось, а
    `coverage.next` задан, выполните его (`max store fetch --all --background`) или спросите владельца, прежде чем
    говорить, что сообщения нет. Слова и фразы находят формы слов; `exact:` или `--exact` — только точную форму.
@@ -161,7 +164,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    почему терминал её не видит, и напечатает команду исправления. Клиенту MCP без терминала (Claude
    Desktop, Cursor) готовую запись с полными путями печатает `max mcp config`.
 6. **`messages show` и `messages context` требуют чат и id сообщения** — или одну ссылку `msg:…` из
-   `messages search`. Искомое сообщение в JSON помечено `"anchor": true`. Если сообщения нет, это
+   `search messages`. Искомое сообщение в JSON помечено `"anchor": true`. Если сообщения нет, это
    `not_found`, а не соседнее сообщение.
 7. **Время сообщения зашито в его id**: `id >> 16` — миллисекунды. Поэтому `--before-id` и
    `--after-id` работают для любого id, даже не прочитанного раньше. Само сообщение не входит ни в
@@ -254,7 +257,7 @@ max messages transcribe -1000 100000000000000001 --json   # текст голо�
 чего не хватает, и не предлагать новую границу; иначе закончить `--since-time` = `until`. Напоминания —
 черновики, отправка — только по слову владельца.
 
-Голосовое — вложение `"kind": "voice"` в `messages list|show|context|search`, `inbox` и `review`.
+Голосовое — вложение `"kind": "voice"` в `messages list|show|context`, `search messages`, `inbox` и `review`.
 Его текст даёт `max messages transcribe`; до минуты на пять минут речи, повторно — сразу из общей
 локальной копии сообщений. Уже расшифрованное голосовое несёт поле `transcript` в
 `messages list` и `inbox`; `--transcribe` там расшифровывает остальные показанные, а не
@@ -277,10 +280,10 @@ max messages transcribe -1000 100000000000000001 --json   # текст голо�
 видел; списка чатов бота у MAX нет, `max <имя> bot chats list` — только увиденные. Положительный
 номер — почти всегда человек: ему пишут `user:<номер>`. Файл — `messages send --file <путь>`. Прочитанное
 и отправленное ботом хранится локально: `bot messages list <чат> --offline` — без сети,
-`bot messages search <текст>` — поиск, `--from <кто>` — только его сообщения. `bot contacts show <кто>` —
+`bot search messages <текст>` — поиск, `--from <кто>` — только его сообщения. `bot contacts show <кто>` —
 где человек писал и его личный чат с ботом; `bot messages between <кто> <кто>` — их переписка в
 чатах, где писал каждый (`--limit` — на чат). Всё это без сети, кроме `contacts show --refresh`.
-Чужие локальные копии ботов — `--all-bots` или `--bots <профили>` у `messages search`, `contacts show` и
+Чужие локальные копии ботов — `--all-bots` или `--bots <профили>` у `search messages`, `contacts show` и
 `messages between`, и только если владелец разрешил `readOtherBots`; иначе отказ с кодом `5` — скажите
 владельцу команду из ошибки. `bot watch --jsonl` забирает события у всех других
 читателей бота — запускайте только по просьбе владельца. Отказ с кодом `7`
@@ -376,7 +379,7 @@ PDF с текстовым слоем — unpdf. Фото и сканы чита�
 
 ```sh
 max attachments extract --chat "Книжный клуб" --download --output-dir ./files
-max messages search 'content:договор'
+max search messages 'content:договор'
 max attachments list --chat "Книжный клуб" --needs-text
 max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 ```

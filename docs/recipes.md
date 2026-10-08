@@ -147,7 +147,7 @@ max recipients add "Иван Петров"       # и писать только 
 ## Кто кому должен
 
 Пишет в MAX: **нет**. Разрешить: `Bash(max review:*)`, `Bash(max messages context:*)`,
-`Bash(max messages search:*)`.
+`Bash(max search messages:*)`.
 
 > Выполни `max review --new --transcribe --json` (первый раз — за 3 дня, потом — с прошлого
 > `--new`, у каждого чата своя точка). Разложи на три списка: что должен я, чего я жду от других, что нужно уточнить. У каждого

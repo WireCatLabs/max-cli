@@ -184,12 +184,12 @@ max sales bot chats admins remove "Команда продаж" 4815162342
 ```sh
 max sales bot messages list "Команда продаж" --offline
 max sales bot messages show "Команда продаж" mid.0000019a7f3c21de --offline
-max sales bot messages search "итоги недели"
+max sales bot search messages "итоги недели"
 ```
 
 Поиск — по словам, лучшие совпадения сверху; `--newest` — новые сверху. Нужны все слова;
 `"фраза"`, `-слово`, `а OR б` и фильтры `from:`, `chat:`, `after:`, `before:`, `has:` работают так же,
-как в `max messages search --language legacy`, а опечатка исправляется. Для строгого
+как в `max search messages --language legacy`, а опечатка исправляется. Для строгого
 поиска по общему архиву используйте [обычный поиск](search.md) с `in:bots`.
 
 Чтобы в копии была и старая история чата, скачайте её:
@@ -213,8 +213,8 @@ max sales bot store fetch "Команда продаж" --since-time 7d # за �
 ```sh
 max sales bot contacts show @ann                 # где писала, и её личный чат с ботом
 max sales bot contacts show @ann --refresh       # сначала перечитать личный чат у MAX
-max sales bot messages search --from @ann        # всё, что она написала
-max sales bot messages search "счёт" --from @ann --from Борис
+max sales bot search messages --from @ann        # всё, что она написала
+max sales bot search messages "счёт" --from @ann --from Борис
 max sales bot messages between @ann Борис --limit 20
 ```
 
@@ -228,11 +228,11 @@ max sales bot messages between @ann Борис --limit 20
 ```sh
 max shop config set --bot readOtherBots true          # боту shop можно читать всех ботов
 max shop config set --bot readOtherBots news,support  # или только этих
-max shop bot messages search заказ --bots news        # и тогда — явно, в команде
+max shop bot search messages заказ --bots news        # и тогда — явно, в команде
 max shop bot contacts show @ann --all-bots            # все, кого разрешено
 ```
 
-`--all-bots` и `--bots` есть у `messages search`, `contacts show` и `messages between`. Без
+`--all-bots` и `--bots` есть у `search messages`, `contacts show` и `messages between`. Без
 `readOtherBots` оба отказывают с кодом `5` и называют команду, которая разрешает. Агенту через
 `max <имя> bot mcp` те же поля (`all_bots`, `bots`) предлагаются, только когда это разрешено.
 
