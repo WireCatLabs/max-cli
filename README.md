@@ -365,7 +365,8 @@ max chats moderate "Поход" --dry-run                 # спам, чужие
 **Найти и сохранить:**
 
 ```sh
-max search messages "договор"                     # по всему прочитанному, без сети
+max search all "договор"                          # сообщения, почта и заметки сразу, без сети
+max search messages "договор" --chat "Проект Альфа"  # только сообщения одного чата
 max store fetch "Проект Альфа" --last 500
 max store export "Проект Альфа" --format markdown --output alfa.md
 ```
@@ -519,6 +520,7 @@ MIT — см. [LICENSE](LICENSE).
 `contacts rename` меняет запись в адресной книге мессенджера. Собственные заметки:
 `contacts notes add <person> --file <path>`, затем `list`, `show`, `edit --revision <n>` и `remove`.
 `contacts show --with-notes` включает заметки явно; `contacts list --search-notes <text>` ищет в них.
+Заметка о контакте видна в каждом профиле, который видит этот контакт; псевдоним — только в своём.
 Обновление контактов сохраняет заметки и псевдонимы. Связывание людей не объединяет эти данные.
 
 `max metadata refresh --chat <id>` сохраняет описание группы или канала локально;
