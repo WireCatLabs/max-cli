@@ -107,6 +107,72 @@ describe("joining and leaving", () => {
     expect(JSON.stringify(JSON.parse(listed.stdout))).not.toContain("-70000000000002")
   })
 
+  it("lists who asked to join with no time, which MAX does not give, and answers each with 77", async () => {
+    const asked = {
+      contact: { id: 10000003, names: [{ name: "Asker", type: "ONEME" }] },
+      presence: { seen: 1789776000 },
+    }
+    const { environment, sent } = messenger({
+      [Opcode.CHAT_MEMBERS]: (request) => (request.type === "JOIN_REQUEST" ? { members: [asked] } : { members: [] }),
+      [Opcode.CHAT_MEMBERS_UPDATE]: { chat: GROUP },
+    })
+    const listed = await runWith(["gr-requests", "chats", "requests", "list", "-70000000000001"], environment)
+    const accepted = await runWith(
+      ["gr-requests", "chats", "requests", "accept", "-70000000000001", "10000003"],
+      environment,
+    )
+    const declined = await runWith(
+      ["gr-requests", "chats", "requests", "decline", "-70000000000001", "10000003"],
+      environment,
+    )
+    const byLink = await runWith(
+      ["gr-requests", "chats", "requests", "list", "-70000000000001", "--link", "https://max.ru/join/x"],
+      environment,
+    )
+
+    expect(listed.code).toBe(0)
+    expect(JSON.parse(listed.stdout).items).toEqual([
+      { person: { id: "10000003", name: "Asker", username: null }, requestedAt: null },
+    ])
+    expect(sent(Opcode.CHAT_MEMBERS).filter((one) => one.type === "JOIN_REQUEST")).toEqual([
+      { chatId: -70000000000001, type: "JOIN_REQUEST", count: expect.any(Number) },
+    ])
+    expect([accepted.code, declined.code]).toEqual([0, 0])
+    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([
+      { chatId: -70000000000001, userIds: [10000003], type: "JOIN_REQUEST", operation: "add" },
+      { chatId: -70000000000001, userIds: [10000003], type: "JOIN_REQUEST", operation: "remove" },
+    ])
+    expect(byLink.stderr).toContain("which link")
+    expect(journalOf("gr-requests").map((one) => one.action)).toEqual(["requests.accept", "requests.decline"])
+  })
+
+  it("searches requests by name, and refuses answering them all, which MAX has no call for", async () => {
+    const { environment, sent } = messenger({ [Opcode.CHAT_MEMBERS]: { members: [] } })
+    const searched = await runWith(
+      ["gr-req-search", "chats", "requests", "list", "-70000000000001", "--limit", "5", "--search", "Ask"],
+      environment,
+    )
+    const all = await Promise.all(
+      ["accept", "decline"].flatMap((verb) => [
+        runWith(["gr-req-all", "chats", "requests", verb, "-70000000000001", "--all"], environment),
+        runWith(
+          ["gr-req-all", "chats", "requests", verb, "-70000000000001", "--all", "--link", "https://max.ru/join/x"],
+          environment,
+        ),
+      ]),
+    )
+
+    expect(searched.code).toBe(0)
+    expect(sent(Opcode.CHAT_MEMBERS)).toContainEqual({
+      chatId: -70000000000001,
+      type: "JOIN_REQUEST",
+      count: expect.any(Number),
+      query: "Ask",
+    })
+    expect(all.map((one) => one.code === 0)).toEqual([false, false, false, false])
+    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([])
+  })
+
   it("refuses what is not a MAX link before anything is sent", async () => {
     const { environment, max } = messenger()
     const refused = await runWith(["gr-bad-link", "chats", "join", "Team"], environment)
@@ -522,14 +588,6 @@ describe("changing a group", () => {
     expect(result.stdout).toBe("")
     expect(result.code).not.toBe(0)
     expect(journalOf("gr-add-refused")).toMatchObject([{ action: "members.add", outcome: "failed" }])
-  })
-
-  it("has no join requests to list, accept or decline: MAX groups have no join approval", async () => {
-    const { environment, sent } = messenger()
-    const { code } = await runWith(["gr-requests", "chats", "requests", "list", "Team", "--json"], environment)
-
-    expect(code).not.toBe(0)
-    expect(sent(Opcode.CHAT_MEMBERS)).toEqual([])
   })
 
   describe("chats events", () => {

@@ -52,6 +52,7 @@ import type {
   GroupMembers,
   GroupSettings,
   Id,
+  JoinRequest,
   MediaKind,
   Message,
   MessageChange,
@@ -543,6 +544,44 @@ export class MaxClient {
       const answer = await this.#wire.chats.linkInfo({ link: wire }).catch(deadLink(link))
       return toGroupCard(record(answer.chat) ?? {})
     },
+
+    /** Who asked to join a channel that approves joins. MAX says nothing of when, so `requestedAt` is null. */
+    joinRequests: async (
+      chatId: Id,
+      { limit, search, link }: { limit: number; search?: string; link?: string },
+    ): Promise<Page<JoinRequest>> => {
+      if (this.#offline) throw new CliError("validation_error", "`--offline` has no join requests; MAX has")
+      if (link !== undefined) throw new CliError("validation_error", "MAX does not say which link a request came by")
+      await this.#connectOnce()
+      const answer = await this.#wire.chats.members({
+        chatId,
+        type: "JOIN_REQUEST",
+        count: limit,
+        ...(search ? { query: search } : {}),
+      })
+      const items = asArray(answer.members).map((raw) => {
+        const { id, name, username } = toGroupMember(raw)
+        return { person: { id, name, username }, requestedAt: null }
+      })
+      return { items, hasMore: typeof answer.marker === "number" && answer.marker > 0 }
+    },
+
+    /** Lets one person in, or turns them away; the web client's 77 with `type: JOIN_REQUEST`. */
+    answerJoinRequest: (chatId: Id, personId: Id, accept: boolean): Promise<{ already: boolean }> =>
+      this.#changeChat(
+        chatId,
+        accept ? "requests.accept" : "requests.decline",
+        async () => {
+          await this.#wire.chats.updateMembers({
+            chatId,
+            userIds: [personId],
+            type: "JOIN_REQUEST",
+            operation: accept ? "add" : "remove",
+          })
+          return { chatId, result: { already: false }, people: 1 }
+        },
+        accept ? [personId] : undefined,
+      ),
 
     /**
      * `requested` where the chat takes join requests: MAX answers the chat with `joinRequestTime` and

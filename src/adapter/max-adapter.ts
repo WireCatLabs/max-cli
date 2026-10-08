@@ -36,6 +36,8 @@ export type MaxAdapter = MessengerAdapter &
       | "startBot"
       | "botApp"
       | "botByLink"
+      | "joinRequests"
+      | "answerJoinRequest"
       | "people"
       | "addContact"
       | "removeContact"
@@ -230,6 +232,8 @@ export const maxAdapter = (
 
     createGroup: (title, people, options) => client.chats.create(title, people, options),
     join: (link) => client.chats.join(link),
+    joinRequests: (chatId, window) => client.chats.joinRequests(chatId, window),
+    answerJoinRequest: (chatId, personId, accept) => client.chats.answerJoinRequest(chatId, personId, accept),
     leave: async (chat) => {
       const { chatId } = await client.chats.leave(chat)
       return { chatId }

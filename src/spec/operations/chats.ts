@@ -209,8 +209,10 @@ export const chatsMembers = defineOperation({
   auth: true,
   request: v.strictObject({
     chatId: id(),
-    /** MAX also takes `JOIN_REQUEST`, and answered `{}`: a group has no join approval to fill it (`FIND-249`). */
-    type: v.literal("MEMBER"),
+    /** `JOIN_REQUEST` lists who asked to join a channel that approves joins (measured 2026-10-08). */
+    type: v.picklist(["MEMBER", "JOIN_REQUEST"]),
+    /** A name to look for among those who asked, as web.max.ru sends it with `JOIN_REQUEST`. */
+    query: v.optional(v.string()),
     /** 0 for the first page, then the `marker` the previous answer carried. */
     marker: v.optional(v.number()),
     count: v.pipe(v.number(), v.integer(), v.minValue(1)),
@@ -237,6 +239,7 @@ export const chatsMembers = defineOperation({
 const MEMBER_ACTIONS: Record<string, readonly [ChatAction, ChatAction]> = {
   MEMBER: ["members.add", "members.remove"],
   ADMIN: ["admins.add", "admins.remove"],
+  JOIN_REQUEST: ["requests.accept", "requests.decline"],
 }
 
 export const chatsUpdateMembers = defineOperation({
@@ -248,8 +251,8 @@ export const chatsUpdateMembers = defineOperation({
     chatId: id(),
     userIds: v.pipe(v.array(id()), v.minLength(1)),
     operation: v.picklist(["add", "remove"]),
-    /** Absent means an ordinary member. */
-    type: v.optional(v.literal("ADMIN")),
+    /** Absent means an ordinary member; `JOIN_REQUEST` answers who asked to join (web.max.ru, `remove` measured 2026-10-08). */
+    type: v.optional(v.picklist(["ADMIN", "JOIN_REQUEST"])),
     showHistory: v.optional(v.boolean()),
     /** Always 0 from us: anything else probably erases the removed person's messages (`NEED-32`). */
     cleanMsgPeriod: v.optional(v.literal(0)),
@@ -267,7 +270,7 @@ export const chatsUpdateMembers = defineOperation({
       kind: "chat",
       action,
       people: countOf(request.userIds),
-      ...(action === "members.add" ? { personIds: peopleOf(request.userIds) } : {}),
+      ...(action === "members.add" || action === "requests.accept" ? { personIds: peopleOf(request.userIds) } : {}),
     }
   },
   provenance: {
@@ -277,7 +280,7 @@ export const chatsUpdateMembers = defineOperation({
       "PyMax invite_users_to_group, remove_users_from_group, add_admin, confirm_join_request, decline_join_request",
     ],
     notes:
-      "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. PyMax's `JOIN_REQUEST` forms are not sent: MAX groups have no join approval (`FIND-249`). max-api-docs calls 77 pin/archive/mute; measured otherwise. " +
+      "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. `JOIN_REQUEST` answers a request to join a channel; a private group takes none (`FIND-249`). max-api-docs calls 77 pin/archive/mute; measured otherwise. " +
       "Adding a bot answers `participants.filter.out` while the bot's privacy setting forbids group chats, " +
       "its default (measured 2026-09-27; dev.max.ru/docs/chatbots/bots-create/manage).",
   },
