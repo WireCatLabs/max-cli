@@ -448,3 +448,9 @@ max tags remove news --chat CHAT_ID --source auto
 `stats messages discussion`. Проверяй качество архива и reply-графа, копируй точные drilldown-аргументы
 с `--component report`. Неизвестные история и дата вступления не равны нулю. Отчёты читают только
 сохранённые данные; не выводи из выбранных id, кто был админом в прошлом.
+
+Медиа чата: `max chats media <чат> --type file --json`; история звонков: `max calls list --json`.
+`max account privacy show --json` читает приватность из ответа на вход.
+`max chats mute|unmute` и `max account privacy set` меняют настройки владельца; выполняй
+их только по его явной просьбе, сохраняй остальные поля. При проверке изменений сначала
+сними значения и после проверки восстанови их.
