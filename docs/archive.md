@@ -219,8 +219,11 @@ max watch --events --jsonl  # ещё правки, удаления, реакц�
 
 `max store migrate` достраивает индексы; `max store reindex` перестраивает их. `store info` и
 `store check` показывают готовность словесного и stem-индексов. Строгий поиск использует основы для форм слов; `exact:` и `--exact` выбирают точную форму. `config set searchStemmers.cyrillic` принимает `russian`
-или `none`, `config set searchStemmers.latin` — `spanish`, `english` или `none`; `none` отключает
-основы для этого алфавита. Затем выполните `store reindex`. Настройка общая для всех профилей и
+или `none`, `config set searchStemmers.latin` — `english`, `spanish` или оба через запятую (по умолчанию
+`english,spanish`: латинское слово ищется по основам обоих языков), либо `none`; `none` отключает
+основы для этого алфавита. После своей настройки выполните `store reindex`. Если основы строятся
+заново — после обновления `max`, сменившего настройку по умолчанию, — поиск пока ищет точные формы
+слов и говорит об этом; `max serve` достраивает основы в фоне, `store migrate` — сразу. Настройка общая для всех профилей и
 обоих мессенджеров, поэтому `--defaults`, `--personal` и `--bot` к ней не применяются, а под
 `MAX_PROFILE_LOCK` менять её нельзя.
 

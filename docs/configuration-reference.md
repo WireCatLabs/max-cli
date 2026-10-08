@@ -200,8 +200,8 @@ max config set defaultProfile work      # какой профиль без пе�
 принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного, а старое `mcpTools` относится
 только к личному аккаунту.
 
-`searchStemmers.cyrillic` (`russian` или `none`) и `searchStemmers.latin` (`spanish`, `english` или
-`none`) хранятся не в файле настроек, а в общем архиве сообщений: они одни на все профили и на оба
+`searchStemmers.cyrillic` (`russian` или `none`) и `searchStemmers.latin` (`english`, `spanish`, оба через
+запятую — так по умолчанию — или `none`) хранятся не в файле настроек, а в общем архиве сообщений: они одни на все профили и на оба
 мессенджера. Поэтому `--defaults`, `--personal` и `--bot` с ними не принимаются, а под
 `MAX_PROFILE_LOCK` их менять нельзя. `config unset` возвращает встроенное значение. После смены
 выполните `max store reindex` — см. [Обслуживание архива](archive.md#обслуживание-архива).
