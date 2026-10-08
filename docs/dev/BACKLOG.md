@@ -25,9 +25,9 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
-- **MAX-71** · P3 · Research: is 68 a message search or a chat-title search; public search (60); join requests —
-  a private group ignores `JOIN_REQUEST` and joins by link at once (measured 2026-10-08, `pnpm probe:join-requests`);
-  left: a public group and a channel.
+- **MAX-71** · P3 · Research left: join requests on a public group and on a channel (a private group ignores
+  `JOIN_REQUEST`, measured 2026-10-08); what 60 (`{query, count, type: ALL}`, public search) returns for a query that
+  finds something. 68 is answered: a message search across all chats (`pnpm probe:search-ops`, IDEA in the journal).
 
 - **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
   numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
