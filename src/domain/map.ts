@@ -2,6 +2,8 @@ import { asId, type Payload } from "../protocol/frame.js"
 import type {
   AccountSession,
   Attachment,
+  Audience,
+  CallRecord,
   Chat,
   ChatKind,
   Contact,
@@ -12,6 +14,7 @@ import type {
   Id,
   Message,
   Poll,
+  PrivacySettings,
   Profile,
   ProfileFacts,
   QuotedMessage,
@@ -217,6 +220,45 @@ export const toSession = (raw: Payload): AccountSession => ({
   device: text(raw.info),
   location: text(raw.location),
   lastActiveAt: timestamp(raw.time),
+})
+
+/** A call in the history 163 answers (measured 2026-10-08); `HUNGUP` is one that was picked up, as the web client reads it. */
+export const toCallRecord = (raw: Payload, self: Id | undefined): CallRecord => {
+  const callerId = asId(raw.callerId) ?? null
+  const hangup = typeof raw.hangupType === "string" ? raw.hangupType : ""
+  const direction = callerId !== null && callerId === self ? "outgoing" : "incoming"
+  const duration = typeof raw.durationMs === "number" && raw.durationMs > 0 ? Math.round(raw.durationMs / 1000) : null
+  return {
+    id: asId(raw.historyId) ?? asId(raw.callId) ?? "",
+    chatId: asId(raw.chatId) ?? null,
+    callerId,
+    direction,
+    outcome: hangup === "HUNGUP" ? "answered" : hangup === "MISSED" ? "missed" : "declined",
+    kind: raw.callType === "VIDEO" ? "video" : "audio",
+    at: timestamp(raw.time) ?? new Date(0).toISOString(),
+    durationSeconds: duration,
+  }
+}
+
+const audience = (value: unknown, fallback: Audience): Audience =>
+  value === "ALL"
+    ? "everyone"
+    : value === "CONTACTS"
+      ? "contacts"
+      : value === "NOBODY" || value === "_NONE_"
+        ? "nobody"
+        : fallback
+
+/**
+ * The privacy part of the settings LOGIN carries. A key left out means MAX's default, as the web client
+ * reads it (chunk `Cdo8IOYe`, 2026-10-08): everyone may find, call and invite; contacts see the number.
+ */
+export const toPrivacy = (user: Payload): PrivacySettings => ({
+  findByPhone: audience(user.SEARCH_BY_PHONE, "everyone"),
+  phoneNumber: audience(user.PHONE_NUMBER_PRIVACY, "contacts"),
+  calls: audience(user.INCOMING_CALL, "everyone"),
+  chatInvites: audience(user.CHATS_INVITE, "everyone"),
+  hideOnline: user.HIDDEN === true,
 })
 
 /** The names a login response carries, so a message can name its sender without another request. */

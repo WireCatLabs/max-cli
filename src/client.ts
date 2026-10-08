@@ -15,6 +15,7 @@ import {
   POLL_CLOSED,
   pollSettings,
   SETTING_FLAGS,
+  toCallRecord,
   toChat,
   toContact,
   toFolder,
@@ -22,6 +23,7 @@ import {
   toGroupMember,
   toMessage,
   toPoll,
+  toPrivacy,
   toProfile,
   toProfileFacts,
   toReactions,
@@ -30,6 +32,7 @@ import {
 import type {
   AccountSession,
   AttachmentLink,
+  CallRecord,
   Chat,
   ChatCard,
   ChatEvents,
@@ -43,6 +46,7 @@ import type {
   GroupMembers,
   GroupSettings,
   Id,
+  MediaKind,
   Message,
   MessageChange,
   MessageHit,
@@ -51,6 +55,7 @@ import type {
   Pin,
   Poll,
   PollMessage,
+  PrivacySettings,
   Profile,
   ProfileFacts,
   QuotedMessage,
@@ -231,6 +236,23 @@ export class MaxClient {
     me: async (): Promise<Profile> => {
       await this.#connectOnce()
       return toProfile(record(this.#session().profile) ?? {})
+    },
+
+    /** What the login carried: MAX sends the account's settings with it, so reading them asks nothing more. */
+    privacy: async (): Promise<PrivacySettings> => {
+      await this.#connectOnce()
+      return toPrivacy(record(record(this.#session().config)?.user) ?? {})
+    },
+
+    /** Newest first. The web tab asks the same with the sync value it last kept; 0 is the whole history. */
+    calls: async (limit: number): Promise<Page<CallRecord>> => {
+      await this.#connectOnce()
+      const answer = await this.#wire.calls.history({ callHistorySync: 0 })
+      const self = asId(record(record(this.#session().profile)?.contact)?.id)
+      const calls = asArray(answer.callHistoryItems)
+        .map((raw) => toCallRecord(record(raw) ?? {}, self))
+        .sort((a, b) => b.at.localeCompare(a.at))
+      return { items: calls.slice(0, limit), hasMore: calls.length > limit }
     },
 
     /**
@@ -856,6 +878,32 @@ export class MaxClient {
       )
       const hasMore = messages.length >= limit || (messages.length > 0 && (await this.#olderThan(chatId, messages)))
       return { items: messages, hasMore }
+    },
+
+    /**
+     * **A chat's gallery**, as web.max.ru asks for it: messages that carry these kinds of attachment,
+     * read back from a message — the newest one, or `before`. Oldest first, like history.
+     */
+    media: async (chatId: Id, kinds: MediaKind[], limit: number, before?: Id): Promise<Page<Message>> => {
+      await this.#connectOnce()
+      const anchor = before ?? (await this.#newestId(chatId))
+      if (anchor === undefined) return { items: [], hasMore: false }
+      const answer = await this.#wire.messages.media({
+        chatId,
+        messageId: anchor,
+        attachTypes: [...new Set(kinds.map((kind) => MEDIA_TYPES[kind]))],
+        forward: 0,
+        backward: limit + 1,
+      })
+      const lookup = { names: namesFrom(this.#session().contacts), ...viewer(this.#store) }
+      const raw = asArray(answer.messages)
+        .map((one) => record(one) ?? {})
+        .filter((one) => asId(one.id) !== before)
+      const older = raw.length > limit
+      const items = await this.#nameSenders(
+        raw.slice(older ? raw.length - limit : 0).map((one) => toMessage(one, chatId, lookup)),
+      )
+      return { items, hasMore: older }
     },
 
     /**
@@ -2103,6 +2151,18 @@ export class MaxClient {
     return reactions ? this.#withReactions(chatId, messages) : messages
   }
 
+  /** Straight to the wire, as `#olderThan`: one message's id is all a gallery read needs to start from. */
+  async #newestId(chatId: Id): Promise<Id | undefined> {
+    const answer = await this.#wire.chats.history({
+      chatId,
+      from: Date.now(),
+      forward: 0,
+      backward: 1,
+      getMessages: true,
+    })
+    return asId(record(asArray(answer.messages).at(-1))?.id)
+  }
+
   /** Straight to the wire: the reactions and names `#history` fetches are not wanted for a yes or no. */
   async #olderThan(chatId: Id, messages: Message[]): Promise<boolean> {
     const oldest = Math.min(...messages.map((message) => Date.parse(message.timestamp)))
@@ -3009,3 +3069,5 @@ const pickFolder = (reference: string, folders: Payload[]): Payload => {
   }
   throw new CliError("not_found", `no folder "${wanted}" — \`max chats folders list\` shows them`)
 }
+
+const MEDIA_TYPES = { photo: "PHOTO", video: "VIDEO", file: "FILE", audio: "AUDIO", link: "SHARE" } as const

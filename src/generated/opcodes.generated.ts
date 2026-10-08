@@ -28,6 +28,7 @@ export const Opcode = {
   CONTACT_INFO_BY_PHONE: 46,
   CHAT_HISTORY: 49,
   CHAT_MARK: 50,
+  CHAT_MEDIA: 51,
   /**
    * **Declared, never sent.** Deleting a chat is left out of MAX-31 for the reason of `NEED-32`: a tool that can
    * destroy a conversation for everyone in it is a poor trade for tidiness. Measured 2026-10-01: `forAll: true` does

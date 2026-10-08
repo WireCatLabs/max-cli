@@ -199,6 +199,32 @@ export const messagesReactions = defineOperation({
   },
 })
 
+export const messagesMedia = defineOperation({
+  name: "messages.media",
+  constant: "CHAT_MEDIA",
+  opcode: 51,
+  auth: true,
+  /** Paged from a message, as history is; `attachTypes` as MAX names them: `PHOTO`, `VIDEO`, `FILE`, `AUDIO`, `SHARE`. */
+  request: v.strictObject({
+    chatId: id(),
+    messageId: id(),
+    attachTypes: v.array(v.picklist(["PHOTO", "VIDEO", "FILE", "AUDIO", "SHARE"])),
+    forward: v.number(),
+    backward: v.number(),
+  }),
+  response: v.looseObject({ messages: v.optional(v.array(v.looseObject({}))), total: v.optional(v.number()) }),
+  guard: null,
+  provenance: {
+    confidence: "measured",
+    sources: [
+      "web.max.ru chunk `_app/immutable/chunks/Cdo8IOYe.js`, read 2026-10-08: `send(51, {chatId, messageId, attachTypes, forward, backward})`",
+      "measured 2026-10-08 on test account B, in the A↔B dialog: `SHARE` answered all 6 link messages history holds, `total: 6`; the other kinds answered `total: 0`",
+      "rumax a9ecaf3 `get_chat_media`",
+    ],
+    notes: "Reading marks nothing: no `CHAT_MARK`, and history's own read never moved a read mark (`RES-11`).",
+  },
+})
+
 export const messagesSearch = defineOperation({
   name: "messages.search",
   constant: "MSG_SEARCH",

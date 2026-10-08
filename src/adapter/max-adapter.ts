@@ -41,6 +41,9 @@ export type MaxAdapter = MessengerAdapter &
       | "createFolder"
       | "updateFolder"
       | "deleteFolder"
+      | "calls"
+      | "privacy"
+      | "media"
       | "orderFolders"
       | "updateProfile"
       | "endOtherSessions"
@@ -265,6 +268,10 @@ export const maxAdapter = (
       await client.folders.delete(id)
     },
     orderFolders: (ids) => client.folders.order(ids),
+
+    calls: ({ limit }) => client.account.calls(limit),
+    privacy: () => client.account.privacy(),
+    media: (chatId, { kinds, limit, before }) => client.messages.media(chatId, kinds, limit, before),
 
     people: (references) => client.people(references),
     addContact: async (id) => toMember(await client.contacts.add(id)),

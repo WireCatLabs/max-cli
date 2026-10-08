@@ -27,6 +27,7 @@ export const chatsCommand = (): Command => {
   command.addCommand(without(sharedSubcommand(shared, "folders"), ["join"]))
   command.addCommand(sharedSubcommand(shared, "rules"))
   command.addCommand(sharedSubcommand(shared, "moderate"))
+  command.addCommand(sharedSubcommand(shared, "media"))
 
   return command
 }

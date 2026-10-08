@@ -145,6 +145,34 @@ max account sessions end [options]
 |---|---|
 | `--others` | every session but this one. |
 
+### `max account privacy`
+
+who may find, call or add the account
+
+#### `max account privacy show`
+
+the account's privacy settings; reading changes nothing
+
+```sh
+max account privacy show
+```
+
+## `max calls`
+
+the account's calls
+
+### `max calls list`
+
+calls made and received, newest first; reading changes nothing
+
+```sh
+max calls list [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many to show. |
+
 ## `max chats`
 
 the chats this account is in
@@ -666,6 +694,24 @@ max chats moderate <chat> [options]
 | `--dry-run` | judge and plan; do nothing. |
 | `--allow-dangerous` | yes to every action whose level in the group's rules is ask. |
 | `--max-actions <n>` | at most this many actions in one run; 10 if not given. |
+
+### `max chats media`
+
+a chat's photos, videos, files, audio and links, from the messenger's server; reading marks nothing
+
+```sh
+max chats media <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--type <names>` | only these kinds, comma-separated: photo, video, file, audio, link. |
+| `--limit <n>` | how many to show. |
+| `--before-id <id>` | read what came before this message id. |
 
 ## `max contacts`
 

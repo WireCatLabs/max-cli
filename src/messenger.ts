@@ -47,6 +47,8 @@ export const maxMessenger: Messenger = {
   inviteLinkRevoke: false,
   folderJoin: false,
   groupPhoto: true,
+  chatMedia: true,
+  privacy: true,
   app: MAX_APP,
   provider: "max",
   name: "MAX",

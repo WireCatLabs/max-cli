@@ -30,6 +30,7 @@ import {
 import {
   messagesDelete,
   messagesEdit,
+  messagesMedia,
   messagesPollVote,
   messagesReact,
   messagesReactions,
@@ -95,6 +96,7 @@ export const spec: readonly Entry[] = [
   messagesUnreact,
   messagesPollVote,
   messagesReactions,
+  messagesMedia,
   messagesSearch,
   messagesDelete,
   attachmentsVideo,

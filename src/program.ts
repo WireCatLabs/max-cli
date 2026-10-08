@@ -28,6 +28,7 @@ import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
 import { botCommand } from "./commands/bot.js"
 import { botRecordingOf } from "./commands/bot-context.js"
+import { callsCommand } from "./commands/calls.js"
 import { chatsCommand } from "./commands/chats.js"
 import { commandsCommand } from "./commands/commands.js"
 import { completeCommand } from "./commands/complete.js"
@@ -74,6 +75,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     sessionCommand(),
     setupCommand(),
     accountCommand(),
+    callsCommand(),
     chatsCommand(),
     contactsCommand(),
     messagesCommand(),
