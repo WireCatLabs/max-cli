@@ -1,4 +1,4 @@
-import type { Attachment, Chat, ChatKind, Message, QuotedMessage } from "@leemour/cli-messaging"
+import type { Attachment, Button, ButtonKind, Chat, ChatKind, Message, QuotedMessage } from "@leemour/cli-messaging"
 import type { PersonFacts } from "@leemour/cli-messaging/store"
 import type {
   Attachment as BotAttachment,
@@ -24,8 +24,33 @@ export const toPerson = (user: User): PersonFacts => ({
   isBot: user.is_bot,
 })
 
+const BUTTON_KINDS: Record<string, ButtonKind> = {
+  callback: "callback",
+  link: "link",
+  message: "message",
+  request_contact: "contact",
+  request_geo_location: "location",
+  open_app: "app",
+  clipboard: "clipboard",
+}
+
+/** The bot's own keyboard, as the personal side shows it; a button's payload stays out, as there. */
+const buttonsOf = (payload: Record<string, unknown>): Button[][] =>
+  (Array.isArray(payload.buttons) ? payload.buttons : []).map((row) =>
+    (Array.isArray(row) ? row : []).map((raw) => {
+      const button = (raw ?? {}) as Record<string, unknown>
+      const kind = BUTTON_KINDS[String(button.type)] ?? "other"
+      const url = kind === "link" && typeof button.url === "string" ? button.url : undefined
+      return { kind, text: typeof button.text === "string" ? button.text : "", ...(url ? { url } : {}) }
+    }),
+  )
+
 const attachmentOf = (attachment: BotAttachment): Attachment | undefined => {
-  if (attachment.type === "inline_keyboard") return undefined
+  if (attachment.type === "inline_keyboard")
+    return {
+      kind: "inline_keyboard",
+      buttons: buttonsOf(((attachment as { payload?: unknown }).payload ?? {}) as Record<string, unknown>),
+    }
   const payload = ((attachment as { payload?: unknown }).payload ?? {}) as Record<string, unknown>
   const extra = attachment as unknown as Record<string, unknown>
   const text = (value: unknown) => (typeof value === "string" ? value : undefined)
