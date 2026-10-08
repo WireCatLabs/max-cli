@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { namesFrom, toChat, toGroupMember, toMessage, toProfile, toSeen } from "./map.js"
+import { namesFrom, toChat, toGroupMember, toMessage, toProfile, toProfileFacts, toSeen } from "./map.js"
 
 /**
  * Field names are from a real MAX response, observed 2026-09-19; every **value** here is invented.
@@ -259,5 +259,13 @@ describe("toSeen", () => {
     expect(toSeen({ seen: 1789776000, status: 1 })).toBe("online")
     expect(toSeen({})).toBeUndefined()
     expect(toSeen(undefined)).toBeUndefined()
+  })
+})
+
+describe("toProfileFacts", () => {
+  it("marks a bot by its options, and says nothing when MAX sent none", () => {
+    expect(toProfileFacts({ id: 7, options: ["TT", "ONEME", "BOT"] }, []).flags).toEqual({ bot: true })
+    expect(toProfileFacts({ id: 7, options: ["ONEME"] }, []).flags).toEqual({ bot: false })
+    expect(toProfileFacts({ id: 7 }, []).flags).toEqual({})
   })
 })
