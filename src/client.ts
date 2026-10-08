@@ -1884,6 +1884,17 @@ export class MaxClient {
       return !CHANGES_CHATS.has(opcode)
     },
 
+    /**
+     * Whether a chat sent whole says something the held copy does not: a chat not held, or another
+     * title, description, member count, status, type, photo or owner. The rest — its last message, its
+     * unread count — changes with every message and is not a change to the chat.
+     */
+    news: (changed: Payload): boolean => {
+      const id = asId(changed.id)
+      const held = asArray(this.#session().chats).find((candidate) => asId(candidate.id) === id)
+      return !held || CHAT_FACTS.some((key) => JSON.stringify(held[key]) !== JSON.stringify(changed[key]))
+    },
+
     /** A contact MAX answered with after our own change to it replaces the login's copy. */
     contact: (changed: Payload): void => {
       const id = asId(changed.id)
@@ -3000,6 +3011,7 @@ const READ_MARK = 130
 /** A chat changed; MAX sends it whole. */
 const CHAT_CHANGED = 135
 const CONFIG_CHANGED = 134
+const CHAT_FACTS = ["title", "description", "participantsCount", "status", "type", "baseIconUrl", "owner"]
 /** Messages deleted (140 in PyMax, 142 in the web client): the snapshot cannot follow them. */
 const CHANGES_CHATS = new Set([140, 142])
 

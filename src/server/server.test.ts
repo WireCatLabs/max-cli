@@ -714,6 +714,31 @@ describe("a command through max serve", () => {
     expect(chat).toMatchObject({ id: "111", title: "Renamed" })
   })
 
+  it("tells watchers of a chat change only when the chat itself changed, not with every send", async () => {
+    const held = { id: 111, title: "First", type: "CHAT", lastEventTime: 1789776000000 }
+    const sent = { id: 116762160362694599n, time: 1789776001000, sender: ME, text: "sent" }
+    const { store, max } = await serve(
+      "c-chat-news",
+      scripted({ [Opcode.MSG_SEND]: { message: sent, chat: { ...held, lastEventTime: 1789776001000 } } }),
+    )
+    const watch = watching(store)
+    await waitUntil(() => watch.events.length === 1, "watcher subscribed")
+
+    const { client } = commandClient(store)
+    await client.messages.send("111", "sent")
+    await client.close()
+    max.push(135, { chat: { ...held, lastEventTime: 1789776002000, newMessages: 3 } }, 9)
+    max.push(135, { chat: { ...held, title: "Renamed" } }, 10)
+    await waitUntil(() => watch.events.some((event) => event.event === "change"), "the rename")
+    await observeFor(50)
+    watch.stop()
+    await watch.listening
+
+    expect(watch.events.filter((event) => event.event === "change")).toMatchObject([
+      { change: { event: "chat", chat: { id: "111", title: "Renamed" } } },
+    ])
+  })
+
   it("does not add a group looked at by its link to the chat list, nor tell watchers it changed", async () => {
     const elsewhere = { id: 222, title: "Elsewhere", type: "CHAT", participantsCount: 5 }
     const { store } = await serve("c-inspect", scripted({ [Opcode.LINK_INFO]: { chat: elsewhere } }))
