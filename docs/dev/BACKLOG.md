@@ -23,6 +23,10 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Features
 
+- **CLI-76** · P2 · Reactions broken down by emoji in message rankings: `max stats messages top --measure reactions`
+  ranks by the total only; show each top message's reactions by emoji (for example 👍 4, 😂 3) beside the total, in
+  the table and in `--json`. Starts in cli-messaging `src/store/sqlite/rankings.ts`, `src/domain/rankings-options.ts`.
+
 - **MAX-71** · P3 · Research left: join requests on a public group (a private group ignores `JOIN_REQUEST`; a
   channel keeps it — MAX-73).
 
