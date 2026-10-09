@@ -320,3 +320,18 @@ appears anywhere in the events, while the `cid` does, so it cannot pass by recor
 Both defects found so far were found this way — a device identity that changed on every call, and
 two sends in the same millisecond sharing a `cid`. Neither would have been visible from the outside
 until it cost something.
+
+## How agents' statistics answers were evaluated
+
+The [public agent evaluation report](https://github.com/leemour/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md)
+records synthetic CLI and MCP tasks covering selected responders, response latency, observed
+retention, counter freshness, exact previews, permission refusal and evidence recovery after source
+changes. Six fresh contexts produced 38 assessed outcomes. This small, correlated sample is not a
+reliability percentage or a guarantee about anyone's agent. MCP used a shell proxy; no real
+messenger or its network adapter participated. The original runs did not record the exact model.
+
+To reproduce, use the [fixture and reproduction instructions](https://github.com/leemour/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md#interpretation-and-reproduction).
+Record model/SDK versions, clock/seed, prompts and first failures. Model answers can differ on a
+rerun; fixture checks and independent model evaluations are counted separately. What a user should
+check in an agent's statistics answer stays in
+[the user page on scripts](../cli-contract.md#как-проверить-ответ-агента-о-статистике).
