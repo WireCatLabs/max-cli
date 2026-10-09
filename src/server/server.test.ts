@@ -1477,7 +1477,7 @@ it("does not ask again on the server after the moderation layer approved the act
 })
 
 describe("auto-replies in max serve", () => {
-  const TESTER = 10000002
+  const FRIEND = 10000002
   const STRANGER = 10000003
   const DIALOG = 222
 
@@ -1487,19 +1487,19 @@ describe("auto-replies in max serve", () => {
         profile: { contact: { id: ME, names: [{ name: "Test Person", type: "FULL_NAME" }] } },
         chats: [{ id: DIALOG, type: "DIALOG", lastEventTime: 1789776000000 }],
         contacts: [
-          { id: TESTER, names: [{ name: "Tess Tester", type: "FULL_NAME" }] },
+          { id: FRIEND, names: [{ name: "Tess Example", type: "FULL_NAME" }] },
           { id: STRANGER, names: [{ name: "Somebody Real", type: "FULL_NAME" }] },
         ],
       },
     })
 
-  const rules = (profile: string, testers: number[]) => {
+  const rules = (profile: string, allowed: number[]) => {
     const path = repliesPathFor(MAX_APP, profile, process.env)
     mkdirSync(dirname(path), { recursive: true })
     writeFileSync(
       path,
       JSON.stringify({
-        testers: testers.map((id) => ({ id: String(id) })),
+        audience: { reply: "listed", allow: { people: allowed.map(String) } },
         rules: [
           {
             id: "away",
@@ -1539,13 +1539,13 @@ describe("auto-replies in max serve", () => {
 
   const replies = (max: ReturnType<typeof scripted>) => max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)
 
-  it("answers a tester once, as a reply, and journals which rule sent it", async () => {
-    rules("ar-tester", [TESTER])
-    await allow("ar-tester")
-    const { store, max } = await serve("ar-tester", withDialog())
+  it("answers an allowed person once, as a reply, and journals which rule sent it", async () => {
+    rules("ar-allowed", [FRIEND])
+    await allow("ar-allowed")
+    const { store, max } = await serve("ar-allowed", withDialog())
 
-    arrive(max, TESTER, 116762160362694601n, 5)
-    arrive(max, TESTER, 116762160362694602n, 6)
+    arrive(max, FRIEND, 116762160362694601n, 5)
+    arrive(max, FRIEND, 116762160362694602n, 6)
     await waitUntil(
       () =>
         new SendJournal(sendsPathFor(store.profile))
@@ -1569,7 +1569,7 @@ describe("auto-replies in max serve", () => {
     mkdirSync(dirname(path), { recursive: true })
     writeFileSync(path, '{"private-template-marker": invalid}')
     const { max, notes } = await serve("ar-invalid", withDialog())
-    arrive(max, TESTER, 116762160362694607n, 5)
+    arrive(max, FRIEND, 116762160362694607n, 5)
     await waitUntil(
       () => notes.includes("a reply rule failed; check the replies file and send permissions"),
       "malformed rule reported",
@@ -1579,8 +1579,8 @@ describe("auto-replies in max serve", () => {
     expect(notes.join("\n")).not.toContain("private-template-marker")
   })
 
-  it("never answers anyone not named in testers", async () => {
-    rules("ar-stranger", [TESTER])
+  it("never answers anyone the audience does not allow", async () => {
+    rules("ar-stranger", [FRIEND])
     await allow("ar-stranger")
     const { max } = await serve("ar-stranger", withDialog())
 
@@ -1591,21 +1591,21 @@ describe("auto-replies in max serve", () => {
   })
 
   it("sends nothing while replies.send is not allow, or while paused", async () => {
-    rules("ar-deny", [TESTER])
+    rules("ar-deny", [FRIEND])
     const { max } = await serve("ar-deny", withDialog())
-    arrive(max, TESTER, 116762160362694604n, 5)
+    arrive(max, FRIEND, 116762160362694604n, 5)
     await observeFor(100)
     expect(replies(max)).toHaveLength(0)
 
     await allow("ar-deny")
     expect(await run(["ar-deny", "replies", "pause", "--json"], { streams: captureStreams(), tty: false })).toBe(0)
-    arrive(max, TESTER, 116762160362694605n, 6)
+    arrive(max, FRIEND, 116762160362694605n, 6)
     await observeFor(100)
     expect(replies(max)).toHaveLength(0)
   })
 
   it("`max replies` reads the rules, dry-runs them without connecting, and resumes after a pause", async () => {
-    rules("ar-commands", [TESTER])
+    rules("ar-commands", [FRIEND])
     rememberAccount(MAX_APP, "ar-commands", String(ME), process.env)
     const json = async (...argv: string[]) => {
       const streams = captureStreams()
@@ -1614,18 +1614,22 @@ describe("auto-replies in max serve", () => {
       return JSON.parse(streams.stdout.join(""))
     }
 
-    expect(await json("replies", "status")).toMatchObject({ send: "deny", testers: 1, rules: [{ id: "away" }] })
+    expect(await json("replies", "status")).toMatchObject({
+      send: "deny",
+      audience: { reply: "listed", allow: 1 },
+      rules: [{ id: "away" }],
+    })
     expect(await json("replies", "test", "--since-time", "1d")).toMatchObject({ rules: [{ id: "away", would: [] }] })
     expect(await json("replies", "pause")).toMatchObject({ paused: true })
     expect(await json("replies", "resume")).toMatchObject({ paused: false })
   })
 
   it("never answers what arrived before it started", async () => {
-    rules("ar-old", [TESTER])
+    rules("ar-old", [FRIEND])
     await allow("ar-old")
     const { max } = await serve("ar-old", withDialog())
 
-    arrive(max, TESTER, 116762160362694606n, 5, Date.now() - 3_600_000)
+    arrive(max, FRIEND, 116762160362694606n, 5, Date.now() - 3_600_000)
     await observeFor(100)
 
     expect(replies(max)).toHaveLength(0)
