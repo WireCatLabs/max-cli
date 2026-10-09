@@ -17,8 +17,14 @@ const GROUP = { id: -70000000000001, title: "Team", type: "CHAT", owner: OWNER, 
 const at = (minutesAgo: number) => Date.now() - minutesAgo * 60_000
 
 const history: { id: bigint; time: number; sender: number; text: string; attaches: Payload[] }[] = [
-  { id: 1n, time: at(30), sender: 30000003, text: "come to https://max.ru/join/other", attaches: [] },
-  { id: 2n, time: at(20), sender: 30000004, text: "hello all", attaches: [] },
+  {
+    id: (BigInt(at(30)) << 16n) + 1n,
+    time: at(30),
+    sender: 30000003,
+    text: "come to https://max.ru/join/other",
+    attaches: [],
+  },
+  { id: (BigInt(at(20)) << 16n) + 2n, time: at(20), sender: 30000004, text: "hello all", attaches: [] },
 ]
 
 const group = (messages = history, answers: Record<number, Payload> = {}) => {
@@ -84,8 +90,10 @@ describe("max chats moderate", () => {
     const first = await check(["ck-act", "chats", "moderate", "Team", "--json"], environment)
     const second = await check(["ck-act", "chats", "moderate", "Team", "--json"], environment)
 
-    expect(first.json).toEqual([expect.objectContaining({ messageId: "1", action: "delete", outcome: "done" })])
-    expect(deletes()).toEqual([{ chatId: GROUP.id, messageIds: [1], forMe: false }])
+    expect(first.json).toEqual([
+      expect.objectContaining({ messageId: String(history[0]?.id), action: "delete", outcome: "done" }),
+    ])
+    expect(deletes()).toEqual([{ chatId: GROUP.id, messageIds: [history[0]?.id], forMe: false }])
     expect(new SendJournal(sendsPathFor("ck-act")).entries()).toEqual([
       expect.objectContaining({ kind: "delete", outcome: "sent", count: 1 }),
     ])
@@ -119,9 +127,14 @@ describe("max chats moderate", () => {
     const real = await check(["ck-dry", "chats", "moderate", "Team", "--json"], environment)
 
     expect(dry.json).toEqual([
-      expect.objectContaining({ messageId: "1", action: "delete", outcome: "planned", reason: "--dry-run" }),
+      expect.objectContaining({
+        messageId: String(history[0]?.id),
+        action: "delete",
+        outcome: "planned",
+        reason: "--dry-run",
+      }),
     ])
-    expect(real.json).toEqual([expect.objectContaining({ messageId: "1", outcome: "done" })])
+    expect(real.json).toEqual([expect.objectContaining({ messageId: String(history[0]?.id), outcome: "done" })])
     expect(deletes()).toHaveLength(1)
   })
 
@@ -133,7 +146,11 @@ describe("max chats moderate", () => {
     const refused = await check(["ck-cap", "chats", "moderate", "Team", "--max-actions", "-1", "--json"], environment)
 
     expect(capped.json).toEqual([
-      expect.objectContaining({ messageId: "1", outcome: "skipped", reason: "over the limit of 0 actions per check" }),
+      expect.objectContaining({
+        messageId: String(history[0]?.id),
+        outcome: "skipped",
+        reason: "over the limit of 0 actions per check",
+      }),
     ])
     expect(deletes()).toEqual([])
     expect(refused.code).toBe(2)
@@ -149,7 +166,7 @@ describe("max chats moderate", () => {
     const saved = await check(["ck-since", "chats", "moderate", "Team", "--json"], environment)
 
     expect(later.json).toEqual([])
-    expect(saved.json).toEqual([expect.objectContaining({ messageId: "1", rule: "invites" })])
+    expect(saved.json).toEqual([expect.objectContaining({ messageId: String(history[0]?.id), rule: "invites" })])
   })
   it("starts the first shared run at legacy session progress, and keeps the numeric group's title", async () => {
     const profile = "ck-migrate"

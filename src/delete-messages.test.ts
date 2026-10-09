@@ -12,7 +12,7 @@ import { mockMax } from "./testing/mock-max.js"
 const FIRST = "116762160362694580"
 const SECOND = "116762160362694583"
 
-const messenger = () => {
+const messenger = (history: Record<string, unknown> = { messages: [] }) => {
   const max = mockMax({
     answers: {
       [Opcode.SESSION_INIT]: {},
@@ -21,6 +21,7 @@ const messenger = () => {
         chats: [{ id: 111, title: "Friends", type: "CHAT", lastEventTime: 1789776000000 }],
       },
       [Opcode.MSG_DELETE]: {},
+      [Opcode.CHAT_HISTORY]: history,
     },
   })
   const keyring = memoryKeyring()
@@ -52,6 +53,39 @@ const runWith = async (argv: string[], environment: Environment = {}) => {
 const journalOf = (profile: string) => new SendJournal(sendsPathFor(profile)).entries()
 
 describe("deleting messages", () => {
+  it("accepts a comma-separated list of ids as well as separate arguments", async () => {
+    const { environment, deletes } = messenger()
+    const result = await runWith(
+      ["d-csv", "messages", "delete", "111", `${FIRST},${SECOND}`, "--allow-dangerous"],
+      environment,
+    )
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout).deleted).toEqual([FIRST, SECOND])
+    expect(deletes()).toEqual([{ chatId: "111", messageIds: [FIRST, SECOND], forMe: true }])
+  })
+  it("does not report a kept service notice as deleted after MAX acknowledges the request", async () => {
+    const { environment, deletes } = messenger({
+      messages: [{ id: BigInt(FIRST), attaches: [{ _type: "CONTROL", event: "title" }] }],
+    })
+    const result = await runWith(["d-kept", "messages", "delete", "111", FIRST, "--allow-dangerous"], environment)
+    expect(result.code).not.toBe(0)
+    expect(result.stdout).not.toContain('"deleted"')
+    expect(JSON.parse(result.stderr)).toMatchObject({
+      error: { code: "outcome_unknown", reason: "deletion_unconfirmed", retained: [FIRST] },
+    })
+    expect(deletes()).toHaveLength(1)
+  })
+
+  it("refuses to claim success when the verification response has no message list", async () => {
+    const { environment, deletes } = messenger({})
+    const result = await runWith(["d-unverified", "messages", "delete", "111", FIRST, "--allow-dangerous"], environment)
+    expect(result.code).not.toBe(0)
+    expect(result.stdout).toBe("")
+    expect(JSON.parse(result.stderr)).toMatchObject({
+      error: { code: "outcome_unknown", reason: "deletion_unconfirmed" },
+    })
+    expect(deletes()).toHaveLength(1)
+  })
   it("**refuses without --allow-dangerous**, before connecting", async () => {
     const { max, environment } = messenger()
     const { code, stderr } = await runWith(["d-word", "messages", "delete", "111", FIRST], environment)

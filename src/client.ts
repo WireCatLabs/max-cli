@@ -1451,12 +1451,44 @@ export class MaxClient {
           `${messageIds.length} messages at once — at most ${DELETE_AT_ONCE} per call, so MAX sees deletions spread out`,
         )
       }
+      const times = messageIds.map((id) => {
+        const time = timeOfMessageId(id)
+        if (time === undefined) throw new CliError("validation_error", `"${id}" is not a message id`)
+        return time
+      })
       const count = messageIds.length
       await this.#guard({ chatId, kind: "delete", count, forEveryone })
 
       try {
         await this.#connectOnce()
         await this.#wire.messages.delete({ chatId, messageIds, forMe: !forEveryone })
+        const retained: Id[] = []
+        try {
+          for (const [index, id] of messageIds.entries()) {
+            const answer = await this.#wire.chats.history({
+              chatId,
+              from: times[index] as number,
+              backward: 1,
+              forward: 0,
+              getMessages: true,
+            })
+            if (!Array.isArray(answer.messages)) throw new Error("missing history")
+            if (answer.messages.some((raw) => asId(record(raw)?.id) === id && record(raw)?.status !== "REMOVED"))
+              retained.push(id)
+          }
+        } catch {
+          throw new CliError(
+            "outcome_unknown",
+            "MAX accepted the deletion but its result could not be verified — read the messages before any retry",
+            { reason: "deletion_unconfirmed" },
+          )
+        }
+        if (retained.length)
+          throw new CliError(
+            "outcome_unknown",
+            "MAX still returns messages after the deletion — read them before any retry",
+            { reason: "deletion_unconfirmed", retained },
+          )
         this.#sends?.record({ chatId, kind: "delete", outcome: "sent", count, forEveryone })
         return { chatId, deleted: messageIds, forEveryone }
       } catch (error) {
