@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   ci:
-    uses: leemour/cli-core/.github/workflows/node-ci.yml@2b029a5c7531b7f50c77643fc623dddcebf68344 # v0.11.0
+    uses: leemour/cli-core/.github/workflows/node-ci.yml@b8acbeebf38cd37edcdcc193152ba5d2c11928cb # v0.17.2
     with:
       # Bun is a supported runtime, not an aspiration (NEED-11): the built command, executed under it.
       bun-run: pnpm build && pnpm smoke:bun
