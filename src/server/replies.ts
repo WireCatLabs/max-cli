@@ -30,7 +30,7 @@ export interface RepliesOptions {
 
 /**
  * The owner's reply rules over what MAX pushes, through the shared step tg's `serve` uses — so only
- * senders named in `testers` are answered (NEED-601) and only with `replies.send` at `allow`. One
+ * senders the rules file's audience allows are answered, and only with `replies.send` at `allow`. One
  * message at a time: two at once would both read the limits before either counted its reply.
  */
 export const serverReplies = ({ profile, env = process.env, since, owner, client, guard, note }: RepliesOptions) => {

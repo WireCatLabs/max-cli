@@ -137,9 +137,10 @@ describe("reply editors and model templates", () => {
     expect(never).not.toHaveBeenCalled()
   })
 
-  it("drives every audience option, with stderr warnings and unchanged testers", async () => {
+  it("drives every audience option, with stderr warnings, from a new file that answers nobody", async () => {
     const { invoke, file, never } = setup()
     await invoke("replies", "add", "away")
+    expect(JSON.parse(readFileSync(file, "utf8")).audience).toMatchObject({ reply: "listed", allow: { people: [] } })
     const result = await invoke(
       "replies",
       "audience",
@@ -161,7 +162,7 @@ describe("reply editors and model templates", () => {
       deny: { people: ["11"], chats: ["21"] },
     })
     expect(result.diagnostics).toContain("deny wins")
-    expect(JSON.parse(readFileSync(file, "utf8")).testers).toEqual([])
+    expect(JSON.parse(readFileSync(file, "utf8"))).not.toHaveProperty("testers")
     expect(
       (
         await invoke(
@@ -260,7 +261,7 @@ describe("reply editors and model templates", () => {
       "{% ai %}Greet {{ sender.firstName }}{% else %}Later{% endai %}",
     )
     const raw = JSON.parse(readFileSync(file, "utf8"))
-    raw.testers = [{ id: "11" }]
+    raw.audience = { reply: "listed", allow: { people: ["11"], chats: [] }, deny: { people: [], chats: [] } }
     writeFileSync(file, JSON.stringify(raw))
     const fetcher = vi.fn(
       async () =>

@@ -92,7 +92,7 @@ const REFRESH_EVERY_MS = 60_000
  * It reopens REQUIREMENTS §3 and §18 on purpose and only here: every other command stays one-shot.
  * What it does on the wire copies web.max.ru — a ping every 30 s, MAX's pings answered, each new
  * message acknowledged (`Connection` with `live`). It never marks anything read. It sends on its own
- * only what the owner's reply rules answer, to test accounts alone (`NEED-601`, `NEED-645`).
+ * only what the owner's reply rules answer, to the people and chats their audience allows (`NEED-645`).
  *
  * The socket answers `{"subscribe": true}` with a stream of `ServerEvent` lines and
  * `{"status": true}` with one. For a command reusing the connection (`ServerConnection`) it answers

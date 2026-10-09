@@ -3306,7 +3306,7 @@ max replies edit <id> [options]
 
 ### `max replies audience`
 
-show the profile's reply audience, or replace its named fields; testers still limit answers
+show the reply audience, who the rules may answer, or replace its named fields; a new file answers nobody
 
 **Меняет что-то только на этом компьютере.**
 

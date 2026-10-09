@@ -85,7 +85,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
   можно свободно. `max chats mark-read` и `messages list --mark-read` отмечают — только по прямой
   просьбе владельца: собеседник это увидит.
 - **Не для:** рассылок и чужих аккаунтов. Автоответы работают только по правилам владельца,
-  для указанных тестовых аккаунтов и с `permissions.replies.send allow` ([руководство](https://github.com/leemour/max-cli/blob/main/docs/replies.md)). Бот — отдельные команды `max <имя> bot …`
+  только для людей и чатов, которых владелец разрешил, и с `permissions.replies.send allow` ([руководство](https://github.com/leemour/max-cli/blob/main/docs/replies.md)). Бот — отдельные команды `max <имя> bot …`
   (раздел «Бот» ниже), а не личный аккаунт.
 - **Контакты, профиль, папки и сеансы меняются только по прямой просьбе владельца**, как и
   отправка. `max account sessions end --others` — никогда по своей инициативе: оно выкидывает
@@ -396,7 +396,7 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 текст доступен лишь модели внутри `ai`. `replies test` показывает инструкцию и fallback без
 модели; `--ai` передаёт сохранённые данные только после `replies consents grant`. Согласие
 выдаётся на профиль и endpoint, `consents deny|allow` управляют запретами для чатов. Не расширяйте
-`testers` и не запускайте реальные проверки без отдельного согласия владельца.
+аудиторию ответов и не запускайте реальные проверки без отдельного согласия владельца.
 
 Файлы: `attachments extract --chat <чат> --from-dir ./files`, в MCP — команда `attachments extract` через `max_write`
 (ограниченный обход с `cursor`, без текста в ответе), `messages download <чат> <id> --extract`.

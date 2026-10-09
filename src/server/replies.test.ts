@@ -12,7 +12,7 @@ import { SessionStore } from "../session/store.js"
 import { mockMax } from "../testing/mock-max.js"
 import { serverReplies } from "./replies.js"
 
-it("the native MAX server opens a task for a matching rule without sending or requiring testers", async () => {
+it("the native MAX server opens a task for a matching rule without sending, while the audience allows nobody", async () => {
   const root = mkdtempSync(join(tmpdir(), "max-reply-task-"))
   const env = {
     ...process.env,
@@ -24,7 +24,6 @@ it("the native MAX server opens a task for a matching rule without sending or re
   writeFileSync(
     join(env.MAX_CONFIG_DIR, "default.replies.json"),
     JSON.stringify({
-      testers: [],
       rules: [
         {
           id: "requests",
