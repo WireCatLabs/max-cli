@@ -34,7 +34,7 @@ def main():
     print(f"retained auditor workspace: {scratch}", file=sys.stderr, flush=True)
     try:
         if not args.shared_source:
-            subprocess.run(["git", "clone", "--branch", "main", "--depth", "1", "https://github.com/leemour/cli-messaging.git", str(shared)], env=env, check=True)
+            subprocess.run(["git", "clone", "--branch", "main", "--depth", "1", "https://github.com/WireCatLabs/cli-messaging.git", str(shared)], env=env, check=True)
         if not (shared / "scripts/parity/deep-audit.ts").is_file():
             raise RuntimeError("shared source lacks deep-audit tooling; update cli-messaging main before running this skill")
         subprocess.run(["pnpm", "install", "--frozen-lockfile", "--prefer-offline"], cwd=shared, env=env, check=True)
