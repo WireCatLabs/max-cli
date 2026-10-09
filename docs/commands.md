@@ -3306,7 +3306,7 @@ max replies edit <id> [options]
 
 ### `max replies audience`
 
-show the reply audience, who the rules may answer, or replace its named fields; a new file answers nobody
+show the reply audience, who the rules may answer, or replace its named fields; a new file answers everyone a rule matches
 
 **Меняет что-то только на этом компьютере.**
 

@@ -24,6 +24,7 @@ it("the native MAX server opens a task for a matching rule without sending, whil
   writeFileSync(
     join(env.MAX_CONFIG_DIR, "default.replies.json"),
     JSON.stringify({
+      audience: { reply: "listed" },
       rules: [
         {
           id: "requests",

@@ -137,10 +137,10 @@ describe("reply editors and model templates", () => {
     expect(never).not.toHaveBeenCalled()
   })
 
-  it("drives every audience option, with stderr warnings, from a new file that answers nobody", async () => {
+  it("drives every audience option, with stderr warnings, from a new file that answers everyone", async () => {
     const { invoke, file, never } = setup()
     await invoke("replies", "add", "away")
-    expect(JSON.parse(readFileSync(file, "utf8")).audience).toMatchObject({ reply: "listed", allow: { people: [] } })
+    expect(JSON.parse(readFileSync(file, "utf8")).audience).toMatchObject({ reply: "all", allow: { people: [] } })
     const result = await invoke(
       "replies",
       "audience",
