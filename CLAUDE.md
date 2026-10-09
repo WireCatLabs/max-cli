@@ -4,14 +4,12 @@
 for which task, and the rules that cost time when broken. It is short; read it before anything
 else.
 
-`docs_ai/` is the working trail — handoff, plans, session journal, cleanup list, and the owner's
-brief (`REQUIREMENTS.md`), rulings (`DECISIONS.md`), closed items (`BACKLOG_DONE.md`) and release
-steps (`releasing.md`), plus captures of the real web client (`captures/`) — and it is **not in
-this repository**. **Correction 2026-09-25:** it is its own private repository,
-`leemour/cli-private`; clone it into `docs_ai/` (`secrets/` inside it is ignored and never
-pushed). A fresh clone of this repository does not have it. When it is absent, start from
-[`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md) and [`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md)
-instead. Commit and push `docs_ai/` like any other repository — it is the only copy of the rulings.
+`docs_ai/` is the private working folder — handoff, the owner's brief (`REQUIREMENTS.md`), rulings
+(`DECISIONS.md` and `decisions/`), live-check list, release steps (`releasing.md`), session journals,
+cleanup list and captures of the real web client (`captures/`). It is **not in this repository**: it is
+the private repository `leemour/cli-private`; clone it into `docs_ai/` (`secrets/` inside it is ignored
+and never pushed). Without it, start from [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md) and
+[`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md). Commit and push `docs_ai/` like any other repository — it is the only copy of the rulings.
 
 Then the one reference that covers what you are about to touch —
 [`docs/dev/CONVENTIONS.md`](docs/dev/CONVENTIONS.md) for how code and documents are written here, and
@@ -71,10 +69,10 @@ git log -S'<string that should not be there>' -- <path>
 git log --oneline -1 -- <path>
 ```
 
-A discrepancy you find gets **corrected in the document that is wrong, in place**, marked as a
-correction. A note appended at the bottom does not count — the next reader reads the top.
-**Except on user pages** — `README.md` and the Russian pages in `docs/`: rewrite the sentence with
-no mark, only current facts ([`docs/dev/CONVENTIONS.md`](docs/dev/CONVENTIONS.md), "User pages").
+A discrepancy you find gets **rewritten in the document that is wrong, in place**, to the current
+fact — no correction mark, no struck-out text, no dated trail. Git keeps what it said before. A
+finished plan or handoff is deleted, a done backlog or cleanup line is deleted
+([`docs/dev/CONVENTIONS.md`](docs/dev/CONVENTIONS.md)).
 
 ## Comments
 
@@ -84,12 +82,13 @@ narrating the change you just made.
 
 ## Record the trail as you go
 
-This repository keeps a [session journal](docs_ai/journal/README.md). Take numbers with
-`docs_ai/journal/note.sh`, which allocates and writes in one operation, and **write the entry when
-you find the thing, not at the end of the session**.
+Each session keeps a [journal](docs_ai/journal/README.md) while its work is in flight. Take numbers
+with `docs_ai/journal/note.sh`, which allocates and writes in one operation, and **write the entry
+when you find the thing, not at the end of the session** — a number that appeared in a reply and is
+missing from the journal is the failure it prevents.
 
-A number that appeared in a reply and is missing from the journal is precisely the failure the
-journal exists to prevent.
+The journal is scratch, not an archive: once the session's work is merged and its findings are in
+the backlog, `docs_ai/DECISIONS.md` or the code, delete the session's journal file.
 
 ## Deletions
 

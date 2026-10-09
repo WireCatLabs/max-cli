@@ -9,11 +9,10 @@ is listed in [commands.md](commands.md).
 - [dev/ARCHITECTURE.md](dev/ARCHITECTURE.md) — how it is built **now**, and which seams you may not cross
 - [dev/architecture/](dev/architecture/) — its detail: session and login sync, reading messages, the store and search
 - `docs_ai/REQUIREMENTS.md` — the owner's brief, cited by section number
-- `docs_ai/DECISIONS.md` — what was ruled, and why — read before "fixing" something odd
+- `docs_ai/DECISIONS.md` and `docs_ai/decisions/` — the rulings in force; read before "fixing" something odd
 - [dev/CONVENTIONS.md](dev/CONVENTIONS.md) — how code and documents are written here
 - [dev/TESTING.md](dev/TESTING.md) — how to check it yourself, and what each check is for
 - [dev/BACKLOG.md](dev/BACKLOG.md) — what is left
-- `docs_ai/BACKLOG_DONE.md` — what is closed, one line each
 
 ## Reference — generated, never hand-written
 
