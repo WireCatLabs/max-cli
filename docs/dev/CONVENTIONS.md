@@ -114,8 +114,8 @@ Russian pages under `docs/`) also carry no decision or backlog ids. A *why* is a
 would otherwise undo the behaviour.
 
 **One fact, one home.** A decision lives in `docs_ai/DECISIONS.md`; a task lives in
-[`BACKLOG.md`](BACKLOG.md); something to delete lives in `docs_ai/CLEANUP.md`; a plan lives in
-`docs_ai/plans/`. Everywhere else links to it. Two copies of a fact drift, and the reader cannot
+[`BACKLOG.md`](BACKLOG.md); something to delete lives in `docs_ai/CLEANUP.md`; a plan for open work
+lives in `docs_ai/plans/`. Everywhere else links to it. Two copies of a fact drift, and the reader cannot
 tell which is current.
 
 **Write the trap, not the rule.** "Close the connection" is weaker than "a MAX WebSocket left open
@@ -137,9 +137,7 @@ Either the real value goes in, or the value is asked for as a plain question fir
 **Never paste a real chat id, phone number, token or message into a committed document.** The same
 rule as the fixtures — §24. Redact, or use an obviously synthetic value and say that it is one.
 
-**Russian in every document written from now on** — corrected 2026-09-21; this rule used to say
-"English in committed documents", which `NEED-108` overturned on 2026-09-20. The documents that
-already exist in English stay English and are not translated: `ARCHITECTURE.md`, this file,
+**Russian in every new document.** The documents that already exist in English stay English and are not translated: `ARCHITECTURE.md`, this file,
 `DECISIONS.md`, `REQUIREMENTS.md`, `TESTING.md`, `BACKLOG.md`. A new section added to one of them
 follows the language of the file it lands in. Do not mix languages inside one file.
 

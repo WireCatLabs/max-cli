@@ -8,8 +8,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 - **An id is permanent** and never reused. Take one with `bin/next-id <PREFIX>`: one counter for
   every worktree on the machine, under a lock, and never below the highest number on any branch.
-  Searching the text instead gave out `CLI-26` three times and `MAX-16` and `MAX-23` twice on
-  2026-09-24.
 - **Prefixes:** `RES` research and measurement · `OPS` repository, tooling, CI, release · `CORE`
   `cli-core` · `SPEC` protocol spec and generator · `MAX` domain, client, transport, session ·
   `CLI` commands and output · `DOC` handwritten docs · `PROTO` protocol unknowns · `RISK` risks.
@@ -18,8 +16,8 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 - **Priority:** **P1** blocks work or breaks something real · **P2** this cycle · **P3** someday.
 - **Mark:** none — not started · 🚧 `<branch>` — taken · 🟡 — half done, the rest named ·
   ⏸️ — deferred by the owner · 🚩 — waits on an owner decision.
-- **Claim before code:** put `🚧 <branch>` on the line in the first push of the branch. Two agents
-  built the same command on 2026-09-23 because an open PR was the only signal.
+- **Claim before code:** put `🚧 <branch>` on the line in the first push of the branch, so two agents
+  never build the same item.
 - **Close in the PR that ships the work:** delete the line here in that PR. Users read what shipped in
   `CHANGELOG.md`.
 
@@ -51,14 +49,11 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **MAX-49** · P3 · Two-step password: log in when MAX asks for it (`passwordChallenge` in the login
   answer, then `AUTH_LOGIN_CHECK_PASSWORD` 115 `{trackId, password}`), and set or remove one
   (112 → 107 → 111). PyMax 2.4.1, code; a user logged in with it on the mobile client (PyMax #106).
-  The password is typed at a prompt, never an argument.
-  Correction 2026-09-28: logging in with a password shipped with `session start` (PR #66,
-  `src/session/login.ts:51`). Left: setting and removing one (112 → 107 → 111).
+  The password is typed at a prompt, never an argument.ts:51`). Left: setting and removing one (112 → 107 → 111).
 - **MAX-34** · 🟡 P3 · Live events: a long-running `max listen` that prints new messages, edits,
   reactions and typing as they arrive (PyMax's `on_message`, `on_message_edit`,
   `on_reaction_update`…). Conflicts with one-shot commands (`CLAUDE.md` constraint 4), so it needs
-  a ruling first. What is new since the last check is already `max inbox` (`CLI-23`).
-  Correction 2026-09-25: the long-running part exists. `max serve` holds the connection and `max
+  a ruling first. What is new since the last check is already `max inbox` (`CLI-23`). `max serve` holds the connection and `max
   watch` prints new messages as they arrive (`src/server/server.ts`, `#pushed`). What is left is
   edits, reactions and typing. The server receives them but passes on only new messages (opcode 128).
 
@@ -69,13 +64,10 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   Done 2026-10-08 (`MAX-67`): reads (130) and chat changes (135, or a 128 carrying the chat).
 - **MAX-4** · 🟡 P3 · Chat addressing. Done: an id, or a title matched exactly then as a fragment,
   an ambiguous one refused (`resolve`, `src/client.ts:325`; `pickChat`, `src/resolve.ts:13`). Left: `@username`, a phone number, a chat the
-  account is not in. Correction 2026-10-08: a bot the account is not in yet is reached by its link in `chats start`
-  (`MAX-72`); a chat with a person is `myId ^ theirId`, as web.max.ru computes it.
+  account is not in.max.ru computes it.
 - **CLI-36** · P3 · The local copy made optional: a setting under which `max` writes no chats or
   messages to disk and answers everything from MAX (`--offline` and `search messages` then refuse).
-  Owner, 2026-09-24: «я бы сделал хранение опциональным в P3».
-  **Correction 2026-10-03 (T6):** the per-profile cache is removed; this option would now need
-  to control shared adapter recording and the login record (`src/record.ts`).
+  The option controls shared adapter recording and the login record (`src/record.ts`).
 - **CLI-5** · P3 · `max raw <operation>` — a debug escape hatch, validated against the spec, never
   arbitrary frames (REQUIREMENTS §22).
 - **MAX-52** · 🟡 P2 · The requests a real tab sends right after LOGIN: 21 on a fresh start
@@ -95,13 +87,10 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   `ANIMOJI_SET`) after every login, each re-login with the sync its previous answer returned
   (`src/client.ts`, `live.readLikeTab`). Left: 48 `{chatIds}`, 32 and 35 `{contactIds}`, 28, and
   the stories 208/209. Never: 22, which subscribes to push.
-- **RES-5** · 🟡 P2 · Does `LOGIN` move presence or read state? Reading history does not (no
-  `CHAT_MARK`, tested). Partly answered by the capture of 2026-09-25: the tab's own LOGIN sends
-  `interactive: false` too; `true` goes only in pings, while its window has focus. Left: whether
-  opening a chat with unread messages marks it read without opcode 50 — see `RES-10`.
-  Correction 2026-09-25 (`RES-10`, captured): the tab marks a chat read with an explicit opcode 50
-  after opening it, not with 49; and 49 without `interactive` moves nothing (measured, `RES-11`). Left:
-  whether LOGIN itself moves presence — needs a second device watching.
+- **RES-5** · 🟡 P2 · Does `LOGIN` move presence? Known: reading history marks nothing; the tab's
+  LOGIN sends `interactive: false`, `true` only in pings while its window has focus; the tab marks a
+  chat read with an explicit opcode 50, and 49 without `interactive` moves nothing. Left: whether
+  LOGIN itself moves presence — needs a second device watching.
 - **RES-7** · P3 · What a real client sends as opcode 36's payload. `{}`, `{marker}` are refused and
   `{marker, count}` closes the connection (`pnpm probe:contacts`), so only a capture answers it. It
   is the only route to contacts who share no chat. Closes `PROTO-1`.
@@ -141,9 +130,6 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **CORE-11** · P3 · Installers and standalone archives per platform (oclif's `pack`), after a
   single-file build (G4 §3.9: Bun only). Lowest priority.
 
-- ~~**RES-12**~~ moved 2026-10-05 to the search stream: search items live in `docs_ai/SEARCH.md` (private
-  repository `leemour/cli-private`), not in this backlog.
-
 ## Later — each reopens a ruling
 
 Added by the owner on 2026-09-24. Each one goes against REQUIREMENTS §3 or §18, and the line says
@@ -154,47 +140,4 @@ which; the plan for it starts by saying so.
   message text reaches that command, so it must go as data on stdin and never into the command
   line; and `max watch --jsonl | <command>` on a running `max serve` (`MAX-35`) already does this
   for live messages, as `max inbox --new` on a schedule does for batches — say what a hook adds
-  over those two pipes. Correction 2026-09-24: written before `max serve` existed.
-
-## Parity tooling follow-up
-
-- Completed 2026-10-04: release documentation describes canonical P7 defaults, resource-specific
-  restrictions, explicit deletion confirmation and current permission recipes. Publication is separate.
-
-- Completed 2026-10-03: repository parity-audit skill runs the shared detailed auditor (#365; shared #470–#474). No account access.
-
-- Completed 2026-10-03: shared sends-list factory honors configured limit and shared skill factory exposes named link-conversations instructions (#368).
-
-- Completed 2026-10-03: message downloads, scheduled reads and evidence now use shared factories (#370); MAX retains safe transport and compatibility --output. Session-end mutation metadata is explicit.
-
-- Completed 2026-10-03: shared account-show factory retains MAX profile fields; contact-lookup argv refusal never repeats a number (#371). Permission runtime remains with T6/P7.
-
-- Completed 2026-10-03: response MIME preserves shared download fallback extensions (SDK0.136); streams remain lazy and bounded, without eager unused attachment requests.
-
-- Completed 2026-10-03: chats-show member counts explain possible self omission or partial lists without claiming incomplete loading (SDK0.137, CLI-62). Online and offline consumer regressions retain JSON counts and members.
-
-- Completed 2026-10-03: MAX poll.already.voted refusal explains explicit retract before a new vote when the poll permits changing votes (CLI-61). Provider error identity and one attempted write are preserved; wire refusal regressions cover other errors and an explicit retract refusal.
-
-- Completed 2026-10-04: coordinated MAX0.27.0/TG0.26.0 published, provenance and installed CLI versions verified; core0.17/shared0.140.
-
-- MCP parity · ✅ canonical personal tool catalogue and strict shared input schemas mounted on MAX’s held session; missing supported bindings and local-write permission checks implemented. Telegram forum tools remain unavailable; legacy moderation/rules names and native preview/transcript behavior retained. Shared prerequisite 0.144.0; final synthetic audit is kept in the private implementation plan. Consumer publication is separate.
-
-## Follow-ups after shared pacing
-
-- **DEBT-59** · ✅ completed 2026-10-08 ([#465](https://github.com/leemour/max-cli/pull/465)) · Native server tests wait for observed events; negative checks retain explicit observation windows.
-- Settings resolver adoption · ✅ implemented 2026-10-08 · Common resolution uses cli-messaging; MAX settings values, sources, scope restrictions and errors stay compatible.
-
-
-## Remote retained attachments
-
-- Remote AI file transfer · ✅ released in MAX 0.36.0 and Telegram 0.37.0 · Retained bytes,
-  bounded chunks and SHA256 are available over CLI/MCP. An isolated HTTP client with no access
-  to the server file completed a four-page PDF transfer, agent recognition, text ingestion and
-  content-search verification on 2026-10-08. The owner index was untouched; no messenger or OCR
-  gateway calls. The owner also passed the hosted ChatGPT MAX test using all four rendered pages,
-  independent agent transcription and the Base64 image fallback. PDF page previews are in the
-  prepared MAX0.39/TG0.40 candidates. Hosted Telegram/Tailscale repetition was deferred by the owner;
-  isolated consumer CLI and modern HTTP MCP checks remain separate from hosted vision evidence.
-- Bot write outcomes · ✅ review follow-up on 2026-10-08 · Lost replies after starting a bot or
-  pressing a callback return non-retryable outcome_unknown; pre-write reads and explicit provider
-  rejections retain their errors. Four regression cases cover the distinction without live calls.
+  over those two pipes.

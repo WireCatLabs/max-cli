@@ -3,8 +3,6 @@
 Detail for [`ARCHITECTURE.md`](../ARCHITECTURE.md) §7: how the token is kept, how a profile is bound
 to one account, what the login fetches, and how chat members get names.
 
-**Status 2026-09-22: built; each part measured on the real account on the date given.**
-
 ## The token is replaced when it has gone stale, and kept
 
 **LOGIN answers with a `token`, and it is a *new* one when the presented token has aged.** Measured
@@ -81,7 +79,7 @@ nothing and the profile still arrived (same day, `NEED-103`).
 
 - **`src/session/handshake.ts` sends the stored marker in all four**, so only a profile's first
   login fetches everything. The marker is one row (`sync_marker`) in the cache database, not the
-  state file. **Correction 2026-10-03 (T6):** `contacts sync` clears the shared contact marker;
+  state file. `contacts sync` clears the shared contact marker;
   the old cache command is removed.
 - ⚠ **Marker and rows are written in one transaction** (cli-messaging store `applyDelta`). A
   marker saved over rows that failed makes the next login ask for changes since data nobody has;

@@ -85,14 +85,14 @@ max commands schema messages list --json
 о покрытии архива. Неизвестный счётчик не равен нулю, а отсутствие сообщения в неполном архиве
 не доказывает молчание участника. [Руководство рейтингов](rankings.md) объясняет эти границы.
 
-[Публичный отчёт о проверках агентов](https://github.com/leemour/cli-messaging/blob/main/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) описывает проверки CLI и MCP на искусственных данных:
+[Публичный отчёт о проверках агентов](https://github.com/leemour/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) описывает проверки CLI и MCP на искусственных данных:
 выбранные отвечающие люди, время ответа, наблюдаемое удержание, свежесть счётчиков, точный preview,
 отказ при запрещённой записи и восстановление evidence после изменения источника. В шести свежих
 контекстах проверено 38 сценариев; это малая выборка с общими контекстами, а не вероятность
 надёжности и не гарантия безопасности вашего агента. MCP проверялся через shell proxy;
 реальный мессенджер и его сетевой адаптер не участвовали. Точная модель исходных запусков не записана.
 
-Для разработчиков есть [стенд и инструкции воспроизведения](https://github.com/leemour/cli-messaging/blob/main/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md#interpretation-and-reproduction).
+Для разработчиков есть [стенд и инструкции воспроизведения](https://github.com/leemour/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md#interpretation-and-reproduction).
 Сохраняйте версии модели и SDK, clock/seed, prompts и первые ошибки. Повторный запуск модели
 может дать другой ответ; проверки стенда и независимые модельные проверки учитываются отдельно.
 

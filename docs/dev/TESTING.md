@@ -168,7 +168,7 @@ What holds for every command, how to produce it, and the test that pins it.
 
 ### Guided setup
 
-**Correction 2026-10-03:** `src/setup.test.ts` drives `max setup` against scripted MAX and a memory
+`src/setup.test.ts` drives `max setup` against scripted MAX and a memory
 keyring: token/QR/browser login, existing-session reuse, inaccessible keyring, paused/bot profiles,
 agent selection, one-result output and cancellation. Help and the bundled skill are checked before
 credentials exist. Real first-login `setup`/`session start` is not run by the live smoke: it would
@@ -249,14 +249,13 @@ bin/max chats list --json --limit 5
 ```
 
 It runs the build with config, state, cache and the shared message store (`MESSAGING_STORE`) in
-`.max/` inside the worktree (gitignored). **Correction 2026-10-03 (T6):** shared store migrations
+`.max/` inside the worktree (gitignored). shared store migrations
 are forward-only, so a branch must never open the owner's real store.
 
 ⚠ **Each worktree therefore has its own session.** The directory variables also move the keyring
 entry — `cli-core` makes the service `max-cli:<config dir>` when any of them is set
 ([`ARCHITECTURE.md`](ARCHITECTURE.md) §14) — so a login in one worktree, or in the installed `max`,
-is invisible to another, and every command warns about it on stderr. ~~The token is typed at the
-prompt; never on a command line or in a file.~~ **Correction 2026-09-28 (`OPS-18`):** `bin/max
+is invisible to another, and every command warns about it on stderr. `bin/max
 session start` once per worktree is gone — each was a new device login on the real account. The first
 `bin/max` in a worktree copies the installed `max`'s sessions (`scripts/seed-worktree.ts`): state and
 `config.json`, and each token keyring to keyring in-process, never printed. Sockets, serve logs,
