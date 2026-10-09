@@ -19,9 +19,9 @@
 Язык — строгий профиль синтаксиса Apache Lucene: слова, фразы, AND/OR/NOT, группы, поля, диапазоны,
 ограниченные шаблоны и регулярные выражения. «Строгий» значит, что всё неподдерживаемое — ошибка, а
 не молча пропущенная часть.
-[Полная справка](https://github.com/leemour/cli-messaging/blob/v0.212.0/docs/search/query-language.md)
+[Полная справка](https://github.com/WireCatLabs/cli-messaging/blob/v0.212.0/docs/search/query-language.md)
 содержит генерируемые таблицы полей, операторов, preset и пределов и проверяемые примеры;
-[техническая спецификация](https://github.com/leemour/cli-messaging/blob/v0.212.0/docs/search/query-language-spec.md)
+[техническая спецификация](https://github.com/WireCatLabs/cli-messaging/blob/v0.212.0/docs/search/query-language-spec.md)
 описывает грамматику и компилятор.
 
 ## Что умеет язык

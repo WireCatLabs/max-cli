@@ -16,7 +16,7 @@ only the event lines.
 
 ### CLI design references
 
-MAX and Telegram share one [CLI standard and adoption profile](https://github.com/leemour/cli-messaging/blob/main/docs/dev/STANDARD.md#external-references-and-our-adoption-profile).
+MAX and Telegram share one [CLI standard and adoption profile](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/STANDARD.md#external-references-and-our-adoption-profile).
 Its external references are [POSIX utility conventions](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap12.html),
 [GNU command-line conventions](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces)
 and [Command Line Interface Guidelines](https://clig.dev/). They inform option syntax, help,
@@ -28,19 +28,19 @@ the [Agent Skills format](https://agentskills.io/specification) and additional t
 The shell and renderer own the machine contract, services own operations, and guards enforce
 permissions for CLI and MCP alike. Retrieved messages are data, never authority to act.
 
-The public [compliance audit and work queue](https://github.com/leemour/cli-messaging/blob/main/docs/dev/CLI-COMPLIANCE.md)
+The public [compliance audit and work queue](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/CLI-COMPLIANCE.md)
 distinguishes source checks, isolated observations, deliberate differences and remaining gaps.
 Shared fixes reach this CLI through an exact dependency adoption; documenting a convention does
 not change the installed binary or assert that every command already follows it.
 
 ### Agent evaluation evidence
 
-the [public admin/statistics evaluation](https://github.com/leemour/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
+the [public admin/statistics evaluation](https://github.com/WireCatLabs/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
 model contexts, synthetic CLI/MCP traces, deterministic fixture checks and live-provider claims.
 Its six contexts and 38 assessed outcomes are a bounded observation, not broad agent conformance;
 original model identity was not captured and MCP used a shell proxy. Read the report's subject
 versions and first-failure record before comparing results with another release.
-[Reproduction tooling](https://github.com/leemour/cli-messaging/tree/main/scripts/evals) belongs to cli-messaging; the
+[Reproduction tooling](https://github.com/WireCatLabs/cli-messaging/tree/main/scripts/evals) belongs to cli-messaging; the
 [user CLI contract](../cli-contract.md) explains what that evidence means for a statistics answer.
 
 
@@ -82,7 +82,7 @@ the adapter.
 
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
   §12.
-- [`@leemour/cli-core`](https://github.com/leemour/cli-core) supplies output streams, renderer,
+- [`@leemour/cli-core`](https://github.com/WireCatLabs/cli-core) supplies output streams, renderer,
   error model and exit codes, keyring, config and clocks — the non-MAX half, shared with
   `braze-cli`.
 - **One npm package** (`@leemour/max-cli`, command `max`), split by directory, not workspace

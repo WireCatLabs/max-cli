@@ -60,7 +60,7 @@ ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max 
 | Gemini | только взрослым в США с личным аккаунтом Google — из России и Европы недоступно | [connected apps](https://support.google.com/gemini/answer/17209137?hl=en) |
 
 Шаги для каждой ОС проверены не на всех системах. Если шаг не работает,
-[откройте issue](https://github.com/leemour/max-cli/issues).
+[откройте issue](https://github.com/WireCatLabs/max-cli/issues).
 
 ## 1. Подготовить Tailscale
 

@@ -119,7 +119,7 @@ max --version
 Нужно, если вы правите код или хотите версию, которая ещё не выпущена.
 
 ```sh
-git clone git@github.com:leemour/max-cli.git
+git clone git@github.com:WireCatLabs/max-cli.git
 cd max-cli
 pnpm install
 pnpm build
@@ -155,7 +155,7 @@ node dist/bin/max.js --help
 - **состояние** — `profiles/<имя>.json` (устройство и счётчик входов), `bots/` (чаты, которые видели
   боты, и их журнал отправок), записи запусков (`runs/`) и точка отсчёта `inbox --new` (`inbox/`).
 - **общая копия сообщений** — общая с другими инструментами на той же библиотеке, например
-  [tg-cli](https://github.com/leemour/tg-cli). Её описывает страница [Локальная копия](archive.md).
+  [tg-cli](https://github.com/WireCatLabs/tg-cli). Её описывает страница [Локальная копия](archive.md).
 - **модели распознавания речи** скачиваются только по вашей команде (`max models audio download`),
   для [распознавания голосовых](audio-recognition.md).
 

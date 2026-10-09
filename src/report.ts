@@ -8,7 +8,7 @@ import type { Diagnosis } from "./diagnose.js"
 import { VERSION } from "./version.js"
 
 /** Where problem reports go (`NEED-267`, changed by the owner to issues). Anybody can read them there. */
-export const REPORT_URL = "https://github.com/leemour/max-cli/issues/new"
+export const REPORT_URL = "https://github.com/WireCatLabs/max-cli/issues/new"
 
 const RECENT_SENDS = 20
 

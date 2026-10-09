@@ -3,7 +3,7 @@
 Please report a security problem privately — never in a public issue or the support chat:
 
 - by email: [hello@wirecat.dev](mailto:hello@wirecat.dev);
-- or through [GitHub's private vulnerability reporting](https://github.com/leemour/max-cli/security/advisories/new).
+- or through [GitHub's private vulnerability reporting](https://github.com/WireCatLabs/max-cli/security/advisories/new).
 
 Say what you saw, how to repeat it, and the version (`max --version`). Never send a token, a
 session or anyone's messages.

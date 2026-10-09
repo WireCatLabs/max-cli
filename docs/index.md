@@ -65,7 +65,7 @@ max sales bot api get-my-info --json
 
 Для `max` нужен Node 22.16+ или 24+ либо Bun ([что поставить заранее](installation.md#что-нужно)).
 
-Чем `max` отличается от других инструментов — в [README проекта на GitHub](https://github.com/leemour/max-cli#readme).
+Чем `max` отличается от других инструментов — в [README проекта на GitHub](https://github.com/WireCatLabs/max-cli#readme).
 
 ## Куда дальше
 

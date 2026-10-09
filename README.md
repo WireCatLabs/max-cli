@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/leemour/max-cli/main/docs/design/logo_text.png" alt="Max CLI" width="480">
+  <img src="https://raw.githubusercontent.com/WireCatLabs/max-cli/main/docs/design/logo_text.png" alt="Max CLI" width="480">
 </p>
 
 # max-cli
@@ -18,7 +18,7 @@ max messages send "Иван Петров" "Опаздываю на 15 минут
 ```
 
 [![npm](https://img.shields.io/npm/v/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
-[![CI](https://github.com/leemour/max-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/leemour/max-cli/actions/workflows/ci.yml)
+[![CI](https://github.com/WireCatLabs/max-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/WireCatLabs/max-cli/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/node/v/@leemour/max-cli)](https://nodejs.org/)
 [![Bun](https://img.shields.io/badge/bun-1.3%2B-f9f1e1)](https://bun.sh/)
 [![npm downloads](https://img.shields.io/npm/dm/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
@@ -498,7 +498,7 @@ pnpm generate                         # переписать сгенериро�
 [docs/dev/protocol.md](docs/dev/protocol.md) из них генерируются — и CI падает, если дерево устарело.
 
 Половина, не имеющая отношения к MAX — потоки вывода, рендерер, коды ошибок, хранилище паролей, часы, —
-вынесена в [`@leemour/cli-core`](https://github.com/leemour/cli-core) и общая с `braze-cli`.
+вынесена в [`@leemour/cli-core`](https://github.com/WireCatLabs/cli-core) и общая с `braze-cli`.
 
 ## Дорожная карта
 
@@ -511,7 +511,7 @@ MIT — см. [LICENSE](LICENSE).
 ## Участие
 
 Пулл-реквесты, сообщения об ошибках и предложения приветствуются —
-[issues](https://github.com/leemour/max-cli/issues). Как устроен код и как его проверять —
+[issues](https://github.com/WireCatLabs/max-cli/issues). Как устроен код и как его проверять —
 [docs/dev/ARCHITECTURE.md](docs/dev/ARCHITECTURE.md) и [docs/dev/TESTING.md](docs/dev/TESTING.md).
 
 ### Private contact notes and automatic tags

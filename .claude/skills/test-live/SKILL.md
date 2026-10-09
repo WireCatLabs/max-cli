@@ -56,7 +56,7 @@ the test channel. **Never a real person's chat**, not even to read it for a chec
 ## 4. Run each command
 
 The rules and the shape-only `live` helper are in
-[RELEASING.md, "Live checks"](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md#live-checks) — use the helper with `bin/max`, and add
+[RELEASING.md, "Live checks"](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md#live-checks) — use the helper with `bin/max`, and add
 `--timeout 60s`. What is max's:
 
 - **A write is proven on the other side.** A sends in the A↔B dialog → B's `messages list` shows it
