@@ -2,8 +2,7 @@
 
 How this repository is put together, and which seams you may not cross.
 
-**Status 2026-09-20: this describes working code, not a plan.** ~~Seven operations run against MAX;~~
-**Correction 2026-09-28:** 44 operations are declared in `src/spec/operations/`, the official Bot API
+44 operations are declared in `src/spec/operations/`, the official Bot API
 has its own half (§18), and the diagram below shows only the first commands;
 `max store` and `max runs` answer from this machine. Both runtimes pass. Everything here was
 verified against the real service unless it says otherwise. Round trip re-verified live 2026-09-20:
@@ -36,7 +35,7 @@ not change the installed binary or assert that every command already follows it.
 
 ### Agent evaluation evidence
 
-Correction 2026-10-08: the [public admin/statistics evaluation](https://github.com/leemour/cli-messaging/blob/main/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
+the [public admin/statistics evaluation](https://github.com/leemour/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
 model contexts, synthetic CLI/MCP traces, deterministic fixture checks and live-provider claims.
 Its six contexts and 38 assessed outcomes are a bounded observation, not broad agent conformance;
 original model identity was not captured and MCP used a shell proxy. Read the report's subject
@@ -69,7 +68,7 @@ versions and first-failure record before comparing results with another release.
                         (the run directory and the event format: cli-messaging's, T6 item 3c)
 ```
 
-**Correction 2026-10-04:** the diagram above is the personal account's own half. Since #260 and T6 (#330–#382)
+the diagram above is the personal account's own half. Since #260 and T6 (#330–#382)
 max also plugs into `@leemour/cli-messaging`: `src/messenger.ts` describes MAX once as a `Messenger`
 (`maxMessenger` — provider, paging, the guard, permissions), and `src/adapter/max-adapter.ts`
 (`maxAdapter`) wraps `MaxClient` behind cli-messaging's `MessengerAdapter` port, translating MAX's
@@ -122,7 +121,7 @@ adapter instead of depending on `@bruch/max-client` (`NEED-17`).
 
 ## 3. The WebSocket is binary, as web.max.ru's is, and ids are the reason to be careful
 
-**Correction 2026-09-25 (`MAX-40`):** this section described text frames `{ver: 11, …}` on
+this section described text frames `{ver: 11, …}` on
 `wss://ws-api.oneme.ru`, and said MessagePack and LZ4 were a TCP-only transport. The web client's
 live socket showed otherwise, and we now send what it sends. The capture is
 `src/testing/fixtures/web-capture-2026-09-25.json` — proof, not somebody's README.
@@ -165,7 +164,7 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
   both requests are checked and reported like any other (§13).
 - LOGIN returns profile, chats, contacts, recent messages and presence, so `account show` and `chats
   list` need **no further request**. `PROFILE` (16) is a profile *update* and refuses an empty
-  payload — not used for reading. **Correction 2026-09-24:** it is sent now, by `max account update`
+  payload — not used for reading. it is sent now, by `max account update`
   only (`MAX-33`), with the current first name always included, as the web client does.
 - `interactive: false` on login and history (the web client sends `true` for a watching person).
   Whether it moves presence or read state is not settled (`RES-5`).
@@ -173,8 +172,7 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
 ## 5. Reading is observational, by construction
 
 `CHAT_HISTORY` (49) and `CHAT_MARK` (50) are separate. Nothing that reads sends 50;
-`src/client.test.ts` asserts opcode 50 is absent from everything sent. **Correction 2026-09-24:**
-this said "we never send 50". Since `CLI-33` it goes out from `client.chats.markRead` only —
+`src/client.test.ts` asserts opcode 50 is absent from everything a read sends. It goes out from `client.chats.markRead` only —
 `max chats mark-read`, `messages list --mark-read`, and the MCP tool behind `--allow-mark-read` — through
 the send guard as kind `read`. Its request is PyMax's shape, not measured (`src/spec/operations/chats.ts`).
 
@@ -193,8 +191,7 @@ message id** and **one** copy, also across two connections and logins — the ca
 - A lost send is retried **once, with the same `cid`**. If that fails too, the result is
   `outcome_unknown` (neither failed nor sent) and names the `cid` as `sendId`; `max messages send --send-id <n>`
   repeats it without risking a second copy.
-- ~~⚠ Unmeasured: how long MAX remembers a `cid`. Both probes were seconds apart.~~ **Correction 2026-10-07
-  (`PROTO-2`):** measured in Saved messages — the same `cid` resent 5 and 15 minutes after the first send got
+- Measured in Saved messages — the same `cid` resent 5 and 15 minutes after the first send got
   the first message's id back each time, and one copy stayed. Fifteen minutes is the longest gap measured; beyond
   it is unproven, and `--send-id` reuse hours later should not be relied on.
 - `cid` is monotonic per process. `Date.now()` alone gave two sends in one millisecond the same
@@ -207,12 +204,11 @@ message id** and **one** copy, also across two connections and logins — the ca
   each journal line with the write's `operationId`; handed to `MaxClient` by
   `createClient`): a read-only profile (code 5), an optional recipient list (7), an hourly limit
   (8) — all before the socket when the chat is an id. Every outcome, refusals included, goes to
-  `<state>/sends/<profile>.jsonl` without the text; the limit counts that file. **Correction
-  2026-09-25 (PR #158):** a write that counts first holds a `reserved` line, written under a lock
+  `<state>/sends/<profile>.jsonl` without the text; the limit counts that file. a write that counts first holds a `reserved` line, written under a lock
   file (`wx`, so Windows too), and its outcome settles it; reading folds settled ones away, so two
   processes at the limit cannot both pass. Over `max serve` only the server reserves. These stop a model
   talked into sending by what it read, not an agent that edits the configuration (`NEED-159`).
-  **Correction 2026-10-03:** the operation-id wrapper retains one prepared request object
+  the operation-id wrapper retains one prepared request object
   across `ask` and `check`, because the shared guard binds confirmation to that object.
   The client-side server wrapper forwards `ask` too; a matching operation id on a different
   request grants no confirmation. MAX now uses canonical permission levels; legacy configuration is translated at read time
@@ -232,8 +228,7 @@ message id** and **one** copy, also across two connections and logins — the ca
   that may have gone out. A `cid` that was sent, or reused in another chat, counts as a new send.
 - **A forward is a send** — `MSG_SEND` with a `FORWARD` link and no text — so it gets the same one
   retry with the same `cid` and counts against the hourly limit. **An edit and a pin are not
-  retried**, like a reaction. **Correction 2026-09-25 (`NEED-282`):** this said neither counts;
-  now an edit and a pin that notifies do, and so does each person added to a group; a scheduled
+  retried**, like a reaction. An edit and a pin that notifies count against the hourly limit, and so does each person added to a group; a scheduled
   message counts in the hour it goes out. The guard's other two checks apply to all of them.
 - **A deletion is guarded like a send, and each deleted message counts toward the hourly limit**
   (`MAX-47`): it wakes nobody, but many at once is what MAX bans for. At most 10 per call, and
@@ -282,8 +277,7 @@ identically; the built-in's support depends on the bundled undici version.
 
 ## 9. A name is never resolved by guessing
 
-- `max messages list "Ivan"` matches chat titles as a fragment. **Correction 2026-09-25:** this said
-  "exact first"; an exact title no longer wins while another title contains it too. **An ambiguous
+- `max messages list "Ivan"` matches chat titles as a fragment; an exact title does not win while another title contains it too. **An ambiguous
   name is an error listing the candidates** — a send to the wrong chat does not undo. Verified live
   (a full contact name matched two chats; the command stopped). Candidates print one per line with
   ids, and in the machine error as `candidates: [{ id, title }]`, so an agent picks one without
@@ -318,8 +312,7 @@ Verified live: stdout one JSON value, stderr empty. Failures too: `run()` return
 - `hasMore` is a boolean, not a total (counting rows MAX has not sent is another cost). Exact for
   chats and contacts; a chat list MAX cut (`#chatsCut`) says `hasMore: true` on its last nonempty page.
   ⚠ **For `messages list` it is a claim about our copy**: history comes in windows, and MAX's answer
-  says nothing of what is older. **Correction 2026-10-04:** this said a full page is the only evidence
-  of another; a page can come back short mid-chat, so a short page back is now checked with one
+  says nothing of what is older. A page can come back short mid-chat, so a short page back is checked with one
   request for a single older message (`#olderThan` in `src/client.ts`).
 - In a terminal, the "more pages" line goes to **stderr**, from `src/commands/paging.ts`, not
   `renderer.result`: `account show` and `session start|end` are not listings and answer a bare
@@ -425,7 +418,7 @@ file. Either, both, or (default) neither. What it looks like and how to use it:
 
 ### The run directory
 
-**Correction 2026-10-03:** local `commands` discovery and `runs` read commands mount the shared
+local `commands` discovery and `runs` read commands mount the shared
 cli-messaging factories; the MAX modules contain only the app binding. Discovery includes the
 common `contract` field, and truncated run output points to `--limit`. Reading these records
 starts no session and creates no new run.
@@ -436,12 +429,12 @@ starts no session and creates no new run.
 starts, whole days by directory name. Rules not stated there:
 
 - **Off unless asked** (`NEED-49`, `NEED-52`): `--record`, `--no-record`, else the config file.
-  **Correction 2026-09-25 (`NEED-268`, `OPS-14`):** a run that fails is kept anyway —
+  a run that fails is kept anyway —
   `recorded()` holds the newest 500 events in memory and opens the directory only on a failure,
   with `keptBecauseFailed: true`. Recording turned off by name (`--no-record`, `"record": false`)
   keeps nothing (`keepFailedRuns` in `src/config.ts`).
-  **Correction 2026-09-25 (`OPS-15`):** every failure, not only one inside `run()`. The last catch
-  **Correction 2026-10-03:** `src/program.ts` delegates parsing and fallback recording to
+  every failure, not only one inside `run()`. The last catch
+  `src/program.ts` delegates parsing and fallback recording to
   cli-messaging's shared runner. Its consumer hooks supply legacy command context, server options
   and bot recording settlement; the shell uses MAX's resolver with the bot/personal scope.
   Anything no run settled (`wasSettled`) reaches the same `recorded()`: Commander's usage errors,
@@ -464,7 +457,7 @@ starts, whole days by directory name. Rules not stated there:
 
 ## 14. Settings, and the order one is decided in
 
-**Correction 2026-10-08:** common settings resolve through cli-messaging `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve`, `mcpTools` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
+common settings resolve through cli-messaging `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve`, `mcpTools` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
 
 **Flag → environment → config file → built-in default**, decided once in `resolveSettings`
 (`src/config.ts`). Commands take what they are given; one that re-derived the order would disagree.
@@ -530,7 +523,7 @@ construction site cannot.
 
 ## 15. The store: people, and the chats they are in
 
-**Correction 2026-10-03 (T6):** max no longer opens its per-profile cache. `src/record.ts` keeps
+max no longer opens its per-profile cache. `src/record.ts` keeps
 login chats, people, membership snapshots and the contact sync marker in cli-messaging's
 account-scoped `messages.db`. It opens lazily once the account is known. The shared `stored`
 adapter wrapper saves history; shared services own search, offline reads, edits and deletions.
@@ -552,7 +545,7 @@ Details: [`architecture/store.md`](architecture/store.md).
 
 ## 16. Searching
 
-**Correction 2026-10-03 (T6):** shared services search the account's `messages.db`; `MaxClient`
+shared services search the account's `messages.db`; `MaxClient`
 no longer implements local search. Search finds recorded history, not unread history that has
 never been fetched. `store fetch` fills it; `--offline` reads it without connecting.
 

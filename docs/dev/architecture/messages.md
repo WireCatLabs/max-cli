@@ -3,8 +3,6 @@
 Detail for [`ARCHITECTURE.md`](../ARCHITECTURE.md) §10: how messages print, what a message id
 holds, and what an attachment carries.
 
-**Status 2026-09-22: built; every wire fact below was measured on the real account that day.**
-
 ## The feed
 
 `messages list` and `search messages` print a feed, not a table (`src/rendering/messages.ts`):
@@ -30,8 +28,7 @@ milliseconds, exactly**; the low 16 bits are a counter (`timeOfMessageId`). A me
 its id alone, with no stored copy.
 
 `CHAT_HISTORY` from that time, measured the same day: `backward: n` gives n messages ending with it,
-`forward: n` the n after it, oldest first; `0/0` gives nothing. **Correction, measured
-2026-09-23:** with `backward: 0`, `forward: n` starts **with** the anchor message itself. So
+`forward: n` the n after it, oldest first; `0/0` gives nothing. with `backward: 0`, `forward: n` starts **with** the anchor message itself. So
 `messages list --after` asks for one extra and drops anything not later than the point; `--after
 <id>` leaves that message out, `--before <id>` includes it. `messages context` asks `before + 1`
 back and `after` forward, and **refuses when the id is not in the answer**: MAX answers with the
