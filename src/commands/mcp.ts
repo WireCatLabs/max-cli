@@ -220,8 +220,11 @@ const FLAG_ARGS: [keyof Flags, string][] = [
   ["allowModerate", "--allow-moderate"],
 ]
 
-/** They choose the keyring entry, so a server without them would answer "no session". */
-const DIRECTORIES = ["MAX_CONFIG_DIR", "MAX_STATE_DIR", "MAX_CACHE_DIR"] as const
+/**
+ * They choose the keyring entry and the store, so a server without them would answer "no session" or search
+ * another store. `XDG_RUNTIME_DIR` reaches the keyring, and a client that trims the environment drops it.
+ */
+const DIRECTORIES = ["MAX_CONFIG_DIR", "MAX_STATE_DIR", "MAX_CACHE_DIR", "MESSAGING_STORE", "XDG_RUNTIME_DIR"] as const
 
 const VERSION_MANAGER = /[\\/](\.nvm|nvm|\.fnm|fnm|fnm_multishells|\.volta|volta|\.asdf|mise)[\\/]/i
 

@@ -48,6 +48,12 @@ describe("max mcp config", () => {
     expect(JSON.stringify(mcpServers)).not.toContain("secret")
   })
 
+  it("copies the store and the runtime directory the keyring is reached through", () => {
+    const { mcpServers } = entry({ env: { MESSAGING_STORE: "/m.db", XDG_RUNTIME_DIR: "/run/user/1000" } }).config
+
+    expect(mcpServers.max).toMatchObject({ env: { MESSAGING_STORE: "/m.db", XDG_RUNTIME_DIR: "/run/user/1000" } })
+  })
+
   it("warns when node belongs to a version manager", () => {
     expect(entry({ execPath: "/home/x/.nvm/versions/node/v24.19.0/bin/node" }).warning).toMatch(/one Node version/)
     expect(entry({ execPath: "/usr/bin/node" }).warning).toBeUndefined()
