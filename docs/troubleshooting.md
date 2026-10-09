@@ -399,7 +399,7 @@ max doctor report create   # записать отчёт в файл и пока
 `max runs list`.
 
 Дальше команда печатает ссылку на новую задачу в
-[github.com/leemour/max-cli/issues](https://github.com/leemour/max-cli/issues): заголовок и заготовка
+[github.com/WireCatLabs/max-cli/issues](https://github.com/WireCatLabs/max-cli/issues): заголовок и заготовка
 текста уже заполнены. Нужен аккаунт на GitHub. Перетащите файл отчёта в поле текста, напишите, что
 делали и что случилось, и нажмите «Submit new issue».
 

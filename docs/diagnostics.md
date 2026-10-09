@@ -216,7 +216,7 @@ max doctor report create --run <id>   # об этом запуске
 ```
 
 Команда пишет файл JSON — то, что показывает `max doctor`, и запуск — и печатает ссылку на новую
-задачу в [github.com/leemour/max-cli/issues](https://github.com/leemour/max-cli/issues). Прочитайте
+задачу в [github.com/WireCatLabs/max-cli/issues](https://github.com/WireCatLabs/max-cli/issues). Прочитайте
 файл, прежде чем отправлять. Текстов сообщений в нём нет, а номера чатов и сообщений заменены
 метками. Что ещё в нём есть — в разделе [как сообщить о проблеме](troubleshooting.md#как-сообщить-о-проблеме).
 

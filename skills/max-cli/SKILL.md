@@ -30,7 +30,7 @@ description: >-
 одноразовые действия имеют срок 30 секунд, меняемый через `--timeout`.
 Перед чувствительной записью `--dry-run` проверяет форму запроса и права до действия;
 общий preview не подключается к мессенджеру, не резервирует запись и оставляет цели непроверенными.
-Полные правила — [контракт CLI](https://github.com/leemour/max-cli/blob/main/docs/cli-contract.md).
+Полные правила — [контракт CLI](https://github.com/WireCatLabs/max-cli/blob/main/docs/cli-contract.md).
 
 MCP: сначала `max_tools_search`, затем `max_read` или `max_write` с `{command, arguments}`.
 Команда совпадает с CLI-путём, например `stats messages show`; прежние per-command имена
@@ -87,7 +87,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
   можно свободно. `max chats mark-read` и `messages list --mark-read` отмечают — только по прямой
   просьбе владельца: собеседник это увидит.
 - **Не для:** рассылок и чужих аккаунтов. Автоответы работают только по правилам и аудитории владельца
-  и только с `permissions.replies.send allow` ([руководство](https://github.com/leemour/max-cli/blob/main/docs/replies.md)). Бот — отдельные команды `max <имя> bot …`
+  и только с `permissions.replies.send allow` ([руководство](https://github.com/WireCatLabs/max-cli/blob/main/docs/replies.md)). Бот — отдельные команды `max <имя> bot …`
   (раздел «Бот» ниже), а не личный аккаунт.
 - **Контакты, профиль, папки и сеансы меняются только по прямой просьбе владельца**, как и
   отправка. `max account sessions end --others` — никогда по своей инициативе: оно выкидывает
@@ -147,9 +147,9 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    `--timezone` задаёт календарную zone; kind:bot и in:bots имеют разные смыслы.
    Term/body regex различаются. Даты — `date:today`, `date:7d`; файл — `filename:*.pdf`, `size>10MB`
    (типа файла MAX не сообщает); ссылка — `has:link AND "github.com"`; метки владельца — `tag:work`.
-   Подсчёт — `max stats messages show`. Руководства: [поиск](https://github.com/leemour/max-cli/blob/main/docs/search.md),
-   [поиск по темам](https://github.com/leemour/max-cli/blob/main/docs/topic-search.md) (разговоры по смыслу),
-   [язык запросов](https://github.com/leemour/max-cli/blob/main/docs/query-language.md).
+   Подсчёт — `max stats messages show`. Руководства: [поиск](https://github.com/WireCatLabs/max-cli/blob/main/docs/search.md),
+   [поиск по темам](https://github.com/WireCatLabs/max-cli/blob/main/docs/topic-search.md) (разговоры по смыслу),
+   [язык запросов](https://github.com/WireCatLabs/max-cli/blob/main/docs/query-language.md).
 5a. **Substring-поиску имён нужны три символа:** --search у chats/contacts list. Строгие message
    terms могут быть короче; не заменяйте strict zero hits fuzzy discovery автоматически.
 
@@ -463,7 +463,7 @@ max tags remove news --chat CHAT_ID --source auto
 `--score helpful|active|engaging`; оценки используют всю допустимую выборку до limit.
 Читай coverage/quality и исключения: неизвестные счётчики не равны нулю, свежесть наблюдений показана по полям; старые значения остаются unknown. Используй drilldown.selection для `stats messages evidence` / `stats contacts evidence`,
 продолжай через nextCursor; при изменении данных начни без cursor.
-Руководство: [рейтинги](https://github.com/leemour/max-cli/blob/main/docs/rankings.md).
+Руководство: [рейтинги](https://github.com/WireCatLabs/max-cli/blob/main/docs/rankings.md).
 
 Для вопросов без наблюдаемого ответа используй `stats messages unanswered`; время ответа явно
 выбранных людей — `stats contacts responses --answerer <person>`. Помощь новичкам с известной датой

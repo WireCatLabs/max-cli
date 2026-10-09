@@ -83,9 +83,9 @@ will be impossible to re-derive when MAX changes.
 ## Command names
 
 One standard for `max` and `tg`: how a command, an option, an answer and an MCP tool are named
-and shaped — [cli-messaging `docs/dev/STANDARD.md`](https://github.com/leemour/cli-messaging/blob/main/docs/dev/STANDARD.md).
+and shaped — [cli-messaging `docs/dev/STANDARD.md`](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/STANDARD.md).
 It moved there on 2026-09-30, so both CLIs read one copy. Every command and option of both is in the
-[parity manifest](https://github.com/leemour/cli-messaging/blob/main/parity.json); `pnpm parity:check`
+[parity manifest](https://github.com/WireCatLabs/cli-messaging/blob/main/parity.json); `pnpm parity:check`
 fails on one that is not.
 
 ## Documents
@@ -174,7 +174,7 @@ journal or decision ids, no file paths, no internal names; a link to the doc pag
 
 ## Documentation authoring
 
-Before documentation work, read the [shared authoring rules](https://github.com/leemour/cli-docs/blob/main/docs/AUTHORING.md).
+Before documentation work, read the [shared authoring rules](https://github.com/WireCatLabs/cli-docs/blob/main/docs/AUTHORING.md).
 Every user guide starts with a brief explanation of when to use it and what result the reader
 will get; mention a prerequisite only when it changes the next step. Keep titles short and
 task-specific. A new sidebar page needs a relevant icon and a contextual incoming link.

@@ -10,7 +10,7 @@ decide) and **the release report** `docs_ai/releases/<version>.md` (everything t
 signed by the owner). `bin/release` refuses to publish without both. The publishing steps themselves
 are in `docs_ai/releasing.md` — follow them from there, do not restate them.
 
-`docs_ai/` is the private repository `leemour/cli-private`, cloned into the main checkout. A
+`docs_ai/` is the private repository `WireCatLabs/cli-private`, cloned into the main checkout. A
 fresh clone of this repository does not have it: without it there are no live scenarios and no
 report, so stop and say so. **Correction 2026-10-01:** `bin/release` stops there too, naming that
 repository. A fork with its own signed report passes it as `bin/release --report <path>`: the same
@@ -19,12 +19,12 @@ checks, and on a renumber the file is rewritten in place for the caller to commi
 Nothing in this skill sends, publishes, tags or merges without the owner's word in this session.
 
 The steps max and tg share are written once, in cli-messaging's
-[RELEASING.md](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
+[RELEASING.md](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
 changelog, the private scenarios and the signed report.
 
 ## 0. Scope: what changed
 
-The commands in [RELEASING.md, "What changed"](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md#what-changed); the
+The commands in [RELEASING.md, "What changed"](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md#what-changed); the
 `docs/commands.md` diff drives steps 3–5. Work on a release branch off `main`, in a worktree; the version bump
 and the changelog go in one pull request, as in `docs_ai/releasing.md` steps 1–2.
 
@@ -53,7 +53,7 @@ Show the draft to the owner. **They accept or edit it** before it goes in.
 
 ## 3. The docs against the diff
 
-[RELEASING.md, "The docs against the diff"](https://github.com/leemour/cli-messaging/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
+[RELEASING.md, "The docs against the diff"](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
 `docs/*.md` and `skills/max-cli/SKILL.md` (agents read it through `max skill show`). User pages get
 plain rewrites with no «Поправка» (`docs/dev/CONVENTIONS.md`, "User pages"); `docs/commands.md` and
 `docs/dev/protocol.md` are generated — `pnpm generate`.

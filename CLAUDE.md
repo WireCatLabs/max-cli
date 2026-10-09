@@ -7,7 +7,7 @@ else.
 `docs_ai/` is the private working folder — handoff, the owner's brief (`REQUIREMENTS.md`), rulings
 (`DECISIONS.md` and `decisions/`), live-check list, release steps (`releasing.md`), session journals,
 cleanup list and captures of the real web client (`captures/`). It is **not in this repository**: it is
-the private repository `leemour/cli-private`; clone it into `docs_ai/` (`secrets/` inside it is ignored
+the private repository `WireCatLabs/cli-private`; clone it into `docs_ai/` (`secrets/` inside it is ignored
 and never pushed). Without it, start from [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md) and
 [`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md). Commit and push `docs_ai/` like any other repository — it is the only copy of the rulings.
 

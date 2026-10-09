@@ -32,7 +32,7 @@ its report says tests **not-run**, and must not be described as a complete audit
 For development of the auditor, `--shared-source <isolated-cli-messaging-worktree>` runs the same
 workflow against that worktree. Never pass a shared checkout another session owns. The direct
 shared command is documented in
-[PARITY-AUDIT.md](https://github.com/leemour/cli-messaging/blob/main/docs/dev/PARITY-AUDIT.md).
+[PARITY-AUDIT.md](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/PARITY-AUDIT.md).
 
 ## Read the evidence before judging
 

@@ -23,7 +23,7 @@ describe("max doctor report", () => {
 
     expect(code).toBe(0)
     expect(JSON.parse(stdout)).toMatchObject({
-      sendTo: "https://github.com/leemour/max-cli/issues/new",
+      sendTo: "https://github.com/WireCatLabs/max-cli/issues/new",
       create: "max doctor report create",
     })
     expect(JSON.parse(stdout).excludes).toContain("токена")
@@ -56,7 +56,7 @@ describe("max doctor report", () => {
       keptBecauseFailed: true,
     })
     expect(report).toMatchObject({ runtime: expect.stringMatching(/^(node|bun) /), doctor: expect.any(Object) })
-    expect(answer.issue).toMatch(/^https:\/\/github\.com\/leemour\/max-cli\/issues\/new\?title=/)
+    expect(answer.issue).toMatch(/^https:\/\/github\.com\/WireCatLabs\/max-cli\/issues\/new\?title=/)
     expect(answer.steps).toHaveLength(4)
   })
 

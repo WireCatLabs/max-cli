@@ -6,7 +6,7 @@
   "author": "Viacheslav Ptsarev",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/leemour/max-cli.git"
+    "url": "git+https://github.com/WireCatLabs/max-cli.git"
   },
   "type": "module",
   "engines": {
