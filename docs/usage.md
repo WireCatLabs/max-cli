@@ -13,10 +13,37 @@ max [профиль] [опции] <ресурс> <действие> [аргум�
 
 Полный список команд и опций — [commands.md](commands.md), он собирается из самой программы.
 
+## Прочитайте чат с агентом
+
+После подключения аккаунта попросите короткий итог переписки. Эта задача читает сообщения и ничего не отправляет.
+
+**Ваш запрос:**
+
+> Подведи итог пяти последних сообщений Книжный клуб. Покажи решения и открытые вопросы. Ничего не отправляй.
+
+**Команда:**
+
+```sh
+max messages list "Книжный клуб" --limit 5 --json
+```
+
+**Пример ответа агента:**
+
+> **Решили:** следующая встреча в четверг в 18:00.
+>
+> **Открыто:** где встречаться.
+>
+> Могу показать сообщения, на которых основан итог. Ничего не отправлено.
+
+Итог ниже вымышлен. Попросите открыть исходные сообщения, прежде чем полагаться на интерпретацию агента. Настройка, действия с сообщениями и разрешения объясняются в разделах ниже.
+
 ## Начало работы
 
 ```sh
 max setup --agent codex  # QR-вход и навык агента
+```
+
+```sh
 max chats list           # ваши чаты
 ```
 
@@ -57,6 +84,9 @@ MAX_TOKEN="$(cat /path/to/token)" max chats list
 
 ```sh
 max account show                # номер телефона — только последние 4 цифры
+```
+
+```sh
 max account show --show-phone   # номер целиком
 ```
 
@@ -75,6 +105,9 @@ max session end
 
 ```sh
 max chats list              # профиль default
+```
+
+```sh
 max personal chats list     # профиль personal
 ```
 
@@ -97,13 +130,37 @@ max chats list
 
 ```sh
 max chats list                      # все чаты
+```
+
+```sh
 max chats list --limit 5            # первые пять
+```
+
+```sh
 max chats list --unread             # только чаты с непрочитанным
+```
+
+```sh
 max chats show "Иван Петров"        # один чат: вид, непрочитанное, последнее сообщение, участники
+```
+
+```sh
 max contacts list                   # люди, с кем есть личный чат
+```
+
+```sh
 max contacts show @ivan             # один человек и общие с ним чаты
+```
+
+```sh
 max messages list 0                 # сообщения чата по id
+```
+
+```sh
 max messages list "Иван Петров"     # или по имени чата
+```
+
+```sh
 max messages list 0 --limit 50
 ```
 
@@ -123,9 +180,21 @@ max messages list 0 --limit 50
 
 ```sh
 max inbox                               # непрочитанное — по счётчику MAX, у каждого сообщения чат
+```
+
+```sh
 max inbox --new                         # что пришло с прошлой проверки, каждое сообщение один раз
+```
+
+```sh
 max inbox --new --jsonl                 # то же для скрипта: одно сообщение на строку
+```
+
+```sh
 max inbox --since-time 2026-09-24T09:00 # разовый взгляд с этого времени
+```
+
+```sh
 max inbox --all                         # и чаты без звука, и архив
 ```
 
@@ -143,6 +212,9 @@ max inbox --all                         # и чаты без звука, и ар
 
 ```sh
 max messages show -1000 100000000000000001
+```
+
+```sh
 max messages context -1000 100000000000000001 --before-n 3 --after-n 3
 ```
 
@@ -189,7 +261,13 @@ Locator другой учётной записи отклоняется. `messag
 
 ```sh
 max models audio list                # какие модели есть, какие скачаны, какая по умолчанию (*)
+```
+
+```sh
 max models audio download gigaam-v3  # 233 МБ, один раз
+```
+
+```sh
 max messages transcribe "Иван Петров" 100000000000000001
 ```
 
@@ -220,6 +298,9 @@ max messages transcribe "Иван Петров" 100000000000000001
 
 ```sh
 max messages list "Иван Петров" --transcribe
+```
+
+```sh
 max inbox --transcribe
 ```
 
@@ -239,7 +320,13 @@ max inbox --transcribe
 
 ```sh
 max chats mark-read "Иван Петров"                  # до последнего сообщения
+```
+
+```sh
 max chats mark-read "Иван Петров" --until 100000000000000001   # до этого сообщения включительно
+```
+
+```sh
 max messages list "Иван Петров" --mark-read        # прочитать и отметить показанное
 ```
 
@@ -250,7 +337,13 @@ max messages list "Иван Петров" --mark-read        # прочитат�
 
 ```sh
 max review                                   # всё за последние 3 дня
+```
+
+```sh
 max review --since-time 2026-09-23T09:00     # с конца прошлого обзора
+```
+
+```sh
 max review --since-time 2026-09-23T09:00 --transcribe --json
 ```
 
@@ -273,6 +366,9 @@ max review --since-time 2026-09-23T09:00 --transcribe --json
 
 ```sh
 max review --unanswered                      # вопросы, на которые сутки никто не ответил
+```
+
+```sh
 max review --chat "Соседи" --unanswered 4h    # в одной группе, без ответа 4 часа
 ```
 
@@ -295,8 +391,17 @@ max review --chat "Соседи" --unanswered 4h    # в одной группе
 
 ```sh
 max contacts list --limit 5             # по пять в странице
+```
+
+```sh
 max contacts list --limit 5 --page 2    # шестой по десятый
+```
+
+```sh
 max contacts list --all                 # всё, без страниц
+```
+
+```sh
 max contacts list --order name          # по алфавиту вместо «кто писал последним»
 ```
 
@@ -313,9 +418,21 @@ max contacts list --order name          # по алфавиту вместо «�
 
 ```sh
 max messages list 0 --limit 20
+```
+
+```sh
 max messages list 0 --before-id 116762160362694583        # id самой старой строки, которую вы видите
+```
+
+```sh
 max messages list 0 --before-time 2026-09-20T01:00:00Z    # работает и когда того сообщения уже нет
+```
+
+```sh
 max messages list 0 --after-id 116762160362694583         # что пришло после этого сообщения
+```
+
+```sh
 max messages list 0 --after-time 2026-09-20T01:00:00Z     # или после этого времени
 ```
 
@@ -337,11 +454,29 @@ max messages list 0 --after-time 2026-09-20T01:00:00Z     # или после э
 
 ```sh
 max chats list --search иван             # чаты, в названии которых есть «иван»
+```
+
+```sh
 max chats list --search work --kind group # только группы
+```
+
+```sh
 max chats list --unread --kind dialog    # личные чаты, где есть непрочитанное
+```
+
+```sh
 max contacts list --search петров        # люди по имени или @username
+```
+
+```sh
 max search all "договор"                 # сообщения, почта и заметки на этом компьютере
+```
+
+```sh
 max search messages "договор"            # по тексту сообщений, которые уже прочитаны
+```
+
+```sh
 max search messages "договор" --chat 42  # в одном чате
 ```
 
@@ -353,6 +488,9 @@ max search messages "договор" --chat 42  # в одном чате
 
 ```sh
 max messages list 42 --limit 20
+```
+
+```sh
 max messages send 42 "текст"
 ```
 
@@ -371,8 +509,17 @@ max messages send 42 "текст"
 
 ```sh
 max stats messages show "договор" --by chat --json
+```
+
+```sh
 max stats messages show --by sender --chat "Работа" --limit 10 --json
+```
+
+```sh
 max stats messages show --by day --timezone Europe/Madrid --json
+```
+
+```sh
 max stats messages show --by hour --timezone UTC --jsonl
 ```
 
@@ -404,12 +551,33 @@ max contacts sync     # забыть, где остановились, и заб
 
 ```sh
 max contacts alias set "Борис Тестов" Боря          # своё имя для человека, только на этом компьютере
+```
+
+```sh
 max contacts alias rm "Борис Тестов"
+```
+
+```sh
 max contacts notes add "Борис Тестов" --file note.txt   # или текст из stdin
+```
+
+```sh
 max contacts notes list "Борис Тестов"
+```
+
+```sh
 max contacts notes edit "Борис Тестов" <id> --revision 1 --file note.txt
+```
+
+```sh
 max contacts notes remove "Борис Тестов" <id>
+```
+
+```sh
 max contacts show "Борис Тестов" --with-notes
+```
+
+```sh
 max contacts list --search-notes квартира           # люди, в чьих заметках есть это слово
 ```
 
@@ -422,6 +590,9 @@ max contacts list --search-notes квартира           # люди, в чь�
 
 ```sh
 max messages send 0 "текст"
+```
+
+```sh
 max messages send "Иван Петров" "текст"
 ```
 
@@ -467,7 +638,13 @@ MAX не создаёт второго сообщения, если повтор
 
 ```sh
 max messages send 0 "напоминание" --at-time 2026-09-25T09:00   # местное время
+```
+
+```sh
 max messages send 0 "напоминание" --at-time 2h                # или через 30m, 2h, 1d
+```
+
+```sh
 max messages scheduled 0                                       # что ждёт отправки в этом чате
 ```
 
@@ -488,6 +665,9 @@ max messages scheduled 0                                       # что ждёт
 
 ```sh
 max messages send 0 "да" --reply-to 100000000000000001   # ответ на сообщение в том же чате
+```
+
+```sh
 max reactions add 0 100000000000000001 👍                 # реакция; прежняя ваша заменяется
 ```
 
@@ -501,9 +681,21 @@ max reactions add 0 100000000000000001 👍                 # реакция; п
 
 ```sh
 max messages edit 0 100000000000000001 "новый текст"          # только своё; вложения остаются
+```
+
+```sh
 max messages forward 0 100000000000000001 --to "Коллеги"      # переслать одно сообщение в другой чат
+```
+
+```sh
 max messages pin 0 100000000000000001                         # закрепить, без уведомления участникам
+```
+
+```sh
 max messages pin 0 100000000000000001 --notify                # закрепить и уведомить
+```
+
+```sh
 max messages unpin 0 100000000000000001                       # открепить; в чате MAX закреплено одно сообщение
 ```
 
@@ -521,7 +713,13 @@ max messages unpin 0 100000000000000001                       # открепит
 
 ```sh
 max messages delete 0 100000000000000001 --allow-dangerous                   # только у вас
+```
+
+```sh
 max messages delete 0 100000000000000001 100000000000000002 --allow-dangerous # несколько, до 10
+```
+
+```sh
 max messages delete 0 100000000000000001 --for-everyone --allow-dangerous    # у всех в чате
 ```
 
@@ -540,9 +738,21 @@ max messages delete 0 100000000000000001 --for-everyone --allow-dangerous    # �
 
 ```sh
 max polls create 0 "Обед?" "Да" "Нет" --multiple     # опрос отдельным сообщением
+```
+
+```sh
 max polls show 0 100000000000000001                  # варианты с id и сколько за каждый
+```
+
+```sh
 max polls vote 0 100000000000000001 1                # голос за вариант с id 1
+```
+
+```sh
 max polls vote 0 100000000000000001 --retract        # снять голос, если опрос это разрешает
+```
+
+```sh
 max polls close 0 100000000000000001                 # закрыть свой опрос; открыть снова нельзя
 ```
 
@@ -569,7 +779,13 @@ web.max.ru опросы не показывает: вместо опроса т�
 
 ```sh
 max messages show <бот> 100000000000000001            # кнопки под сообщением: [1 Да] [2 Нет]
+```
+
+```sh
 max messages press <бот> 100000000000000001 2         # нажать вторую кнопку
+```
+
+```sh
 max messages press <бот> 100000000000000001 "Да"      # или по её тексту
 ```
 
@@ -582,8 +798,17 @@ max messages press <бот> 100000000000000001 "Да"      # или по её т
 
 ```sh
 max chats start <бот>                                 # запустить бота, как кнопка «Начать»
+```
+
+```sh
 max chats start <бот> --payload ref1                  # с параметром, как ссылка max.ru/<бот>?start=ref1
+```
+
+```sh
 max chats start https://max.ru/<бот>?start=ref1       # по ссылке — и бота, которому вы ещё не писали
+```
+
+```sh
 max chats app <бот>                                   # адрес мини-приложения бота
 ```
 
@@ -604,33 +829,117 @@ max chats app <бот>                                   # адрес мини-�
 
 ```sh
 max contacts lookup                         # спросит номер; или: echo "+7…" | max contacts lookup
+```
+
+```sh
 max contacts add 20000002                   # id из lookup, или часть известного имени
+```
+
+```sh
 max contacts remove 20000002
+```
+
+```sh
 max contacts rename 20000002 "Соседка" "Анна" # своё имя для человека; он его не видит
+```
+
+```sh
 max contacts block 20000002                 # больше не сможет вам писать
+```
+
+```sh
 max contacts unblock 20000002
+```
+
+```sh
 max contacts profile 20000002               # профиль, дата создания, его сообщения по общим чатам
+```
+
+```sh
 max contacts check 20000002                 # похож ли на бота; подробнее — people.md
+```
+
+```sh
 max contacts import книжка.csv              # строка: номер, запятая, табуляция или точка с запятой, имя
+```
+
+```sh
 max account update --description "о себе"   # имя остаётся прежним
+```
+
+```sh
 max account update --photo портрет.png      # новое фото профиля
+```
+
+```sh
 max account sessions list                   # где ещё выполнен вход
+```
+
+```sh
 max account privacy show                    # кто находит по номеру, звонит, добавляет в чаты
+```
+
+```sh
 max stickers list                           # наборы стикеров; --set <id> — стикеры набора с их id
+```
+
+```sh
 max messages send 0 --sticker 51            # стикер, один, без текста
+```
+
+```sh
 max account privacy set --calls contacts    # звонить могут только контакты; остальное не меняется
+```
+
+```sh
 max account privacy set --hide-online on    # скрыть «в сети» и «был недавно»
+```
+
+```sh
 max chats mute "Поход"                      # без уведомлений из чата, насовсем
+```
+
+```sh
 max chats mute "Поход" --until 8h           # на 8 часов; или до даты: --until 2026-10-09T09:00
+```
+
+```sh
 max chats unmute "Поход"
+```
+
+```sh
 max chats clear "Поход" --allow-dangerous   # удалить все сообщения у себя; у остальных останутся
+```
+
+```sh
 max chats delete "Поход" --allow-dangerous  # удалить чат у себя; у остальных он останется
+```
+
+```sh
 max calls list                              # звонки, новые сверху
+```
+
+```sh
 max account sessions end --others --yes     # выйти везде, кроме этого сеанса — и на телефоне
+```
+
+```sh
 max chats folders list
+```
+
+```sh
 max chats folders create "Работа" --chat -1000 --chat "Проект"
+```
+
+```sh
 max chats folders update "Работа" --title "Офис" --add -2000 --remove -1000
+```
+
+```sh
 max chats folders delete "Офис"             # чаты остаются
+```
+
+```sh
 max chats folders order "Офис" "Семья"      # после «Все чаты»: эти две, затем остальные
 ```
 
@@ -663,7 +972,13 @@ max chats folders order "Офис" "Семья"      # после «Все ча�
 
 ```sh
 max chats media "Поход"                           # фото, видео, файлы, аудио и ссылки, как галерея в MAX
+```
+
+```sh
 max chats media "Поход" --type photo,video        # только фото и видео
+```
+
+```sh
 max chats media "Поход" --before-id <id>          # то, что старше этого сообщения
 ```
 
@@ -674,9 +989,21 @@ max chats media "Поход" --before-id <id>          # то, что старш
 
 ```sh
 max messages send 0 "отчёт" --file отчёт.pdf
+```
+
+```sh
 max messages send 0 "с дачи" --file ролик.mp4          # видео, которое смотрят прямо в чате
+```
+
+```sh
 max messages send 0 --file ролик.mp4 --as-file       # то же видео файлом для скачивания
+```
+
+```sh
 max messages send 0 --photo снимок.png                # фото
+```
+
+```sh
 max messages send 0 --voice заметка.ogg              # голосовое сообщение
 ```
 
@@ -720,24 +1047,81 @@ max messages send 0 "встреча **в 15:00**, не _в 14_" --md
 
 ```sh
 max chats inspect https://max.ru/join/…          # что за ссылкой; не вступает
+```
+
+```sh
 max chats join https://max.ru/join/…             # вступить; канал с одобрением ответит requested: true
+```
+
+```sh
 max chats leave "Семья"                          # выйти
+```
+
+```sh
 max chats create "Поход" "Аня" 20000002          # создать группу с людьми (имя или id)
+```
+
+```sh
 max chats create "Новости" --channel            # закрытый канал; люди входят по ссылке-приглашению
+```
+
+```sh
 max chats members list "Поход" --all             # все участники: когда заведён аккаунт, когда был в сети
+```
+
+```sh
 max chats members add "Поход" "Боря"             # без старых сообщений; с ними — --history
+```
+
+```sh
 max chats members remove "Поход" "Боря"
+```
+
+```sh
 max chats admins add "Поход" "Аня" --can members,pin
+```
+
+```sh
 max chats admins remove "Поход" "Аня"              # снять права; участником остаётся
+```
+
+```sh
 max chats update "Поход" --title "Поход-2026" --description "в июле"
+```
+
+```sh
 max chats update "Поход" --photo обложка.jpg    # новое фото группы
+```
+
+```sh
 max chats show "Поход"                           # настройки группы — в поле settings
+```
+
+```sh
 max chats update "Поход" --all-can-pin off       # поменять одну
+```
+
+```sh
 max chats link show "Поход"                      # ссылка-приглашение, если вам её видно
+```
+
+```sh
 max chats link reset "Поход"                     # новая ссылка; старая перестаёт работать
+```
+
+```sh
 max chats requests list "Канал"                  # кто просится в канал с одобрением; видят только админы
+```
+
+```sh
 max chats requests accept "Канал" 20000002        # впустить; decline — отказать
+```
+
+```sh
 max chats events "Поход"                         # кто вступил, вышел, кого добавили и удалили — за 7 дней
+```
+
+```sh
 max chats events "Поход" --type add,remove --since-time 2026-09-01T00:00
 ```
 
@@ -790,10 +1174,25 @@ show` показывает только тех, кого видела локал
 
 ```sh
 max chats rules show "Поход"                          # правила группы; без них — значения по умолчанию
+```
+
+```sh
 max chats rules set "Поход" invites delete            # приглашения в чужие чаты — удалять
+```
+
+```sh
 max chats rules set "Поход" newAccount.days 3         # аккаунт моложе трёх дней — отметить
+```
+
+```sh
 max chats rules set "Поход" trusted 30000003,30000004 # этих людей правила не трогают
+```
+
+```sh
 max chats rules set "Поход" consent.delete ask        # перед удалением — спрашивать
+```
+
+```sh
 max chats rules unset "Поход" consent.delete          # вернуть значение по умолчанию
 ```
 
@@ -813,8 +1212,17 @@ max chats rules unset "Поход" consent.delete          # вернуть зн
 
 ```sh
 max chats moderate "Поход"                       # что нового нарушает правила; делает то, что разрешено
+```
+
+```sh
 max chats moderate "Поход" --dry-run             # только показать
+```
+
+```sh
 max chats moderate "Поход" --allow-dangerous     # сделать и то, что стоит на уровне ask
+```
+
+```sh
 max chats moderate "Поход" --since-time 2026-09-20T00:00
 ```
 
@@ -933,6 +1341,9 @@ fi
 
 ```sh
 max chats list --trace      # показать, ничего не сохраняя
+```
+
+```sh
 max chats list --record       # сохранить, ничего не показывая
 ```
 
@@ -947,7 +1358,13 @@ max chats list --record       # сохранить, ничего не показ
 
 ```sh
 max runs list                 # что делалось, новое сверху
+```
+
+```sh
 max runs show <id>            # один запуск: чем кончился и куда ходил
+```
+
+```sh
 max runs path <id>            # каталог, для jq и grep
 ```
 
@@ -979,7 +1396,13 @@ max runs path <id>            # каталог, для jq и grep
 
 ```sh
 max config set permissions.messages readonly
+```
+
+```sh
 max work config set permissions.messages.delete allow
+```
+
+```sh
 max config set --defaults permissions.contacts readonly
 ```
 
