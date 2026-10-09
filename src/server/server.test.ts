@@ -44,8 +44,9 @@ const refusedAfterFirst = (refusal: string) => {
 const scripted = (
   overrides: Parameters<typeof mockMax>[0]["answers"] = {},
   refuse: Parameters<typeof mockMax>[0]["refuse"] = {},
-) =>
-  mockMax({
+) => {
+  const removed = new Set<string>()
+  return mockMax({
     refuse,
     answers: {
       [Opcode.SESSION_INIT]: {},
@@ -56,12 +57,17 @@ const scripted = (
       },
       [Opcode.PING]: {},
       [Opcode.LOG]: {},
-      [Opcode.CHAT_HISTORY]: {
-        messages: [{ id: 116762160362694583n, time: 1789776000000, sender: 10000002, text: "hi", attaches: [] }],
-      },
+      [Opcode.CHAT_HISTORY]: () => ({
+        messages: removed.has("116762160362694583")
+          ? []
+          : [{ id: 116762160362694583n, time: 1789776000000, sender: 10000002, text: "hi", attaches: [] }],
+      }),
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
       [Opcode.MSG_SEND]: { message: { id: 116762160362694599n, time: 1789776001000, sender: ME, text: "sent" } },
-      [Opcode.MSG_DELETE]: {},
+      [Opcode.MSG_DELETE]: (payload) => {
+        for (const id of payload.messageIds as unknown[]) removed.add(String(id))
+        return {}
+      },
       [Opcode.FOLDERS_GET]: { folders: [], folderSync: 1_789_000_000_000 },
       [Opcode.BANNERS_GET]: { banners: [] },
       [Opcode.CALL_HISTORY]: { callHistoryItems: [], callHistorySync: 1_788_000_000_000 },
@@ -69,6 +75,7 @@ const scripted = (
       ...overrides,
     },
   })
+}
 
 const running: MaxServer[] = []
 afterEach(async () => {
@@ -670,7 +677,11 @@ describe("a command through max serve", () => {
     const { store, max } = await serve("c-delete", scripted(), { refreshEveryMs: 0 })
     const { client } = commandClient(store)
 
-    await withPermissionApproval("messages.delete", () => client.messages.delete("111", ["116762160362694583"]))
+    await withPermissionApproval("messages.delete", () => client.messages.delete("111", ["116762160362694583"])).catch(
+      (error: unknown) => {
+        expect(error).toMatchObject({ code: "outcome_unknown", details: { reason: "deletion_unconfirmed" } })
+      },
+    )
     await client.close()
     await tabReads(max, 2)
 

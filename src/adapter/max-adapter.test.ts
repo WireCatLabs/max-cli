@@ -211,7 +211,7 @@ describe("the MAX adapter", () => {
   })
 
   it("deletes, reacts and takes the reaction off, pins and unpins, and marks read", async () => {
-    const { adapter, sent } = connected()
+    const { adapter, sent } = connected({ [Opcode.CHAT_HISTORY]: { messages: [] } })
 
     await adapter.delete("111", [MESSAGE], { forEveryone: false })
     await adapter.react("111", MESSAGE, "👍")

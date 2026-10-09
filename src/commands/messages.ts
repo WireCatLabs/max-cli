@@ -100,7 +100,12 @@ export const messagesCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "scheduled"))
 
   command.addCommand(editCommand(maxMessenger))
-  command.addCommand(deleteCommand(maxMessenger))
+  const remove = deleteCommand(maxMessenger)
+  remove.registeredArguments[1]?.argParser((value: string, previous: string[] = []) => [
+    ...previous,
+    ...value.split(",").map((id) => id.trim()),
+  ])
+  command.addCommand(remove)
   command.addCommand(forwardCommand(maxMessenger))
   command.addCommand(pinCommand(maxMessenger))
   command.addCommand(unpinCommand(maxMessenger))

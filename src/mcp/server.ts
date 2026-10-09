@@ -120,7 +120,7 @@ export const serveOverStdio = async (context: CommandContext, options: ServerOpt
   }
 }
 
-/** The same server over HTTP behind the owner's tunnel, until Ctrl-C (CLI-58); every write asks first. */
+/** The same server over HTTP behind the owner's tunnel, until Ctrl-C (CLI-58). */
 export const serveOverHttpUntilStopped = async (
   context: CommandContext,
   options: ServerOptions,

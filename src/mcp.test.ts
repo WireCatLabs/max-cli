@@ -25,8 +25,20 @@ import { SessionStore } from "./session/store.js"
 import { SKILL } from "./skill.js"
 import { type MockMaxOptions, mockMax } from "./testing/mock-max.js"
 
-const scriptedMax = (extra: MockMaxOptions["answers"] = {}) =>
-  mockMax({
+const scriptedMax = (extra: MockMaxOptions["answers"] = {}) => {
+  const removed = new Set<string>()
+  const response = extra[Opcode.CHAT_HISTORY] ?? {
+    messages: [{ id: 116762160362694583n, time: 1789776000000, sender: 10000001, text: "hi", attaches: [] }],
+  }
+  const deletion = extra[Opcode.MSG_DELETE]
+  const deletionAnswer: MockMaxOptions["answers"] = {}
+  if (deletion !== undefined)
+    deletionAnswer[Opcode.MSG_DELETE] = (request) => {
+      const answer = typeof deletion === "function" ? deletion(request) : deletion
+      if (answer && !answer.error) for (const id of request.messageIds as unknown[]) removed.add(String(id))
+      return answer
+    }
+  return mockMax({
     answers: {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: {
@@ -39,12 +51,19 @@ const scriptedMax = (extra: MockMaxOptions["answers"] = {}) =>
         ],
       },
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
-      [Opcode.CHAT_HISTORY]: {
-        messages: [{ id: 116762160362694583n, time: 1789776000000, sender: 10000001, text: "hi", attaches: [] }],
-      },
       ...extra,
+      [Opcode.CHAT_HISTORY]: (request) => {
+        const answer = typeof response === "function" ? response(request) : response
+        if (!answer || !Array.isArray(answer.messages)) return answer
+        return {
+          ...answer,
+          messages: answer.messages.filter((message) => !removed.has(String((message as { id: unknown }).id))),
+        }
+      },
+      ...deletionAnswer,
     },
   })
+}
 
 const closers: (() => Promise<void>)[] = []
 afterEach(async () => {
@@ -1710,7 +1729,13 @@ describe("the skill as an MCP resource", () => {
 })
 
 describe("max_chats_check", () => {
-  const invite = { id: 5n, time: Date.now() - 60_000, sender: 30000003, text: "https://max.ru/join/x", attaches: [] }
+  const invite = {
+    id: (BigInt(Date.now() - 60_000) << 16n) + 5n,
+    time: Date.now() - 60_000,
+    sender: 30000003,
+    text: "https://max.ru/join/x",
+    attaches: [],
+  }
   const groupAnswers = {
     [Opcode.CHAT_HISTORY]: (request: { from?: unknown }) => ({
       messages: invite.time > Number(request.from) ? [invite] : [],
