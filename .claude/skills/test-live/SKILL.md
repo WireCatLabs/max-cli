@@ -72,8 +72,9 @@ The rules and the shape-only `live` helper are in
 
 ## 5. Record and report
 
-Append a dated row per scenario to the plan's **Results** table: the branch or version, the id,
-PASS/FAIL, the exit codes and shapes. No content. A FAIL caused by the account's state rather than
+Rewrite each scenario's row in the plan's **Latest results** table — one row per scenario, the
+newest run only: the date, the branch or version, the id, PASS/FAIL, the exit codes and shapes. No
+content. The release report keeps the run itself. A FAIL caused by the account's state rather than
 the change is still a FAIL until the owner rules on it.
 
 Report to the owner: what ran, what failed with the command and exit code, what was dropped and

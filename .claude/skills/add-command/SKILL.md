@@ -100,5 +100,5 @@ add a line to `skills/max-cli/SKILL.md` (Russian, what `max skill show` prints).
 
 ## 7. Close
 
-In the PR that ships it: delete the backlog line, append it to `docs_ai/BACKLOG_DONE.md`, write the
-journal entry (`docs_ai/journal/note.sh`). Conventional commit; PR based on `main`, never stacked.
+In the PR that ships it: delete the backlog line and write the journal entry
+(`docs_ai/journal/note.sh`). Conventional commit; PR based on `main`, never stacked.

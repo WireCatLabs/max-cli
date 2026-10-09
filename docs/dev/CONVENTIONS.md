@@ -106,16 +106,12 @@ documentation, it is a claim, until its current source says the same thing.
 **Anchor every claim.** `path/file.ts:123` for our code, a URL for anything external, a commit for
 anything historical. A claim without an anchor is an opinion.
 
-**Correct in place; never append.** A doc where the truth lives in a note at the bottom is a doc
-that lies at the top. Rewrite the wrong sentence. If the wrong version circulated, mark the fix —
-do not hide it.
-
-**User pages state current facts only.** `README.md` and the Russian pages under `docs/` — the
-ones [`../README.md`](../README.md) lists under "Using it", except `CHANGELOG.md` — carry no «Поправка», no struck-out text, no
-dated "measured on", no decision or backlog ids. Rewrite the sentence and say nothing about the
-old one; the trail lives in git, `CHANGELOG.md` and the journal. A *why* is allowed when a reader
-would otherwise undo the behaviour. The marked-correction rule above is for the developer
-documents.
+**Every document states current facts only.** Rewrite the wrong sentence in place and say nothing
+about the old one: no «Поправка», no struck-out text, no dated "measured on" trail. Git keeps what it
+said before; `CHANGELOG.md` is the one place with version history. A finished plan or handoff is
+deleted, not marked done; a done backlog or cleanup line is deleted. User pages (`README.md` and the
+Russian pages under `docs/`) also carry no decision or backlog ids. A *why* is allowed when a reader
+would otherwise undo the behaviour.
 
 **One fact, one home.** A decision lives in `docs_ai/DECISIONS.md`; a task lives in
 [`BACKLOG.md`](BACKLOG.md); something to delete lives in `docs_ai/CLEANUP.md`; a plan lives in

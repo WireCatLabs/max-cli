@@ -92,11 +92,11 @@ How to run one — `bin/max`, the shape-only helper, snapshot and restore — is
    from the installed `max` on first use, so no profile needs `session start`.
 4. MCP scenarios (X2): `pnpm mcp:tools -- mcp`, `-- mcp --allow-send`, `-- mcp --allow-send
    --confirm-send`, `-- <bot> bot mcp` — the count and names per flag set. Compare with the previous
-   release's X2 row in the Results table; a count that moved needs a PR that explains it.
+   X2 row in the Latest results table; a count that moved needs a PR that explains it.
 5. `pnpm smoke:live` — every write once in Saved messages, cleaned up after. Any `FAIL`: no release.
 6. Follow the plan's rules: `--json`, a timeout on everything, the shape recorded and never the
    content, a snapshot before a change and the exact value put back after.
-7. Append the results to the plan's Results table, dated, with the version.
+7. Rewrite each scenario's row in the plan's Latest results table, dated, with the version.
 
 ## 6. The report
 
