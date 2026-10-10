@@ -78,6 +78,7 @@ describe("P7 permissions", () => {
     ["serve"],
     ["store", "fetch", "111"],
     ["contacts", "context", "synthetic-person"],
+    ["contacts", "timeline", "synthetic-person"],
   ])("refuses message reads through %j before any MAX request", async (...args) => {
     save({ profiles: { work: { permissions: { messages: "deny" } } } })
     const { max, environment } = scripted()
@@ -211,7 +212,7 @@ it("refuses a readonly command child when the parent allows writes", async () =>
 })
 
 describe("contacts context in named chats", () => {
-  it("reads the chat from MAX with --refresh and answers one person's messages, short unless -v", async () => {
+  it("reads the chat from MAX with --refresh and answers one person's messages, short unless -v, then their timeline", async () => {
     const profile = "context-chats"
     rememberAccount(MAX_APP, profile, "10000001", process.env)
     const store = await openStore()
@@ -266,5 +267,29 @@ describe("contacts context in named chats", () => {
     ])
     expect(detailed.code, detailed.stderr).toBe(0)
     expect(JSON.parse(detailed.stdout).chats[0].messages[0]).toHaveProperty("locator")
+
+    const timeline = await cli(
+      [
+        profile,
+        "contacts",
+        "timeline",
+        "20000002",
+        "--scope",
+        "personal",
+        "--since-time",
+        new Date(1789774000000).toISOString(),
+        "--until-time",
+        new Date(1789776000000).toISOString(),
+        "--limit",
+        "5",
+        "--json",
+      ],
+      environment,
+    )
+    expect(timeline.code, timeline.stderr).toBe(0)
+    expect(JSON.parse(timeline.stdout)).toMatchObject({
+      hasMore: false,
+      items: [{ role: "sender", scope: "personal", locator: "msg:max/10000001/111/116762160362694583" }],
+    })
   })
 })

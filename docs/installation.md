@@ -148,7 +148,7 @@ node dist/bin/max.js --help
 | настройки | `~/.config/max-cli/` | `~/Library/Preferences/max-cli/` | `%APPDATA%\max-cli\Config\` |
 | состояние | `~/.local/share/max-cli/` | `~/Library/Application Support/max-cli/` | `%LOCALAPPDATA%\max-cli\Data\` |
 | кэш | `~/.cache/max-cli/` | `~/Library/Caches/max-cli/` | `%LOCALAPPDATA%\max-cli\Cache\` |
-| общая копия сообщений | `~/.local/share/cli-messaging/messages.db` | под `~/Library/Application Support/cli-messaging/` | под `%LOCALAPPDATA%\cli-messaging\Data\` |
+| общая копия сообщений | `~/.local/share/cli-messaging/wirecat.db` | под `~/Library/Application Support/cli-messaging/` | под `%LOCALAPPDATA%\cli-messaging\Data\` |
 | модели распознавания речи | `~/.cache/cli-common/models/audio/` | под `~/Library/Caches/cli-common/` | под `%LOCALAPPDATA%\cli-common\Cache\` |
 
 - **настройки** — `config.json`, и `credentials.json` с токеном, только если на машине нет ключницы.
@@ -187,7 +187,7 @@ max complete fish | source                         # fish, в config.fish
 PowerShell — `max complete powershell | Out-String | Invoke-Expression` в профиле.
 
 Tab **никогда не подключается к MAX**: подключение на каждое нажатие — это вход в аккаунт сотни раз
-подряд. Названия чатов и людей берутся из общего хранилища `messages.db` для аккаунта
+подряд. Названия чатов и людей берутся из общего хранилища `wirecat.db` для аккаунта
 выбранного профиля. Пока аккаунт не известен или хранилища нет, дополняются только команды и флаги.
 В командах бота предлагаются чаты из его локального списка. Чат предлагается по id, а
 название стоит рядом: название с пробелом дошло бы до `max` двумя словами.
@@ -203,6 +203,10 @@ max upgrade --check   # только сказать, есть ли новее; �
 уступает место сам: первая команда новой версии останавливает старый сервер и запускает новый.
 Сервер, запущенный вручную, продолжает работать на старом коде — перезапустите его сами:
 `max server restart`. Сам себя `max` не обновляет никогда.
+
+**С 0.43.1 и старше локальная копия начинается заново.** Копия теперь в новом файле `wirecat.db`;
+старый `messages.db` остаётся на месте нетронутым. Выполните `max store fetch --all`, чтобы вернуть
+сообщения. Вход сохраняется ([копия и другие версии](archive.md#копия-и-другие-версии)).
 
 ### JSON-ответ обновления
 
