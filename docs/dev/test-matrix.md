@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**924 ✅ · 112 ⛔ · 0 ❌** — 313 commands, 723 options.
+**925 ✅ · 112 ⛔ · 0 ❌** — 313 commands, 724 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -568,6 +568,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--newest` | ✅ |  |
 | `search messages` | `--exact` | ✅ |  |
 | `search messages` | `--context` | ✅ |  |
+| `search messages` | `--discover` | ✅ |  |
 | `search messages` | `--language` | ✅ |  |
 | `search messages` | `--timezone` | ✅ |  |
 | `search messages` | `--regex` | ✅ |  |
