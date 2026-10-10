@@ -1,7 +1,7 @@
 import { CliError } from "@wirecat/cli-core"
 import { McpPicture } from "@wirecat/cli-messaging/cli"
 import type { MaxClient } from "../client.js"
-import { fetchBytes, publicOnly, type Reach } from "../download.js"
+import { fetchBytes, httpOnly, type Reach } from "../download.js"
 
 const PHOTO_LIMIT = 512 * 1024
 
@@ -15,7 +15,7 @@ const ascii = (bytes: Uint8Array, from: number, to: number) => String.fromCharCo
 export const photoForMcp = async (
   client: MaxClient,
   args: { chat: string; message: string; index?: number },
-  reach: Reach = publicOnly,
+  reach: Reach = httpOnly,
 ): Promise<McpPicture> => {
   const chatId = await client.chats.resolve(args.chat)
   const [found] = await client.messages.around(chatId, args.message, { reactions: false })

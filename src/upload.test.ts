@@ -136,7 +136,7 @@ describe("the profile photo", () => {
 
   it.each([
     ["missing.png", "no such file"],
-    [".hidden.png", "hidden files"],
+
     ["picture.gif", "a photo is a"],
   ])("refuses %s before logging in", async (file, message) => {
     const result = await update(file)

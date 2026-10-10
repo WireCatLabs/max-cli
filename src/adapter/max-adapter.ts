@@ -14,7 +14,7 @@ import type {
 import type { Upload } from "@wirecat/cli-messaging/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
-import { LARGEST_VOICE, publicOnly, type Reach, streamBytes } from "../download.js"
+import { httpOnly, LARGEST_VOICE, type Reach, streamBytes } from "../download.js"
 import { formatMarkdown, toNativeMarkup } from "../format-markdown.js"
 import type { Markup } from "../markdown.js"
 import { isId } from "../resolve.js"
@@ -94,7 +94,7 @@ const MARKUP: Record<string, string> = {
 export const maxAdapter = (
   client: MaxClient,
   store: SessionStore,
-  reach: Reach = publicOnly,
+  reach: Reach = httpOnly,
   warn: (message: string) => void = () => {},
   options: { reactions?: boolean } = {},
 ): MaxAdapter => {

@@ -11,7 +11,7 @@ import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
 import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
-import { fetchBytes, publicOnly, type Reach } from "../download.js"
+import { fetchBytes, httpOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
 import { askerFor, assertReadable, currentReadPermission, permissionScope } from "../permissions.js"
 import { rootOf } from "../profile.js"
@@ -208,9 +208,9 @@ export const contextFor = (
     },
     track,
     browser: environment.browser ?? realBrowser,
-    reach: environment.reach ?? publicOnly,
+    reach: environment.reach ?? httpOnly,
     hearing: {
-      fetchAudio: (link) => fetchBytes(link, environment.reach ?? publicOnly),
+      fetchAudio: (link) => fetchBytes(link, environment.reach ?? httpOnly),
       ...(environment.recognizer ? { open: environment.recognizer } : {}),
     },
     ask: (prompt, { secret = false, signal: stop = signal } = {}) => {
