@@ -3554,7 +3554,7 @@ max config show [options]
 
 | Опция | Что делает |
 |---|---|
-| `--bot` | the settings a `max bot` command on this profile gets, rather than the personal account's. |
+| `--bot` | the settings a bot command on this profile gets, rather than the personal account's. |
 
 ### `max config migrate`
 

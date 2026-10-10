@@ -70,7 +70,7 @@ export const configCommand = (): Command => {
   command
     .command("show")
     .description("the profile, the profiles that exist, and each setting with where it came from")
-    .option("--bot", "the settings a `max bot` command on this profile gets, rather than the personal account's")
+    .option("--bot", "the settings a bot command on this profile gets, rather than the personal account's")
     .action(async function (this: Command, options: { bot?: boolean }) {
       const context = forCommand(this)
       const { renderer } = context
