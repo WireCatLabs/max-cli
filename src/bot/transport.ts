@@ -13,7 +13,6 @@ import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-core/
 import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-messaging/cli"
 import { guardedWrite, newOperationId } from "@wirecat/cli-messaging/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
-import { Agent } from "undici"
 import { VERSION } from "../version.js"
 import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"
 
@@ -23,16 +22,23 @@ const DEFAULT_TIMEOUT_MS = 60_000
 /** `GET /updates` holds the request open for up to its own `timeout`; ours has to outlast it. */
 const LONG_POLL_MARGIN_MS = 15_000
 
-let botAgent: Agent | undefined
+let trusted = false
 
-/** The additional root applies only to the official Bot API origin. */
-export const botFetch = (): FetchLike => (input, init) => {
-  const origin = new URL(input instanceof Request ? input.url : String(input)).origin
-  if (origin !== BOT_API_URL) return fetch(input, init)
-  const ca = [...(tls.getCACertificates?.("default") ?? tls.rootCertificates), RUSSIAN_TRUSTED_ROOT_CA]
-  if ("Bun" in globalThis) return fetch(input, { ...init, redirect: "error", tls: { ca } } as RequestInit)
-  botAgent ??= new Agent({ connect: { ca } })
-  return fetch(input, { ...init, redirect: "error", dispatcher: botAgent } as unknown as RequestInit)
+/**
+ * Adds the Минцифры root to the trusted roots (`NEED-293`). On Node (22.19+) that changes the
+ * process-wide default, so every TLS connection this process makes from then on trusts it, not only
+ * the Bot API's: Node's `fetch` takes no per-request list. Bun does, so there only these calls do.
+ */
+export const botFetch = (): FetchLike => {
+  if ("Bun" in globalThis) {
+    const ca = [...tls.rootCertificates, RUSSIAN_TRUSTED_ROOT_CA]
+    return (input, init) => fetch(input, { ...init, tls: { ca } } as RequestInit)
+  }
+  if (!trusted && typeof tls.setDefaultCACertificates === "function") {
+    tls.setDefaultCACertificates([...tls.getCACertificates("default"), RUSSIAN_TRUSTED_ROOT_CA])
+    trusted = true
+  }
+  return fetch
 }
 
 export interface CallInput {

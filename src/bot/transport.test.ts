@@ -1,10 +1,9 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http"
 import type { AddressInfo } from "node:net"
-import tls from "node:tls"
 import { CliError } from "@wirecat/cli-core"
-import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest"
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { botOperations } from "./client.js"
-import { BOT_API_URL, BotTransport, botFetch, plainJson } from "./transport.js"
+import { BotTransport, plainJson } from "./transport.js"
 
 type Handler = (request: IncomingMessage & { body: string }, response: ServerResponse) => void
 
@@ -181,20 +180,4 @@ describe("events for the run log", () => {
     expect(JSON.stringify(events)).not.toContain("vt-secret")
     expect(events.at(-2)).toEqual({ event: "request", operation: "getChat", ids: { chat: "5" } })
   })
-})
-
-it("scopes the additional CA to the official API without changing process trust", async () => {
-  const roots = tls.getCACertificates("default")
-  const mocked = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("{}"))
-  try {
-    const request = botFetch()
-    await request(`${BOT_API_URL}/me`)
-    expect(mocked.mock.calls[0]?.[1]).toMatchObject({ redirect: "error" })
-    expect(mocked.mock.calls[0]?.[1]).toHaveProperty("Bun" in globalThis ? "tls" : "dispatcher")
-    await request("https://synthetic.example/me")
-    expect(mocked.mock.calls[1]?.[1]).toBeUndefined()
-    expect(tls.getCACertificates("default")).toEqual(roots)
-  } finally {
-    mocked.mockRestore()
-  }
 })
