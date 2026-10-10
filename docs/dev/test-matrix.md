@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 114 ⛔ · 0 ❌** — 315 commands, 730 options.
+**931 ✅ · 116 ⛔ · 0 ❌** — 315 commands, 732 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -553,6 +553,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `metadata refresh` | `--limit` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
 | `search all` |  | ✅ |  |
 | `search all` | `--only` | ✅ |  |
+| `search all` | `--meetings` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts searches a stored meeting account through search all |
+| `search all` | `--max-meetings` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through |
 | `search all` | `--limit` | ✅ |  |
 | `search all` | `--exact` | ✅ |  |
 | `search all` | `--timezone` | ✅ |  |

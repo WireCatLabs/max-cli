@@ -2721,7 +2721,7 @@ find things by text: search all for everything the local store holds, or one res
 
 ### `max search all`
 
-search everything the local store holds — messenger messages, mail and notes — best match first; start here when you do not know where something was written
+search everything the local store holds — messenger messages, mail and notes, and with --meetings a meeting account's transcripts — best match first; start here when you do not know where something was written
 
 ```sh
 max search all <query> [options]
@@ -2733,7 +2733,9 @@ max search all <query> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--only <resources>` | only these, separated by commas: messages, mail, notes. |
+| `--only <resources>` | only these resources, separated by commas: messages, mail, notes; meetings with --meetings. |
+| `--meetings [provider:account]` | also search one meeting account; with no value, the one stored account that holds meetings (put it after the query). |
+| `--max-meetings <n\|all>` | how many meetings --meetings looks through, newest first; all looks through every one (default 100). |
 | `--limit <n>` | how many. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
