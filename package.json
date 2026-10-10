@@ -1,7 +1,7 @@
 {
   "name": "@wirecat/max-cli",
   "version": "0.44.0",
-  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal — built for agents and scripts",
+  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal \u2014 built for agents and scripts",
   "license": "Apache-2.0",
   "author": "Viacheslav Ptsarev",
   "repository": {
@@ -90,7 +90,8 @@
     "standards:check": "node config/wirecat/check.mjs",
     "docs:lint": "markdownlint-cli2",
     "docs:spell": "cspell lint --config cspell.json --no-progress README.md",
-    "ci:quick": "pnpm typecheck"
+    "ci:quick": "pnpm typecheck",
+    "contracts:check": "cli-contract contracts/plan.json"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.1.0",
@@ -111,21 +112,22 @@
   "devDependencies": {
     "@biomejs/biome": "2.5.15",
     "@cspell/dict-en-gb": "5.0.34",
+    "@cspell/dict-es-es": "3.0.9",
     "@cspell/dict-ru_ru": "2.3.3",
     "@modelcontextprotocol/client": "~2.2.0",
     "@napi-rs/canvas": "1.0.10",
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^5.0.3",
+    "@wirecat/cli-testing": "https://github.com/WireCatLabs/cli-testing/releases/download/toolkit-v0.2.0/wirecat-cli-testing-0.2.0.tgz",
     "cspell": "10.3.6",
     "lefthook": "2.1.16",
+    "markdownlint-cli2": "0.23.3",
     "rumdl": "^0.2.78",
     "typescript": "^7.0.2",
     "unpdf": "1.8.1",
     "vitest": "^5.0.3",
-    "yaml": "^2.9.1",
-    "@cspell/dict-es-es": "3.0.9",
-    "markdownlint-cli2": "0.23.3"
+    "yaml": "^2.9.1"
   },
   "publishConfig": {
     "access": "public"

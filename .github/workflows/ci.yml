@@ -26,6 +26,7 @@ jobs:
       # so a specification change that was not regenerated is a stale tree (OPS-3). The test matrix
       # is rebuilt from this run's argv log, so the diff also catches a stale test-matrix.md (NEED-360).
       checks: |
+        pnpm contracts:check
         pnpm version:check
         pnpm generate
         pnpm exec cli-dev test-matrix --program dist/program.js --untested scripts/test-matrix-untested.ts --name max --check
