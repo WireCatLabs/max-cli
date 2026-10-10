@@ -508,6 +508,22 @@ describe("the program", () => {
       expect(stdout.split("\n").map((line) => JSON.parse(line).id)).toEqual(["116762160362694583"])
     })
 
+    it("--agent-json exposes controls while --json preserves original message text", async () => {
+      const text = "synthetic\u202e text"
+      const { environment } = acquaintedMax({
+        [Opcode.CHAT_HISTORY]: pagedHistory([
+          { id: 116762160362694583n, time: 1789776000000, sender: 10000001, text, attaches: [] },
+        ]),
+      })
+      const ordinary = await runWith(["t-agent-json", "messages", "list", "111", "--json"], environment)
+      const agent = await runWith(["t-agent-json", "messages", "list", "111", "--agent-json"], environment)
+      expect([ordinary.code, agent.code]).toEqual([0, 0])
+      expect(JSON.parse(ordinary.stdout).items[0].text).toBe(text)
+      const visible = JSON.parse(agent.stdout).items[0].text as string
+      expect(visible).toBe("synthetic\\u202e text")
+      expect(agent.stderr).toBe("")
+    })
+
     it("**leaves stdout empty on a failure** — no session, nothing printed but the error", async () => {
       const { max: _, ...environment } = scriptedMax({ token: false })
       const { stdout, stderr, code } = await runWith(["account", "show", "--json"], environment)
