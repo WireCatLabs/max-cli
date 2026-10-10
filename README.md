@@ -22,7 +22,7 @@ max messages send "Иван Петров" "Опаздываю на 15 минут
 [![Node](https://img.shields.io/node/v/@wirecat/max-cli)](https://nodejs.org/)
 [![Bun](https://img.shields.io/badge/bun-1.3%2B-f9f1e1)](https://bun.sh/)
 [![npm downloads](https://img.shields.io/npm/dm/@wirecat/max-cli)](https://www.npmjs.com/package/@wirecat/max-cli)
-[![License: MIT](https://img.shields.io/npm/l/@wirecat/max-cli)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 ## Бот
 
@@ -506,7 +506,7 @@ pnpm generate                         # переписать сгенериро�
 
 ## Лицензия
 
-MIT — см. [LICENSE](LICENSE).
+Apache License 2.0 — см. [LICENSE](LICENSE).
 
 ## Участие
 
