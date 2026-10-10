@@ -1859,6 +1859,18 @@ max store repair [options]
 |---|---|
 | `--dry-run` | say what it would do, and change nothing. |
 
+### `max store reset`
+
+back the store up beside itself, then delete it and start an empty one at this build's schema; asks first, or --yes
+
+```sh
+max store reset [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--no-backup` | delete the store without backing it up first. |
+
 ### `max store copies`
 
 the tables `store repair` kept as copies
