@@ -1,0 +1,100 @@
+[
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "additionalProperties": {},
+          "description": "that command's arguments",
+          "propertyNames": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "command": {
+          "description": "a command max_tools_search returned: \"messages list\"",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": ["command"],
+      "type": "object"
+    },
+    "name": "max_read",
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "required": [],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": true
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "description": "words that describe the task",
+          "type": "string"
+        }
+      },
+      "required": [],
+      "type": "object"
+    },
+    "name": "max_tools_search",
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "required": [],
+      "type": "object"
+    }
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "additionalProperties": {},
+          "description": "that command's arguments",
+          "propertyNames": {
+            "type": "string"
+          },
+          "type": "object"
+        },
+        "command": {
+          "description": "a command max_tools_search returned: \"messages list\"",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": ["command"],
+      "type": "object"
+    },
+    "name": "max_write",
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {},
+      "required": [],
+      "type": "object"
+    }
+  }
+]
