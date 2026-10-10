@@ -105,13 +105,13 @@ kill that PID.
 
 ## Committing
 
-Conventional commits. Run `pnpm standards:check && pnpm lint` before committing. Work on a
+Conventional commits. The pre-commit hook checks staged lint and secrets. Work on a
 branch off `main`, in a worktree, and open a pull request.
 
 ## Development check budget
 
-Keep commit and push hooks fast. Ordinary development and PRs use standards
-verification, lint, Markdown, and secret detection. Full typechecking, tests,
+Local commits check only staged lint and secrets. There is no pre-push check.
+Config integrity, repository lint, Markdown, and secret detection run in PR CI. Full typechecking, tests,
 coverage, builds, parity, browser and platform suites run for releases or an
 explicit manual validation. See the
 [shared policy](https://github.com/WireCatLabs/community/blob/main/standards/README.md#ci-and-hooks).
