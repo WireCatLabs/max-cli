@@ -262,8 +262,8 @@ describe("max bot messages send --file", () => {
     ])
   })
 
-  it("**refuses a file from a hidden folder** unless --allow-any-file", async () => {
-    const hidden = join(mkdtempSync(join(tmpdir(), "bot-hidden-")), ".secret")
+  it("**refuses a file from a credential folder** unless --allow-any-file", async () => {
+    const hidden = join(mkdtempSync(join(tmpdir(), "bot-hidden-")), ".ssh")
     mkdirSync(hidden)
     writeFileSync(join(hidden, "key.txt"), "x")
     expect((await max(["bot", "messages", "send", "-100", "--file", join(hidden, "key.txt"), "--json"])).code).toBe(2)
