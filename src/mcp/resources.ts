@@ -1,4 +1,6 @@
 import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server"
+import { visibleControls } from "@wirecat/cli-core"
+import { answerMcpTool } from "@wirecat/cli-messaging/cli"
 import { openStore } from "@wirecat/cli-messaging/store"
 import type { SessionStore } from "../session/store.js"
 import { SKILL_RESOURCE } from "../skill.js"
@@ -32,7 +34,7 @@ export const registerResources = (
           return {
             resources: chats.map(({ id, title }) => ({
               uri: `max://chat/${id}`,
-              name: title ?? id,
+              name: visibleControls(title ?? id),
               mimeType: "application/json",
             })),
           }
@@ -56,7 +58,11 @@ export const registerResources = (
           ).items,
         }
       })
-      return { contents: [{ uri: uri.href, mimeType: "application/json", text: JSON.stringify(body) }] }
+      return {
+        contents: [
+          { uri: uri.href, mimeType: "application/json", text: JSON.stringify(answerMcpTool(body).structuredContent) },
+        ],
+      }
     },
   )
 }
