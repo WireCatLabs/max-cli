@@ -1,6 +1,6 @@
 {
   "name": "@wirecat/max-cli",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal \u2014 built for agents and scripts",
   "license": "Apache-2.0",
   "author": "Viacheslav Ptsarev",
