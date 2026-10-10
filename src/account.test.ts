@@ -374,6 +374,20 @@ describe("contacts", () => {
 })
 
 describe("the profile", () => {
+  it("renders agent JSON safely while raw JSON retains account values", async () => {
+    const name = "Synthetic\u202eName"
+    const { environment } = account({
+      [Opcode.LOGIN]: { profile: { contact: { id: 10000001, names: [{ name, type: "ONEME" }] } } },
+    })
+    const raw = await runWith(["account", "show"], environment)
+    const safe = await runWith(["account", "show", "--agent-json"], environment)
+    expect(raw.code).toBe(0)
+    expect(safe.code).toBe(0)
+    expect(JSON.stringify(JSON.parse(raw.stdout))).toContain("\u202e")
+    expect(JSON.stringify(JSON.parse(safe.stdout))).not.toContain("\u202e")
+    expect(safe.stdout).toContain("\\u202e")
+  })
+
   it("`account update --description` sends the name the login carried along with it", async () => {
     const { environment, sent } = account()
     const updated = await runWith(["account", "update", "--description", "hi"], environment)

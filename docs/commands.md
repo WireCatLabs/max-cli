@@ -29,6 +29,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `-V, --version` | output the version number. |
 | `-v, --verbose` | more detail in what is shown: -v ids, -vv everything we know. По умолчанию: `0`. |
 | `--json` | machine-readable output: one JSON value on stdout, nothing else. |
+| `--agent-json` | JSON for AI agents: invisible controls are visible; ordinary --json preserves text. |
 | `--jsonl` | machine-readable output: one JSON object per line, for streaming and jq. |
 | `--quiet` | diagnostics off. |
 | `--trace` | one line per request on stderr: ids and timings, never message content. |

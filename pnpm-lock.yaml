@@ -18,11 +18,11 @@ importers:
         specifier: 1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@7.0.2))
       '@wirecat/cli-core':
-        specifier: 0.18.1
-        version: 0.18.1(commander@15.0.0)(typescript@7.0.2)
+        specifier: 0.19.0
+        version: 0.19.0(commander@15.0.0)(typescript@7.0.2)
       '@wirecat/cli-messaging':
-        specifier: 0.216.0
-        version: 0.216.0(@napi-rs/canvas@1.0.10)(@wirecat/cli-core@0.18.1(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)
+        specifier: 0.217.0
+        version: 0.217.0(@napi-rs/canvas@1.0.10)(@wirecat/cli-core@0.19.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)
       commander:
         specifier: 15.0.0
         version: 15.0.0
@@ -1254,8 +1254,8 @@ packages:
   '@wasm-audio-decoders/opus-ml@0.0.3':
     resolution: {integrity: sha512-SEeTmk0eb3q5etJA/NHCRWW6BivTx9tqvNTmG0kg2ynuATEQRUZnwQE6Ibvl1BBvqIGHqI57+qyJMWmJBwb5XQ==}
 
-  '@wirecat/cli-core@0.18.1':
-    resolution: {integrity: sha512-eDf4p3Y+UMgt1NXj/DIqmbH9GBTPypGmqszViJWgyKhVGG0KS0Gyhb6pfdZ4AN/LCAeNPAH0vfsTPiOvEaCrhA==}
+  '@wirecat/cli-core@0.19.0':
+    resolution: {integrity: sha512-pGtphpeXqS87eRu20CJoB28MRwKdqKuHQe7ORuyiFo+BgA/IZ1KMPfP4VYXye3/kSAWksDLojOLvfyeslhk4wA==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -1270,13 +1270,13 @@ packages:
   '@wirecat/cli-messaging-sqlite@1.0.0':
     resolution: {integrity: sha512-xdPRDx6p8189iHUikaauadrOUro1LCxkQzwP3jV8fJpA1I6NUoVNmeE3sKVtIkSiT/6XmAPEGov4AgSCuqy6wg==}
 
-  '@wirecat/cli-messaging@0.216.0':
-    resolution: {integrity: sha512-lRi9dw2755TbF2iCOtvBVOGtAUoYra3ZTWzK66HMBOsw/dlBkSSMbq7zcEraDUv/HK76oSkzweCjAgV4IS++8g==}
+  '@wirecat/cli-messaging@0.217.0':
+    resolution: {integrity: sha512-s6ZnDeQVVE3VdcC9If41IKx8uKQkoXKddNgd1iTyjUpt+3DijjtXz+8yz7lZUoRjjjDvfvn4ebdD/xyi9fBmSw==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
       '@napi-rs/canvas': '>=0.1.69 <2'
-      '@wirecat/cli-core': '>=0.18.1 <0.19.0'
+      '@wirecat/cli-core': '>=0.19.0 <0.20.0'
       commander: '>=15'
       mammoth: '>=1.8.0 <2'
       unpdf: '>=1.0.0 <2'
@@ -1288,8 +1288,8 @@ packages:
       unpdf:
         optional: true
 
-  '@wirecat/cli-tasks@0.2.0':
-    resolution: {integrity: sha512-35s9WDYfH+ItLy6D8jphTU7GRUeroPp0USwM3KaFIkU6fiyPNZ8GdWA3rx3/Be+PeRPoJKKKkZBjKZCLWNu22w==}
+  '@wirecat/cli-tasks@0.2.1':
+    resolution: {integrity: sha512-og9li309jbYkddyNX7joec/8CfFWsz2tjz6iSlDAyZn26Qb1OlIbHfNgz+au+ttjybf/2n9mYRgKLAafRNd03g==}
     engines: {node: '>=22'}
 
   '@xmldom/xmldom@0.9.12':
@@ -2708,7 +2708,7 @@ snapshots:
     dependencies:
       '@wasm-audio-decoders/common': 9.0.7
 
-  '@wirecat/cli-core@0.18.1(commander@15.0.0)(typescript@7.0.2)':
+  '@wirecat/cli-core@0.19.0(commander@15.0.0)(typescript@7.0.2)':
     dependencies:
       cli-table3: 0.6.5
       cross-spawn: 7.0.6
@@ -2728,7 +2728,7 @@ snapshots:
 
   '@wirecat/cli-messaging-sqlite@1.0.0': {}
 
-  '@wirecat/cli-messaging@0.216.0(@napi-rs/canvas@1.0.10)(@wirecat/cli-core@0.18.1(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)':
+  '@wirecat/cli-messaging@0.217.0(@napi-rs/canvas@1.0.10)(@wirecat/cli-core@0.19.0(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)':
     dependencies:
       '@anthropic-ai/sdk': 0.131.0(zod@4.6.5)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
@@ -2736,10 +2736,10 @@ snapshots:
       '@modelcontextprotocol/server': 2.1.0
       '@resvg/resvg-js': 2.6.2
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
-      '@wirecat/cli-core': 0.18.1(commander@15.0.0)(typescript@7.0.2)
+      '@wirecat/cli-core': 0.19.0(commander@15.0.0)(typescript@7.0.2)
       '@wirecat/cli-messaging-onnx': 1.0.0
       '@wirecat/cli-messaging-sqlite': 1.0.0
-      '@wirecat/cli-tasks': 0.2.0
+      '@wirecat/cli-tasks': 0.2.1
       '@xmldom/xmldom': 0.9.12
       chardet: 2.2.0
       commander: 15.0.0
@@ -2765,7 +2765,7 @@ snapshots:
       - typescript
       - zod
 
-  '@wirecat/cli-tasks@0.2.0': {}
+  '@wirecat/cli-tasks@0.2.1': {}
 
   '@xmldom/xmldom@0.9.12': {}
 

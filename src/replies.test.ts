@@ -277,7 +277,7 @@ describe("reply editors and model templates", () => {
     expect(preview.code).toBe(0)
     expect(JSON.parse(preview.data).rules[0].would[0]).toMatchObject({
       text: "Later",
-      blocks: [{ instruction: "Greet Ana", fallback: "Later" }],
+      blocks: [{ instruction: "Greet [templateValues[0]]", fallback: "Later" }],
     })
     expect(fetcher).not.toHaveBeenCalled()
     const disabled = await invoke("replies", "test", "--ai")
