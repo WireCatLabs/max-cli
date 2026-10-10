@@ -1,6 +1,6 @@
 /**
  * Everything about a release that a program can decide, one line each, and exit 1 if any failed.
- * `release.yml` runs it, and `bin/release` before starting that workflow. The judgement half —
+ * `bin/release` runs the full check; release CI uses --artifact-only after full validation. The judgement half —
  * changelog wording, docs against the diff, requirements, live scenarios — is the release skill,
  * `.claude/skills/release/SKILL.md`.
  *
@@ -63,7 +63,11 @@ const failed = releaseCheck(
             run: command(root, "gitleaks", "git", "--no-banner", "--redact", "--exit-code", "1", "."),
           },
         ]),
-  ],
+  ].filter(
+    (check) =>
+      !process.argv.includes("--artifact-only") ||
+      ["changelog", "web client version", "package contents"].includes(check.name),
+  ),
   { version, log: console.log },
 )
 process.exit(failed === 0 ? 0 : 1)

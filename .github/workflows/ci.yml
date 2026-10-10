@@ -2,6 +2,13 @@ name: Full validation
 
 on:
   workflow_call:
+    inputs:
+      pack:
+        type: boolean
+        default: false
+    outputs:
+      package-sha256:
+        value: ${{ jobs.ci.outputs.package-sha256 }}
   workflow_dispatch:
 
 permissions:
@@ -9,8 +16,10 @@ permissions:
 
 jobs:
   ci:
-    uses: WireCatLabs/cli-core/.github/workflows/node-ci.yml@5940608f735c6de554b6180275ad58b01149b31b # v0.18.1
+    uses: WireCatLabs/cli-core/.github/workflows/node-ci.yml@4c78a803c460317fd40a38be6d1fb53278087741
     with:
+      pack: ${{ inputs.pack || false }}
+      pack-checks: node --experimental-strip-types scripts/release-check.ts --artifact-only
       # Bun is a supported runtime, not an aspiration (NEED-11): the built command, executed under it.
       bun-run: pnpm build && pnpm smoke:bun
       # `max --version` reads src/version.ts, not package.json (OPS-4). Generated files are committed,
