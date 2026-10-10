@@ -46,6 +46,7 @@ export class MaxSession {
   #queue: Promise<unknown> = Promise.resolve()
   #events: Events = () => {}
   #closed = false
+  readonly #locals = new Set<Promise<unknown>>()
 
   constructor(
     context: CommandContext,
@@ -67,6 +68,7 @@ export class MaxSession {
   async close(): Promise<void> {
     this.#closed = true
     try {
+      await Promise.allSettled(this.#locals)
       await this.#queue
       await this.#release()
     } finally {
@@ -75,11 +77,14 @@ export class MaxSession {
   }
 
   local<T>(name: string, body: () => Promise<T>): Promise<T> {
-    const turn = this.#queue.then(() => {
-      if (this.#closed) throw new Error("the MCP server is shutting down")
-      return this.#context.run(name, body)
-    })
-    this.#queue = turn.catch(() => {})
+    if (this.#closed) return Promise.reject(new Error("the MCP server is shutting down"))
+    // A store operation may await an online turn, so it cannot hold the connection queue.
+    const turn = Promise.resolve().then(() => this.#context.run(name, body))
+    this.#locals.add(turn)
+    void turn.then(
+      () => this.#locals.delete(turn),
+      () => this.#locals.delete(turn),
+    )
     return turn
   }
 

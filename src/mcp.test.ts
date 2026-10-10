@@ -1366,6 +1366,35 @@ describe("the MCP server", () => {
     expect(String((body.error as { message: string }).message)).toMatch(/max mcp-\d+ setup/)
   })
 
+  it("lets a local store operation use the serialized online session", async () => {
+    const { session, logins } = await connect()
+    const account = await session.local("mcp attachment fixture", () =>
+      session.use("mcp attachment download", (client) => client.account.me()),
+    )
+    expect(account.id).toBe("10000001")
+    expect(logins()).toBe(1)
+  })
+
+  it("waits for local work on shutdown and refuses a new local call", async () => {
+    const { session, logins } = await connect()
+    let finish = () => {}
+    const gate = new Promise<void>((resolve) => {
+      finish = resolve
+    })
+    const pending = session.local("mcp local fixture", () => gate)
+    let closed = false
+    const closing = session.close().then(() => {
+      closed = true
+    })
+    await Promise.resolve()
+    expect(closed).toBe(false)
+    await expect(session.local("mcp late fixture", async () => {})).rejects.toThrow("shutting down")
+    finish()
+    await pending
+    await closing
+    expect(logins()).toBe(0)
+  })
+
   it("closes the socket to MAX when the session closes", async () => {
     const { client, session, max } = await connect()
 
@@ -1716,6 +1745,22 @@ describe("MCP prompts and resources", () => {
 })
 
 describe("the skill as an MCP resource", () => {
+  it("makes hidden Unicode visible when a chat is read as a resource", async () => {
+    const hidden = "a\u{e0041}\u0085\u202e\ufeffb"
+    const { client } = await connect(
+      {},
+      {
+        answers: {
+          [Opcode.CHAT_HISTORY]: {
+            messages: [{ id: 116762160362694583n, time: 1789776000000, sender: 10000001, text: hidden, attaches: [] }],
+          },
+        },
+      },
+    )
+    const read = await client.readResource({ uri: "max://chat/111" })
+    const first = read.contents[0]
+    expect(first && "text" in first && JSON.parse(first.text).messages[0].text).toBe("a\\u{e0041}\\x85\\u202e\\ufeffb")
+  })
   it("serves SKILL.md as max://skill without logging in", async () => {
     const { client, logins } = await connect()
 

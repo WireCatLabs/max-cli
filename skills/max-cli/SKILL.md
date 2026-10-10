@@ -408,6 +408,8 @@ max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 
 Файлы: `attachments extract --chat <чат> --from-dir ./files`, в MCP — команда `attachments extract` через `max_write`
 (ограниченный обход с `cursor`, без текста в ответе), `messages download <чат> <id> --extract`.
+Из from_dir нельзя читать скрытые файлы/папки, папки CLI и хранилище; output_dir в MCP также их запрещает.
+PDF с текстом: до 20 страниц и 30 секунд. Локальная речь: полная mono/stereo Ogg Opus запись до 10 минут.
 Подготовка после явно разрешённой загрузки: `store fetch <чат> --catch-up` с
 `--catch-up-chunks`, `--catch-up-messages`, `--catch-up-time`; `--no-catch-up` отменяет
 настройку `searchCatchUp`. Модели не скачиваются, удалённый провайдер не вызывается.
@@ -480,7 +482,7 @@ max tags remove news --chat CHAT_ID --source auto
 
 
 Удалённому агенту доступны байты сохранённого файла: найдите attachments show через max_tools_search
-и вызовите max_read. Соберите порции по nextOffsetBytes, передавайте if_sha256 и проверьте хеш.
+и вызовите max_read. Скрытые файлы, папки CLI и хранилище не передаются, включая ссылки. Соберите порции по nextOffsetBytes, передавайте if_sha256 и проверьте хеш.
 Если клиент не может открыть PDF, запросите каждую страницу через page:1..pdf.pageCount;
 нужны необязательные unpdf/@napi-rs/canvas. Страница возвращается изображением; если видны только
 метаданные, запросите format:base64 и покажите PNG средствами агента. Просмотрите реальные пиксели
