@@ -1,7 +1,7 @@
-import { CliError } from "@leemour/cli-core"
-import { annotate } from "@leemour/cli-core/commands"
-import { installerOf } from "@leemour/cli-core/update"
-import { httpTokenFile, revokeAll } from "@leemour/cli-messaging/cli"
+import { CliError } from "@wirecat/cli-core"
+import { annotate } from "@wirecat/cli-core/commands"
+import { installerOf } from "@wirecat/cli-core/update"
+import { httpTokenFile, revokeAll } from "@wirecat/cli-messaging/cli"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { ownScript } from "../install.js"
@@ -165,7 +165,7 @@ export const mcpCommand = (): Command => {
       })
       const [name, server] = Object.entries(entry.config.mcpServers)[0] ?? []
       if (!name || !server) throw new CliError("validation_error", "the MCP entry is empty")
-      const { installStdioEntry, probeStdio } = await import("@leemour/cli-core/mcp")
+      const { installStdioEntry, probeStdio } = await import("@wirecat/cli-core/mcp")
       try {
         const configuration = server as Parameters<typeof probeStdio>[0]
         const { potentialWrites } = await probeStdio(configuration)
@@ -192,7 +192,7 @@ export const mcpCommand = (): Command => {
         })
         const server = Object.values(entry.config.mcpServers)[0]
         if (!server) throw new CliError("validation_error", "the MCP entry is empty")
-        const { probeStdio } = await import("@leemour/cli-core/mcp")
+        const { probeStdio } = await import("@wirecat/cli-core/mcp")
         try {
           const { tools, potentialWrites } = await probeStdio(server as Parameters<typeof probeStdio>[0])
           renderer.result({
@@ -250,7 +250,7 @@ export const serverEntry = ({
     throw new CliError(
       "validation_error",
       "this max runs from npx's cache, which gets cleared, and the path would stop working — " +
-        "`npm install -g @leemour/max-cli`, then run `max mcp config` again",
+        "`npm install -g @wirecat/max-cli`, then run `max mcp config` again",
     )
   }
   const args = [

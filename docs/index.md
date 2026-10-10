@@ -45,7 +45,7 @@ Codex, Cursor или Gemini CLI). Она работает с двумя веща
 ## Начать
 
 ```sh
-npm install -g @leemour/max-cli
+npm install -g @wirecat/max-cli
 max setup                 # QR-вход и навык агента
 max inbox                 # непрочитанные сообщения других людей во всех чатах
 max chats list --limit 5  # пять последних чатов

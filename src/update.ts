@@ -1,21 +1,21 @@
 import { realpathSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { resolvePaths } from "@leemour/cli-core"
-import type { FetchLike } from "@leemour/cli-core/http"
-import { skillHint as sharedSkillHint } from "@leemour/cli-core/skill"
+import { resolvePaths } from "@wirecat/cli-core"
+import type { FetchLike } from "@wirecat/cli-core/http"
+import { skillHint as sharedSkillHint } from "@wirecat/cli-core/skill"
 import {
   type Installer,
   installerOf,
   latestVersion,
   runUpdate as runPackageManager,
   updateNotice as sharedNotice,
-} from "@leemour/cli-core/update"
+} from "@wirecat/cli-core/update"
 import { resolveSettings } from "./config.js"
 import { SKILL_APP } from "./skill.js"
 import { VERSION } from "./version.js"
 
-export const PACKAGE = "@leemour/max-cli"
+export const PACKAGE = "@wirecat/max-cli"
 
 /** npm, the clock, the terminal and the package manager as `max upgrade` sees them — faked in a test. */
 export interface UpdateEnvironment {

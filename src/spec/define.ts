@@ -1,5 +1,5 @@
-import { CliError } from "@leemour/cli-core"
-import type { SendEntry } from "@leemour/cli-messaging/sends"
+import { CliError } from "@wirecat/cli-core"
+import type { SendEntry } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
 import type { Payload } from "../protocol/frame.js"
 

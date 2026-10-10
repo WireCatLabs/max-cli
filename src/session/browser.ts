@@ -7,7 +7,7 @@ import { tmpdir } from "node:os"
 import { delimiter, join } from "node:path"
 import type { Readable, Writable } from "node:stream"
 import { setTimeout as delay } from "node:timers/promises"
-import { CliError } from "@leemour/cli-core"
+import { CliError } from "@wirecat/cli-core"
 import qrcode from "qrcode-generator"
 import type { Closeable } from "../deadline.js"
 

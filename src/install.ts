@@ -1,7 +1,7 @@
 import { closeSync, existsSync, openSync, readSync, realpathSync } from "node:fs"
 import { posix, win32 } from "node:path"
 import { fileURLToPath } from "node:url"
-import { type Installer, installerOf } from "@leemour/cli-core/update"
+import { type Installer, installerOf } from "@wirecat/cli-core/update"
 
 export interface InstallOptions {
   scriptPath: string
@@ -30,7 +30,7 @@ export interface Install {
   fix: string[]
 }
 
-const PACKAGE_DIR = ["node_modules", "@leemour", "max-cli"]
+const PACKAGE_DIR = ["node_modules", "@wirecat", "max-cli"]
 const SCRIPT_TAIL = "max-cli/dist/bin/max.js"
 
 /** This installation's `dist/bin/max.js`, through any link — what `node <script>` must be given. */

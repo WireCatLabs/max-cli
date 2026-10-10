@@ -1,5 +1,5 @@
-import { CliError } from "@leemour/cli-core"
-import { annotate } from "@leemour/cli-core/commands"
+import { CliError } from "@wirecat/cli-core"
+import { annotate } from "@wirecat/cli-core/commands"
 import type { Command } from "commander"
 import { checkBody } from "../bot/input.js"
 import { plainJson } from "../bot/transport.js"

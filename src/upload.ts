@@ -1,7 +1,7 @@
 import { realpathSync } from "node:fs"
 import { readFile } from "node:fs/promises"
 import { basename, extname, isAbsolute, relative, resolve, sep } from "node:path"
-import { CliError, resolvePaths } from "@leemour/cli-core"
+import { CliError, resolvePaths } from "@wirecat/cli-core"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
 const HEADERS = {

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
 import {
   type AccountAction,
   type ChatAction,
@@ -10,7 +10,7 @@ import {
   SendJournal,
   type SendKind,
   sendGuard,
-} from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { resolveSettings } from "./config.js"

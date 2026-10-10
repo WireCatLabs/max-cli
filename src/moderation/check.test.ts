@@ -1,4 +1,4 @@
-import { CliError } from "@leemour/cli-core"
+import { CliError } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import type { GroupMember, Message } from "../domain/models.js"
 import { act, type Finding, judge, type Moderator } from "./check.js"

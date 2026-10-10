@@ -1,5 +1,5 @@
-import { stemFills } from "@leemour/cli-messaging/cli"
-import { type MessageStore, openStore } from "@leemour/cli-messaging/store"
+import { stemFills } from "@wirecat/cli-messaging/cli"
+import { type MessageStore, openStore } from "@wirecat/cli-messaging/store"
 
 /** Needs no MAX connection, so it runs beside the server rather than inside it. */
 export const serveStems = ({ note, env = process.env }: { note: (line: string) => void; env?: NodeJS.ProcessEnv }) => {

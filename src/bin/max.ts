@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { ensureSqlite } from "@leemour/cli-messaging/sqlite-runtime"
+import { ensureSqlite } from "@wirecat/cli-messaging/sqlite-runtime"
 
 // `max chats --json | head` closes the pipe while we are still writing, and an unhandled EPIPE
 // makes Node print a stack trace over the output of the command that just worked. A reader that

@@ -1,4 +1,4 @@
-import type { Override } from "@leemour/cli-core/codegen"
+import type { Override } from "@wirecat/cli-core/codegen"
 
 /**
  * Corrections to the effect the adapter derives from the HTTP method (GET read, DELETE

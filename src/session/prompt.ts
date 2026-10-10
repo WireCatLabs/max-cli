@@ -1,1 +1,1 @@
-export { readSecret, type SecretInput } from "@leemour/cli-messaging"
+export { readSecret, type SecretInput } from "@wirecat/cli-messaging"

@@ -15,10 +15,10 @@ updates:
     schedule:
       interval: daily
     allow:
-      - dependency-name: "@leemour/*"
+      - dependency-name: "@wirecat/*"
     groups:
       shared:
         patterns:
-          - "@leemour/*"
+          - "@wirecat/*"
     commit-message:
       prefix: "chore(deps)"

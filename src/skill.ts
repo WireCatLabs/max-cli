@@ -1,4 +1,4 @@
-import { type SkillApp, skillResource } from "@leemour/cli-core/skill"
+import { type SkillApp, skillResource } from "@wirecat/cli-core/skill"
 import { VERSION } from "./version.js"
 
 /** Beside `dist/` in the package and in a checkout alike, so the skill is always this version's. */

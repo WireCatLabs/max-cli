@@ -1,5 +1,5 @@
-import type { KeyringStore } from "@leemour/cli-core"
-import { BotTokenStore as SharedBotTokenStore } from "@leemour/cli-messaging/cli"
+import type { KeyringStore } from "@wirecat/cli-core"
+import { BotTokenStore as SharedBotTokenStore } from "@wirecat/cli-messaging/cli"
 import { MAX_APP } from "../app.js"
 
 export interface BotTokenStoreOptions {

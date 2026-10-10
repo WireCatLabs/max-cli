@@ -14,7 +14,7 @@
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs"
 import { basename, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { type KeyringStore, keyringService, resolvePaths, systemKeyring } from "@leemour/cli-core"
+import { type KeyringStore, keyringService, resolvePaths, systemKeyring } from "@wirecat/cli-core"
 
 const SERVICE = "max-cli"
 

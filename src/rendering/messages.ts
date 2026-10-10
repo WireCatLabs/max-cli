@@ -1,5 +1,5 @@
 import { styleText } from "node:util"
-import { singleLine, visibleControls } from "@leemour/cli-core"
+import { singleLine, visibleControls } from "@wirecat/cli-core"
 import stringWidth from "string-width"
 import wrapAnsi from "wrap-ansi"
 import type {

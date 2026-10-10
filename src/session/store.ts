@@ -8,7 +8,7 @@ import {
   pathsAreOverridden,
   resolvePaths,
   writeSecurely,
-} from "@leemour/cli-core"
+} from "@wirecat/cli-core"
 
 /**
  * What a MAX session actually is: a token, and an identity for this installation.

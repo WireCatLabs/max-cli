@@ -7,7 +7,7 @@
 Слова, которые здесь встречаются:
 
 - **Пакет npm** — способ, которым распространяется `max`. npm (или pnpm, или Bun) скачивает его и
-  ставит на компьютер команду `max`. Пакет называется **`@leemour/max-cli`**, а команда, которую он
+  ставит на компьютер команду `max`. Пакет называется **`@wirecat/max-cli`**, а команда, которую он
   ставит, — **`max`**.
 - **Node** или **Bun** — программа, которая запускает `max`. Поставьте одну из них заранее.
 - **PATH** — список папок, в которых терминал ищет команду по имени. `max` запускается просто по
@@ -32,17 +32,17 @@
 ## Установить
 
 ```sh
-npm install -g @leemour/max-cli
-pnpm add -g @leemour/max-cli
-bun add -g @leemour/max-cli
+npm install -g @wirecat/max-cli
+pnpm add -g @wirecat/max-cli
+bun add -g @wirecat/max-cli
 ```
 
 Запустить, ничего не устанавливая:
 
 ```sh
-npx @leemour/max-cli --help
-pnpm dlx @leemour/max-cli --help
-bunx @leemour/max-cli --help
+npx @wirecat/max-cli --help
+pnpm dlx @wirecat/max-cli --help
+bunx @wirecat/max-cli --help
 ```
 
 Проверить, что всё встало:
@@ -53,7 +53,7 @@ max --help              # список команд
 max doctor              # где лежат файлы и есть ли вход; к MAX не подключается
 ```
 
-Если установка прошла, а `max` не находится, `npx @leemour/max-cli doctor` скажет почему и какую
+Если установка прошла, а `max` не находится, `npx @wirecat/max-cli doctor` скажет почему и какую
 команду выполнить ([`max` не находится после установки](troubleshooting.md#max-не-находится-после-установки)).
 
 ## Первый запуск
@@ -92,7 +92,7 @@ npm, обновляет PATH текущего PowerShell и ставит нав�
 имени. `-Agent codex|cursor|claude|gemini|all|none` выбирает, куда ставить навык. Повторный запуск
 обновляет навык и не дублирует PATH. Политику выполнения PowerShell он не меняет.
 
-Через npm используйте `npm.cmd install -g @leemour/max-cli`. Если npm разрешает сценарии
+Через npm используйте `npm.cmd install -g @wirecat/max-cli`. Если npm разрешает сценарии
 установки, пакет добавляет свою папку в PATH пользователя, сохраняя существующие записи, и
 оставляет рабочий запуск через `.cmd`. Новый терминал найдёт `max` по имени. Уже открытый
 терминал этого не увидит: npm не может изменить PATH терминала, из которого его запустили, —
@@ -102,7 +102,7 @@ npm, обновляет PATH текущего PowerShell и ставит нав�
 
 ```powershell
 $maxNpmPrefix = (npm.cmd prefix -g).Trim()
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$maxNpmPrefix\node_modules\@leemour\max-cli\install\windows.ps1" -RepairOnly -Prefix $maxNpmPrefix
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$maxNpmPrefix\node_modules\@wirecat\max-cli\install\windows.ps1" -RepairOnly -Prefix $maxNpmPrefix
 $env:Path = "$maxNpmPrefix;$env:Path"
 max skill install --for all
 max --version
@@ -137,7 +137,7 @@ pnpm link --global      # теперь работает просто `max`
 node dist/bin/max.js --help
 ```
 
-Пакет называется с областью `@leemour/`: имя `max-cli` без области занято чужим пакетом.
+Пакет называется с областью `@wirecat/`: имя `max-cli` без области занято чужим пакетом.
 
 ## Куда всё ложится
 
@@ -226,7 +226,7 @@ max upgrade --check   # только сказать, есть ли новее; �
 max server uninstall                   # если ставили фоновую службу
 max session end                        # выйти и забыть токен ДО удаления команды
 max sales bot auth remove              # забыть токен бота из профиля sales
-npm uninstall -g @leemour/max-cli
+npm uninstall -g @wirecat/max-cli
 rm -rf ~/.config/max-cli ~/.local/share/max-cli ~/.cache/max-cli
 ```
 

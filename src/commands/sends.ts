@@ -1,4 +1,4 @@
-import { sendsCommand as sharedSendsCommand } from "@leemour/cli-messaging/cli"
+import { sendsCommand as sharedSendsCommand } from "@wirecat/cli-messaging/cli"
 import type { Command } from "commander"
 import { maxMessenger } from "../messenger.js"
 

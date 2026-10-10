@@ -1,7 +1,7 @@
 import { resolve } from "node:path"
-import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@leemour/cli-core"
-import { runsDirFor } from "@leemour/cli-messaging/cli"
-import { SendJournal } from "@leemour/cli-messaging/sends"
+import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@wirecat/cli-core"
+import { runsDirFor } from "@wirecat/cli-messaging/cli"
+import { SendJournal } from "@wirecat/cli-messaging/sends"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
@@ -321,7 +321,7 @@ export const installNotes = ({ install, native }: Diagnosis, note: (message: str
   }
   if (install.installer === "npx" && install.onPath === null) {
     note(
-      "running through npx, and there is no `max` command on PATH — `npm install -g @leemour/max-cli` installs " +
+      "running through npx, and there is no `max` command on PATH — `npm install -g @wirecat/max-cli` installs " +
         "one; if `max` is still not found after that, `npm prefix -g` names the folder PATH needs",
     )
   }

@@ -17,7 +17,7 @@ import {
   typesGenerator,
   valibotGenerator,
   writeArtifacts,
-} from "@leemour/cli-core/codegen"
+} from "@wirecat/cli-core/codegen"
 import { parse } from "yaml"
 import { adaptOpenApi } from "./openapi-adapter.ts"
 import { overrides } from "./overrides.ts"

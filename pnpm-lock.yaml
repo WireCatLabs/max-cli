@@ -8,12 +8,6 @@ importers:
 
   .:
     dependencies:
-      '@leemour/cli-core':
-        specifier: 0.17.2
-        version: 0.17.2(commander@15.0.0)(typescript@7.0.2)
-      '@leemour/cli-messaging':
-        specifier: 0.213.0
-        version: 0.213.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(@napi-rs/canvas@1.0.10)(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)
       '@modelcontextprotocol/server':
         specifier: 2.1.0
         version: 2.1.0
@@ -23,6 +17,12 @@ importers:
       '@valibot/to-json-schema':
         specifier: 1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@7.0.2))
+      '@wirecat/cli-core':
+        specifier: 0.18.1
+        version: 0.18.1(commander@15.0.0)(typescript@7.0.2)
+      '@wirecat/cli-messaging':
+        specifier: 0.215.0
+        version: 0.215.0(@napi-rs/canvas@1.0.10)(@wirecat/cli-core@0.18.1(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)
       commander:
         specifier: 15.0.0
         version: 15.0.0
@@ -620,44 +620,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
-
-  '@leemour/cli-core@0.17.2':
-    resolution: {integrity: sha512-YHzCF3tmLSJhoXiBgb5WuSs83vTZqgCt6fmAgxAcXZqmGtJvHsRqGSpOaAxdUd7/URF1/vIi4Q+x2KpbBPNjGg==}
-    engines: {node: '>=22'}
-    hasBin: true
-    peerDependencies:
-      commander: '>=15'
-    peerDependenciesMeta:
-      commander:
-        optional: true
-
-  '@leemour/cli-messaging-onnx@1.0.0':
-    resolution: {integrity: sha512-3LdujLvACTZ2+XR+7cUp9ztj3YsnHDSnsyYR4N875irShozmBnpCZILCsMtNGf/DuV3SozizqZmc2ojx6+CSgQ==}
-
-  '@leemour/cli-messaging-sqlite@1.0.0':
-    resolution: {integrity: sha512-NFJMG+/2BWIb3JdOMgyV8SFsB7Fuv3wLtUmMt08GZ4KTpgu0WuA7qQmQE6appEgJJuF/97vHj6+AuXw2z3HMHw==}
-
-  '@leemour/cli-messaging@0.213.0':
-    resolution: {integrity: sha512-IYoPBbR+M+Sckd0KaQPIPoIV/AaZOgAfctxJW45bjldKAVhkmN13xoytUv3+RkdNjzXBcxvzR/tLeesO6l65mA==}
-    engines: {node: ^22.16.0 || >=24}
-    hasBin: true
-    peerDependencies:
-      '@leemour/cli-core': '>=0.16.0 <0.18.0'
-      '@napi-rs/canvas': '>=0.1.69 <2'
-      commander: '>=15'
-      mammoth: '>=1.8.0 <2'
-      unpdf: '>=1.0.0 <2'
-    peerDependenciesMeta:
-      '@napi-rs/canvas':
-        optional: true
-      mammoth:
-        optional: true
-      unpdf:
-        optional: true
-
-  '@leemour/cli-tasks@0.1.0':
-    resolution: {integrity: sha512-XN4e7+jn1DoAQk0fBkaS4clXBHIgvjv4dtTnkVfHiqTB9dgneQxglwY+tohNytWE4PaPAzy3SgPrpbe41IELOA==}
-    engines: {node: '>=22'}
 
   '@modelcontextprotocol/client@2.2.0':
     resolution: {integrity: sha512-LxCou/CSYQ6dwEnjhLZY0KnEuc8V4UJ3IEQCl/uR2yHobSQIEdJKUlKLRYRF5i5FqRGHy1eK7une3aAWDHLtig==}
@@ -1288,6 +1250,44 @@ packages:
 
   '@wasm-audio-decoders/opus-ml@0.0.3':
     resolution: {integrity: sha512-SEeTmk0eb3q5etJA/NHCRWW6BivTx9tqvNTmG0kg2ynuATEQRUZnwQE6Ibvl1BBvqIGHqI57+qyJMWmJBwb5XQ==}
+
+  '@wirecat/cli-core@0.18.1':
+    resolution: {integrity: sha512-eDf4p3Y+UMgt1NXj/DIqmbH9GBTPypGmqszViJWgyKhVGG0KS0Gyhb6pfdZ4AN/LCAeNPAH0vfsTPiOvEaCrhA==}
+    engines: {node: '>=22'}
+    hasBin: true
+    peerDependencies:
+      commander: '>=15'
+    peerDependenciesMeta:
+      commander:
+        optional: true
+
+  '@wirecat/cli-messaging-onnx@1.0.0':
+    resolution: {integrity: sha512-U8x0jee2htq5VaWLFeyfmV+Eq3Lv5KTKIZMjyZLnZdA56OYSYwomFAT3usHN3MlA3qCqm6v0Vn77W0OfQg/OGA==}
+
+  '@wirecat/cli-messaging-sqlite@1.0.0':
+    resolution: {integrity: sha512-xdPRDx6p8189iHUikaauadrOUro1LCxkQzwP3jV8fJpA1I6NUoVNmeE3sKVtIkSiT/6XmAPEGov4AgSCuqy6wg==}
+
+  '@wirecat/cli-messaging@0.215.0':
+    resolution: {integrity: sha512-DwNTLiy0q8CouEe9VzpIYBOP7xiHU6EzCuzziOXjqTZjx11r/g8Aj9MLHzrJzLjzPm8ltCfcvmaiH7+mf92xEQ==}
+    engines: {node: ^22.16.0 || >=24}
+    hasBin: true
+    peerDependencies:
+      '@napi-rs/canvas': '>=0.1.69 <2'
+      '@wirecat/cli-core': '>=0.18.1 <0.19.0'
+      commander: '>=15'
+      mammoth: '>=1.8.0 <2'
+      unpdf: '>=1.0.0 <2'
+    peerDependenciesMeta:
+      '@napi-rs/canvas':
+        optional: true
+      mammoth:
+        optional: true
+      unpdf:
+        optional: true
+
+  '@wirecat/cli-tasks@0.2.0':
+    resolution: {integrity: sha512-35s9WDYfH+ItLy6D8jphTU7GRUeroPp0USwM3KaFIkU6fiyPNZ8GdWA3rx3/Be+PeRPoJKKKkZBjKZCLWNu22w==}
+    engines: {node: '>=22'}
 
   '@xmldom/xmldom@0.9.12':
     resolution: {integrity: sha512-5AXjrcMClTryPe9LgZrygpB1lj7s0S9E0+W+AHaVKAVyHanafK86iPSvG5xHVSp/jC+VH1UXu0TAEmY279xH7A==}
@@ -2304,65 +2304,6 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.6.0
 
-  '@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2)':
-    dependencies:
-      cli-table3: 0.6.5
-      cross-spawn: 7.0.6
-      env-paths: 4.0.0
-      picocolors: 1.1.1
-      pino: 10.3.1
-      valibot: 1.5.0(typescript@7.0.2)
-    optionalDependencies:
-      '@napi-rs/keyring': 2.1.0
-      commander: 15.0.0
-    transitivePeerDependencies:
-      - typescript
-
-  '@leemour/cli-messaging-onnx@1.0.0':
-    dependencies:
-      onnxruntime-common: 1.30.0
-
-  '@leemour/cli-messaging-sqlite@1.0.0': {}
-
-  '@leemour/cli-messaging@0.213.0(@leemour/cli-core@0.17.2(commander@15.0.0)(typescript@7.0.2))(@napi-rs/canvas@1.0.10)(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)':
-    dependencies:
-      '@anthropic-ai/sdk': 0.131.0(zod@4.6.5)
-      '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
-      '@huggingface/tokenizers': 0.2.0
-      '@leemour/cli-core': 0.17.2(commander@15.0.0)(typescript@7.0.2)
-      '@leemour/cli-messaging-onnx': 1.0.0
-      '@leemour/cli-messaging-sqlite': 1.0.0
-      '@leemour/cli-tasks': 0.1.0
-      '@modelcontextprotocol/server': 2.1.0
-      '@resvg/resvg-js': 2.6.2
-      '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
-      '@xmldom/xmldom': 0.9.12
-      chardet: 2.2.0
-      commander: 15.0.0
-      echarts: 6.1.0
-      fflate: 0.8.3
-      iconv-lite: 0.7.3
-      image-size: 2.0.4
-      liquidjs: 10.30.0
-      lossless-json: 4.3.0
-      ogg-opus-decoder: 1.7.5
-      qrcode-generator: 2.0.4
-      sherpa-onnx: 1.13.8
-      string-width: 8.3.0
-      valibot: 1.5.0(typescript@7.0.2)
-      wrap-ansi: 10.0.2
-      yaml: 2.9.1
-    optionalDependencies:
-      '@napi-rs/canvas': 1.0.10
-      unpdf: 1.8.1(@napi-rs/canvas@1.0.10)
-    transitivePeerDependencies:
-      - cac
-      - citty
-      - typescript
-      - zod
-
-  '@leemour/cli-tasks@0.1.0': {}
-
   '@modelcontextprotocol/client@2.2.0':
     dependencies:
       '@modelcontextprotocol/core': 2.2.0
@@ -2759,6 +2700,65 @@ snapshots:
   '@wasm-audio-decoders/opus-ml@0.0.3':
     dependencies:
       '@wasm-audio-decoders/common': 9.0.7
+
+  '@wirecat/cli-core@0.18.1(commander@15.0.0)(typescript@7.0.2)':
+    dependencies:
+      cli-table3: 0.6.5
+      cross-spawn: 7.0.6
+      env-paths: 4.0.0
+      picocolors: 1.1.1
+      pino: 10.3.1
+      valibot: 1.5.0(typescript@7.0.2)
+    optionalDependencies:
+      '@napi-rs/keyring': 2.1.0
+      commander: 15.0.0
+    transitivePeerDependencies:
+      - typescript
+
+  '@wirecat/cli-messaging-onnx@1.0.0':
+    dependencies:
+      onnxruntime-common: 1.30.0
+
+  '@wirecat/cli-messaging-sqlite@1.0.0': {}
+
+  '@wirecat/cli-messaging@0.215.0(@napi-rs/canvas@1.0.10)(@wirecat/cli-core@0.18.1(commander@15.0.0)(typescript@7.0.2))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(unpdf@1.8.1(@napi-rs/canvas@1.0.10))(zod@4.6.5)':
+    dependencies:
+      '@anthropic-ai/sdk': 0.131.0(zod@4.6.5)
+      '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
+      '@huggingface/tokenizers': 0.2.0
+      '@modelcontextprotocol/server': 2.1.0
+      '@resvg/resvg-js': 2.6.2
+      '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
+      '@wirecat/cli-core': 0.18.1(commander@15.0.0)(typescript@7.0.2)
+      '@wirecat/cli-messaging-onnx': 1.0.0
+      '@wirecat/cli-messaging-sqlite': 1.0.0
+      '@wirecat/cli-tasks': 0.2.0
+      '@xmldom/xmldom': 0.9.12
+      chardet: 2.2.0
+      commander: 15.0.0
+      echarts: 6.1.0
+      fflate: 0.8.3
+      iconv-lite: 0.7.3
+      image-size: 2.0.4
+      liquidjs: 10.30.0
+      lossless-json: 4.3.0
+      ogg-opus-decoder: 1.7.5
+      qrcode-generator: 2.0.4
+      sherpa-onnx: 1.13.8
+      string-width: 8.3.0
+      valibot: 1.5.0(typescript@7.0.2)
+      wrap-ansi: 10.0.2
+      yaml: 2.9.1
+    optionalDependencies:
+      '@napi-rs/canvas': 1.0.10
+      unpdf: 1.8.1(@napi-rs/canvas@1.0.10)
+    transitivePeerDependencies:
+      - cac
+      - citty
+      - typescript
+      - zod
+
+  '@wirecat/cli-tasks@0.2.0': {}
 
   '@xmldom/xmldom@0.9.12': {}
 

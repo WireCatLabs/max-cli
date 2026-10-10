@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
-import { captureStreams } from "@leemour/cli-core"
-import { SendJournal } from "@leemour/cli-messaging/sends"
+import { captureStreams } from "@wirecat/cli-core"
+import { SendJournal } from "@wirecat/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
 import { run } from "../program.js"
 import { sendsPathFor } from "../sends.js"

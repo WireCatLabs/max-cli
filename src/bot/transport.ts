@@ -7,11 +7,11 @@ import {
   realSleep,
   type SleepLike,
   singleLine,
-} from "@leemour/cli-core"
-import type { ManifestOperation } from "@leemour/cli-core/codegen"
-import { type FetchLike, providerWaitMs, statusToCode } from "@leemour/cli-core/http"
-import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@leemour/cli-messaging/cli"
-import { guardedWrite, newOperationId } from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-core"
+import type { ManifestOperation } from "@wirecat/cli-core/codegen"
+import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-core/http"
+import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-messaging/cli"
+import { guardedWrite, newOperationId } from "@wirecat/cli-messaging/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
 import { VERSION } from "../version.js"
 import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"

@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs"
-import { CliError } from "@leemour/cli-core"
-import { holdLock, lockPath, releaseLock } from "@leemour/cli-messaging/background"
+import { CliError } from "@wirecat/cli-core"
+import { holdLock, lockPath, releaseLock } from "@wirecat/cli-messaging/background"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
 import { parseDuration } from "../config.js"

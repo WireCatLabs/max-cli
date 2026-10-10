@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { CliError } from "@leemour/cli-core"
-import type { ManifestOperation } from "@leemour/cli-core/codegen"
+import { CliError } from "@wirecat/cli-core"
+import type { ManifestOperation } from "@wirecat/cli-core/codegen"
 import {
   guardedWrite,
   newOperationId,
@@ -10,7 +10,7 @@ import {
   SendJournal,
   type SendKind,
   sendGuard,
-} from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-messaging/sends"
 import { botOperations } from "../bot/client.js"
 import { BOT_JOURNAL_KINDS, BOT_KEYS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
@@ -126,7 +126,7 @@ export const guardedCall = async (context: Context, target: ManifestOperation, i
   assertAllowed(target, context.settings)
   if (target.effect === "read") return client.call(target, input)
   const key = BOT_KEYS[target.id]
-  if (key && (await import("@leemour/cli-messaging/sends")).levelFor(context.settings.permissions, key).level === "ask")
+  if (key && (await import("@wirecat/cli-messaging/sends")).levelFor(context.settings.permissions, key).level === "ask")
     await context.askPermission(key, { chatId: null })
   const kind = BOT_JOURNAL_KINDS[target.id]
   if (!kind) return client.call(target, input)

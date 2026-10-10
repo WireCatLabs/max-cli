@@ -1,8 +1,8 @@
 import { accessSync, constants, mkdirSync } from "node:fs"
-import { CliError, indent, renderPretty, resolvePaths } from "@leemour/cli-core"
-import { annotate } from "@leemour/cli-core/commands"
-import { installSkill, type SkillTarget } from "@leemour/cli-core/skill"
-import { runtime } from "@leemour/cli-messaging/cli"
+import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-core"
+import { annotate } from "@wirecat/cli-core/commands"
+import { installSkill, type SkillTarget } from "@wirecat/cli-core/skill"
+import { runtime } from "@wirecat/cli-messaging/cli"
 import { Command, Option } from "commander"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
@@ -83,7 +83,7 @@ export const setupCommand = (): Command =>
         "  max store fetch <chat> --last 100\n" +
         "Setup starts no background service and downloads no message history.\n" +
         "\nWindows: use max.cmd or npm.cmd if PowerShell blocks scripts. Without PATH:\n" +
-        "  npm.cmd exec --yes --package=@leemour/max-cli -- max setup\n",
+        "  npm.cmd exec --yes --package=@wirecat/max-cli -- max setup\n",
     )
     .addOption(
       new Option("--agent <agent>", "install the skill for this agent; asks at a terminal, otherwise none").choices(
@@ -116,7 +116,7 @@ export const setupCommand = (): Command =>
       const prefix = `max ${asFirstWord(settings.profile)}`
       const runner =
         installer(environmentOf(this).update) === "npx"
-          ? `npm${process.platform === "win32" ? ".cmd" : ""} exec --yes --package=@leemour/max-cli -- ${prefix}`
+          ? `npm${process.platform === "win32" ? ".cmd" : ""} exec --yes --package=@wirecat/max-cli -- ${prefix}`
           : prefix
       const paths = resolvePaths({ appName: "max-cli", prefix: "MAX" })
       const screen = screenFor(context, this.optsWithGlobals().quiet === true)

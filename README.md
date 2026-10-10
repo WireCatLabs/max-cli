@@ -17,12 +17,12 @@ max sales bot messages send "Команда продаж" "Сборка гото
 max messages send "Иван Петров" "Опаздываю на 15 минут"         # от вашего имени
 ```
 
-[![npm](https://img.shields.io/npm/v/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
+[![npm](https://img.shields.io/npm/v/@wirecat/max-cli)](https://www.npmjs.com/package/@wirecat/max-cli)
 [![CI](https://github.com/WireCatLabs/max-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/WireCatLabs/max-cli/actions/workflows/ci.yml)
-[![Node](https://img.shields.io/node/v/@leemour/max-cli)](https://nodejs.org/)
+[![Node](https://img.shields.io/node/v/@wirecat/max-cli)](https://nodejs.org/)
 [![Bun](https://img.shields.io/badge/bun-1.3%2B-f9f1e1)](https://bun.sh/)
-[![npm downloads](https://img.shields.io/npm/dm/@leemour/max-cli)](https://www.npmjs.com/package/@leemour/max-cli)
-[![License: MIT](https://img.shields.io/npm/l/@leemour/max-cli)](LICENSE)
+[![npm downloads](https://img.shields.io/npm/dm/@wirecat/max-cli)](https://www.npmjs.com/package/@wirecat/max-cli)
+[![License: MIT](https://img.shields.io/npm/l/@wirecat/max-cli)](LICENSE)
 
 ## Бот
 
@@ -272,18 +272,18 @@ max chats moderate "Поход" --allow-dangerous         # проверить �
 
 ## Установка
 
-Пакет — **`@leemour/max-cli`**, команда, которую он ставит, — **`max`**.
+Пакет — **`@wirecat/max-cli`**, команда, которую он ставит, — **`max`**.
 
 Запустить, ничего не устанавливая:
 
 ```sh
-npx @leemour/max-cli --help
+npx @wirecat/max-cli --help
 ```
 
 Поставить насовсем:
 
 ```sh
-npm install -g @leemour/max-cli
+npm install -g @wirecat/max-cli
 max --version
 max setup --agent codex  # вход и подключение навыка агента
 ```
@@ -295,7 +295,7 @@ max setup --agent codex  # вход и подключение навыка аг�
 Нужен **Node 22.16+ (ветка 22.x) или 24+**, либо **Bun 1.3+**. Работает на macOS, Linux и Windows. Подробности,
 переменные окружения и то, куда ложатся файлы, — [docs/installation.md](docs/installation.md).
 
-Если после установки команда `max` не находится, `npx @leemour/max-cli doctor` скажет почему и
+Если после установки команда `max` не находится, `npx @wirecat/max-cli doctor` скажет почему и
 напечатает команду, которая это исправит.
 
 ## Вход
@@ -498,7 +498,7 @@ pnpm generate                         # переписать сгенериро�
 [docs/dev/protocol.md](docs/dev/protocol.md) из них генерируются — и CI падает, если дерево устарело.
 
 Половина, не имеющая отношения к MAX — потоки вывода, рендерер, коды ошибок, хранилище паролей, часы, —
-вынесена в [`@leemour/cli-core`](https://github.com/WireCatLabs/cli-core) и общая с `braze-cli`.
+вынесена в [`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-core) и общая с `braze-cli`.
 
 ## Дорожная карта
 

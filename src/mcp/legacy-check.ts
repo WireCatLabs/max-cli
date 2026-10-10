@@ -1,4 +1,4 @@
-import type { PersonalMcpTool } from "@leemour/cli-messaging/cli"
+import type { PersonalMcpTool } from "@wirecat/cli-messaging/cli"
 import * as v from "valibot"
 import { finish, MAX_ACTIONS, personal, prepare, sessionPoints } from "../moderation/check.js"
 import { withPermissionApproval } from "../permissions.js"

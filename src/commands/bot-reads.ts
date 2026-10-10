@@ -1,5 +1,5 @@
-import { CliError } from "@leemour/cli-core"
-import { pickChat } from "@leemour/cli-messaging"
+import { CliError } from "@wirecat/cli-core"
+import { pickChat } from "@wirecat/cli-messaging"
 import type { ChatRegistry } from "../bot/registry.js"
 
 const CHAT_ID = /^-?\d+$/

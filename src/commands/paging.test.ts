@@ -1,4 +1,4 @@
-import { captureStreams, createRenderer } from "@leemour/cli-core"
+import { captureStreams, createRenderer } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import { resolveSettings, type Settings } from "../config.js"
 import { renderPage, wholeNumber, window } from "./paging.js"

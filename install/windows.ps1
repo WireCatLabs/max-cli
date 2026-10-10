@@ -73,7 +73,7 @@ function RemoveGeneratedPowerShellShim([string] $Directory) {
     $script = Join-Path $Directory "$Tool.ps1"
     if (Test-Path -LiteralPath $script) {
         $content = (Get-Content -LiteralPath $script -Raw).Replace('\', '/')
-        if (-not $content.Contains("node_modules/@leemour/$Tool-cli/dist/bin/$Tool.js")) {
+        if (-not $content.Contains("node_modules/@wirecat/$Tool-cli/dist/bin/$Tool.js")) {
             throw "An unrelated $Tool.ps1 exists in the npm prefix; it was left untouched."
         }
         # npm's .cmd launcher works even when PowerShell refuses unsigned .ps1 scripts.
@@ -100,7 +100,7 @@ if (-not $RepairOnly) {
         throw 'Node.js 22.16+ or 24+ is required. Install a supported Node.js release first.'
     }
     $npm = (Get-Command npm.cmd -CommandType Application -ErrorAction Stop | Select-Object -First 1).Source
-    $package = "@leemour/$Tool-cli"
+    $package = "@wirecat/$Tool-cli"
     if (-not $PackageSpec) { $PackageSpec = $package }
     Note "1/3 Installing $package..."
     $savedPreference = $ErrorActionPreference

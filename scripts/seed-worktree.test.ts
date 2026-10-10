@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { keyringService, memoryKeyring } from "@leemour/cli-core"
+import { keyringService, memoryKeyring } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import { seed } from "./seed-worktree.ts"
 

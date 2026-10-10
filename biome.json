@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "extends": ["@leemour/cli-core/biome"],
+  "extends": ["@wirecat/cli-core/biome"],
   "files": {
     "includes": ["**", "!**/dist", "!**/node_modules", "!pnpm-lock.yaml"]
   },

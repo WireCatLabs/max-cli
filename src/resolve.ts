@@ -1,4 +1,4 @@
-import { isId, pickChat as pickChatFrom } from "@leemour/cli-messaging"
+import { isId, pickChat as pickChatFrom } from "@wirecat/cli-messaging"
 import type { Chat } from "./domain/models.js"
 
 export { isId }

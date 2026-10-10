@@ -1,5 +1,5 @@
-import type { Chat, Contact, Id, Member, PeopleLookup } from "@leemour/cli-messaging"
-import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@leemour/cli-messaging/store"
+import type { Chat, Contact, Id, Member, PeopleLookup } from "@wirecat/cli-messaging"
+import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@wirecat/cli-messaging/store"
 
 const MARKER = "login.marker"
 

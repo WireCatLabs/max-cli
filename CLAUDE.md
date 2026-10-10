@@ -17,7 +17,7 @@ Then the one reference that covers what you are about to touch —
 
 ## Where this project is
 
-Published as `@leemour/max-cli` and working against the real MAX. The commands are listed in
+Published as `@wirecat/max-cli` and working against the real MAX. The commands are listed in
 [`docs/commands.md`](docs/commands.md) (generated); how they are built is
 [`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md); what is left is
 [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md).

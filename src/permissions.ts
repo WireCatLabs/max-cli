@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks"
-import { CliError } from "@leemour/cli-core"
-import { metaOf } from "@leemour/cli-core/commands"
+import { CliError } from "@wirecat/cli-core"
+import { metaOf } from "@wirecat/cli-core/commands"
 import {
   type Asker,
   assertStatsPermissionsCurrent,
@@ -8,7 +8,7 @@ import {
   levelFor,
   readKeysForCommand,
   skipFlagFor,
-} from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-messaging/sends"
 import type { Command } from "commander"
 import { BOT_KEYS } from "./bot/permissions.js"
 import type { Environment } from "./commands/context.js"

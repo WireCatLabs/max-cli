@@ -1,4 +1,4 @@
-import type { IdMaker, Seed } from "@leemour/cli-messaging/testing"
+import type { IdMaker, Seed } from "@wirecat/cli-messaging/testing"
 import { Opcode } from "../generated/opcodes.generated.js"
 import type { Payload } from "../protocol/frame.js"
 import { type MockMax, mockMax } from "./mock-max.js"

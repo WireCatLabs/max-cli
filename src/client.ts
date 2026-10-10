@@ -1,6 +1,6 @@
-import { CliError, realSleep, type SleepLike } from "@leemour/cli-core"
-import { pickPerson as pickStoredPerson } from "@leemour/cli-messaging"
-import { type DiagnosticEvent, providerErrorKey } from "@leemour/cli-messaging/cli"
+import { CliError, realSleep, type SleepLike } from "@wirecat/cli-core"
+import { pickPerson as pickStoredPerson } from "@wirecat/cli-messaging"
+import { type DiagnosticEvent, providerErrorKey } from "@wirecat/cli-messaging/cli"
 import {
   type AccountAction,
   type ChatAction,
@@ -8,7 +8,7 @@ import {
   type GuardRequest,
   type SendGuard,
   type Upload as SharedUpload,
-} from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-messaging/sends"
 import { delayMs } from "./config.js"
 import {
   fromPrivacy,

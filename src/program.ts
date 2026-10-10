@@ -1,6 +1,6 @@
 import { appendFileSync } from "node:fs"
-import { CliError, processStreams } from "@leemour/cli-core"
-import { metaOf } from "@leemour/cli-core/commands"
+import { CliError, processStreams } from "@wirecat/cli-core"
+import { metaOf } from "@wirecat/cli-core/commands"
 import {
   attachmentsCommand,
   conversationsCommand,
@@ -22,8 +22,8 @@ import {
   statsCommand,
   tagsCommand,
   tasksCommand,
-} from "@leemour/cli-messaging/cli"
-import { levelFor } from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-messaging/cli"
+import { levelFor } from "@wirecat/cli-messaging/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"

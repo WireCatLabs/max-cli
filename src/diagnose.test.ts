@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { MIGRATIONS, openCache, openStore } from "@leemour/cli-messaging/store"
+import { MIGRATIONS, openCache, openStore } from "@wirecat/cli-messaging/store"
 import { beforeEach, describe, expect, it } from "vitest"
 import { diagnose, knownProfiles } from "./diagnose.js"
 

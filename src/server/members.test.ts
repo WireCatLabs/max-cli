@@ -1,5 +1,5 @@
-import { memoryKeyring } from "@leemour/cli-core"
-import { openStore } from "@leemour/cli-messaging/store"
+import { memoryKeyring } from "@wirecat/cli-core"
+import { openStore } from "@wirecat/cli-messaging/store"
 import { afterEach, expect, it, vi } from "vitest"
 import { serveMembers } from "../commands/serve-members.js"
 import { Opcode } from "../generated/opcodes.generated.js"

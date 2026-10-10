@@ -1,5 +1,5 @@
-import { defaultRules, type GroupRules, ModerationRules, moderationPathFor as sharedPath } from "@leemour/cli-messaging"
-import { LEVELS } from "@leemour/cli-messaging/sends"
+import { defaultRules, type GroupRules, ModerationRules, moderationPathFor as sharedPath } from "@wirecat/cli-messaging"
+import { LEVELS } from "@wirecat/cli-messaging/sends"
 import { MAX_APP } from "../app.js"
 
 export { defaultRules, type GroupRules, ModerationRules }

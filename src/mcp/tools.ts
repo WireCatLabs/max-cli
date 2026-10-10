@@ -1,4 +1,5 @@
-import { CliError } from "@leemour/cli-core"
+import type { McpServer } from "@modelcontextprotocol/server"
+import { CliError } from "@wirecat/cli-core"
 import {
   AI_SETTING_KEYS,
   type PersonalMcpDefaults,
@@ -10,10 +11,9 @@ import {
   registerPersonalMcpSurface,
   rememberAccount,
   stored,
-} from "@leemour/cli-messaging/cli"
-import { levelFor, type Permission } from "@leemour/cli-messaging/sends"
-import { openStore } from "@leemour/cli-messaging/store"
-import type { McpServer } from "@modelcontextprotocol/server"
+} from "@wirecat/cli-messaging/cli"
+import { levelFor, type Permission } from "@wirecat/cli-messaging/sends"
+import { openStore } from "@wirecat/cli-messaging/store"
 import * as v from "valibot"
 import { maxAdapter } from "../adapter/max-adapter.js"
 import { MAX_APP } from "../app.js"

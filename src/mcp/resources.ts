@@ -1,5 +1,5 @@
-import { openStore } from "@leemour/cli-messaging/store"
 import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server"
+import { openStore } from "@wirecat/cli-messaging/store"
 import type { SessionStore } from "../session/store.js"
 import { SKILL_RESOURCE } from "../skill.js"
 import type { MaxSession } from "./session.js"

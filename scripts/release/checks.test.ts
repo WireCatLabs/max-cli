@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { docsProblems } from "@leemour/cli-core/release"
+import { docsProblems } from "@wirecat/cli-core/release"
 import { afterEach, describe, expect, it } from "vitest"
 import { clientAgeProblems, docsRules } from "./checks.ts"
 
