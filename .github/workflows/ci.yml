@@ -1,9 +1,8 @@
-name: CI
+name: Full validation
 
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -69,3 +68,9 @@ jobs:
           # Warnings only until the rules are tuned: each finding is an annotation on the pull
           # request, and the job never fails.
           ./vale --output line README.md docs/*.md | sed 's/^/::warning::/' || true
+
+  windows:
+    uses: ./.github/workflows/windows.yml
+
+  install_windows:
+    uses: ./.github/workflows/install-windows.yml
