@@ -151,6 +151,7 @@ export interface GlobalFlags {
   profile?: string
   json?: boolean
   jsonl?: boolean
+  agentJson?: boolean
   quiet?: boolean
   verbose?: number
   trace?: boolean
@@ -168,6 +169,7 @@ export interface Settings extends AISettings {
   /** Where the profile came from, decided here so nothing has to re-derive the order. */
   json: boolean
   jsonl: boolean
+  agentJson?: boolean
   quiet: boolean
   /** How much of what the model knows a human view shows: `-v`, `-vv`. */
   detail: 0 | 1 | 2

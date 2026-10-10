@@ -14,6 +14,7 @@ import { openStore } from "@wirecat/cli-messaging/store"
 import { mcpCommandsClient } from "@wirecat/cli-messaging/testing"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { contextFor } from "./commands/context.js"
+import type { Reach } from "./download.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { instructions } from "./mcp/instructions.js"
 import { createMaxServer, type ServerOptions, serveOverHttpUntilStopped } from "./mcp/server.js"
@@ -128,8 +129,10 @@ const connect = async (
     http = false,
     permission,
     record,
+    reach,
   }: {
     /** Over `max mcp --http` on 127.0.0.1, logged in through the owner login. */
+    reach?: Reach
     http?: boolean
     confirmation?: "permissions"
     permission?: string[]
@@ -149,6 +152,7 @@ const connect = async (
     { profile, record, permission },
     {
       streams,
+      reach,
       tty: false,
       store: (profile) => {
         const store = new SessionStore({ profile, keyring })
@@ -1596,7 +1600,7 @@ describe("what the MCP server offers beyond the basics", () => {
 
   it("hands a photo over as an image, and never its link", async () => {
     serving(webp(81_164))
-    const { client } = await connect({}, { answers: withPhoto })
+    const { client } = await connect({}, { answers: withPhoto, reach: async () => {} })
 
     const result = await client.callTool({
       name: "max_messages_photo",
@@ -1625,6 +1629,7 @@ describe("what the MCP server offers beyond the basics", () => {
     const { client } = await connect(
       {},
       {
+        reach: async () => {},
         answers:
           variant === "no photo"
             ? {
@@ -1905,6 +1910,19 @@ describe("group reads", () => {
 })
 
 describe("P7 MCP policy", () => {
+  it("refuses resource reads and listing after permissions tighten on a held session", async () => {
+    const profile = "p7-mcp-resource-revoke"
+    const { client } = await connect({}, { profile })
+    expect(
+      await run([profile, "config", "set", "permissions.messages", "deny"], { streams: captureStreams(), tty: false }),
+    ).toBe(0)
+    await expect(client.readResource({ uri: "max://chat/111" })).rejects.toThrow(/denies messages/)
+    expect(
+      await run([profile, "config", "set", "permissions.chats", "deny"], { streams: captureStreams(), tty: false }),
+    ).toBe(0)
+    await expect(client.listResources()).rejects.toThrow(/denies chats/)
+  })
+
   it("offers the owner's mixed message policy and deletes without any form or retired flag", async () => {
     const profile = "p7-mcp-work"
     expect(

@@ -1,11 +1,14 @@
+import { randomUUID } from "node:crypto"
+import type { LookupAddress } from "node:dns"
 import { lookup } from "node:dns/promises"
 import { createWriteStream } from "node:fs"
 import { link, rm } from "node:fs/promises"
-import { BlockList, isIP } from "node:net"
+import { BlockList, isIP, type LookupFunction } from "node:net"
 import { basename, join } from "node:path"
 import { PassThrough, Readable, Transform, Writable } from "node:stream"
 import { pipeline } from "node:stream/promises"
 import { CliError } from "@wirecat/cli-core"
+import { Agent, fetch as connectionFetch } from "undici"
 import type { AttachmentLink } from "./domain/models.js"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
@@ -48,20 +51,38 @@ export type Reach = (url: URL) => Promise<void>
  * this machine or its network would make `max` a way to read what only this machine can reach.
  * Checked again after every redirect.
  */
-export const publicOnly: Reach = async (url) => {
+export const publicAddresses = async (url: URL, resolve = lookup) => {
   if (url.protocol !== "https:") {
     throw new CliError("validation_error", `a ${url.protocol} link is not downloaded — only https`)
   }
   const host = url.hostname.replace(/^\[|\]$/g, "")
   const family = isIP(host)
-  const addresses = family ? [{ address: host, family }] : await lookup(host, { all: true, verbatim: true })
-  if (addresses.some(({ address, family }) => PRIVATE.check(address, family === 6 ? "ipv6" : "ipv4"))) {
+  const addresses = family ? [{ address: host, family }] : await resolve(host, { all: true, verbatim: true })
+  if (
+    addresses.length === 0 ||
+    addresses.some(({ address, family }) => PRIVATE.check(address, family === 6 ? "ipv6" : "ipv4"))
+  ) {
     throw new CliError(
       "validation_error",
       `the link points into this machine or its network (${url.hostname}) — not downloaded`,
     )
   }
+  return addresses
 }
+
+export const publicOnly: Reach = async (url) => {
+  await publicAddresses(url)
+}
+
+export const pinnedLookup =
+  (addresses: readonly LookupAddress[]): LookupFunction =>
+  (_hostname, options, done) => {
+    const eligible = options.family ? addresses.filter(({ family }) => family === options.family) : [...addresses]
+    if (options.all) return done(null, eligible)
+    const selected = eligible[0]
+    if (!selected) return done(new Error("the download host has no address for this family"), "", 0)
+    done(null, selected.address, selected.family)
+  }
 
 const PRIVATE = new BlockList()
 for (const [network, prefix] of [
@@ -72,12 +93,19 @@ for (const [network, prefix] of [
   ["169.254.0.0", 16],
   ["172.16.0.0", 12],
   ["192.168.0.0", 16],
+  ["192.0.0.0", 29],
+  ["192.0.0.170", 31],
+  ["192.0.2.0", 24],
+  ["198.18.0.0", 15],
+  ["198.51.100.0", 24],
+  ["203.0.113.0", 24],
   ["224.0.0.0", 3],
 ] as const)
   PRIVATE.addSubnet(network, prefix, "ipv4")
 // `::ffff:127.0.0.1` is matched against the IPv4 rules by BlockList itself, under Node and Bun alike.
 for (const [network, prefix] of [
-  ["::", 127],
+  ["::", 96],
+  ["2001:db8::", 32],
   ["fc00::", 7],
   ["fe80::", 10],
   ["ff00::", 8],
@@ -126,7 +154,14 @@ const open = async (
 ): Promise<{ response: Response; pump: (destination: Writable) => Promise<number> }> => {
   const stalled = watchdog(STALL_MS)
   const signal = parentSignal ? AbortSignal.any([stalled.signal, parentSignal]) : stalled.signal
-  const failed = (error: unknown): never => {
+  let agent: Agent | undefined
+  const release = async () => {
+    const owned = agent
+    agent = undefined
+    await owned?.destroy()
+  }
+  const failed = async (error: unknown): Promise<never> => {
+    await release()
     stalled.stop()
     if (stalled.signal.aborted) {
       throw new CliError("timeout", `the ${attachment.kind} download stopped moving for ${STALL_MS / 1000} s`)
@@ -136,25 +171,39 @@ const open = async (
 
   let target = new URL(attachment.url)
   for (let hop = 0; ; hop += 1) {
-    const response = await reach(target)
-      .then(() => fetch(target, { headers: HEADERS, redirect: "manual", signal }))
-      .catch(failed)
+    const response = await (async () => {
+      if (reach !== publicOnly) {
+        await reach(target)
+        return fetch(target, { headers: HEADERS, redirect: "manual", signal })
+      }
+      const addresses = await publicAddresses(target)
+      agent = new Agent({ connect: { autoSelectFamily: true, lookup: pinnedLookup(addresses) } })
+      return connectionFetch(target, {
+        headers: HEADERS,
+        redirect: "manual",
+        signal,
+        dispatcher: agent,
+      }) as unknown as Promise<Response>
+    })().catch(failed)
     const location = response.headers.get("location")
     if (response.status >= 300 && response.status < 400 && location) {
       await response.body?.cancel()
+      await release()
       if (hop >= REDIRECTS)
-        failed(new CliError("network_error", `the ${attachment.kind} link redirects too many times`))
+        await failed(new CliError("network_error", `the ${attachment.kind} link redirects too many times`))
       target = new URL(location, target)
       continue
     }
     if (!response.ok || !response.body) {
       await response.body?.cancel()
-      failed(new CliError("network_error", `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`))
+      await failed(
+        new CliError("network_error", `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`),
+      )
     }
     const declared = Number(response.headers.get("content-length") ?? Number.NaN)
     if (declared > limit) {
       await response.body?.cancel()
-      failed(tooLarge(attachment, limit))
+      await failed(tooLarge(attachment, limit))
     }
 
     let bytes = 0
@@ -167,7 +216,8 @@ const open = async (
     })
     const source = Readable.fromWeb(response.body as import("node:stream/web").ReadableStream)
     const pump = (destination: Writable): Promise<number> =>
-      pipeline(source, counting, destination).then(() => {
+      pipeline(source, counting, destination).then(async () => {
+        await release()
         stalled.stop()
         return bytes
       }, failed)
@@ -244,7 +294,7 @@ export const save = async (
   const extension = EXTENSIONS[response.headers.get("content-type")?.split(";")[0]?.trim() ?? ""]
   const name = safeName(attachment.name) ?? (extension ? `${fallbackName}.${extension}` : fallbackName)
   const path = join(directory, name)
-  const partial = join(directory, `.${name}.${process.pid}.part`)
+  const partial = join(directory, `.${name}.${randomUUID()}.part`)
 
   try {
     const bytes = await pump(createWriteStream(partial, { flags: "wx", mode: 0o600 }))

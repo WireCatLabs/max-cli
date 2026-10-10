@@ -2,6 +2,8 @@ import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server"
 import { visibleControls } from "@wirecat/cli-core"
 import { answerMcpTool } from "@wirecat/cli-messaging/cli"
 import { openStore } from "@wirecat/cli-messaging/store"
+import { resolveSettings } from "../config.js"
+import { assertReadable } from "../permissions.js"
 import type { SessionStore } from "../session/store.js"
 import { SKILL_RESOURCE } from "../skill.js"
 import type { MaxSession } from "./session.js"
@@ -17,15 +19,24 @@ const LISTED = 100
 export const registerResources = (
   server: McpServer,
   session: MaxSession,
-  defaults: { profile: string; defaultLimit: number; store: SessionStore; warn: (message: string) => void },
+  defaults: {
+    profile: string
+    permission?: string[]
+    defaultLimit: number
+    store: SessionStore
+    warn: (message: string) => void
+  },
 ): void => {
   const { defaultLimit, store: state } = defaults
+  const assertRead = (key: string) =>
+    assertReadable(resolveSettings({ profile: defaults.profile, permission: defaults.permission }), key)
   const { name, uri, title, description, mimeType, read } = SKILL_RESOURCE
   server.registerResource(name, uri, { title, description, mimeType }, read)
   server.registerResource(
     "chat",
     new ResourceTemplate("max://chat/{id}", {
       list: async () => {
+        assertRead("chats")
         const account = state.readState().viewerId
         if (account === undefined) return { resources: [] }
         const store = await openStore()
@@ -49,6 +60,8 @@ export const registerResources = (
       mimeType: "application/json",
     },
     async (uri, { id }) => {
+      assertRead("chats")
+      assertRead("messages")
       const body = await session.use("mcp resource chat", async (client) => {
         const chatId = await client.chats.resolve(String(id))
         return {

@@ -3,9 +3,10 @@ import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
 import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { Agent, fetch as connectionFetch } from "undici"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import type { AttachmentLink } from "./domain/models.js"
-import { fetchBytes, publicOnly, type Reach, streamBytes, watchdog } from "./download.js"
+import { fetchBytes, pinnedLookup, publicAddresses, publicOnly, type Reach, streamBytes, watchdog } from "./download.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
@@ -374,4 +375,66 @@ describe("publicOnly", () => {
   it("lets a public address through", async () => {
     await expect(publicOnly(new URL("https://93.184.215.14/"))).resolves.toBeUndefined()
   })
+})
+
+describe("validated download addresses", () => {
+  it("resolves once and rejects a mixed public and private answer", async () => {
+    const resolve = vi.fn().mockResolvedValue([
+      { address: "93.184.215.14", family: 4 },
+      { address: "127.0.0.1", family: 4 },
+    ])
+    await expect(publicAddresses(new URL("https://synthetic.example/file"), resolve)).rejects.toThrow(/not downloaded/)
+    expect(resolve).toHaveBeenCalledTimes(1)
+    resolve.mockResolvedValue([{ address: "93.184.215.14", family: 4 }])
+    expect(await publicAddresses(new URL("https://synthetic.example/file"), resolve)).toEqual([
+      { address: "93.184.215.14", family: 4 },
+    ])
+  })
+
+  it.each(["198.18.0.1", "192.0.2.1", "198.51.100.1", "203.0.113.1", "[2001:db8::1]"])(
+    "refuses special-use address %s",
+    async (host) => {
+      await expect(publicOnly(new URL(`https://${host}/file`))).rejects.toThrow(/not downloaded/)
+    },
+  )
+})
+
+it("preserves all validated endpoints for connection fallback without resolving again", () => {
+  const addresses = [
+    { address: "93.184.215.14", family: 4 },
+    { address: "2606:4700::1111", family: 6 },
+  ]
+  const lookup = pinnedLookup(addresses)
+  const done = vi.fn()
+  lookup("synthetic.example", { all: true }, done)
+  expect(done).toHaveBeenLastCalledWith(null, addresses)
+  lookup("synthetic.example", { family: 6 }, done)
+  expect(done).toHaveBeenLastCalledWith(null, "2606:4700::1111", 6)
+})
+
+it.each(["192.0.0.9", "192.0.0.10", "[64:ff9b::5db8:d70e]"])(
+  "keeps public special-use endpoint %s reachable",
+  async (host) => {
+    await expect(publicOnly(new URL(`https://${host}/file`))).resolves.toBeUndefined()
+  },
+)
+
+it("connects with the pinned lookup and retries an unreachable endpoint", async () => {
+  const target = new URL(origin)
+  target.hostname = "synthetic.example"
+  const agent = new Agent({
+    connect: {
+      autoSelectFamily: true,
+      lookup: pinnedLookup([
+        { address: "127.0.0.2", family: 4 },
+        { address: "127.0.0.1", family: 4 },
+      ]),
+    },
+  })
+  try {
+    const response = await connectionFetch(target, { dispatcher: agent })
+    expect(await response.text()).toBe("file bytes")
+  } finally {
+    await agent.destroy()
+  }
 })

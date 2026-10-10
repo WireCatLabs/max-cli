@@ -88,6 +88,9 @@ export const createMaxServer = (
     )
       registerResources(server, session, {
         profile: context.settings.profile,
+        permission: Object.entries(context.settings.permissions).flatMap(([key, level]) =>
+          context.settings.permissionSources[key] === "flag" ? [`${key}=${level}`] : [],
+        ),
         defaultLimit: context.settings.limit,
         store: context.store,
         warn: context.renderer.note,
