@@ -586,7 +586,7 @@ MAX's official HTTP Bot API. The two share no transport, no session and no
 generated code. Nothing under `src/bot/` imports `src/protocol/`, `src/session/` or
 `src/generated/`, and the other way round.
 
-```
+```text
 spec/bot/schema.yaml        the official OpenAPI document, committed with provenance.json
    │  pnpm bot:spec:sync    — the only step that reads the network, and only when run by hand
    ▼

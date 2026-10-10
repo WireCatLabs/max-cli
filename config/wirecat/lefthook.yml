@@ -1,5 +1,3 @@
-extends:
-  - config/wirecat/lefthook.yml
 # Git hooks. Installed by the `prepare` npm script, which pnpm runs on every install — necessary
 # because pnpm blocks dependencies' build scripts by default, so lefthook's own postinstall never
 # fires and the hooks would otherwise silently never land.
@@ -31,7 +29,6 @@ pre-push:
   parallel: true
   commands:
     typecheck:
-      # The parity check builds into the same dist/ as typecheck, so the two run in one command, one
-      # after the other. It catches what CI refuses a minute later: a command or option parity.json
-      # does not expect, or a page naming an option that does not exist.
-      run: pnpm typecheck && pnpm -s parity:check
+      # A messaging CLI's parity check builds into the same dist/ as typecheck, so it runs here, after
+      # it, rather than as a command of its own beside it. A project without the script skips it.
+      run: pnpm -s run --if-present typecheck && pnpm -s run --if-present parity:check

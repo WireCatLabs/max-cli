@@ -41,7 +41,7 @@
     "mcp:tools": "node --experimental-strip-types scripts/mcp-tools.ts",
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
     "release:check": "pnpm build && node --experimental-strip-types scripts/release-check.ts",
-    "docs:check": "cli-dev docs-check --rules scripts/release/checks.ts --pages && cspell --no-progress --no-summary README.md 'docs/*.md' && rumdl check --config node_modules/@wirecat/cli-core/config/rumdl.toml README.md docs/*.md",
+    "docs:check": "cli-dev docs-check --rules scripts/release/checks.ts --pages && cspell --no-progress --no-summary README.md 'docs/*.md' && rumdl check --config config/wirecat/rumdl.toml README.md docs/*.md",
     "parity:check": "pnpm build && node dist/bin/max.js commands --json | cli-messaging-parity max && node dist/bin/max.js commands --json | cli-messaging-parity max --pages README.md docs/*.md",
     "version:check": "cli-dev version",
     "version:sync": "cli-dev version --sync",
@@ -86,7 +86,10 @@
     "probe:keyboard": "pnpm build && node --experimental-strip-types scripts/probe-keyboard.ts",
     "probe:bot:me": "pnpm build && node --experimental-strip-types scripts/probe-bot-me.ts",
     "postinstall": "node install/postinstall.mjs",
-    "check:agent-docs": "pnpm build && node --experimental-strip-types scripts/check-agent-docs.ts"
+    "check:agent-docs": "pnpm build && node --experimental-strip-types scripts/check-agent-docs.ts",
+    "standards:check": "node config/wirecat/check.mjs",
+    "docs:lint": "markdownlint-cli2",
+    "docs:spell": "cspell lint --config cspell.json --no-progress README.md"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.1.0",
@@ -105,21 +108,23 @@
     "ws": "8.21.3"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.14",
-    "@cspell/dict-en-gb": "^5.0.34",
-    "@cspell/dict-ru_ru": "^2.3.2",
+    "@biomejs/biome": "2.5.15",
+    "@cspell/dict-en-gb": "5.0.34",
+    "@cspell/dict-ru_ru": "2.3.3",
     "@modelcontextprotocol/client": "~2.2.0",
     "@napi-rs/canvas": "1.0.10",
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^5.0.3",
-    "cspell": "^10.3.6",
-    "lefthook": "^2.1.8",
+    "cspell": "10.3.6",
+    "lefthook": "2.1.16",
     "rumdl": "^0.2.78",
     "typescript": "^7.0.2",
     "unpdf": "1.8.1",
     "vitest": "^5.0.3",
-    "yaml": "^2.9.1"
+    "yaml": "^2.9.1",
+    "@cspell/dict-es-es": "3.0.9",
+    "markdownlint-cli2": "0.23.3"
   },
   "publishConfig": {
     "access": "public"
