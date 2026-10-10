@@ -1,18 +1,8 @@
 name: Windows and macOS
 
 on:
+  workflow_call:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - '.github/workflows/windows.yml'
-      - 'src/commands/setup.ts'
-      - 'src/setup.test.ts'
-      - 'src/commands/session.ts'
-      - 'src/session/**'
-      - 'src/commands/context.ts'
-      - 'src/deadline*'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
 
 permissions:
   contents: read

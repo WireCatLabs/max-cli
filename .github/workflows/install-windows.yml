@@ -1,14 +1,7 @@
 name: Windows install readiness
 
 on:
-  pull_request:
-    paths:
-      - ".github/workflows/install-windows.yml"
-      - "install/**"
-      - "src/install/**"
-      - "scripts/install-windows.test.ps1"
-      - "scripts/install-unix.test.mjs"
-      - "package.json"
+  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -28,7 +21,7 @@ jobs:
       - run: npm pack --ignore-scripts
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
-          name: package
+          name: install-readiness-package
           path: wirecat-max-cli-*.tgz
 
   install:
@@ -46,7 +39,7 @@ jobs:
           node-version: ${{ matrix.node }}
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          name: package
+          name: install-readiness-package
           path: package
       - name: Install without PATH and verify direct launch and skills
         shell: pwsh
@@ -67,6 +60,6 @@ jobs:
           node-version: ${{ matrix.node }}
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
-          name: package
+          name: install-readiness-package
           path: package
       - run: node scripts/install-unix.test.mjs package/wirecat-max-cli-*.tgz
