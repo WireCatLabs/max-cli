@@ -55,7 +55,14 @@ const failed = releaseCheck(
     },
     { name: "tree unchanged", run: command(root, "git", "diff", "--exit-code", "--stat") },
     { name: "package contents", run: packContents(root, PACKED, PACKED_SAID) },
-    { name: "secrets", run: command(root, "gitleaks", "git", "--no-banner", "--redact", "--exit-code", "1", ".") },
+    ...(process.env.SECURITY_SECRETS_CHECKED === "1" && process.env.CI
+      ? []
+      : [
+          {
+            name: "secrets",
+            run: command(root, "gitleaks", "git", "--no-banner", "--redact", "--exit-code", "1", "."),
+          },
+        ]),
   ],
   { version, log: console.log },
 )

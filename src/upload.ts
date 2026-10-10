@@ -25,12 +25,7 @@ const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".webm", ".mkv"])
 
 export const isVideo = (path: string): boolean => VIDEO_EXTENSIONS.has(extname(path).toLowerCase())
 
-/**
- * A file somebody talked an agent into sending would be a key or a token: those live in hidden
- * files and folders, `~/.ssh` among them, and in max's own folders, which `MAX_*_DIR` can move out
- * of sight (`NEED-274`). The real path is checked as well as the typed one, so a link does not hide
- * where it points.
- */
+/** Protect known credentials and application state, while allowing hidden developer folders. */
 const refusedPlace = (path: string): boolean => {
   const own = Object.values(resolvePaths({ appName: "max-cli", prefix: "MAX" }))
   let real = resolve(path)
@@ -39,8 +34,13 @@ const refusedPlace = (path: string): boolean => {
   } catch {}
   return [resolve(path), real].some(
     (candidate) =>
-      candidate.split(sep).some((part) => part.startsWith(".") && part !== "." && part !== "..") ||
-      own.some((dir) => inside(candidate, dir)),
+      candidate
+        .split(sep)
+        .some(
+          (part) =>
+            [".ssh", ".gnupg", ".aws", ".secrets", "secrets", ".env", ".npmrc", ".pypirc"].includes(part) ||
+            /^\.env\./.test(part),
+        ) || own.some((dir) => inside(candidate, dir)),
   )
 }
 
@@ -54,7 +54,7 @@ export const readUpload = async (path: string, { anyFile = false }: { anyFile?: 
   if (!anyFile && refusedPlace(path)) {
     throw new CliError(
       "validation_error",
-      `cannot send ${path}: hidden files and folders, ~/.ssh and max's own folders are not sent — ` +
+      `cannot send ${path}: credential files and max's own folders are not sent — ` +
         "add --allow-any-file if this file is meant to go",
     )
   }

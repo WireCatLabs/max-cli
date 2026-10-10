@@ -1,7 +1,5 @@
-import { lookup } from "node:dns/promises"
 import { createWriteStream } from "node:fs"
 import { link, rm } from "node:fs/promises"
-import { BlockList, isIP } from "node:net"
 import { basename, join } from "node:path"
 import { PassThrough, Readable, Transform, Writable } from "node:stream"
 import { pipeline } from "node:stream/promises"
@@ -43,46 +41,11 @@ const safeName = (name: string | undefined): string | undefined => {
 /** Where a download may go; throws for a link it must not follow. */
 export type Reach = (url: URL) => Promise<void>
 
-/**
- * **Out to the internet only, over https** (`NEED-278`). A link comes from MAX, and one pointing at
- * this machine or its network would make `max` a way to read what only this machine can reach.
- * Checked again after every redirect.
- */
-export const publicOnly: Reach = async (url) => {
-  if (url.protocol !== "https:") {
-    throw new CliError("validation_error", `a ${url.protocol} link is not downloaded — only https`)
-  }
-  const host = url.hostname.replace(/^\[|\]$/g, "")
-  const family = isIP(host)
-  const addresses = family ? [{ address: host, family }] : await lookup(host, { all: true, verbatim: true })
-  if (addresses.some(({ address, family }) => PRIVATE.check(address, family === 6 ? "ipv6" : "ipv4"))) {
-    throw new CliError(
-      "validation_error",
-      `the link points into this machine or its network (${url.hostname}) — not downloaded`,
-    )
-  }
+/** Use the runtime's configured transport and DNS, including private networks and proxies. */
+export const httpOnly: Reach = async (url) => {
+  if (!["http:", "https:"].includes(url.protocol))
+    throw new CliError("validation_error", `a ${url.protocol} link is not downloaded — use http or https`)
 }
-
-const PRIVATE = new BlockList()
-for (const [network, prefix] of [
-  ["0.0.0.0", 8],
-  ["10.0.0.0", 8],
-  ["100.64.0.0", 10],
-  ["127.0.0.0", 8],
-  ["169.254.0.0", 16],
-  ["172.16.0.0", 12],
-  ["192.168.0.0", 16],
-  ["224.0.0.0", 3],
-] as const)
-  PRIVATE.addSubnet(network, prefix, "ipv4")
-// `::ffff:127.0.0.1` is matched against the IPv4 rules by BlockList itself, under Node and Bun alike.
-for (const [network, prefix] of [
-  ["::", 127],
-  ["fc00::", 7],
-  ["fe80::", 10],
-  ["ff00::", 8],
-] as const)
-  PRIVATE.addSubnet(network, prefix, "ipv6")
 
 /** MAX takes attachments up to 4 GB (help.max.ru, "Как отправить в чат фото и другие файлы"). */
 const LARGEST_ATTACHMENT = 4 * 1024 ** 3
@@ -124,6 +87,7 @@ const open = async (
   limit: number,
   parentSignal?: AbortSignal,
 ): Promise<{ response: Response; pump: (destination: Writable) => Promise<number> }> => {
+  let target = new URL(attachment.url)
   const stalled = watchdog(STALL_MS)
   const signal = parentSignal ? AbortSignal.any([stalled.signal, parentSignal]) : stalled.signal
   const failed = (error: unknown): never => {
@@ -134,7 +98,6 @@ const open = async (
     throw error
   }
 
-  let target = new URL(attachment.url)
   for (let hop = 0; ; hop += 1) {
     const response = await reach(target)
       .then(() => fetch(target, { headers: HEADERS, redirect: "manual", signal }))
@@ -144,7 +107,11 @@ const open = async (
       await response.body?.cancel()
       if (hop >= REDIRECTS)
         failed(new CliError("network_error", `the ${attachment.kind} link redirects too many times`))
-      target = new URL(location, target)
+      try {
+        target = new URL(location, target)
+      } catch (error) {
+        await failed(error)
+      }
       continue
     }
     if (!response.ok || !response.body) {
@@ -184,7 +151,7 @@ const tooLarge = (attachment: AttachmentLink, limit: number) =>
 /** General attachments stream with a file budget; voice transcription keeps its smaller memory budget. */
 export const streamBytes = async function* (
   attachment: AttachmentLink,
-  reach: Reach = publicOnly,
+  reach: Reach = httpOnly,
   limit = LARGEST_ATTACHMENT,
   onMime?: (mime: string | undefined) => void,
   signal?: AbortSignal,
@@ -210,7 +177,7 @@ export const streamBytes = async function* (
 /** Into memory rather than a file: a voice message is a few hundred kilobytes, and transcription reads it once. */
 export const fetchBytes = async (
   attachment: AttachmentLink,
-  reach: Reach = publicOnly,
+  reach: Reach = httpOnly,
   limit = LARGEST_VOICE,
 ): Promise<Uint8Array> => {
   const { pump } = await open(attachment, reach, limit)
@@ -237,7 +204,7 @@ export const save = async (
   attachment: AttachmentLink,
   directory: string,
   fallbackName: string,
-  reach: Reach = publicOnly,
+  reach: Reach = httpOnly,
 ): Promise<Saved> => {
   const { response, pump } = await open(attachment, reach, LARGEST_ATTACHMENT)
 

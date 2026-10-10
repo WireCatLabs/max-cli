@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-core"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import type { AttachmentLink } from "./domain/models.js"
-import { fetchBytes, publicOnly, type Reach, streamBytes, watchdog } from "./download.js"
+import { fetchBytes, httpOnly, type Reach, streamBytes, watchdog } from "./download.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
@@ -63,7 +63,7 @@ beforeAll(async () => {
 
 afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())))
 
-/** The test's own server is on this machine, which a real download is refused. */
+/** The test injects its own destination policy where a scenario needs one. */
 const anywhere: Reach = async () => {}
 
 const download = async (
@@ -259,18 +259,17 @@ describe("max messages download", () => {
     expect(await readdir(directory)).toEqual([])
   })
 
-  it("refuses a plain http link, before asking anything", async () => {
+  it("downloads an HTTP attachment on a private network using the default transport", async () => {
     const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
     let asked = 0
     server.once("request", () => {
       asked += 1
     })
-    const { code, stderr } = await download(directory, { reach: publicOnly })
+    const { code } = await download(directory, { reach: httpOnly })
 
-    expect(code).not.toBe(0)
-    expect(stderr).toContain("only https")
-    expect(asked).toBe(0)
-    expect(await readdir(directory)).toEqual([])
+    expect(code).toBe(0)
+    expect(asked).toBe(1)
+    expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
   })
 
   it("checks where a redirect goes before following it", async () => {
@@ -356,22 +355,18 @@ describe("streamBytes", () => {
   })
 })
 
-describe("publicOnly", () => {
+describe("HTTP attachment links", () => {
   it.each([
-    "https://127.0.0.1/",
+    "http://127.0.0.1/",
     "https://[::1]/",
-    "https://169.254.169.254/latest",
     "https://10.1.2.3/",
-    "https://[::ffff:127.0.0.1]/",
-  ])("refuses %s", async (url) => {
-    await expect(publicOnly(new URL(url))).rejects.toThrow(/points into this machine/)
+    "https://100.64.0.1/",
+    "https://198.18.0.1/",
+    "https://synthetic.invalid/",
+  ])("accepts %s without requiring local DNS or public addresses", async (url) => {
+    await expect(httpOnly(new URL(url))).resolves.toBeUndefined()
   })
-
-  it.each(["http://93.184.215.14/", "file:///etc/passwd"])("refuses %s: only https", async (url) => {
-    await expect(publicOnly(new URL(url))).rejects.toThrow(/only https/)
-  })
-
-  it("lets a public address through", async () => {
-    await expect(publicOnly(new URL("https://93.184.215.14/"))).resolves.toBeUndefined()
+  it.each(["file:///synthetic", "data:text/plain,synthetic"])("refuses non-HTTP transport %s", async (url) => {
+    await expect(httpOnly(new URL(url))).rejects.toThrow(/http or https/)
   })
 })

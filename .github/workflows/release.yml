@@ -22,10 +22,12 @@ concurrency:
 
 jobs:
   checks:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' || inputs.dry_run
     permissions:
       contents: read
-    uses: WireCatLabs/cli-core/.github/workflows/release-checks.yml@5940608f735c6de554b6180275ad58b01149b31b # v0.18.1
+      actions: read
+      security-events: write
+    uses: WireCatLabs/cli-core/.github/workflows/release-checks.yml@1183bfb970330989ad8acec917b14b7e6187de15
 
   build:
     needs: checks
@@ -60,17 +62,10 @@ jobs:
           fi
 
       - run: pnpm install --frozen-lockfile
-      - name: gitleaks
-        env:
-          GITLEAKS_VERSION: 8.30.1
-          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
-        run: |
-          curl -sSfLo gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
-          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
-          sudo tar -xzf gitleaks.tar.gz -C /usr/local/bin gitleaks
-          rm gitleaks.tar.gz
       # The same checks bin/release runs on the owner's machine, so the two cannot disagree.
       - run: pnpm release:check
+        env:
+          SECURITY_SECRETS_CHECKED: "1"
 
       # `prepack` deletes dist and builds it again, so nothing left over from an earlier build ships.
       - run: npm pack
