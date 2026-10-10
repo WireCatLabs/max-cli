@@ -42,6 +42,53 @@ const invoke = async (argv: string[]) => {
 }
 
 describe("shared search adoption", () => {
+  it("discovers question evidence offline with strict scope and preserves strict defaults", async () => {
+    await db.saveChats(account, [
+      {
+        id: "990",
+        title: "Synthetic discovery",
+        kind: "group",
+        unreadCount: 0,
+        lastMessageAt: null,
+        participantsCount: 10,
+      },
+    ])
+    const rows = [
+      { id: "9901", text: "Helix export: what time should the daily export run?", senderId: "700" },
+      { id: "9902", text: "Every day at 06:45 UTC.", senderId: "700", replyToId: "9901" },
+      { id: "9903", text: "Every day at 02:00 UTC.", senderId: "701", replyToId: "9901" },
+    ]
+    await db.saveMessages(
+      account,
+      "990",
+      rows.map((m) => ({
+        ...m,
+        chatId: "990",
+        senderName: "Synthetic",
+        timestamp: "2026-10-08T12:00:00.000Z",
+        editedAt: null,
+        outgoing: false,
+        attachments: [],
+        replyTo: null,
+        forwardedFrom: null,
+        reactions: null,
+      })),
+      { via: "synthetic" },
+    )
+    await db.fillSearchIndex({})
+    await db.fillStems({})
+    const query = "What time does Helix export run? chat:990 from:700 date:2026-10-08"
+    const result = await invoke(["search", "messages", query, "--discover", "--timezone", "UTC"])
+    expect(result.code).toBe(0)
+    const body = JSON.parse(result.stdout)
+    expect(body.query.discovery).toMatchObject({ method: "lexical-partial" })
+    expect(body.items.map((m: { id: string }) => m.id)).toContain("9902")
+    expect(body.items.map((m: { id: string }) => m.id)).not.toContain("9903")
+    expect(body.items.find((m: { id: string }) => m.id === "9902").discovery.parent).toBe("msg:max/500/990/9901")
+    const strict = await invoke(["search", "messages", query, "--timezone", "UTC"])
+    expect(strict.code).toBe(0)
+    expect(JSON.parse(strict.stdout).items).toEqual([])
+  })
   it("uses strict defaults and applies graph packet bounds", async () => {
     const result = await invoke([
       "search",
