@@ -2708,7 +2708,7 @@ max search all <query> [options]
 
 ### `max search messages`
 
-search messenger messages in the local store and on the messenger's server (--backend); optionally fetches new messages with --sync-first
+search messenger messages in the local store and on the messenger's server (--backend); optionally fetches new messages with --sync-first; --discover searches the archive only
 
 ```sh
 max search messages [query] [options]
@@ -2729,7 +2729,7 @@ max search messages [query] [options]
 | `--thread-messages <n>` | at most this many messages in each thread context (default: 50). |
 | `--thread-bytes <n>` | at most this many bytes of whole messages and links in each context (default: 65536). |
 | `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
-| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both). |
+| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
 | `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
@@ -2738,6 +2738,7 @@ max search messages [query] [options]
 | `--newest` | newest first instead of best first. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
+| `--discover` | find partial lexical matches and eligible replies in the local archive; results are evidence, not confirmed answers. |
 | `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
