@@ -1,6 +1,6 @@
-import { CliError, singleLine } from "@leemour/cli-core"
-import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@leemour/cli-messaging"
-import { observedCounters } from "@leemour/cli-messaging"
+import { CliError, singleLine } from "@wirecat/cli-core"
+import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@wirecat/cli-messaging"
+import { observedCounters } from "@wirecat/cli-messaging"
 import type {
   MessageEditing,
   MessagePins,
@@ -10,8 +10,8 @@ import type {
   ReadState,
   SendOptions,
   ServerReads,
-} from "@leemour/cli-messaging/cli"
-import type { Upload } from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-messaging/cli"
+import type { Upload } from "@wirecat/cli-messaging/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
 import { LARGEST_VOICE, publicOnly, type Reach, streamBytes } from "../download.js"

@@ -1,8 +1,8 @@
 import { chmodSync, mkdirSync, rmSync } from "node:fs"
 import { connect, createServer, type Server, type Socket } from "node:net"
 import { dirname } from "node:path"
-import { CliError } from "@leemour/cli-core"
-import type { SendGuard } from "@leemour/cli-messaging/sends"
+import { CliError } from "@wirecat/cli-core"
+import type { SendGuard } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
 import {
   FIRST_TAB_SYNC,

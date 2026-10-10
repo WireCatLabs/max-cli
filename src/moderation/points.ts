@@ -1,5 +1,5 @@
-import { CliError } from "@leemour/cli-core"
-import { ModerationRules, moderationPathFor } from "@leemour/cli-messaging"
+import { CliError } from "@wirecat/cli-core"
+import { ModerationRules, moderationPathFor } from "@wirecat/cli-messaging"
 import { MAX_APP } from "../app.js"
 import type { SessionStore } from "../session/store.js"
 

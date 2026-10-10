@@ -63,7 +63,7 @@ max doctor --online
 Установка прошла, а терминал отвечает, что команды `max` нет. Узнать причину можно без неё:
 
 ```sh
-npx @leemour/max-cli doctor
+npx @wirecat/max-cli doctor
 ```
 
 Строка `max on PATH` покажет, найдена ли команда, а заметка ниже — что сделать.
@@ -83,7 +83,7 @@ $env:Path -split ';'
 
 **PowerShell отвечает «running scripts is disabled on this system».** npm кладёт рядом `max.ps1`
 (и `npx.ps1`), а PowerShell по умолчанию запрещает скрипты. Либо запускайте `max.cmd` и
-`npx.cmd` — они работают всегда (`npx.cmd @leemour/max-cli doctor`), — либо разрешите скрипты для
+`npx.cmd` — они работают всегда (`npx.cmd @wirecat/max-cli doctor`), — либо разрешите скрипты для
 своей учётной записи:
 
 ```powershell
@@ -96,12 +96,12 @@ Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
 **На `PATH` другой `max`.** Если раньше в `PATH` стоит чужая программа с тем же именем, `max doctor`
 назовёт её путь. Вызывайте нашу по полному пути или поставьте её каталог раньше.
 
-### `npx @leemour/max-cli` ставит не ту версию
+### `npx @wirecat/max-cli` ставит не ту версию
 
 `npx` кэширует. Явная версия обходит кэш:
 
 ```sh
-npx @leemour/max-cli@latest --version
+npx @wirecat/max-cli@latest --version
 ```
 
 ## Вход и профили

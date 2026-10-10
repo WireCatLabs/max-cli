@@ -1,5 +1,5 @@
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
-import { SendJournal } from "@leemour/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { SendJournal } from "@wirecat/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
 import { timeOfMessageId } from "./client.js"
 import type { Environment } from "./commands/context.js"

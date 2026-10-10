@@ -11,7 +11,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { openCache } from "@leemour/cli-messaging/store"
+import { openCache } from "@wirecat/cli-messaging/store"
 import { decodeOgg } from "../dist/transcribe/speech.js"
 
 const runtime = typeof (globalThis as { Bun?: unknown }).Bun === "undefined" ? "node" : "bun"

@@ -17,7 +17,7 @@ execFileSync(
     "--global",
     "--prefix",
     prefix,
-    "--allow-scripts=@leemour/max-cli",
+    "--allow-scripts=@wirecat/max-cli",
     "--foreground-scripts",
     resolve(tarball),
   ],

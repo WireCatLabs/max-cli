@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import { runUpdate, type UpdateEnvironment, updateNotice } from "./update.js"
 
 const PNPM =
-  "/home/a/.local/share/pnpm/store/v11/links/@leemour/max-cli/0.6.0/x/node_modules/@leemour/max-cli/dist/update.js"
+  "/home/a/.local/share/pnpm/store/v11/links/@wirecat/max-cli/0.6.0/x/node_modules/@wirecat/max-cli/dist/update.js"
 
 const setup = (latest: string | Error = "99.0.0") => {
   const home = mkdtempSync(join(tmpdir(), "max-update-"))

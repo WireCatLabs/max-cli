@@ -1,5 +1,5 @@
-import type { ManifestOperation, SchemaNode } from "@leemour/cli-core/codegen"
-import { apiFlagOf, apiOptionKey, checkApiBody, checkApiParameter, readApiBody } from "@leemour/cli-messaging/cli"
+import type { ManifestOperation, SchemaNode } from "@wirecat/cli-core/codegen"
+import { apiFlagOf, apiOptionKey, checkApiBody, checkApiParameter, readApiBody } from "@wirecat/cli-messaging/cli"
 import { schemas } from "./generated/schemas.js"
 
 export { apiFlagOf as flagOf, apiOptionKey as optionKey, readApiBody as readBody }

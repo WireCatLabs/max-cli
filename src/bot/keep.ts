@@ -1,12 +1,12 @@
-import { CliError } from "@leemour/cli-core"
-import type { Chat, Message } from "@leemour/cli-messaging"
+import { CliError } from "@wirecat/cli-core"
+import type { Chat, Message } from "@wirecat/cli-messaging"
 import {
   type AccountKey,
   type IngestedVia,
   type MessageStore,
   openStore,
   type PersonFacts,
-} from "@leemour/cli-messaging/store"
+} from "@wirecat/cli-messaging/store"
 import type { ChatRegistry } from "./registry.js"
 
 /** How a bot's messages are told apart from a personal account's in the shared store and its locators. */

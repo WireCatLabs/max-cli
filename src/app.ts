@@ -1,4 +1,4 @@
-import type { AppIdentity } from "@leemour/cli-messaging/cli"
+import type { AppIdentity } from "@wirecat/cli-messaging/cli"
 import { VERSION } from "./version.js"
 
 export const MAX_APP: AppIdentity = {

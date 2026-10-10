@@ -1,4 +1,4 @@
-import { isCliError } from "@leemour/cli-core"
+import { isCliError } from "@wirecat/cli-core"
 import type { MaxClient, MaxClientOptions } from "../client.js"
 import type { CommandContext } from "../commands/context.js"
 import { type MaxRecord, maxRecord } from "../record.js"

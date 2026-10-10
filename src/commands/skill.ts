@@ -1,4 +1,4 @@
-import { skillCommand as sharedSkillCommand } from "@leemour/cli-messaging/cli"
+import { skillCommand as sharedSkillCommand } from "@wirecat/cli-messaging/cli"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { SKILL } from "../skill.js"

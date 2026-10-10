@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process"
 import { dirname, join, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
-import { installSkill } from "@leemour/cli-core/skill"
+import { installSkill } from "@wirecat/cli-core/skill"
 import { SKILL, SKILL_APP } from "../skill.js"
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..")

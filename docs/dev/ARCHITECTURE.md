@@ -69,7 +69,7 @@ versions and first-failure record before comparing results with another release.
 ```
 
 the diagram above is the personal account's own half. Since #260 and T6 (#330–#382)
-max also plugs into `@leemour/cli-messaging`: `src/messenger.ts` describes MAX once as a `Messenger`
+max also plugs into `@wirecat/cli-messaging`: `src/messenger.ts` describes MAX once as a `Messenger`
 (`maxMessenger` — provider, paging, the guard, permissions), and `src/adapter/max-adapter.ts`
 (`maxAdapter`) wraps `MaxClient` behind cli-messaging's `MessengerAdapter` port, translating MAX's
 models into the shared domain types. `src/program.ts` registers cli-messaging's shared commands —
@@ -82,10 +82,10 @@ the adapter.
 
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
   §12.
-- [`@leemour/cli-core`](https://github.com/WireCatLabs/cli-core) supplies output streams, renderer,
+- [`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-core) supplies output streams, renderer,
   error model and exit codes, keyring, config and clocks — the non-MAX half, shared with
   `braze-cli`.
-- **One npm package** (`@leemour/max-cli`, command `max`), split by directory, not workspace
+- **One npm package** (`@wirecat/max-cli`, command `max`), split by directory, not workspace
   (`NEED-12`). **`src/commands/` may not import from `src/protocol/`, `src/spec/` or
   `src/generated/`**: a Biome rule fails the build with that sentence. Verified by writing the
   forbidden import, both directions.
@@ -597,7 +597,7 @@ scripts/bot/overrides.ts         read / write / destructive, where the HTTP meth
 src/bot/generated/{types,schemas,manifest}.ts   docs/dev/bot-api-coverage.md
 ```
 
-The generator itself is `@leemour/cli-core/codegen`, shared with other CLIs; only the adapter from
+The generator itself is `@wirecat/cli-core/codegen`, shared with other CLIs; only the adapter from
 OpenAPI is ours. The generated Valibot schemas keep the schema's constraints and turn a 64-bit id
 into an exact decimal string. They expect numbers from `lossless-json`, and they decode only — a
 request is validated with them and then sent as the original lossless value. Enums and

@@ -1,4 +1,4 @@
-import { CliError } from "@leemour/cli-core"
+import { CliError } from "@wirecat/cli-core"
 import {
   type Asker,
   currentOperation,
@@ -12,7 +12,7 @@ import {
   sendGuard,
   recipientsPathFor as sharedRecipientsPath,
   sendsPathFor as sharedSendsPath,
-} from "@leemour/cli-messaging/sends"
+} from "@wirecat/cli-messaging/sends"
 import { MAX_APP } from "./app.js"
 import { type Settings, setCommandFor } from "./config.js"
 import { approvePermission } from "./permissions.js"

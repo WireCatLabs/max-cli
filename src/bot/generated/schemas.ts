@@ -2,7 +2,7 @@
 // Source: spec/bot/schema.yaml
 // Run: pnpm bot:generate
 
-import { int64, integer, number, unique } from "@leemour/cli-core/codegen/runtime"
+import { int64, integer, number, unique } from "@wirecat/cli-core/codegen/runtime"
 import * as v from "valibot"
 import type * as T from "./types.js"
 

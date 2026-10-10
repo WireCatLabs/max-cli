@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring, resolvePaths } from "@leemour/cli-core"
+import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"

@@ -1,5 +1,5 @@
-import { CliError } from "@leemour/cli-core"
-import type { ChatKind, Id, Message } from "@leemour/cli-messaging"
+import { CliError } from "@wirecat/cli-core"
+import type { ChatKind, Id, Message } from "@wirecat/cli-messaging"
 import {
   NO_RULES,
   openRequestTask,
@@ -9,9 +9,9 @@ import {
   replyRenderer,
   replyTo,
   senderFacts,
-} from "@leemour/cli-messaging/cli"
-import { guardedWrite, levelFor, type SendGuard } from "@leemour/cli-messaging/sends"
-import { type MessageStore, openStore } from "@leemour/cli-messaging/store"
+} from "@wirecat/cli-messaging/cli"
+import { guardedWrite, levelFor, type SendGuard } from "@wirecat/cli-messaging/sends"
+import { type MessageStore, openStore } from "@wirecat/cli-messaging/store"
 import { MAX_APP } from "../app.js"
 import type { MaxClient } from "../client.js"
 import { resolveSettings } from "../config.js"

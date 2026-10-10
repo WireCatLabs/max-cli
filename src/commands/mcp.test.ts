@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
-import { captureStreams } from "@leemour/cli-core"
-import { httpTokenFile } from "@leemour/cli-messaging/cli"
+import { captureStreams } from "@wirecat/cli-core"
+import { httpTokenFile } from "@wirecat/cli-messaging/cli"
 import { describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "../app.js"
 import { serveOverHttpUntilStopped, serveOverStdio } from "../mcp/server.js"
@@ -13,7 +13,7 @@ vi.mock("../mcp/server.js", () => ({
   serveOverHttpUntilStopped: vi.fn(async () => {}),
 }))
 
-const SCRIPT = "C:\\Users\\x\\AppData\\Roaming\\npm\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js"
+const SCRIPT = "C:\\Users\\x\\AppData\\Roaming\\npm\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js"
 const entry = (over: Partial<Parameters<typeof serverEntry>[0]> = {}) =>
   serverEntry({
     profile: "default",
@@ -60,7 +60,7 @@ describe("max mcp config", () => {
   })
 
   it("refuses npx's cache, which is cleared under it", () => {
-    const npx = "/home/x/.npm/_npx/1a2b/node_modules/@leemour/max-cli/dist/bin/max.js"
+    const npx = "/home/x/.npm/_npx/1a2b/node_modules/@wirecat/max-cli/dist/bin/max.js"
 
     expect(() => entry({ scriptPath: npx })).toThrow(/npx/)
   })

@@ -1,5 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises"
-import { CliError } from "@leemour/cli-core"
+import { CliError } from "@wirecat/cli-core"
 import type { WireClient } from "../generated/client.generated.js"
 import type { Payload } from "../protocol/frame.js"
 

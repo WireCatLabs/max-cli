@@ -1,4 +1,4 @@
-import { markReadCommand, chatsCommand as sharedChatsCommand } from "@leemour/cli-messaging/cli"
+import { markReadCommand, chatsCommand as sharedChatsCommand } from "@wirecat/cli-messaging/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 

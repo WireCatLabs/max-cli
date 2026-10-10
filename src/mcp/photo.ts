@@ -1,5 +1,5 @@
-import { CliError } from "@leemour/cli-core"
-import { McpPicture } from "@leemour/cli-messaging/cli"
+import { CliError } from "@wirecat/cli-core"
+import { McpPicture } from "@wirecat/cli-messaging/cli"
 import type { MaxClient } from "../client.js"
 import { fetchBytes, publicOnly, type Reach } from "../download.js"
 

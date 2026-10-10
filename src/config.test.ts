@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { levelFor } from "@leemour/cli-messaging/sends"
+import { levelFor } from "@wirecat/cli-messaging/sends"
 import { beforeEach, describe, expect, it } from "vitest"
 import { changeSetting, configuredProfiles, resolveSettings, setCommandFor } from "./config.js"
 

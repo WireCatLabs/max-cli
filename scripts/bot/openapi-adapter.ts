@@ -12,7 +12,7 @@ import type {
   Effect,
   HttpMethod,
   SchemaNode,
-} from "@leemour/cli-core/codegen"
+} from "@wirecat/cli-core/codegen"
 
 type Json = Record<string, unknown>
 type Node<T extends SchemaNode["type"]> = Extract<SchemaNode, { type: T }>

@@ -1,4 +1,4 @@
-import { CliError, type Renderer, type RenderFormat, type Streams } from "@leemour/cli-core"
+import { CliError, type Renderer, type RenderFormat, type Streams } from "@wirecat/cli-core"
 import type { Command } from "commander"
 import type { Settings } from "../config.js"
 import type { Page } from "../domain/models.js"

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
-import { listRuns, runsDirFor } from "@leemour/cli-messaging/cli"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { listRuns, runsDirFor } from "@wirecat/cli-messaging/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"

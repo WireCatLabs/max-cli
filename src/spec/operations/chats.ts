@@ -1,4 +1,4 @@
-import type { ChatAction } from "@leemour/cli-messaging/sends"
+import type { ChatAction } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
 import { defineOperation } from "../define.js"
 import { ambiguous, chatOf, countOf, messageOf, peopleOf } from "../guards.js"

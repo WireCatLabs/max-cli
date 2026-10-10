@@ -1,4 +1,4 @@
-import { CliError } from "@leemour/cli-core"
+import { CliError } from "@wirecat/cli-core"
 import { asId, type Payload } from "../protocol/frame.js"
 
 /**

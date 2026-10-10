@@ -1,6 +1,6 @@
 import { homedir } from "node:os"
-import { resolvePaths } from "@leemour/cli-core"
-import { storePath } from "@leemour/cli-messaging/store"
+import { resolvePaths } from "@wirecat/cli-core"
+import { storePath } from "@wirecat/cli-messaging/store"
 import { describe, expect, it } from "vitest"
 
 describe("the test sandbox", () => {

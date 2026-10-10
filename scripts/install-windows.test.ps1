@@ -20,7 +20,7 @@ $key.Dispose()
 if (Get-Command max -ErrorAction SilentlyContinue) { throw 'Expected max to be absent before install.' }
 
 # The actual packed npm lifecycle hook must persist PATH and install skills without login.
-& npm.cmd install --global --prefix $prefix --allow-scripts=@leemour/max-cli --foreground-scripts $Tarball
+& npm.cmd install --global --prefix $prefix --allow-scripts=@wirecat/max-cli --foreground-scripts $Tarball
 if ($LASTEXITCODE -ne 0) { throw 'Packed global npm install failed.' }
 $key = [Microsoft.Win32.Registry]::CurrentUser.OpenSubKey('Environment')
 $userPath = [string] $key.GetValue('Path', '', [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
@@ -39,7 +39,7 @@ $env:Path = [Environment]::ExpandEnvironmentVariables("$([Environment]::GetEnvir
 & $powershell -NoProfile -ExecutionPolicy Restricted -Command 'max --version; if ($LASTEXITCODE -ne 0) { exit 1 }; max skill show | Out-Null; if ($LASTEXITCODE -ne 0) { exit 1 }'
 if ($LASTEXITCODE -ne 0) { throw 'Fresh restricted PowerShell cannot run bare max.' }
 
-$installer = Join-Path $prefix 'node_modules/@leemour/max-cli/install/windows.ps1'
+$installer = Join-Path $prefix 'node_modules/@wirecat/max-cli/install/windows.ps1'
 $before = $userPath
 & $installer -RepairOnly -Prefix $prefix -NodeDirectory $nodeDirectory -Json
 if ($LASTEXITCODE -ne 0) { throw 'Repeated PATH repair failed.' }

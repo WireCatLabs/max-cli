@@ -1,8 +1,8 @@
 import { openAsBlob, statSync } from "node:fs"
 import { basename, extname } from "node:path"
-import { CliError, type ErrorCode, realSleep, type SleepLike } from "@leemour/cli-core"
-import { type FetchLike, statusToCode } from "@leemour/cli-core/http"
-import type { DiagnosticEvent } from "@leemour/cli-messaging/cli"
+import { CliError, type ErrorCode, realSleep, type SleepLike } from "@wirecat/cli-core"
+import { type FetchLike, statusToCode } from "@wirecat/cli-core/http"
+import type { DiagnosticEvent } from "@wirecat/cli-messaging/cli"
 import { parse } from "lossless-json"
 import { plainJson } from "./transport.js"
 

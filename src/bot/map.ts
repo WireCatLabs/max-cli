@@ -1,5 +1,5 @@
-import type { Attachment, Button, ButtonKind, Chat, ChatKind, Message, QuotedMessage } from "@leemour/cli-messaging"
-import type { PersonFacts } from "@leemour/cli-messaging/store"
+import type { Attachment, Button, ButtonKind, Chat, ChatKind, Message, QuotedMessage } from "@wirecat/cli-messaging"
+import type { PersonFacts } from "@wirecat/cli-messaging/store"
 import type {
   Attachment as BotAttachment,
   Chat as BotChat,

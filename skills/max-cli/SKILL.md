@@ -55,7 +55,7 @@ MCP: сначала `max_tools_search`, затем `max_read` или `max_write`
 Сначала предложите выбрать чат и объём истории; только затем используйте `store fetch`.
 Навык можно поставить отдельно, без входа: `max skill install --for all`.
 На Windows при блокировке скриптов используйте `max.cmd` и `npm.cmd`; без PATH:
-`npm.cmd exec --yes --package=@leemour/max-cli -- max setup --agent codex`.
+`npm.cmd exec --yes --package=@wirecat/max-cli -- max setup --agent codex`.
 Бот подключается отдельно через `max <профиль> bot auth set`.
 
 ## Границы
@@ -162,7 +162,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 5d. **Ошибку, которую не удаётся объяснить, — в отчёт автору.** Предложите владельцу
    `max doctor report create`: команда пишет файл без текстов сообщений и печатает ссылку на новую
    задачу на GitHub. Задачу создаёт владелец сам: она видна всем.
-5e. **`max` не находится — `npx @leemour/max-cli doctor`.** Он скажет, куда поставлена команда и
+5e. **`max` не находится — `npx @wirecat/max-cli doctor`.** Он скажет, куда поставлена команда и
    почему терминал её не видит, и напечатает команду исправления. Клиенту MCP без терминала (Claude
    Desktop, Cursor) готовую запись с полными путями печатает `max mcp config`.
 6. **`messages show` и `messages context` требуют чат и id сообщения** — или одну ссылку `msg:…` из

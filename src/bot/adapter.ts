@@ -1,6 +1,6 @@
-import { CliError, type SleepLike } from "@leemour/cli-core"
-import type { FetchLike } from "@leemour/cli-core/http"
-import type { AdminRight, Markup, Message } from "@leemour/cli-messaging"
+import { CliError, type SleepLike } from "@wirecat/cli-core"
+import type { FetchLike } from "@wirecat/cli-core/http"
+import type { AdminRight, Markup, Message } from "@wirecat/cli-messaging"
 import type {
   BotAction,
   BotAdapter,
@@ -9,7 +9,7 @@ import type {
   BotEvent,
   BotWebhook,
   EventSink,
-} from "@leemour/cli-messaging/cli"
+} from "@wirecat/cli-messaging/cli"
 import { formatMarkdown, toHtml } from "../format-markdown.js"
 import { type BotApiClient, botOperations } from "./client.js"
 import { checkBody } from "./input.js"

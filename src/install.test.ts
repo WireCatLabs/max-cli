@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest"
 import { checkInstall, pathFix } from "./install.js"
 
 const NPM_WIN = "C:\\Users\\O'Neil Smith\\AppData\\Roaming\\npm"
-const WIN_SCRIPT = `${NPM_WIN}\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js`
-const SHIM = '@"%~dp0\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js" %*'
+const WIN_SCRIPT = `${NPM_WIN}\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js`
+const SHIM = '@"%~dp0\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js" %*'
 
 const onWindows = (files: Record<string, string>, env: NodeJS.ProcessEnv, scriptPath = WIN_SCRIPT) =>
   checkInstall({
@@ -25,7 +25,7 @@ const onPosix = (
   platform: "linux" | "darwin",
   files: Record<string, string>,
   env: NodeJS.ProcessEnv,
-  scriptPath = "/usr/local/lib/node_modules/@leemour/max-cli/dist/bin/max.js",
+  scriptPath = "/usr/local/lib/node_modules/@wirecat/max-cli/dist/bin/max.js",
 ) =>
   checkInstall({
     scriptPath,
@@ -66,7 +66,7 @@ describe("where max is installed and whether a terminal finds it", () => {
     const install = onWindows(
       { [`${version}\\max.cmd`]: SHIM, "C:\\nvm4w\\nodejs\\max.cmd": SHIM },
       { Path: "C:\\nvm4w\\nodejs" },
-      `${version}\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js`,
+      `${version}\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js`,
     )
 
     expect(install).toMatchObject({ binDir: version, binDirOnPath: false, isMaxCli: true, fix: [] })
@@ -83,7 +83,7 @@ describe("where max is installed and whether a terminal finds it", () => {
 
   it("does not look for a global command when run through npx, but says whether one exists", () => {
     const npx =
-      "C:\\Users\\x\\AppData\\Local\\npm-cache\\_npx\\1a2b\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js"
+      "C:\\Users\\x\\AppData\\Local\\npm-cache\\_npx\\1a2b\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js"
     const install = onWindows({}, { Path: "C:\\Windows" }, npx)
 
     expect(install).toMatchObject({ installer: "npx", binDir: null, binDirOnPath: null, onPath: null, fix: [] })
@@ -93,7 +93,7 @@ describe("where max is installed and whether a terminal finds it", () => {
     const install = onWindows(
       {},
       { Path: "C:\\Windows" },
-      "C:\\project\\node_modules\\@leemour\\max-cli\\dist\\bin\\max.js",
+      "C:\\project\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js",
     )
 
     expect(install).toMatchObject({ installer: "npm", binDir: null, fix: [] })
@@ -102,7 +102,7 @@ describe("where max is installed and whether a terminal finds it", () => {
   it.each(["linux", "darwin"] as const)(
     "on %s: <prefix>/bin beside lib, and an export line, not PowerShell",
     (platform) => {
-      const script = "/home/x/.npm-global/lib/node_modules/@leemour/max-cli/dist/bin/max.js"
+      const script = "/home/x/.npm-global/lib/node_modules/@wirecat/max-cli/dist/bin/max.js"
       const install = onPosix(platform, { "/home/x/.npm-global/bin/max": script }, { PATH: "/usr/bin:/bin" }, script)
 
       expect(install).toMatchObject({ binDir: "/home/x/.npm-global/bin", binDirOnPath: false, onPath: null })
@@ -111,14 +111,14 @@ describe("where max is installed and whether a terminal finds it", () => {
   )
 
   it("on Linux, knows the max on PATH is this one by where its link leads", () => {
-    const script = "/usr/local/lib/node_modules/@leemour/max-cli/dist/bin/max.js"
+    const script = "/usr/local/lib/node_modules/@wirecat/max-cli/dist/bin/max.js"
     const install = onPosix("linux", { "/usr/local/bin/max": script }, { PATH: "/usr/local/bin:/usr/bin" })
 
     expect(install).toMatchObject({ binDirOnPath: true, onPath: "/usr/local/bin/max", isMaxCli: true, fix: [] })
   })
 
   it("on macOS, takes pnpm's shell script for max-cli, and another max for another program", () => {
-    const pnpm = '#!/bin/sh\nexec node "$basedir/../global/v11/x/node_modules/@leemour/max-cli/dist/bin/max.js" "$@"'
+    const pnpm = '#!/bin/sh\nexec node "$basedir/../global/v11/x/node_modules/@wirecat/max-cli/dist/bin/max.js" "$@"'
     expect(onPosix("darwin", { "/p/bin/max": pnpm }, { PATH: "/p/bin" }).isMaxCli).toBe(true)
     expect(onPosix("darwin", { "/opt/bin/max": "\u007fELF" }, { PATH: "/opt/bin" }).isMaxCli).toBe(false)
   })

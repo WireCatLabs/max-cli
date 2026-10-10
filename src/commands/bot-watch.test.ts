@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, type KeyringStore, memoryKeyring } from "@leemour/cli-core"
+import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-core"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { JoinLog } from "../bot/joins.js"

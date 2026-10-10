@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { PassThrough } from "node:stream"
 import { stripVTControlCharacters } from "node:util"
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -250,10 +250,10 @@ describe("MAX guided setup", () => {
 
   it("keeps an npm exec runner in next commands", async () => {
     const h = harness()
-    h.environment.update = { scriptPath: "/tmp/.npm/_npx/abc/node_modules/@leemour/max-cli/dist/bin/max.js" }
+    h.environment.update = { scriptPath: "/tmp/.npm/_npx/abc/node_modules/@wirecat/max-cli/dist/bin/max.js" }
     expect(await h.setup("--json")).toBe(0)
     expect(JSON.parse(h.streams.stdout.join("\n")).next.instructions).toContain(
-      "exec --yes --package=@leemour/max-cli -- max setup-test skill show",
+      "exec --yes --package=@wirecat/max-cli -- max setup-test skill show",
     )
   })
 

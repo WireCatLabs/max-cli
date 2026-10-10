@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { CliError, captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-core"
 import {
   crashOf,
   type DiagnosticEvent,
@@ -10,7 +10,7 @@ import {
   readEvents,
   recorded,
   renderEvent,
-} from "@leemour/cli-messaging/cli"
+} from "@wirecat/cli-messaging/cli"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "./app.js"
 import { MaxClient } from "./client.js"
@@ -126,7 +126,7 @@ describe("a crash's frames", () => {
     const error = new Error("x")
     error.stack = [
       "Error: x",
-      "    at MaxClient.connect (/home/someone/.local/share/pnpm/global/node_modules/@leemour/max-cli/dist/client.js:1497:13)",
+      "    at MaxClient.connect (/home/someone/.local/share/pnpm/global/node_modules/@wirecat/max-cli/dist/client.js:1497:13)",
       "    at async /home/someone/project/src/commands/chats.ts:40:5",
       "    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
     ].join("\n")

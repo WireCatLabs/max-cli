@@ -17,7 +17,7 @@ import {
   packageVersion,
   packContents,
   releaseCheck,
-} from "@leemour/cli-core/release"
+} from "@wirecat/cli-core/release"
 import { CHANGELOG, clientAgeProblems, docsRules, PACKED, PACKED_SAID } from "./release/checks.ts"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
@@ -26,7 +26,7 @@ const read = (path: string) => readFileSync(join(root, path), "utf8")
 
 const failed = releaseCheck(
   [
-    { name: "version not on npm", run: notOnNpm(root, "@leemour/max-cli", version) },
+    { name: "version not on npm", run: notOnNpm(root, "@wirecat/max-cli", version) },
     { name: "version in step", run: command(root, "pnpm", "version:check") },
     { name: "changelog", run: () => changelogProblems(read("CHANGELOG.md"), { ...CHANGELOG, version, release: true }) },
     { name: "web client version", run: () => clientAgeProblems(read("src/spec/identity.ts")) },

@@ -1,5 +1,5 @@
-import { CliError, exitCodeFor } from "@leemour/cli-core"
-import { type ServerOptions, serverCommand as sharedServerCommand } from "@leemour/cli-messaging/cli"
+import { CliError, exitCodeFor } from "@wirecat/cli-core"
+import { type ServerOptions, serverCommand as sharedServerCommand } from "@wirecat/cli-messaging/cli"
 import type { Command } from "commander"
 import { maxMessenger } from "../messenger.js"
 import { serverStatus, stopServer } from "../server/server-connection.js"

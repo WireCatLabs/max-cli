@@ -1,4 +1,4 @@
-import { generatedApiCommand, botCommand as sharedBotCommand } from "@leemour/cli-messaging/cli"
+import { generatedApiCommand, botCommand as sharedBotCommand } from "@wirecat/cli-messaging/cli"
 import type { Command } from "commander"
 import { botOperations } from "../bot/client.js"
 import { checkBody, checkParameter } from "../bot/input.js"

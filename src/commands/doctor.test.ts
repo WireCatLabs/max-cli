@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@leemour/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
 import { afterEach, describe, expect, it } from "vitest"
 import { run } from "../program.js"
 import { SessionStore } from "../session/store.js"
@@ -191,6 +191,6 @@ describe("what doctor says about the installation", () => {
   })
 
   it("under npx with no max on PATH, says how to install one", () => {
-    expect(notes(diagnosis({ installer: "npx" }))).toEqual([expect.stringContaining("npm install -g @leemour/max-cli")])
+    expect(notes(diagnosis({ installer: "npx" }))).toEqual([expect.stringContaining("npm install -g @wirecat/max-cli")])
   })
 })

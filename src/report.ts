@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from "node:crypto"
 import { homedir } from "node:os"
 import { basename, join } from "node:path"
-import { CliError } from "@leemour/cli-core"
-import { findRun, listRuns, type RunMetadata, readEvents, runtime } from "@leemour/cli-messaging/cli"
-import type { SendEntry } from "@leemour/cli-messaging/sends"
+import { CliError } from "@wirecat/cli-core"
+import { findRun, listRuns, type RunMetadata, readEvents, runtime } from "@wirecat/cli-messaging/cli"
+import type { SendEntry } from "@wirecat/cli-messaging/sends"
 import type { Diagnosis } from "./diagnose.js"
 import { VERSION } from "./version.js"
 

@@ -1,4 +1,4 @@
-import { CliError } from "@leemour/cli-core"
+import { CliError } from "@wirecat/cli-core"
 import type { MaxClient } from "../client.js"
 import type { AttachmentLink, Id, Message } from "../domain/models.js"
 import { fetchBytes, LARGEST_VOICE } from "../download.js"

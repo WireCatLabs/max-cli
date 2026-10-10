@@ -1,4 +1,4 @@
-import type { Permission, SendKind } from "@leemour/cli-messaging/sends"
+import type { Permission, SendKind } from "@wirecat/cli-messaging/sends"
 
 /**
  * Which of the personal account's permission names (`CLI-37`) a bot write falls under, so one

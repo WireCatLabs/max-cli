@@ -1,10 +1,10 @@
-import { captureStreams } from "@leemour/cli-core"
+import { captureStreams } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import { run } from "../program.js"
 import type { UpdateEnvironment } from "../update.js"
 
 const PNPM =
-  "/home/a/.local/share/pnpm/store/v11/links/@leemour/max-cli/0.6.0/x/node_modules/@leemour/max-cli/dist/update.js"
+  "/home/a/.local/share/pnpm/store/v11/links/@wirecat/max-cli/0.6.0/x/node_modules/@wirecat/max-cli/dist/update.js"
 
 const upgrade = async (argv: string[], { latest = "99.0.0", scriptPath = PNPM, exit = 0 } = {}) => {
   const ran: string[][] = []
@@ -31,7 +31,7 @@ describe("max upgrade", () => {
       latest: "99.0.0",
       newer: true,
       installer: "pnpm",
-      command: "pnpm add -g @leemour/max-cli@latest",
+      command: "pnpm add -g @wirecat/max-cli@latest",
       updated: false,
       restarted: [],
     })
@@ -40,7 +40,7 @@ describe("max upgrade", () => {
   it("runs the package manager that installed max, and says it did", async () => {
     const { code, ran, result } = await upgrade([])
     expect(code).toBe(0)
-    expect(ran).toEqual([["pnpm", "add", "-g", "@leemour/max-cli@latest"]])
+    expect(ran).toEqual([["pnpm", "add", "-g", "@wirecat/max-cli@latest"]])
     expect(result).toMatchObject({ updated: true, restarted: [] })
   })
 

@@ -7,8 +7,8 @@ import {
   resolvePaths,
   saveConfigFile,
   writeSecurely,
-} from "@leemour/cli-core"
-import { annotate } from "@leemour/cli-core/commands"
+} from "@wirecat/cli-core"
+import { annotate } from "@wirecat/cli-core/commands"
 import {
   AI_SETTING_KEYS,
   changeStoreSetting,
@@ -17,7 +17,7 @@ import {
   refuseUnknownKey,
   STORE_SETTINGS,
   storeSettings,
-} from "@leemour/cli-messaging/cli"
+} from "@wirecat/cli-messaging/cli"
 import { Command } from "commander"
 import * as v from "valibot"
 import { MAX_APP } from "../app.js"

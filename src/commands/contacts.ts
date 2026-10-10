@@ -1,5 +1,5 @@
-import { CliError } from "@leemour/cli-core"
-import { contactsCommand as sharedContactsCommand } from "@leemour/cli-messaging/cli"
+import { CliError } from "@wirecat/cli-core"
+import { contactsCommand as sharedContactsCommand } from "@wirecat/cli-messaging/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
