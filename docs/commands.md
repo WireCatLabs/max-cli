@@ -29,6 +29,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `-V, --version` | output the version number. |
 | `-v, --verbose` | more detail in what is shown: -v ids, -vv everything we know. По умолчанию: `0`. |
 | `--json` | machine-readable output: one JSON value on stdout, nothing else. |
+| `--agent-json` | JSON for AI agents: invisible controls are visible; ordinary --json preserves text. |
 | `--jsonl` | machine-readable output: one JSON object per line, for streaming and jq. |
 | `--quiet` | diagnostics off. |
 | `--trace` | one line per request on stderr: ids and timings, never message content. |
@@ -1435,7 +1436,7 @@ max messages send <chat> [text] [options]
 | `--photo <file>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption. |
 | `--as-file` | send the --file as a file to download, a video included. |
 | `--voice <file>` | send an Ogg Opus file as a voice message, alone, with no text. |
-| `--allow-any-file` | send a file even from a hidden folder, \~/.ssh or this CLI's own folders. |
+| `--allow-any-file` | send a file even from credential folders or this CLI's own folders. |
 | `--at-time <time>` | let the messenger send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now. |
 | `--sticker <id>` | send this sticker, alone; `stickers list` finds its id. |
 
@@ -4117,7 +4118,7 @@ max bot messages send <chat> [text] [options]
 | `--photo <file>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption. |
 | `--as-file` | send the --file as a file to download, a video included. |
 | `--voice <file>` | send an Ogg Opus file as a voice message, alone, with no text. |
-| `--allow-any-file` | send a file even from a hidden folder, \~/.ssh or this CLI's own folders. |
+| `--allow-any-file` | send a file even from credential folders or this CLI's own folders. |
 
 #### `max bot messages list`
 

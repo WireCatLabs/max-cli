@@ -92,8 +92,6 @@ describe("starting the package manager", () => {
   })
 
   it("fails loudly when the package manager cannot be started", () => {
-    // Windows starts it through cmd, which reports a missing program as exit 1 on stderr, not as an error.
-    if (process.platform === "win32") expect(runUpdate(["max-cli-no-such-installer", "--version"])).not.toBe(0)
-    else expect(() => runUpdate(["max-cli-no-such-installer", "--version"])).toThrow(/max-cli-no-such-installer/)
+    expect(() => runUpdate(["max-cli-no-such-installer", "--version"])).toThrow(/max-cli-no-such-installer/)
   })
 })
