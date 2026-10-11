@@ -7,9 +7,9 @@ import {
   realSleep,
   type SleepLike,
   singleLine,
-} from "@wirecat/cli-core"
-import type { ManifestOperation } from "@wirecat/cli-core/codegen"
-import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-core/http"
+} from "@wirecat/cli-base"
+import type { ManifestOperation } from "@wirecat/cli-base/codegen"
+import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-base/http"
 import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-messaging/cli"
 import { guardedWrite, newOperationId } from "@wirecat/cli-messaging/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"

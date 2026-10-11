@@ -1,7 +1,7 @@
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { listRuns, runsDirFor, startRun } from "@wirecat/cli-messaging/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "../app.js"

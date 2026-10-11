@@ -1,4 +1,4 @@
-import { captureStreams, createRenderer } from "@wirecat/cli-core"
+import { captureStreams, createRenderer } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import { resolveSettings, type Settings } from "../config.js"
 import { renderPage, wholeNumber, window } from "./paging.js"

@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { validateSkill } from "@wirecat/cli-messaging/skill-validation"
 import type { Command } from "commander"
 import { afterEach, describe, expect, it, vi } from "vitest"

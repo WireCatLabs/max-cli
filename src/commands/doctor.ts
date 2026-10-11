@@ -1,5 +1,5 @@
 import { resolve } from "node:path"
-import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@wirecat/cli-core"
+import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@wirecat/cli-base"
 import { runsDirFor } from "@wirecat/cli-messaging/cli"
 import { SendJournal } from "@wirecat/cli-messaging/sends"
 import { Command } from "commander"

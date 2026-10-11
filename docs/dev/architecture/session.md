@@ -38,7 +38,7 @@ only comparison is against the token sent; the only output is whether a write fa
 ⚠ **A token reaches the keyring only after MAX accepts it** (`src/session/adopt.ts`). Writing first
 let a typo, an expired token or a closed browser tab replace a *working* credential — unrecoverably:
 `Credentials.write` overwrites, and a keyring entry cannot be read back. The same shape destroyed
-two working keys in `brazecli` on 2026-09-14 (noted in `cli-core`'s `credentials.ts`).
+two working keys in `brazecli` on 2026-09-14 (noted in `cli-base`'s `credentials.ts`).
 
 Restoring the old token after a failed login is worse: a kill between write and restore breaks the
 profile. So `MaxClient.connect` tries a candidate token and stores nothing; `adoptToken` writes once

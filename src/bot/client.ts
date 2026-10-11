@@ -1,5 +1,5 @@
-import { CliError } from "@wirecat/cli-core"
-import type { ManifestOperation } from "@wirecat/cli-core/codegen"
+import { CliError } from "@wirecat/cli-base"
+import type { ManifestOperation } from "@wirecat/cli-base/codegen"
 import type { Chat, Message } from "@wirecat/cli-messaging"
 import type { PersonFacts } from "@wirecat/cli-messaging/store"
 import * as v from "valibot"

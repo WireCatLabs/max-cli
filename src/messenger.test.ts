@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
+import { memoryKeyring } from "@wirecat/cli-base"
 import type { DiagnosticEvent } from "@wirecat/cli-messaging/cli"
 import type { SendEntry, SendGuard } from "@wirecat/cli-messaging/sends"
 import { guardedWrite, SendJournal } from "@wirecat/cli-messaging/sends"

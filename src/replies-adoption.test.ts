@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { repliesPathFor } from "@wirecat/cli-messaging/cli"
 import { describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"

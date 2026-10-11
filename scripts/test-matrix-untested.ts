@@ -591,14 +591,14 @@ export const UNTESTED: Untested[] = [
     command: "mcp setup",
     ...(option ? { option } : {}),
     reason:
-      "changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex",
+      "changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex",
   })),
   ...["", "--allow-send", "--confirm-send", "--allow-mark-read", "--allow-delete", "--allow-moderate"].map(
     (option) => ({
       command: "mcp doctor",
       ...(option ? { option } : {}),
       reason:
-        "starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
+        "starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
     }),
   ),
   ...["", "--allow-send", "--confirm-send", "--allow-dangerous", "--allow-delete", "--allow-moderate"].map(
@@ -924,4 +924,10 @@ export const UNTESTED: Untested[] = [
     reason:
       "cli-messaging src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1)",
   },
+  ...["--brief", "--full"].map((option) => ({
+    command: "",
+    option,
+    reason:
+      "cli-messaging src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0)",
+  })),
 ]

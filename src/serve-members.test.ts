@@ -1,7 +1,7 @@
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
+import { memoryKeyring } from "@wirecat/cli-base"
 import { openStore } from "@wirecat/cli-messaging/store"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MaxClient } from "./client.js"
@@ -79,7 +79,7 @@ describe("native daily member fetching", () => {
       if (mode === "denied") {
         // Config command machinery belongs to another suite; this worker reads the live profile file.
         const { writeFileSync, mkdirSync } = await import("node:fs")
-        const { resolvePaths } = await import("@wirecat/cli-core")
+        const { resolvePaths } = await import("@wirecat/cli-base")
         const { join } = await import("node:path")
         const paths = resolvePaths({ appName: "max-cli", prefix: "MAX" })
         mkdirSync(paths.config, { recursive: true })

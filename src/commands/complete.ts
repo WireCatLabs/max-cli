@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { resolvePaths, singleLine } from "@wirecat/cli-core"
+import { resolvePaths, singleLine } from "@wirecat/cli-base"
 import { completeCommand as sharedCompleteCommand } from "@wirecat/cli-messaging/cli"
 import { ChatRegistry } from "../bot/registry.js"
 import { configuredProfiles } from "../config.js"

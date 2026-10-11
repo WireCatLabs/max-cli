@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { memberFetches } from "@wirecat/cli-messaging/cli"
 import { chatsService, onlineDeps } from "@wirecat/cli-messaging/services"
 import { type MessageStore, openStore } from "@wirecat/cli-messaging/store"

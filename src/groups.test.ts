@@ -1,4 +1,4 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { rememberAccount } from "@wirecat/cli-messaging/cli"
 import { RecipientList, SendJournal } from "@wirecat/cli-messaging/sends"
 import { describe, expect, it } from "vitest"

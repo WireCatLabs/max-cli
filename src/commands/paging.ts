@@ -1,4 +1,4 @@
-import { CliError, type Renderer, type RenderFormat, type Streams } from "@wirecat/cli-core"
+import { CliError, type Renderer, type RenderFormat, type Streams } from "@wirecat/cli-base"
 import type { Command } from "commander"
 import type { Settings } from "../config.js"
 import type { Page } from "../domain/models.js"

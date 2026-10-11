@@ -1,6 +1,6 @@
 import { appendFileSync } from "node:fs"
-import { CliError, processStreams } from "@wirecat/cli-core"
-import { metaOf } from "@wirecat/cli-core/commands"
+import { CliError, processStreams } from "@wirecat/cli-base"
+import { metaOf } from "@wirecat/cli-base/commands"
 import {
   attachmentsCommand,
   conversationsCommand,

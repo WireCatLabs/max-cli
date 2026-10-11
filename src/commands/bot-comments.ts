@@ -1,5 +1,5 @@
-import { CliError } from "@wirecat/cli-core"
-import { annotate } from "@wirecat/cli-core/commands"
+import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
 import { Command, Option } from "commander"
 import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"

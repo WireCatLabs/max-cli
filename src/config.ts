@@ -1,4 +1,4 @@
-import { CliError, loadConfigFile, saveConfigFile } from "@wirecat/cli-core"
+import { CliError, loadConfigFile, saveConfigFile } from "@wirecat/cli-base"
 import { AI_ENTRIES, type AISettings, first, settingsFor } from "@wirecat/cli-messaging/cli"
 import { type Level, PERMISSIONS, type Permission } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
@@ -285,7 +285,7 @@ export interface ResolveOptions {
  * output of a command that never asked for it.
  *
  * Two things already jump this queue and are documented rather than re-litigated here:
- * `MAX_TOKEN` outranks the keyring (`cli-core`'s `Credentials.read`), and `MAX_CONFIG_DIR`,
+ * `MAX_TOKEN` outranks the keyring (`cli-base`'s `Credentials.read`), and `MAX_CONFIG_DIR`,
  * `MAX_STATE_DIR` or `MAX_CACHE_DIR` move the whole installation — including which keyring entry
  * a profile means (`ARCHITECTURE.md` §14).
  */

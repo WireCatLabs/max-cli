@@ -1,6 +1,6 @@
 import { mkdirSync } from "node:fs"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring, resolvePaths, writeSecurely } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring, resolvePaths, writeSecurely } from "@wirecat/cli-base"
 import { rememberAccount } from "@wirecat/cli-messaging/cli"
 import { openStore } from "@wirecat/cli-messaging/store"
 import { beforeAll, describe, expect, it } from "vitest"

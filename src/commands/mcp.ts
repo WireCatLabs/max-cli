@@ -1,6 +1,6 @@
-import { CliError } from "@wirecat/cli-core"
-import { annotate } from "@wirecat/cli-core/commands"
-import { installerOf } from "@wirecat/cli-core/update"
+import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import { installerOf } from "@wirecat/cli-base/update"
 import { httpTokenFile, revokeAll } from "@wirecat/cli-messaging/cli"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
@@ -165,7 +165,7 @@ export const mcpCommand = (): Command => {
       })
       const [name, server] = Object.entries(entry.config.mcpServers)[0] ?? []
       if (!name || !server) throw new CliError("validation_error", "the MCP entry is empty")
-      const { installStdioEntry, probeStdio } = await import("@wirecat/cli-core/mcp")
+      const { installStdioEntry, probeStdio } = await import("@wirecat/cli-base/mcp")
       try {
         const configuration = server as Parameters<typeof probeStdio>[0]
         const { potentialWrites } = await probeStdio(configuration)
@@ -192,7 +192,7 @@ export const mcpCommand = (): Command => {
         })
         const server = Object.values(entry.config.mcpServers)[0]
         if (!server) throw new CliError("validation_error", "the MCP entry is empty")
-        const { probeStdio } = await import("@wirecat/cli-core/mcp")
+        const { probeStdio } = await import("@wirecat/cli-base/mcp")
         try {
           const { tools, potentialWrites } = await probeStdio(server as Parameters<typeof probeStdio>[0])
           renderer.result({

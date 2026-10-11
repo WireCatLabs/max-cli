@@ -2,7 +2,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync
 import { createServer, type Server } from "node:net"
 import { dirname, join } from "node:path"
 import { decode, ExtData } from "@msgpack/msgpack"
-import { type CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@wirecat/cli-core"
+import { type CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
 import { thisMachine, unitScope } from "@wirecat/cli-messaging/background"
 import { rememberAccount, repliesPathFor } from "@wirecat/cli-messaging/cli"
 import { guardedWrite, RecipientList, SendJournal } from "@wirecat/cli-messaging/sends"

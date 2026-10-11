@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join } from "node:path"
-import { pathsAreOverridden, resolvePaths } from "@wirecat/cli-core"
+import { pathsAreOverridden, resolvePaths } from "@wirecat/cli-base"
 import { runtime, storeSummary } from "@wirecat/cli-messaging/cli"
 import { openCache, storePath } from "@wirecat/cli-messaging/store"
 import { checkInstall, type Install, ownScript } from "./install.js"
@@ -224,8 +224,8 @@ const loadNative = async (): Promise<Native> => {
     }
   }
   return {
-    // The keyring module belongs to cli-core, so it is resolved from there, as cli-core does.
-    keyring: await attempt(() => createRequire(import.meta.resolve("@wirecat/cli-core"))("@napi-rs/keyring")),
+    // The keyring module belongs to cli-base, so it is resolved from there, as cli-base does.
+    keyring: await attempt(() => createRequire(import.meta.resolve("@wirecat/cli-base"))("@napi-rs/keyring")),
     sqlite: await attempt(async () => (await openCache(":memory:")).close()),
   }
 }

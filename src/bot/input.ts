@@ -1,4 +1,4 @@
-import type { ManifestOperation, SchemaNode } from "@wirecat/cli-core/codegen"
+import type { ManifestOperation, SchemaNode } from "@wirecat/cli-base/codegen"
 import { apiFlagOf, apiOptionKey, checkApiBody, checkApiParameter, readApiBody } from "@wirecat/cli-messaging/cli"
 import { schemas } from "./generated/schemas.js"
 

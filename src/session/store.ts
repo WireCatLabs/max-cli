@@ -8,7 +8,7 @@ import {
   pathsAreOverridden,
   resolvePaths,
   writeSecurely,
-} from "@wirecat/cli-core"
+} from "@wirecat/cli-base"
 
 /**
  * What a MAX session actually is: a token, and an identity for this installation.

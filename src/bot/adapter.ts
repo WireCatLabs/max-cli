@@ -1,5 +1,5 @@
-import { CliError, type SleepLike } from "@wirecat/cli-core"
-import type { FetchLike } from "@wirecat/cli-core/http"
+import { CliError, type SleepLike } from "@wirecat/cli-base"
+import type { FetchLike } from "@wirecat/cli-base/http"
 import type { AdminRight, Markup, Message } from "@wirecat/cli-messaging"
 import type {
   BotAction,

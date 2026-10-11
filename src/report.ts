@@ -1,7 +1,7 @@
 import { createHash, randomBytes } from "node:crypto"
 import { homedir } from "node:os"
 import { basename, join } from "node:path"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { findRun, listRuns, type RunMetadata, readEvents, runtime } from "@wirecat/cli-messaging/cli"
 import type { SendEntry } from "@wirecat/cli-messaging/sends"
 import type { Diagnosis } from "./diagnose.js"

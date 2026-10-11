@@ -1,5 +1,5 @@
 import { homedir } from "node:os"
-import { resolvePaths } from "@wirecat/cli-core"
+import { resolvePaths } from "@wirecat/cli-base"
 import { storePath } from "@wirecat/cli-messaging/store"
 import { describe, expect, it } from "vitest"
 

@@ -3,7 +3,7 @@ import { link, rm } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { PassThrough, Readable, Transform, Writable } from "node:stream"
 import { pipeline } from "node:stream/promises"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { AttachmentLink } from "./domain/models.js"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 

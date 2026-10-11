@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { httpTokenFile } from "@wirecat/cli-messaging/cli"
 import { describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "../app.js"

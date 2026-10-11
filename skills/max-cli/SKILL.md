@@ -304,7 +304,7 @@ max messages transcribe -1000 100000000000000001 --json   # текст голо�
 stdout — только данные, в той же форме, что у личного аккаунта; id больше 2^53 приходит строкой.
 Все методы официальной схемы Bot API доступны, включая операции вне удобных команд:
 `max <имя> bot api <операция>`; её флаги —
-`max commands --json`. Генераторы cli-core и конструктор native API общие с Telegram:
+`max commands --json`. Генераторы cli-base и конструктор native API общие с Telegram:
 `--body`, `--body-file` и stdin для JSON, `--poll-timeout` для нативного ожидания,
 `--timeout` для дедлайна команды. `--store-token <profile>` недоступен для текущих методов
 MAX: все они отклоняют его до выполнения операции.

@@ -39,6 +39,8 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--max-input-bytes <bytes>` | maximum buffered input bytes (default: 16777216). |
 | `--max-output-bytes <bytes>` | maximum machine output bytes (default: 4194304; 0 disables). |
 | `--fields <paths>` | comma-separated item or object fields: id,text; preserve pagination and operation ids. |
+| `--brief` | found messages and mail as reference, title, time, sender and excerpt only. |
+| `--full` | found messages and mail with their whole text and every provider field. |
 | `--dry-run` | preview parsed arguments and permissions before running the action. |
 | `--yes` | go ahead without the question an ask level puts before a write. |
 | `--record` | keep this run under `max runs` — ids and timings, never message content. |
@@ -2851,7 +2853,7 @@ max search messages [query] [options]
 
 ### `max search mail`
 
-search the mail imported into the local store — memo mail import brings it in
+search the mail imported into the local store — memo mail <account> import brings it in
 
 ```sh
 max search mail [query] [options]

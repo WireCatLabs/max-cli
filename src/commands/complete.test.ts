@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { captureStreams, resolvePaths } from "@wirecat/cli-core"
+import { captureStreams, resolvePaths } from "@wirecat/cli-base"
 import { rememberAccount } from "@wirecat/cli-messaging/cli"
 import { openStore } from "@wirecat/cli-messaging/store"
 import { beforeAll, describe, expect, it } from "vitest"

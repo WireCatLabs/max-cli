@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { SendJournal } from "@wirecat/cli-messaging/sends"
 import { describe, expect, it } from "vitest"
 import { run } from "../program.js"

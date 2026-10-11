@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { McpPicture } from "@wirecat/cli-messaging/cli"
 import type { MaxClient } from "../client.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"

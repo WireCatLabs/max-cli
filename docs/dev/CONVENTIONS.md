@@ -36,7 +36,7 @@ output except behind an explicit debug/raw option —
 **Reusable core code stays Node-light, and this is a weaker rule than it looks.** ⚠ *`braze-cli`
 requires its core to run unchanged in a Cloudflare Worker and enforces that with three gates.
 That is not a requirement here.* The brief asks only for "minimal coupling to Node-specific APIs
-in reusable core code **where practical**" (§2). The reason to keep `cli-core` free of Node
+in reusable core code **where practical**" (§2). The reason to keep `cli-base` free of Node
 specifics is that it has to serve more than one CLI and be testable without a filesystem, a
 terminal or a clock — not that it has to run in a Worker. Do not import the three-gate apparatus
 until something actually needs it.
