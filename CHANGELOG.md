@@ -8,7 +8,7 @@
 
 ### Исправлено
 
-- Работает на `@wirecat/cli-messaging` 0.230.0: там же cli-meetings 0.3.0 и пакеты SQLite и ONNX 1.0.1 с файлом
+- Работает на `@wirecat/cli-messaging` 0.231.0: там же cli-meetings 0.3.0 и пакеты SQLite и ONNX 1.0.1 с файлом
   лицензии; для `max` ничего не меняется.
 
 ## 0.45.3 — 11.10.2026
