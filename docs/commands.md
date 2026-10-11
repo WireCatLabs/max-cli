@@ -2282,6 +2282,75 @@ max tasks add <message> [options]
 | Опция | Что делает |
 |---|---|
 | `--type <name>` | the task's type: question, request, mention or promise. |
+| `--title <text>` | one line: the action and its object — send Alex the API token. |
+| `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
+| `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
+| `--check <when>` | when to look at it again: an ISO 8601 time or 2h, 3d from now; none clears it. |
+
+### `max tasks plan`
+
+set a task's title, description, due date and next check; nothing reaches the messenger
+
+```sh
+max tasks plan <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--title <text>` | one line: the action and its object — send Alex the API token. |
+| `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
+| `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
+| `--check <when>` | when to look at it again: an ISO 8601 time or 2h, 3d from now; none clears it. |
+
+### `max tasks link`
+
+link a task to what it concerns — messages, chats, people, documents, URLs — to read around later
+
+```sh
+max tasks link <task> [targets] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+| `targets` | необязательный | msg: locators, person:<id>, document:<id>, note:<id>, or a URL. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat it concerns, repeatable; a chat: its id, or part of its title. |
+| `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from. |
+
+### `max tasks show`
+
+one task: its plan and everything linked to it
+
+```sh
+max tasks show <task>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+### `max tasks agenda`
+
+what needs a look today, from the local store and without message text: tasks overdue, due or to check, chats where you owe an answer, chats where you wait for one
+
+```sh
+max tasks agenda [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--due <span>` | list tasks due within this: 30m, 2h, 1d (default 1d). |
+| `--unanswered <span>` | list chats where someone else wrote last this long ago (default 1d). |
+| `--waiting <span>` | list chats where you wrote last this long ago (default 7d). |
+| `--within <span>` | leave out chats silent longer than this: they ended (default 30d). |
+| `--kind <kinds>` | only these chat kinds, comma-separated (default dialog,group). |
 
 ### `max tasks close`
 
@@ -3733,7 +3802,7 @@ max skill show [name]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `name` | необязательный | one of the skills shipped for a task: link-conversations. |
+| `name` | необязательный | one of the skills shipped for a task: follow-ups, link-conversations. |
 
 ### `max skill install`
 
