@@ -1,7 +1,7 @@
 import { chmodSync, mkdirSync, rmSync } from "node:fs"
 import { connect, createServer, type Server, type Socket } from "node:net"
 import { dirname } from "node:path"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { SendGuard } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
 import {

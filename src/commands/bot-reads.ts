@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { pickChat } from "@wirecat/cli-messaging"
 import type { ChatRegistry } from "../bot/registry.js"
 

@@ -1,5 +1,5 @@
-import { CliError, indent } from "@wirecat/cli-core"
-import { annotate } from "@wirecat/cli-core/commands"
+import { CliError, indent } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
 import { Argument, Command } from "commander"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { maskedProfile } from "../domain/map.js"

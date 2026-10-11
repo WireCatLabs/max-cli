@@ -1,4 +1,4 @@
-import { memoryKeyring } from "@wirecat/cli-core"
+import { memoryKeyring } from "@wirecat/cli-base"
 import { openStore } from "@wirecat/cli-messaging/store"
 import { afterEach, expect, it, vi } from "vitest"
 import { serveMembers } from "../commands/serve-members.js"

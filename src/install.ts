@@ -1,7 +1,7 @@
 import { closeSync, existsSync, openSync, readSync, realpathSync } from "node:fs"
 import { posix, win32 } from "node:path"
 import { fileURLToPath } from "node:url"
-import { type Installer, installerOf } from "@wirecat/cli-core/update"
+import { type Installer, installerOf } from "@wirecat/cli-base/update"
 
 export interface InstallOptions {
   scriptPath: string

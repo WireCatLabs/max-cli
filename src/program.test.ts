@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { listRuns, runsDirFor } from "@wirecat/cli-messaging/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
@@ -388,7 +388,7 @@ describe("the program", () => {
     ])
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEARCH)
     expect(JSON.parse(found.stdout)).toMatchObject({
-      items: [{ chatId: "222", text: "invoice due", source: "server" }],
+      items: [{ chatId: "222", excerpt: "invoice due", source: "server" }],
       server: { skipped: null, calls: 1, returned: 1, new: 1, complete: true },
     })
   })
@@ -683,7 +683,7 @@ describe("the program", () => {
         ["t-search", "search", "messages", "lat", "--language", "legacy", "--json"],
         environment,
       )
-      expect(JSON.parse(strict.stdout).items.map((message: { text: string }) => message.text)).toEqual(["later"])
+      expect(JSON.parse(strict.stdout).items.map((message: { excerpt: string }) => message.excerpt)).toEqual(["later"])
       expect(JSON.parse(legacy.stdout).items).toHaveLength(2)
     })
 
@@ -953,7 +953,7 @@ describe("the program", () => {
 
     expect(stdout).toBe("")
     expect(JSON.parse(stderr).error.code).toBe("authentication_error")
-    // 4 is authentication_error in cli-core's table: a script branches on this, not on the text.
+    // 4 is authentication_error in cli-base's table: a script branches on this, not on the text.
     expect(code).toBe(4)
   })
 

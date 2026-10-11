@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { Chat, Message } from "@wirecat/cli-messaging"
 import {
   type AccountKey,

@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import { join } from "node:path"
-import { resolvePaths, writeSecurely } from "@wirecat/cli-core"
+import { resolvePaths, writeSecurely } from "@wirecat/cli-base"
 import type { Command } from "commander"
 import { forCommand } from "./commands/context.js"
 

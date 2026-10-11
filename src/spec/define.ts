@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { SendEntry } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
 import type { Payload } from "../protocol/frame.js"

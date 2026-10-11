@@ -7,7 +7,7 @@ import { Client, type ElicitResult, StreamableHTTPClientTransport } from "@model
 import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
-import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
 import { personalMcpTools, serveOverHttp } from "@wirecat/cli-messaging/cli"
 import { parseLucene, servicesFor, storedDeps } from "@wirecat/cli-messaging/services"
 import { openStore } from "@wirecat/cli-messaging/store"
@@ -675,7 +675,7 @@ describe("the MCP server", () => {
     const reopened = await connect({}, { profile })
     const result = await call(reopened.client, "max_search_messages", { text: "searchable", backend: "archive" })
     expect(result.isError).toBe(false)
-    expect(result.body).toMatchObject({ items: [{ id: "116762160362694583", text: "searchable history" }] })
+    expect(result.body).toMatchObject({ items: [{ id: "116762160362694583", excerpt: "searchable history" }] })
     expect(reopened.logins()).toBe(0)
     expect(max.sent).toHaveLength(before)
     expect(logins()).toBe(1)
@@ -836,7 +836,7 @@ describe("the MCP server", () => {
     expect(context.body).toMatchObject({ items: [{ id, anchor: true, text: "context archive" }] })
     const search = await call(client, "max_search_messages", { text: "context", chat: "111", backend: "archive" })
     expect(search.isError).toBe(false)
-    expect(search.body).toMatchObject({ items: [{ id, text: "context archive" }] })
+    expect(search.body).toMatchObject({ items: [{ id, excerpt: "context archive" }] })
   })
 
   it("keeps MCP edits and deletions reflected in the shared search index", async () => {
@@ -859,7 +859,7 @@ describe("the MCP server", () => {
     expect(
       (await call(client, "max_search_messages", { text: "updated", chat: "111", backend: "archive" })).body,
     ).toMatchObject({
-      items: [{ id, text: "updated archived" }],
+      items: [{ id, excerpt: "updated archived" }],
     })
     expect(
       (await call(client, "max_search_messages", { text: "original", chat: "111", backend: "archive" })).body.items,

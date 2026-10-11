@@ -126,7 +126,7 @@ jobs:
         if: ${{ !inputs.dry_run }}
         run: |
           # The version's own document, not `npm view`: on 2026-10-01 the document answered while the
-          # version list `npm view` reads was still stale for minutes (cli-core 0.13.0 and 0.14.0).
+          # version list `npm view` reads was still stale for minutes (cli-base 0.13.0 and 0.14.0).
           for _ in $(seq 90); do
             curl -sfo /dev/null "https://registry.npmjs.org/@wirecat%2fmax-cli/$VERSION" && exit 0
             sleep 10

@@ -17,7 +17,7 @@ import {
   packageVersion,
   packContents,
   releaseCheck,
-} from "@wirecat/cli-core/release"
+} from "@wirecat/cli-base/release"
 import { CHANGELOG, clientAgeProblems, docsRules, PACKED, PACKED_SAID } from "./release/checks.ts"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")

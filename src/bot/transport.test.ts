@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http"
 import type { AddressInfo } from "node:net"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { botOperations } from "./client.js"
 import { BotTransport, plainJson } from "./transport.js"

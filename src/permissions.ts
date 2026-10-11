@@ -1,6 +1,6 @@
 import { AsyncLocalStorage } from "node:async_hooks"
-import { CliError } from "@wirecat/cli-core"
-import { metaOf } from "@wirecat/cli-core/commands"
+import { CliError } from "@wirecat/cli-base"
+import { metaOf } from "@wirecat/cli-base/commands"
 import {
   type Asker,
   assertStatsPermissionsCurrent,

@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { Readable } from "node:stream"
-import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
 import { SendJournal } from "@wirecat/cli-messaging/sends"
 import { storePath } from "@wirecat/cli-messaging/store"
 import { describe, expect, it } from "vitest"

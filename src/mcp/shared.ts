@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { type MessengerAdapter, stored } from "@wirecat/cli-messaging/cli"
 import { onlineDeps, type Services, servicesFor } from "@wirecat/cli-messaging/services"
 import { type MessageStore, openStore } from "@wirecat/cli-messaging/store"

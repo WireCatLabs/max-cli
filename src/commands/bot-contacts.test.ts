@@ -1,6 +1,6 @@
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
-import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { run } from "../program.js"

@@ -28,7 +28,7 @@ const max = (...args: string[]) => spawnSync(process.execPath, ["dist/bin/max.js
  *
  * Every check below writes something, and none of it may land in the owner's real state directory
  * — the overrides also move the keyring entry to a service of this directory's own, so nothing
- * here can read or delete the real session (`cli-core`, `pathsAreOverridden`).
+ * here can read or delete the real session (`cli-base`, `pathsAreOverridden`).
  */
 const isolated = mkdtempSync(join(tmpdir(), "max-smoke-run-"))
 const maxHere = (...args: string[]) =>

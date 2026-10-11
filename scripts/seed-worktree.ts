@@ -5,7 +5,7 @@
  *   node --experimental-strip-types scripts/seed-worktree.ts --force   # again, after a new login
  *
  * `bin/max` points a worktree at its own `.max/` so a branch's build never migrates the owner's
- * cache. That also moves the keyring entry (`pathsAreOverridden` in cli-core), and a `session start`
+ * cache. That also moves the keyring entry (`pathsAreOverridden` in cli-base), and a `session start`
  * per worktree is a new device login on the real account — every release, for every profile.
  * Copying keeps the device and the token; the cache is never copied, so the isolation holds.
  *
@@ -14,7 +14,7 @@
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs"
 import { basename, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { type KeyringStore, keyringService, resolvePaths, systemKeyring } from "@wirecat/cli-core"
+import { type KeyringStore, keyringService, resolvePaths, systemKeyring } from "@wirecat/cli-base"
 
 const SERVICE = "max-cli"
 

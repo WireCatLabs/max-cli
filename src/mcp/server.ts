@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { type HttpOptions, MCP_PATH, serveOverHttp, warmEmbedders } from "@wirecat/cli-messaging/cli"
 import { levelFor } from "@wirecat/cli-messaging/sends"
 import type { CommandContext } from "../commands/context.js"

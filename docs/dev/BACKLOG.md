@@ -9,7 +9,7 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 - **An id is permanent** and never reused. Take one with `bin/next-id <PREFIX>`: one counter for
   every worktree on the machine, under a lock, and never below the highest number on any branch.
 - **Prefixes:** `RES` research and measurement · `OPS` repository, tooling, CI, release · `CORE`
-  `cli-core` · `SPEC` protocol spec and generator · `MAX` domain, client, transport, session ·
+  `cli-base` · `SPEC` protocol spec and generator · `MAX` domain, client, transport, session ·
   `CLI` commands and output · `DOC` handwritten docs · `PROTO` protocol unknowns · `RISK` risks.
 - **One item:** the task as a title, then where the work starts (`path:line` or a REQUIREMENTS §).
   Analysis goes to a plan in `docs_ai/plans/`, a ruling to `DECISIONS.md`.

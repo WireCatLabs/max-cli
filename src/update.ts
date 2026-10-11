@@ -1,16 +1,16 @@
 import { realpathSync } from "node:fs"
 import { join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { resolvePaths } from "@wirecat/cli-core"
-import type { FetchLike } from "@wirecat/cli-core/http"
-import { skillHint as sharedSkillHint } from "@wirecat/cli-core/skill"
+import { resolvePaths } from "@wirecat/cli-base"
+import type { FetchLike } from "@wirecat/cli-base/http"
+import { skillHint as sharedSkillHint } from "@wirecat/cli-base/skill"
 import {
   type Installer,
   installerOf,
   latestVersion,
   runUpdate as runPackageManager,
   updateNotice as sharedNotice,
-} from "@wirecat/cli-core/update"
+} from "@wirecat/cli-base/update"
 import { resolveSettings } from "./config.js"
 import { SKILL_APP } from "./skill.js"
 import { VERSION } from "./version.js"
@@ -64,7 +64,7 @@ export const updateNotice = (
 
     if (argv.includes("upgrade")) return Promise.resolve(undefined)
     const pretty = !argv.includes("--json") && !argv.includes("--jsonl") && (tty ?? process.stdout.isTTY === true)
-    // cli-core names the command `update`; it is `upgrade` here (CONVENTIONS, "Command names").
+    // cli-base names the command `update`; it is `upgrade` here (CONVENTIONS, "Command names").
     return sharedNotice({
       argv,
       packageName: PACKAGE,

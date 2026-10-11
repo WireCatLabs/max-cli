@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { MaxClient } from "../client.js"
 import type { AttachmentLink, Id, Message } from "../domain/models.js"
 import { fetchBytes, LARGEST_VOICE } from "../download.js"

@@ -1,7 +1,7 @@
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { rememberAccount } from "@wirecat/cli-messaging/cli"
 import { openStore } from "@wirecat/cli-messaging/store"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"

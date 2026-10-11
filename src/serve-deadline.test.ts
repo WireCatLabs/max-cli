@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import { Server } from "node:net"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { lockPath } from "@wirecat/cli-messaging/background"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"

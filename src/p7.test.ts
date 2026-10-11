@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { rememberAccount } from "@wirecat/cli-messaging/cli"
 import { levelFor } from "@wirecat/cli-messaging/sends"
 import { openStore } from "@wirecat/cli-messaging/store"

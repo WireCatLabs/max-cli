@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { asId, type Payload } from "../protocol/frame.js"
 import type {
   AccountSession,

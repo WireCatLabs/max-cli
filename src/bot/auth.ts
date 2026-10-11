@@ -1,4 +1,4 @@
-import type { KeyringStore } from "@wirecat/cli-core"
+import type { KeyringStore } from "@wirecat/cli-base"
 import { BotTokenStore as SharedBotTokenStore } from "@wirecat/cli-messaging/cli"
 import { MAX_APP } from "../app.js"
 

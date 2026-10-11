@@ -1,5 +1,5 @@
 /**
- * The MAX Bot API's OpenAPI 3.0 document → cli-core's format-neutral `ApiModel`.
+ * The MAX Bot API's OpenAPI 3.0 document → cli-base's format-neutral `ApiModel`.
  *
  * Strict on purpose: a keyword this does not understand stops generation and names the place,
  * because a constraint dropped here is a request MAX refuses at run time (brief §7).
@@ -12,7 +12,7 @@ import type {
   Effect,
   HttpMethod,
   SchemaNode,
-} from "@wirecat/cli-core/codegen"
+} from "@wirecat/cli-base/codegen"
 
 type Json = Record<string, unknown>
 type Node<T extends SchemaNode["type"]> = Extract<SchemaNode, { type: T }>

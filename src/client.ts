@@ -1,4 +1,4 @@
-import { CliError, realSleep, type SleepLike } from "@wirecat/cli-core"
+import { CliError, realSleep, type SleepLike } from "@wirecat/cli-base"
 import { pickPerson as pickStoredPerson } from "@wirecat/cli-messaging"
 import { type DiagnosticEvent, providerErrorKey } from "@wirecat/cli-messaging/cli"
 import {
@@ -2231,7 +2231,7 @@ export class MaxClient {
     const token = candidate ?? this.#store.readToken()
     if (!token) {
       const profile = this.#store.profile
-      // cli-core swallows a keyring that will not open, so the state file is the only witness: a
+      // cli-base swallows a keyring that will not open, so the state file is the only witness: a
       // profile that has logged in lost its keyring, not its session, and another login would
       // register one more device for nothing (MAX-50, measured from cron 2026-09-25).
       if (this.#store.hasLoggedIn()) {

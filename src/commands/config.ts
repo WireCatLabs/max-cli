@@ -7,8 +7,8 @@ import {
   resolvePaths,
   saveConfigFile,
   writeSecurely,
-} from "@wirecat/cli-core"
-import { annotate } from "@wirecat/cli-core/commands"
+} from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
 import {
   AI_SETTING_KEYS,
   changeStoreSetting,

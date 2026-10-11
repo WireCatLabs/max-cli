@@ -1,5 +1,5 @@
 import { connect } from "node:net"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { asFirstWord } from "../profile.js"
 import { fromLine, lineReader } from "./lines.js"
 import type { ServerEvent } from "./server.js"

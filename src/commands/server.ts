@@ -1,4 +1,4 @@
-import { CliError, exitCodeFor } from "@wirecat/cli-core"
+import { CliError, exitCodeFor } from "@wirecat/cli-base"
 import { type ServerOptions, serverCommand as sharedServerCommand } from "@wirecat/cli-messaging/cli"
 import type { Command } from "commander"
 import { maxMessenger } from "../messenger.js"

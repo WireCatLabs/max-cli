@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { Command } from "commander"
 import type { MessageChange, MessageHit } from "../domain/models.js"
 import { renderMessages } from "../rendering/messages.js"

@@ -80,7 +80,7 @@ stat -c %Y ~/.cache/max-cli/default.db && pnpm vitest run src/program.test.ts &&
 
 ## No test touches a real keychain
 
-The keyring is one injected function from `cli-core`, replaced by `memoryKeyring()` in every test.
+The keyring is one injected function from `cli-base`, replaced by `memoryKeyring()` in every test.
 Setting a config directory would be necessary but not sufficient — one test that forgets it writes
 to the developer's actual keychain. The seam makes it impossible rather than discouraged.
 
@@ -253,7 +253,7 @@ It runs the build with config, state, cache and the shared message store (`MESSA
 are forward-only, so a branch must never open the owner's real store.
 
 ⚠ **Each worktree therefore has its own session.** The directory variables also move the keyring
-entry — `cli-core` makes the service `max-cli:<config dir>` when any of them is set
+entry — `cli-base` makes the service `max-cli:<config dir>` when any of them is set
 ([`ARCHITECTURE.md`](ARCHITECTURE.md) §14) — so a login in one worktree, or in the installed `max`,
 is invisible to another, and every command warns about it on stderr. `bin/max
 session start` once per worktree is gone — each was a new device login on the real account. The first

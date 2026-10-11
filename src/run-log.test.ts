@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import {
   crashOf,
   type DiagnosticEvent,

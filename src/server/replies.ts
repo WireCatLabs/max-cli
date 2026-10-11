@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { ChatKind, Id, Message } from "@wirecat/cli-messaging"
 import {
   NO_RULES,

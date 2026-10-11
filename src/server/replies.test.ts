@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
+import { memoryKeyring } from "@wirecat/cli-base"
 import { openStore } from "@wirecat/cli-messaging/store"
 import { expect, it } from "vitest"
 import { MaxClient } from "../client.js"

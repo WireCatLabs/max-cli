@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
-import { CliError } from "@wirecat/cli-core"
-import type { ManifestOperation } from "@wirecat/cli-core/codegen"
+import { CliError } from "@wirecat/cli-base"
+import type { ManifestOperation } from "@wirecat/cli-base/codegen"
 import {
   guardedWrite,
   newOperationId,

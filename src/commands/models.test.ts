@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, truncateSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { run } from "../program.js"
 import { isInstalled, modelPath, modelsDirectory, vadPath } from "../transcribe/install.js"

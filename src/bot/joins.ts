@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
-import { writeSecurely } from "@wirecat/cli-core"
+import { writeSecurely } from "@wirecat/cli-base"
 import { botsDirectory } from "./registry.js"
 
 export interface JoinEntry {

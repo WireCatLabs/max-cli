@@ -1,4 +1,4 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import type { Message } from "@wirecat/cli-messaging"
 import { rememberAccount } from "@wirecat/cli-messaging/cli"
 import { openStore } from "@wirecat/cli-messaging/store"

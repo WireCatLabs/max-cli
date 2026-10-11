@@ -82,7 +82,7 @@ the adapter.
 
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
   §12.
-- [`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-base) supplies output streams, renderer,
+- [`@wirecat/cli-base`](https://github.com/WireCatLabs/cli-base) supplies output streams, renderer,
   error model and exit codes, keyring, config and clocks — the non-MAX half, shared with
   `braze-cli`.
 - **One npm package** (`@wirecat/max-cli`, command `max`), split by directory, not workspace
@@ -113,7 +113,7 @@ the adapter.
 | `spec/` | every operation, its shape and where it came from | the socket, the session, output |
 | `generated/` | what follows from `spec/` | being edited by hand |
 | `protocol/` | frames, seq, the socket | who is asking or why — **including the handshake** |
-| `session/` | the keyring, the state file, INIT → LOGIN | anything it can ask `cli-core` for |
+| `session/` | the keyring, the state file, INIT → LOGIN | anything it can ask `cli-base` for |
 | `runs/` | what a request cost, and where a record of it goes | what a request *said* — §13 |
 
 Why: if MAX's transport changes, only `protocol/` and `client.ts` change. That is why we own the
@@ -298,7 +298,7 @@ identically; the built-in's support depends on the bundled undici version.
 `✓`, warning or ANSI. Diagnostics go to stderr in every mode, so the contract holds by construction.
 Verified live: stdout one JSON value, stderr empty. Failures too: `run()` returns an exit code
 (never throws), the error goes to stderr (JSON when piped, a sentence in a terminal), codes from
-`cli-core` (`4` authentication, `130` interrupt). Scripts branch on the code, never on text.
+`cli-base` (`4` authentication, `130` interrupt). Scripts branch on the code, never on text.
 
 ### A listing answers one object, always the same one
 
@@ -483,7 +483,7 @@ paging for users: [`../usage.md`](../usage.md). The profile follows the same ord
 What a user sets and how: [`../configuration.md`](../configuration.md), [`../usage.md`](../usage.md). The rules
 behind it:
 
-- `~/.config/max-cli/config.json`, mode `0644`, read by `cli-core`'s `loadConfigFile`. A missing
+- `~/.config/max-cli/config.json`, mode `0644`, read by `cli-base`'s `loadConfigFile`. A missing
   file is not an error; a malformed one is, in every output mode, naming the field.
 - The schema is `strictObject`: `"limitt"` is reported as `profiles.default.limitt`, where plain
   `object()` would drop it silently. The **opposite** of MAX answers, whose unknown fields are kept
@@ -505,7 +505,7 @@ behind it:
 
 ### Two things that jump the queue
 
-- **`MAX_TOKEN` outranks the keyring** (`cli-core`'s `Credentials.read`) — a token for a container
+- **`MAX_TOKEN` outranks the keyring** (`cli-base`'s `Credentials.read`) — a token for a container
   or probe without storing it.
 - ⚠ **`MAX_CONFIG_DIR`, `MAX_STATE_DIR` and `MAX_CACHE_DIR` change which keyring entry a profile
   means.** `pathsAreOverridden` makes the service `max-cli:<configDir>`, so a login made with them
@@ -590,14 +590,14 @@ generated code. Nothing under `src/bot/` imports `src/protocol/`, `src/session/`
 spec/bot/schema.yaml        the official OpenAPI document, committed with provenance.json
    │  pnpm bot:spec:sync    — the only step that reads the network, and only when run by hand
    ▼
-scripts/bot/openapi-adapter.ts   OpenAPI → cli-core's format-neutral ApiModel; strict, names what it refuses
+scripts/bot/openapi-adapter.ts   OpenAPI → cli-base's format-neutral ApiModel; strict, names what it refuses
 scripts/bot/overrides.ts         read / write / destructive, where the HTTP method is wrong
    │  pnpm bot:generate     — part of `pnpm generate`, so CI's freshness check covers it
    ▼
 src/bot/generated/{types,schemas,manifest}.ts   docs/dev/bot-api-coverage.md
 ```
 
-The generator itself is `@wirecat/cli-core/codegen`, shared with other CLIs; only the adapter from
+The generator itself is `@wirecat/cli-base/codegen`, shared with other CLIs; only the adapter from
 OpenAPI is ours. The generated Valibot schemas keep the schema's constraints and turn a 64-bit id
 into an exact decimal string. They expect numbers from `lossless-json`, and they decode only — a
 request is validated with them and then sent as the original lossless value. Enums and

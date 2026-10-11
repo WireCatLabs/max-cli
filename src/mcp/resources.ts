@@ -1,5 +1,5 @@
 import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server"
-import { visibleControls } from "@wirecat/cli-core"
+import { visibleControls } from "@wirecat/cli-base"
 import { answerMcpTool } from "@wirecat/cli-messaging/cli"
 import { openStore } from "@wirecat/cli-messaging/store"
 import type { SessionStore } from "../session/store.js"
