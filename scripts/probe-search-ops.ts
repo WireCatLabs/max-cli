@@ -4,7 +4,7 @@
  *   MAX_PROFILE=mila pnpm probe:search-ops <query>
  *
  * Sends what web.max.ru sends — 68 `{query, count, marker}` and 60 `{query, count: 40, type: ALL}` —
- * and prints key names, value types, `type` values and counts. Never text, names or ids.
+ * and prints key names, value types, `type`/`section` values and counts. Never text, names or ids.
  */
 import type { Invoke } from "../dist/generated/client.generated.js"
 import { Connection } from "../dist/protocol/connection.js"
@@ -28,7 +28,9 @@ const paths = new Map<string, Set<string>>()
 const walk = (value: unknown, path: string, key = ""): void => {
   const kinds = paths.get(path) ?? new Set()
   const kind = Array.isArray(value) ? `array ×${value.length}` : value === null ? "null" : typeof value
-  kinds.add(key === "type" || key === "_type" || key === "status" ? `${kind} = ${String(value)}` : kind)
+  kinds.add(
+    key === "type" || key === "_type" || key === "status" || key === "section" ? `${kind} = ${String(value)}` : kind,
+  )
   paths.set(path, kinds)
   if (Array.isArray(value)) for (const item of value) walk(item, `${path}[]`)
   else if (typeof value === "object" && value !== null)
@@ -43,15 +45,34 @@ const invoke: Invoke = (operation, request) => connection.invoke(operation.opcod
 try {
   await connection.open()
   await startSession(invoke, { token, deviceId: store.readState().deviceId, chatsCount: 20 })
-  for (const [opcode, request] of [
-    [68, { query, count: 10 }],
-    [60, { query, count: 40, type: "ALL" }],
-  ] as const) {
-    try {
-      walk(await connection.invoke(opcode, request), String(opcode))
-    } catch (error) {
-      console.log(`${opcode} refused: ${(error as Error).message.replace(/\d{5,}/g, "<id>")}`)
+  type Hit = { section?: string; chatId?: unknown; message?: unknown }
+  const tally = (label: string, answer: { result?: Hit[]; marker?: unknown }) => {
+    const hits = answer.result ?? []
+    const messages = hits.filter((hit) => hit.section === "MESSAGES" && hit.message)
+    const chats = new Set(messages.map((hit) => String(hit.chatId)))
+    console.log(
+      `${label}: ${hits.length} results, ${messages.length} message hits from ${chats.size} chats, marker ${answer.marker === undefined ? "absent" : "present"}`,
+    )
+  }
+  try {
+    const first = (await connection.invoke(68, { query, count: 30 })) as { result?: Hit[]; marker?: unknown }
+    walk(first, "68")
+    tally("68 page 1", first)
+    if (first.marker !== undefined) {
+      const second = (await connection.invoke(68, { query, count: 30, marker: first.marker })) as {
+        result?: Hit[]
+        marker?: unknown
+      }
+      walk(second, "68")
+      tally("68 page 2", second)
     }
+  } catch (error) {
+    console.log(`68 refused: ${(error as Error).message.replace(/\d{5,}/g, "<id>")}`)
+  }
+  try {
+    walk(await connection.invoke(60, { query, count: 40, type: "ALL" }), "60")
+  } catch (error) {
+    console.log(`60 refused: ${(error as Error).message.replace(/\d{5,}/g, "<id>")}`)
   }
   for (const [path, kinds] of [...paths].sort(([a], [b]) => a.localeCompare(b)))
     console.log(`  ${path}: ${[...kinds].join(" | ")}`)
