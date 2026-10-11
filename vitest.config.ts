@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     globals: false,
+    // Agents run suites side by side on 24 cores; one worker per core ran the machine out of memory (2026-10-11).
+    maxWorkers: 4,
     // Every test file runs with config, state and cache pointed at a temporary directory. See the
     // file for why this is not optional.
     setupFiles: ["src/testing/sandbox.ts", "src/testing/unscripted.ts"],
