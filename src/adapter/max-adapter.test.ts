@@ -183,7 +183,7 @@ describe("the MAX adapter", () => {
     expect(page.items[0]?.attachments[0]).not.toHaveProperty("providerRef")
   })
 
-  it("searches one chat on MAX's server with opcode 73, and refuses a search without a chat", async () => {
+  it("searches one named chat on MAX's server with opcode 73", async () => {
     const { adapter, sent } = connected({
       [Opcode.MSG_SEARCH]: {
         result: [
@@ -197,8 +197,56 @@ describe("the MAX adapter", () => {
 
     expect(found).toMatchObject({ items: [{ id: MESSAGE, chatId: "111", text: "invoice" }], hasMore: false })
     expect(sent(Opcode.MSG_SEARCH)).toEqual([{ chatId: 111, query: "invoice", count: 10 }])
-    await expect(adapter.searchMessages?.({ text: "invoice" }, { limit: 10 })).rejects.toMatchObject({
-      code: "validation_error",
+    expect(sent(Opcode.MSG_SEARCH_GLOBAL)).toEqual([])
+  })
+
+  it("searches every chat with one opcode 68 call when no chat is named, keeping only message hits", async () => {
+    const message = (id: bigint, text: string) => ({ id, cid: 1, time: 1789776000000, sender: OWNER, text })
+    const { adapter, sent } = connected({
+      [Opcode.MSG_SEARCH_GLOBAL]: {
+        result: [
+          { chatId: 111, section: "MESSAGES", count: 4, highlights: ["invoice"], message: message(5001n, "invoice A") },
+          { chatId: 222, section: "MESSAGES", count: 1, highlights: [], message: message(5002n, "invoice B") },
+          { chatId: 333, section: "CHATS", count: 1, highlights: [], message: message(5003n, "invoice title") },
+          { chatId: 444, section: "PUBLIC_CHATS", count: 1, highlights: [], message: message(5004n, "channel") },
+          { chatId: 555, count: 1, highlights: [], message: message(5005n, "no section") },
+        ],
+        counters: { MESSAGES: 5 },
+        total: 5,
+        marker: 77,
+      },
+    })
+
+    const found = await adapter.searchMessages?.({ text: "invoice" }, { limit: 100 })
+
+    expect(sent(Opcode.MSG_SEARCH_GLOBAL)).toEqual([{ query: "invoice", count: 30 }])
+    expect(sent(Opcode.MSG_SEARCH)).toEqual([])
+    expect(found).toMatchObject({
+      items: [
+        { id: "5001", chatId: "111", text: "invoice A", chatTitle: null },
+        { id: "5002", chatId: "222", text: "invoice B", chatTitle: null },
+      ],
+      hasMore: true,
+      chats: [],
+    })
+    expect(found?.items).toHaveLength(2)
+  })
+
+  it("cuts a chatless search at the limit, and has no more when MAX hands back no marker", async () => {
+    const hit = (chatId: number, id: bigint) => ({
+      chatId,
+      section: "MESSAGES",
+      count: 1,
+      highlights: [],
+      message: { id, time: 1789776000000, sender: OWNER, text: "invoice" },
+    })
+    const { adapter } = connected({ [Opcode.MSG_SEARCH_GLOBAL]: { result: [hit(111, 6001n)], total: 1 } })
+    expect(await adapter.searchMessages?.({ text: "invoice" }, { limit: 10 })).toMatchObject({ hasMore: false })
+
+    const many = connected({ [Opcode.MSG_SEARCH_GLOBAL]: { result: [hit(111, 6001n), hit(222, 6002n)], total: 2 } })
+    expect(await many.adapter.searchMessages?.({ text: "invoice" }, { limit: 1 })).toMatchObject({
+      items: [{ id: "6001" }],
+      hasMore: true,
     })
   })
 

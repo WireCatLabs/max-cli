@@ -107,6 +107,8 @@ export const wireClient = (invoke: Invoke) => ({
     media: (request: RequestOf<(typeof OPERATIONS)["messages.media"]>) => invoke(OPERATIONS["messages.media"], request),
     search: (request: RequestOf<(typeof OPERATIONS)["messages.search"]>) =>
       invoke(OPERATIONS["messages.search"], request),
+    searchGlobal: (request: RequestOf<(typeof OPERATIONS)["messages.searchGlobal"]>) =>
+      invoke(OPERATIONS["messages.searchGlobal"], request),
     delete: (request: RequestOf<(typeof OPERATIONS)["messages.delete"]>) =>
       invoke(OPERATIONS["messages.delete"], request),
   },

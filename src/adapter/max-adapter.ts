@@ -79,6 +79,9 @@ export type MaxAdapter = MessengerAdapter &
     >
   >
 
+// web.max.ru asks for 30 (`_app/immutable/chunks/Cdo8IOYe.js`, 2026-10-11); one hit per chat, so 30 chats.
+const GLOBAL_SEARCH_COUNT = 30
+
 const MARKUP: Record<string, string> = {
   bold: "STRONG",
   italic: "EMPHASIZED",
@@ -139,13 +142,16 @@ export const maxAdapter = (
       return { ...page, items: items.map(remoteMessage) }
     },
 
+    // With no chat, one opcode 68 call with web.max.ru's count; its `marker` is never followed, so a
+    // query costs one call and `hasMore` tells the caller the answer is partial.
     searchMessages: async (query, { limit }) => {
-      if (query.chat === undefined)
-        throw new CliError("validation_error", "MAX's server searches one chat at a time — name the chat")
-      const page = await client.messages.search(await chatId(query.chat), query.text, limit)
+      const page =
+        query.chat === undefined
+          ? await client.messages.searchGlobal(query.text, GLOBAL_SEARCH_COUNT)
+          : await client.messages.search(await chatId(query.chat), query.text, limit)
       return {
-        items: page.items.map((message) => ({ ...remoteMessage(message), chatTitle: null })),
-        hasMore: page.hasMore,
+        items: page.items.slice(0, limit).map((message) => ({ ...remoteMessage(message), chatTitle: null })),
+        hasMore: page.hasMore || page.items.length > limit,
         chats: [],
       }
     },
