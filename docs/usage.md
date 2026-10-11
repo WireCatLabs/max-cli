@@ -1426,7 +1426,10 @@ fi
 навык `max`: правила и ловушки, которые не объяснит `--help`. Его ставит `max setup`, а также
 `max skill install` (`--for claude`, `agents` или `all`, по умолчанию): он пишет SKILL.md в
 `~/.claude/skills/max-cli/` (Claude Code) и `~/.agents/skills/max-cli/` (Codex, Gemini CLI).
-`max skill show` печатает тот же текст.
+`max skill show` печатает тот же текст. После обновления `max` запустите `max skill install` ещё раз:
+если навыка нет или он старше `max`, агент раз в сутки увидит об этом строку в stderr. Выключается
+подсказка командой `max config set skillHint false --defaults`. Как агенты находят навыки —
+[Codex](https://learn.chatgpt.com/docs/build-skills), [Gemini CLI](https://geminicli.com/docs/cli/skills/).
 
 Агент без терминала (например, Claude Desktop или Cursor) подключается через MCP:
 [MCP-сервер](mcp.md).
