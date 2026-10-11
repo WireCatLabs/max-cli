@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/WireCatLabs/max-cli/main/docs/design/logo_text.png" alt="MAX CLI" width="480">
+  <img src="https://raw.githubusercontent.com/WireCatLabs/max-cli/main/docs/images/social-preview.png" alt="MAX CLI для людей, ботов и агентов" width="100%">
 </p>
 
 # MAX CLI для людей, ботов и агентов
