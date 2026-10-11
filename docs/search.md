@@ -86,9 +86,9 @@ max search conversations 'переезд на дачу'      # разговор�
 `search all` у каждой находки пишет, что это — сообщение (`msg:…`) или заметка (`note:…`).
 `search messages` никогда не возвращает почту, а `search mail` — сообщения мессенджеров; вместе их
 ищет только `search all`. `--type` у `search messages` оставляет только текст, голосовые или файлы
-(`text|voice|file`), у `search notes` — заметки из memo или из папки (`internal|file`). Если в запросе
-есть поле, которого у почты или заметок нет (`chat:`, `from:`), `search all` пропускает их и говорит
-об этом.
+(`text|voice|file`), у `search notes` — заметки из memo или из папки (`internal|file`). У почты
+`chat:` выбирает цепочку писем, а `from:` — отправителя. Если поле не подходит — `kind:`/`topic:`
+для почты или `chat:`/`from:` для заметок — `search all` пропускает этот источник и объясняет почему.
 
 Почта и заметки попадают в архив через memo: `memo mail import` и `memo import`. Без них
 `search all` ищет только сообщения.
