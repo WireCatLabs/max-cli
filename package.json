@@ -24,7 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build --force",
     "generate": "node --experimental-strip-types scripts/bot/generate.ts && pnpm build && node --experimental-strip-types scripts/generate.ts && node --experimental-strip-types scripts/commands.ts",
     "bot:spec:sync": "node --experimental-strip-types scripts/bot/sync-spec.ts",
     "bot:generate": "node --experimental-strip-types scripts/bot/generate.ts",
