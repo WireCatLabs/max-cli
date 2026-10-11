@@ -82,7 +82,7 @@ the adapter.
 
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
   §12.
-- [`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-core) supplies output streams, renderer,
+- [`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-base) supplies output streams, renderer,
   error model and exit codes, keyring, config and clocks — the non-MAX half, shared with
   `braze-cli`.
 - **One npm package** (`@wirecat/max-cli`, command `max`), split by directory, not workspace

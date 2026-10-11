@@ -366,7 +366,7 @@ pnpm generate                         # переписать сгенериро�
 Протокол MAX неофициальный и разобран обратной инженерией. Каждый опкод объявлен один раз в
 `src/spec/`, а реестр, типизированный клиент и `docs/dev/protocol.md` из него генерируются; CI
 падает, если дерево устарело. Общая часть — потоки вывода, коды ошибок, хранилище паролей — в
-[`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-core).
+[`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-base).
 
 ## Часть WireCat
 
