@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**941 ✅ · 136 ⛔ · 0 ❌** — 320 commands, 757 options.
+**941 ✅ · 149 ⛔ · 0 ❌** — 326 commands, 764 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -762,6 +762,19 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `server logs` | `--lines` | ✅ |  |
 | `server install` |  | ✅ |  |
 | `server uninstall` |  | ✅ |  |
+| `schedule command` |  | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule command` | `--every` | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule command` | `--at` | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule command` | `--once` | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1) |
+| `schedule agent` |  | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--max-cost` | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--every` | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--at` | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--once` | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1) |
+| `schedule list` |  | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule run` |  | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
+| `schedule remove` |  | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule exec` |  | ⛔ | cli-messaging src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
 | `watch` |  | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `config show` |  | ✅ |  |
