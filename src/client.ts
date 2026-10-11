@@ -1127,6 +1127,26 @@ export class MaxClient {
     },
 
     /**
+     * **MAX's search across every chat**, one call as web.max.ru's search box sends it: the best
+     * message of each matching chat, not every match (measured 2026-10-11). Chat-title and public
+     * channel hits are not messages and are left out. `hasMore` while MAX hands back a `marker`.
+     */
+    searchGlobal: async (query: string, count: number): Promise<Page<Message>> => {
+      await this.#connectOnce()
+      const answer = await this.#wire.messages.searchGlobal({ query, count })
+      const lookup = { names: namesFrom(this.#session().contacts), ...viewer(this.#store) }
+      const raw = asArray(answer.result).flatMap((one) => {
+        const hit = record(one)
+        const message = record(hit?.message)
+        const chatId = asId(hit?.chatId)
+        return hit?.section === "MESSAGES" && message !== undefined && chatId !== undefined
+          ? [toMessage(message, chatId, lookup)]
+          : []
+      })
+      return { items: await this.#nameSenders(raw), hasMore: answer.marker !== undefined }
+    },
+
+    /**
      * **One message and a window either side of it**, oldest first, the one asked for marked
      * `anchor: true`.
      *

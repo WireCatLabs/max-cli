@@ -360,6 +360,39 @@ describe("the program", () => {
     expect(max.sent).toHaveLength(sent)
   })
 
+  it("`search messages` with no chat asks MAX's server once, with opcode 68, and keeps the message hit", async () => {
+    const { max, environment } = acquaintedMax({
+      [Opcode.MSG_SEARCH_GLOBAL]: {
+        result: [
+          {
+            chatId: 222,
+            section: "MESSAGES",
+            count: 3,
+            highlights: ["invoice"],
+            message: { id: 116762160362699001n, time: 1789776000000, sender: 10000002, text: "invoice due" },
+          },
+          { chatId: 333, section: "PUBLIC_CHATS", count: 1, highlights: [] },
+        ],
+        counters: { MESSAGES: 1 },
+        total: 1,
+      },
+    })
+
+    await runWith(["t-search-global", "messages", "list", "111", "--json"], environment)
+
+    const found = await runWith(["t-search-global", "search", "messages", "invoice", "--json"], environment)
+
+    expect(found.code).toBe(0)
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEARCH_GLOBAL).map(({ payload }) => payload)).toEqual([
+      { query: "invoice", count: 30 },
+    ])
+    expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEARCH)
+    expect(JSON.parse(found.stdout)).toMatchObject({
+      items: [{ chatId: "222", text: "invoice due", source: "server" }],
+      server: { skipped: null, calls: 1, returned: 1, new: 1, complete: true },
+    })
+  })
+
   it("**refuses `--timeout` without a unit**, because the neighbouring setting is milliseconds", async () => {
     const { code, stderr } = await runWith(["--timeout", "30", "chats", "list"])
     expect(code).not.toBe(0)
@@ -642,7 +675,10 @@ describe("the program", () => {
       expect(JSON.parse(capped.stdout).items).toHaveLength(1)
       expect(JSON.parse(all.stdout).items).toHaveLength(2)
       expect(JSON.parse(capped.stdout).query).toMatchObject({ language: "lucene-v1", timezone: "Europe/Madrid" })
-      const strict = await runWith(["t-search", "search", "messages", "lat", "--json"], environment)
+      const strict = await runWith(
+        ["t-search", "search", "messages", "lat", "--backend", "archive", "--json"],
+        environment,
+      )
       const legacy = await runWith(
         ["t-search", "search", "messages", "lat", "--language", "legacy", "--json"],
         environment,

@@ -601,7 +601,7 @@ describe("the MCP server", () => {
   it.each([false, true])("native MCP search history honors explicit recording %s", async (record) => {
     const { client } = await connect({}, { record })
     await call(client, "max_messages_list", { chat: "111" })
-    const found = await call(client, "max_search_messages", { text: "hi" })
+    const found = await call(client, "max_search_messages", { text: "hi", backend: "archive" })
     const counted = await call(client, "max_stats_messages_show", { text: "hi" })
     expect(found.isError).toBe(false)
     expect(counted.body).toMatchObject({ total: 1 })
@@ -673,7 +673,7 @@ describe("the MCP server", () => {
     const before = max.sent.length
     // A fresh server answers the archived search without logging in.
     const reopened = await connect({}, { profile })
-    const result = await call(reopened.client, "max_search_messages", { text: "searchable" })
+    const result = await call(reopened.client, "max_search_messages", { text: "searchable", backend: "archive" })
     expect(result.isError).toBe(false)
     expect(result.body).toMatchObject({ items: [{ id: "116762160362694583", text: "searchable history" }] })
     expect(reopened.logins()).toBe(0)
@@ -725,7 +725,10 @@ describe("the MCP server", () => {
     )
     const legacy = await call(reopened.client, "max_search_messages", { text: "invoice", language: "legacy" })
     expect(legacy.isError).toBe(false)
-    const ast = await call(reopened.client, "max_search_messages", { ast: parseLucene("invoice") })
+    const ast = await call(reopened.client, "max_search_messages", {
+      ast: parseLucene("invoice"),
+      backend: "archive",
+    })
     expect(ast.isError).toBe(false)
     expect(ast.body).toMatchObject({ items: [{ id: "116762160362694599" }], query: { language: "lucene-v1" } })
     const missing = await call(reopened.client, "max_search_messages", {})
@@ -885,7 +888,7 @@ describe("the MCP server", () => {
     } finally {
       await store.close()
     }
-    const search = await call(client, "max_search_messages", { text: "foreign" })
+    const search = await call(client, "max_search_messages", { text: "foreign", backend: "archive" })
     expect(search.isError).toBe(false)
     expect(search.body.items).toEqual([])
     expect((await client.listResources()).resources.map(({ uri }) => uri)).not.toContain("max://chat/333")

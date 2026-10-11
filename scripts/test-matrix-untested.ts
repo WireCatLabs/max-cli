@@ -76,7 +76,7 @@ export const UNTESTED: Untested[] = [
     command: "search messages",
     option,
     reason:
-      "cli-messaging src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcode 73",
+      "cli-messaging src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcodes 73 (one chat) and 68 (every chat)",
   })),
   {
     command: "stats messages top",

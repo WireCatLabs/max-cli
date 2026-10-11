@@ -44,6 +44,7 @@ import {
   messagesReact,
   messagesReactions,
   messagesSearch,
+  messagesSearchGlobal,
   messagesSend,
   messagesUnreact,
 } from "../spec/operations/messages.js"
@@ -101,6 +102,7 @@ export const OPERATIONS = {
   "messages.reactions": messagesReactions,
   "messages.media": messagesMedia,
   "messages.search": messagesSearch,
+  "messages.searchGlobal": messagesSearchGlobal,
   "messages.delete": messagesDelete,
   "attachments.video": attachmentsVideo,
   "attachments.file": attachmentsFile,

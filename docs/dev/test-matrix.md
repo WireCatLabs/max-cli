@@ -569,7 +569,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--thread-bytes` | ✅ |  |
 | `search messages` | `--thread-within` | ✅ |  |
 | `search messages` | `--backend` | ✅ |  |
-| `search messages` | `--server-time` | ⛔ | cli-messaging src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcode 73 |
+| `search messages` | `--server-time` | ⛔ | cli-messaging src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcodes 73 (one chat) and 68 (every chat) |
 | `search messages` | `--chat` | ✅ |  |
 | `search messages` | `--source` | ✅ |  |
 | `search messages` | `--type` | ✅ |  |
