@@ -91,7 +91,9 @@
     "docs:lint": "markdownlint-cli2",
     "docs:spell": "cspell lint --config cspell.json --no-progress README.md",
     "ci:quick": "pnpm typecheck",
-    "contracts:check": "cli-contract contracts/plan.json"
+    "contracts:check": "cli-contract contracts/plan.json",
+    "contracts:upgrade": "pnpm --dir contracts/previous install --ignore-workspace --frozen-lockfile --ignore-scripts && cli-contract contracts/upgrade.json && cli-contract contracts/legacy-store.json",
+    "security:no-leak": "cli-testing security no-leak . contracts/no-leak.json"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.1.0",
@@ -119,7 +121,7 @@
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^5.0.3",
-    "@wirecat/cli-testing": "0.2.0",
+    "@wirecat/cli-testing": "0.3.0",
     "cspell": "10.3.6",
     "lefthook": "2.1.16",
     "markdownlint-cli2": "0.23.3",

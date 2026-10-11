@@ -1,0 +1,10 @@
+{
+  "name": "wirecat-contract-baselines",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.20.0",
+  "dependencies": {
+    "@wirecat/previous-cli": "npm:@wirecat/max-cli@0.44.0",
+    "@wirecat/legacy-cli": "npm:@wirecat/max-cli@0.43.1"
+  }
+}

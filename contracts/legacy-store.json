@@ -1,0 +1,53 @@
+{
+  "command": "node",
+  "args": ["../dist/bin/max.js"],
+  "previous": {
+    "entry": "./previous/node_modules/@wirecat/legacy-cli/dist/bin/max.js",
+    "version": "0.43.1"
+  },
+  "canaries": ["wirecat-synthetic-message-canary"],
+  "cases": [
+    {
+      "id": "seed-incompatible-store",
+      "entry": "./seed.mjs",
+      "args": ["{{previousEntry}}"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "capture": {
+        "original": "/sha256"
+      }
+    },
+    {
+      "id": "candidate-rejects-legacy-store",
+      "args": ["contract", "--offline", "--json", "messages", "list", "7"],
+      "exit": 3,
+      "stream": "stderr",
+      "kind": "json",
+      "errorCode": "configuration_error",
+      "files": [
+        {
+          "path": "store.sqlite",
+          "sha256": "{{original}}"
+        }
+      ]
+    },
+    {
+      "id": "previous-still-reads-legacy-store",
+      "previous": true,
+      "args": ["contract", "--offline", "--json", "messages", "list", "7"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "allowSensitiveOutput": true,
+      "json": {
+        "items": [
+          {
+            "id": "101",
+            "text": "wirecat-synthetic-message-canary"
+          }
+        ]
+      }
+    }
+  ]
+}
