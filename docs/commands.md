@@ -3614,6 +3614,94 @@ remove this profile's unit; stop it first
 max server uninstall
 ```
 
+## `max schedule`
+
+run a max command or an agent later or on a timer (systemd, launchd, Task Scheduler); an agent cannot send
+
+### `max schedule command`
+
+run max <args…> on a timer — reads save what they read, so this is how a chat's history fills the store
+
+```sh
+max schedule command <name> <args> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | обязательный | lowercase letters, digits and dashes. |
+| `args` | обязательный | the max command after its name, e.g. -- messages list <chat> --limit 50. |
+
+| Опция | Что делает |
+|---|---|
+| `--every <duration>` | repeat: 30m, 2h, 1d. |
+| `--at <HH:MM>` | every day at this local time. |
+| `--once <when>` | one run: 30m, 2d from now, or an ISO time; the schedule removes itself after it. |
+
+### `max schedule agent`
+
+start an agent (claude or codex) with a prompt on a timer; it runs with MAX_READ_ONLY=1, so it reads and drafts and cannot send — its answer is kept and you are notified
+
+```sh
+max schedule agent <name> <harness> <prompt> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | обязательный | lowercase letters, digits and dashes. |
+| `harness` | обязательный | the agent to start. Одно из: `claude`, `codex`. |
+| `prompt` | обязательный | what to do, e.g. "run the daily follow-up review: max skill show follow-ups". |
+
+| Опция | Что делает |
+|---|---|
+| `--max-cost <usd>` | claude only: stop a run that costs more than this, in US dollars. |
+| `--every <duration>` | repeat: 30m, 2h, 1d. |
+| `--at <HH:MM>` | every day at this local time. |
+| `--once <when>` | one run: 30m, 2d from now, or an ISO time; the schedule removes itself after it. |
+
+### `max schedule list`
+
+the schedules, when they run and how their last run went
+
+```sh
+max schedule list
+```
+
+### `max schedule run`
+
+run a schedule now, as its timer would, and wait for it
+
+```sh
+max schedule run <name>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | обязательный |  |
+
+### `max schedule remove`
+
+stop a schedule and remove its timer; its past output stays
+
+```sh
+max schedule remove <name>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | обязательный |  |
+
+### `max schedule exec`
+
+what a timer runs, given the schedule's file; to run one by hand, use run
+
+```sh
+max schedule exec <file>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `file` | обязательный |  |
+
 ## `max watch`
 
 print new messages as they arrive, from a running `max serve`

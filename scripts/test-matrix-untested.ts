@@ -852,4 +852,76 @@ export const UNTESTED: Untested[] = [
     reason:
       "cli-messaging src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0)",
   })),
+  {
+    command: "schedule command",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule command",
+    option: "--every",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule command",
+    option: "--at",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule command",
+    option: "--once",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1)",
+  },
+  {
+    command: "schedule agent",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule agent",
+    option: "--max-cost",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule agent",
+    option: "--every",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule agent",
+    option: "--at",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule agent",
+    option: "--once",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1)",
+  },
+  {
+    command: "schedule list",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule run",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1)",
+  },
+  {
+    command: "schedule remove",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
+  },
+  {
+    command: "schedule exec",
+    reason:
+      "cli-messaging src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1)",
+  },
 ]
