@@ -23,7 +23,12 @@ describe("the skill an agent is given", () => {
     const named = [...new Set(cliSkill.match(/--[a-z][a-z-]*/g) ?? [])]
 
     expect(named.filter((flag) => !flags.has(flag) && flag !== "--profile")).toEqual([])
-    expect(flags.has("--profile")).toBe(false)
+    expect(program.options.some((option) => option.long === "--profile")).toBe(false)
+    expect(
+      commands
+        .filter((command) => command.options.some((option) => option.long === "--profile"))
+        .map((command) => `${command.parent?.name()} ${command.name()}`),
+    ).toEqual(["runs search"])
   })
 
   it("names only commands that exist", () => {
