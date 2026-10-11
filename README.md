@@ -7,7 +7,7 @@
 Ваш аккаунт и ваши боты [MAX](https://max.ru) — в терминале и в ИИ-агентах. Читайте, ищите и
 отвечайте сами или поручите это Claude, Codex и Cursor — по вашим правилам.
 
-[Документация](https://wirecat.dev/ru/docs/max) · [Примеры](docs/recipes.md) · [WireCat](https://wirecat.dev/ru)
+[Документация](https://wirecat.dev/ru/docs/max) · [Примеры](https://github.com/WireCatLabs/max-cli/blob/main/docs/recipes.md) · [WireCat](https://wirecat.dev/ru)
 
 [![npm](https://img.shields.io/npm/v/@wirecat/max-cli)](https://www.npmjs.com/package/@wirecat/max-cli)
 [![CI](https://github.com/WireCatLabs/max-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/WireCatLabs/max-cli/actions/workflows/ci.yml)
@@ -50,8 +50,9 @@ max inbox                  # непрочитанное во всех чатах
 
 Нужен Node 22.16+ (ветка 22.x) или 24+, либо Bun 1.3+; работает в Windows, macOS и Linux.
 Попробовать без установки — `npx @wirecat/max-cli --help`. Если `max` не находится,
-`npx @wirecat/max-cli doctor` скажет почему. Полностью — [установка](docs/installation.md) и
-[вход и профили](docs/sessions.md).
+`npx @wirecat/max-cli doctor` скажет почему.
+
+Подробнее: [установка](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/installation)), [вход и профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/sessions)).
 
 ## Что можно сделать
 
@@ -75,8 +76,10 @@ max search all "встреча Алиса"
 max review --since-time 3d --transcribe
 ```
 
-Сводки по расписанию, отчёты по рабочему чату, напоминания и черновики ответов — готовые запросы
-в [рецептах](docs/recipes.md).
+Ещё: сводки утром и вечером, итог недели по рабочему чату, кому вы обещали ответить, черновики
+ответов, которые отправляете вы или агент с вашего разрешения.
+
+Подробнее: [рецепты для агентов](https://github.com/WireCatLabs/max-cli/blob/main/docs/recipes.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/recipes)).
 
 ## Для ИИ-агентов
 
@@ -87,8 +90,7 @@ max review --since-time 3d --transcribe
   сам; отдельно — `max skill install`.
 - **Приложение без терминала** — Claude Desktop, Cursor и другие клиенты MCP. Подключите
   MCP-сервер `max mcp`; готовые просьбы `/catch-up`, `/review`, `/reply` и `/find` уже внутри.
-- **ChatGPT или Claude в браузере** — через HTTPS-туннель и вход по коду
-  ([подключение](docs/remote.md)).
+- **ChatGPT или Claude в браузере** — через HTTPS-туннель и вход по коду.
 
 ```sh
 max mcp setup claude-code  # или codex
@@ -96,7 +98,9 @@ max mcp config             # запись для Claude Desktop, Cursor и др�
 ```
 
 С `--json` каждая команда отдаёт только данные, а ошибка приходит отдельно, с постоянным кодом
-завершения. Подробно — [MCP-сервер](docs/mcp.md) и [контракт для скриптов](docs/cli-contract.md).
+завершения.
+
+Подробнее: [MCP-сервер](https://github.com/WireCatLabs/max-cli/blob/main/docs/mcp.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/mcp)), [браузер](https://github.com/WireCatLabs/max-cli/blob/main/docs/remote.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/remote)), [контракт для скриптов](https://github.com/WireCatLabs/max-cli/blob/main/docs/cli-contract.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/cli-contract)).
 
 ## Почему max
 
@@ -110,23 +114,28 @@ max mcp config             # запись для Claude Desktop, Cursor и др�
   список чатов для записи и лимит сообщений в час. Если имя подходит к двум чатам, `max` не выбирает
   сам. Если связь оборвалась при отправке, `max` так и скажет, а повтор не создаст второе сообщение.
 - **Порядок в группах, которые вы ведёте.** Вопросы без ответа, кто вступил, проверка по вашим
-  правилам: спам, чужие ссылки, флуд. По умолчанию проверка только отмечает
-  ([группы](docs/groups.md)).
+  правилам: спам, чужие ссылки, флуд. По умолчанию проверка только отмечает.
 
-Чем max-cli отличается от PyMax и max-mcp — [сравнение](docs/index.md#чем-отличается-от-других).
+### Чем отличается от других
 
-## Личный аккаунт и бот
+Для MAX есть и другие хорошие проекты; [PyMax](https://github.com/MaxApiTeam/PyMax) — самая полная
+библиотека для личного аккаунта, и её код помог разобрать протокол. Коротко, для личного аккаунта:
 
-### Личный аккаунт
+| | max-cli | [PyMax](https://github.com/MaxApiTeam/PyMax) | [max-mcp](https://github.com/renosaza/max-mcp) |
+|---|:-:|:-:|:-:|
+| что это | программа и MCP-сервер | библиотека на Python | MCP-сервер на PyMax |
+| готовые команды, навык и MCP для агентов | ✅ | — | MCP |
+| ограничения для агента: только чтение, список чатов, лимит в час | ✅ | — | — |
+| локальная копия с поиском без интернета | ✅ | — | — |
+| расшифровка голосовых на вашем компьютере | ✅ | — | — |
+| реакции, правка, пересылка, опросы, отложенная отправка | ✅ | ✅ | — |
+| для админа группы: вопросы без ответа, проверка по правилам | ✅ | — | — |
 
-`max` без слова `bot` работает с вашим аккаунтом: читать, искать, отвечать, отправлять файлы и
-голосовые, вести группы и каналы, контакты и профиль.
+Подробнее: [полная таблица](https://github.com/WireCatLabs/max-cli/blob/main/docs/index.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max)).
 
-```sh
-max chats list --limit 5
-max messages list "Алиса Пример"
-max messages send "Алиса Пример" "Опаздываю на 15 минут"
-```
+## Личный аккаунт
+
+`max` без слова `bot` работает с вашим аккаунтом как ещё одно ваше устройство.
 
 > ⚠️ **Для личного аккаунта max-cli использует неофициальный внутренний API MAX.** API может
 > измениться без предупреждения, а использование инструмента может нарушать условия сервиса. Вы
@@ -134,21 +143,230 @@ max messages send "Алиса Пример" "Опаздываю на 15 мину
 > аккаунтов, потерю данных или другие последствия. Бот работает через официальный API, и к нему
 > это не относится.
 
-Полностью — [личный аккаунт](docs/usage.md).
-
-### Бот
-
-`max bot` работает через **официальный** [Bot API MAX](https://dev.max.ru/docs-api) по токену бота.
-Ботов может быть несколько; имя бота — первое слово команды.
+- **Читать.** Чаты, история, сообщение вместе с соседними, непрочитанное во всех чатах (`max inbox`),
+  разбор «кто кому должен» (`max review`), новые сообщения по мере прихода (`max watch`), вложения,
+  голосовые — текстом на вашем компьютере.
+- **Писать.** Текст и разметка, ответы, фото, видео, файлы и голосовые, правка, пересылка,
+  закрепление, реакции, опросы, отложенная отправка, удаление — у себя или у всех.
+- **Группы и каналы.** Создать, вступить по ссылке, выйти, участники и админы, настройки, ссылка-приглашение, папки.
+- **Контакты и аккаунт.** Найти по номеру, добавить, переименовать, заблокировать, свои заметки о
+  людях; профиль и фото; другие сеансы.
 
 ```sh
-max sales bot auth set                                         # токен — в скрытом вводе
-max sales bot messages send "Команда продаж" "Сборка готова" --file report.pdf
-max sales bot api get-updates --limit 10                       # любой метод Bot API
+max inbox                                              # непрочитанное, ничего не отмечая
+max messages list "Алиса Пример" --limit 20
+max messages send "Алиса Пример" "Созвонимся в 15:00?" --reply-to <id>
+max reactions add "Алиса Пример" <id> 👍
+max messages send 0 "Позвонить Борису" --at-time 2h    # напоминание себе в «Избранное»
+max chats mark-read "Алиса Пример"                     # отметить прочитанным, когда нужно
 ```
 
-Модерация, вебхуки, кнопки, MCP-сервер бота и список чатов, куда ему можно писать. Бота создают на
-[business.max.ru](https://business.max.ru/self). Полностью — [бот MAX](docs/bot.md).
+Подробнее: [личный аккаунт](https://github.com/WireCatLabs/max-cli/blob/main/docs/usage.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/usage)), [один человек](https://github.com/WireCatLabs/max-cli/blob/main/docs/people.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/people)), [ответы](https://github.com/WireCatLabs/max-cli/blob/main/docs/replies.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/replies)).
+
+## Бот
+
+`max bot` работает через **официальный** [Bot API MAX](https://dev.max.ru/docs-api) по токену бота.
+Ботов может быть несколько: каждый хранится под именем, которое вы выбираете, и это имя — первое
+слово команды. Бота создают на [business.max.ru](https://business.max.ru/self); MAX выдаёт их
+подтверждённым организациям, ИП и самозанятым.
+
+```sh
+max sales bot auth set                                   # токен — в скрытом вводе, MAX его проверит
+max sales bot recipients add "Команда продаж"            # писать только сюда
+max sales bot messages send "Команда продаж" "**Сборка готова**" --md --file report.pdf
+max sales bot messages pin "Команда продаж" <mid>        # id сообщения — из ответа на send
+max sales bot watch --events                             # всё, что происходит в чатах бота
+max sales bot chats moderate "Команда продаж" --dry-run  # что нарушает правила — без действий
+max sales bot api get-updates --limit 10                 # любой метод Bot API
+max bot list --check                                     # все боты на этом компьютере
+```
+
+- **Полный Bot API.** Каждый метод официальной схемы — `max <бот> bot api <операция>`: параметры —
+  флаги, тело — JSON, который сверяется со схемой до отправки.
+- **Сообщения и чаты.** Чат называют по номеру, по названию, если бот его видел, или человека как
+  `user:<номер>`. Файлы, участники, комментарии, кнопки, меню команд, вебхуки.
+- **Модерация.** `bot chats rules` и `bot chats moderate` удаляют спам и людей по вашим правилам.
+- **Копия переписки бота.** `bot contacts show`, `bot search messages --from`,
+  `bot messages between` — без запросов к MAX.
+- **Бот не напишет лишнего.** Свой список чатов для записи, журнал отправленного без текста,
+  `permissions` и MCP-сервер `max <бот> bot mcp`. Токен — в системном хранилище паролей, отдельно от вашего.
+
+Подробнее: [бот MAX](https://github.com/WireCatLabs/max-cli/blob/main/docs/bot.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/bot)).
+
+## Группы, которые вы ведёте
+
+```sh
+max review --chat "Поход" --unanswered            # вопросы, на которые сутки никто не ответил
+max chats events "Поход"                          # кто вступил и вышел
+max chats members list "Поход" --all              # все участники: когда заведён аккаунт
+max chats rules set "Поход" invites delete        # приглашения в чужие чаты — удалять
+max chats moderate "Поход" --dry-run              # что нарушает правила — без действий
+```
+
+Проверка сверяет новое в группе с вашими правилами: заблокированные люди, приглашения, ссылки,
+пересланное, флуд, совсем новые аккаунты. По умолчанию она только отмечает. Для каждого действия вы
+решаете сами: никогда, только с флагом, с вашим подтверждением или сразу. Не больше 10 действий за
+раз, и ничего не следит за группой в фоне.
+
+Подробнее: [группы](https://github.com/WireCatLabs/max-cli/blob/main/docs/groups.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/groups)), [рейтинги](https://github.com/WireCatLabs/max-cli/blob/main/docs/rankings.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/rankings)).
+
+## Локальная копия и поиск
+
+Всё прочитанное сохраняется на вашем компьютере. По копии работают поиск и чтение без интернета;
+историю чата можно скачать глубже и выгрузить.
+
+```sh
+max search all "договор"                             # сообщения, почта и заметки сразу
+max search messages "договор" --chat "Проект Альфа"  # только один чат
+max store fetch "Проект Альфа" --last 500            # последние 500 сообщений — в копию
+max store export "Проект Альфа" --format markdown --output alfa.md
+max chats list --offline                             # без подключения к MAX
+```
+
+Поиск понимает слова, людей, даты, файлы, ссылки и ваши метки; есть поиск по темам и сохранённые
+запросы. Текст из сохранённых вложений ищется через `content:`.
+
+Подробнее: [локальная копия](https://github.com/WireCatLabs/max-cli/blob/main/docs/archive.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/archive)), [поиск](https://github.com/WireCatLabs/max-cli/blob/main/docs/search.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/search)), [язык запросов](https://github.com/WireCatLabs/max-cli/blob/main/docs/query-language.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/query-language)), [поиск по темам](https://github.com/WireCatLabs/max-cli/blob/main/docs/topic-search.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/topic-search)), [вложения](https://github.com/WireCatLabs/max-cli/blob/main/docs/attachments.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/attachments)), [голосовые](https://github.com/WireCatLabs/max-cli/blob/main/docs/audio-recognition.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/audio-recognition)).
+
+## Агенты: навык и MCP
+
+**Навык** ставится одной командой и всегда той же версии, что и `max`: в `~/.claude/skills/max-cli/`
+для Claude Code и в `~/.agents/skills/max-cli/` для Codex, Gemini CLI и Cursor. После обновления
+`max` запустите установку ещё раз.
+
+```sh
+max skill show                  # прочитать до входа
+max skill install --for all     # или --for claude, --for agents
+```
+
+**MCP-сервер** работает с тем же аккаунтом. Права профиля проверяются при каждом вызове; формы
+подтверждения на сервере нет — подтверждение вызовов настраивается в приложении агента. Навык
+доступен ресурсом `max://skill`.
+
+```sh
+max mcp doctor                                       # проверить локальный MCP
+max mcp --http --public-url https://<имя>.ts.net     # для ChatGPT и Claude в браузере
+max mcp --permission messages.send=ask               # временно изменить право
+```
+
+Подробнее: [MCP-сервер](https://github.com/WireCatLabs/max-cli/blob/main/docs/mcp.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/mcp)), [браузер](https://github.com/WireCatLabs/max-cli/blob/main/docs/remote.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/remote)), [внешние модели](https://github.com/WireCatLabs/max-cli/blob/main/docs/external-models.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/external-models)).
+
+## Для скриптов
+
+С `--json` команда печатает только данные; так же она работает, когда её вывод читает другая
+программа (`max … | jq`). Любой список приходит в одной форме:
+
+```json
+{ "items": [ … ], "page": 1, "limit": 20, "hasMore": true }
+```
+
+Ошибка приходит одной строкой JSON в stderr, stdout остаётся пустым. Код завершения говорит, что
+случилось: `4` — нужно войти, `5` — права не разрешают, `6` — чат или сообщение не найдены, `8` —
+лимит, `9` — MAX не ответил вовремя, `14` — неизвестно, ушло ли сообщение (повторять только с тем же
+`--send-id`). Частичный результат может прийти с кодом `0`: проверьте поле `complete`.
+
+Подробнее: [контракт](https://github.com/WireCatLabs/max-cli/blob/main/docs/cli-contract.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/cli-contract)), [все команды и коды](https://github.com/WireCatLabs/max-cli/blob/main/docs/commands.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/commands)).
+
+## Вход и профили
+
+```sh
+max setup --agent codex       # QR-код в терминале и навык Codex
+max setup --method qr-chrome  # QR через web.max.ru в браузере
+max setup --method sms        # номер телефона — в браузере
+max setup --method token      # готовый токен, скрытым вводом или через stdin
+max session start qr          # повторный вход, когда сессия истекла
+```
+
+Несколько аккаунтов — несколько профилей; профиль называется **первым словом**:
+`max personal chats list`, или `export MAX_PROFILE=personal` на всю сессию оболочки.
+
+Подробнее: [вход и сессии](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/sessions)), [профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/profiles.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/profiles)).
+
+## Настройки и права
+
+У каждого профиля свои настройки и права; без файла настроек действуют встроенные значения.
+
+| Настройка | Что делает | По умолчанию |
+|---|---|---|
+| `permissions` | что можно: `deny`, `readonly`, `ask`, `allow` — для команды или группы команд | всё, кроме удаления и других необратимых действий: они спрашивают |
+| `sendsPerHour` | сколько сообщений профиль отправит за час | `30` |
+| `requestsPerMinute` | темп обращений к MAX | `20` |
+| `catchUpMarksRead` | `inbox` и `review` отмечают показанное прочитанным | `false` |
+| `limit` | сколько строк в списке | `20` |
+
+```sh
+max config set permissions.messages readonly  # профиль только для чтения
+max config set permissions.messages.send ask  # спрашивать перед отправкой
+```
+
+Подробнее: [настройки](https://github.com/WireCatLabs/max-cli/blob/main/docs/configuration.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/configuration)), [права](https://github.com/WireCatLabs/max-cli/blob/main/docs/permissions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/permissions)), [все ключи](https://github.com/WireCatLabs/max-cli/blob/main/docs/configuration-reference.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/configuration-reference)).
+
+## Ограничения
+
+`max` держит каждый профиль в одном темпе: первые 10 запросов идут сразу, дальше — 20 в минуту, и
+две команды одновременно делят этот темп. Если MAX отвечает «слишком много запросов», `max`
+останавливается и не повторяет запрос сам. Фоновый `max serve` держит одно подключение для всех
+команд и сам останавливается, когда им 15 минут никто не пользуется.
+
+Подробнее: [ограничения и ожидания](https://github.com/WireCatLabs/max-cli/blob/main/docs/limits.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/limits)).
+
+## Безопасность
+
+- Токен входа — в системном хранилище паролей, не в файле и не в истории команд.
+- Локальная копия и служебные файлы доступны только вашему пользователю; от кражи диска защищает
+  шифрование диска целиком.
+- Перед каждой отправкой, в том числе через фоновый сервер и MCP, `max` проверяет ограничения
+  профиля и пишет строку в журнал — без текста сообщения.
+- `--file` не отправит известные файлы с учётными данными, папки `max` и хранилище.
+- Чужой текст не управляет вашим терминалом: управляющие символы из имён и сообщений показываются
+  как текст.
+- Ограничения защищают от агента, которого уговорило прочитанное сообщение, но не от агента,
+  который хочет их обойти: для этого нужна песочница или отдельный пользователь.
+
+Подробнее: [безопасность](https://github.com/WireCatLabs/max-cli/blob/main/docs/security.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/security)).
+
+## Когда не работает
+
+```sh
+max doctor               # где лежат файлы и есть ли вход; к MAX не подключается
+max chats list --trace   # каждый запрос к MAX — без текстов, имён и токена
+max runs list            # неудачные и частичные запуски сохраняются сами
+```
+
+Запись `--trace` можно приложить к сообщению об ошибке.
+
+Подробнее: [по симптому](https://github.com/WireCatLabs/max-cli/blob/main/docs/troubleshooting.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/troubleshooting)), [диагностика](https://github.com/WireCatLabs/max-cli/blob/main/docs/diagnostics.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/diagnostics)).
+
+## Документация
+
+Каждая страница есть и на сайте — [wirecat.dev/ru/docs/max](https://wirecat.dev/ru/docs/max); ниже —
+исходники в этом репозитории.
+
+| Раздел | Страницы |
+|---|---|
+| Начало | [обзор и сравнение](https://github.com/WireCatLabs/max-cli/blob/main/docs/index.md) · [установка](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md) |
+| Как пользоваться | [личный аккаунт](https://github.com/WireCatLabs/max-cli/blob/main/docs/usage.md) · [вход и сессии](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) · [локальная копия](https://github.com/WireCatLabs/max-cli/blob/main/docs/archive.md) · [поиск](https://github.com/WireCatLabs/max-cli/blob/main/docs/search.md) · [вложения](https://github.com/WireCatLabs/max-cli/blob/main/docs/attachments.md) · [голосовые](https://github.com/WireCatLabs/max-cli/blob/main/docs/audio-recognition.md) · [внешние модели](https://github.com/WireCatLabs/max-cli/blob/main/docs/external-models.md) · [рейтинги](https://github.com/WireCatLabs/max-cli/blob/main/docs/rankings.md) · [поиск по темам](https://github.com/WireCatLabs/max-cli/blob/main/docs/topic-search.md) · [язык запросов](https://github.com/WireCatLabs/max-cli/blob/main/docs/query-language.md) · [бот MAX](https://github.com/WireCatLabs/max-cli/blob/main/docs/bot.md) · [группы](https://github.com/WireCatLabs/max-cli/blob/main/docs/groups.md) · [один человек](https://github.com/WireCatLabs/max-cli/blob/main/docs/people.md) · [ответы](https://github.com/WireCatLabs/max-cli/blob/main/docs/replies.md) · [MCP-сервер](https://github.com/WireCatLabs/max-cli/blob/main/docs/mcp.md) · [браузер](https://github.com/WireCatLabs/max-cli/blob/main/docs/remote.md) · [рецепты](https://github.com/WireCatLabs/max-cli/blob/main/docs/recipes.md) |
+| Справочник | [все команды](https://github.com/WireCatLabs/max-cli/blob/main/docs/commands.md) · [настройки](https://github.com/WireCatLabs/max-cli/blob/main/docs/configuration.md) · [права](https://github.com/WireCatLabs/max-cli/blob/main/docs/permissions.md) · [профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/profiles.md) · [все ключи настроек](https://github.com/WireCatLabs/max-cli/blob/main/docs/configuration-reference.md) · [контракт для скриптов](https://github.com/WireCatLabs/max-cli/blob/main/docs/cli-contract.md) · [ограничения](https://github.com/WireCatLabs/max-cli/blob/main/docs/limits.md) |
+| Если что-то не так | [диагностика](https://github.com/WireCatLabs/max-cli/blob/main/docs/diagnostics.md) · [когда не работает](https://github.com/WireCatLabs/max-cli/blob/main/docs/troubleshooting.md) · [безопасность](https://github.com/WireCatLabs/max-cli/blob/main/docs/security.md) |
+| Проект | [дорожная карта](https://github.com/WireCatLabs/max-cli/blob/main/docs/roadmap.md) |
+| Изменения | [CHANGELOG.md](https://github.com/WireCatLabs/max-cli/blob/main/CHANGELOG.md) |
+
+Для разработчиков: [архитектура](https://github.com/WireCatLabs/max-cli/blob/main/docs/dev/ARCHITECTURE.md), [проверки](https://github.com/WireCatLabs/max-cli/blob/main/docs/dev/TESTING.md),
+[протокол](https://github.com/WireCatLabs/max-cli/blob/main/docs/dev/protocol.md) (генерируется), [что осталось](https://github.com/WireCatLabs/max-cli/blob/main/docs/dev/BACKLOG.md).
+
+## Разработка
+
+```sh
+pnpm install
+pnpm lint && pnpm typecheck && pnpm test
+pnpm build && pnpm smoke:bun          # собранная команда под Bun
+pnpm generate                         # переписать сгенерированные файлы
+```
+
+Протокол MAX неофициальный и разобран обратной инженерией. Каждый опкод объявлен один раз в
+`src/spec/`, а реестр, типизированный клиент и `docs/dev/protocol.md` из него генерируются; CI
+падает, если дерево устарело. Общая часть — потоки вывода, коды ошибок, хранилище паролей — в
+[`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-core).
 
 ## Часть WireCat
 
@@ -156,39 +374,10 @@ max-cli — часть [WireCat](https://wirecat.dev/ru): открытого с�
 хранит данные на вашем компьютере. Начните с MAX. Добавьте Telegram, почту и заметки, когда
 понадобится. Ваш контекст. Любой агент.
 
-## Документация
-
-| Страница | Про что |
-|---|---|
-| [Установка](docs/installation.md) | что нужно, куда ложатся файлы, обновление |
-| [Личный аккаунт](docs/usage.md) | чтение, отправка, файлы, машинный режим |
-| [Локальная копия](docs/archive.md) и [поиск](docs/search.md) | что хранится, как искать и выгружать |
-| [Бот MAX](docs/bot.md) | токен, сообщения, модерация, любой метод Bot API |
-| [Группы, которые вы ведёте](docs/groups.md) | вопросы без ответа, правила, проверка |
-| [MCP-сервер](docs/mcp.md) и [браузер](docs/remote.md) | Claude Desktop, Cursor, ChatGPT |
-| [Рецепты](docs/recipes.md) | готовые задачи для агента и расписание |
-| [Все команды](docs/commands.md) | каждая команда и опция, собирается из программы |
-| [Когда не работает](docs/troubleshooting.md) | что на экране и что делать |
-
-Всё вместе — на [wirecat.dev/ru/docs/max](https://wirecat.dev/ru/docs/max) и в
-[оглавлении](docs/README.md).
-
-## Безопасность
-
-- Токен входа — в системном хранилище паролей, не в файле и не в истории команд.
-- Перед каждой отправкой, в том числе через MCP, `max` проверяет ограничения профиля и пишет строку
-  в журнал — без текста сообщения.
-- `--trace` и записи запусков не содержат текстов, имён, телефонов и токена.
-- Ограничения защищают от агента, которого уговорило прочитанное сообщение, но не от агента,
-  который хочет их обойти: для этого нужна песочница или отдельный пользователь.
-
-Что пишется на диск и уходит в сеть — [безопасность](docs/security.md).
-
 ## Участие и лицензия
 
 Пулл-реквесты, сообщения об ошибках и предложения —
-[issues](https://github.com/WireCatLabs/max-cli/issues). Как устроен код и как его проверять —
-[архитектура](docs/dev/ARCHITECTURE.md) и [проверки](docs/dev/TESTING.md).
+[issues](https://github.com/WireCatLabs/max-cli/issues).
 
 Делаем автоматизацию и инструменты под задачу: интеграции с MAX и другими мессенджерами,
 ИИ-агентов, внутренние сервисы — [info@neirox.ai](mailto:info@neirox.ai).
