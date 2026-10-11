@@ -1,0 +1,243 @@
+{
+  "command": "node",
+  "args": ["../dist/bin/max.js"],
+  "previous": {
+    "entry": "./previous/node_modules/@wirecat/previous-cli/dist/bin/max.js",
+    "version": "0.44.0"
+  },
+  "fixtures": [
+    {
+      "path": "MAX/CONFIG/config.json",
+      "text": "{\"defaults\": {\"limit\": 7}, \"profiles\": {\"readonly\": {\"readOnly\": true}, \"contract\": {}}}"
+    }
+  ],
+  "canaries": ["wirecat-synthetic-message-canary"],
+  "artifacts": ["MAX/STATE/runs"],
+  "cases": [
+    {
+      "id": "seed-previous-store",
+      "args": ["{{previousEntry}}"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "entry": "./seed.mjs",
+      "json": {
+        "seeded": true
+      }
+    },
+    {
+      "id": "previous-store-data",
+      "args": ["contract", "--offline", "--json", "--trace", "--record", "messages", "list", "7"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "previous": true,
+      "allowSensitiveOutput": true,
+      "json": {
+        "items": [
+          {
+            "id": "101",
+            "text": "wirecat-synthetic-message-canary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "migration-preview",
+      "args": ["config", "migrate", "--dry-run", "--json"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "json": {
+        "changed": true,
+        "dryRun": true
+      },
+      "files": [
+        {
+          "path": "MAX/CONFIG/config.json",
+          "unchanged": true
+        }
+      ]
+    },
+    {
+      "id": "migration-apply",
+      "args": ["config", "migrate", "--json"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "json": {
+        "changed": true,
+        "dryRun": false
+      },
+      "files": [
+        {
+          "path": "MAX/CONFIG/config.json",
+          "json": {
+            "defaults": {
+              "limit": 7
+            },
+            "personal": {
+              "profiles": {
+                "readonly": {
+                  "permissions": {
+                    "messages": "readonly",
+                    "tasks": "readonly"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "migration-repeat",
+      "args": ["config", "migrate", "--json"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "json": {
+        "changed": false
+      }
+    },
+    {
+      "id": "candidate-store-migrate",
+      "args": ["contract", "store", "migrate", "--json"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "diagnostic": "4 terms\n"
+    },
+    {
+      "id": "candidate-store-data",
+      "args": ["contract", "--offline", "--json", "--trace", "--record", "messages", "list", "7"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "previous": false,
+      "allowSensitiveOutput": true,
+      "json": {
+        "items": [
+          {
+            "id": "101",
+            "text": "wirecat-synthetic-message-canary"
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-add",
+      "args": ["contract", "--json", "--record", "tasks", "add", "msg:max/601/7/101", "--type", "promise"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "capture": {
+        "task": "/id"
+      },
+      "json": {
+        "state": "open"
+      },
+      "allowSensitiveOutput": true
+    },
+    {
+      "id": "task-list",
+      "args": ["contract", "--json", "--trace", "--record", "tasks", "list", "--state", "open"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "allowSensitiveOutput": true,
+      "json": {
+        "items": [
+          {
+            "id": "{{task}}",
+            "state": "open",
+            "message": {
+              "text": "wirecat-synthetic-message-canary"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "task-close",
+      "args": [
+        "contract",
+        "--json",
+        "--record",
+        "tasks",
+        "close",
+        "{{task}}",
+        "--as",
+        "dismissed",
+        "--reason",
+        "synthetic-check"
+      ],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "json": {
+        "state": "dismissed",
+        "reason": "synthetic-check"
+      },
+      "allowSensitiveOutput": true
+    },
+    {
+      "id": "task-persisted",
+      "args": ["contract", "--json", "tasks", "list", "--state", "dismissed"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "allowSensitiveOutput": true,
+      "json": {
+        "items": [
+          {
+            "id": "{{task}}",
+            "state": "dismissed"
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-task",
+      "args": [
+        "contract",
+        "--json",
+        "--trace",
+        "--record",
+        "tasks",
+        "close",
+        "missing-synthetic-task",
+        "--as",
+        "dismissed"
+      ],
+      "exit": 6,
+      "stream": "stderr",
+      "kind": "json",
+      "errorCode": "not_found"
+    },
+    {
+      "id": "migration-store-repeat",
+      "args": ["contract", "store", "migrate", "--json"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json"
+    },
+    {
+      "id": "data-after-repeat",
+      "args": ["contract", "--offline", "--json", "--trace", "--record", "messages", "list", "7"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "previous": false,
+      "allowSensitiveOutput": true,
+      "json": {
+        "items": [
+          {
+            "id": "101",
+            "text": "wirecat-synthetic-message-canary"
+          }
+        ]
+      }
+    }
+  ]
+}
