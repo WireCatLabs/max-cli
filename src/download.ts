@@ -13,6 +13,14 @@ export interface Saved {
   bytes: number
 }
 
+const retryAfterMs = (value: string | null): number | undefined => {
+  if (!value?.trim()) return undefined
+  const seconds = Number(value)
+  const milliseconds = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(value) - Date.now()
+  const delay = Math.ceil(milliseconds)
+  return Number.isSafeInteger(delay) && delay >= 0 ? delay : undefined
+}
+
 const EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -116,7 +124,14 @@ const open = async (
     }
     if (!response.ok || !response.body) {
       await response.body?.cancel()
-      failed(new CliError("network_error", `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`))
+      const pause = retryAfterMs(response.headers.get("retry-after"))
+      failed(
+        new CliError(
+          response.status === 429 ? "rate_limited" : "network_error",
+          `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`,
+          { status: response.status, ...(pause === undefined ? {} : { retryAfterMs: pause }) },
+        ),
+      )
     }
     const declared = Number(response.headers.get("content-length") ?? Number.NaN)
     if (declared > limit) {

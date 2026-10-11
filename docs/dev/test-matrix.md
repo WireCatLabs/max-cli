@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 116 ⛔ · 0 ❌** — 315 commands, 732 options.
+**941 ✅ · 114 ⛔ · 0 ❌** — 316 commands, 739 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -296,8 +296,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store decrypt` | `--output` | ✅ |  |
 | `store repair` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover structural repair and retained data |
 | `store repair` | `--dry-run` | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover preview rollback and retained data |
-| `store reset` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts covers the backup, the refusals and the empty store; consumer mounts the shared command |
-| `store reset` | `--no-backup` | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts resets without a copy and checks backup: null |
+| `store reset` |  | ✅ |  |
+| `store reset` | `--no-backup` | ✅ |  |
 | `store copies delete` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion |
 | `stats messages show` |  | ✅ |  |
 | `stats messages show` | `--sync-first` | ✅ |  |
@@ -763,6 +763,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `runs list` |  | ✅ |  |
 | `runs list` | `--limit` | ✅ |  |
 | `runs show` |  | ✅ |  |
+| `runs search` |  | ✅ |  |
+| `runs search` | `--status` | ✅ |  |
+| `runs search` | `--error-code` | ✅ |  |
+| `runs search` | `--operation` | ✅ |  |
+| `runs search` | `--profile` | ✅ |  |
+| `runs search` | `--since-time` | ✅ |  |
+| `runs search` | `--limit` | ✅ |  |
+| `runs search` | `--page` | ✅ |  |
 | `runs path` |  | ✅ |  |
 | `skill show` |  | ✅ |  |
 | `skill install` |  | ✅ |  |

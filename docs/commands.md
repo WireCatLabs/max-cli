@@ -1684,7 +1684,7 @@ max store jobs list [options]
 
 | Опция | Что делает |
 |---|---|
-| `--state <state>` | only jobs in this state. Одно из: `running`, `done`, `failed`, `cancelled`, `died`. |
+| `--state <state>` | only jobs in this state. Одно из: `running`, `done`, `partial`, `failed`, `cancelled`, `died`. |
 
 #### `max store jobs show`
 
@@ -1712,7 +1712,7 @@ max store jobs cancel <job>
 
 #### `max store jobs retry`
 
-start a failed or died job again, as a new job; the fetch resumes where the store stopped
+start a partial, failed or died job again, as a new job; the fetch resumes where the store stopped
 
 ```sh
 max store jobs retry [job] [options]
@@ -1724,7 +1724,7 @@ max store jobs retry [job] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--failed` | every chat whose newest job failed or died. |
+| `--failed` | every chat whose newest job partial, failed or died. |
 
 #### `max store jobs clear`
 
@@ -3681,6 +3681,28 @@ max runs show <run-id>
 | Аргумент | | Что это |
 |---|---|---|
 | `run-id` | обязательный | an id from `max runs list`. |
+
+### `max runs search`
+
+search recorded diagnostic metadata and events; no message contents
+
+```sh
+max runs search [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | case-insensitive literal diagnostic text. |
+
+| Опция | Что делает |
+|---|---|
+| `--status <status>` | run outcome. Одно из: `success`, `failed`, `partial`, `running`. |
+| `--error-code <code>` | one stable error code. |
+| `--operation <name>` | one operation, such as messages.download. |
+| `--profile <name>` | one recorded profile. |
+| `--since-time <time>` | runs starting on or after an ISO time or 2h / 1d ago. |
+| `--limit <n>` | matches per page, at most 100. По умолчанию: `20`. |
+| `--page <n>` | result page. По умолчанию: `1`. |
 
 ### `max runs path`
 

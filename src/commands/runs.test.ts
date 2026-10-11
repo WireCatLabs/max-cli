@@ -40,4 +40,55 @@ describe("the shared runs command in MAX", () => {
     }
     expect(listRuns(dir).map((item) => item.runId)).toEqual(before)
   })
+  it("searches partial failures with filters without contacting MAX or recording the search", async () => {
+    vi.stubEnv("MAX_STATE_DIR", mkdtempSync(join(tmpdir(), "max-runs-search-")))
+    const dir = runsDirFor(MAX_APP)
+    const recorded = startRun({
+      runsDir: dir,
+      profile: "synthetic",
+      command: "messages download",
+      cliVersion: MAX_APP.version,
+    })
+    recorded.logger.info({
+      event: "response",
+      operation: "messages.download",
+      errorCode: "rate_limited",
+      ids: { message: "50" },
+    })
+    await recorded.finish("partial", {
+      partial: { failed: 1, failures: [{ id: "50", stage: "download", errorCode: "rate_limited" }] },
+    })
+    const before = listRuns(dir).map((item) => item.runId)
+    const streams = captureStreams()
+    expect(
+      await run(
+        [
+          "runs",
+          "search",
+          "50",
+          "--status",
+          "partial",
+          "--error-code",
+          "rate_limited",
+          "--operation",
+          "messages.download",
+          "--profile",
+          "synthetic",
+          "--since-time",
+          "2020-01-01",
+          "--limit",
+          "1",
+          "--page",
+          "1",
+          "--json",
+        ],
+        { streams, tty: false },
+      ),
+    ).toBe(0)
+    expect(JSON.parse(streams.stdout[0] ?? "").items).toMatchObject([
+      { profile: "synthetic", status: "partial", partial: { failed: 1 } },
+    ])
+    expect(streams.stderr).toEqual([])
+    expect(listRuns(dir).map((item) => item.runId)).toEqual(before)
+  })
 })

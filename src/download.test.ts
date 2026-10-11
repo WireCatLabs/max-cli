@@ -14,6 +14,7 @@ import { mockMax, pagedHistory } from "./testing/mock-max.js"
 
 let server: Server
 let origin: string
+let limitedHits = 0
 let stalledOpened = 0
 let stalledClosed = 0
 let stalledCompletion: Promise<void> = Promise.resolve()
@@ -36,6 +37,11 @@ beforeAll(async () => {
       return response.writeHead(200, { "content-type": "image/webp" }).end("webp bytes")
     if (request.url === "/truncated")
       return response.writeHead(200, { "content-length": "1000", connection: "close" }).end("short body")
+    if (request.url === "/limited") {
+      limitedHits++
+      return response.writeHead(429, { "retry-after": "2" }).end()
+    }
+    if (request.url === "/too-large-request") return response.writeHead(413).end()
     if (request.url === "/missing") return response.writeHead(404).end()
     if (request.url === "/moved") return response.writeHead(302, { location: "/elsewhere" }).end()
     if (request.url === "/large-file") {
@@ -74,7 +80,8 @@ const download = async (
     reach = anywhere,
     args,
     photo = false,
-  }: { name?: string; path?: string; reach?: Reach; args?: string[]; photo?: boolean } = {},
+    twoFiles = false,
+  }: { name?: string; path?: string; reach?: Reach; args?: string[]; photo?: boolean; twoFiles?: boolean } = {},
 ) => {
   const max = mockMax({
     answers: {
@@ -88,7 +95,11 @@ const download = async (
           text: "",
           attaches: photo
             ? [{ _type: "PHOTO", photoId: 5, photoToken: "synthetic-photo-token", baseUrl: `${origin}/webp` }]
-            : [{ _type: "FILE", fileId: 42, name, size: 10 }, { _type: "CALL" }],
+            : [
+                { _type: "FILE", fileId: 42, name, size: 10 },
+                ...(twoFiles ? [{ _type: "FILE", fileId: 43, name: "later.pdf", size: 10 }] : []),
+                { _type: "CALL" },
+              ],
         },
       ]),
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
@@ -122,8 +133,10 @@ describe("max messages download", () => {
     expect(code).toBe(0)
     expect(max.unexpected).toEqual([])
     expect(String(max.sent.find((call) => call.opcode === Opcode.FILE_DOWNLOAD)?.payload.fileId)).toBe("42")
-    expect(JSON.parse(stdout)).toEqual({
+    expect(JSON.parse(stdout)).toMatchObject({
       items: [{ kind: "file", path: join(directory, "report.pdf"), bytes: 10 }],
+      complete: false,
+      batch: { failures: [{ id: "116762160362694583", stage: "record_downloads", error: { code: "not_found" } }] },
     })
     expect(stderr).toContain("not a file, not downloaded: call")
     expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
@@ -233,11 +246,25 @@ describe("max messages download", () => {
     const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
     await writeFile(join(directory, "report.pdf"), "mine")
 
-    const { code, stdout, stderr } = await download(directory)
+    const { code, stdout } = await download(directory)
 
-    expect(code).not.toBe(0)
-    expect(stdout).toBe("")
-    expect(stderr).toContain("already exists")
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toMatchObject({
+      items: [],
+      complete: false,
+      batch: {
+        failures: [
+          {
+            stage: "download",
+            error: {
+              code: "validation_error",
+              message: expect.stringContaining("already exists"),
+              actions: expect.any(Array),
+            },
+          },
+        ],
+      },
+    })
     expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("mine")
     expect(await readdir(directory)).toEqual(["report.pdf"])
   })
@@ -252,10 +279,59 @@ describe("max messages download", () => {
 
   it("fails when the link does not answer, and saves nothing", async () => {
     const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
-    const { code, stderr } = await download(directory, { path: "/missing" })
+    const { code, stdout } = await download(directory, { path: "/missing" })
 
-    expect(code).not.toBe(0)
-    expect(stderr).toContain("HTTP 404")
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout)).toMatchObject({
+      items: [],
+      complete: false,
+      batch: {
+        failures: [
+          { stage: "download", error: { message: expect.stringContaining("HTTP 404"), actions: expect.any(Array) } },
+        ],
+      },
+    })
+    expect(await readdir(directory)).toEqual([])
+  })
+
+  it("reports an HTTP rate limit and its wait, stopping later file requests", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const before = limitedHits
+    const result = await download(directory, { path: "/limited", twoFiles: true })
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      items: [],
+      complete: false,
+      batch: {
+        stopReason: "rate_limited",
+        failures: [
+          {
+            stage: "download",
+            error: {
+              code: "rate_limited",
+              status: 429,
+              retryAfterMs: 2000,
+              actions: [{ type: "wait", afterMs: 2000 }, { type: "retry" }],
+            },
+          },
+        ],
+      },
+    })
+    expect(limitedHits - before).toBe(1)
+    expect(await readdir(directory)).toEqual([])
+  })
+
+  it("reports an HTTP size limit with provider guidance rather than a local setting", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const result = await download(directory, { path: "/too-large-request" })
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout).batch.failures[0]).toMatchObject({
+      stage: "download",
+      error: {
+        status: 413,
+        actions: [{ type: "check", message: expect.stringContaining("provider limits") }, { type: "skip" }],
+      },
+    })
     expect(await readdir(directory)).toEqual([])
   })
 
@@ -279,11 +355,15 @@ describe("max messages download", () => {
       checked.push(url.pathname)
       if (url.pathname === "/elsewhere") throw new CliError("validation_error", "not there")
     }
-    const { code, stderr } = await download(directory, { path: "/moved", reach })
+    const { code, stdout } = await download(directory, { path: "/moved", reach })
 
-    expect(code).not.toBe(0)
+    expect(code).toBe(0)
     expect(checked).toEqual(["/moved", "/elsewhere"])
-    expect(stderr).toContain("not there")
+    expect(JSON.parse(stdout)).toMatchObject({
+      items: [],
+      complete: false,
+      batch: { failures: [{ stage: "download", error: { code: "validation_error", message: "not there" } }] },
+    })
   })
 
   it("strips control and direction characters from a name MAX sends", async () => {
@@ -333,8 +413,12 @@ describe("streamBytes", () => {
   it("rejects a disconnected HTTP body and leaves no finished or partial file", async () => {
     const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
     const result = await download(directory, { path: "/truncated" })
-    expect(result.code).not.toBe(0)
-    expect(result.stdout).toBe("")
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      items: [],
+      complete: false,
+      batch: { failed: expect.any(Number), failures: [{ stage: "download", error: { actions: expect.any(Array) } }] },
+    })
     expect(await readdir(directory)).toEqual([])
   })
 
