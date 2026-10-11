@@ -14,6 +14,7 @@ import { mockMax, pagedHistory } from "./testing/mock-max.js"
 
 let server: Server
 let origin: string
+let limitedHits = 0
 let stalledOpened = 0
 let stalledClosed = 0
 let stalledCompletion: Promise<void> = Promise.resolve()
@@ -36,6 +37,11 @@ beforeAll(async () => {
       return response.writeHead(200, { "content-type": "image/webp" }).end("webp bytes")
     if (request.url === "/truncated")
       return response.writeHead(200, { "content-length": "1000", connection: "close" }).end("short body")
+    if (request.url === "/limited") {
+      limitedHits++
+      return response.writeHead(429, { "retry-after": "2" }).end()
+    }
+    if (request.url === "/too-large-request") return response.writeHead(413).end()
     if (request.url === "/missing") return response.writeHead(404).end()
     if (request.url === "/moved") return response.writeHead(302, { location: "/elsewhere" }).end()
     if (request.url === "/large-file") {
@@ -74,7 +80,8 @@ const download = async (
     reach = anywhere,
     args,
     photo = false,
-  }: { name?: string; path?: string; reach?: Reach; args?: string[]; photo?: boolean } = {},
+    twoFiles = false,
+  }: { name?: string; path?: string; reach?: Reach; args?: string[]; photo?: boolean; twoFiles?: boolean } = {},
 ) => {
   const max = mockMax({
     answers: {
@@ -88,7 +95,11 @@ const download = async (
           text: "",
           attaches: photo
             ? [{ _type: "PHOTO", photoId: 5, photoToken: "synthetic-photo-token", baseUrl: `${origin}/webp` }]
-            : [{ _type: "FILE", fileId: 42, name, size: 10 }, { _type: "CALL" }],
+            : [
+                { _type: "FILE", fileId: 42, name, size: 10 },
+                ...(twoFiles ? [{ _type: "FILE", fileId: 43, name: "later.pdf", size: 10 }] : []),
+                { _type: "CALL" },
+              ],
         },
       ]),
       [Opcode.MSG_GET_REACTIONS]: { messagesReactions: {} },
@@ -278,6 +289,47 @@ describe("max messages download", () => {
         failures: [
           { stage: "download", error: { message: expect.stringContaining("HTTP 404"), actions: expect.any(Array) } },
         ],
+      },
+    })
+    expect(await readdir(directory)).toEqual([])
+  })
+
+  it("reports an HTTP rate limit and its wait, stopping later file requests", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const before = limitedHits
+    const result = await download(directory, { path: "/limited", twoFiles: true })
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      items: [],
+      complete: false,
+      batch: {
+        stopReason: "rate_limited",
+        failures: [
+          {
+            stage: "download",
+            error: {
+              code: "rate_limited",
+              status: 429,
+              retryAfterMs: 2000,
+              actions: [{ type: "wait", afterMs: 2000 }, { type: "retry" }],
+            },
+          },
+        ],
+      },
+    })
+    expect(limitedHits - before).toBe(1)
+    expect(await readdir(directory)).toEqual([])
+  })
+
+  it("reports an HTTP size limit with provider guidance rather than a local setting", async () => {
+    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
+    const result = await download(directory, { path: "/too-large-request" })
+    expect(result.code).toBe(0)
+    expect(JSON.parse(result.stdout).batch.failures[0]).toMatchObject({
+      stage: "download",
+      error: {
+        status: 413,
+        actions: [{ type: "check", message: expect.stringContaining("provider limits") }, { type: "skip" }],
       },
     })
     expect(await readdir(directory)).toEqual([])
