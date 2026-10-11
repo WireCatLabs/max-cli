@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**941 ✅ · 114 ⛔ · 0 ❌** — 316 commands, 739 options.
+**941 ✅ · 117 ⛔ · 0 ❌** — 316 commands, 742 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -558,6 +558,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search all` | `--limit` | ✅ |  |
 | `search all` | `--exact` | ✅ |  |
 | `search all` | `--timezone` | ✅ |  |
+| `search all` | `--backend` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts covers archive (never connects), server and both for search all |
+| `search all` | `--server-time` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts bounds the server step; search all passes it unchanged |
 | `search messages` |  | ✅ |  |
 | `search messages` | `--sync-first` | ✅ |  |
 | `search messages` | `--max-chats` | ✅ |  |
@@ -584,6 +586,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--saved` | ✅ |  |
 | `search mail` |  | ✅ |  |
 | `search mail` | `--chat` | ✅ |  |
+| `search mail` | `--account` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts narrows mail to one held address and refuses an unknown one |
 | `search mail` | `--limit` | ✅ |  |
 | `search mail` | `--newest` | ✅ |  |
 | `search mail` | `--exact` | ✅ |  |

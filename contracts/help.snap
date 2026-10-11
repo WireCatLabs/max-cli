@@ -70,8 +70,9 @@ Commands:
                               search finds them
   metadata                    cached group/channel descriptions for local
                               automatic tags
-  search                      find things by text: search all for everything the
-                              local store holds, or one resource
+  search                      find things by text: one resource when you know it
+                              (mail, messages, notes), or search all across
+                              messages, mail and notes
   searches                    saved searches and the history of search messages
                               and stats messages show, kept in the local store;
                               --saved runs one
