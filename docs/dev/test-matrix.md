@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**941 ✅ · 117 ⛔ · 0 ❌** — 316 commands, 742 options.
+**941 ✅ · 136 ⛔ · 0 ❌** — 320 commands, 757 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -435,6 +435,25 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks list` | `--limit` | ✅ |  |
 | `tasks add` |  | ✅ |  |
 | `tasks add` | `--type` | ✅ |  |
+| `tasks add` | `--title` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks add` | `--description` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks add` | `--due` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks add` | `--check` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` |  | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--title` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks plan` | `--description` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks plan` | `--due` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--check` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks link` |  | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks link` | `--chat` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks link` | `--kind` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks show` |  | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` |  | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--due` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--unanswered` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks agenda` | `--waiting` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--within` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--kind` | ⛔ | cli-messaging src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks close` |  | ✅ |  |
 | `tasks close` | `--as` | ✅ |  |
 | `tasks close` | `--reason` | ✅ |  |
