@@ -310,7 +310,7 @@ describe("max messages download", () => {
             error: {
               code: "rate_limited",
               status: 429,
-              retryAfterMs: 2000,
+              retry_after_ms: 2000,
               actions: [{ type: "wait", afterMs: 2000 }, { type: "retry" }],
             },
           },

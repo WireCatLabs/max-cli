@@ -129,7 +129,7 @@ const open = async (
         new CliError(
           response.status === 429 ? "rate_limited" : "network_error",
           `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`,
-          { status: response.status, ...(pause === undefined ? {} : { retryAfterMs: pause }) },
+          { status: response.status, ...(pause === undefined ? {} : { retry_after_ms: pause }) },
         ),
       )
     }

@@ -142,7 +142,7 @@ export class BotTransport {
         if (this.#signal?.aborted) throw error
         const retryable = reads && error.details.retryable === true && attempt <= this.#retry.retries
         if (!retryable) throw error
-        const wait = error.details.retryAfterMs ?? backoffMs(attempt, this.#retry, this.#random)
+        const wait = error.details.retry_after_ms ?? backoffMs(attempt, this.#retry, this.#random)
         if (wait > this.#retry.maxRetryAfterMs) throw error
         try {
           await this.#sleep(wait, this.#signal, "retry")
@@ -282,7 +282,7 @@ export class BotTransport {
         status: response.status,
         retryable,
         ...(maxCode ? { maxCode } : {}),
-        ...(retryAfterMs === undefined ? {} : { retryAfterMs }),
+        ...(retryAfterMs === undefined ? {} : { retry_after_ms: retryAfterMs }),
       },
     )
   }

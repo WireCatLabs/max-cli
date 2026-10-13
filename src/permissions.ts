@@ -58,7 +58,7 @@ export const assertReadable = (
 export const commandPermission = (command: Command): string | null => {
   const words: string[] = []
   for (let at: Command | null = command; at?.parent; at = at.parent) words.unshift(at.name())
-  const operation = metaOf(command).operationId
+  const operation = metaOf(command).operation_id
   if (words[0] === "bot" && words[1] === "api" && operation)
     return BOT_KEYS[operation] ?? `bot.api.${words.slice(2).join(".")}`
   if (words[0] === "bot" && words[1] === "comments") return `bot.messages.${words.slice(2).join(".")}`

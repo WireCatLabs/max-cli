@@ -31,7 +31,7 @@ describe("max commands", () => {
     expect(code).toBe(0)
     expect(stdout).toHaveLength(1)
     expect(stderr).toEqual([])
-    expect(JSON.parse(stdout[0] as string)).toMatchObject({ cli: "max", version: MAX_APP.version, contract: 0 })
+    expect(JSON.parse(stdout[0] as string)).toMatchObject({ cli: "max", version: MAX_APP.version, contract: 1 })
   })
 
   it("lists every command the program has, with the argv path already split", async () => {
@@ -195,7 +195,7 @@ describe("max commands", () => {
 
   it("publishes the exit code for every failure a script branches on", async () => {
     const { stdout } = await commands()
-    expect(JSON.parse(stdout[0] as string).exitCodes).toMatchObject({ ok: 0, ...EXIT_CODES })
+    expect(JSON.parse(stdout[0] as string).exit_codes).toMatchObject({ ok: 0, ...EXIT_CODES })
   })
 
   it("needs no session and survives a configuration file it cannot read", async () => {
