@@ -36,6 +36,7 @@ const maxHere = (...args: string[]) =>
     encoding: "utf8",
     env: {
       ...process.env,
+      MAX_PROFILE: "default",
       MAX_CONFIG_DIR: join(isolated, "config"),
       MAX_STATE_DIR: join(isolated, "state"),
       MAX_CACHE_DIR: join(isolated, "cache"),

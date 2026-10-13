@@ -70,7 +70,7 @@ Commands:
                               stored messages by replies, mentions and who wrote
                               next
   attachments                 the files of stored messages: their text in the
-                              local store, for content: in a search
+                              local store, where search finds it
   tags                        your own labels on chats, people and messages,
                               kept in the local store and never sent; tag: in a
                               search finds them

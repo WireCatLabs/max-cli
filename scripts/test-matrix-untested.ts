@@ -374,11 +374,6 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "search all",
-    option: "--meetings",
-    reason: "cli-messaging src/cli/messenger/messenger.test.ts searches a stored meeting account through search all",
-  },
-  {
-    command: "search all",
     option: "--max-meetings",
     reason: "cli-messaging src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through",
   },
@@ -392,12 +387,6 @@ export const UNTESTED: Untested[] = [
     command: "search all",
     option: "--server-time",
     reason: "cli-messaging src/cli/messenger/messenger.test.ts bounds the server step; search all passes it unchanged",
-  },
-  {
-    command: "search mail",
-    option: "--account",
-    reason:
-      "cli-messaging src/cli/messenger/messenger.test.ts narrows mail to one held address and refuses an unknown one",
   },
   {
     command: "store reset",
