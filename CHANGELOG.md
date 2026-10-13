@@ -4,6 +4,15 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Изменено — может сломать скрипты
+
+- **Сборка на `@wirecat/cli-messaging` 0.261.0 и `@wirecat/cli-base` 0.26.0.** Ключи в машинном выводе —
+  snake_case: в `error.details` — `operation_id`, `send_id`, `retry_after_ms`; в `commands --json` —
+  `global_options`, `inherited_options`, `exit_codes`, `takes_value` и `contract: 1`. Дерево запроса в MCP-аргументе
+  `ast` пишет `lower_inclusive`, `upper_inclusive` и `must_not`.
+
 ## 0.49.0 — 13.10.2026
 
 ### Что нового
