@@ -130,9 +130,14 @@ describe("BotTransport", () => {
 
   it("reports a read that timed out as a timeout, after the retries", async () => {
     handler = () => {}
-    const error = await failure(transport({ timeoutMs: 30 }).call(operation("getMyInfo")))
+    const attempts: string[] = []
+    const events = (event: { event: string }) => {
+      if (event.event === "request") attempts.push(event.event)
+    }
+    const error = await failure(transport({ timeoutMs: 30, events }).call(operation("getMyInfo")))
     expect(error.code).toBe("timeout")
-    expect(seen).toHaveLength(3)
+    // Counted on our side: a slow runner can cut a 30 ms request before the server has read it.
+    expect(attempts).toHaveLength(3)
   })
 
   it("names MAX's own error code and keeps the token out of the message", async () => {
