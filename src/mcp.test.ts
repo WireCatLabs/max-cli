@@ -8,8 +8,9 @@ import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { serveStdio } from "@modelcontextprotocol/server/stdio"
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
 import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
+import { parseLucene } from "@wirecat/cli-base/query"
 import { personalMcpTools, serveOverHttp } from "@wirecat/cli-messaging/cli"
-import { parseLucene, servicesFor, storedDeps } from "@wirecat/cli-messaging/services"
+import { servicesFor, storedDeps } from "@wirecat/cli-messaging/services"
 import { openStore } from "@wirecat/cli-messaging/store"
 import { mcpCommandsClient } from "@wirecat/cli-messaging/testing"
 import { afterEach, describe, expect, it, vi } from "vitest"
@@ -1150,13 +1151,13 @@ describe("the MCP server", () => {
     await session.close()
   })
 
-  it("hands back the send id when it cannot tell whether a send went out", async () => {
+  it("hands back the operation id when it cannot tell whether a send went out", async () => {
     const { client } = await connect({ allowSend: true }, { answers: { [Opcode.MSG_SEND]: () => undefined } })
 
     const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "hello" })
 
     expect(isError).toBe(true)
-    expect(body.error).toMatchObject({ code: "outcome_unknown", details: { sendId: expect.any(Number) } })
+    expect(body.error).toMatchObject({ code: "outcome_unknown", details: { operation_id: expect.any(String) } })
   })
 
   it("schedules with `at_time` the way `--at-time` does, and answers scheduledFor", async () => {

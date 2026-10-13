@@ -681,7 +681,7 @@ export class MaxClient {
         await this.#botWrite(
           () => this.#wire.messages.send({ chatId, message: { cid, attaches: [control] } }),
           "the bot may already have started",
-          { sendId: cid },
+          { send_id: cid },
         )
         this.#sends?.record({ chatId, kind: "message", sendId: String(cid), outcome: "sent" })
       } catch (error) {
