@@ -1,7 +1,7 @@
 import { realpathSync } from "node:fs"
-import { readFile } from "node:fs/promises"
+import { readFile, stat } from "node:fs/promises"
 import { basename, extname, isAbsolute, relative, resolve, sep } from "node:path"
-import { CliError, resolvePaths } from "@wirecat/cli-base"
+import { CliError, isCliError, resolvePaths } from "@wirecat/cli-base"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
 const HEADERS = {
@@ -50,6 +50,9 @@ const inside = (path: string, dir: string): boolean => {
   return way === "" || (!way.startsWith("..") && !isAbsolute(way))
 }
 
+/** Node's readFile refuses larger files (ERR_FS_FILE_TOO_LARGE); MAX documents no limit of its own. */
+const READ_MAX = 2 ** 31 - 1
+
 export const readUpload = async (path: string, { anyFile = false }: { anyFile?: boolean } = {}): Promise<Buffer> => {
   if (!anyFile && refusedPlace(path)) {
     throw new CliError(
@@ -59,8 +62,15 @@ export const readUpload = async (path: string, { anyFile = false }: { anyFile?: 
     )
   }
   try {
+    const { size } = await stat(path)
+    if (size > READ_MAX)
+      throw new CliError(
+        "validation_error",
+        `cannot send ${path}: it is ${(size / 2 ** 30).toFixed(1)} GiB, and max sends files under 2 GiB`,
+      )
     return await readFile(path)
   } catch (error) {
+    if (isCliError(error)) throw error
     const reason = (error as NodeJS.ErrnoException).code === "ENOENT" ? "no such file" : "it cannot be read"
     throw new CliError("validation_error", `cannot send ${path}: ${reason}`)
   }

@@ -24,6 +24,9 @@ export const userIdsJson = (ids: readonly string[]): string => {
 /** A friendly command's body meets the same schema check as one given to `max bot api`. */
 export const checked = (id: string, text: string): string => checkBody(operation(id), text) ?? text
 
+/** The Bot API's `UserIdsList` takes `maxItems: 100` (spec/bot/schema.yaml). */
+const ADD_AT_ONCE = 100
+
 const limitOf = (limit: number): string => {
   if (limit > 100) throw new CliError("validation_error", "MAX gives at most 100 at a time — --limit 100")
   return String(limit)
@@ -57,8 +60,15 @@ export const addMembersCommands = (members: Command): void => {
     })
 
   annotate(members.command("add <chat> <users...>"), { mutates: true })
-    .description("add people to a chat by user id; the bot must be an admin that may add members")
+    .description(
+      `add people to a chat by user id, at most ${ADD_AT_ONCE}; the bot must be an admin that may add members`,
+    )
     .action(async function (this: Command, chat: string, users: string[]) {
+      if (users.length > ADD_AT_ONCE)
+        throw new CliError(
+          "validation_error",
+          `MAX adds at most ${ADD_AT_ONCE} people at a time, got ${users.length} — split them into several runs`,
+        )
       const context = botContext(this)
       const answer = await guardedCall(context, operation("addMembers"), {
         path: { chatId: chatIdOf(chat, context.registry) },

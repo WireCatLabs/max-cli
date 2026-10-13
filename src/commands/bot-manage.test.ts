@@ -345,6 +345,14 @@ describe("max bot members and admins", () => {
     expect(over.stderr).toContain("at most 100")
   })
 
+  it("refuses to add more than 100 people at once, as the Bot API takes", async () => {
+    const users = Array.from({ length: 101 }, (_, at) => String(at + 1))
+    const over = await max(["bot", "chats", "members", "add", "-100", ...users, "--json"])
+    expect(over.code).not.toBe(0)
+    expect(over.stderr).toContain("split them into several runs")
+    expect(writes()).toEqual([])
+  })
+
   it("removes a person without a ban by default, and with one on --block", async () => {
     expect((await max(["bot", "chats", "members", "remove", "-100", "42", "--json"])).code).toBe(0)
     expect(writes().at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/members?user_id=42" })

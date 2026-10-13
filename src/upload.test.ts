@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs"
-import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, symlink, truncate, writeFile } from "node:fs/promises"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
@@ -11,6 +11,7 @@ import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+import { readUpload } from "./upload.js"
 
 let server: Server
 let origin: string
@@ -334,5 +335,14 @@ describe("sending files", () => {
     expect(code).not.toBe(0)
     expect(sends).toEqual([])
     expect(stderr).toContain("no such file")
+  })
+
+  // Windows would write the 2 GiB out; elsewhere the file is sparse.
+  it.skipIf(process.platform === "win32")("refuses a file of 2 GiB or more, which Node cannot read", async () => {
+    const path = join(directory, "huge.bin")
+    await writeFile(path, "")
+    await truncate(path, 2 ** 31)
+
+    await expect(readUpload(path)).rejects.toThrow("2.0 GiB, and max sends files under 2 GiB")
   })
 })
