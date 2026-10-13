@@ -126,8 +126,7 @@
 
 | Система | Путь |
 |---|---|
-| Linux | `~/.config/max-cli/config.json` |
-| macOS | `~/Library/Preferences/max-cli/config.json` |
+| Linux и macOS | `~/.config/max-cli/config.json` |
 | Windows | `%APPDATA%\max-cli\Config\config.json` |
 
 `max config show` печатает путь, который действительно использует этот компьютер, и каждую настройку

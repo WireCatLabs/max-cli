@@ -145,13 +145,13 @@ node dist/bin/max.js --help
 
 Три каталога следуют соглашениям операционной системы, ещё два общие с другими инструментами:
 
-| Что | Linux | macOS | Windows |
-|---|---|---|---|
-| настройки | `~/.config/max-cli/` | `~/Library/Preferences/max-cli/` | `%APPDATA%\max-cli\Config\` |
-| состояние | `~/.local/share/max-cli/` | `~/Library/Application Support/max-cli/` | `%LOCALAPPDATA%\max-cli\Data\` |
-| кэш | `~/.cache/max-cli/` | `~/Library/Caches/max-cli/` | `%LOCALAPPDATA%\max-cli\Cache\` |
-| общая копия сообщений | `~/.local/share/WireCat/wirecat.db` | `~/.local/share/WireCat/wirecat.db` | `%LOCALAPPDATA%\WireCat\Data\wirecat.db` |
-| модели распознавания речи | `~/.local/share/WireCat/models/audio/` | `~/.local/share/WireCat/models/audio/` | `%LOCALAPPDATA%\WireCat\Data\models\audio\` |
+| Что | Linux и macOS | Windows |
+|---|---|---|
+| настройки | `~/.config/max-cli/` | `%APPDATA%\max-cli\Config\` |
+| состояние | `~/.local/share/max-cli/` | `%LOCALAPPDATA%\max-cli\Data\` |
+| кэш | `~/.cache/max-cli/` | `%LOCALAPPDATA%\max-cli\Cache\` |
+| общая копия сообщений | `~/.local/share/WireCat/wirecat.db` | `%LOCALAPPDATA%\WireCat\Data\wirecat.db` |
+| модели распознавания речи | `~/.local/share/WireCat/models/audio/` | `%LOCALAPPDATA%\WireCat\Data\models\audio\` |
 
 - **настройки** — `config.json`, и `credentials.json` с токеном, только если на машине нет ключницы.
 - **состояние** — `profiles/<имя>.json` (устройство и счётчик входов), `bots/` (чаты, которые видели
@@ -168,6 +168,9 @@ node dist/bin/max.js --help
 
 Каждый каталог можно перенести переменной: `MAX_CONFIG_DIR`, `MAX_STATE_DIR`, `MAX_CACHE_DIR`,
 `MESSAGING_STORE` (сам файл общей копии) и `WIRECAT_STATE_DIR` (папка WireCat: общая копия и модели).
+
+В macOS версии до 0.47.0 держали три первых каталога в `~/Library`; первый запуск новой версии
+один раз переносит их на места из таблицы.
 
 Первый запуск после обновления со старого `max` один раз переносит общую копию и модели в папку WireCat
 из `~/.local/share/cli-messaging/` и `~/.cache/cli-common/models/`. Если в обоих местах лежат разные копии,
