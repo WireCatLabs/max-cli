@@ -93,7 +93,8 @@
     "ci:quick": "pnpm typecheck",
     "contracts:check": "cli-contract contracts/plan.json",
     "contracts:upgrade": "pnpm --dir contracts/previous install --frozen-lockfile --ignore-scripts && cli-contract contracts/upgrade.json && cli-contract contracts/legacy-store.json",
-    "security:no-leak": "cli-testing security no-leak . contracts/no-leak.json"
+    "security:no-leak": "cli-testing security no-leak . contracts/no-leak.json",
+    "lint:commands": "node node_modules/@wirecat/cli-base-lint/dist/dev/bin.js lint --cli dist/bin/max.js"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.1.0",
@@ -121,6 +122,7 @@
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.2",
     "@vitest/coverage-v8": "^5.0.3",
+    "@wirecat/cli-base-lint": "npm:@wirecat/cli-base@0.22.0",
     "@wirecat/cli-testing": "0.4.0",
     "cspell": "10.3.6",
     "lefthook": "2.1.16",

@@ -36,6 +36,7 @@ const failed = releaseCheck(
     { name: "test", run: command(root, "pnpm", "test") },
     { name: "bun", run: command(root, "pnpm", "smoke:bun") },
     { name: "generated files", run: command(root, "pnpm", "generate") },
+    { name: "command lint", run: command(root, "pnpm", "lint:commands") },
     {
       name: "test matrix",
       run: command(
