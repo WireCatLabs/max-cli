@@ -2,7 +2,7 @@ import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@wirecat/cli-base"
-import { type ContractCase, contractCases, type Seed } from "@wirecat/cli-messaging/testing"
+import { type ContractCase, contractCases, type Seed } from "@wirecat/cli-core/testing"
 import { afterEach, describe, expect, it } from "vitest"
 import { MaxClient } from "../client.js"
 import { Connection } from "../protocol/connection.js"
@@ -43,7 +43,7 @@ const connect = async (seed: Seed) => {
 
 const cases: ContractCase[] = contractCases({ connect, ids: maxIds, orderBy: "time" })
 
-describe("the MAX adapter keeps cli-messaging's port promises", () => {
+describe("the MAX adapter keeps cli-core's port promises", () => {
   it("skips only cases that exist", () => {
     expect(Object.keys(SKIPPED).filter((name) => !cases.some((one) => one.name === name))).toEqual([])
   })

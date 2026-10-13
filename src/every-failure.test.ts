@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { listRuns, runsDirFor } from "@wirecat/cli-messaging/cli"
+import { listRuns, runsDirFor } from "@wirecat/cli-core/cli"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"

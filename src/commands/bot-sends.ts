@@ -10,7 +10,7 @@ import {
   SendJournal,
   type SendKind,
   sendGuard,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import { MAX_APP } from "../app.js"
 import { botOperations } from "../bot/client.js"
 import { BOT_JOURNAL_KINDS, BOT_KEYS } from "../bot/permissions.js"
@@ -40,7 +40,7 @@ const recipientsOf = (context: Context) =>
   new RecipientList(files(context.settings.profile).recipients, `max ${botWords(context.settings.profile)}`)
 
 /**
- * cli-messaging's guard with the bot's own recipient list and journal. `readOnly` and `allow` are
+ * cli-core's guard with the bot's own recipient list and journal. `readOnly` and `allow` are
  * checked before it, with the bot's permission names; no hourly limit unless `bot.*` sets one (`NEED-305`, `NEED-356`).
  */
 const guardOf = (context: Context) =>
@@ -130,7 +130,7 @@ export const guardedCall = async (context: Context, target: ManifestOperation, i
   assertAllowed(target, context.settings)
   if (target.effect === "read") return client.call(target, input)
   const key = BOT_KEYS[target.id]
-  if (key && (await import("@wirecat/cli-messaging/sends")).levelFor(context.settings.permissions, key).level === "ask")
+  if (key && (await import("@wirecat/cli-core/sends")).levelFor(context.settings.permissions, key).level === "ask")
     await context.askPermission(key, { chatId: null })
   const kind = BOT_JOURNAL_KINDS[target.id]
   if (!kind) return client.call(target, input)

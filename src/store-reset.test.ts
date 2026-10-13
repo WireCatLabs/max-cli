@@ -2,7 +2,7 @@ import { mkdtempSync, readdirSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { captureStreams } from "@wirecat/cli-base"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { openStore } from "@wirecat/cli-core/store"
 import { describe, expect, it } from "vitest"
 import { run } from "./program.js"
 

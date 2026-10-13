@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs"
 import { CliError } from "@wirecat/cli-base"
-import { holdLock, lockPath, releaseLock } from "@wirecat/cli-messaging/background"
+import { holdLock, lockPath, releaseLock } from "@wirecat/cli-core/background"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
 import { parseDuration } from "../config.js"

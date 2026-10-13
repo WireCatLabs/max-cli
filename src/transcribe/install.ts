@@ -7,4 +7,4 @@ export {
   modelPath,
   modelsDirectory,
   vadPath,
-} from "@wirecat/cli-messaging/speech"
+} from "@wirecat/cli-core/speech"

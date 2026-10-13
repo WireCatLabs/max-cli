@@ -1,7 +1,7 @@
-import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@wirecat/cli-messaging/cli"
-import { AI_SETTING_KEYS } from "@wirecat/cli-messaging/cli"
-import type { GuardRequest, SendGuard } from "@wirecat/cli-messaging/sends"
-import { moderationService } from "@wirecat/cli-messaging/services"
+import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@wirecat/cli-core/cli"
+import { AI_SETTING_KEYS } from "@wirecat/cli-core/cli"
+import type { GuardRequest, SendGuard } from "@wirecat/cli-core/sends"
+import { moderationService } from "@wirecat/cli-core/services"
 import type { Command } from "commander"
 import { maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
@@ -37,11 +37,11 @@ export const overServer = (guard: SendGuard, server: () => { readonly journals: 
 /** One subcommand of a shared command group, to sit among max's own. */
 export const sharedSubcommand = (group: Command, name: string): Command => {
   const found = group.commands.find((one) => one.name() === name)
-  if (!found) throw new Error(`cli-messaging's ${group.name()} has no ${name}`)
+  if (!found) throw new Error(`cli-core's ${group.name()} has no ${name}`)
   return found
 }
 
-/** What cli-messaging's shared commands and services need from max, for the personal account. */
+/** What cli-core's shared commands and services need from max, for the personal account. */
 export const maxMessenger: Messenger = {
   inviteLinkList: false,
   inviteLinkRevoke: false,

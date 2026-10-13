@@ -5,7 +5,7 @@ import { join } from "node:path"
 import { pathToFileURL } from "node:url"
 
 const fromPrevious = createRequire(realpathSync(process.argv[2]))
-const { openStore } = await import(pathToFileURL(fromPrevious.resolve("@wirecat/cli-messaging/store")).href)
+const { openStore } = await import(pathToFileURL(fromPrevious.resolve("@wirecat/cli-core/store")).href)
 const state = process.env.MAX_STATE_DIR
 mkdirSync(join(state, "accounts"), { recursive: true })
 writeFileSync(join(state, "accounts", "contract.json"), JSON.stringify({ account: "601" }), { mode: 0o600 })

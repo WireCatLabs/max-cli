@@ -151,7 +151,7 @@ What holds for every command, how to produce it, and the test that pins it.
 |---|---|---|---|
 | Machine output | `--json` / `--jsonl`, or stdout not a terminal | stdout: one JSON value (or one per line), nothing else; diagnostics on stderr | `src/output.test.ts`, `src/commands/commands.test.ts` |
 | An error | any refusal with `--json` | exit code from the table in [`../commands.md`](../commands.md); stderr one `{"error":{code,message}}` | `src/program.test.ts` |
-| Trace and record | `--trace`, `--record`, then `max runs list\|show` | events on stderr, never content; a run directory | cli-messaging `src/cli/runs/recording.test.ts`, `src/commands/bot.test.ts` |
+| Trace and record | `--trace`, `--record`, then `max runs list\|show` | events on stderr, never content; a run directory | cli-core `src/cli/runs/recording.test.ts`, `src/commands/bot.test.ts` |
 | A failed run is kept | any failure, no flag | `max runs list` shows it with `keptBecauseFailed` | `src/run-log.test.ts`, `src/every-failure.test.ts`, `src/report.test.ts` |
 | `--quiet` | any command | notes gone, data and errors kept | `src/inbox.test.ts`, `src/client.test.ts` |
 | No session | a profile never logged in | exit 4, names `max <p> setup` | `src/every-failure.test.ts`, `src/client.test.ts` |
@@ -323,14 +323,14 @@ until it cost something.
 
 ## How agents' statistics answers were evaluated
 
-The [public agent evaluation report](https://github.com/WireCatLabs/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md)
+The [public agent evaluation report](https://github.com/WireCatLabs/cli-core/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md)
 records synthetic CLI and MCP tasks covering selected responders, response latency, observed
 retention, counter freshness, exact previews, permission refusal and evidence recovery after source
 changes. Six fresh contexts produced 38 assessed outcomes. This small, correlated sample is not a
 reliability percentage or a guarantee about anyone's agent. MCP used a shell proxy; no real
 messenger or its network adapter participated. The original runs did not record the exact model.
 
-To reproduce, use the [fixture and reproduction instructions](https://github.com/WireCatLabs/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md#interpretation-and-reproduction).
+To reproduce, use the [fixture and reproduction instructions](https://github.com/WireCatLabs/cli-core/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md#interpretation-and-reproduction).
 Record model/SDK versions, clock/seed, prompts and first failures. Model answers can differ on a
 rerun; fixture checks and independent model evaluations are counted separately. What a user should
 check in an agent's statistics answer stays in

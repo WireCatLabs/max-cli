@@ -84,7 +84,7 @@ if the change lifts them.
 ## 5. Agents
 
 Decide, and say in the PR, whether an agent gets it over MCP (`src/mcp/tools.ts`; for a bot command,
-cli-messaging's `src/mcp/bot/tools.ts` or, for max's own, `src/bot/mcp-tools.ts`). Reads: usually yes. Writes: behind a flag or `mcpTools` in the config
+cli-core's `src/mcp/bot/tools.ts` or, for max's own, `src/bot/mcp-tools.ts`). Reads: usually yes. Writes: behind a flag or `mcpTools` in the config
 (`NEED-350`) — **a product decision for the owner, not yours**. If an agent should know the command,
 add a line to `skills/max-cli/SKILL.md` (Russian, what `max skill show` prints).
 

@@ -1,4 +1,4 @@
-import type { Message } from "@wirecat/cli-messaging"
+import type { Message } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import { accountOf, fromStore, keep } from "./keep.js"
 

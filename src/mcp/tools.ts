@@ -11,9 +11,9 @@ import {
   registerPersonalMcpSurface,
   rememberAccount,
   stored,
-} from "@wirecat/cli-messaging/cli"
-import { levelFor, type Permission } from "@wirecat/cli-messaging/sends"
-import { openStore } from "@wirecat/cli-messaging/store"
+} from "@wirecat/cli-core/cli"
+import { levelFor, type Permission } from "@wirecat/cli-core/sends"
+import { openStore } from "@wirecat/cli-core/store"
 import * as v from "valibot"
 import { maxAdapter } from "../adapter/max-adapter.js"
 import { MAX_APP } from "../app.js"

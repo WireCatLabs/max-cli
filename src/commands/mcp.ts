@@ -1,7 +1,7 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installerOf } from "@wirecat/cli-base/update"
-import { httpTokenFile, revokeAll } from "@wirecat/cli-messaging/cli"
+import { httpTokenFile, revokeAll } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { ownScript } from "../install.js"

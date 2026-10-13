@@ -1,1 +1,1 @@
-export { type OutputOptions, resolveOutput } from "@wirecat/cli-messaging"
+export { type OutputOptions, resolveOutput } from "@wirecat/cli-core"

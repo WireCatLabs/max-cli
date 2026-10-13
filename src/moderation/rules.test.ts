@@ -27,7 +27,7 @@ describe("ModerationRules", () => {
     expect(saved.newAccount).toEqual({ days: 7, action: "report" })
   })
 
-  it("reads the levels cli-messaging writes when a bot of the same name changes its rules", () => {
+  it("reads the levels cli-core writes when a bot of the same name changes its rules", () => {
     const rules = fresh()
     const consent = { delete: "ask", remove: "deny" }
     writeFileSync(rules.path, JSON.stringify({ groups: { "-1": { ...defaultRules("Team"), consent } } }))

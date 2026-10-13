@@ -10,7 +10,7 @@ import {
   SendJournal,
   type SendKind,
   sendGuard,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { resolveSettings } from "./config.js"

@@ -1,4 +1,4 @@
-import type { Permission } from "@wirecat/cli-messaging/sends"
+import type { Permission } from "@wirecat/cli-core/sends"
 import type { McpToolGroup } from "../config.js"
 import { SKILL_RESOURCE } from "../skill.js"
 

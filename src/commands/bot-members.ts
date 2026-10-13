@@ -38,7 +38,7 @@ const showMembers = (context: ReturnType<typeof botContext>, answer: unknown): v
 
 /**
  * `members list` and `add`, which only MAX's Bot API has, on the shared `bot chats members` group —
- * `remove` comes from cli-messaging with the admins.
+ * `remove` comes from cli-core with the admins.
  */
 export const addMembersCommands = (members: Command): void => {
   members

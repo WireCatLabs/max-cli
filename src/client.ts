@@ -1,6 +1,6 @@
 import { CliError, realSleep, type SleepLike } from "@wirecat/cli-base"
-import { pickPerson as pickStoredPerson } from "@wirecat/cli-messaging"
-import { type DiagnosticEvent, providerErrorKey } from "@wirecat/cli-messaging/cli"
+import { pickPerson as pickStoredPerson } from "@wirecat/cli-core"
+import { type DiagnosticEvent, providerErrorKey } from "@wirecat/cli-core/cli"
 import {
   type AccountAction,
   type ChatAction,
@@ -8,7 +8,7 @@ import {
   type GuardRequest,
   type SendGuard,
   type Upload as SharedUpload,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import { delayMs } from "./config.js"
 import {
   fromPrivacy,

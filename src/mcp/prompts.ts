@@ -1,6 +1,6 @@
 import type { GetPromptResult, McpServer } from "@modelcontextprotocol/server"
 import { toStandardJsonSchema } from "@valibot/to-json-schema"
-import { registerLinkConversationsPrompt } from "@wirecat/cli-messaging/cli"
+import { registerLinkConversationsPrompt } from "@wirecat/cli-core/cli"
 import * as v from "valibot"
 
 /** What every prompt ends with: a prompt reads as if the owner typed it, and must not pass on what others wrote. */

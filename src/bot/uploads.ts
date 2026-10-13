@@ -2,7 +2,7 @@ import { openAsBlob, statSync } from "node:fs"
 import { basename, extname } from "node:path"
 import { CliError, type ErrorCode, realSleep, type SleepLike } from "@wirecat/cli-base"
 import { type FetchLike, statusToCode } from "@wirecat/cli-base/http"
-import type { DiagnosticEvent } from "@wirecat/cli-messaging/cli"
+import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
 import { parse } from "lossless-json"
 import { plainJson } from "./transport.js"
 

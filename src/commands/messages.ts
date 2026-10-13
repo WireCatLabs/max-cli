@@ -7,7 +7,7 @@ import {
   sendCommand,
   messagesCommand as sharedMessagesCommand,
   unpinCommand,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"

@@ -1,6 +1,6 @@
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { RecipientList, SendJournal } from "@wirecat/cli-messaging/sends"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { RecipientList, SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"

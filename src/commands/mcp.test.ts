@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { captureStreams } from "@wirecat/cli-base"
-import { httpTokenFile } from "@wirecat/cli-messaging/cli"
+import { httpTokenFile } from "@wirecat/cli-core/cli"
 import { describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "../app.js"
 import { serveOverHttpUntilStopped, serveOverStdio } from "../mcp/server.js"

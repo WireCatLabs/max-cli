@@ -1,1 +1,1 @@
-export { type Closeable, withDeadline } from "@wirecat/cli-messaging/cli"
+export { type Closeable, withDeadline } from "@wirecat/cli-core/cli"

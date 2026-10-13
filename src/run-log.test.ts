@@ -10,7 +10,7 @@ import {
   readEvents,
   recorded,
   renderEvent,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "./app.js"
 import { MaxClient } from "./client.js"

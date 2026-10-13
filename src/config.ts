@@ -1,6 +1,6 @@
 import { CliError, loadConfigFile, saveConfigFile } from "@wirecat/cli-base"
-import { AI_ENTRIES, type AISettings, first, settingsFor } from "@wirecat/cli-messaging/cli"
-import { type Level, PERMISSIONS, type Permission } from "@wirecat/cli-messaging/sends"
+import { AI_ENTRIES, type AISettings, first, settingsFor } from "@wirecat/cli-core/cli"
+import { type Level, PERMISSIONS, type Permission } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
 import { knownProfiles } from "./diagnose.js"

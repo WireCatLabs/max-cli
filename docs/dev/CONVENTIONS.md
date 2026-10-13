@@ -83,9 +83,9 @@ will be impossible to re-derive when MAX changes.
 ## Command names
 
 One standard for `max` and `tg`: how a command, an option, an answer and an MCP tool are named
-and shaped — [cli-messaging `docs/dev/STANDARD.md`](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/STANDARD.md).
+and shaped — [cli-core `docs/dev/STANDARD.md`](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/STANDARD.md).
 It moved there on 2026-09-30, so both CLIs read one copy. Every command and option of both is in the
-[parity manifest](https://github.com/WireCatLabs/cli-messaging/blob/main/parity.json); `pnpm parity:check`
+[parity manifest](https://github.com/WireCatLabs/cli-core/blob/main/parity.json); `pnpm parity:check`
 fails on one that is not.
 
 ## Documents
