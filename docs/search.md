@@ -72,7 +72,7 @@ max personal search messages 'договор' --chat Друзья     # толь
 ```
 
 ```sh
-max personal search mail 'счёт'                          # только почта, которую привёл memo mail import
+max personal search mail 'счёт'                          # только почта, которую привёл memo sync --mail
 ```
 
 ```sh
@@ -90,7 +90,7 @@ max personal search conversations 'переезд на дачу'      # разг
 `chat:` выбирает цепочку писем, а `from:` — отправителя. Если поле не подходит — `kind:`/`topic:`
 для почты или `chat:`/`from:` для заметок — `search all` пропускает этот источник и объясняет почему.
 
-Почта и заметки попадают в архив через memo: `memo mail import` и `memo import`. Без них
+Почта и заметки попадают в архив через memo: `memo sync --mail` и `memo import`. Без них
 `search all` ищет только сообщения.
 
 Дальше на этой странице — поиск сообщений, `max personal search messages`. Без `--discover` поиск в одном чате спрашивает ещё и

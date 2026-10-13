@@ -534,7 +534,10 @@ describe("the MCP server", () => {
     expect(planned.body).toMatchObject({ scope: "interior", ordering: "time", gaps: [{ from: 4, to: 6 }] })
     const repair = await call(client, "max_store_gaps_repair", { chat: "111", catch_up: true })
     expect(repair.isError).toBe(true)
-    expect(repair.body.error).toMatchObject({ code: "permission_error", permission: "conversations.links" })
+    expect(repair.body.error).toMatchObject({
+      code: "permission_error",
+      details: { permission: "conversations.links" },
+    })
     const extracted = await call(client, "max_attachments_extract", { chat: "111", limit: 1 })
     expect(extracted.isError).toBe(false)
     expect(extracted.body).toMatchObject({ extracted: 0 })
@@ -1100,7 +1103,7 @@ describe("the MCP server", () => {
     const { isError, body } = await call(client, "max_messages_send", { chat: "Team", text: "hello" })
 
     expect(isError).toBe(true)
-    expect(body.error).toMatchObject({ candidates: [{ id: "111" }, { id: "222" }] })
+    expect(body.error).toMatchObject({ details: { candidates: [{ id: "111" }, { id: "222" }] } })
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEND)
   })
 
@@ -1153,7 +1156,7 @@ describe("the MCP server", () => {
     const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "hello" })
 
     expect(isError).toBe(true)
-    expect(body.error).toMatchObject({ code: "outcome_unknown", sendId: expect.any(Number) })
+    expect(body.error).toMatchObject({ code: "outcome_unknown", details: { sendId: expect.any(Number) } })
   })
 
   it("schedules with `at_time` the way `--at-time` does, and answers scheduledFor", async () => {

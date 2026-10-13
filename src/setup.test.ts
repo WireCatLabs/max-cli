@@ -263,7 +263,7 @@ describe("MAX guided setup", () => {
     input.end("synthetic-secret")
     h.environment.stdin = input
     expect(await h.setup("--method", "token", "--max-input-bytes", "4", "--json")).toBe(2)
-    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.reason).toBe("input_limit")
+    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.reason).toBe("input.too-large")
     expect(h.max.sent).toEqual([])
     expect(h.store.readToken()).toBeUndefined()
   })

@@ -69,7 +69,7 @@ check("`runs list` exits cleanly with nothing to show", empty.status === 0)
 check("`runs list` prints an empty list on stdout", JSON.parse(empty.stdout).items?.length === 0)
 check("`runs list` says on stderr why it is empty", empty.stderr.includes("--record"))
 
-// Pino writes the event log, and this is the only place it runs under Bun. `session end` reaches
+// cli-base's log writer writes the event log, and this is the only place it runs under Bun. `session end` reaches
 // no network and, in this directory, no real session — what it proves is that the run directory,
 // the atomic `run.json` and the log stream all work under this runtime.
 const recordedRun = maxHere("session", "end", "--record", "--json")
@@ -78,7 +78,9 @@ check("a recorded command still prints its own answer", JSON.parse(recordedRun.s
 
 const days = readdirSync(join(isolated, "state", "runs"))
 const day = days[0] ?? ""
-const kept = readdirSync(join(isolated, "state", "runs", day))
+const kept = readdirSync(join(isolated, "state", "runs", day), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
 const runDir = join(isolated, "state", "runs", day, kept[0] ?? "")
 check("it left exactly one run directory", days.length === 1 && kept.length === 1)
 check("the run directory holds its metadata", existsSync(join(runDir, "run.json")))

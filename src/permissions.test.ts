@@ -147,7 +147,7 @@ describe("a profile with an allow list", () => {
 
     expect(refused.code).toBe(5)
     expect(max.sent).toEqual([])
-    expect(JSON.parse(refused.stderr).error).toMatchObject({ permission: "messages.send" })
+    expect(JSON.parse(refused.stderr).error).toMatchObject({ details: { permission: "messages.send" } })
     expect(JSON.parse(refused.stderr).error.message).toContain("config set permissions.messages.send allow")
     expect(new SendJournal(sendsPathFor("p-cmd")).entries()).toMatchObject([{ chatId: "111", outcome: "refused" }])
 

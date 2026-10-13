@@ -135,7 +135,10 @@ describe("voting", () => {
 
     expect(failed.code).toBe(11)
     expect(failed.stdout).toBe("")
-    expect(JSON.parse(failed.stderr).error).toMatchObject({ code: "provider_error", providerError: refusal })
+    expect(JSON.parse(failed.stderr).error).toMatchObject({
+      code: "provider_error",
+      message: expect.stringContaining(refusal),
+    })
     expect(failed.stderr.includes("--retract")).toBe(hint)
     expect(sentWith(Opcode.SEND_VOTE).map(({ payload }) => payload.answersIds)).toEqual([[2]])
     expect(journalOf(profile)).toMatchObject([{ kind: "reaction", outcome: "failed", errorCode: "provider_error" }])

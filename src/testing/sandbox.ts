@@ -35,9 +35,10 @@ process.env.MAX_REQUESTS_PER_MINUTE = "0"
 process.env.MAX_CACHE_DIR = join(sandbox, "cache")
 // cli-messaging's store is one file for every messenger, outside all three.
 process.env.MESSAGING_STORE = join(sandbox, "messages.db")
-// Speech models shared by every CLI, also outside the three. A test that writes a sized stand-in for
-// a model there overwrote the owner's downloaded one on 2026-10-01.
-process.env.CLI_COMMON_CACHE_DIR = join(sandbox, "common-cache")
+// The WireCat folder every CLI shares, also outside the three: speech models, and the store when
+// MESSAGING_STORE is unset. A test that wrote a sized stand-in for a model there overwrote the owner's
+// downloaded one on 2026-10-01.
+process.env.WIRECAT_STATE_DIR = join(sandbox, "wirecat")
 // `max server install` writes the systemd unit under it — the owner's real one otherwise.
 process.env.XDG_CONFIG_HOME = join(sandbox, "xdg-config")
 process.env.TMPDIR = sandbox

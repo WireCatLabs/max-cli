@@ -756,7 +756,7 @@ describe("the program", () => {
         (run: { profile: string }) => run.profile === "t-runs",
       )
 
-      const shown = await runWith(["t-runs", "runs", "show", runId, "--json"])
+      const shown = await runWith(["t-runs", "runs", "show", runId, "-v", "--json"])
       const path = await runWith(["t-runs", "runs", "path", runId, "--json"])
       const missing = await runWith(["t-runs", "runs", "show", "no-such-run", "--json"])
 
@@ -931,7 +931,7 @@ describe("the program", () => {
 
       const ambiguous = await runWith(["t-person", "contacts", "show", "on", "--json"], environment)
       expect(ambiguous.code).toBe(2)
-      expect(JSON.parse(ambiguous.stderr).error.candidates).toHaveLength(2)
+      expect(JSON.parse(ambiguous.stderr).error.details.candidates).toHaveLength(2)
     })
 
     it("**`--offline` reaches the command**: it answers from the record and never connects", async () => {

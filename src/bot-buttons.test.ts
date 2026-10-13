@@ -150,7 +150,7 @@ describe("a bot's buttons on the personal account", () => {
 
     expect(lost.code).toBe(14)
     const { error } = JSON.parse(lost.stderr)
-    expect(error).toMatchObject({ code: "outcome_unknown", retryable: false })
+    expect(error).toMatchObject({ code: "outcome_unknown" })
     expect(sentWith(Opcode.MSG_SEND)).toHaveLength(1)
     expect(new SendJournal(sendsPathFor("b-start-lost")).entries()).toMatchObject([
       { kind: "message", outcome: "outcome_unknown", sendId: expect.any(String) },
@@ -162,7 +162,7 @@ describe("a bot's buttons on the personal account", () => {
     const lost = await runWith(["b-press-lost", "messages", "press", "111", MESSAGE, "Yes"], environment)
 
     expect(lost.code).toBe(14)
-    expect(JSON.parse(lost.stderr).error).toMatchObject({ code: "outcome_unknown", retryable: false })
+    expect(JSON.parse(lost.stderr).error).toMatchObject({ code: "outcome_unknown" })
     expect(sentWith(Opcode.MSG_CALLBACK)).toHaveLength(1)
     expect(new SendJournal(sendsPathFor("b-press-lost")).entries()).toMatchObject([
       { kind: "reaction", outcome: "outcome_unknown", messageId: MESSAGE },

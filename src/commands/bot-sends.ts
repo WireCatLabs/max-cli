@@ -11,6 +11,7 @@ import {
   type SendKind,
   sendGuard,
 } from "@wirecat/cli-messaging/sends"
+import { MAX_APP } from "../app.js"
 import { botOperations } from "../bot/client.js"
 import { BOT_JOURNAL_KINDS, BOT_KEYS } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
@@ -49,7 +50,10 @@ const guardOf = (context: Context) =>
     readOnly: false,
     readOnlyFrom: "default",
     sendsPerHour: context.settings.sendsPerHour,
-    journal: new SendJournal(files(context.settings.profile).journal),
+    journal: new SendJournal(files(context.settings.profile).journal, {
+      service: MAX_APP.command,
+      version: MAX_APP.version,
+    }),
     recipients: recipientsOf(context),
     warn: (message) => context.streams.diagnostic(message),
   })

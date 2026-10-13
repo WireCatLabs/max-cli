@@ -64,7 +64,7 @@ describe("the adopted agent CLI contract", () => {
     ])
     expect(code).not.toBe(0)
     expect(streams.stdout).toEqual([])
-    expect(JSON.parse(streams.stderr[0] ?? "").error.reason).toBe("output_limit")
+    expect(JSON.parse(streams.stderr[0] ?? "").error.reason).toBe("output.too-large")
     expect(opened).not.toHaveBeenCalled()
   })
 })
