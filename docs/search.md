@@ -130,7 +130,7 @@ max personal search messages '"счёт оплачен"' --chat "Книжный 
 regex, presets, метки и формы слов. Начните со скачивания всех чатов:
 
 ```sh
-max personal store fetch --all --background     # последние 90 дней каждого чата, в фоне
+max personal messages sync --all --background     # последние 90 дней каждого чата, в фоне
 ```
 
 ```sh
@@ -138,7 +138,7 @@ max personal store jobs show                    # сколько уже скач
 ```
 
 Один запуск скачивает не больше 1200 сообщений на чат по умолчанию; повторите команду, чтобы
-продолжить. `--since-time 365d` — дальше в прошлое; один чат — `max personal store fetch Друзья`
+продолжить. `--since-time 365d` — дальше в прошлое; один чат — `max personal messages sync Друзья`
 ([скачать историю чата](archive.md#скачать-историю)). Дальше архив держит свежим `max personal serve`.
 
 Каждый поиск говорит, что он просмотрел. Если архив мог бы держать больше или ничего не нашлось, в терминале
@@ -146,7 +146,7 @@ max personal store jobs show                    # сколько уже скач
 это исправит:
 
 ```text
-searched 12,430 messages in 37 chats — 5 never fetched; `max personal store fetch --all --background` fetches them
+searched 12,430 messages in 37 chats — 5 never fetched; `max personal messages sync --all --background` fetches them
 ```
 
 С `--json` то же в `coverage`: `messages`, `chats`, до десяти чатов в `attention` и `next`. Если ничего
@@ -565,7 +565,7 @@ max personal search messages 'счёт' --chat "Книжный клуб" --sync-
 ## Если ничего не нашлось
 
 Пустой ответ значит «нет в архиве, где искали», а не «никогда не отправлялось». Что сохранено,
-покажет `max personal store status`, дополнить — `max personal store fetch`. С `--json` ответ говорит, какие чаты
+покажет `max personal store status`, дополнить — `max personal messages sync`. С `--json` ответ говорит, какие чаты
 просмотрены и насколько они полны, даже без совпадений. Если `max` просит `max personal store migrate`, индекс
 слов ещё строится; поиск без слов (`has:file`, `date:today`) работает уже сейчас.
 
@@ -581,7 +581,7 @@ max personal search messages 'счёт' --chat "Книжный клуб" --sync-
 MCP эти команды находятся через `max_tools_search`, план и задания читаются через `max_read`, ремонт —
 через `max_write`.
 
-**Подготовить поиск по темам при скачивании.** `max personal store fetch <чат> --catch-up` сразу после загрузки
+**Подготовить поиск по темам при скачивании.** `max personal messages sync <чат> --catch-up` сразу после загрузки
 строит разговоры и локальные векторы только этого чата — для [поиска по темам](topic-search.md). По
 умолчанию это выключено; настройка профиля `searchCatchUp: true` включает, а `--no-catch-up` отменяет на
 один запуск. Границы: `--catch-up-chunks 500 --catch-up-messages 10000 --catch-up-time 30s`. Модель

@@ -85,7 +85,7 @@ max personal contacts profile 20000002 --json
 настоящего первого сообщения. Чтобы дополнить, скачайте чат:
 
 ```sh
-max personal store fetch "Книжный клуб"
+max personal messages sync "Книжный клуб"
 ```
 
 ## Что он писал: `contacts context`

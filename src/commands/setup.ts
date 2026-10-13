@@ -81,7 +81,7 @@ export const setupCommand = (): Command =>
         "Existing sessions are checked without another login. Machine mode skips agent installation\n" +
         "unless --agent is given. Bot accounts use `max <profile> bot auth set` separately.\n" +
         "\nSetup checks five chats. Choose a chat and how much history to fetch before:\n" +
-        "  max personal store fetch <chat> --last 100\n" +
+        "  max personal messages sync <chat> --last 100\n" +
         "Setup starts no background service and downloads no message history.\n" +
         "\nWindows: use max.cmd or npm.cmd if PowerShell blocks scripts. Without PATH:\n" +
         "  npm.cmd exec --yes --package=@wirecat/max-cli -- max personal setup\n",
@@ -164,7 +164,7 @@ export const setupCommand = (): Command =>
         const next = {
           instructions: `${runner}skill show`,
           chats: `${runner}chats list --limit 5`,
-          history: `${runner}store fetch <chat> --last 100`,
+          history: `${runner}messages sync <chat> --last 100`,
           ...(agent === "none" ? { skill: `${runner}skill install` } : {}),
         }
         return {

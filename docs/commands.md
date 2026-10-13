@@ -1416,6 +1416,34 @@ max messages evidence <chat> [options]
 | `--limit <n>` | how many, 1–100. |
 | `--before-id <id>` | only messages older than this message id. |
 
+### `max messages sync`
+
+bring a chat's history in the local store up to date, newest first; run it again to continue; --all syncs every chat
+
+```sh
+max messages sync [chat] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | необязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--all` | every chat, most recently active first — what search needs; the last 90d unless --since-time or --last. |
+| `--limit <n>` | at most this many messages in this run, per chat with --all; 1200 if not given. |
+| `--page-size <n>` | how many messages one request asks for; 30 if not given. |
+| `--pause <duration>` | the least pause between pages, to stay under the provider's limits; each is up to twice that. По умолчанию: `5s`. |
+| `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
+| `--last <n>` | stop once the newest n messages are held. |
+| `--catch-up` | prepare local search after this run; overrides searchCatchUp. |
+| `--no-catch-up` | skip local preparation after this run. |
+| `--catch-up-chunks <n>` | at most this many local vector chunks. |
+| `--catch-up-messages <n>` | skip a graph rebuild larger than this many messages. |
+| `--catch-up-time <duration>` | local preparation time budget, 30s by default. |
+| `--background` | run as a job that outlives this command; `store jobs show` follows it. |
+| `--estimate` | only estimate how many messages, requests and minutes a full fetch would still take — from the store, no request. |
+
 ### `max messages transcribe`
 
 turn a voice message into text, on this machine — the recording goes nowhere
@@ -1605,34 +1633,6 @@ max store status [chat]
 |---|---|---|
 | `chat` | необязательный | a chat: its id, or part of its title. |
 
-### `max store fetch`
-
-fetch a chat's history into the local store, newest first; run it again to continue; --all fetches every chat
-
-```sh
-max store fetch [chat] [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | необязательный | a chat: its id, or part of its title. |
-
-| Опция | Что делает |
-|---|---|
-| `--all` | every chat, most recently active first — what search needs; the last 90d unless --since-time or --last. |
-| `--limit <n>` | at most this many messages in this run, per chat with --all; 1200 if not given. |
-| `--page-size <n>` | how many messages one request asks for; 30 if not given. |
-| `--pause <duration>` | the least pause between pages, to stay under the provider's limits; each is up to twice that. По умолчанию: `5s`. |
-| `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
-| `--last <n>` | stop once the newest n messages are held. |
-| `--catch-up` | prepare local search after fetch; overrides searchCatchUp. |
-| `--no-catch-up` | skip local preparation after this fetch. |
-| `--catch-up-chunks <n>` | at most this many local vector chunks. |
-| `--catch-up-messages <n>` | skip a graph rebuild larger than this many messages. |
-| `--catch-up-time <duration>` | local preparation time budget, 30s by default. |
-| `--background` | run as a job that outlives this command; `store jobs show` follows it. |
-| `--estimate` | only estimate how many messages, requests and minutes a full fetch would still take — from the store, no request. |
-
 ### `max store gaps`
 
 inspect recorded interior coverage gaps and explicitly fetch them
@@ -1678,11 +1678,11 @@ max store gaps repair <chat> [options]
 
 ### `max store jobs`
 
-background fetch jobs
+background sync jobs
 
 #### `max store jobs list`
 
-background fetch jobs, newest first
+background sync jobs, newest first
 
 ```sh
 max store jobs list [options]
@@ -1702,11 +1702,11 @@ max store jobs show [job]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `job` | необязательный | the job id `store fetch --background` printed. |
+| `job` | необязательный | the job id `messages sync --background` printed. |
 
 #### `max store jobs cancel`
 
-stop a running background job after its current page; a later fetch resumes where it stopped
+stop a running background job after its current page; a later sync resumes where it stopped
 
 ```sh
 max store jobs cancel <job>
@@ -1718,7 +1718,7 @@ max store jobs cancel <job>
 
 #### `max store jobs retry`
 
-start a partial, failed or died job again, as a new job; the fetch resumes where the store stopped
+start a partial, failed or died job again, as a new job; the sync resumes where the store stopped
 
 ```sh
 max store jobs retry [job] [options]
@@ -1744,7 +1744,7 @@ max store jobs clear
 
 ### `max store export`
 
-a chat's stored messages as JSON lines, oldest first; never asks the messenger
+a chat's stored messages, oldest first: --jsonl one message per line, --json one { items, page, limit, hasMore } object; never asks the messenger
 
 ```sh
 max store export [chats] [options]
@@ -1756,7 +1756,7 @@ max store export [chats] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--format <format>` | jsonl (the default): one message per line; markdown: a transcript with a heading per day, replies and forwards quoted. |
+| `--format <format>` | jsonl: one message per line, the default with --output; markdown: a transcript with a heading per day, replies and forwards quoted. |
 | `--since-time <time>` | only from this ISO 8601 time, or 30m / 2h / 1d ago, on. |
 | `--output <file>` | write JSON lines, or the transcript, to this new file, readable only by you. |
 | `--to <dir>` | write into this folder, a file per chat and a manifest; run again on it for only what changed since. |
@@ -2602,11 +2602,11 @@ max conversations embed clear [options]
 
 ## `max attachments`
 
-the files of stored messages: their text in the local store, for content: in a search
+the files of stored messages: their text in the local store, where search finds it
 
 ### `max attachments extract`
 
-read the text of downloaded files — text, PDF/DOCX text layers, ODT/ODS/XLSX/PPTX/EPUB — into the local store, for content: in a search
+read the text of downloaded files — text, PDF/DOCX text layers, ODT/ODS/XLSX/PPTX/EPUB — into the local store, where search finds them
 
 ```sh
 max attachments extract [options]
@@ -2666,7 +2666,7 @@ the text of one file, as an agent read it
 
 #### `max attachments text set`
 
-keep the text an agent read from a file — a scan, a photo — so content: finds it; nothing is sent
+keep the text an agent read from a file — a scan, a photo — so search finds it; nothing is sent
 
 ```sh
 max attachments text set <chat> [message] [options]

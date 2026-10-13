@@ -53,7 +53,7 @@ MCP: сначала `max_tools_search`, затем `max_read` или `max_write`
 явно запускает `max personal session start qr`.
 
 Команда проверяет до пяти чатов, не запускает фоновый сервис и не скачивает историю.
-Сначала предложите выбрать чат и объём истории; только затем используйте `store fetch`.
+Сначала предложите выбрать чат и объём истории; только затем используйте `messages sync`.
 Навык можно поставить отдельно, без входа: `max skill install --for all`.
 На Windows при блокировке скриптов используйте `max.cmd` и `npm.cmd`; без PATH:
 `npm.cmd exec --yes --package=@wirecat/max-cli -- max personal setup --agent codex`.
@@ -148,7 +148,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    не доказывают ответ. Явный синтаксис остаётся строгим.
    **Без `--discover`, `max personal search messages` с одним чатом (`--chat` или `chat:`) спрашивает и сервер MAX**
    (`--backend archive` — только архив). Хороший поиск требует скачанных чатов: если ничего не нашлось, а
-   `coverage.next` задан, выполните его (`max personal store fetch --all --background`) или спросите владельца, прежде чем
+   `coverage.next` задан, выполните его (`max personal messages sync --all --background`) или спросите владельца, прежде чем
    говорить, что сообщения нет. Слова и фразы находят формы слов; `exact:` или `--exact` — только точную форму.
    Default — строгий профиль Lucene:
    фразы, AND/OR/NOT, field groups и date ranges. `alpha OR beta gamma` = `(alpha OR beta) AND gamma`.
@@ -166,7 +166,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 5b. **`max personal store export` выгружает только скачанное и прочитанное** и в MAX не ходит. Какие куски
    чата скачаны целиком, показывает `max personal store status <чат>`; прежде чем отдать файл как «всю
    переписку», сверьтесь с ним.
-5c. **`max personal store fetch` скачивает историю сразу — только по слову владельца**: это сотни запросов с
+5c. **`max personal messages sync` скачивает историю сразу — только по слову владельца**: это сотни запросов с
    его аккаунта. Посчитать заранее нельзя: `--estimate` для MAX отказывает. Скажите владельцу, что
    один запуск — до 40 страниц по 30 сообщений с паузой 5–10 с, то есть 3–7 минут.
 5d. **Ошибку, которую не удаётся объяснить, — в отчёт автору.** Предложите владельцу
@@ -422,7 +422,7 @@ max personal attachments text set "Книжный клуб" 204 --text-file ./sc
 output_dir в MCP также их защищает. Обычные скрытые рабочие папки разрешены.
 У текста PDF нет отдельного предела страниц и 30-секундного срока; действуют отмена и файловые бюджеты.
 Локальная речь: полная mono/stereo Ogg Opus запись без 10-минутного предела; длинные записи требуют больше памяти.
-Подготовка после явно разрешённой загрузки: `store fetch <чат> --catch-up` с
+Подготовка после явно разрешённой загрузки: `messages sync <чат> --catch-up` с
 `--catch-up-chunks`, `--catch-up-messages`, `--catch-up-time`; `--no-catch-up` отменяет
 настройку `searchCatchUp`. Модели не скачиваются, удалённый провайдер не вызывается.
 Разрывы: сначала локальный `store gaps plan <чат>`, затем только по слову владельца

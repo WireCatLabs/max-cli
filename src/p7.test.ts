@@ -76,7 +76,7 @@ describe("P7 permissions", () => {
     ["review"],
     ["watch"],
     ["serve"],
-    ["store", "fetch", "111"],
+    ["messages", "sync", "111"],
     ["contacts", "context", "synthetic-person"],
     ["contacts", "timeline", "synthetic-person"],
   ])("refuses message reads through %j before any MAX request", async (...args) => {

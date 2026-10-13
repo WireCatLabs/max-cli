@@ -218,7 +218,7 @@ max personal chats moderate "Поход" --dry-run              # что нар�
 ```sh
 max personal search all "договор"                             # сообщения, почта и заметки сразу
 max personal search messages "договор" --chat "Проект Альфа"  # только один чат
-max personal store fetch "Проект Альфа" --last 500            # последние 500 сообщений — в копию
+max personal messages sync "Проект Альфа" --last 500            # последние 500 сообщений — в копию
 max personal store export "Проект Альфа" --format markdown --output alfa.md
 max personal chats list --offline                             # без подключения к MAX
 ```
