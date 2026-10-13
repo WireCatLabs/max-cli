@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import { ModerationRules, moderationPathFor } from "@wirecat/cli-messaging"
+import { ModerationRules, moderationPathFor } from "@wirecat/cli-core"
 import { MAX_APP } from "../app.js"
 import type { SessionStore } from "../session/store.js"
 

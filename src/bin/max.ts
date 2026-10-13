@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { catchCrashes } from "@wirecat/cli-base"
-import { migrateFolders } from "@wirecat/cli-messaging/background"
-import { ensureSqlite } from "@wirecat/cli-messaging/sqlite-runtime"
+import { migrateFolders } from "@wirecat/cli-core/background"
+import { ensureSqlite } from "@wirecat/cli-core/sqlite-runtime"
 import { MAX_APP } from "../app.js"
 
 // `max chats --json | head` closes the pipe while we are still writing, and an unhandled EPIPE

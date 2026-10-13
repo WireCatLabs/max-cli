@@ -18,7 +18,7 @@ import {
   refuseUnknownKey,
   STORE_SETTINGS,
   storeSettings,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import * as v from "valibot"
 import { MAX_APP } from "../app.js"

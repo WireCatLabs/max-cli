@@ -2,7 +2,7 @@
 
 Detail for [`ARCHITECTURE.md`](../ARCHITECTURE.md) §15 and §16.
 the per-profile cache and its schema are removed. The shared
-cli-messaging store owns `messages.db`; max never opens the legacy profile database.
+cli-core store owns `messages.db`; max never opens the legacy profile database.
 
 ## A group member is a person, not a contact
 
@@ -15,7 +15,7 @@ A channel's short participant list is not stored as its whole membership.
 
 ## Shared migrations
 
-Shared store migrations belong to cli-messaging and are forward-only. A branch build and every test must set `MESSAGING_STORE` to
+Shared store migrations belong to cli-core and are forward-only. A branch build and every test must set `MESSAGING_STORE` to
 an isolated file; neither may migrate the owner's store.
 
 ## It never fails the command

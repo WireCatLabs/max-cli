@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { connect, type Socket } from "node:net"
 import { CliError, errorCodes } from "@wirecat/cli-base"
-import { currentOperation } from "@wirecat/cli-messaging/sends"
+import { currentOperation } from "@wirecat/cli-core/sends"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { OPERATIONS } from "../generated/operations.generated.js"
 import { permissionApprovals } from "../permissions.js"

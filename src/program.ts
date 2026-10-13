@@ -23,8 +23,8 @@ import {
   statsCommand,
   tagsCommand,
   tasksCommand,
-} from "@wirecat/cli-messaging/cli"
-import { levelFor } from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/cli"
+import { levelFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"

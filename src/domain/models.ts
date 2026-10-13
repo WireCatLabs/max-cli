@@ -4,7 +4,7 @@
  * Everything above the adapter speaks these types.
  */
 
-import type { Button, Chat, Contact, Id, Member, Reactions, ChatCard as SharedChatCard } from "@wirecat/cli-messaging"
+import type { Button, Chat, Contact, Id, Member, Reactions, ChatCard as SharedChatCard } from "@wirecat/cli-core"
 
 /**
  * The shared model where MAX says the same thing; below, only what MAX says differently or alone.
@@ -43,7 +43,7 @@ export type {
   ReadMark,
   Sticker,
   StickerSet,
-} from "@wirecat/cli-messaging"
+} from "@wirecat/cli-core"
 
 export interface Attachment {
   /** Lower-cased MAX type: `photo`, `video`, `file`, `share`, `call`, `control`, `sticker`… */

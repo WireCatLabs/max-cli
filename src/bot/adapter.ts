@@ -1,6 +1,6 @@
 import { CliError, type SleepLike } from "@wirecat/cli-base"
 import type { FetchLike } from "@wirecat/cli-base/http"
-import type { AdminRight, Markup, Message } from "@wirecat/cli-messaging"
+import type { AdminRight, Markup, Message } from "@wirecat/cli-core"
 import type {
   BotAction,
   BotAdapter,
@@ -9,7 +9,7 @@ import type {
   BotEvent,
   BotWebhook,
   EventSink,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import { formatMarkdown, toHtml } from "../format-markdown.js"
 import { type BotApiClient, botOperations } from "./client.js"
 import { checkBody } from "./input.js"

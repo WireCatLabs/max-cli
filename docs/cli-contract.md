@@ -152,7 +152,7 @@ JSONL-списки выводят элементы без общей обёрт�
 [Agent Skills](https://agentskills.io/specification).
 Как они применяются и какие исключения сделаны намеренно, описывают
 [архитектура](dev/ARCHITECTURE.md) и
-[общий стандарт CLI](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/STANDARD.md).
+[общий стандарт CLI](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/STANDARD.md).
 Полной сторонней сертификации мы не заявляем.
 
 Настройка по шагам — в [руководстве по настройке](configuration.md); все ключи и переменные окружения —

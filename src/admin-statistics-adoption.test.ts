@@ -1,6 +1,6 @@
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { openStore } from "@wirecat/cli-core/store"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import { run } from "./program.js"

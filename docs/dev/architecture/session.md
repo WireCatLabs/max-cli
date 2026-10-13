@@ -81,7 +81,7 @@ nothing and the profile still arrived (same day, `NEED-103`).
   login fetches everything. The marker is one row (`sync_marker`) in the cache database, not the
   state file. `contacts sync` clears the shared contact marker;
   the old cache command is removed.
-- ⚠ **Marker and rows are written in one transaction** (cli-messaging store `applyDelta`). A
+- ⚠ **Marker and rows are written in one transaction** (cli-core store `applyDelta`). A
   marker saved over rows that failed makes the next login ask for changes since data nobody has;
   those people stay missing, silently. It has its own test.
 - ⚠ **A delta is mostly empty, and that is correct**: after the first login, absent means unchanged.

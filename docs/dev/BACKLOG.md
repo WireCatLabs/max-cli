@@ -25,14 +25,14 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 - **CLI-76** · P2 · Reactions broken down by emoji in message rankings: `max stats messages top --measure reactions`
   ranks by the total only; show each top message's reactions by emoji (for example 👍 4, 😂 3) beside the total, in
-  the table and in `--json`. Starts in cli-messaging `src/store/sqlite/rankings.ts`, `src/domain/rankings-options.ts`.
+  the table and in `--json`. Starts in cli-core `src/store/sqlite/rankings.ts`, `src/domain/rankings-options.ts`.
 
 - **MAX-71** · P3 · Research left: join requests on a public group (a private group ignores `JOIN_REQUEST`; a
   channel keeps it — MAX-73).
 
 - **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
   numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
-  Starts in cli-messaging `src/charts/` and `src/cli/messenger/stats-command.ts`; plan the report
+  Starts in cli-core `src/charts/` and `src/cli/messenger/stats-command.ts`; plan the report
   structure and command surface before implementation.
 
 

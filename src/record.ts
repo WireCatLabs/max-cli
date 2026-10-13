@@ -1,5 +1,5 @@
-import type { Chat, Contact, Id, Member, PeopleLookup } from "@wirecat/cli-messaging"
-import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@wirecat/cli-messaging/store"
+import type { Chat, Contact, Id, Member, PeopleLookup } from "@wirecat/cli-core"
+import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@wirecat/cli-core/store"
 
 const MARKER = "login.marker"
 

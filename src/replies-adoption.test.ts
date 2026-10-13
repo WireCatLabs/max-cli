@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
 import { captureStreams } from "@wirecat/cli-base"
-import { repliesPathFor } from "@wirecat/cli-messaging/cli"
+import { repliesPathFor } from "@wirecat/cli-core/cli"
 import { describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import { run } from "./program.js"

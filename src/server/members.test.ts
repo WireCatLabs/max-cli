@@ -1,5 +1,5 @@
 import { memoryKeyring } from "@wirecat/cli-base"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { openStore } from "@wirecat/cli-core/store"
 import { afterEach, expect, it, vi } from "vitest"
 import { serveMembers } from "../commands/serve-members.js"
 import { Opcode } from "../generated/opcodes.generated.js"

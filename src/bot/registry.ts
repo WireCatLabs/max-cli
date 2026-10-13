@@ -2,15 +2,15 @@ import {
   ChatRegistry as SharedChatRegistry,
   botsDirectory as sharedBotsDirectory,
   registryProfiles as sharedRegistryProfiles,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import { MAX_APP } from "../app.js"
 
-export type { SeenChat } from "@wirecat/cli-messaging/cli"
+export type { SeenChat } from "@wirecat/cli-core/cli"
 
 /** Everything this machine keeps about its bots: seen chats, recipients, the send journal. */
 export const botsDirectory = (env: NodeJS.ProcessEnv = process.env): string => sharedBotsDirectory(MAX_APP, env)
 
-/** cli-messaging's, under max-cli's state directory. */
+/** cli-core's, under max-cli's state directory. */
 export class ChatRegistry extends SharedChatRegistry {
   constructor(profile: string, env: NodeJS.ProcessEnv = process.env) {
     super(MAX_APP, profile, env)

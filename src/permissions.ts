@@ -8,7 +8,7 @@ import {
   levelFor,
   readKeysForCommand,
   skipFlagFor,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { BOT_KEYS } from "./bot/permissions.js"
 import type { Environment } from "./commands/context.js"

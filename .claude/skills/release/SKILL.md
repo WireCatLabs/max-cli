@@ -18,13 +18,13 @@ checks, and on a renumber the file is rewritten in place for the caller to commi
 
 Nothing in this skill sends, publishes, tags or merges without the owner's word in this session.
 
-The steps max and tg share are written once, in cli-messaging's
-[RELEASING.md](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
+The steps max and tg share are written once, in cli-core's
+[RELEASING.md](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
 changelog, the private scenarios and the signed report.
 
 ## 0. Scope: what changed
 
-The commands in [RELEASING.md, "What changed"](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md#what-changed); the
+The commands in [RELEASING.md, "What changed"](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/RELEASING.md#what-changed); the
 `docs/commands.md` diff drives steps 3–5. Work on a release branch off `main`, in a worktree; the version bump
 and the changelog go in one pull request, as in `docs_ai/releasing.md` steps 1–2.
 
@@ -53,7 +53,7 @@ Show the draft to the owner. **They accept or edit it** before it goes in.
 
 ## 3. The docs against the diff
 
-[RELEASING.md, "The docs against the diff"](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
+[RELEASING.md, "The docs against the diff"](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
 `docs/*.md` and `skills/max-cli/SKILL.md` (agents read it through `max skill show`). User pages get
 plain rewrites with no «Поправка» (`docs/dev/CONVENTIONS.md`, "User pages"); `docs/commands.md` and
 `docs/dev/protocol.md` are generated — `pnpm generate`.

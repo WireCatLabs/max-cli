@@ -18,7 +18,7 @@ import { ARGV_LOG } from "./argv-log.js"
  * one.
  *
  * The three variables move config, state and cache together; `MESSAGING_STORE` moves the shared
- * message store, which lives in cli-messaging's own directory. They also scope the keyring entry
+ * message store, which lives in cli-core's own directory. They also scope the keyring entry
  * (`ARCHITECTURE.md` §14) — the documented trap, which here is precisely the isolation wanted.
  *
  * `TMPDIR` points into it too, and the whole of it goes when the file is done: every test makes
@@ -33,7 +33,7 @@ process.env.MAX_STATE_DIR = join(sandbox, "state")
 // One profile's pace file is shared by every test: paced, a file of tests would wait on each other's calls.
 process.env.MAX_REQUESTS_PER_MINUTE = "0"
 process.env.MAX_CACHE_DIR = join(sandbox, "cache")
-// cli-messaging's store is one file for every messenger, outside all three.
+// cli-core's store is one file for every messenger, outside all three.
 process.env.MESSAGING_STORE = join(sandbox, "messages.db")
 // The WireCat folder every CLI shares, also outside the three: speech models, and the store when
 // MESSAGING_STORE is unset. A test that wrote a sized stand-in for a model there overwrote the owner's

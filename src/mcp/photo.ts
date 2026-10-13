@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import { McpPicture } from "@wirecat/cli-messaging/cli"
+import { McpPicture } from "@wirecat/cli-core/cli"
 import type { MaxClient } from "../client.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
 

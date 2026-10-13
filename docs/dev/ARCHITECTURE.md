@@ -16,7 +16,7 @@ only the event lines.
 
 ### CLI design references
 
-MAX and Telegram share one [CLI standard and adoption profile](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/STANDARD.md#external-references-and-our-adoption-profile).
+MAX and Telegram share one [CLI standard and adoption profile](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/STANDARD.md#external-references-and-our-adoption-profile).
 Its external references are [POSIX utility conventions](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap12.html),
 [GNU command-line conventions](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces)
 and [Command Line Interface Guidelines](https://clig.dev/). They inform option syntax, help,
@@ -28,19 +28,19 @@ the [Agent Skills format](https://agentskills.io/specification) and additional t
 The shell and renderer own the machine contract, services own operations, and guards enforce
 permissions for CLI and MCP alike. Retrieved messages are data, never authority to act.
 
-The public [compliance audit and work queue](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/CLI-COMPLIANCE.md)
+The public [compliance audit and work queue](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/CLI-COMPLIANCE.md)
 distinguishes source checks, isolated observations, deliberate differences and remaining gaps.
 Shared fixes reach this CLI through an exact dependency adoption; documenting a convention does
 not change the installed binary or assert that every command already follows it.
 
 ### Agent evaluation evidence
 
-the [public admin/statistics evaluation](https://github.com/WireCatLabs/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
+the [public admin/statistics evaluation](https://github.com/WireCatLabs/cli-core/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
 model contexts, synthetic CLI/MCP traces, deterministic fixture checks and live-provider claims.
 Its six contexts and 38 assessed outcomes are a bounded observation, not broad agent conformance;
 original model identity was not captured and MCP used a shell proxy. Read the report's subject
 versions and first-failure record before comparing results with another release.
-[Reproduction tooling](https://github.com/WireCatLabs/cli-messaging/tree/main/scripts/evals) belongs to cli-messaging; the
+[Reproduction tooling](https://github.com/WireCatLabs/cli-core/tree/main/scripts/evals) belongs to cli-core; the
 [user CLI contract](../cli-contract.md) explains what that evidence means for a statistics answer.
 
 
@@ -65,19 +65,19 @@ versions and first-failure record before comparing results with another release.
                         src/session/   handshake (INIT → LOGIN) · keyring · state
                         src/record.ts  account-scoped login data in the shared store
                         src/wire-events.ts  which ids and counts a MAX event carries
-                        (the run directory and the event format: cli-messaging's, T6 item 3c)
+                        (the run directory and the event format: cli-core's, T6 item 3c)
 ```
 
 the diagram above is the personal account's own half. Since #260 and T6 (#330–#382)
-max also plugs into `@wirecat/cli-messaging`: `src/messenger.ts` describes MAX once as a `Messenger`
+max also plugs into `@wirecat/cli-core`: `src/messenger.ts` describes MAX once as a `Messenger`
 (`maxMessenger` — provider, paging, the guard, permissions), and `src/adapter/max-adapter.ts`
-(`maxAdapter`) wraps `MaxClient` behind cli-messaging's `MessengerAdapter` port, translating MAX's
-models into the shared domain types. `src/program.ts` registers cli-messaging's shared commands —
+(`maxAdapter`) wraps `MaxClient` behind cli-core's `MessengerAdapter` port, translating MAX's
+models into the shared domain types. `src/program.ts` registers cli-core's shared commands —
 `store`, `conversations`, `polls`, `reactions`, `inbox`, `review`, and `chats mark-read` among `chats`
 — beside max's own; they reach MAX only through that adapter, and read and write the shared store
 (`~/.local/share/cli-messaging/messages.db`), not a cache of max's own. So the path is now
-commands → cli-messaging services → `maxAdapter` → `MaxClient` → protocol; `MaxClient` stays the
-only code that knows the wire. `src/adapter/contract.test.ts` runs cli-messaging's contract cases over
+commands → cli-core services → `maxAdapter` → `MaxClient` → protocol; `MaxClient` stays the
+only code that knows the wire. `src/adapter/contract.test.ts` runs cli-core's contract cases over
 the adapter.
 
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
@@ -199,7 +199,7 @@ message id** and **one** copy, also across two connections and logins — the ca
 - `--silent` sends `notify: false` (normally `true`). ⚠ **Only `true` is measured**; what MAX does
   with `false` has never been observed (that means messaging somebody), so it may be ignored. The
   first use against a real chat settles it.
-- **Every send passes a guard first** (cli-messaging's `sendGuard` since T6 item 3b, 2026-09-30 —
+- **Every send passes a guard first** (cli-core's `sendGuard` since T6 item 3b, 2026-09-30 —
   **correction:** it was `src/sends/guard.ts`; `src/sends.ts` now builds it for a profile and stamps
   each journal line with the write's `operationId`; handed to `MaxClient` by
   `createClient`): a read-only profile (code 5), an optional recipient list (7), an hourly limit
@@ -419,7 +419,7 @@ file. Either, both, or (default) neither. What it looks like and how to use it:
 ### The run directory
 
 local `commands` discovery and `runs` read commands mount the shared
-cli-messaging factories; the MAX modules contain only the app binding. Discovery includes the
+cli-core factories; the MAX modules contain only the app binding. Discovery includes the
 common `contract` field, and truncated run output points to `--limit`. Reading these records
 starts no session and creates no new run.
 
@@ -435,14 +435,14 @@ starts, whole days by directory name. Rules not stated there:
   keeps nothing (`keepFailedRuns` in `src/config.ts`).
   every failure, not only one inside `run()`. The last catch
   `src/program.ts` delegates parsing and fallback recording to
-  cli-messaging's shared runner. Its consumer hooks supply legacy command context, server options
+  cli-core's shared runner. Its consumer hooks supply legacy command context, server options
   and bot recording settlement; the shell uses MAX's resolver with the bot/personal scope.
   Anything no run settled (`wasSettled`) reaches the same `recorded()`: Commander's usage errors,
   checks before a command opens its run, and commands that never open one. The run is named by the command's words only (`commandPath`), never the arguments.
 - **Beyond requests**: `warning` events carry a code from a closed list (`WarningCode`), never
   the sentence; a crash adds a `crash` event with the class and up to ten `function file:line`
   frames, never the message; `providerError` is MAX's refusal key when it is shaped like one
-  (`providerErrorKey`, cli-messaging's — **correction 2026-09-30:** it was `maxError`, `src/runs/events.ts`). `run.json` carries `runtime`, `platform`, `arch`.
+  (`providerErrorKey`, cli-core's — **correction 2026-09-30:** it was `maxError`, `src/runs/events.ts`). `run.json` carries `runtime`, `platform`, `arch`.
 - `run.json` is written atomically. `finish` runs on every path and **awaits the logger**: Pino
   appends via a plain stream, and a process that exits first loses the tail — the part somebody
   wanted.
@@ -457,7 +457,7 @@ starts, whole days by directory name. Rules not stated there:
 
 ## 14. Settings, and the order one is decided in
 
-common settings resolve through cli-messaging `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve`, `mcpTools` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
+common settings resolve through cli-core `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve`, `mcpTools` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
 
 **Flag → environment → config file → built-in default**, decided once in `resolveSettings`
 (`src/config.ts`). Commands take what they are given; one that re-derived the order would disagree.
@@ -524,7 +524,7 @@ construction site cannot.
 ## 15. The store: people, and the chats they are in
 
 max no longer opens its per-profile cache. `src/record.ts` keeps
-login chats, people, membership snapshots and the contact sync marker in cli-messaging's
+login chats, people, membership snapshots and the contact sync marker in cli-core's
 account-scoped `messages.db`. It opens lazily once the account is known. The shared `stored`
 adapter wrapper saves history; shared services own search, offline reads, edits and deletions.
 A failed record write warns without losing an answer MAX already gave, and does not advance its
@@ -619,7 +619,7 @@ per request on Bun (`NEED-293`). The bot token is `bot:<profile>` in the keyring
 A Biome rule keeps `src/bot/` away from `src/protocol/`, `src/session/`, `src/spec/` and
 `src/client.ts`.
 
-Рейтинги архива и evidence реализованы в общих services/store cli-messaging; adapter
+Рейтинги архива и evidence реализованы в общих services/store cli-core; adapter
 сохраняет `providerMetadata.graph` v1 с доказанной reply-связью или известным отсутствием
 reply у полного сообщения. Неполный кадр оставляет связь неизвестной.
 [Пользовательский контракт](../rankings.md) описывает формулы, пределы и качество данных.
@@ -634,7 +634,7 @@ versioned selection inside the existing evidence commands. See the [user guide](
 
 ### Retention and counter freshness
 
-`cli-messaging` migration 24 stores explicit roster batches with member/stay references and independent
+`cli-core` migration 24 stores explicit roster batches with member/stay references and independent
 latest counter observations. Known joining dates define cohorts; firstSeenAt is not substituted.
 Retention uses the first roster within 24 hours after each checkpoint, disclosing observed/unknown/pending
 denominators and interval departures. The shared service and existing MCP frontend reuse bounded evidence.

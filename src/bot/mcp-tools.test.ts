@@ -1,4 +1,4 @@
-import { commandLookup } from "@wirecat/cli-messaging/cli"
+import { commandLookup } from "@wirecat/cli-core/cli"
 import type { Command } from "commander"
 import * as v from "valibot"
 import { describe, expect, it } from "vitest"

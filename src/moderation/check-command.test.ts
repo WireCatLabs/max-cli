@@ -1,6 +1,6 @@
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { ModerationRules as SharedRules } from "@wirecat/cli-messaging"
-import { RecipientList, SendJournal } from "@wirecat/cli-messaging/sends"
+import { ModerationRules as SharedRules } from "@wirecat/cli-core"
+import { RecipientList, SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "../commands/context.js"
 import { Opcode } from "../generated/opcodes.generated.js"

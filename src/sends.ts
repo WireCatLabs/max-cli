@@ -12,7 +12,7 @@ import {
   sendGuard,
   recipientsPathFor as sharedRecipientsPath,
   sendsPathFor as sharedSendsPath,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import { MAX_APP } from "./app.js"
 import { type Settings, setCommandFor } from "./config.js"
 import { approvePermission } from "./permissions.js"

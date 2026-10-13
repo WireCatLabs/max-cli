@@ -1,6 +1,6 @@
 import { CliError, singleLine } from "@wirecat/cli-base"
-import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@wirecat/cli-messaging"
-import { observedCounters } from "@wirecat/cli-messaging"
+import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@wirecat/cli-core"
+import { observedCounters } from "@wirecat/cli-core"
 import type {
   MessageEditing,
   MessagePins,
@@ -10,8 +10,8 @@ import type {
   ReadState,
   SendOptions,
   ServerReads,
-} from "@wirecat/cli-messaging/cli"
-import type { Upload } from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/cli"
+import type { Upload } from "@wirecat/cli-core/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
 import { httpOnly, LARGEST_VOICE, type Reach, streamBytes } from "../download.js"
@@ -90,7 +90,7 @@ const MARKUP: Record<string, string> = {
 }
 
 /**
- * cli-messaging's port over a connected `MaxClient` that was built **without** its send guard: the
+ * cli-core's port over a connected `MaxClient` that was built **without** its send guard: the
  * shared services guard every write, and a second guard would count each one twice. The resend
  * rule and the name filling stay in `MaxClient` (`NEED-34`).
  */

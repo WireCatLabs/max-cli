@@ -7,7 +7,7 @@ import {
   type SendGuardOptions,
   SendJournal,
   sendGuard,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import { describe, expect, it, vi } from "vitest"
 import { overServer } from "./messenger.js"
 import { operating } from "./sends.js"

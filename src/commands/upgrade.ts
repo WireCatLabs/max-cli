@@ -1,4 +1,4 @@
-import { upgradeCommand as sharedUpgradeCommand } from "@wirecat/cli-messaging/cli"
+import { upgradeCommand as sharedUpgradeCommand } from "@wirecat/cli-core/cli"
 import { MAX_APP } from "../app.js"
 import { installer, latest, PACKAGE, runUpdate } from "../update.js"
 import { environmentOf, outputFor } from "./context.js"

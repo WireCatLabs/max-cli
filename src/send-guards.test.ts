@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, utimesSync, writeFileSync } from "node:fs"
 import { dirname } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { RecipientList, SendJournal, sendGuard } from "@wirecat/cli-messaging/sends"
+import { RecipientList, SendJournal, sendGuard } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"

@@ -4,7 +4,7 @@ import {
   botLimit as limit,
   botOption as option,
   botText as text,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import * as v from "valibot"
 
 const message = v.pipe(

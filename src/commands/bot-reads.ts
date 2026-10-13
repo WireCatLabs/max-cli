@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import { pickChat } from "@wirecat/cli-messaging"
+import { pickChat } from "@wirecat/cli-core"
 import type { ChatRegistry } from "../bot/registry.js"
 
 const CHAT_ID = /^-?\d+$/

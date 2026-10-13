@@ -1,5 +1,5 @@
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { toPoll } from "./domain/map.js"
