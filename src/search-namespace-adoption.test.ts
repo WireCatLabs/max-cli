@@ -72,7 +72,20 @@ const invoke = async (argv: string[]) => {
 
 describe("search <resource> adoption", () => {
   it("search all answers messages, mail and notes, and --only narrows it", async () => {
-    const all = await invoke(["search", "all", "invoice", "--limit", "20", "--exact", "--timezone", "UTC"])
+    const all = await invoke([
+      "search",
+      "all",
+      "invoice",
+      "--limit",
+      "20",
+      "--offset",
+      "0",
+      "--source",
+      "all",
+      "--exact",
+      "--timezone",
+      "UTC",
+    ])
     expect(all.code).toBe(0)
     expect(new Set(all.answer.items.map(({ kind }: { kind: string }) => kind))).toEqual(
       new Set(["message", "mail", "note"]),
@@ -90,6 +103,10 @@ describe("search <resource> adoption", () => {
       "t1",
       "--limit",
       "5",
+      "--offset",
+      "0",
+      "--source",
+      "all",
       "--newest",
       "--exact",
       "--context",
@@ -101,7 +118,17 @@ describe("search <resource> adoption", () => {
     expect(found.answer.items.map(({ locator }: { locator: string }) => locator)).toEqual([
       "msg:email/owner%40example.test/t1/m1",
     ])
-    const messages = await invoke(["search", "messages", "invoice", "--source", "all", "--type", "text"])
+    const messages = await invoke([
+      "search",
+      "messages",
+      "invoice",
+      "--source",
+      "all",
+      "--type",
+      "text",
+      "--offset",
+      "0",
+    ])
     expect(messages.code).toBe(0)
     expect(messages.answer.items.some(({ locator }: { locator: string }) => locator.startsWith("msg:email/"))).toBe(
       false,

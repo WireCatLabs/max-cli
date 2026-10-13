@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**941 ✅ · 149 ⛔ · 5 ❌** — 326 commands, 769 options.
+**946 ✅ · 149 ⛔ · 0 ❌** — 326 commands, 769 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -572,10 +572,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `metadata refresh` | `--limit` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
 | `search all` |  | ✅ |  |
 | `search all` | `--only` | ✅ |  |
-| `search all` | `--source` | ❌ |  |
+| `search all` | `--source` | ✅ |  |
 | `search all` | `--max-meetings` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through |
 | `search all` | `--limit` | ✅ |  |
-| `search all` | `--offset` | ❌ |  |
+| `search all` | `--offset` | ✅ |  |
 | `search all` | `--exact` | ✅ |  |
 | `search all` | `--timezone` | ✅ |  |
 | `search all` | `--backend` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts covers archive (never connects), server and both for search all |
@@ -596,7 +596,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--source` | ✅ |  |
 | `search messages` | `--type` | ✅ |  |
 | `search messages` | `--limit` | ✅ |  |
-| `search messages` | `--offset` | ❌ |  |
+| `search messages` | `--offset` | ✅ |  |
 | `search messages` | `--newest` | ✅ |  |
 | `search messages` | `--exact` | ✅ |  |
 | `search messages` | `--context` | ✅ |  |
@@ -607,9 +607,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--saved` | ✅ |  |
 | `search mail` |  | ✅ |  |
 | `search mail` | `--chat` | ✅ |  |
-| `search mail` | `--source` | ❌ |  |
+| `search mail` | `--source` | ✅ |  |
 | `search mail` | `--limit` | ✅ |  |
-| `search mail` | `--offset` | ❌ |  |
+| `search mail` | `--offset` | ✅ |  |
 | `search mail` | `--newest` | ✅ |  |
 | `search mail` | `--exact` | ✅ |  |
 | `search mail` | `--context` | ✅ |  |
