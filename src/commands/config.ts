@@ -14,6 +14,7 @@ import {
   changeStoreSetting,
   isStoreSetting,
   migratePermissionConfig,
+  NONE_NAMED,
   refuseUnknownKey,
   STORE_SETTINGS,
   storeSettings,
@@ -72,15 +73,15 @@ export const configCommand = (): Command => {
     .description("the profile, the profiles that exist, and each setting with where it came from")
     .option("--bot", "the settings a bot command on this profile gets, rather than the personal account's")
     .action(async function (this: Command, options: { bot?: boolean }) {
-      const context = forCommand(this)
+      const context = forCommand(this, { needsProfile: false })
       const { renderer } = context
       const settings = options.bot
-        ? resolveSettings(this.optsWithGlobals<GlobalFlags>(), { kind: "bot" })
+        ? resolveSettings(this.optsWithGlobals<GlobalFlags>(), { kind: "bot", needsProfile: false })
         : context.settings
       const overridden = pathsAreOverridden({ appName: "max-cli", prefix: "MAX" })
 
       renderer.result({
-        profile: settings.profile,
+        profile: settings.sources.profile === NONE_NAMED ? null : settings.profile,
         profileFrom: settings.sources.profile,
         kind: settings.kind,
         permissions: settings.permissions,
@@ -122,7 +123,7 @@ export const configCommand = (): Command => {
       .description("replace legacy access settings with permissions, preserving effective levels")
       .option("--dry-run", "show the migration without writing the file")
       .action(function (this: Command) {
-        const { settings, renderer } = forCommand(this)
+        const { settings, renderer } = forCommand(this, { needsProfile: false })
         const dryRun = this.opts<{ dryRun?: boolean }>().dryRun === true
         if (!dryRun && process.env.MAX_PROFILE_LOCK)
           throw new CliError("permission_error", "config migrate changes every profile — run outside the profile lock")
@@ -176,8 +177,10 @@ export const configCommand = (): Command => {
 
     sub.action(async function (this: Command, setting: string, given: unknown) {
       const value = action === "set" ? String(given) : undefined
-      const { settings, renderer } = forCommand(this)
       const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
+      const { settings, renderer } = forCommand(this, {
+        needsProfile: !flags.defaults && setting !== "defaultProfile" && !isStoreSetting(setting),
+      })
       if (flags.personal && flags.bot) {
         throw new CliError("validation_error", "--personal and --bot name different sections; use one")
       }

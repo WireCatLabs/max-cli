@@ -19,10 +19,10 @@
   ([локальная копия](archive.md)).
 - **Проверки отправки** — то, через что проходит каждая отправка: профиль только для чтения, список
   разрешённых получателей и лимит в час ([безопасность](security.md)).
-- **`max serve`** — фоновый процесс, который держит одно подключение к MAX для всех команд профиля.
+- **`max personal serve`** — фоновый процесс, который держит одно подключение к MAX для всех команд профиля.
 
 Каждая команда делает одно дело, печатает результат и завершается. Подключение к MAX держит
-только [`max serve`](archive.md#новые-сообщения-сразу-max-serve-и-max-watch): его запускает в фоне первая
+только [`max personal serve`](archive.md#новые-сообщения-сразу-max-serve-и-max-watch): его запускает в фоне первая
 команда, которой нужен MAX, и он сам останавливается через 15 минут без дела.
 
 ```sh
@@ -33,19 +33,19 @@ max [профиль] [опции] <ресурс> <действие> [аргум�
 
 | Область | Что можно | С чего начать |
 |---|---|---|
-| Чтение | чаты, сообщения, одно сообщение и соседние | `max chats list`, `max messages list <чат>` |
-| Что ждёт ответа | непрочитанное от других; что вы обещали и что открыто | `max inbox`, `max review` |
-| Голосовые | превратить голосовое в текст, на этом компьютере | `max messages transcribe` |
-| Файлы | скачать вложения сообщения или всего чата; медиа чата | `max messages download`, `max chats media` |
-| Люди | контакты, свои имена и заметки, профиль человека, проверка на бота | `max contacts list`, `max contacts profile` |
-| Поиск | сообщения, файлы, даты, люди; обсуждения по смыслу | `max search messages`, `max search conversations` |
-| Отправка | текст, файлы, голосовые, ответы, отложенные сообщения | `max messages send` |
-| Изменение | правка, пересылка, закрепление, удаление, реакции, опросы, отметка прочитанным | `max messages edit`, `max reactions add` |
-| Боты | нажать кнопку бота, запустить бота, открыть мини-приложение | `max messages press`, `max chats start` |
-| Порядок | папки, звук чатов, приватность | `max chats folders list`, `max chats mute` |
-| Группы | участники, ссылки-приглашения, заявки, админы, правила модерации | `max chats members list`, `max chats rules show` |
-| Слежение | новые сообщения по мере прихода; свежая локальная копия | `max watch`, `max serve` |
-| Проверка | что делала команда; что профилю можно | `max runs list`, `max config show` |
+| Чтение | чаты, сообщения, одно сообщение и соседние | `max personal chats list`, `max personal messages list <чат>` |
+| Что ждёт ответа | непрочитанное от других; что вы обещали и что открыто | `max personal inbox`, `max personal review` |
+| Голосовые | превратить голосовое в текст, на этом компьютере | `max personal messages transcribe` |
+| Файлы | скачать вложения сообщения или всего чата; медиа чата | `max personal messages download`, `max personal chats media` |
+| Люди | контакты, свои имена и заметки, профиль человека, проверка на бота | `max personal contacts list`, `max personal contacts profile` |
+| Поиск | сообщения, файлы, даты, люди; обсуждения по смыслу | `max personal search messages`, `max personal search conversations` |
+| Отправка | текст, файлы, голосовые, ответы, отложенные сообщения | `max personal messages send` |
+| Изменение | правка, пересылка, закрепление, удаление, реакции, опросы, отметка прочитанным | `max personal messages edit`, `max personal reactions add` |
+| Боты | нажать кнопку бота, запустить бота, открыть мини-приложение | `max personal messages press`, `max personal chats start` |
+| Порядок | папки, звук чатов, приватность | `max personal chats folders list`, `max personal chats mute` |
+| Группы | участники, ссылки-приглашения, заявки, админы, правила модерации | `max personal chats members list`, `max personal chats rules show` |
+| Слежение | новые сообщения по мере прихода; свежая локальная копия | `max personal watch`, `max personal serve` |
+| Проверка | что делала команда; что профилю можно | `max personal runs list`, `max config show` |
 
 ## Прочитайте чат с агентом
 
@@ -59,7 +59,7 @@ max [профиль] [опции] <ресурс> <действие> [аргум�
 **Команда:**
 
 ```sh
-max messages list "Книжный клуб" --limit 5 --json
+max personal messages list "Книжный клуб" --limit 5 --json
 ```
 
 **Пример ответа агента:**
@@ -76,11 +76,11 @@ max messages list "Книжный клуб" --limit 5 --json
 ## Начало работы
 
 ```sh
-max setup --agent codex  # QR-вход и навык агента
+max personal setup --agent codex  # QR-вход и навык агента
 ```
 
 ```sh
-max chats list           # ваши чаты
+max personal chats list           # ваши чаты
 ```
 
 Настройка может занять около пяти минут. Команда проверяет до пяти чатов и не запускает
@@ -91,13 +91,13 @@ max chats list           # ваши чаты
 
 ## Вход
 
-Первый запуск — `max setup`. Для явного повторного входа — `max session start qr`: в терминале
+Первый запуск — `max personal setup`. Для явного повторного входа — `max personal session start qr`: в терминале
 появится QR-код, вы отсканируете его приложением MAX, и токен ляжет в ключницу. Все способы входа —
-[вход, сессии и профили](sessions.md). Без способа `max session start` **импортирует токен**,
+[вход, сессии и профили](sessions.md). Без способа `max personal session start` **импортирует токен**,
 полученный в официальном клиенте, и кладёт его в ключницу операционной системы.
 
 ```sh
-max session start
+max personal session start
 MAX token: ▏               # ввод не отображается
 ```
 
@@ -105,24 +105,24 @@ MAX token: ▏               # ввод не отображается
 истории оболочки. Поэтому он либо спрашивается у терминала без эха, либо читается из трубы:
 
 ```sh
-pass show max/token | max session start
+pass show max/token | max personal session start
 ```
 
 Для CI и разовых запусков есть `MAX_TOKEN` — он старше ключницы, то есть если переменная задана,
 берётся она:
 
 ```sh
-MAX_TOKEN="$(cat /path/to/token)" max chats list
+MAX_TOKEN="$(cat /path/to/token)" max personal chats list
 ```
 
 Проверить, кто вы:
 
 ```sh
-max account show                # номер телефона — только последние 4 цифры
+max personal account show                # номер телефона — только последние 4 цифры
 ```
 
 ```sh
-max account show --show-phone   # номер целиком
+max personal account show --show-phone   # номер целиком
 ```
 
 ```sh
@@ -130,13 +130,13 @@ max account list                # все профили на этом компь
 ```
 
 ```sh
-max account sessions list       # где ещё выполнен вход
+max personal account sessions list       # где ещё выполнен вход
 ```
 
 Выйти из MAX и забыть сессию на этой машине:
 
 ```sh
-max session end
+max personal session end
 ```
 
 `session end` завершает сессию на сервере MAX (`revokedOnServer: true`). Если токен был скопирован
@@ -150,15 +150,15 @@ max session end
 Несколько аккаунтов живут рядом. Профиль называется первым словом, а не флагом:
 
 ```sh
-max chats list              # профиль default
-```
-
-```sh
 max personal chats list     # профиль personal
+max work chats list         # профиль work
 ```
 
 Правило простое: **первое слово — это профиль, если оно не совпадает с именем команды.** Поэтому
 профиль нельзя назвать `chats` — при создании такое имя будет отвергнуто, с объяснением.
+
+`max` никогда не выбирает профиль сам, даже если он один: без имени команда останавливается и
+перечисляет профили этого компьютера. Имя даёт первое слово, `MAX_PROFILE` или `defaultProfile`.
 
 Для целой сессии оболочки удобнее переменная:
 
@@ -191,19 +191,19 @@ max chats list
 ### Чаты
 
 ```sh
-max chats list                      # все чаты
+max personal chats list                      # все чаты
 ```
 
 ```sh
-max chats list --limit 5            # первые пять
+max personal chats list --limit 5            # первые пять
 ```
 
 ```sh
-max chats list --unread             # только чаты с непрочитанным
+max personal chats list --unread             # только чаты с непрочитанным
 ```
 
 ```sh
-max chats show "Иван Петров"        # один чат: вид, непрочитанное, последнее сообщение, участники
+max personal chats show "Иван Петров"        # один чат: вид, непрочитанное, последнее сообщение, участники
 ```
 
 `chats show` отвечает одним объектом: поля строки из `chats list` и `members` — кто в чате, кроме
@@ -213,25 +213,25 @@ max chats show "Иван Петров"        # один чат: вид, неп�
 ### Сообщения
 
 ```sh
-max messages list 0                 # сообщения чата по id
+max personal messages list 0                 # сообщения чата по id
 ```
 
 ```sh
-max messages list "Иван Петров"     # или по имени чата
+max personal messages list "Иван Петров"     # или по имени чата
 ```
 
 ```sh
-max messages list 0 --limit 50
+max personal messages list 0 --limit 50
 ```
 
 Одно сообщение и то, что было вокруг него — чат и id сообщения обязательны (id выдуманные):
 
 ```sh
-max messages show -1000 100000000000000001
+max personal messages show -1000 100000000000000001
 ```
 
 ```sh
-max messages context -1000 100000000000000001 --before-n 3 --after-n 3
+max personal messages context -1000 100000000000000001 --before-n 3 --after-n 3
 ```
 
 В ленте искомое помечено `◀`, в JSON — `"anchor": true`. Если такого сообщения нет — удалено
@@ -240,7 +240,7 @@ max messages context -1000 100000000000000001 --before-n 3 --after-n 3
 
 ### Ссылка на сообщение
 
-`max messages link <chat> <message>` или `max messages link <msg:locator>` возвращает
+`max personal messages link <chat> <message>` или `max personal messages link <msg:locator>` возвращает
 `{ locator, url, access, reason }`. Личный MAX сначала проверяет сообщение в локальном архиве
 и возвращает locator; формат нативной ссылки пока не подтверждён. С `--offline` подключения нет.
 Locator другой учётной записи отклоняется. `messages links` — другая команда: она объясняет связи
@@ -249,26 +249,26 @@ Locator другой учётной записи отклоняется. `messag
 ### Что ждёт ответа
 
 ```sh
-max inbox                               # непрочитанное — по счётчику MAX, у каждого сообщения чат
+max personal inbox                               # непрочитанное — по счётчику MAX, у каждого сообщения чат
 ```
 
 ```sh
-max inbox --new                         # что пришло с прошлой проверки, каждое сообщение один раз
+max personal inbox --new                         # что пришло с прошлой проверки, каждое сообщение один раз
 ```
 
 ```sh
-max inbox --new --jsonl                 # то же для скрипта: одно сообщение на строку
+max personal inbox --new --jsonl                 # то же для скрипта: одно сообщение на строку
 ```
 
 ```sh
-max inbox --since-time 2026-09-24T09:00 # разовый взгляд с этого времени
+max personal inbox --since-time 2026-09-24T09:00 # разовый взгляд с этого времени
 ```
 
 ```sh
-max inbox --all                         # и чаты без звука, и архив
+max personal inbox --all                         # и чаты без звука, и архив
 ```
 
-**`max inbox` ничего не помечает прочитанным**, поэтому отвечает одно и то же, пока сообщения не
+**`max personal inbox` ничего не помечает прочитанным**, поэтому отвечает одно и то же, пока сообщения не
 прочитаны в приложении. Для запуска по расписанию — `--new`: место, где остановились, хранится в
 профиле и сдвигается, только когда вывод напечатан. Первый `--new` смотрит на последние 24 часа.
 `--since-time` это место не двигает. Свои сообщения не показываются. Больше `--limit` в одном чате (по
@@ -281,15 +281,15 @@ max inbox --all                         # и чаты без звука, и ар
 ### Обзор: кто кому что должен
 
 ```sh
-max review                                   # всё за последние 3 дня
+max personal review                                   # всё за последние 3 дня
 ```
 
 ```sh
-max review --since-time 2026-09-23T09:00     # с конца прошлого обзора
+max personal review --since-time 2026-09-23T09:00     # с конца прошлого обзора
 ```
 
 ```sh
-max review --since-time 2026-09-23T09:00 --transcribe --json
+max personal review --since-time 2026-09-23T09:00 --transcribe --json
 ```
 
 Все сообщения — и ваши, и чужие — во всех чатах, где что-то было с `--since-time`. Нужно, чтобы понять,
@@ -310,11 +310,11 @@ max review --since-time 2026-09-23T09:00 --transcribe --json
 #### Вопросы без ответа
 
 ```sh
-max review --unanswered                      # вопросы, на которые сутки никто не ответил
+max personal review --unanswered                      # вопросы, на которые сутки никто не ответил
 ```
 
 ```sh
-max review --chat "Соседи" --unanswered 4h    # в одной группе, без ответа 4 часа
+max personal review --chat "Соседи" --unanswered 4h    # в одной группе, без ответа 4 часа
 ```
 
 `--unanswered [длительность]` оставляет только вопросы, которые ждут ответа — ваш или админов группы.
@@ -338,15 +338,15 @@ max review --chat "Соседи" --unanswered 4h    # в одной группе
 распознавания скачивается один раз, отдельной командой:
 
 ```sh
-max models audio list                # какие модели есть, какие скачаны, какая по умолчанию (*)
+max personal models audio list                # какие модели есть, какие скачаны, какая по умолчанию (*)
 ```
 
 ```sh
-max models audio download gigaam-v3  # 233 МБ, один раз
+max personal models audio download gigaam-v3  # 233 МБ, один раз
 ```
 
 ```sh
-max messages transcribe "Иван Петров" 100000000000000001
+max personal messages transcribe "Иван Петров" 100000000000000001
 ```
 
 Модели лежат в общем каталоге MAX и Telegram; `CLI_COMMON_CACHE_DIR` переносит его.
@@ -375,11 +375,11 @@ max messages transcribe "Иван Петров" 100000000000000001
 Расшифровать сразу все голосовые в чате или во входящих:
 
 ```sh
-max messages list "Иван Петров" --transcribe
+max personal messages list "Иван Петров" --transcribe
 ```
 
 ```sh
-max inbox --transcribe
+max personal inbox --transcribe
 ```
 
 `--transcribe` слушает только показанные голосовые, у которых ещё нет текста; `--model` выбирает
@@ -397,11 +397,11 @@ max inbox --transcribe
 Вложения сообщения — фото, файлы, видео, аудио — сохраняются в каталог (по умолчанию текущий):
 
 ```sh
-max messages download -1000 100000000000000001 --output-dir ~/Downloads
+max personal messages download -1000 100000000000000001 --output-dir ~/Downloads
 ```
 
 ```sh
-max messages download -1000 --all --output-dir ~/Downloads --pause 5s   # все файлы чата
+max personal messages download -1000 --all --output-dir ~/Downloads --pause 5s   # все файлы чата
 ```
 
 `--output` остаётся совместимым именем `--output-dir`; одновременно задавать разные каталоги нельзя.
@@ -421,15 +421,15 @@ max messages download -1000 --all --output-dir ~/Downloads --pause 5s   # все
 Медиа чата, как галерея в приложении MAX:
 
 ```sh
-max chats media "Поход"                           # фото, видео, файлы, аудио и ссылки, как галерея в MAX
+max personal chats media "Поход"                           # фото, видео, файлы, аудио и ссылки, как галерея в MAX
 ```
 
 ```sh
-max chats media "Поход" --type photo,video        # только фото и видео
+max personal chats media "Поход" --type photo,video        # только фото и видео
 ```
 
 ```sh
-max chats media "Поход" --before-id <id>          # то, что старше этого сообщения
+max personal chats media "Поход" --before-id <id>          # то, что старше этого сообщения
 ```
 
 Список берётся с сервера MAX, поэтому в нём есть и то, что ещё не скачано на этот компьютер. Чтение
@@ -438,11 +438,11 @@ max chats media "Поход" --before-id <id>          # то, что старш
 ### Люди
 
 ```sh
-max contacts list                   # люди, с кем есть личный чат
+max personal contacts list                   # люди, с кем есть личный чат
 ```
 
 ```sh
-max contacts show @ivan             # один человек и общие с ним чаты
+max personal contacts show @ivan             # один человек и общие с ним чаты
 ```
 
 Найти можно любого, кого знает локальная копия, — и участника группы, который контактом не
@@ -452,7 +452,7 @@ max contacts show @ivan             # один человек и общие с �
 
 #### Кто считается контактом
 
-`max contacts list` отвечает **людьми, с которыми есть личный чат**, свежий разговор сверху.
+`max personal contacts list` отвечает **людьми, с которыми есть личный чат**, свежий разговор сверху.
 Остальные участники ваших групп тоже сохраняются — с именами и с тем, какие чаты у вас общие, — но
 контактами не считаются и в этом списке не появляются.
 
@@ -461,7 +461,7 @@ max contacts show @ivan             # один человек и общие с �
 каждый вход просит у MAX **только то, что изменилось** с прошлого раза.
 
 ```sh
-max contacts sync     # забыть, где остановились, и забрать список заново
+max personal contacts sync     # забыть, где остановились, и забрать список заново
 ```
 
 Это ремонт, а не обычный путь. Он нужен, если локальная копия разъехалась или её обнулило
@@ -470,35 +470,35 @@ max contacts sync     # забыть, где остановились, и заб
 #### Свои имена и заметки о людях
 
 ```sh
-max contacts alias set "Борис Тестов" Боря          # своё имя для человека, только на этом компьютере
+max personal contacts alias set "Борис Тестов" Боря          # своё имя для человека, только на этом компьютере
 ```
 
 ```sh
-max contacts alias rm "Борис Тестов"
+max personal contacts alias rm "Борис Тестов"
 ```
 
 ```sh
-max contacts notes add "Борис Тестов" --file note.txt   # или текст из stdin
+max personal contacts notes add "Борис Тестов" --file note.txt   # или текст из stdin
 ```
 
 ```sh
-max contacts notes list "Борис Тестов"
+max personal contacts notes list "Борис Тестов"
 ```
 
 ```sh
-max contacts notes edit "Борис Тестов" <id> --revision 1 --file note.txt
+max personal contacts notes edit "Борис Тестов" <id> --revision 1 --file note.txt
 ```
 
 ```sh
-max contacts notes remove "Борис Тестов" <id>
+max personal contacts notes remove "Борис Тестов" <id>
 ```
 
 ```sh
-max contacts show "Борис Тестов" --with-notes
+max personal contacts show "Борис Тестов" --with-notes
 ```
 
 ```sh
-max contacts list --search-notes квартира           # люди, в чьих заметках есть это слово
+max personal contacts list --search-notes квартира           # люди, в чьих заметках есть это слово
 ```
 
 Своё имя и заметки хранятся только в локальной копии и в MAX не уходят. Своё имя действует в выбранном
@@ -513,19 +513,19 @@ max contacts list --search-notes квартира           # люди, в чь�
 времени без страниц:
 
 ```sh
-max contacts list --limit 5             # по пять в странице
+max personal contacts list --limit 5             # по пять в странице
 ```
 
 ```sh
-max contacts list --limit 5 --page 2    # шестой по десятый
+max personal contacts list --limit 5 --page 2    # шестой по десятый
 ```
 
 ```sh
-max contacts list --all                 # всё, без страниц
+max personal contacts list --all                 # всё, без страниц
 ```
 
 ```sh
-max contacts list --order name          # по алфавиту вместо «кто писал последним»
+max personal contacts list --order name          # по алфавиту вместо «кто писал последним»
 ```
 
 `--all` вместе с `--page` — отказ, а не тихая победа одного из них. `--limit` можно записать в
@@ -541,23 +541,23 @@ max contacts list --order name          # по алфавиту вместо «�
 времени, и листать её назад можно точно, а не приблизительно:
 
 ```sh
-max messages list 0 --limit 20
+max personal messages list 0 --limit 20
 ```
 
 ```sh
-max messages list 0 --before-id 116762160362694583        # id самой старой строки, которую вы видите
+max personal messages list 0 --before-id 116762160362694583        # id самой старой строки, которую вы видите
 ```
 
 ```sh
-max messages list 0 --before-time 2026-09-20T01:00:00Z    # работает и когда того сообщения уже нет
+max personal messages list 0 --before-time 2026-09-20T01:00:00Z    # работает и когда того сообщения уже нет
 ```
 
 ```sh
-max messages list 0 --after-id 116762160362694583         # что пришло после этого сообщения
+max personal messages list 0 --after-id 116762160362694583         # что пришло после этого сообщения
 ```
 
 ```sh
-max messages list 0 --after-time 2026-09-20T01:00:00Z     # или после этого времени
+max personal messages list 0 --after-time 2026-09-20T01:00:00Z     # или после этого времени
 ```
 
 `--after-id` и `--after-time` — чтение вперёд: `--limit` сообщений **после** указанной точки, от
@@ -577,31 +577,31 @@ max messages list 0 --after-time 2026-09-20T01:00:00Z     # или после э
 ### Найти чат, потом писать в него
 
 ```sh
-max chats list --search иван             # чаты, в названии которых есть «иван»
+max personal chats list --search иван             # чаты, в названии которых есть «иван»
 ```
 
 ```sh
-max chats list --search work --kind group # только группы
+max personal chats list --search work --kind group # только группы
 ```
 
 ```sh
-max chats list --unread --kind dialog    # личные чаты, где есть непрочитанное
+max personal chats list --unread --kind dialog    # личные чаты, где есть непрочитанное
 ```
 
 ```sh
-max contacts list --search петров        # люди по имени или @username
+max personal contacts list --search петров        # люди по имени или @username
 ```
 
 ```sh
-max search all "договор"                 # сообщения, почта и заметки на этом компьютере
+max personal search all "договор"                 # сообщения, почта и заметки на этом компьютере
 ```
 
 ```sh
-max search messages "договор"            # по тексту сообщений, которые уже прочитаны
+max personal search messages "договор"            # по тексту сообщений, которые уже прочитаны
 ```
 
 ```sh
-max search messages "договор" --chat 42  # в одном чате
+max personal search messages "договор" --chat 42  # в одном чате
 ```
 
 Искомое — **не меньше трёх символов**: по двум буквам совпадёт половина списка, и это не ответ. `chats list`
@@ -611,14 +611,14 @@ max search messages "договор" --chat 42  # в одном чате
 Найдя нужный чат, дальше обращайтесь к нему **по id** — он в выводе, и он не меняется:
 
 ```sh
-max messages list 42 --limit 20
+max personal messages list 42 --limit 20
 ```
 
 ```sh
-max messages send 42 "текст"
+max personal messages send 42 "текст"
 ```
 
-Часть названия там тоже принимается — и в `max search messages --chat`: имя чата ищется среди сохранённых,
+Часть названия там тоже принимается — и в `max personal search messages --chat`: имя чата ищется среди сохранённых,
 а без `--discover` поиск в одном чате спрашивает ещё и сервер MAX (`--backend archive` — только архив). Поиск
 использует [язык поисковых запросов](query-language.md): слово находит и другие свои формы, начало
 слова — явный шаблон `квартир*`, только точная форма — `exact:квартира`. `--regex` — отдельный режим:
@@ -626,24 +626,24 @@ max messages send 42 "текст"
 
 ### Сколько сообщений совпало
 
-`max stats messages show` считает сообщения из локального архива, не подключаясь к MAX.
+`max personal stats messages show` считает сообщения из локального архива, не подключаясь к MAX.
 Без запроса считает все сохранённые сообщения текущей учётной записи; с запросом — совпадения
 строгого Lucene, как `search messages`. Каждое сообщение считается один раз.
 
 ```sh
-max stats messages show "договор" --by chat --json
+max personal stats messages show "договор" --by chat --json
 ```
 
 ```sh
-max stats messages show --by sender --chat "Работа" --limit 10 --json
+max personal stats messages show --by sender --chat "Работа" --limit 10 --json
 ```
 
 ```sh
-max stats messages show --by day --timezone Europe/Madrid --json
+max personal stats messages show --by day --timezone Europe/Madrid --json
 ```
 
 ```sh
-max stats messages show --by hour --timezone UTC --jsonl
+max personal stats messages show --by hour --timezone UTC --jsonl
 ```
 
 `--by` выбирает чат, отправителя, календарный день или час. `--limit` ограничивает строки,
@@ -655,16 +655,16 @@ max stats messages show --by hour --timezone UTC --jsonl
 
 <a id="графики-статистики"></a>
 
-Графики по тем же данным — `max stats charts`. Команда возвращает описание графика в JSON;
+Графики по тем же данным — `max personal stats charts`. Команда возвращает описание графика в JSON;
 `--output activity.svg` также сохраняет SVG с тёмной темой, `--output activity.png` — PNG. Укажите
-найденный через `max chats list` чат аргументом команды. `--chart-kind messages` показывает сообщения,
+найденный через `max personal chats list` чат аргументом команды. `--chart-kind messages` показывает сообщения,
 `active` — активных авторов, `membership` — вступления и выходы. `--by day` или `week` задаёт период;
 неделя начинается в понедельник. `--timezone` применяется к календарным датам.
 
 В этом примере имя чата `synthetic-group` вымышленное:
 
 ```sh
-max stats charts synthetic-group --chart-kind messages --by day --timezone Europe/Madrid --output activity.svg --json
+max personal stats charts synthetic-group --chart-kind messages --by day --timezone Europe/Madrid --output activity.svg --json
 ```
 
 JSON содержит `chart`, а при сохранении изображения — также `chartFile` с путём и размером.
@@ -686,15 +686,15 @@ JSON содержит `chart`, а при сохранении изображен
 только для чтения, список получателей и лимит в час ([безопасность](security.md)).
 
 ```sh
-max messages send 0 "текст"
+max personal messages send 0 "текст"
 ```
 
 ```sh
-max messages send "Иван Петров" "текст"
+max personal messages send "Иван Петров" "текст"
 ```
 
 ```sh
-max messages send 0 "встреча **в 15:00**, не _в 14_" --md
+max personal messages send 0 "встреча **в 15:00**, не _в 14_" --md
 ```
 
 С `--md` используется преобразователь MAX: `**жирный**` или `__жирный__`, `_курсив_` или
@@ -717,13 +717,13 @@ max messages send 0 "встреча **в 15:00**, не _в 14_" --md
 Оставьте последний аргумент — и тело прочитается со стандартного ввода:
 
 ```sh
-echo "текст" | max messages send 0
-max messages send 0 <<'EOF'
+echo "текст" | max personal messages send 0
+max personal messages send 0 <<'EOF'
 первая строка
 
 третья
 EOF
-cat письмо.txt | max messages send 0
+cat письмо.txt | max personal messages send 0
 ```
 
 Так пишется **многострочное** сообщение, которое аргументом не передать вовсе, и так текст не
@@ -731,22 +731,22 @@ cat письмо.txt | max messages send 0
 аргументом. Переносы строк сохраняются все, кроме одного в самом конце: его добавляет `echo`, и
 без этого почти каждое сообщение заканчивалось бы пустой строкой.
 
-⚠ **Если ввод — терминал, команда откажет, а не будет ждать.** `max messages send 0` без текста —
+⚠ **Если ввод — терминал, команда откажет, а не будет ждать.** `max personal messages send 0` без текста —
 это забытый аргумент, а не приглашение печатать; команда, которая молча ждёт, неотличима от
 зависшей.
 
 ### Отправить позже
 
 ```sh
-max messages send 0 "напоминание" --at-time 2026-09-25T09:00   # местное время
+max personal messages send 0 "напоминание" --at-time 2026-09-25T09:00   # местное время
 ```
 
 ```sh
-max messages send 0 "напоминание" --at-time 2h                # или через 30m, 2h, 1d
+max personal messages send 0 "напоминание" --at-time 2h                # или через 30m, 2h, 1d
 ```
 
 ```sh
-max messages scheduled 0                                       # что ждёт отправки в этом чате
+max personal messages scheduled 0                                       # что ждёт отправки в этом чате
 ```
 
 Сообщение ждёт **на сервере MAX** и уйдёт, даже если этот компьютер выключен. MAX отбрасывает
@@ -765,31 +765,31 @@ max messages scheduled 0                                       # что ждёт
 ### Фото, видео, файлы и голосовые
 
 ```sh
-max messages send 0 "отчёт" --file отчёт.pdf
+max personal messages send 0 "отчёт" --file отчёт.pdf
 ```
 
 ```sh
-max messages send 0 "с дачи" --file ролик.mp4          # видео, которое смотрят прямо в чате
+max personal messages send 0 "с дачи" --file ролик.mp4          # видео, которое смотрят прямо в чате
 ```
 
 ```sh
-max messages send 0 --file ролик.mp4 --as-file       # то же видео файлом для скачивания
+max personal messages send 0 --file ролик.mp4 --as-file       # то же видео файлом для скачивания
 ```
 
 ```sh
-max messages send 0 --photo снимок.png                # фото
+max personal messages send 0 --photo снимок.png                # фото
 ```
 
 ```sh
-max messages send 0 --voice заметка.ogg              # голосовое сообщение
+max personal messages send 0 --voice заметка.ogg              # голосовое сообщение
 ```
 
 ```sh
-max stickers list                                    # наборы стикеров; --set <id> — стикеры набора с их id
+max personal stickers list                                    # наборы стикеров; --set <id> — стикеры набора с их id
 ```
 
 ```sh
-max messages send 0 --sticker 51                     # стикер, один, без текста
+max personal messages send 0 --sticker 51                     # стикер, один, без текста
 ```
 
 С `--file` `.jpg .jpeg .png .webp .gif` уходят фотографией, `.mp4 .mov .webm .mkv` — видео,
@@ -814,7 +814,7 @@ ffmpeg -i запись.m4a -ac 1 -ar 48000 -c:a libopus -b:a 32k заметка.
 ### Ответ
 
 ```sh
-max messages send 0 "да" --reply-to 100000000000000001   # ответ на сообщение в том же чате
+max personal messages send 0 "да" --reply-to 100000000000000001   # ответ на сообщение в том же чате
 ```
 
 Ответ — это отправка, поэтому с ним работают все опции отправки.
@@ -822,31 +822,31 @@ max messages send 0 "да" --reply-to 100000000000000001   # ответ на с�
 ### Реакции и опросы
 
 ```sh
-max reactions add 0 100000000000000001 👍                 # реакция; прежняя ваша заменяется
+max personal reactions add 0 100000000000000001 👍                 # реакция; прежняя ваша заменяется
 ```
 
 ```sh
-max reactions remove 0 100000000000000001
+max personal reactions remove 0 100000000000000001
 ```
 
 ```sh
-max polls create 0 "Обед?" "Да" "Нет" --multiple     # опрос отдельным сообщением
+max personal polls create 0 "Обед?" "Да" "Нет" --multiple     # опрос отдельным сообщением
 ```
 
 ```sh
-max polls show 0 100000000000000001                  # варианты с id и сколько за каждый
+max personal polls show 0 100000000000000001                  # варианты с id и сколько за каждый
 ```
 
 ```sh
-max polls vote 0 100000000000000001 1                # голос за вариант с id 1
+max personal polls vote 0 100000000000000001 1                # голос за вариант с id 1
 ```
 
 ```sh
-max polls vote 0 100000000000000001 --retract        # снять голос, если опрос это разрешает
+max personal polls vote 0 100000000000000001 --retract        # снять голос, если опрос это разрешает
 ```
 
 ```sh
-max polls close 0 100000000000000001                 # закрыть свой опрос; открыть снова нельзя
+max personal polls close 0 100000000000000001                 # закрыть свой опрос; открыть снова нельзя
 ```
 
 Реакцию видит собеседник, как и ответ. При чтении реакции печатаются под сообщением —
@@ -870,42 +870,42 @@ web.max.ru опросы не показывает: вместо опроса т�
 там, где переголосовать нельзя; варианта с таким id нет. Голос, закрытие и новый опрос проходят те
 же проверки, что отправка: голос — как реакция, закрытие — как правка, новый опрос — как сообщение.
 В `sendsPerHour` считаются новый опрос и закрытие; голос, как и реакция, — нет. Голос не
-повторяется сам. Через `max mcp` голос (`max_write`, `command: "polls vote"`) и новый опрос
+повторяется сам. Через `max personal mcp` голос (`max_write`, `command: "polls vote"`) и новый опрос
 (`command: "polls create"`) доступны только с `permissions`; закрытие (`command: "polls close"`)
 требует права записи `polls.close` ([MCP-сервер](mcp.md)).
 
 ### Правка, пересылка, закрепление, удаление
 
 ```sh
-max messages edit 0 100000000000000001 "новый текст"          # только своё; вложения остаются
+max personal messages edit 0 100000000000000001 "новый текст"          # только своё; вложения остаются
 ```
 
 ```sh
-max messages forward 0 100000000000000001 --to "Коллеги"      # переслать одно сообщение в другой чат
+max personal messages forward 0 100000000000000001 --to "Коллеги"      # переслать одно сообщение в другой чат
 ```
 
 ```sh
-max messages pin 0 100000000000000001                         # закрепить, без уведомления участникам
+max personal messages pin 0 100000000000000001                         # закрепить, без уведомления участникам
 ```
 
 ```sh
-max messages pin 0 100000000000000001 --notify                # закрепить и уведомить
+max personal messages pin 0 100000000000000001 --notify                # закрепить и уведомить
 ```
 
 ```sh
-max messages unpin 0 100000000000000001                       # открепить; в чате MAX закреплено одно сообщение
+max personal messages unpin 0 100000000000000001                       # открепить; в чате MAX закреплено одно сообщение
 ```
 
 ```sh
-max messages delete 0 100000000000000001 --allow-dangerous                   # только у вас
+max personal messages delete 0 100000000000000001 --allow-dangerous                   # только у вас
 ```
 
 ```sh
-max messages delete 0 100000000000000001 100000000000000002 --allow-dangerous # несколько, до 10
+max personal messages delete 0 100000000000000001 100000000000000002 --allow-dangerous # несколько, до 10
 ```
 
 ```sh
-max messages delete 0 100000000000000001 --for-everyone --allow-dangerous    # у всех в чате
+max personal messages delete 0 100000000000000001 --for-everyone --allow-dangerous    # у всех в чате
 ```
 
 Правку видит собеседник, и старый текст он мог уже прочитать. MAX разрешает править своё
@@ -940,25 +940,25 @@ max messages delete 0 100000000000000001 --for-everyone --allow-dangerous    # �
 которым попытку можно повторить, не рискуя вторым сообщением:
 
 ```sh
-max messages send 0 "текст" --send-id 1789784741828
+max personal messages send 0 "текст" --send-id 1789784741828
 ```
 
 MAX не создаёт второго сообщения, если повтор пришёл с тем же `cid`. Если пересылка ответила
 `outcome_unknown`, повторяйте её только с `--send-id` из ошибки — MAX оставит одну копию. Повтор без
-него будет второй копией. Отложенное сообщение не повторяется: проверьте `max messages scheduled <чат>`.
+него будет второй копией. Отложенное сообщение не повторяется: проверьте `max personal messages scheduled <чат>`.
 
 ### Отметить прочитанным
 
 ```sh
-max chats mark-read "Иван Петров"                  # до последнего сообщения
+max personal chats mark-read "Иван Петров"                  # до последнего сообщения
 ```
 
 ```sh
-max chats mark-read "Иван Петров" --until 100000000000000001   # до этого сообщения включительно
+max personal chats mark-read "Иван Петров" --until 100000000000000001   # до этого сообщения включительно
 ```
 
 ```sh
-max messages list "Иван Петров" --mark-read        # прочитать и отметить показанное
+max personal messages list "Иван Петров" --mark-read        # прочитать и отметить показанное
 ```
 
 Собеседник увидит, что вы прочитали. Отметка проходит те же проверки, что отправка: профиль только
@@ -968,107 +968,107 @@ max messages list "Иван Петров" --mark-read        # прочитат�
 ### Контакты, профиль, папки
 
 ```sh
-max contacts lookup                         # спросит номер; или: echo "+7…" | max contacts lookup
+max personal contacts lookup                         # спросит номер; или: echo "+7…" | max personal contacts lookup
 ```
 
 ```sh
-max contacts add 20000002                   # id из lookup, или часть известного имени
+max personal contacts add 20000002                   # id из lookup, или часть известного имени
 ```
 
 ```sh
-max contacts remove 20000002
+max personal contacts remove 20000002
 ```
 
 ```sh
-max contacts rename 20000002 "Соседка" "Анна" # своё имя для человека; он его не видит
+max personal contacts rename 20000002 "Соседка" "Анна" # своё имя для человека; он его не видит
 ```
 
 ```sh
-max contacts block 20000002                 # больше не сможет вам писать
+max personal contacts block 20000002                 # больше не сможет вам писать
 ```
 
 ```sh
-max contacts unblock 20000002
+max personal contacts unblock 20000002
 ```
 
 ```sh
-max contacts profile 20000002               # профиль, дата создания, его сообщения по общим чатам
+max personal contacts profile 20000002               # профиль, дата создания, его сообщения по общим чатам
 ```
 
 ```sh
-max contacts check 20000002                 # похож ли на бота
+max personal contacts check 20000002                 # похож ли на бота
 ```
 
 ```sh
-max contacts import книжка.csv              # строка: номер, запятая, табуляция или точка с запятой, имя
+max personal contacts import книжка.csv              # строка: номер, запятая, табуляция или точка с запятой, имя
 ```
 
 ```sh
-max account update --description "о себе"   # имя остаётся прежним
+max personal account update --description "о себе"   # имя остаётся прежним
 ```
 
 ```sh
-max account update --photo портрет.png      # новое фото профиля
+max personal account update --photo портрет.png      # новое фото профиля
 ```
 
 ```sh
-max account privacy show                    # кто находит по номеру, звонит, добавляет в чаты
+max personal account privacy show                    # кто находит по номеру, звонит, добавляет в чаты
 ```
 
 ```sh
-max account privacy set --calls contacts    # звонить могут только контакты; остальное не меняется
+max personal account privacy set --calls contacts    # звонить могут только контакты; остальное не меняется
 ```
 
 ```sh
-max account privacy set --hide-online on    # скрыть «в сети» и «был недавно»
+max personal account privacy set --hide-online on    # скрыть «в сети» и «был недавно»
 ```
 
 ```sh
-max chats mute "Поход"                      # без уведомлений из чата, насовсем
+max personal chats mute "Поход"                      # без уведомлений из чата, насовсем
 ```
 
 ```sh
-max chats mute "Поход" --until 8h           # на 8 часов; или до даты: --until 2026-10-09T09:00
+max personal chats mute "Поход" --until 8h           # на 8 часов; или до даты: --until 2026-10-09T09:00
 ```
 
 ```sh
-max chats unmute "Поход"
+max personal chats unmute "Поход"
 ```
 
 ```sh
-max chats clear "Поход" --allow-dangerous   # удалить все сообщения у себя; у остальных останутся
+max personal chats clear "Поход" --allow-dangerous   # удалить все сообщения у себя; у остальных останутся
 ```
 
 ```sh
-max chats delete "Поход" --allow-dangerous  # удалить чат у себя; у остальных он останется
+max personal chats delete "Поход" --allow-dangerous  # удалить чат у себя; у остальных он останется
 ```
 
 ```sh
-max calls list                              # звонки, новые сверху
+max personal calls list                              # звонки, новые сверху
 ```
 
 ```sh
-max account sessions end --others --yes     # выйти везде, кроме этого сеанса — и на телефоне
+max personal account sessions end --others --yes     # выйти везде, кроме этого сеанса — и на телефоне
 ```
 
 ```sh
-max chats folders list
+max personal chats folders list
 ```
 
 ```sh
-max chats folders create "Работа" --chat -1000 --chat "Проект"
+max personal chats folders create "Работа" --chat -1000 --chat "Проект"
 ```
 
 ```sh
-max chats folders update "Работа" --title "Офис" --add -2000 --remove -1000
+max personal chats folders update "Работа" --title "Офис" --add -2000 --remove -1000
 ```
 
 ```sh
-max chats folders delete "Офис"             # чаты остаются
+max personal chats folders delete "Офис"             # чаты остаются
 ```
 
 ```sh
-max chats folders order "Офис" "Семья"      # после «Все чаты»: эти две, затем остальные
+max personal chats folders order "Офис" "Семья"      # после «Все чаты»: эти две, затем остальные
 ```
 
 Номер телефона не пишется в строку команды — её видят `ps` и история оболочки. Добавленный
@@ -1100,15 +1100,15 @@ max chats folders order "Офис" "Семья"      # после «Все ча�
 ### Кнопки ботов
 
 ```sh
-max messages show <бот> 100000000000000001            # кнопки под сообщением: [1 Да] [2 Нет]
+max personal messages show <бот> 100000000000000001            # кнопки под сообщением: [1 Да] [2 Нет]
 ```
 
 ```sh
-max messages press <бот> 100000000000000001 2         # нажать вторую кнопку
+max personal messages press <бот> 100000000000000001 2         # нажать вторую кнопку
 ```
 
 ```sh
-max messages press <бот> 100000000000000001 "Да"      # или по её тексту
+max personal messages press <бот> 100000000000000001 "Да"      # или по её тексту
 ```
 
 Бот видит, кто нажал. Нажимаются только обычные кнопки бота. Остальные команда не нажимает и
@@ -1119,19 +1119,19 @@ max messages press <бот> 100000000000000001 "Да"      # или по её т
 - кнопка мини-приложения — `chats app`.
 
 ```sh
-max chats start <бот>                                 # запустить бота, как кнопка «Начать»
+max personal chats start <бот>                                 # запустить бота, как кнопка «Начать»
 ```
 
 ```sh
-max chats start <бот> --payload ref1                  # с параметром, как ссылка max.ru/<бот>?start=ref1
+max personal chats start <бот> --payload ref1                  # с параметром, как ссылка max.ru/<бот>?start=ref1
 ```
 
 ```sh
-max chats start https://max.ru/<бот>?start=ref1       # по ссылке — и бота, которому вы ещё не писали
+max personal chats start https://max.ru/<бот>?start=ref1       # по ссылке — и бота, которому вы ещё не писали
 ```
 
 ```sh
-max chats app <бот>                                   # адрес мини-приложения бота
+max personal chats app <бот>                                   # адрес мини-приложения бота
 ```
 
 `chats start` принимает чат с ботом или ссылку на бота. По ссылке запускается и бот, которого нет в
@@ -1152,83 +1152,83 @@ max chats app <бот>                                   # адрес мини-�
 Сценарии для админа группы, все правила и ограничения — [группы, которыми вы управляете](groups.md).
 
 ```sh
-max chats inspect https://max.ru/join/…          # что за ссылкой; не вступает
+max personal chats inspect https://max.ru/join/…          # что за ссылкой; не вступает
 ```
 
 ```sh
-max chats join https://max.ru/join/…             # вступить; канал с одобрением ответит requested: true
+max personal chats join https://max.ru/join/…             # вступить; канал с одобрением ответит requested: true
 ```
 
 ```sh
-max chats leave "Семья"                          # выйти
+max personal chats leave "Семья"                          # выйти
 ```
 
 ```sh
-max chats create "Поход" "Аня" 20000002          # создать группу с людьми (имя или id)
+max personal chats create "Поход" "Аня" 20000002          # создать группу с людьми (имя или id)
 ```
 
 ```sh
-max chats create "Новости" --channel            # закрытый канал; люди входят по ссылке-приглашению
+max personal chats create "Новости" --channel            # закрытый канал; люди входят по ссылке-приглашению
 ```
 
 ```sh
-max chats members list "Поход" --all             # все участники: когда заведён аккаунт, когда был в сети
+max personal chats members list "Поход" --all             # все участники: когда заведён аккаунт, когда был в сети
 ```
 
 ```sh
-max chats members add "Поход" "Боря"             # без старых сообщений; с ними — --history
+max personal chats members add "Поход" "Боря"             # без старых сообщений; с ними — --history
 ```
 
 ```sh
-max chats members remove "Поход" "Боря"
+max personal chats members remove "Поход" "Боря"
 ```
 
 ```sh
-max chats admins add "Поход" "Аня" --can members,pin
+max personal chats admins add "Поход" "Аня" --can members,pin
 ```
 
 ```sh
-max chats admins remove "Поход" "Аня"              # снять права; участником остаётся
+max personal chats admins remove "Поход" "Аня"              # снять права; участником остаётся
 ```
 
 ```sh
-max chats update "Поход" --title "Поход-2026" --description "в июле"
+max personal chats update "Поход" --title "Поход-2026" --description "в июле"
 ```
 
 ```sh
-max chats update "Поход" --photo обложка.jpg    # новое фото группы
+max personal chats update "Поход" --photo обложка.jpg    # новое фото группы
 ```
 
 ```sh
-max chats show "Поход"                           # настройки группы — в поле settings
+max personal chats show "Поход"                           # настройки группы — в поле settings
 ```
 
 ```sh
-max chats update "Поход" --all-can-pin off       # поменять одну
+max personal chats update "Поход" --all-can-pin off       # поменять одну
 ```
 
 ```sh
-max chats link show "Поход"                      # ссылка-приглашение, если вам её видно
+max personal chats link show "Поход"                      # ссылка-приглашение, если вам её видно
 ```
 
 ```sh
-max chats link reset "Поход"                     # новая ссылка; старая перестаёт работать
+max personal chats link reset "Поход"                     # новая ссылка; старая перестаёт работать
 ```
 
 ```sh
-max chats requests list "Канал"                  # кто просится в канал с одобрением; видят только админы
+max personal chats requests list "Канал"                  # кто просится в канал с одобрением; видят только админы
 ```
 
 ```sh
-max chats requests accept "Канал" 20000002        # впустить; decline — отказать
+max personal chats requests accept "Канал" 20000002        # впустить; decline — отказать
 ```
 
 ```sh
-max chats events "Поход"                         # кто вступил, вышел, кого добавили и удалили — за 7 дней
+max personal chats events "Поход"                         # кто вступил, вышел, кого добавили и удалили — за 7 дней
 ```
 
 ```sh
-max chats events "Поход" --type add,remove --since-time 2026-09-01T00:00
+max personal chats events "Поход" --type add,remove --since-time 2026-09-01T00:00
 ```
 
 **Всё это видят другие люди**: вступление, выход, добавление, новое название. Кроме `inspect`,
@@ -1282,27 +1282,27 @@ show` показывает только тех, кого видела локал
 ### Правила модерации
 
 ```sh
-max chats rules show "Поход"                          # правила группы; без них — значения по умолчанию
+max personal chats rules show "Поход"                          # правила группы; без них — значения по умолчанию
 ```
 
 ```sh
-max chats rules set "Поход" invites delete            # приглашения в чужие чаты — удалять
+max personal chats rules set "Поход" invites delete            # приглашения в чужие чаты — удалять
 ```
 
 ```sh
-max chats rules set "Поход" newAccount.days 3         # аккаунт моложе трёх дней — отметить
+max personal chats rules set "Поход" newAccount.days 3         # аккаунт моложе трёх дней — отметить
 ```
 
 ```sh
-max chats rules set "Поход" trusted 30000003,30000004 # этих людей правила не трогают
+max personal chats rules set "Поход" trusted 30000003,30000004 # этих людей правила не трогают
 ```
 
 ```sh
-max chats rules set "Поход" consent.delete ask        # перед удалением — спрашивать
+max personal chats rules set "Поход" consent.delete ask        # перед удалением — спрашивать
 ```
 
 ```sh
-max chats rules unset "Поход" consent.delete          # вернуть значение по умолчанию
+max personal chats rules unset "Поход" consent.delete          # вернуть значение по умолчанию
 ```
 
 Правила хранятся на этом компьютере, в файле рядом с настройками профиля; команда называет его в
@@ -1320,19 +1320,19 @@ max chats rules unset "Поход" consent.delete          # вернуть зн
 ### Проверка группы
 
 ```sh
-max chats moderate "Поход"                       # что нового нарушает правила; делает то, что разрешено
+max personal chats moderate "Поход"                       # что нового нарушает правила; делает то, что разрешено
 ```
 
 ```sh
-max chats moderate "Поход" --dry-run             # только показать
+max personal chats moderate "Поход" --dry-run             # только показать
 ```
 
 ```sh
-max chats moderate "Поход" --allow-dangerous     # сделать и то, что стоит на уровне ask
+max personal chats moderate "Поход" --allow-dangerous     # сделать и то, что стоит на уровне ask
 ```
 
 ```sh
-max chats moderate "Поход" --since-time 2026-09-20T00:00
+max personal chats moderate "Поход" --since-time 2026-09-20T00:00
 ```
 
 Проверка смотрит, что появилось в группе с прошлой проверки (в первый раз — за сутки): сообщения,
@@ -1368,7 +1368,7 @@ max chats moderate "Поход" --since-time 2026-09-20T00:00
 не терминал, то есть в трубе и в CI. На это и опираются скрипты и ваш агент.
 
 ```sh
-max chats list --json
+max personal chats list --json
 ```
 
 **Любой список отвечает одним объектом**, всегда одним и тем же — и у бота тоже. У списка без
@@ -1396,13 +1396,13 @@ max chats list --json
 страница, в этом режиме говорит только строчка на stderr.
 
 ```sh
-max messages list -1000 --jsonl | jq 'select(.senderId == "111")'
+max personal messages list -1000 --jsonl | jq 'select(.senderId == "111")'
 ```
 
 Ошибка, завершающая команду, уходит **на stderr**, а stdout остаётся пустым — так отказ невозможно принять за результат:
 
 ```json
-{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max setup` in a local terminal; agents: read `max skill show`"}}
+{"error":{"code":"authentication_error","message":"no session for profile \"personal\" — run `max personal setup` in a local terminal; agents: read `max skill show`"}}
 ```
 
 Частичное чтение или скачивание может вернуть JSON с кодом `0`: проверьте `complete` и `batch` или `issue`. JSONL частичной загрузки добавляет `batch_summary`; успешная часть сохраняется.
@@ -1412,10 +1412,10 @@ max messages list -1000 --jsonl | jq 'select(.senderId == "111")'
 `14` — исход неизвестен.
 
 ```sh
-if ! max messages send 0 "текст" --json > /dev/null; then
+if ! max personal messages send 0 "текст" --json > /dev/null; then
   case $? in
     14) echo "могло уйти, повторять только с тем же --send-id" ;;
-    4)  echo "нужен max setup" ;;
+    4)  echo "нужен max personal setup" ;;
   esac
 fi
 ```
@@ -1423,7 +1423,7 @@ fi
 ## Подключить ИИ-агента
 
 ИИ-агент, который запускает команды в терминале (например, Claude Code, Codex или Gemini CLI), читает
-навык `max`: правила и ловушки, которые не объяснит `--help`. Его ставит `max setup`, а также
+навык `max`: правила и ловушки, которые не объяснит `--help`. Его ставит `max personal setup`, а также
 `max skill install` (`--for claude`, `agents` или `all`, по умолчанию): он пишет SKILL.md в
 `~/.claude/skills/max-cli/` (Claude Code) и `~/.agents/skills/max-cli/` (Codex, Gemini CLI).
 `max skill show` печатает тот же текст. После обновления `max` запустите `max skill install` ещё раз:
@@ -1436,7 +1436,7 @@ fi
 
 ## Как выглядит переписка
 
-`max messages list` и `max search messages` в терминале печатают ленту, а не таблицу:
+`max personal messages list` и `max personal search messages` в терминале печатают ленту, а не таблицу:
 
 ```text
 ── 3 января 2026 ──
@@ -1460,7 +1460,7 @@ fi
 
 ## Новые сообщения по мере прихода
 
-`max watch` печатает новые сообщения, пока его не остановят; `max serve` держит подключение и
+`max personal watch` печатает новые сообщения, пока его не остановят; `max personal serve` держит подключение и
 сохраняет всё в локальную копию. Как они работают вместе, что делает сервер в сети и как поставить
 его службой — [новые сообщения сразу](archive.md#новые-сообщения-сразу-max-serve-и-max-watch).
 
@@ -1470,11 +1470,11 @@ fi
 Две отдельные вещи включают диагностику:
 
 ```sh
-max chats list --trace      # показать, ничего не сохраняя
+max personal chats list --trace      # показать, ничего не сохраняя
 ```
 
 ```sh
-max chats list --record       # сохранить, ничего не показывая
+max personal chats list --record       # сохранить, ничего не показывая
 ```
 
 `--trace` печатает по строке на запрос — на stderr, поэтому `--json` рядом не ломается:
@@ -1487,15 +1487,15 @@ max chats list --record       # сохранить, ничего не показ
 `--record` кладёт то же самое в каталог запуска и хранит 30 дней:
 
 ```sh
-max runs list                 # что делалось, новое сверху
+max personal runs list                 # что делалось, новое сверху
 ```
 
 ```sh
-max runs show <id>            # один запуск: чем кончился и куда ходил
+max personal runs show <id>            # один запуск: чем кончился и куда ходил
 ```
 
 ```sh
-max runs path <id>            # каталог, для jq и grep
+max personal runs path <id>            # каталог, для jq и grep
 ```
 
 **В записи нет содержимого.** Операция, опкод, номер запроса, идентификаторы, байты и
@@ -1523,7 +1523,7 @@ max runs path <id>            # каталог, для jq и grep
 
 Порядок, в котором решается любая настройка: **флаг → переменная окружения → файл → встроенное
 значение**. В файле профиль сильнее общих `defaults`, а разделы `personal` и `bot` задают значения
-отдельно для личного аккаунта и для ботов (`max config set --personal …`, `--bot …`). Все поля,
+отдельно для личного аккаунта и для ботов (`max personal config set --personal …`, `--bot …`). Все поля,
 `defaultProfile` и `permissions` в том числе, — [настройки](configuration.md). Опечатка в имени поля —
 ошибка с именем поля, а не молчаливое значение по умолчанию.
 
@@ -1532,7 +1532,7 @@ max runs path <id>            # каталог, для jq и grep
 <a id="что-профилю-можно"></a>
 
 ```sh
-max config set permissions.messages readonly
+max personal config set permissions.messages readonly
 ```
 
 ```sh
@@ -1551,9 +1551,9 @@ max config set --defaults permissions.contacts readonly
 
 ## Один человек
 
-`max contacts profile <человек>` показывает, что MAX и локальная копия знают о человеке.
-`max contacts check <человек>` оценивает, похож ли он на бота. `max contacts context <человек>` читает
-из копии его последние сообщения по чатам, а `max contacts link` связывает его аккаунт MAX с аккаунтом
+`max personal contacts profile <человек>` показывает, что MAX и локальная копия знают о человеке.
+`max personal contacts check <человек>` оценивает, похож ли он на бота. `max personal contacts context <человек>` читает
+из копии его последние сообщения по чатам, а `max personal contacts link` связывает его аккаунт MAX с аккаунтом
 Telegram. Подробно — [люди](people.md).
 
 ## Дальше

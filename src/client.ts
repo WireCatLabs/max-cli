@@ -336,7 +336,7 @@ export class MaxClient {
           } catch (error) {
             throw new CliError(
               "configuration_error",
-              `the other sessions are ended, but the new token for this one could not be saved: ${reasonOf(error)} — run \`max session start\``,
+              `the other sessions are ended, but the new token for this one could not be saved: ${reasonOf(error)} — run \`max ${asFirstWord(this.#store.profile)}session start\``,
             )
           }
         }
@@ -346,7 +346,7 @@ export class MaxClient {
         } catch (error) {
           throw new CliError(
             "authentication_error",
-            `the other sessions are ended, and MAX no longer answers this one (${asCliError(error).message}) — run \`max session start\``,
+            `the other sessions are ended, and MAX no longer answers this one (${asCliError(error).message}) — run \`max ${asFirstWord(this.#store.profile)}session start\``,
           )
         }
       }),
@@ -3348,7 +3348,7 @@ const asRefusal = (error: ProtocolError): CliError => {
   if (text.includes("token") || text.includes("auth")) {
     return new CliError(
       "authentication_error",
-      `${error.message} — the session may have expired; run \`max session start\``,
+      `${error.message} — the session may have expired; run \`max <profile> session start\``,
     )
   }
   return new CliError("provider_error", error.message, { operation: String(error.opcode) })

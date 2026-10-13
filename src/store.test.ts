@@ -76,7 +76,7 @@ describe("max store", () => {
     const { environment, sent } = setup()
 
     const fetched = await max(
-      ["s-fetch", "store", "fetch", "111", "--pause", "1ms", "--limit", "150", "--json"],
+      ["s-fetch", "messages", "sync", "111", "--pause", "1ms", "--limit", "150", "--json"],
       environment,
     )
 
@@ -93,7 +93,7 @@ describe("max store", () => {
   it("builds evidence from the local archive without connecting or marking read", async () => {
     const { environment, sent } = setup()
     expect(
-      (await max(["s-evidence", "store", "fetch", "111", "--pause", "1ms", "--limit", "150", "--json"], environment))
+      (await max(["s-evidence", "messages", "sync", "111", "--pause", "1ms", "--limit", "150", "--json"], environment))
         .code,
     ).toBe(0)
     const before = sent(Opcode.LOGIN).length
@@ -122,7 +122,7 @@ describe("max store", () => {
     const { environment, sent } = setup()
 
     const fetched = await max(
-      ["s-page", "store", "fetch", "111", "--pause", "1ms", "--page-size", "10", "--limit", "20", "--json"],
+      ["s-page", "messages", "sync", "111", "--pause", "1ms", "--page-size", "10", "--limit", "20", "--json"],
       environment,
     )
 
@@ -135,7 +135,7 @@ describe("max store", () => {
   it("refuses --estimate: MAX's ids do not count the messages missing", async () => {
     const { environment, sent } = setup()
 
-    const estimate = await max(["s-estimate", "store", "fetch", "111", "--estimate"], environment)
+    const estimate = await max(["s-estimate", "messages", "sync", "111", "--estimate"], environment)
 
     expect(estimate.code).toBe(2)
     expect(sent(Opcode.CHAT_HISTORY)).toEqual([])
@@ -143,7 +143,7 @@ describe("max store", () => {
 
   it("exports what it holds as JSON lines or a transcript, from --since, into a file only the owner reads", async () => {
     const { environment } = setup()
-    await max(["s-export", "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max(["s-export", "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     const file = join(tmpdir(), "s-export.jsonl")
 
     const lines = await max(["s-export", "store", "export", "111", "--format", "jsonl"], environment)
@@ -165,7 +165,7 @@ describe("max store", () => {
   it("looks after the store file without connecting: info, check, migrate, backup, restore and reindex", async () => {
     const { environment, sent } = setup()
     const backup = join(tmpdir(), "s-backup.db")
-    await max(["s-care", "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max(["s-care", "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     const logins = sent(Opcode.LOGIN).length
 
     expect((await max(["s-care", "store", "info", "--json"], environment)).code).toBe(0)
@@ -180,7 +180,7 @@ describe("max store", () => {
 
   it("`store clear --left` deletes a chat the account left, only with --allow-dangerous, and connects to nothing", async () => {
     const { environment, sent } = setup({ leftAfter: 1 })
-    await max(["s-clear", "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max(["s-clear", "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     await max(["s-clear", "chats", "list", "--json"], environment)
     const logins = sent(Opcode.LOGIN).length
 
@@ -214,7 +214,7 @@ describe("max store", () => {
 describe("max conversations", () => {
   const fetched = async (profile: string) => {
     const { environment, sent } = setup()
-    await max([profile, "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max([profile, "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     return { environment, logins: () => sent(Opcode.LOGIN).length }
   }
   const [first, second] = HISTORY.map((message) => String(message.id))

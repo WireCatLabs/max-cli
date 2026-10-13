@@ -28,7 +28,7 @@ describe("max mcp config", () => {
   it("starts node and the script by full path, so no .cmd and no PATH are involved", () => {
     expect(entry().config).toEqual({
       mcpServers: {
-        max: { type: "stdio", command: "C:\\Program Files\\nodejs\\node.exe", args: [SCRIPT, "mcp"] },
+        max: { type: "stdio", command: "C:\\Program Files\\nodejs\\node.exe", args: [SCRIPT, "default", "mcp"] },
       },
     })
   })

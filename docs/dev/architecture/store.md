@@ -28,7 +28,7 @@ also keeps a failed history write from failing a completed network read.
 
 Search now belongs to the shared services, including query validation and indexing. It searches
 only the account's recorded history. Offline search never opens a MAX connection. Fetch history
-with `max store fetch` to make older messages available.
+with `max messages sync` to make older messages available.
 
 ## Departed chats
 

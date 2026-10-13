@@ -3,6 +3,7 @@ import { AI_ENTRIES, type AISettings, first, settingsFor } from "@wirecat/cli-me
 import { type Level, PERMISSIONS, type Permission } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
+import { knownProfiles } from "./diagnose.js"
 import { usableProfileName } from "./profile.js"
 import { DEFAULT_MODEL, MODELS } from "./transcribe/models.js"
 
@@ -227,6 +228,8 @@ export interface Settings extends AISettings {
   kind: ProfileKind
   /** Profiles the configuration file names, whether or not anyone has logged in to them. */
   configuredProfiles: string[]
+  /** The profiles on this computer, as `account list` shows them. */
+  profilesHere: string[]
   /** Where each value came from — `max config show` prints it. */
   sources: Record<SourcedSetting, Source>
 }
@@ -242,6 +245,7 @@ export type Source =
   | `MAX_${string}`
   | `config file: ${string}`
   | "default"
+  | "none named"
   | "resolved per purpose"
   | `config defaults: ${string}`
 export type SourcedSetting =
@@ -274,6 +278,8 @@ export interface ResolveOptions {
   kind?: ProfileKind
   /** Tests pass a temporary directory; nothing else should need this. */
   configDir?: string
+  /** `false` for a command that touches no account, so it runs with no profile named. */
+  needsProfile?: boolean
 }
 
 /**
@@ -548,6 +554,8 @@ export const hasPermissionConfig = (config: Config): boolean =>
 
 const sharedSettings = settingsFor(MAX_APP, {
   schema: configSchema,
+  // A MAX session or bot lives in max's own state files, which the shared list cannot see.
+  profiles: (env) => knownProfiles({ env }).map(({ name }) => name),
   profile: { serve: personalEntries.serve, mcpTools: personalEntries.mcpTools },
   defaults: { transcribeModel: defaultsEntries.transcribeModel },
   sourcePaths: true,

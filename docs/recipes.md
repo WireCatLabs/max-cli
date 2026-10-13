@@ -12,7 +12,7 @@
 - **Навык** — файл, из которого агент узнаёт, как работать с `max`. `max skill install` кладёт его
   туда, где агент его ищет.
 - **MCP-клиент** — ИИ-приложение без терминала, например Claude Desktop. Оно обращается к `max`
-  через MCP-сервер `max mcp`, а не запускает команды.
+  через MCP-сервер `max personal mcp`, а не запускает команды.
 - **Режим без диалога** — агент получает один запрос, выполняет его и завершается. У Claude Code это
   режим `-p`, у Codex — `codex exec`.
 - **cron** — встроенный планировщик Linux и macOS. Он запускает команду в заданное время.
@@ -44,7 +44,7 @@
 3. Сохраните запросы из рецептов в файлы, например в `~/max-recipes/`. Команды расписания ниже
    читают запрос из файла.
 
-MCP-клиенту навык не нужен. Подключите MCP-сервер (`max mcp config` печатает запись для его
+MCP-клиенту навык не нужен. Подключите MCP-сервер (`max personal mcp config` печатает запись для его
 настроек) и зовите готовые команды — `/catch-up`, `/review`, `/reply`, `/find`. См.
 [готовые команды MCP-сервера](mcp.md#команды-и-чаты-по-).
 
@@ -55,11 +55,11 @@ MCP-клиенту навык не нужен. Подключите MCP-серв
 изменить, он не обойдёт.
 
 **Запрет на уровне агента.** Это настройка самого агента. Например, Claude Code в режиме `-p`
-запускает только команды из `--allowedTools`. Если `max messages send` в списке нет, агент не может
+запускает только команды из `--allowedTools`. Если `max personal messages send` в списке нет, агент не может
 её вызвать:
 
 ```sh
-claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max inbox:*)"
+claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max personal inbox:*)"
 ```
 
 У Codex такого списка нет. Его песочница по умолчанию закрывает сеть и запись файлов, а `max` нужно
@@ -70,11 +70,11 @@ claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max inbox:*)"
 
 ```sh
 for resource in messages reactions polls topics chats contacts account bot conversations; do
-  max config set "permissions.$resource" readonly
+  max personal config set "permissions.$resource" readonly
 done
 max config show                       # проверить эффективные права
-max config set sendsPerHour 5          # или: не больше пяти сообщений в час
-max recipients add "Иван Петров"       # и писать только в эти чаты
+max personal config set sendsPerHour 5          # или: не больше пяти сообщений в час
+max personal recipients add "Иван Петров"       # и писать только в эти чаты
 ```
 
 `readonly` на одном ресурсе не касается остальных: с одним `messages` агент ещё может ставить
@@ -83,9 +83,9 @@ max recipients add "Иван Петров"       # и писать только 
 профиль должен только читать. После миграции старый `readOnly` менять нельзя.
 
 `permissions` ограничивает и ваши собственные команды, пока вы не снимете запрет:
-`max config unset permissions.<ресурс>`. Тогда снова действуют унаследованные настройки и
+`max personal config unset permissions.<ресурс>`. Тогда снова действуют унаследованные настройки и
 значения по умолчанию. Чтобы ограничить только агента, дайте ему отдельный профиль. Все попытки
-отправки, в том числе отклонённые, — в `max sends list`. См.
+отправки, в том числе отклонённые, — в `max personal sends list`. См.
 [защиту от отправки не туда](security.md#защита-от-отправки-не-туда) и
 [права доступа](configuration-reference.md#права-доступа).
 
@@ -100,7 +100,7 @@ max recipients add "Иван Петров"       # и писать только 
 - **cron и `claude -p`.** Без приложения, на любом компьютере, который включён в это время:
 
   ```cron
-  30 8 * * * claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max inbox:*)" >> ~/max-recipes/morning.log 2>&1
+  30 8 * * * claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max personal inbox:*)" >> ~/max-recipes/morning.log 2>&1
   ```
 
   Задачи cron запускаются в почти пустом окружении. В Linux это ломает `max` двумя способами:
@@ -137,9 +137,9 @@ max recipients add "Иван Петров"       # и писать только 
 
 ## Утренняя сводка
 
-Пишет в MAX: **нет**. Разрешить: `Bash(max inbox:*)`.
+Пишет в MAX: **нет**. Разрешить: `Bash(max personal inbox:*)`.
 
-> Выполни `max inbox --new --json`. Сгруппируй сообщения по чатам. Для каждого чата — одна строка:
+> Выполни `max personal inbox --new --json`. Сгруппируй сообщения по чатам. Для каждого чата — одна строка:
 > кто пишет и чего хочет. Сверху — то, на что нужно ответить сегодня. Рекламу и уведомления
 > сервисов сведи в одну строку в конце.
 
@@ -148,9 +148,9 @@ max recipients add "Иван Петров"       # и писать только 
 
 ### С какого момента «новое»
 
-- `max inbox` — непрочитанное, как его считает MAX: всё, что вы не открыли ни на одном устройстве.
-- `max inbox --new` — с прошлого запуска `--new`. Эту точку знает только `max`, собеседники её не видят.
-- `max inbox --since-time 2d` — за последние два дня; сохранённая точка не сдвигается.
+- `max personal inbox` — непрочитанное, как его считает MAX: всё, что вы не открыли ни на одном устройстве.
+- `max personal inbox --new` — с прошлого запуска `--new`. Эту точку знает только `max`, собеседники её не видят.
+- `max personal inbox --since-time 2d` — за последние два дня; сохранённая точка не сдвигается.
 
 Ни одна из них не отмечает сообщения прочитанными. Если это нужно, добавьте `--mark-read` или
 включите `catchUpMarksRead` в [настройках](configuration.md). Тогда собеседник увидит, что вы
@@ -163,16 +163,16 @@ max recipients add "Иван Петров"       # и писать только 
 чата своя точка, и один запуск не прячет то, что ещё не показал другой:
 
 ```cron
-30 8 * * * claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max inbox:*)"
-0 19 * * * claude -p "$(cat ~/max-recipes/news.md)" --allowedTools "Bash(max inbox:*)"
+30 8 * * * claude -p "$(cat ~/max-recipes/morning.md)" --allowedTools "Bash(max personal inbox:*)"
+0 19 * * * claude -p "$(cat ~/max-recipes/news.md)" --allowedTools "Bash(max personal inbox:*)"
 ```
 
-В `morning.md` — `max inbox --new --kind dialog,group --json`, в `news.md` —
-`max inbox --new --kind channel --json` и просьба выбрать главное. Без `--kind` — всё вместе.
+В `morning.md` — `max personal inbox --new --kind dialog,group --json`, в `news.md` —
+`max personal inbox --new --kind channel --json` и просьба выбрать главное. Без `--kind` — всё вместе.
 
 ## Недельный отчёт по рабочему чату
 
-Пишет в MAX: **нет**. Разрешить: `Bash(max messages list:*)`.
+Пишет в MAX: **нет**. Разрешить: `Bash(max personal messages list:*)`.
 
 > Прочитай сообщения в чате «Проект Альфа» за последние 7 дней: `max messages list "Проект Альфа"
 > --after-time 7d --limit 200 --json`. Если в ответе
@@ -181,10 +181,10 @@ max recipients add "Иван Петров"       # и писать только 
 
 ## Кто кому должен
 
-Пишет в MAX: **нет**. Разрешить: `Bash(max review:*)`, `Bash(max messages context:*)`,
-`Bash(max search messages:*)`.
+Пишет в MAX: **нет**. Разрешить: `Bash(max personal review:*)`, `Bash(max personal messages context:*)`,
+`Bash(max personal search messages:*)`.
 
-> Выполни `max review --new --transcribe --json` (первый раз — за 3 дня, потом — с прошлого
+> Выполни `max personal review --new --transcribe --json` (первый раз — за 3 дня, потом — с прошлого
 > `--new`, у каждого чата своя точка). Разложи на три списка: что должен я, чего я жду от других,
 > что нужно уточнить. У каждого пункта — чат, дата и id сообщений, на которых он основан; срок —
 > только если он назван. Прежде чем назвать что-то просроченным, проверь, не сделано ли это позже
@@ -197,27 +197,27 @@ max recipients add "Иван Петров"       # и писать только 
 
 ## Кому вы не ответили
 
-Короче всего — `max review --since-time 7d --unanswered --json`: вопросы, на которые никто не
+Короче всего — `max personal review --since-time 7d --unanswered --json`: вопросы, на которые никто не
 ответил, — в личных чатах вам, в группах вам или админам. Рецепт ниже шире: он ловит и просьбы без
 вопросительного знака.
 
-Пишет в MAX: **нет**. Разрешить: `Bash(max chats list:*)`, `Bash(max messages list:*)`.
+Пишет в MAX: **нет**. Разрешить: `Bash(max personal chats list:*)`, `Bash(max personal messages list:*)`.
 
-> Выполни `max chats list --kind dialog --limit 30 --json`. Для каждого чата, где последнее
-> сообщение было за последние 7 дней, прочитай `max messages list <id чата> --limit 5 --json`.
+> Выполни `max personal chats list --kind dialog --limit 30 --json`. Для каждого чата, где последнее
+> сообщение было за последние 7 дней, прочитай `max personal messages list <id чата> --limit 5 --json`.
 > Покажи чаты, где последнее сообщение не от меня и в нём вопрос или просьба: с кем, о чём и
 > сколько дней прошло.
 
 ## Найти, что было сказано
 
-Пишет в MAX: **нет**. Разрешить: `Bash(max search messages:*)`, `Bash(max messages context:*)`.
+Пишет в MAX: **нет**. Разрешить: `Bash(max personal search messages:*)`, `Bash(max personal messages context:*)`.
 
-> Найди «счёт» через `max search messages счёт --json`. Для каждого найденного прочитай
-> `max messages context <locator> --json` и скажи, кто что сказал и когда.
+> Найди «счёт» через `max personal search messages счёт --json`. Для каждого найденного прочитай
+> `max personal messages context <locator> --json` и скажи, кто что сказал и когда.
 
 По умолчанию поиск идёт и по копии на этом компьютере, и на сервере MAX. В локальной копии есть
 только то, что `max` уже сохранил. Чтобы искать по всей истории чата локально, сначала скачайте
-её. Это запрос от вашего аккаунта, поэтому сделайте его сами: `max store fetch <чат>`. См.
+её. Это запрос от вашего аккаунта, поэтому сделайте его сами: `max personal messages sync <чат>`. См.
 [скачивание истории](archive.md#скачать-историю).
 
 ## Черновик ответа
@@ -228,24 +228,24 @@ max recipients add "Иван Петров"       # и писать только 
 > Прочитай последние 20 сообщений в чате с Иваном Петровым и предложи ответ на его последний
 > вопрос. Не отправляй — покажи мне текст.
 
-Когда вы согласны, агент отправляет сам: `max messages send "Иван Петров" "…"`. MCP-клиент
-подключается через `max mcp`. Не давайте клиенту заранее одобрять `max_write`, и он будет
+Когда вы согласны, агент отправляет сам: `max personal messages send "Иван Петров" "…"`. MCP-клиент
+подключается через `max personal mcp`. Не давайте клиенту заранее одобрять `max_write`, и он будет
 спрашивать вас перед каждой отправкой. Права профиля всё равно ограничивают запись. См.
 [MCP-сервер](mcp.md).
 
 ## Группа, которую вы ведёте
 
-Пишет в MAX: **только если разрешено правилами группы**. Разрешить: `Bash(max review:*)`,
-`Bash(max chats events:*)`, `Bash(max chats members list:*)`, `Bash(max chats moderate:*)`.
+Пишет в MAX: **только если разрешено правилами группы**. Разрешить: `Bash(max personal review:*)`,
+`Bash(max personal chats events:*)`, `Bash(max personal chats members list:*)`, `Bash(max personal chats moderate:*)`.
 
-> Выполни `max review --chat "Поход" --unanswered 4h --json`, `max chats events "Поход" --since-time
+> Выполни `max personal review --chat "Поход" --unanswered 4h --json`, `max chats events "Поход" --since-time
 > 7d --json` и `max chats moderate "Поход" --dry-run --json`. Коротко: какие вопросы ждут ответа, от
 > кого и с какого времени; кто вступил или был добавлен за неделю и кем; что проверка нашла по
 > правилам группы и что предлагает сделать. Никому не отвечай и никого не удаляй сам — перечисли
 > команды, которые сделают это, если я соглашусь.
 
 С `--dry-run` команда `chats moderate` только составляет план. Без него она действует в пределах
-правил группы, поэтому уберите `Bash(max chats moderate:*)` из списка, если агент не должен
+правил группы, поэтому уберите `Bash(max personal chats moderate:*)` из списка, если агент не должен
 действовать никогда. Все сценарии и правила — [группы, которые вы ведёте](groups.md).
 
 ## Похожие сборники

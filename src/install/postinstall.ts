@@ -65,7 +65,9 @@ export const completeGlobalInstall = ({
     )
     note("max: agent skill installed. Agent: read max skill show before login; verify the installed skill is loaded.")
   }
-  note("max: guided account login: max setup. Allow about five minutes; history downloads are separate.")
+  note(
+    "max: guided account login: max personal setup (any profile name in place of personal). Allow about five minutes; history downloads are separate.",
+  )
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

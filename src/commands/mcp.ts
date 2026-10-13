@@ -255,7 +255,7 @@ export const serverEntry = ({
   }
   const args = [
     scriptPath,
-    ...(profile === "default" ? [] : [profile]),
+    profile,
     "mcp",
     ...(flags.permission ?? []).flatMap((entry) => ["--permission", entry]),
     ...FLAG_ARGS.filter(([key]) => flags[key] === true).map(([, flag]) => flag),

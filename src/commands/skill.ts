@@ -7,6 +7,6 @@ export const skillCommand = (): Command =>
   sharedSkillCommand(MAX_APP, SKILL).addHelpText(
     "after",
     "\nAgents: run `max skill show` before login; it needs no MAX session.\n" +
-      "Guided first run: `max setup --agent codex`.\n" +
+      "Guided first run: `max personal setup --agent codex`.\n" +
       "Install instructions separately: `max skill install --for all`.\n",
   )

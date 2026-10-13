@@ -5,8 +5,10 @@ MAX Messenger from the terminal: bots through the official Bot API (`max bot
 
 The first word is the profile whenever it is not a command — `max personal chats
 list`.
-`MAX_PROFILE` says the same thing for a whole shell session; without either it
-is `default`.
+`MAX_PROFILE` says the same thing for a whole shell session, and
+`defaultProfile` in the config file for good.
+No profile is assumed: without one, a command that uses an account stops and
+lists the profiles here.
 
 Options:
   -V, --version               output the version number
@@ -125,9 +127,11 @@ Commands:
   help [command]              display help for command
 
 Getting started after installation:
-  max setup                    Guided personal-account login; allow about 5 minutes
-  max setup --agent codex      Connect the skill for your agent
-  max setup --help             Login methods, Windows advice and examples
+  max personal setup               Guided personal-account login; allow about 5 minutes
+  max personal setup --agent codex Connect the skill for your agent
+  max setup --help                 Login methods, Windows advice and examples
+
+Every command names its profile first (`max personal chats list`), or MAX_PROFILE does.
 
 Agents: read `max skill show` before login; `max commands --json` lists commands.
 Choose a chat and how much history to fetch after setup.

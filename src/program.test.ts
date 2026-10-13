@@ -276,8 +276,8 @@ describe("the program", () => {
 
   it("counts -v, gives the version to -V, and turns -vv into the second level", async () => {
     expect((await runWith(["-V"])).stdout.trim()).toMatch(/^\d+\.\d+\.\d+/)
-    expect(resolveSettings({ verbose: 2 }, { env: {} }).detail).toBe(2)
-    expect(resolveSettings({ verbose: 5 }, { env: {} }).detail).toBe(2)
+    expect(resolveSettings({ verbose: 2 }, { env: {}, needsProfile: false }).detail).toBe(2)
+    expect(resolveSettings({ verbose: 5 }, { env: {}, needsProfile: false }).detail).toBe(2)
 
     const program = createProgram()
     program.parseOptions(["-vv"])
@@ -504,11 +504,34 @@ describe("the program", () => {
       expect(await serveOf("--no-serve")).toEqual({ setting: "serve", value: false, from: "flag" })
     })
 
+    it("**assumes no profile**: an account command stops and lists them; account list and config show still run", async () => {
+      const { MAX_PROFILE } = process.env
+      delete process.env.MAX_PROFILE
+      try {
+        const chats = await runWith(["chats", "list", "--json"])
+        expect(chats.code).toBe(2)
+        expect(JSON.parse(chats.stderr).error.message).toMatch(/^name a profile: /)
+        expect((await runWith(["account", "list", "--json"])).code).toBe(0)
+        expect(JSON.parse((await runWith(["config", "show", "--json"])).stdout)).toMatchObject({
+          profile: null,
+          profileFrom: "none named",
+        })
+      } finally {
+        process.env.MAX_PROFILE = MAX_PROFILE
+      }
+    })
+
     it("`config set defaultProfile` picks the profile a bare `max` uses", async () => {
-      await runWith(["config", "set", "defaultProfile", "mila"])
-      const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout)
-      expect(shown).toMatchObject({ profile: "mila", profileFrom: "config file: defaultProfile" })
-      await runWith(["config", "unset", "defaultProfile"])
+      const { MAX_PROFILE } = process.env
+      delete process.env.MAX_PROFILE
+      try {
+        await runWith(["config", "set", "defaultProfile", "mila"])
+        const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout)
+        expect(shown).toMatchObject({ profile: "mila", profileFrom: "config file: defaultProfile" })
+        await runWith(["config", "unset", "defaultProfile"])
+      } finally {
+        process.env.MAX_PROFILE = MAX_PROFILE
+      }
     })
 
     it("`skill show` prints the skill file itself", async () => {

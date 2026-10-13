@@ -547,7 +547,7 @@ Details: [`architecture/store.md`](architecture/store.md).
 
 shared services search the account's `messages.db`; `MaxClient`
 no longer implements local search. Search finds recorded history, not unread history that has
-never been fetched. `store fetch` fills it; `--offline` reads it without connecting.
+never been fetched. `messages sync` fills it; `--offline` reads it without connecting.
 
 ## 17. The MCP server is a second adapter, and it keeps the connection for minutes
 

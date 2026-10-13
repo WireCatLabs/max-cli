@@ -87,7 +87,7 @@ export const doctorCommand = (): Command => {
       }
       if (report.legacyCache.exists) {
         renderer.note(
-          `the old local copy ${report.legacyCache.file} is no longer used by shared reads — you can remove it; use \`max store fetch\` to fetch history again`,
+          `the old local copy ${report.legacyCache.file} is no longer used by shared reads — you can remove it; use \`max messages sync\` to fetch history again`,
         )
       }
 

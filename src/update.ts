@@ -76,7 +76,7 @@ export const updateNotice = (
       format: pretty ? "pretty" : "json",
       stderrIsTTY: environment.stderrIsTTY ?? process.stderr.isTTY === true,
       quiet: argv.includes("--quiet"),
-      enabled: resolveSettings({}, { env }).updateCheck,
+      enabled: resolveSettings({}, { env, needsProfile: false }).updateCheck,
       installer: installer(environment),
       env,
       offVariables: ["MAX_NO_UPDATE_CHECK"],
@@ -98,7 +98,7 @@ export const skillHint = (
       argv,
       env,
       statePath: statePath(env),
-      enabled: resolveSettings({}, { env }).skillHint,
+      enabled: resolveSettings({}, { env, needsProfile: false }).skillHint,
       ...(now ? { now } : {}),
     })
   } catch {

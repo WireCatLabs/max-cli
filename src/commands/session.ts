@@ -38,13 +38,13 @@ export const sessionCommand = (): Command => {
     .description("log this profile in to MAX")
     .addHelpText(
       "after",
-      "\nFirst time: run `max setup --agent codex` for guided login and agent setup.\n" +
-        "Examples:\n  max session start qr          Scan a QR with MAX on your phone\n" +
-        "  max session start qr-chrome   Log in through web.max.ru in Chromium\n" +
-        "  max session start sms         Enter your phone number in that browser\n" +
-        "  max work session start        Import a token at a hidden prompt\n" +
-        "\nAn interrupted first setup can be resumed with `max setup`.\n" +
-        "For an expired session, explicitly log in again with `max session start qr`.\n" +
+      "\nFirst time: run `max personal setup --agent codex` for guided login and agent setup.\n" +
+        "Examples:\n  max personal session start qr          Scan a QR with MAX on your phone\n" +
+        "  max personal session start qr-chrome   Log in through web.max.ru in Chromium\n" +
+        "  max personal session start sms         Enter your phone number in that browser\n" +
+        "  max work session start                 Import a token at a hidden prompt\n" +
+        "\nAn interrupted first setup can be resumed with `max <profile> setup`.\n" +
+        "For an expired session, explicitly log in again with `max <profile> session start qr`.\n" +
         "Agents: read `max skill show` before login. QR/browser login needs a local terminal.\n" +
         "Never put tokens or passwords in command arguments.\n",
     )

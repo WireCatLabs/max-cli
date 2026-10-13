@@ -67,7 +67,7 @@ export const UNTESTED: Untested[] = [
       "cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0)",
   })),
   {
-    command: "store fetch",
+    command: "messages sync",
     option: "--all",
     reason:
       "cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0)",
@@ -549,7 +549,7 @@ export const UNTESTED: Untested[] = [
     })),
   ),
   {
-    command: "store fetch",
+    command: "messages sync",
     option: "--background",
     reason:
       "starts a detached `max` that outlives the test; cli-messaging src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6",

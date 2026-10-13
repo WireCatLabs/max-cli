@@ -33,5 +33,5 @@ jobs:
       - run: pnpm build
       - run: node dist/bin/max.js --version
       - run: node dist/bin/max.js upgrade --check --json
-      - run: node dist/bin/max.js doctor --json
-      - run: node dist/bin/max.js mcp config --json
+      - run: node dist/bin/max.js default doctor --json
+      - run: node dist/bin/max.js default mcp config --json

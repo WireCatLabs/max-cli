@@ -40,6 +40,7 @@ export const messagesCommand = (): Command => {
     })
   command.addCommand(download)
   command.addCommand(sharedSubcommand(shared, "evidence"))
+  command.addCommand(sharedSubcommand(shared, "sync"))
 
   /**
    * **On this machine, and only with a model the owner downloaded** (`NEED-231`). The recording is

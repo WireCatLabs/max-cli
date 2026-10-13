@@ -31,7 +31,7 @@
 аккаунт важнее записи про все.
 
 ```sh
-max chats list --limit 5          # флаг: 5
+max personal chats list --limit 5          # флаг: 5
 MAX_PROFILE=personal max chats list   # переменная выбирает профиль
 # "limit": 50 у профиля в файле — когда флага нет
 # "limit": 30 в "defaults" — когда и у профиля нет
@@ -60,7 +60,8 @@ max config show --json     # то же одним объектом
 
 Против каждой настройки — откуда она: `flag`, `default` или `config file:` с ключом, из которого
 она прочитана, например `config file: bot.profiles.test`. Против профиля — `first word`,
-`MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: defaultProfile` или `default`.
+`MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: defaultProfile` или `none named` — профиль не назван,
+и `profile` тогда `null`.
 
 С `--json` в ответе есть и `storeSettings` — настройки общего архива (`searchStemmers.*`) и
 откуда они взяты: `store` или `default`.
@@ -75,7 +76,7 @@ max config show --json     # то же одним объектом
 и с ботом, и у каждого — личный он, бот или оба.
 
 ⚠ **Это не проверка здоровья.** Команда читает файлы: не открывает кеш, не трогает ключницу и не
-связывается с MAX. Жива ли сессия, проверяет `max doctor` ([первый шаг при проблемах](troubleshooting.md)).
+связывается с MAX. Жива ли сессия, проверяет `max personal doctor` ([первый шаг при проблемах](troubleshooting.md)).
 
 Секретов в выводе нет: в файле настроек нет поля, куда их можно было бы положить.
 
@@ -84,7 +85,7 @@ max config show --json     # то же одним объектом
 `~/.config/max-cli/config.json` на Linux; пути на других системах — в
 [руководстве по настройкам](configuration.md#где-лежит-файл). Первая команда, читающая настройки,
 создаёт его с `limit`, `keepRunsForDays`, `sendsPerHour`, `updateCheck` и `skillHint` в `defaults`.
-Файл создаётся с правами `0600`, а `max config set` записывает его с правами `0644`: секретов в нём нет.
+Файл создаётся с правами `0600`, а `max personal config set` записывает его с правами `0644`: секретов в нём нет.
 
 ```json
 {
@@ -111,20 +112,20 @@ max config show --json     # то же одним объектом
 
 | Поле | Что делает | Что перекрывает на один запуск | По умолчанию |
 |---|---|---|---|
-| `defaultProfile` | какой профиль, если первым словом ничего не названо и `MAX_PROFILE` не задан | первое слово (`max work …`), `MAX_PROFILE` | `default` |
+| `defaultProfile` | какой профиль, если первым словом ничего не названо и `MAX_PROFILE` не задан | первое слово (`max work …`), `MAX_PROFILE` | нет: без имени команда перечисляет профили |
 | `limit` | сколько записей показывать, когда `--limit` не передан | `--limit` | `20` |
 | `timeoutMs` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
-| `senderColors` | в `max messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
-| `catchUpMarksRead` | `max inbox` и `max review` отмечают прочитанным каждый показанный чат — до последнего показанного сообщения. Собеседник видит отметку. Только для личного аккаунта | `--mark-read`, `--no-mark-read` | `false` |
-| `searchCatchUp` | после `store fetch` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
+| `senderColors` | в `max personal messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
+| `catchUpMarksRead` | `max personal inbox` и `max personal review` отмечают прочитанным каждый показанный чат — до последнего показанного сообщения. Собеседник видит отметку. Только для личного аккаунта | `--mark-read`, `--no-mark-read` | `false` |
+| `searchCatchUp` | после `messages sync` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
 | `record` | записывать ли каждый запуск, как будто передан `--record` ([диагностика](diagnostics.md)) | `--record`, `--no-record` | `false` |
 | `keepRunsForDays` | сколько дней хранятся записи запусков | — | `30` |
 | `permissions` | уровни прав по ресурсам и командам: `deny`, `readonly`, `ask`, `allow`; более точный ключ имеет приоритет ([ниже](#права-доступа)) | —; `--yes` и `--allow-dangerous` только отвечают на `ask`, `deny` они не снимают | всё `allow`, кроме: удаление, завершение других сессий и ещё несколько необратимых изменений — `ask`; автоответы `replies.send` — `deny` |
 | `sendsPerHour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями, добавленными в группы людьми и принятыми заявками на вступление; сверх — отказ с кодом `8`. **Боту** лимит задаётся только в разделе `bot`; без него бот не ограничен ([защита от отправки](security.md#защита-от-отправки-не-туда)) | — | `30`, у бота — нет |
 | `requestsPerMinute` | сколько запросов в минуту профиль делает к MAX — после первых 10 подряд, вместе во всех процессах этого профиля; `0` — без ограничения ([ограничения и ожидания](limits.md)) | `MAX_REQUESTS_PER_MINUTE` | `20` |
-| `serve` | запускать ли `max serve` в фоне, когда команде нужен MAX, а сервера нет. С `MAX_TOKEN` сервер не запускается. Только для личного аккаунта | `--serve`, `--no-serve` | `true` |
-| `transcribeModel` | какой моделью `max messages transcribe` распознаёт речь. **Только в `defaults`** | `--model` у `messages transcribe` и рядом с `--transcribe` | `gigaam-v3` |
+| `serve` | запускать ли `max personal serve` в фоне, когда команде нужен MAX, а сервера нет. С `MAX_TOKEN` сервер не запускается. Только для личного аккаунта | `--serve`, `--no-serve` | `true` |
+| `transcribeModel` | какой моделью `max personal messages transcribe` распознаёт речь. **Только в `defaults`** | `--model` у `messages transcribe` и рядом с `--transcribe` | `gigaam-v3` |
 | `readOtherBots` | может ли бот читать копии других ботов, когда команда просит это `--all-bots` или `--bots`: `false`, `true` — всех, или список профилей ботов. **Только в разделе `bot`** ([боты](bot.md)) | —; `--all-bots` и `--bots` просят, поле разрешает | `false` |
 | `updateCheck` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | —; выключают `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER`, `CI` | `true` |
 | `skillHint` | раз в сутки говорить агенту в stderr, что навыка `max` у него нет или он старше программы и что его ставит `max skill install`. Агента узнаём по переменной `AI_AGENT` или `CLAUDECODE`. **Только в `defaults`** | — | `true` |
@@ -155,7 +156,7 @@ max config show --json     # то же одним объектом
 
 **`--page` и `--all` поля не имеют, и это намеренно.** Номер страницы, записанный в файл, нужен
 ровно один раз и потом мешает каждому следующему запуску. То же про `--order` у
-`max contacts list`: настройка `contactOrder` была бы вторым написанием того же самого. `--limit` поле
+`max personal contacts list`: настройка `contactOrder` была бы вторым написанием того же самого. `--limit` поле
 имеет, потому что «сколько показывать» — это привычка, а не разовый выбор.
 
 ## Права доступа
@@ -207,9 +208,9 @@ max config show --json     # то же одним объектом
 `account.sessions.end`. Автоответы не отправляют, пока вы не разрешите: `replies.send` — `deny`.
 
 ```sh
-max config set permissions.messages.delete allow     # удалять без вопроса
-max config set permissions.messages.send ask         # спрашивать перед каждой отправкой
-max config unset permissions.messages.delete         # вернуть значение по умолчанию
+max personal config set permissions.messages.delete allow     # удалять без вопроса
+max personal config set permissions.messages.send ask         # спрашивать перед каждой отправкой
+max personal config unset permissions.messages.delete         # вернуть значение по умолчанию
 ```
 
 ### Вопрос перед изменением
@@ -249,7 +250,7 @@ max config migrate
 ## Изменить, не открывая файл
 
 ```sh
-max config set limit 50                 # профилю по умолчанию
+max personal config set limit 50        # профилю personal
 max work config set record true         # профилю work
 max config set keepRunsForDays 7 --defaults   # всем профилям сразу
 max work config unset limit             # убрать; снова решает defaults или встроенное
@@ -259,7 +260,7 @@ max config set --personal --defaults limit 30 # всем личным аккау
 max config set defaultProfile work      # какой профиль без первого слова
 ```
 
-Значение проверяется той же схемой, что и при чтении, **до записи**: `max config set limit 0`
+Значение проверяется той же схемой, что и при чтении, **до записи**: `max personal config set limit 0`
 откажет, и файл останется прежним. `serve`, `senderColors`, `catchUpMarksRead`, `searchCatchUp` и
 `mcpTools` с `--bot` не принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного, а
 старое `mcpTools` относится только к личному аккаунту.
@@ -270,7 +271,7 @@ max config set defaultProfile work      # какой профиль без пе�
 через запятую — так по умолчанию — или `none`) хранятся не в файле настроек, а в общем архиве
 сообщений: они одни на все профили и на оба мессенджера. Поэтому `--defaults`, `--personal` и `--bot`
 с ними не принимаются, а под `MAX_PROFILE_LOCK` их менять нельзя. `config unset` возвращает встроенное
-значение. После смены выполните `max store reindex` — см.
+значение. После смены выполните `max personal store reindex` — см.
 [обслуживание архива](archive.md#обслуживание-архива).
 
 ## Опечатка — это ошибка, а не умолчание
@@ -298,10 +299,10 @@ whole number, 1 or more, not "20"`.
 | `MAX_TIMEOUT` | ограничение на команду целиком, на всю сессию оболочки; то же, что `--timeout` |
 | `MAX_REQUESTS_PER_MINUTE` | то же, что `requestsPerMinute`, и сильнее файла |
 | `MAX_TOKEN` | токен напрямую, в обход ключницы — для CI и разовых запусков |
-| `MAX_BOT_TOKEN` | токен бота для `max bot`, в обход ключницы |
+| `MAX_BOT_TOKEN` | токен бота для `max sales bot`, в обход ключницы |
 | `MAX_CONFIG_DIR` | где лежат `config.json` и, при отсутствии ключницы, файл с токеном |
 | `MAX_STATE_DIR` | где лежат состояние профилей и каталог `runs/` |
-| `MAX_CACHE_DIR` | только прежний кэш: `max doctor` ищет там оставшийся файл. Для совместимости всё ещё меняет запись в ключнице; для общей копии используйте `MESSAGING_STORE` |
+| `MAX_CACHE_DIR` | только прежний кэш: `max personal doctor` ищет там оставшийся файл. Для совместимости всё ещё меняет запись в ключнице; для общей копии используйте `MESSAGING_STORE` |
 | `MESSAGING_STORE` | файл общей локальной копии чатов, сообщений и расшифровок |
 | `NO_COLOR` | выключает цвет, как и в любой другой программе |
 | `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER` | не спрашивать npm о новой версии; `CI` действует так же |
@@ -324,8 +325,8 @@ export MAX_CONFIG_DIR=/tmp/max-try/config
 export MAX_STATE_DIR=/tmp/max-try/state
 export MESSAGING_STORE=/tmp/max-try/wirecat.db
 
-max setup            # этот токен не виден обычной установке
-max chats list
+max personal setup            # этот токен не виден обычной установке
+max personal chats list
 ```
 
 > ⚠ И обратно тоже: **обычная установка не видит эту сессию**. Если переменные заданы в одном окне
@@ -350,7 +351,7 @@ max chats list
 | `mcpTools` | массив `contacts`, `polls`, `groups`, `profile`; старый формат | личный аккаунт |
 | `readOtherBots` | boolean или массив имён профилей | только `bot` |
 | `updateCheck`, `skillHint` | boolean | только `defaults` |
-| `transcribeModel` | строковый id из `max models audio list` | только `defaults` |
+| `transcribeModel` | строковый id из `max personal models audio list` | только `defaults` |
 | `embeddingProvider` | `local` или `openai` | профиль |
 | `embeddingModel`, `analysisModel` | непустая строка, не более 200 символов | профиль |
 | `embeddingBaseUrl`, `analysisBaseUrl` | URL HTTP(S) без credentials, query и fragment | профиль |

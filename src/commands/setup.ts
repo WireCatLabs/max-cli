@@ -68,22 +68,23 @@ export const setupCommand = (): Command =>
     .addHelpText(
       "after",
       "\nExamples:\n" +
-        "  max setup                         Guided QR login in your local terminal\n" +
-        "  max setup --agent codex           Install the skill for Codex\n" +
-        "  max work setup --agent claude     Set up a separate work profile\n" +
-        "  max setup --method qr-chrome      Log in through web.max.ru in Chromium\n" +
-        "  max setup --method sms            Enter your phone number in that browser\n" +
-        "  max setup --method token          Import a token at a hidden prompt or from stdin\n" +
+        "  max personal setup                     Guided QR login in your local terminal\n" +
+        "  max personal setup --agent codex       Install the skill for Codex\n" +
+        "  max work setup --agent claude          Set up a separate work profile\n" +
+        "  max personal setup --method qr-chrome  Log in through web.max.ru in Chromium\n" +
+        "  max personal setup --method sms        Enter your phone number in that browser\n" +
+        "  max personal setup --method token      Import a token at a hidden prompt or from stdin\n" +
+        "\nThe first word names the profile; any name works, and every later command repeats it.\n" +
         "\nAllow about 5 minutes. Scan the QR with MAX on your phone.\n" +
         "Keep tokens and passwords in the local terminal, never in command arguments.\n" +
         "Agents: read `max skill show` before login. QR/browser login needs a local terminal.\n" +
         "Existing sessions are checked without another login. Machine mode skips agent installation\n" +
         "unless --agent is given. Bot accounts use `max <profile> bot auth set` separately.\n" +
         "\nSetup checks five chats. Choose a chat and how much history to fetch before:\n" +
-        "  max store fetch <chat> --last 100\n" +
+        "  max personal messages sync <chat> --last 100\n" +
         "Setup starts no background service and downloads no message history.\n" +
         "\nWindows: use max.cmd or npm.cmd if PowerShell blocks scripts. Without PATH:\n" +
-        "  npm.cmd exec --yes --package=@wirecat/max-cli -- max setup\n",
+        "  npm.cmd exec --yes --package=@wirecat/max-cli -- max personal setup\n",
     )
     .addOption(
       new Option("--agent <agent>", "install the skill for this agent; asks at a terminal, otherwise none").choices(
@@ -163,7 +164,7 @@ export const setupCommand = (): Command =>
         const next = {
           instructions: `${runner}skill show`,
           chats: `${runner}chats list --limit 5`,
-          history: `${runner}store fetch <chat> --last 100`,
+          history: `${runner}messages sync <chat> --last 100`,
           ...(agent === "none" ? { skill: `${runner}skill install` } : {}),
         }
         return {

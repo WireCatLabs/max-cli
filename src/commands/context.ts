@@ -9,7 +9,7 @@ import { MAX_APP } from "../app.js"
 import type { BotTokenStore } from "../bot/auth.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
-import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
+import { type GlobalFlags, type ResolveOptions, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
@@ -132,15 +132,16 @@ export interface CommandContext {
  * what `commander` happened to parse.
  *
  */
-export const forCommand = (command: Command): CommandContext =>
-  contextFor(command.optsWithGlobals<GlobalFlags & { offline?: boolean }>(), environmentOf(command))
+export const forCommand = (command: Command, resolving: Pick<ResolveOptions, "needsProfile"> = {}): CommandContext =>
+  contextFor(command.optsWithGlobals<GlobalFlags & { offline?: boolean }>(), environmentOf(command), resolving)
 
 /** The same context from flags already parsed — for `max mcp`, whose calls arrive without argv. */
 export const contextFor = (
   flags: GlobalFlags & { offline?: boolean; yes?: boolean; allowDangerous?: boolean },
   environment: Environment = {},
+  resolving: Pick<ResolveOptions, "needsProfile"> = {},
 ): CommandContext => {
-  const settings = resolveSettings(flags, { env: environment.env ?? process.env })
+  const settings = resolveSettings(flags, { env: environment.env ?? process.env, ...resolving })
   const { renderer, format, color, streams } = resolveOutput({
     ...settings,
     env: environment.env ?? process.env,

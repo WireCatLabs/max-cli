@@ -19,13 +19,13 @@
 
 | Задача | Команда |
 | --- | --- |
-| Отправить файл, фото, видео или голосовое | `max messages send --file`, `--voice` |
-| Скачать файлы сообщения или чата | `max messages download` |
-| Прочитать текст из сохранённых файлов на этом компьютере | `max attachments extract` |
-| Узнать, каким файлам ещё нужен текст | `max attachments list --needs-text` |
-| Сохранить текст, который прочитал агент | `max attachments text set` |
-| Найти сообщение по тексту его файла | `max search messages 'content:…'` |
-| Массово распознать сканы внешней моделью | `max attachments extract --ocr` |
+| Отправить файл, фото, видео или голосовое | `max personal messages send --file`, `--voice` |
+| Скачать файлы сообщения или чата | `max personal messages download` |
+| Прочитать текст из сохранённых файлов на этом компьютере | `max personal attachments extract` |
+| Узнать, каким файлам ещё нужен текст | `max personal attachments list --needs-text` |
+| Сохранить текст, который прочитал агент | `max personal attachments text set` |
+| Найти сообщение по тексту его файла | `max personal search messages 'content:…'` |
+| Массово распознать сканы внешней моделью | `max personal attachments extract --ocr` |
 
 ## Что можно отправить
 
@@ -61,8 +61,8 @@
 | Стикер, событие, опрос или вложение без доступной ссылки/идентификатора | Пропускает; тип указан среди пропущенных вложений |
 
 ```sh
-max messages download "Учебная группа" 204 --output-dir ./files --json
-max attachments list --chat "Учебная группа" --needs-text --json
+max personal messages download "Учебная группа" 204 --output-dir ./files --json
+max personal attachments list --chat "Учебная группа" --needs-text --json
 ```
 
 Сохранённый `localPath` в ответе — путь к файлу на компьютере, где работает `max`.
@@ -153,10 +153,10 @@ npm install -g unpdf mammoth @napi-rs/canvas
 примерно такие команды:
 
 ```sh
-max attachments list --chat "Учебная группа" --needs-text --json
+max personal attachments list --chat "Учебная группа" --needs-text --json
 # Агент открывает localPath, читает все страницы и сохраняет буквальный текст в scan.txt.
-max attachments text set "Учебная группа" 204 --attachment 1 --text-file ./scan.txt --json
-max search messages 'content:умножение' --chat "Учебная группа" --offline --json
+max personal attachments text set "Учебная группа" 204 --attachment 1 --text-file ./scan.txt --json
+max personal search messages 'content:умножение' --chat "Учебная группа" --offline --json
 ```
 
 `--attachment` выбирает один файл сообщения, где их несколько; счёт с 1. Получить байты и
@@ -215,7 +215,7 @@ Anthropic и совместимого сервера, хранение ключ�
 в [руководстве по внешним моделям](external-models.md). После настройки:
 
 ```sh
-max attachments extract --chat "Учебная группа" --ocr --concurrency 4 --limit 20 --json
+max personal attachments extract --chat "Учебная группа" --ocr --concurrency 4 --limit 20 --json
 ```
 
 Повтор использует хеш файла и цель модели; хороший сохранённый текст остаётся при ошибке,
@@ -253,5 +253,5 @@ API OCR принимает PDF до 20 страниц, изображения д
 `MESSAGING_BATCH_MAX_ERROR_PERCENT` задаёт целый процент от 1 до 100. Ограничение частоты или отказ
 авторизации останавливает раньше; выполняющиеся параллельные запросы могут ещё завершиться.
 После паузы сервера повторите только незавершённое. Ошибки и частичные запуски ищутся через
-`max runs search --status partial --json` или `max_read` с `command: "runs search"` в MCP
+`max personal runs search --status partial --json` или `max_read` с `command: "runs search"` в MCP
 ([диагностика](diagnostics.md)).

@@ -44,6 +44,8 @@ process.env.TMPDIR = sandbox
 // Read before the keyring, so a token exported in the shell would log the suite in to the real account.
 delete process.env.MAX_TOKEN
 delete process.env.MAX_PROFILE_LOCK
+// No profile is ever assumed; a test about "none named" removes this from its own env.
+process.env.MAX_PROFILE = "default"
 process.env.MAX_TEST_SANDBOX = "1"
 process.env.MAX_TEST_ARGV_LOG = ARGV_LOG
 for (const key of Object.keys(process.env)) {

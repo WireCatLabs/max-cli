@@ -105,6 +105,7 @@ export const maxMessenger: Messenger = {
       {
         ...(options.env === undefined ? {} : { env: options.env }),
         ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+        ...(options.needsProfile === undefined ? {} : { needsProfile: options.needsProfile }),
       },
     )
     return {
