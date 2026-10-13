@@ -84,7 +84,7 @@ describe("max bot auth", () => {
     expect((await max(["staging", "bot", "me", "--json"])).code).toBe(0)
     const missing = await max(["bot", "me", "--json"])
     expect(missing.code).not.toBe(0)
-    expect(missing.stdout + missing.stderr).toContain("max bot auth set")
+    expect(missing.stdout + missing.stderr).toContain("max default bot auth set")
   })
 
   it("forgets the profile's token on remove, without asking MAX, and leaves other profiles' tokens", async () => {

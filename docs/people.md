@@ -18,20 +18,20 @@
 
 | Задача | Команда |
 | --- | --- |
-| Узнать, кто это и где вы с ним переписываетесь | `max contacts profile` |
-| Прочитать, что он писал, во всех чатах или в названных | `max contacts context` |
-| Проверить, похож ли аккаунт на бота, фейк или спамера | `max contacts check` |
-| Проверить самых подозрительных участников группы | `max chats members audit --deep` |
-| Записать, что аккаунт в MAX и аккаунт в Telegram — один человек | `max contacts link` |
-| Вести своё имя и заметки о человеке | `max contacts alias`, `max contacts notes` |
+| Узнать, кто это и где вы с ним переписываетесь | `max personal contacts profile` |
+| Прочитать, что он писал, во всех чатах или в названных | `max personal contacts context` |
+| Проверить, похож ли аккаунт на бота, фейк или спамера | `max personal contacts check` |
+| Проверить самых подозрительных участников группы | `max personal chats members audit --deep` |
+| Записать, что аккаунт в MAX и аккаунт в Telegram — один человек | `max personal contacts link` |
+| Вести своё имя и заметки о человеке | `max personal contacts alias`, `max personal contacts notes` |
 
 Все опции этих команд — в [справочнике команд для контактов](commands.md#max-contacts).
 
 ## Кто это: `contacts profile`
 
 ```sh
-max contacts profile 20000002
-max contacts profile 20000002 --json
+max personal contacts profile 20000002
+max personal contacts profile 20000002 --json
 ```
 
 Команда показывает, что MAX сообщает о человеке, и сколько его сообщений лежит в локальной копии
@@ -85,7 +85,7 @@ max contacts profile 20000002 --json
 настоящего первого сообщения. Чтобы дополнить, скачайте чат:
 
 ```sh
-max store fetch "Книжный клуб"
+max personal store fetch "Книжный клуб"
 ```
 
 ## Что он писал: `contacts context`
@@ -95,14 +95,14 @@ max store fetch "Книжный клуб"
 подключается и ничего не отмечает прочитанным.
 
 ```sh
-max contacts context 20000002
+max personal contacts context 20000002
 ```
 
 С `--chat` — его последние сообщения в каждом названном чате, от старых к новым, по 20 на чат:
 
 ```sh
-max contacts context 20000002 --chat "Книжный клуб" --chat "Работа" --limit 10
-max contacts context 20000002 --chat "Книжный клуб" --refresh
+max personal contacts context 20000002 --chat "Книжный клуб" --chat "Работа" --limit 10
+max personal contacts context 20000002 --chat "Книжный клуб" --refresh
 ```
 
 ```json
@@ -133,7 +133,7 @@ max contacts context 20000002 --chat "Книжный клуб" --refresh
 ## Бот, фейк или спамер: `contacts check`
 
 ```sh
-max contacts check 20000002
+max personal contacts check 20000002
 ```
 
 ```json
@@ -180,8 +180,8 @@ max contacts check 20000002
 ## Участники группы: `chats members audit --deep`
 
 ```sh
-max chats members audit "Книжный клуб"
-max chats members audit "Книжный клуб" --deep 10
+max personal chats members audit "Книжный клуб"
+max personal chats members audit "Книжный клуб" --deep 10
 ```
 
 `chats members audit` оценивает всех участников по списку участников и локальной копии, без
@@ -195,8 +195,8 @@ max chats members audit "Книжный клуб" --deep 10
 и аккаунт в Telegram — один человек, запишите это:
 
 ```sh
-max contacts link 20000002 telegram:1000001
-max contacts unlink 20000002
+max personal contacts link 20000002 telegram:1000001
+max personal contacts unlink 20000002
 ```
 
 После этого `contacts context` без `--chat` собирает оба аккаунта: общие чаты и сообщения из MAX и
@@ -207,14 +207,14 @@ MAX эта запись не меняет.
 ## Свои имена и заметки: `contacts alias`, `contacts notes`
 
 ```sh
-max contacts alias set "Борис Пример" Боря            # ваше имя для человека, только на этом компьютере
-max contacts alias rm "Борис Пример"
-max contacts notes add "Борис Пример" --file note.txt  # или текст из stdin
-max contacts notes list "Борис Пример"
-max contacts notes edit "Борис Пример" <id> --revision 1 --file note.txt
-max contacts notes remove "Борис Пример" <id>
-max contacts show "Борис Пример" --with-notes
-max contacts list --search-notes квартира             # люди, в чьих заметках есть этот текст
+max personal contacts alias set "Борис Пример" Боря            # ваше имя для человека, только на этом компьютере
+max personal contacts alias rm "Борис Пример"
+max personal contacts notes add "Борис Пример" --file note.txt  # или текст из stdin
+max personal contacts notes list "Борис Пример"
+max personal contacts notes edit "Борис Пример" <id> --revision 1 --file note.txt
+max personal contacts notes remove "Борис Пример" <id>
+max personal contacts show "Борис Пример" --with-notes
+max personal contacts list --search-notes квартира             # люди, в чьих заметках есть этот текст
 ```
 
 Псевдонимы и заметки хранятся в локальной копии и никогда не уходят в MAX. Псевдоним действует

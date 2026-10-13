@@ -14,8 +14,12 @@ max [профиль] [опции] <команда> <действие> [аргу�
 ```
 
 **Первое слово — профиль**, если оно не совпадает с именем команды: `max personal chats list`
-читает чаты профиля `personal`, а `max chats list` — профиля по умолчанию. То же самое говорит
-переменная `MAX_PROFILE`; без неё профиль называется `default`.
+читает чаты профиля `personal`. То же самое говорит переменная `MAX_PROFILE` на весь сеанс
+оболочки, а `defaultProfile` в файле настроек — насовсем (`max config set defaultProfile personal`).
+**Профиль никогда не подразумевается**: если его не назвать, команда, которой нужен аккаунт,
+останавливается и перечисляет профили этого компьютера — даже если профиль один. Первый вход тоже
+с именем: `max personal setup`. Без профиля работают только команды, которым аккаунт не нужен:
+`--help`, `--version`, `commands`, `skill show`, `account list`, `config show`.
 
 ⚠ Описания команд и опций ниже — ровно те, что печатает `max --help`, то есть по-английски. Это
 не недоработка перевода: текст живёт в программе, и второй его копии здесь быть не должно.
@@ -1917,7 +1921,7 @@ max stats messages show [query] [options]
 | `--max-messages <n>` | fetch at most this many messages total (default: 500). |
 | `--by <chat\|sender\|day\|hour>` | what to count by (default: chat). |
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
-| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
+| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query. |
 | `--limit <n>` | how many rows. |
 | `--timezone <zone>` | the IANA timezone for calendar days and hours. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
@@ -1942,7 +1946,7 @@ max stats messages counters show [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--source <messenger>` | held accounts of this messenger; refresh uses the active account. |
+| `--source <accounts>` | held accounts of this messenger; refresh uses the active account. |
 | `--exact` | bare words match exact forms. |
 | `--timezone <zone>` | IANA timezone for query dates. |
 | `--selection <json>` | pinned counter-targets selection from counters show; conflicts with query and scope. |
@@ -1967,7 +1971,7 @@ max stats messages counters refresh [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--source <messenger>` | held accounts of this messenger; refresh uses the active account. |
+| `--source <accounts>` | held accounts of this messenger; refresh uses the active account. |
 | `--exact` | bare words match exact forms. |
 | `--timezone <zone>` | IANA timezone for query dates. |
 | `--selection <json>` | pinned counter-targets selection from counters show; conflicts with query and scope. |
@@ -1992,7 +1996,7 @@ max stats messages unanswered [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--source <accounts>` | every held account of this messenger; personal, bots or all. |
 | `--exact` | bare words match exact forms rather than stems. |
 | `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
@@ -2015,7 +2019,7 @@ max stats messages discussion [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--source <accounts>` | every held account of this messenger; personal, bots or all. |
 | `--exact` | bare words match exact forms rather than stems. |
 | `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
@@ -2046,7 +2050,7 @@ max stats messages top [query] [options]
 | `--weights <json>` | the complete component weights; replaces preset weights. |
 | `--message-kind <kind>` | select proven all, posts or comments before ranking. Одно из: `all`, `posts`, `comments`. |
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--source <accounts>` | every held account of this messenger; personal, bots or all. |
 | `--timezone <zone>` | the IANA timezone for dates and active days. |
 | `--exact` | bare words match exact forms rather than stems. |
 | `--limit <n>` | ranked rows, 1–100. |
@@ -2090,7 +2094,7 @@ max stats contacts responses [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--source <accounts>` | every held account of this messenger; personal, bots or all. |
 | `--exact` | bare words match exact forms rather than stems. |
 | `--saved <name\|id>` | run a saved report of this kind; typed report options replace stored options. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
@@ -2120,7 +2124,7 @@ max stats contacts top [query] [options]
 | `--weights <json>` | the complete component weights; replaces preset weights. |
 | `--message-kind <kind>` | select proven all, posts or comments before ranking. Одно из: `all`, `posts`, `comments`. |
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--source <messenger>` | every held account of this messenger; personal, bots or all. |
+| `--source <accounts>` | every held account of this messenger; personal, bots or all. |
 | `--timezone <zone>` | the IANA timezone for dates and active days. |
 | `--exact` | bare words match exact forms rather than stems. |
 | `--limit <n>` | ranked rows, 1–100. |
@@ -2792,7 +2796,7 @@ find things by text: one resource when you know it (mail, messages, notes), or s
 
 ### `max search all`
 
-search messenger messages, mail and notes in the local store, and the messenger's server for messages (--backend; mail and notes are local only), and with --meetings a meeting account's transcripts — best match first; not tasks, people, memories or projects. Use it when you do not know where something was written; search mail, messages or notes reads one kind with all its fields
+search messenger messages, mail and notes in the local store, and the messenger's server for messages (--backend; mail and notes are local only), and a meeting account's transcripts when --source names one — best match first; not tasks, people, memories or projects. Use it when you do not know where something was written; search mail, messages or notes reads one kind with all its fields
 
 ```sh
 max search all <query> [options]
@@ -2804,10 +2808,11 @@ max search all <query> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--only <resources>` | only these resources, separated by commas: messages, mail, notes; meetings with --meetings. |
-| `--meetings [provider:account]` | also search one meeting account; with no value, the one stored account that holds meetings (put it after the query). |
-| `--max-meetings <n\|all>` | how many meetings --meetings looks through, newest first; all looks through every one (default 100). |
+| `--only <resources>` | only these resources, separated by commas: messages, mail, notes; meetings when --source names a meeting account. |
+| `--source <accounts>` | only these accounts, separated by commas: provider:account as a hit shows it, a provider, a kind or group:<name>; each resource reads the ones of its kind, and meetings only when it names one. |
+| `--max-meetings <n\|all>` | how many of the meeting account's meetings to look through, newest first; all looks through every one (default 100). |
 | `--limit <n>` | how many. |
+| `--offset <n>` | skip this many, for the next page. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
@@ -2839,9 +2844,10 @@ max search messages [query] [options]
 | `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
-| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice,email:me@example.com. |
+| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice,email:me@example.com. |
 | `--type <text\|voice\|file>` | only messages of this type: text alone, a voice message, or a file. |
 | `--limit <n>` | how many. |
+| `--offset <n>` | skip this many, for the next page. |
 | `--newest` | newest first instead of best first. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
@@ -2866,8 +2872,9 @@ max search mail [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this mail thread, by id or subject. |
-| `--account <address>` | only this mail account, by its address; every mail account when unset. |
+| `--source <accounts>` | only these mail accounts, separated by commas: email:<address> as a hit shows it, email, mail or group:<name>; every mail account when unset. |
 | `--limit <n>` | how many. |
+| `--offset <n>` | skip this many, for the next page. |
 | `--newest` | newest first instead of best first. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
@@ -2888,7 +2895,7 @@ max search notes <query> [options]
 | Опция | Что делает |
 |---|---|
 | `--type <internal\|file>` | only notes written in memo, or only notes from a folder. |
-| `--folder <id>` | only this notes folder, by its id; repeat it for more. |
+| `--source <accounts>` | only these notes accounts, separated by commas: notes:internal for notes written in memo, notes:<folder id> as a hit shows it, notes, documents or group:<name>. |
 | `--tag <tag>` | only notes with this tag. |
 | `--filter <query>` | a query every hit must also match; it does not change the search by meaning. |
 | `--limit <n>` | how many. |
@@ -2922,7 +2929,7 @@ max search conversations <query> [options]
 | `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
 | `--since-time <time>` | only those still going at this ISO 8601 time, or 30m / 2h / 1d ago, or later. |
 | `--filter <query>` | strict Lucene filter: any message in a conversation must match; does not change the meaning query. |
-| `--source <source>` | accounts to search: personal, bots, all, a provider, or a list like group:work,telegram:Alice,email:me@example.com; defaults to the active account. |
+| `--source <accounts>` | accounts to search: personal, bots, all, a provider, or a list like group:work,telegram:Alice,email:me@example.com; defaults to the active account. |
 | `--timezone <zone>` | IANA timezone for filter dates; system timezone by default. |
 | `--limit <n>` | how many. |
 | `--refresh` | first build and embed, on this machine, the chats in scope that changed or were never built — within --max-chats and --max-chunks. |
@@ -2947,7 +2954,7 @@ max searches create <name> [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat — the same as chat: in the query; a chat: its id, or part of its title. |
-| `--source <messenger>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice,email:me@example.com. |
+| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice,email:me@example.com. |
 | `--limit <n>` | how many. |
 | `--newest` | newest first instead of best first. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |

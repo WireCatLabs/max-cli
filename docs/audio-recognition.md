@@ -17,18 +17,18 @@
 
 | Задача | Команда |
 | --- | --- |
-| Посмотреть модели, их размер и что уже скачано | `max models audio list` |
-| Скачать модель | `max models audio download <модель>` |
-| Расшифровать одно голосовое | `max messages transcribe <чат> <сообщение>` |
+| Посмотреть модели, их размер и что уже скачано | `max personal models audio list` |
+| Скачать модель | `max personal models audio download <модель>` |
+| Расшифровать одно голосовое | `max personal messages transcribe <чат> <сообщение>` |
 | Расшифровать голосовые в показанном списке | `--transcribe` у `messages list` и `inbox` |
 | Выбрать модель для всех следующих запусков | `max config set --defaults transcribeModel <модель>` |
 
 ## Быстрый запуск
 
 ```sh
-max models audio list --json
-max models audio download gigaam-v3
-max messages transcribe "Учебная группа" 204 --json
+max personal models audio list --json
+max personal models audio download gigaam-v3
+max personal messages transcribe "Учебная группа" 204 --json
 ```
 
 `max` получает запись из MAX, закрывает соединение и только потом запускает модель.
@@ -47,8 +47,8 @@ max messages transcribe "Учебная группа" 204 --json
 знает язык записи. Для одного запуска:
 
 ```sh
-max models audio download parakeet-v3
-max messages transcribe "Учебная группа" 204 --model parakeet-v3 --json
+max personal models audio download parakeet-v3
+max personal messages transcribe "Учебная группа" 204 --model parakeet-v3 --json
 ```
 
 Для всех следующих запусков:
@@ -63,8 +63,8 @@ max config set --defaults transcribeModel parakeet-v3
 ## Несколько сообщений
 
 ```sh
-max messages list "Учебная группа" --limit 20 --transcribe --json
-max inbox --transcribe --json
+max personal messages list "Учебная группа" --limit 20 --transcribe --json
+max personal inbox --transcribe --json
 ```
 
 `--transcribe` обрабатывает только голосовые из показанного списка, у которых ещё нет текста.

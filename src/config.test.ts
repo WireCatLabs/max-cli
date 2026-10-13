@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { levelFor } from "@wirecat/cli-messaging/sends"
@@ -11,7 +11,9 @@ const withConfig = (contents: string): void => {
   writeFileSync(join(configDir, "config.json"), contents)
 }
 
-const settings = (flags = {}, env: NodeJS.ProcessEnv = {}) => resolveSettings(flags, { env, configDir })
+// Most of these are about the values, not the profile rule: "no profile named" resolves as `default` here.
+const settings = (flags = {}, env: NodeJS.ProcessEnv = {}) =>
+  resolveSettings(flags, { env, configDir, needsProfile: false })
 
 beforeEach(() => {
   configDir = mkdtempSync(join(tmpdir(), "max-config-"))
@@ -28,8 +30,19 @@ it("uses the shared request pace setting and its environment override, with zero
 })
 
 describe("where a setting came from", () => {
+  it("**assumes no profile**: none named is an error listing max's own profiles, or saying how to make one", () => {
+    const env = { MAX_STATE_DIR: mkdtempSync(join(tmpdir(), "max-state-")) }
+    const strict = () => resolveSettings({}, { env, configDir })
+    expect(strict).toThrow("there is none on this computer yet — create one with `max personal setup`")
+
+    mkdirSync(join(env.MAX_STATE_DIR, "profiles"))
+    writeFileSync(join(env.MAX_STATE_DIR, "profiles", "work.json"), "{}")
+    expect(strict).toThrow("name a profile: `max <profile> …` — profiles here: work (or set MAX_PROFILE)")
+    expect(resolveSettings({ profile: "work" }, { env, configDir }).profile).toBe("work")
+  })
+
   it("names the layer that decided the profile, so nobody has to re-derive the order", () => {
-    expect(settings().sources.profile).toBe("default")
+    expect(settings().sources.profile).toBe("none named")
     expect(settings({}, { MAX_PROFILE: "work" }).sources.profile).toBe("MAX_PROFILE")
     expect(settings({ profile: "work" }, { MAX_PROFILE: "other" }).sources.profile).toBe("first word")
   })
@@ -283,7 +296,7 @@ describe("where each setting came from", () => {
       defaults: { limit: 20 },
       profiles: {},
     })
-    expect(resolved.sources).toMatchObject({ limit: "config file: defaults", profile: "default", record: "default" })
+    expect(resolved.sources).toMatchObject({ limit: "config file: defaults", profile: "none named", record: "default" })
   })
 
   it("tells a flag from the file from the built-in value", () => {

@@ -184,6 +184,8 @@ it("keeps a native read child override and checks nested native read groups", as
 it("allows migration preview under a profile lock and refuses the whole-file write", async () => {
   save({ profiles: { work: { readOnly: true } } })
   const before = readFileSync(configPath(), "utf8")
+  const { MAX_PROFILE } = process.env
+  delete process.env.MAX_PROFILE
   process.env.MAX_PROFILE_LOCK = "work"
   try {
     expect((await cli(["config", "migrate", "--json"])).code).toBe(5)
@@ -191,6 +193,7 @@ it("allows migration preview under a profile lock and refuses the whole-file wri
     expect(readFileSync(configPath(), "utf8")).toBe(before)
   } finally {
     delete process.env.MAX_PROFILE_LOCK
+    process.env.MAX_PROFILE = MAX_PROFILE
   }
 })
 

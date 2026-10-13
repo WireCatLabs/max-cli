@@ -285,7 +285,7 @@ describe("MAX guided setup", () => {
   )("makes instructions available without credentials: %j", async (argv) => {
     const h = harness({ token: false })
     expect(await run(argv, h.environment)).toBe(0)
-    expect(h.streams.stdout.join("\n")).toContain("max setup")
+    expect(h.streams.stdout.join("\n")).toContain("max personal setup")
     expect(h.max.sent).toEqual([])
   })
 })

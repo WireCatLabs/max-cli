@@ -38,9 +38,9 @@
 интерактивный ввод, затем настройте назначение:
 
 ```sh
-max models text key set openai
-max config set models.ocr.provider openai
-max config set models.ocr.model gpt-4o-mini
+max personal models text key set openai
+max personal config set models.ocr.provider openai
+max personal config set models.ocr.model gpt-4o-mini
 max config show
 ```
 
@@ -51,7 +51,7 @@ max config show
 Если `baseUrl` не задан и не унаследован из `models.default`, используется стандартный OpenAI endpoint. Для проверки на небольшом объёме:
 
 ```sh
-max attachments extract --chat "Учебная группа" --ocr --concurrency 1 --limit 1 --json
+max personal attachments extract --chat "Учебная группа" --ocr --concurrency 1 --limit 1 --json
 ```
 
 `--limit 1` ограничивает число файлов, а не API-вызовов. PDF из нескольких сканированных
@@ -64,10 +64,10 @@ max attachments extract --chat "Учебная группа" --ocr --concurrency
 вашего значения, а не готовое имя модели.
 
 ```sh
-max models text key set anthropic
-max config set models.ocr.provider anthropic
-max config set models.ocr.model your-vision-model
-max config unset models.ocr.baseUrl
+max personal models text key set anthropic
+max personal config set models.ocr.provider anthropic
+max personal config set models.ocr.model your-vision-model
+max personal config unset models.ocr.baseUrl
 ```
 
 Последняя команда удаляет прежнее переопределение endpoint, если оно было задано.
@@ -80,10 +80,10 @@ OpenAI-совместимый endpoint использует адаптер `open
 текстовые запросы. Настройте URL без ключа, параметров запроса и фрагмента:
 
 ```sh
-max config set models.ocr.provider openai
-max config set models.ocr.model your-vision-model
-max config set models.ocr.baseUrl https://gateway.example.org/v1
-max models text key set gateway.example.org
+max personal config set models.ocr.provider openai
+max personal config set models.ocr.model your-vision-model
+max personal config set models.ocr.baseUrl https://gateway.example.org/v1
+max personal models text key set gateway.example.org
 ```
 
 Для нестандартного endpoint имя ключа — его host, включая порт, если он указан в URL.
@@ -106,7 +106,7 @@ max models text key set gateway.example.org
 запуска в POSIX-терминале, используя уже сохранённый ключ:
 
 ```sh
-MAX_MODELS_OCR_PROVIDER=openai MAX_MODELS_OCR_MODEL=gpt-4o-mini max attachments extract --chat "Учебная группа" --ocr --limit 1 --json
+MAX_MODELS_OCR_PROVIDER=openai MAX_MODELS_OCR_MODEL=gpt-4o-mini max personal attachments extract --chat "Учебная группа" --ocr --limit 1 --json
 ```
 
 В PowerShell задайте соответствующие `$env:MAX_MODELS_OCR_PROVIDER` и

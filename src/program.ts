@@ -119,9 +119,10 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     program.addHelpText(
       "after",
       "\nGetting started after installation:\n" +
-        "  max setup                    Guided personal-account login; allow about 5 minutes\n" +
-        "  max setup --agent codex      Connect the skill for your agent\n" +
-        "  max setup --help             Login methods, Windows advice and examples\n" +
+        "  max personal setup               Guided personal-account login; allow about 5 minutes\n" +
+        "  max personal setup --agent codex Connect the skill for your agent\n" +
+        "  max setup --help                 Login methods, Windows advice and examples\n" +
+        "\nEvery command names its profile first (`max personal chats list`), or MAX_PROFILE does.\n" +
         "\nAgents: read `max skill show` before login; `max commands --json` lists commands.\n" +
         "Choose a chat and how much history to fetch after setup.\n" +
         "Bots: `max <profile> bot auth set` connects a bot separately.\n",
@@ -141,7 +142,11 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     program.hook("preAction", (_root, action) => {
       const key = commandPermission(action)
       if (key) {
-        const settings = resolveSettings(rootOf(action).opts(), { kind: key.startsWith("bot.") ? "bot" : "personal" })
+        // The command's own context refuses an unnamed profile when it uses an account; this only checks levels.
+        const settings = resolveSettings(rootOf(action).opts(), {
+          kind: key.startsWith("bot.") ? "bot" : "personal",
+          needsProfile: false,
+        })
         assertReadable(settings, key)
         if (metaOf(action).mutates && metaOf(action).local && levelFor(settings.permissions, key).level === "readonly")
           throw new CliError("permission_error", `profile ${settings.profile} does not let ${key} write`, {

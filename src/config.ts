@@ -1,8 +1,9 @@
-import { CliError, loadConfigFile, saveConfigFile } from "@wirecat/cli-base"
+import { CliError, isCliError, loadConfigFile, saveConfigFile } from "@wirecat/cli-base"
 import { AI_ENTRIES, type AISettings, first, settingsFor } from "@wirecat/cli-messaging/cli"
 import { type Level, PERMISSIONS, type Permission } from "@wirecat/cli-messaging/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
+import { knownProfiles } from "./diagnose.js"
 import { usableProfileName } from "./profile.js"
 import { DEFAULT_MODEL, MODELS } from "./transcribe/models.js"
 
@@ -242,6 +243,7 @@ export type Source =
   | `MAX_${string}`
   | `config file: ${string}`
   | "default"
+  | "none named"
   | "resolved per purpose"
   | `config defaults: ${string}`
 export type SourcedSetting =
@@ -274,6 +276,8 @@ export interface ResolveOptions {
   kind?: ProfileKind
   /** Tests pass a temporary directory; nothing else should need this. */
   configDir?: string
+  /** `false` for a command that touches no account, so it runs with no profile named. */
+  needsProfile?: boolean
 }
 
 /**
@@ -295,8 +299,28 @@ export const resolveSettings = (flags: GlobalFlags = {}, options: ResolveOptions
     shared: _shared,
     offline: _offline,
     ...settings
-  } = sharedSettings.resolveSettings(flags, options)
+  } = withMaxProfiles(() => sharedSettings.resolveSettings(flags, options), options.env)
   return settings as Settings
+}
+
+/**
+ * The shared refusal lists the profiles it can see; a MAX session or bot lives in max's own state
+ * files, which only `knownProfiles` reads — so the list a person is shown here is that one.
+ */
+const withMaxProfiles = <T>(resolve: () => T, env: NodeJS.ProcessEnv = process.env): T => {
+  try {
+    return resolve()
+  } catch (error) {
+    const listed = isCliError(error) ? error.details.profiles : undefined
+    if (!Array.isArray(listed)) throw error
+    const here = [...new Set([...listed, ...knownProfiles({ env }).map(({ name }) => name)])].sort()
+    if (here.length === listed.length) throw error
+    throw new CliError(
+      "validation_error",
+      `name a profile: \`max <profile> …\` — profiles here: ${here.join(", ")} (or set MAX_PROFILE)`,
+      { profiles: here },
+    )
+  }
 }
 
 export const configuredProfiles = (options: ResolveOptions = {}): string[] => sharedSettings.configuredProfiles(options)

@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest"
 import { resolveSettings, type Settings } from "../config.js"
 import { renderPage, wholeNumber, window } from "./paging.js"
 
-const settingsWith = (over: Partial<Settings>): Settings => ({ ...resolveSettings({}, { env: {} }), ...over })
+const settingsWith = (over: Partial<Settings>): Settings => ({
+  ...resolveSettings({}, { env: { MAX_PROFILE: "default" } }),
+  ...over,
+})
 
 const rendered = (format: "json" | "jsonl" | "pretty", over: Partial<Settings>, hasMore: boolean) => {
   const streams = captureStreams()

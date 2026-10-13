@@ -41,7 +41,7 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 - [groups.md](groups.md) — группы, которые вы ведёте: сценарии с агентом, правила, проверка по ним
 - [people.md](people.md) — один человек: профиль, его сообщения по чатам, похож ли на бота
 - [recipes.md](recipes.md) — рецепты для агентов: сводка, отчёт, долги, неотвеченное, запуск по расписанию
-- [diagnostics.md](diagnostics.md) — `--trace`, `--record`, `max runs` — и чего в записи нет
+- [diagnostics.md](diagnostics.md) — `--trace`, `--record`, `max personal runs` — и чего в записи нет
 - [security.md](security.md) — что попадает на диск, а что не попадает никогда
 - [troubleshooting.md](troubleshooting.md) — по симптому: что видно на экране и что делать
 - [roadmap.md](roadmap.md) — что планируется

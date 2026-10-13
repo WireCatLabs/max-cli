@@ -8,7 +8,7 @@
 Прочитав эту страницу, вы сможете подготовить чат к поиску по темам, задавать вопросы своими словами,
 читать результаты и понимать, когда лучше подходит обычный поиск по словам. Поиск по темам использует
 только сообщения, которые `max` уже сохранил на этом компьютере, поэтому сначала скачайте историю:
-`max store fetch <чат>` ([скачать историю чата](archive.md#скачать-историю)).
+`max personal store fetch <чат>` ([скачать историю чата](archive.md#скачать-историю)).
 
 Термины этой страницы:
 
@@ -29,18 +29,18 @@
 
 | Задача | Команда |
 |---|---|
-| Найти обсуждение по теме — в одном чате или во всех подготовленных | `max search conversations "<вопрос>"` |
-| Посмотреть разговоры чата, новые сверху | `max conversations list --chat <чат>` |
-| Прочитать один разговор от начала до конца | `max conversations show <id>` |
-| Открыть весь разговор, в котором есть сообщение | `max conversations show <чат> <сообщение>` |
-| Найти другие разговоры о том же, во всех чатах | `max conversations related <чат> <сообщение>` |
-| Ограничить результат человеком, периодом или словом | `max search conversations "<вопрос>" --filter '<запрос>'` |
-| Узнать, что устарело, и догнать | `max conversations status`, `max search conversations "<вопрос>" --refresh` |
+| Найти обсуждение по теме — в одном чате или во всех подготовленных | `max personal search conversations "<вопрос>"` |
+| Посмотреть разговоры чата, новые сверху | `max personal conversations list --chat <чат>` |
+| Прочитать один разговор от начала до конца | `max personal conversations show <id>` |
+| Открыть весь разговор, в котором есть сообщение | `max personal conversations show <чат> <сообщение>` |
+| Найти другие разговоры о том же, во всех чатах | `max personal conversations related <чат> <сообщение>` |
+| Ограничить результат человеком, периодом или словом | `max personal search conversations "<вопрос>" --filter '<запрос>'` |
+| Узнать, что устарело, и догнать | `max personal conversations status`, `max personal search conversations "<вопрос>" --refresh` |
 | Попросить своего ИИ-агента точнее связать сообщения | `max skill show link-conversations` |
 
 ## Поиск по темам или поиск по словам?
 
-| | [Поиск по словам](search.md) (`max search messages`) | Поиск по темам (`max search conversations`) |
+| | [Поиск по словам](search.md) (`max personal search messages`) | Поиск по темам (`max personal search conversations`) |
 |---|---|---|
 | Что вы помните | точные слова, имя, дату, файл | только о чём шла речь |
 | Что находит | отдельные сообщения с вашими словами | целые разговоры о вашем вопросе |
@@ -66,12 +66,12 @@
 **Что происходит по шагам:**
 
 ```sh
-max store fetch "Книжный клуб"                  # 1. скачать историю, если её ещё нет
-max conversations build --chat "Книжный клуб"   # 2. разделить чат на разговоры
-max models text download e5-small               # 3. один раз: скачать модель, 135 МБ, общая с tg
-max conversations embed --chat "Книжный клуб"   # 4. посчитать вектор каждого куска
-max search conversations "где встречаемся" --chat "Книжный клуб"   # 5. спросить
-max conversations show 91                       # 6. прочитать найденный разговор
+max personal store fetch "Книжный клуб"                  # 1. скачать историю, если её ещё нет
+max personal conversations build --chat "Книжный клуб"   # 2. разделить чат на разговоры
+max personal models text download e5-small               # 3. один раз: скачать модель, 135 МБ, общая с tg
+max personal conversations embed --chat "Книжный клуб"   # 4. посчитать вектор каждого куска
+max personal search conversations "где встречаемся" --chat "Книжный клуб"   # 5. спросить
+max personal conversations show 91                       # 6. прочитать найденный разговор
 ```
 
 Шаги 2–4 выполняются на вашем компьютере и к MAX не обращаются. `embed` продолжает с места, где его
@@ -94,7 +94,7 @@ max conversations show 91                       # 6. прочитать найд
 
 ### 1. Build: разделить чат на разговоры
 
-`max conversations build` читает сохранённые сообщения чата от старых к новым и для каждого решает,
+`max personal conversations build` читает сохранённые сообщения чата от старых к новым и для каждого решает,
 какое прежнее сообщение оно продолжает. ИИ не используется, к MAX команда не обращается. Связи берутся
 в таком порядке:
 
@@ -114,7 +114,7 @@ max conversations show 91                       # 6. прочитать найд
 
 ### 2. Embed: превратить каждый кусок в вектор
 
-`max conversations embed` режет каждый разговор на куски около 1200 знаков, по границам сообщений.
+`max personal conversations embed` режет каждый разговор на куски около 1200 знаков, по границам сообщений.
 Каждая строка куска — «отправитель: текст». Сообщение длиннее куска делится на части внахлёст, чтобы
 модель прочитала всё длинное сообщение, а не только начало. Сообщения без текста ничего не добавляют.
 Затем модель превращает каждый кусок в вектор, и `max` его сохраняет. Сам текст куска второй раз не
@@ -122,7 +122,7 @@ max conversations show 91                       # 6. прочитать найд
 
 ### 3. Search: по смыслу и по словам одновременно
 
-`max search conversations` ищет ваш вопрос двумя способами и объединяет результаты:
+`max personal search conversations` ищет ваш вопрос двумя способами и объединяет результаты:
 
 - **По смыслу.** Вопрос тоже превращается в вектор. `max` сравнивает его с векторами всех кусков и
   оценивает каждый разговор по его самому близкому куску. У модели по умолчанию `e5-small` совпадение
@@ -152,7 +152,7 @@ max conversations show 91                       # 6. прочитать найд
 - номер разговора, когда он начался и кончился, сколько сообщений и людей, его первое сообщение;
 - `(messages 4185–4192)` — кусок, совпавший лучше всего (или сообщение, если нашли только по словам):
   с него и начинайте читать;
-- ссылка на сообщение (`msg:…`), которую принимают `max messages show` и `max messages context`;
+- ссылка на сообщение (`msg:…`), которую принимают `max personal messages show` и `max personal messages context`;
 - `stale`, если текст изменили после подсчёта вектора: оценка — для старого текста.
 
 С `--json` в ответе ещё есть `meaning` (`searched` или `unavailable`), `model` и `readiness`: какие чаты
@@ -161,11 +161,11 @@ max conversations show 91                       # 6. прочитать найд
 `conversations embed --chat <чат>`.
 
 ```sh
-max conversations list --chat "Книжный клуб" --since-time 7d
-max conversations show 91                       # один разговор, от старых к новым
-max conversations show "Книжный клуб" 204       # разговор, в котором сообщение 204
-max conversations related "Книжный клуб" 204    # другие разговоры о том же, во всех чатах
-max messages links "Книжный клуб" 204           # почему сообщение там, где оно есть
+max personal conversations list --chat "Книжный клуб" --since-time 7d
+max personal conversations show 91                       # один разговор, от старых к новым
+max personal conversations show "Книжный клуб" 204       # разговор, в котором сообщение 204
+max personal conversations related "Книжный клуб" 204    # другие разговоры о том же, во всех чатах
+max personal messages links "Книжный клуб" 204           # почему сообщение там, где оно есть
 ```
 
 `related` берёт векторы, которые сохранил `embed`, и модель не запускает, поэтому отвечает быстро. Это
@@ -176,7 +176,7 @@ max messages links "Книжный клуб" 204           # почему соо
 **Тему помните, слова — нет.**
 
 ```sh
-max search conversations "кто берёт еду на пикник"
+max personal search conversations "кто берёт еду на пикник"
 ```
 
 Поиск идёт во всех подготовленных чатах. Он может найти разговор, где писали «я возьму бутерброды» и
@@ -185,7 +185,7 @@ max search conversations "кто берёт еду на пикник"
 **Обсуждали на другом языке.**
 
 ```sh
-max search conversations "аренда квартиры" --chat "Valencia expats"
+max personal search conversations "аренда квартиры" --chat "Valencia expats"
 ```
 
 С моделью по умолчанию так находится и обсуждение на испанском — про «piso».
@@ -195,18 +195,18 @@ max search conversations "аренда квартиры" --chat "Valencia expats
 ищется по смыслу.
 
 ```sh
-max search conversations "бюджет поездки" --filter 'from:"Алиса Тестова" date:30d'
+max personal search conversations "бюджет поездки" --filter 'from:"Алиса Тестова" date:30d'
 ```
 
 ```sh
-max search conversations "условия договора" --filter 'has:file' --timezone Europe/Madrid
+max personal search conversations "условия договора" --filter 'has:file' --timezone Europe/Madrid
 ```
 
 **Начать с одного сообщения.** Вы нашли сообщение поиском по словам и хотите всё остальное на эту тему:
 
 ```sh
-max search messages '"вернули залог"' --chat "Valencia expats"
-max conversations related "Valencia expats" 5120
+max personal search messages '"вернули залог"' --chat "Valencia expats"
+max personal conversations related "Valencia expats" 5120
 ```
 
 **Искать и в чатах ботов.** По умолчанию поиск по темам идёт в текущей учётной записи. `--source personal`,
@@ -214,14 +214,14 @@ max conversations related "Valencia expats" 5120
 учётной записи он.
 
 ```sh
-max search conversations "задержка доставки" --source all
+max personal search conversations "задержка доставки" --source all
 ```
 
 **Скачать новое перед вопросом.** `--sync-first` сначала скачивает новые сообщения — в пределах чата,
 времени и числа сообщений, как у поиска сообщений.
 
 ```sh
-max search conversations "где встречаемся" --chat "Книжный клуб" --sync-first
+max personal search conversations "где встречаемся" --chat "Книжный клуб" --sync-first
 ```
 
 ## Свежесть
@@ -230,10 +230,10 @@ max search conversations "где встречаемся" --chat "Книжный 
 `embed`.
 
 ```sh
-max conversations status                         # что отстало, по чатам
-max conversations build                          # все изменившиеся чаты и группы, ни разу не построенные
-max conversations embed                          # все построенные чаты, где остались куски
-max search conversations "аренда квартиры" --refresh   # сначала догнать, потом искать
+max personal conversations status                         # что отстало, по чатам
+max personal conversations build                          # все изменившиеся чаты и группы, ни разу не построенные
+max personal conversations embed                          # все построенные чаты, где остались куски
+max personal search conversations "аренда квартиры" --refresh   # сначала догнать, потом искать
 ```
 
 `status` считает для каждого построенного чата сообщения, которых `build` ещё не видел (новые,
@@ -243,12 +243,12 @@ max search conversations "аренда квартиры" --refresh   # снач�
 продолжить. Модель они не скачивают. `--refresh` нельзя сочетать с `--filter` и `--source`: сначала
 постройте и посчитайте нужные чаты.
 
-Когда в новой версии меняются правила, `status` и `max store check` называют чаты, построенные по
+Когда в новой версии меняются правила, `status` и `max personal store check` называют чаты, построенные по
 старым, — постройте их снова.
 
 Когда сообщение удаляют, его текст уходит и из векторов.
 
-`max store fetch <чат> --catch-up` может сразу после скачивания построить разговоры чата и посчитать
+`max personal store fetch <чат> --catch-up` может сразу после скачивания построить разговоры чата и посчитать
 векторы ([скачать историю чата](archive.md#скачать-историю)).
 
 ## Связать сообщения поможет ваш агент
@@ -258,23 +258,23 @@ max search conversations "аренда квартиры" --refresh   # снач�
 
 ```sh
 max skill show link-conversations                     # инструкция для агента
-max conversations batches status --chat "Книжный клуб"   # сколько сообщений и пачек, сколько текста
+max personal conversations batches status --chat "Книжный клуб"   # сколько сообщений и пачек, сколько текста
 ```
 
 Агент читает инструкцию, говорит, сколько текста прочитает, и ждёт вашего «да». Потом он берёт чат
-пачками (`max conversations batches next`), решает, на какое прежнее сообщение отвечает каждое, и
-сохраняет ответ (`max conversations links add`). Следующий `build` его учитывает: сначала идут ответы
-самого MAX, потом связи агента, потом правила. `max conversations links clear --chat "Книжный клуб"`
+пачками (`max personal conversations batches next`), решает, на какое прежнее сообщение отвечает каждое, и
+сохраняет ответ (`max personal conversations links add`). Следующий `build` его учитывает: сначала идут ответы
+самого MAX, потом связи агента, потом правила. `max personal conversations links clear --chat "Книжный клуб"`
 убирает ответы агента; после этого постройте чат снова. В этом процессе сам `max` модель не вызывает.
 Сохранять ответы разрешает право профиля `conversations.links`.
 
 `max` может и сам отправить пачки сервису моделей. Обычный `build` использует правила и сохранённые
-связи; `max conversations build --chat <чат> --analyze` передаёт ограниченные пачки настроенному
+связи; `max personal conversations build --chat <чат> --analyze` передаёт ограниченные пачки настроенному
 OpenAI-совместимому сервису или Anthropic. Нужен явный `--chat`. Перед первой передачей команда
 показывает объём, адрес и предел токенов и спрашивает согласие; оно сохраняется для учётной записи,
 чата и выбранного сервиса до отзыва. По умолчанию пачка — 50 сообщений (`--size`), предел резерва —
 100 000 токенов за запуск (`--max-tokens`); `--yes` даёт согласие в скриптах.
-`max conversations consents list` показывает согласия, `consents revoke --chat <чат>` отзывает их.
+`max personal conversations consents list` показывает согласия, `consents revoke --chat <чат>` отзывает их.
 Встроенный анализ доступен только из командной строки, не через MCP; ключи не записываются в файл
 настроек.
 
@@ -284,8 +284,8 @@ OpenAI-совместимому сервису или Anthropic. Нужен яв
 команде:
 
 ```sh
-max models text list                             # модели и какие скачаны
-max models text download embeddinggemma --accept-terms
+max personal models text list                             # модели и какие скачаны
+max personal models text download embeddinggemma --accept-terms
 ```
 
 `e5-small` — по умолчанию: маленькая и быстрая, около 100 языков. `embeddinggemma` находит больше, но
@@ -299,16 +299,16 @@ max models text download embeddinggemma --accept-terms
 Векторы может считать внешний сервис, с вашим ключом:
 
 ```sh
-max models text key set openai
-max conversations embed --chat "Книжный клуб" --provider openai
-max search conversations "аренда квартиры" --provider openai
+max personal models text key set openai
+max personal conversations embed --chat "Книжный клуб" --provider openai
+max personal search conversations "аренда квартиры" --provider openai
 ```
 
 Тогда текст разговоров чата уходит этому сервису, а каждый поиск отправляет ему ваш вопрос. Прежде
 чем что-то отправить, `embed` называет число кусков, наибольшее число токенов и наибольшую цену и
 ждёт «да» (`--yes` в скриптах; `--max-tokens` задаёт предел). `--base-url` принимает любой сервер с
 API векторов OpenAI (`/v1/embeddings`), например Ollama или LM Studio на вашем компьютере, вместе с
-`--model` и `--dims`. `max models text key remove openai` забывает ключ. Настройка внешних векторов
+`--model` и `--dims`. `max personal models text key remove openai` забывает ключ. Настройка внешних векторов
 действует и на поиск, который ваш агент выполняет через MCP: его вопросы тоже уходят этому сервису.
 
 ## Дальше

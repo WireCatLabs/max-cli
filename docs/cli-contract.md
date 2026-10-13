@@ -14,7 +14,7 @@
 - **Код завершения** — число, которое команда возвращает при выходе. `0` — успех, любое другое число
   называет вид сбоя.
 - **Машинный режим** — вывод в JSON для программы, а не текстом для человека.
-- **Одноразовая команда** делает одно действие и завершается, например `max messages list`.
+- **Одноразовая команда** делает одно действие и завершается, например `max personal messages list`.
   **Постоянная команда** работает, пока её не остановят: `watch`, `serve` и `mcp`.
 - **Запись** — любая команда, которая что-то меняет в MAX: отправляет, правит, удаляет или отмечает
   прочитанным.
@@ -38,10 +38,10 @@
 затем идёт ресурс и вид отчёта:
 
 ```sh
-max stats messages show --by sender --limit 10 --json
-max stats chats show <чат> --json
-max stats tasks show --json
-max stats charts <чат> --json
+max personal stats messages show --by sender --limit 10 --json
+max personal stats chats show <чат> --json
+max personal stats tasks show --json
+max personal stats charts <чат> --json
 ```
 
 Старых путей `messages stats`, `chats stats` и `tasks stats` больше нет, псевдонимов для них тоже
@@ -89,7 +89,7 @@ max stats charts <чат> --json
 ## Короткий результат и что принимает команда
 
 ```sh
-max messages list <чат> --json --fields id,text
+max personal messages list <чат> --json --fields id,text
 max commands messages list --json
 max commands schema messages list --json
 ```

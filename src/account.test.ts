@@ -725,7 +725,7 @@ describe("sessions", () => {
       connection: () => new Connection({ createSocket: refusing.createSocket, timeoutMs: 50 }),
     })
 
-    expect(JSON.parse(ended.stderr).error.message).toContain("run `max session start`")
+    expect(JSON.parse(ended.stderr).error.message).toContain("run `max default session start`")
     expect(new SendJournal(sendsPathFor("default")).entries().at(-1)).toMatchObject({
       kind: "account",
       action: "sessions-end",

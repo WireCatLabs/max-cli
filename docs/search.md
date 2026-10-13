@@ -29,7 +29,7 @@
 Для управления из командной строки:
 
 ```sh
-max search messages 'Во сколько ежедневная выгрузка проекта Маяк?' --discover --chat 990 --json
+max personal search messages 'Во сколько ежедневная выгрузка проекта Маяк?' --discover --chat 990 --json
 ```
 
 Это поиск только в локальном архиве. Ограничения чата, автора и даты сохраняются. В MCP передайте
@@ -46,41 +46,41 @@ AST, `--exact` и `--newest` сохраняют строгую семантик�
 
 ## Что можно сделать
 
-Весь поиск — в одной группе команд, `max search`. Если не знаете, где было написано, начните с
+Весь поиск — в одной группе команд, `max personal search`. Если не знаете, где было написано, начните с
 `search all`.
 
 | Задача | Команда |
 |---|---|
-| Искать сразу в сообщениях, почте и заметках | `max search all '<запрос>'` |
-| Искать только сообщения мессенджеров, без `--discover`, в одном чате — и на сервере MAX | `max search messages '<запрос>'` |
-| Искать только почту, которую импортировал memo | `max search mail '<запрос>'` |
-| Искать заметки из memo или из папки | `max search notes '<запрос>'` |
-| Найти обсуждение по тому, о чём оно было | `max search conversations '<вопрос>'` ([поиск по темам](topic-search.md)) |
-| Посчитать совпадения по чатам, людям, дням или часам | `max stats messages show '<запрос>'` |
-| Сохранить поиск и запускать его снова | `max searches create`, `max search messages --saved <имя>` |
+| Искать сразу в сообщениях, почте и заметках | `max personal search all '<запрос>'` |
+| Искать только сообщения мессенджеров, без `--discover`, в одном чате — и на сервере MAX | `max personal search messages '<запрос>'` |
+| Искать только почту, которую импортировал memo | `max personal search mail '<запрос>'` |
+| Искать заметки из memo или из папки | `max personal search notes '<запрос>'` |
+| Найти обсуждение по тому, о чём оно было | `max personal search conversations '<вопрос>'` ([поиск по темам](topic-search.md)) |
+| Посчитать совпадения по чатам, людям, дням или часам | `max personal stats messages show '<запрос>'` |
+| Сохранить поиск и запускать его снова | `max personal searches create`, `max personal search messages --saved <имя>` |
 
 ```sh
-max search all 'договор аренды'                 # сообщения, почта и заметки, лучшее первым
+max personal search all 'договор аренды'                 # сообщения, почта и заметки, лучшее первым
 ```
 
 ```sh
-max search all 'договор' --only messages,notes  # без почты
+max personal search all 'договор' --only messages,notes  # без почты
 ```
 
 ```sh
-max search messages 'договор' --chat Друзья     # только сообщения мессенджеров, без почты
+max personal search messages 'договор' --chat Друзья     # только сообщения мессенджеров, без почты
 ```
 
 ```sh
-max search mail 'счёт'                          # только почта, которую привёл memo mail import
+max personal search mail 'счёт'                          # только почта, которую привёл memo mail import
 ```
 
 ```sh
-max search notes 'бюджет' --type internal       # только заметки, написанные в memo
+max personal search notes 'бюджет' --type internal       # только заметки, написанные в memo
 ```
 
 ```sh
-max search conversations 'переезд на дачу'      # разговоры, близкие по смыслу
+max personal search conversations 'переезд на дачу'      # разговоры, близкие по смыслу
 ```
 
 `search all` у каждой находки пишет, что это — сообщение (`msg:…`) или заметка (`note:…`).
@@ -93,7 +93,7 @@ max search conversations 'переезд на дачу'      # разговор�
 Почта и заметки попадают в архив через memo: `memo mail import` и `memo import`. Без них
 `search all` ищет только сообщения.
 
-Дальше на этой странице — поиск сообщений, `max search messages`. Без `--discover` поиск в одном чате спрашивает ещё и
+Дальше на этой странице — поиск сообщений, `max personal search messages`. Без `--discover` поиск в одном чате спрашивает ещё и
 сервер MAX ([ниже](#поиск-на-сервере-max---backend)).
 
 ## Попробуйте поиск в одном чате
@@ -107,7 +107,7 @@ max search conversations 'переезд на дачу'      # разговор�
 **Команда:**
 
 ```sh
-max search messages '"счёт оплачен"' --chat "Книжный клуб" --backend archive --json
+max personal search messages '"счёт оплачен"' --chat "Книжный клуб" --backend archive --json
 ```
 
 **Пример ответа агента:**
@@ -130,23 +130,23 @@ max search messages '"счёт оплачен"' --chat "Книжный клуб"
 regex, presets, метки и формы слов. Начните со скачивания всех чатов:
 
 ```sh
-max store fetch --all --background     # последние 90 дней каждого чата, в фоне
+max personal store fetch --all --background     # последние 90 дней каждого чата, в фоне
 ```
 
 ```sh
-max store jobs show                    # сколько уже скачано
+max personal store jobs show                    # сколько уже скачано
 ```
 
 Один запуск скачивает не больше 1200 сообщений на чат по умолчанию; повторите команду, чтобы
-продолжить. `--since-time 365d` — дальше в прошлое; один чат — `max store fetch Друзья`
-([скачать историю чата](archive.md#скачать-историю)). Дальше архив держит свежим `max serve`.
+продолжить. `--since-time 365d` — дальше в прошлое; один чат — `max personal store fetch Друзья`
+([скачать историю чата](archive.md#скачать-историю)). Дальше архив держит свежим `max personal serve`.
 
 Каждый поиск говорит, что он просмотрел. Если архив мог бы держать больше или ничего не нашлось, в терминале
 одна строка: сколько сообщений и чатов просмотрено, сколько чатов не скачано или отстаёт, и команда, которая
 это исправит:
 
 ```text
-searched 12,430 messages in 37 chats — 5 never fetched; `max store fetch --all --background` fetches them
+searched 12,430 messages in 37 chats — 5 never fetched; `max personal store fetch --all --background` fetches them
 ```
 
 С `--json` то же в `coverage`: `messages`, `chats`, до десяти чатов в `attention` и `next`. Если ничего
@@ -159,23 +159,23 @@ searched 12,430 messages in 37 chats — 5 never fetched; `max store fetch --all
 ## Слова и фразы
 
 ```sh
-max search messages счёт
+max personal search messages счёт
 ```
 
 ```sh
-max search messages '"счёт оплачен"'             # слова подряд
+max personal search messages '"счёт оплачен"'             # слова подряд
 ```
 
 ```sh
-max search messages 'кафе OR библиотека'
+max personal search messages 'кафе OR библиотека'
 ```
 
 ```sh
-max search messages '(кафе OR библиотека) NOT шумно'
+max personal search messages '(кафе OR библиотека) NOT шумно'
 ```
 
 ```sh
-max search messages 'квартир*'                   # все слова, которые начинаются на «квартир»
+max personal search messages 'квартир*'                   # все слова, которые начинаются на «квартир»
 ```
 
 Слова рядом должны быть в сообщении все. Поиск находит формы слов: `квартира` найдёт «квартиру».
@@ -187,27 +187,27 @@ max search messages 'квартир*'                   # все слова, к�
 ## Люди и чаты
 
 ```sh
-max search messages 'from:"Алиса Тестова" счёт'
+max personal search messages 'from:"Алиса Тестова" счёт'
 ```
 
 ```sh
-max search messages 'from:("Алиса Тестова" OR "Борис Тестов") библиотека'
+max personal search messages 'from:("Алиса Тестова" OR "Борис Тестов") библиотека'
 ```
 
 ```sh
-max search messages 'from:me date:7d'            # что вы писали за неделю
+max personal search messages 'from:me date:7d'            # что вы писали за неделю
 ```
 
 ```sh
-max search messages 'chat:"Книжный клуб" библиотека'
+max personal search messages 'chat:"Книжный клуб" библиотека'
 ```
 
 ```sh
-max search messages библиотека --chat "Книжный клуб"   # то же, опцией
+max personal search messages библиотека --chat "Книжный клуб"   # то же, опцией
 ```
 
 ```sh
-max search messages 'паспорт kind:private'       # только личные переписки
+max personal search messages 'паспорт kind:private'       # только личные переписки
 ```
 
 `kind:` принимает `private` (личные), `group`, `channel`, `saved` (Избранное) и `bot`. Искать во всех
@@ -216,19 +216,19 @@ max search messages 'паспорт kind:private'       # только личн�
 ## Даты
 
 ```sh
-max search messages 'date:today'
+max personal search messages 'date:today'
 ```
 
 ```sh
-max search messages 'библиотека date:yesterday'
+max personal search messages 'библиотека date:yesterday'
 ```
 
 ```sh
-max search messages 'счёт date:7d'               # от 7 дней назад до сейчас; также 30m, 2h
+max personal search messages 'счёт date:7d'               # от 7 дней назад до сейчас; также 30m, 2h
 ```
 
 ```sh
-max search messages 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid
+max personal search messages 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe/Madrid
 ```
 
 `today`, `yesterday` и календарные даты — это дни в часовом поясе компьютера; `--timezone` выбирает
@@ -237,31 +237,31 @@ max search messages 'счёт date:[2026-01-01 TO 2026-02-01}' --timezone Europe
 ## Файлы и ссылки
 
 ```sh
-max search messages 'has:file'
+max personal search messages 'has:file'
 ```
 
 ```sh
-max search messages 'filename:*.pdf'
+max personal search messages 'filename:*.pdf'
 ```
 
 ```sh
-max search messages 'filename:*договор*'         # часть имени
+max personal search messages 'filename:*договор*'         # часть имени
 ```
 
 ```sh
-max search messages 'size>10MB'
+max personal search messages 'size>10MB'
 ```
 
 ```sh
-max search messages 'size:[1KB TO 300KB]'
+max personal search messages 'size:[1KB TO 300KB]'
 ```
 
 ```sh
-max search messages 'has:photo chat:"Книжный клуб"'
+max personal search messages 'has:photo chat:"Книжный клуб"'
 ```
 
 ```sh
-max search messages 'has:link AND "github.com"'  # ссылка на сайт
+max personal search messages 'has:link AND "github.com"'  # ссылка на сайт
 ```
 
 Файл находится по имени и размеру, даже если в сообщении нет текста. `filename:` сравнивает имя
@@ -276,19 +276,19 @@ max search messages 'has:link AND "github.com"'  # ссылка на сайт
 это делает `max` или ваш агент. Подробнее о файлах — [вложения](attachments.md).
 
 ```sh
-max attachments extract --chat "Книжный клуб" --download --output-dir ./files
+max personal attachments extract --chat "Книжный клуб" --download --output-dir ./files
 ```
 
 ```sh
-max search messages 'content:договор'
+max personal search messages 'content:договор'
 ```
 
 ```sh
-max attachments list --chat "Книжный клуб" --needs-text
+max personal attachments list --chat "Книжный клуб" --needs-text
 ```
 
 ```sh
-max attachments text set "Книжный клуб" 204 --text-file ./scan.txt
+max personal attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 ```
 
 `attachments extract` читает на этом компьютере обычные текстовые файлы, DOCX и PDF с текстовым слоем.
@@ -320,19 +320,19 @@ MCP-сервере не передаёт ему файл: для чтения н
 `your-vision-model` именем своей модели.
 
 ```sh
-max config set models.ocr.provider openai
+max personal config set models.ocr.provider openai
 ```
 
 ```sh
-max config set models.ocr.model your-vision-model
+max personal config set models.ocr.model your-vision-model
 ```
 
 ```sh
-max models text key set openai
+max personal models text key set openai
 ```
 
 ```sh
-max attachments extract --chat "Книжный клуб" --ocr --concurrency 4 --limit 100 --json
+max personal attachments extract --chat "Книжный клуб" --ocr --concurrency 4 --limit 100 --json
 ```
 
 `--ocr` передаёт изображения выбранному сервису; без него модель не вызывается. Одновременно — от 1 до
@@ -343,10 +343,10 @@ max attachments extract --chat "Книжный клуб" --ocr --concurrency 4 -
 Проверьте `failed` и статусы отдельных файлов; после ограничения провайдера новые запросы этого запуска
 прекращаются. `--offline` с `--ocr` несовместим.
 
-**Файлы, которые у вас уже есть.** `max attachments extract --chat <чат> --from-dir ./files` читает
+**Файлы, которые у вас уже есть.** `max personal attachments extract --chat <чат> --from-dir ./files` читает
 одну папку, без вложенных папок. Нужен однозначно совпадающий исходный файл или полный набор файлов с
 именами загрузчика. Не сочетайте `--from-dir` с `--download` или `--output-dir`.
-`max messages download <чат> <id> --extract` извлекает текст только из файлов, скачанных этим запуском;
+`max personal messages download <чат> <id> --extract` извлекает текст только из файлов, скачанных этим запуском;
 `--all --extract` делает то же для всего запуска. Изменившиеся файлы видны по хешу, а текст, записанный
 агентом, сохраняется. Через MCP ограниченное извлечение возвращает `cursor` для продолжения и сведения
 о файлах, без их текста.
@@ -359,11 +359,11 @@ max attachments extract --chat "Книжный клуб" --ocr --concurrency 4 -
 ## Пароли, коды и карты
 
 ```sh
-max search messages 'preset:secret kind:saved'   # что-то похожее на пароль или токен в Избранном
+max personal search messages 'preset:secret kind:saved'   # что-то похожее на пароль или токен в Избранном
 ```
 
 ```sh
-max search messages 'preset:card'
+max personal search messages 'preset:card'
 ```
 
 Preset находит сообщения, которые *похожи* на пароль, код входа, ключ API, номер карты или IBAN,
@@ -373,27 +373,27 @@ Preset находит сообщения, которые *похожи* на п�
 ## Метки
 
 ```sh
-max tags add work --chat "Книжный клуб"
+max personal tags add work --chat "Книжный клуб"
 ```
 
 ```sh
-max tags add work --contact "Борис Тестов"
+max personal tags add work --contact "Борис Тестов"
 ```
 
 ```sh
-max tags list --tag work --type chat
+max personal tags list --tag work --type chat
 ```
 
 ```sh
-max search messages 'tag:work счёт'
+max personal search messages 'tag:work счёт'
 ```
 
 ```sh
-max search messages 'счёт NOT tag:work'
+max personal search messages 'счёт NOT tag:work'
 ```
 
 ```sh
-max tags remove work --chat "Книжный клуб"
+max personal tags remove work --chat "Книжный клуб"
 ```
 
 Метка — ваша собственная пометка на чате, человеке или одном сообщении (`--message <id> --chat <чат>`).
@@ -405,61 +405,61 @@ max tags remove work --chat "Книжный клуб"
 модели:
 
 ```sh
-max metadata refresh --chat "Книжный клуб"   # прочитать описание чата из MAX (сам чат не меняется)
+max personal metadata refresh --chat "Книжный клуб"   # прочитать описание чата из MAX (сам чат не меняется)
 ```
 
 ```sh
-max metadata refresh --only-missing          # все сохранённые группы и каналы, у которых описание ещё не читалось
+max personal metadata refresh --only-missing          # все сохранённые группы и каналы, у которых описание ещё не читалось
 ```
 
 ```sh
-max tags auto --dry-run                      # что получилось бы, без записи
+max personal tags auto --dry-run                      # что получилось бы, без записи
 ```
 
 ```sh
-max tags auto                                # записать автоматические метки
+max personal tags auto                                # записать автоматические метки
 ```
 
 ```sh
-max tags list --source auto                  # только автоматические
+max personal tags list --source auto                  # только автоматические
 ```
 
 Автоматическая метка не трогает ваши: повторный запуск убирает только устаревшие автоматические. Если вы
 сами поставите метку, которую уже дала автоматика, она станет вашей.
 
-`max tags auto` обрабатывает до 50 чатов за запуск; `--limit` поднимает предел до 500, а `--chat`
+`max personal tags auto` обрабатывает до 50 чатов за запуск; `--limit` поднимает предел до 500, а `--chat`
 выбирает чаты (его можно повторить). `--dry-run` берёт сохранённые описания. Чтобы перед разметкой
 прочитать свежие, добавьте `--refresh-metadata` без `--dry-run`. Сохранённое описание показывает
-`max metadata get --chat <чат>`.
+`max personal metadata get --chat <чат>`.
 
 ## Сохранённые поиски и история
 
 ```sh
-max searches create meetings 'библиотека OR кафе' --chat "Книжный клуб"
+max personal searches create meetings 'библиотека OR кафе' --chat "Книжный клуб"
 ```
 
 ```sh
-max search messages --saved meetings
+max personal search messages --saved meetings
 ```
 
 ```sh
-max search messages --saved meetings 'date:today'   # слова добавляются через AND
+max personal search messages --saved meetings 'date:today'   # слова добавляются через AND
 ```
 
 ```sh
-max stats messages show --saved meetings --by day
+max personal stats messages show --saved meetings --by day
 ```
 
 ```sh
-max searches list
+max personal searches list
 ```
 
 ```sh
-max searches history --limit 10
+max personal searches history --limit 10
 ```
 
 ```sh
-max search messages --saved 42                   # строка истории, по её номеру
+max personal search messages --saved 42                   # строка истории, по её номеру
 ```
 
 `searches create` сохраняет запрос с опциями и ничего не запускает; занятое имя — только с
@@ -470,7 +470,7 @@ max search messages --saved 42                   # строка истории, 
 Каждый успешный поиск и подсчёт попадает в историю: запрос и опции, но не найденные сообщения.
 Хранятся последние 1000 запусков. `--no-record` не записывает один запуск, в MCP — `record: false`;
 `searches clear` очищает историю, сохранённые поиски остаются. Эта история отдельна от записей
-`max runs`.
+`max personal runs`.
 
 Сохранённые поиски и история лежат в архиве, общем для `max` и `tg`: обе программы видят одни и те
 же, и `delete` или `clear` в одной меняет их и в другой. Метки остаются при своём аккаунте.
@@ -478,19 +478,19 @@ max search messages --saved 42                   # строка истории, 
 ## Подсчёт: `stats messages show`
 
 ```sh
-max stats messages show счёт                          # сколько в каждом чате
+max personal stats messages show счёт                          # сколько в каждом чате
 ```
 
 ```sh
-max stats messages show 'date:7d' --by sender
+max personal stats messages show 'date:7d' --by sender
 ```
 
 ```sh
-max stats messages show 'from:me' --by day --timezone Europe/Madrid
+max personal stats messages show 'from:me' --by day --timezone Europe/Madrid
 ```
 
 ```sh
-max stats messages show --by hour                     # все сохранённые сообщения
+max personal stats messages show --by hour                     # все сохранённые сообщения
 ```
 
 `stats messages show` считает сообщения, которые нашёл бы `search messages` с тем же запросом, каждое один
@@ -508,19 +508,19 @@ max stats messages show --by hour                     # все сохранён�
 совпадения в этих чатах находит архив, если они в нём есть. Название чата и публичные каналы в ответ не попадают.
 
 ```sh
-max search messages 'счёт' --chat "Книжный клуб"                    # архив и сервер MAX, один чат
+max personal search messages 'счёт' --chat "Книжный клуб"                    # архив и сервер MAX, один чат
 ```
 
 ```sh
-max search messages 'счёт'                                          # архив и сервер MAX, все чаты
+max personal search messages 'счёт'                                          # архив и сервер MAX, все чаты
 ```
 
 ```sh
-max search messages 'счёт' --chat "Книжный клуб" --backend server   # только то, что нашёл сервер
+max personal search messages 'счёт' --chat "Книжный клуб" --backend server   # только то, что нашёл сервер
 ```
 
 ```sh
-max search messages 'счёт' --backend archive                        # только архив
+max personal search messages 'счёт' --backend archive                        # только архив
 ```
 
 Сервер находит слово и по началу, но не другие его формы: `книгу` не найдёт «книга». Поэтому `max` берёт его
@@ -536,7 +536,7 @@ max search messages 'счёт' --backend archive                        # тол
 ## Сначала скачать новое: `--sync-first`
 
 ```sh
-max search messages 'счёт' --chat "Книжный клуб" --sync-first
+max personal search messages 'счёт' --chat "Книжный клуб" --sync-first
 ```
 
 `--sync-first` сначала скачивает новые сообщения, ничего не помечая прочитанным: не больше 5 чатов,
@@ -565,14 +565,14 @@ max search messages 'счёт' --chat "Книжный клуб" --sync-first
 ## Если ничего не нашлось
 
 Пустой ответ значит «нет в архиве, где искали», а не «никогда не отправлялось». Что сохранено,
-покажет `max store status`, дополнить — `max store fetch`. С `--json` ответ говорит, какие чаты
-просмотрены и насколько они полны, даже без совпадений. Если `max` просит `max store migrate`, индекс
+покажет `max personal store status`, дополнить — `max personal store fetch`. С `--json` ответ говорит, какие чаты
+просмотрены и насколько они полны, даже без совпадений. Если `max` просит `max personal store migrate`, индекс
 слов ещё строится; поиск без слов (`has:file`, `date:today`) работает уже сейчас.
 
-**Пробелы в истории чата.** `max store gaps plan <чат>` на этом компьютере показывает разрывы между
+**Пробелы в истории чата.** `max personal store gaps plan <чат>` на этом компьютере показывает разрывы между
 сохранёнными кусками истории. Пропуски номеров сообщений и тишина сами по себе не означают потерянную
 историю; края сохранённой истории остаются `unknown`. Проверьте план, затем
-`max store gaps repair <чат> --fingerprint <хеш>` скачает разрывы. По умолчанию — до 5 разрывов, 500
+`max personal store gaps repair <чат> --fingerprint <хеш>` скачает разрывы. По умолчанию — до 5 разрывов, 500
 сообщений и 30 секунд; пределы задают `--max-gaps`, `--limit`, `--repair-time`, `--page-size` и
 `--pause`. Повторный запуск проверяет оставшиеся разрывы и не удаляет сообщение только потому, что MAX
 его не вернул. Неоднозначные страницы с одинаковым временем остаются незавершёнными. `--background`
@@ -581,7 +581,7 @@ max search messages 'счёт' --chat "Книжный клуб" --sync-first
 MCP эти команды находятся через `max_tools_search`, план и задания читаются через `max_read`, ремонт —
 через `max_write`.
 
-**Подготовить поиск по темам при скачивании.** `max store fetch <чат> --catch-up` сразу после загрузки
+**Подготовить поиск по темам при скачивании.** `max personal store fetch <чат> --catch-up` сразу после загрузки
 строит разговоры и локальные векторы только этого чата — для [поиска по темам](topic-search.md). По
 умолчанию это выключено; настройка профиля `searchCatchUp: true` включает, а `--no-catch-up` отменяет на
 один запуск. Границы: `--catch-up-chunks 500 --catch-up-messages 10000 --catch-up-time 30s`. Модель
