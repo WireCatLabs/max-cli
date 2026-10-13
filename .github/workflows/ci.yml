@@ -6,6 +6,9 @@ on:
       pack:
         type: boolean
         default: false
+      skip-platforms:
+        type: boolean
+        default: false
     outputs:
       package-sha256:
         value: ${{ jobs.ci.outputs.package-sha256 }}
@@ -83,7 +86,9 @@ jobs:
           ./vale --output line README.md docs/*.md | sed 's/^/::warning::/' || true
 
   windows:
+    if: ${{ !inputs.skip-platforms }}
     uses: ./.github/workflows/windows.yml
 
   install_windows:
+    if: ${{ !inputs.skip-platforms }}
     uses: ./.github/workflows/install-windows.yml
