@@ -10,11 +10,11 @@ import { DEFAULT_MODEL, MODELS, speechModel, VAD } from "../transcribe/models.js
 afterEach(() => vi.unstubAllEnvs())
 
 const fresh = () => {
-  const env = { ...process.env, CLI_COMMON_CACHE_DIR: join(mkdtempSync(join(tmpdir(), "max-audio-")), "common") }
+  const env = { ...process.env, WIRECAT_STATE_DIR: join(mkdtempSync(join(tmpdir(), "max-audio-")), "wirecat") }
   return { env, directory: modelsDirectory(env) }
 }
 const cli = async (argv: string[], env: NodeJS.ProcessEnv, tty = false) => {
-  vi.stubEnv("CLI_COMMON_CACHE_DIR", env.CLI_COMMON_CACHE_DIR ?? "")
+  vi.stubEnv("WIRECAT_STATE_DIR", env.WIRECAT_STATE_DIR ?? "")
   const streams = captureStreams()
   const code = await run(argv, {
     streams,

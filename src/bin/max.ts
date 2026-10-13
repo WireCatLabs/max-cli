@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { catchCrashes } from "@wirecat/cli-base"
 import { migrateFolders } from "@wirecat/cli-messaging/background"
 import { ensureSqlite } from "@wirecat/cli-messaging/sqlite-runtime"
 import { MAX_APP } from "../app.js"
@@ -17,8 +18,11 @@ for (const stream of [process.stdout, process.stderr]) {
 }
 
 // Before anything resolves a path: a write into a new folder first would strand the old one.
+// The move stops with an error when two different stores exist; it reaches the person as the error object.
+const stopCatching = catchCrashes({ cli: MAX_APP.command, interactive: process.stdout.isTTY === true })
 migrateFolders(MAX_APP)
 await ensureSqlite()
+stopCatching()
 // A static import would load the whole program, and its SQLite, before ensureSqlite could swap it.
 const { run } = await import("../program.js")
 process.exitCode = await run(process.argv.slice(2))

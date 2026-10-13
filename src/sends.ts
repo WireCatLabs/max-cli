@@ -98,7 +98,7 @@ export const guardFor = (settings: Settings, warn: (message: string) => void, as
       permissionSources: settings.permissionSources,
       ...(ask ? { ask } : {}),
       sendsPerHour: settings.sendsPerHour,
-      journal: new SendJournal(sendsPathFor(settings.profile)),
+      journal: new SendJournal(sendsPathFor(settings.profile), { service: MAX_APP.command, version: MAX_APP.version }),
       recipients: recipientListFor(settings.profile),
       warn,
     }),

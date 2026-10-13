@@ -37,6 +37,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--jsonl` | machine-readable output: one JSON object per line, for streaming and jq. |
 | `--quiet` | diagnostics off. |
 | `--trace` | one line per request on stderr: ids and timings, never message content. |
+| `--debug` | on a failure, its whole record — cause and stack — in place of the short line. |
 | `--timeout <duration>` | give up on the whole command after this — 30s, 2m, 500ms. |
 | `--offline` | answer from what was recorded and never connect; fails if nothing was. |
 | `--no-input` | never prompt or open interactive login; piped input remains available. |
@@ -2859,7 +2860,7 @@ max search messages [query] [options]
 
 ### `max search mail`
 
-search the mail imported into the local store — memo mail <account> import brings it in
+search the mail imported into the local store — memo sync --mail brings it in
 
 ```sh
 max search mail [query] [options]
@@ -3841,7 +3842,7 @@ max runs list [options]
 
 ### `max runs show`
 
-one run: what it was, and one line per operation
+one run: what it was, how it ended and what went wrong; -v for every event
 
 ```sh
 max runs show <run-id>

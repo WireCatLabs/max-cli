@@ -19,6 +19,7 @@ describe("the shared runs command in MAX", () => {
         profile: "synthetic",
         command: "chats list",
         cliVersion: MAX_APP.version,
+        service: MAX_APP.command,
       })
       await recorded.finish("success")
     }
@@ -48,6 +49,7 @@ describe("the shared runs command in MAX", () => {
       profile: "synthetic",
       command: "messages download",
       cliVersion: MAX_APP.version,
+      service: MAX_APP.command,
     })
     recorded.logger.info({
       event: "response",
@@ -90,5 +92,20 @@ describe("the shared runs command in MAX", () => {
     ])
     expect(streams.stderr).toEqual([])
     expect(listRuns(dir).map((item) => item.runId)).toEqual(before)
+  })
+
+  it("**--debug adds the failure's record** as a second line after the error object", async () => {
+    vi.stubEnv("MAX_STATE_DIR", mkdtempSync(join(tmpdir(), "max-runs-debug-")))
+    const streams = captureStreams()
+
+    expect(await run(["runs", "show", "no-such-run", "--json", "--debug"], { streams, tty: false })).not.toBe(0)
+    expect(streams.stdout).toEqual([])
+    const [object, record] = streams.stderr
+      .join("\n")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line))
+    expect(object.error).toMatchObject({ code: "not_found" })
+    expect(record).toMatchObject({ severity: "error", command: "runs show", resource: { service: "max" } })
   })
 })

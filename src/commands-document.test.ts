@@ -1,5 +1,5 @@
 import { captureStreams } from "@wirecat/cli-base"
-import { parseCommandsDocument } from "@wirecat/cli-base-lint/commands"
+import { parseCommandsDocument } from "@wirecat/cli-base/commands"
 import { describe, expect, it } from "vitest"
 import { run } from "./program.js"
 

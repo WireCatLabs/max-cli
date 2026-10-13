@@ -150,8 +150,8 @@ node dist/bin/max.js --help
 | настройки | `~/.config/max-cli/` | `~/Library/Preferences/max-cli/` | `%APPDATA%\max-cli\Config\` |
 | состояние | `~/.local/share/max-cli/` | `~/Library/Application Support/max-cli/` | `%LOCALAPPDATA%\max-cli\Data\` |
 | кэш | `~/.cache/max-cli/` | `~/Library/Caches/max-cli/` | `%LOCALAPPDATA%\max-cli\Cache\` |
-| общая копия сообщений | `~/.local/share/cli-messaging/wirecat.db` | под `~/Library/Application Support/cli-messaging/` | под `%LOCALAPPDATA%\cli-messaging\Data\` |
-| модели распознавания речи | `~/.cache/cli-common/models/audio/` | под `~/Library/Caches/cli-common/` | под `%LOCALAPPDATA%\cli-common\Cache\` |
+| общая копия сообщений | `~/.local/share/WireCat/wirecat.db` | `~/.local/share/WireCat/wirecat.db` | `%LOCALAPPDATA%\WireCat\Data\wirecat.db` |
+| модели распознавания речи | `~/.local/share/WireCat/models/audio/` | `~/.local/share/WireCat/models/audio/` | `%LOCALAPPDATA%\WireCat\Data\models\audio\` |
 
 - **настройки** — `config.json`, и `credentials.json` с токеном, только если на машине нет ключницы.
 - **состояние** — `profiles/<имя>.json` (устройство и счётчик входов), `bots/` (чаты, которые видели
@@ -167,7 +167,12 @@ node dist/bin/max.js --help
 поля, и схема настроек его не примет.
 
 Каждый каталог можно перенести переменной: `MAX_CONFIG_DIR`, `MAX_STATE_DIR`, `MAX_CACHE_DIR`,
-`MESSAGING_STORE` (сам файл общей копии) и `CLI_COMMON_CACHE_DIR` (модели).
+`MESSAGING_STORE` (сам файл общей копии) и `WIRECAT_STATE_DIR` (папка WireCat: общая копия и модели).
+
+Первый запуск после обновления со старого `max` один раз переносит общую копию и модели в папку WireCat
+из `~/.local/share/cli-messaging/` и `~/.cache/cli-common/models/`. Если в обоих местах лежат разные копии,
+`max` останавливается и называет оба файла; оставьте один и запустите снова
+([две разные копии](troubleshooting.md#two-different-copies-of-the-store---nothing-was-moved-or-changed)).
 
 > ⚠ **Переменные переносят и запись в ключнице.** Сессия, сохранённая с `MAX_CONFIG_DIR`,
 > `MAX_STATE_DIR` или `MAX_CACHE_DIR`, не видна команде, запущенной без них: меняется имя службы,
@@ -239,7 +244,7 @@ rm -rf ~/.config/max-cli ~/.local/share/max-cli ~/.cache/max-cli
 `max personal session end` и `bot auth remove` стирают токены из ключницы. Если сначала удалить команду,
 запись в ключнице останется — безвредно, но лежать будет.
 
-Общая копия сообщений нужна и другим инструментам. Удаляйте `~/.local/share/cli-messaging/`, только
+Общая копия сообщений нужна и другим инструментам. Удаляйте `~/.local/share/WireCat/`, только
 если ею больше ничто не пользуется: там сообщения, которые прочитал каждый из них.
 
 ## Дальше

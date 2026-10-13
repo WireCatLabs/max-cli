@@ -281,7 +281,7 @@ max personal messages transcribe -1000 100000000000000001 --json   # текст 
 мегабайт, и выбор модели за ним.
 
 Каталог аудиомоделей общий с Telegram; путь есть в `max personal models audio list --json` (`directory`).
-Существующие файлы используются повторно; `CLI_COMMON_CACHE_DIR` задаёт другое место.
+Существующие файлы используются повторно; `WIRECAT_STATE_DIR` задаёт другое место.
 
 Вложение в JSON: `{ "kind": "photo", "url": "https://…", "width": 901, "height": 594 }`. Чтобы
 посмотреть фото, скачать его по `url` и открыть файл.

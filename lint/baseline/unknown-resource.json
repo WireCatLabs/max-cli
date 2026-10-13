@@ -2,11 +2,9 @@
   "account privacy",
   "account sessions",
   "attachments text",
-  "bot api",
   "bot auth",
   "bot callbacks",
   "bot chats rules",
-  "bot comments",
   "bot uploads",
   "bot webhooks",
   "calls",
@@ -29,6 +27,5 @@
   "schedule",
   "stats messages counters",
   "stickers",
-  "store gaps",
-  "store jobs"
+  "store gaps"
 ]

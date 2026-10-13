@@ -71,7 +71,7 @@ describe("deleting messages", () => {
     expect(result.code).not.toBe(0)
     expect(result.stdout).not.toContain('"deleted"')
     expect(JSON.parse(result.stderr)).toMatchObject({
-      error: { code: "outcome_unknown", reason: "deletion_unconfirmed", retained: [FIRST] },
+      error: { code: "outcome_unknown", message: expect.stringContaining(FIRST) },
     })
     expect(deletes()).toHaveLength(1)
   })
@@ -82,7 +82,7 @@ describe("deleting messages", () => {
     expect(result.code).not.toBe(0)
     expect(result.stdout).toBe("")
     expect(JSON.parse(result.stderr)).toMatchObject({
-      error: { code: "outcome_unknown", reason: "deletion_unconfirmed" },
+      error: { code: "outcome_unknown", message: expect.stringContaining("could not be verified") },
     })
     expect(deletes()).toHaveLength(1)
   })

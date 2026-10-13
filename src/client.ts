@@ -1506,7 +1506,7 @@ export class MaxClient {
         if (retained.length)
           throw new CliError(
             "outcome_unknown",
-            "MAX still returns messages after the deletion — read them before any retry",
+            `MAX still returns messages ${retained.join(", ")} after the deletion — read them before any retry`,
             { reason: "deletion_unconfirmed", retained },
           )
         this.#sends?.record({ chatId, kind: "delete", outcome: "sent", count, forEveryone })

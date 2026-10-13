@@ -72,13 +72,13 @@
 | список разрешённых получателей, если включён | `~/.local/share/max-cli/profiles/<профиль>.recipients.json` | `0600` |
 | правила модерации групп — после первого `chats rules set` | `~/.local/share/max-cli/profiles/<профиль>.moderation.json` | `0600` |
 | бот: чаты, которые он видел, журнал отправок, список получателей, отметка `watch` | `~/.local/share/max-cli/bots/…` | каталог `0700`, файлы `0600` |
-| общая локальная копия сообщений — личного аккаунта, бота и `tg`; с текстами, расшифровками голосовых, путями скачанных вложений и их извлечённым текстом | `~/.local/share/cli-messaging/wirecat.db` | каталог `0700`, файл `0600` |
+| общая локальная копия сообщений — личного аккаунта, бота и `tg`; с текстами, расшифровками голосовых, путями скачанных вложений и их извлечённым текстом | `~/.local/share/WireCat/wirecat.db` | каталог `0700`, файл `0600` |
 | сокет и журнал фонового сервера `max personal serve` | `~/.local/share/max-cli/profiles/<профиль>.sock`, `.serve.log` | `0600` |
 | прежняя локальная копия профиля; больше не открывается | `~/.cache/max-cli/<профиль>.db` и её `-wal`, `-shm` | каталог `0700`, файлы `0600` |
 | выгрузка переписки — **только `max personal store export --output`** | куда вы укажете | `0600` |
 | скачанные файлы из сообщений — `max personal messages download` или `max personal attachments extract --download --output-dir` | текущий каталог или `--output` | `0600` |
 | отчёт о проблеме — **только `max personal doctor report create`** | текущий каталог или `--output` | `0600` |
-| модели распознавания речи — **только после `max personal models audio download`** | `~/.cache/cli-common/models/audio/…` | каталог `0700`, файлы `0600` |
+| модели распознавания речи — **только после `max personal models audio download`** | `~/.local/share/WireCat/models/audio/…` | каталог `0700`, файлы `0600` |
 
 ⚠ **Общая локальная копия содержит тексты сообщений и расшифровки голосовых** — это её назначение:
 отвечать без сети. `max personal session end` её не удаляет. `max personal store clear --left --allow-dangerous`
