@@ -50,7 +50,7 @@ const inside = (path: string, dir: string): boolean => {
   return way === "" || (!way.startsWith("..") && !isAbsolute(way))
 }
 
-/** Node's readFile refuses larger files (ERR_FS_FILE_TOO_LARGE); MAX documents no limit of its own. */
+/** Node's readFile refuses larger files (ERR_FS_FILE_TOO_LARGE); the repo's MAX docs give no upload limit. */
 const READ_MAX = 2 ** 31 - 1
 
 export const readUpload = async (path: string, { anyFile = false }: { anyFile?: boolean } = {}): Promise<Buffer> => {
