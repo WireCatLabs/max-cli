@@ -134,6 +134,11 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **CORE-11** · P3 · Installers and standalone archives per platform (oclif's `pack`), after a
   single-file build (G4 §3.9: Bun only). Lowest priority.
 
+- **MAX-74** · P3 · Split `src/client/values.ts` by owner, and read the client's options once: it holds 59
+  exports (opcodes, page sizes, error mapping, folder rules, phone formatting) imported by 20 modules, and
+  `options.offline ?? false` / `options.now ?? Date.now` repeat 10 and 7 times across `src/client/`. Left from the
+  client split (#609); the review's finding is DEBT-76 in cli-private `docs_ai/reports/2026-10-14-refactor-pr-review.md`.
+
 ## Later — each reopens a ruling
 
 Added by the owner on 2026-09-24. Each one goes against REQUIREMENTS §3 or §18, and the line says
