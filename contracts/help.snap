@@ -80,8 +80,8 @@ Commands:
   metadata                     cached group/channel descriptions for local
                                automatic tags
   search                       find things by text: one resource when you know
-                               it (mail, messages, notes), or search all across
-                               messages, mail and notes
+                               it (messages, notes), or search all across
+                               messages and notes; mail is memo search mail
   searches                     saved searches and the history of search messages
                                and stats messages show, kept in the local store;
                                --saved runs one

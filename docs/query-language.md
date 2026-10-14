@@ -4,7 +4,7 @@
 ищете, и запрос составит агент. Эта страница — для тех, кто набирает поиск сам, и для тех, кому нужен
 каждый фильтр: точные операторы, все поля, preset, правила дат и пределы.
 
-Это справка по запросам `max personal search messages`, `max personal search mail`, `max personal search all`, `max personal stats messages show`, сохранённых
+Это справка по запросам `max personal search messages`, `max personal search all`, `max personal stats messages show`, сохранённых
 поисков и `--filter` [поиска по темам](topic-search.md). Примеры на каждый день — в
 [поиске сообщений](search.md).
 
@@ -24,8 +24,7 @@
 [техническая спецификация](https://github.com/WireCatLabs/cli-core/blob/v0.212.0/docs/search/query-language-spec.md)
 описывает грамматику и компилятор.
 
-Для почты `chat:` выбирает цепочку по id или теме письма, а `from:` — отправителя.
-У почты нет полей `kind:` и `topic:`.
+Почту `max` не ищет: это `memo search mail`.
 
 ## Что умеет язык
 

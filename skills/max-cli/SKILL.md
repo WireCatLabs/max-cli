@@ -137,8 +137,8 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    при подтверждённой дедупликации провайдера и с теми же чатом, темой, содержимым и `--operation-id`;
    никакой автоматической повторной записи только по коду ошибки.
 
-5. **Искать начинайте с `max personal search all`**: сообщения, почта и заметки на этой машине одним ответом, у каждой
-   находки её вид (`message`, `mail`, `note`). Уже: `max personal search messages`, `search mail`, `search notes`,
+5. **Искать начинайте с `max personal search all`**: сообщения и заметки на этой машине одним ответом, у каждой
+   находки её вид (`message`, `note`). Почта — не здесь: `memo search mail`. Уже: `max personal search messages`, `search notes`,
    `search conversations` (по смыслу); весь поиск — под `max personal search`.
    Для вопроса обычными словами или неточной формулировки используй
    `max personal search messages '<вопрос>' --discover` или MCP `discover: true`. Это локальный поиск без

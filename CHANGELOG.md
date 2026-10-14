@@ -4,6 +4,16 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Изменено — может сломать скрипты
+
+- **`max search mail` больше нет: почту ищет memo** (решение владельца 14.10.2026, cli-core 0.285.0,
+  cli-core#1121). У MCP нет `search_mail`. `max search all` ищет сообщения и заметки (и встречи, если их назвал
+  `--source`), но никогда почту; `--only mail` отклоняется. Вместо «unknown command» `max search mail …` отвечает
+  подсказкой ``mail is memo's: install @wirecat/cli-memo, then `memo search mail …` ``. Задачи, заметки о контактах,
+  метки, `search notes` и `search all` остаются в `max`.
+
 ## 0.54.0 — 15.10.2026
 
 ### Что нового

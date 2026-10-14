@@ -603,14 +603,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--discover` | ✅ |  |
 | `search messages` | `--timezone` | ✅ |  |
 | `search messages` | `--saved` | ✅ |  |
-| `search mail` |  | ✅ |  |
-| `search mail` | `--source` | ✅ |  |
-| `search mail` | `--limit` | ✅ |  |
-| `search mail` | `--page` | ✅ |  |
-| `search mail` | `--newest` | ✅ |  |
-| `search mail` | `--exact` | ✅ |  |
-| `search mail` | `--context` | ✅ |  |
-| `search mail` | `--timezone` | ✅ |  |
 | `search notes` |  | ✅ |  |
 | `search notes` | `--type` | ✅ |  |
 | `search notes` | `--source` | ✅ |  |

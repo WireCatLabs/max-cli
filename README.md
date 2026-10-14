@@ -216,7 +216,7 @@ max personal chats moderate "Поход" --dry-run              # что нар�
 историю чата можно скачать глубже и выгрузить.
 
 ```sh
-max personal search all "договор"                             # сообщения, почта и заметки сразу
+max personal search all "договор"                             # сообщения и заметки сразу; почта — memo search mail
 max personal search messages 'договор chat:"Проект Альфа"'  # только один чат
 max personal messages sync "Проект Альфа" --last 500            # последние 500 сообщений — в копию
 max personal store export "Проект Альфа" --format markdown --output alfa.md

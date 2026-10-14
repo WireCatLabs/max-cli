@@ -87,7 +87,7 @@ max sales bot api get-my-info --json
 | [Безопасность](security.md) | Что попадает на диск и в сеть и что не даёт отправить не туда? |
 | [Дорожная карта](roadmap.md) | Что будет дальше? |
 
-[Поиск](search.md): `max personal search all` — сразу сообщения, почта и заметки; `search messages`
+[Поиск](search.md): `max personal search all` — сразу сообщения и заметки (почта — `memo search mail`); `search messages`
 находит сообщения по словам, людям, датам, файлам и меткам; [поиск по темам](topic-search.md) —
 обсуждения по тому, о чём они были; [язык поисковых запросов](query-language.md) — полная справка.
 

@@ -3060,11 +3060,11 @@ max metadata refresh [options]
 
 ## `max search`
 
-find things by text: one resource when you know it (mail, messages, notes), or search all across messages, mail and notes
+find things by text: one resource when you know it (messages, notes), or search all across messages and notes; mail is memo search mail
 
 ### `max search all`
 
-search messenger messages, mail and notes in the local store, and the messenger's server for messages (--backend; mail and notes are local only), and a meeting account's transcripts when --source names one — best match first; not tasks, people, memories or projects. Use it when you do not know where something was written; search mail, messages or notes reads one kind with all its fields
+search messenger messages and notes in the local store, and the messenger's server for messages (--backend; notes are local only), and a meeting account's transcripts when --source names one — best match first; not mail (memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
 
 ```sh
 max search all <query> [options]
@@ -3076,7 +3076,7 @@ max search all <query> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--only <resources>` | only these resources, separated by commas: messages, mail, notes; meetings when --source names a meeting account. |
+| `--only <resources>` | only these resources, separated by commas: messages, notes; meetings when --source names a meeting account. |
 | `--source <accounts>` | only these accounts, separated by commas: provider:account as a hit shows it, a provider, a kind or group:<name>; each resource reads the ones of its kind, and meetings only when it names one. |
 | `--max-meetings <n\|all>` | how many of the meeting account's meetings to look through, newest first; all looks through every one (default 100). |
 | `--limit <n>` | how many. |
@@ -3111,7 +3111,7 @@ max search messages [query] [options]
 | `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
 | `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
-| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice,email:me@example.com. |
+| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice. |
 | `--limit <n>` | how many. |
 | `--page <n>` | which page, starting at 1. |
 | `--newest` | newest first instead of best first. |
@@ -3120,28 +3120,6 @@ max search messages [query] [options]
 | `--discover` | find partial lexical matches and eligible replies in the local archive; results are evidence, not confirmed answers. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
-
-### `max search mail`
-
-search the mail imported into the local store — memo sync --mail brings it in
-
-```sh
-max search mail [query] [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `query` | необязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges. |
-
-| Опция | Что делает |
-|---|---|
-| `--source <accounts>` | only these mail accounts, separated by commas: email:<address> as a hit shows it, email, mail or group:<name>; every mail account when unset. |
-| `--limit <n>` | how many. |
-| `--page <n>` | which page, starting at 1. |
-| `--newest` | newest first instead of best first. |
-| `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
-| `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
-| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 
 ### `max search notes`
 
