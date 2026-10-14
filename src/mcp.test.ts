@@ -802,8 +802,8 @@ describe("the MCP server", () => {
     }
     const listed = await call(client, "max_conversations_list", { chat: "331" })
     expect(listed.isError).toBe(false)
-    const items = listed.body.items as { id: string; firstMessageId: string }[]
-    expect(items).toMatchObject([{ firstMessageId: "9007199254740993123" }])
+    const items = listed.body.items as { id: string; first_message: string }[]
+    expect(items).toMatchObject([{ first_message: "msg:max/10000031/331/9007199254740993123" }])
     const shown = await call(client, "max_conversations_show", { id: items[0]?.id })
     expect(shown.isError).toBe(false)
     expect(shown.body.messages).toMatchObject([{ id: "9007199254740993123", text: "synthetic body" }])

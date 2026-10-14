@@ -66,7 +66,12 @@ it("authors local contact metadata and classifies cached channels without a mess
   expect(await call(["metadata", "get", "--chat", "99"])).toMatchObject({ metadata: { title: "AI news" } })
   expect(await call(["tags", "auto", "--chat", "99", "--limit", "1", "--dry-run"])).toMatchObject({ dryRun: true })
   await call(["tags", "auto", "--chat", "99", "--limit", "1"])
-  expect(await call(["tags", "list", "--source", "auto"])).toMatchObject({ items: [{ tag: "ai" }, { tag: "news" }] })
+  expect(await call(["tags", "list", "sources:auto"])).toMatchObject({
+    items: [
+      { tag: "ai", sources: ["auto"] },
+      { tag: "news", sources: ["auto"] },
+    ],
+  })
   await call(["tags", "remove", "news", "--chat", "99", "--source", "auto"])
   await call(["contacts", "notes", "remove", "101", note.id])
   await call(["contacts", "alias", "rm", "101"])

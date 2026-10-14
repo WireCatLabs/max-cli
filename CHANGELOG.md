@@ -6,8 +6,29 @@
 
 ## Не выпущено
 
+### Что нового
+
+- **`max mentions`: телефоны, почта, ссылки и документы Google из сохранённых сообщений** (cli-core 0.264.0,
+  версия базы 7). `mentions list kind:phone`, `mentions list domain:google.com`; слово без поля — значение в любой
+  записи, `89001234567` найдёт `+79001234567`. `mentions show <id>` показывает текст вокруг. Сообщения, сохранённые
+  раньше, читает один `max <профиль> mentions rebuild`; новые читаются при записи.
+
+### Изменено — может сломать скрипты
+
+- **На `@wirecat/cli-core` 0.264.0 и `@wirecat/cli-base` 0.27.1.**
+- **`--json=<поля>` заменяет `--fields` и `--agent-json`, их больше нет.** `--json=id,text` оставляет эти поля каждого
+  элемента. JSON в CLI сохраняет текст как есть; ответы MCP по-прежнему показывают невидимые символы.
+- **`tags list`, `tasks list` и `conversations list` принимают запрос вместо флагов-фильтров.**
+  `tags list tag:work type:chat`, `tags list sources:auto`; `tasks list state:open kind:promise chat:<id>`;
+  `conversations list <чат> started_at>=7d`. Флагов `--tag`, `--type`, `--source`, `--state`, `--chat`, `--before-time`
+  и `--since-time` у этих списков больше нет. Элементы — общие сущности: метка называет, на чём она, как `target`,
+  разговор отдаёт `messages_count`, `started_at`, `first_message`.
+
 ### Исправлено
 
+- **Запись о неудачном запуске снова хранит код отказа MAX** (`providerError`, например `proto.payload`). С cli-core
+  0.263.0 он читается из `error.details.provider_error`, а max писал `providerError`, и код терялся; так же опрос
+  «уже проголосовали» и повторная попытка после `not.found` смотрят на новый ключ.
 - **`MaxClient` называет файл от 2 ГиБ таким, а не «it cannot be read».** Файл по пути в `send({ files })` и фото
   группы или профиля сначала проверяются по размеру: Node не читает файл от 2 ГиБ, и ошибка теперь говорит это.
 - **`max <бот> bot chats members add` берёт не больше 100 человек за раз.** Bot API MAX принимает до 100 id в одном

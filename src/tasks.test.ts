@@ -74,23 +74,9 @@ describe("tasks through max", () => {
     expect(added.code, added.err).toBe(0)
     const { id } = JSON.parse(added.out)
 
-    const listed = await cli([
-      "tasks",
-      "list",
-      "--state",
-      "open",
-      "--chat",
-      "7",
-      "--type",
-      "promise",
-      "--before-time",
-      "2099-01-01T00:00:00Z",
-      "--limit",
-      "5",
-      "--json",
-    ])
+    const listed = await cli(["tasks", "list", "state:open", "kind:promise", "--limit", "5", "--json"])
     expect(listed.code, listed.err).toBe(0)
-    expect(JSON.parse(listed.out).items).toMatchObject([{ id, message: { text: "I'll send the invoice tomorrow" } }])
+    expect(JSON.parse(listed.out).items).toMatchObject([{ id, kind: "promise", state: "open" }])
 
     const counted = await cli(["stats", "tasks", "show", "--chat", "7", "--type", "promise", "--json"])
     expect(JSON.parse(counted.out).items).toMatchObject([{ group: "7", open: 1 }])

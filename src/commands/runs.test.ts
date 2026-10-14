@@ -55,7 +55,7 @@ describe("the shared runs command in MAX", () => {
       event: "response",
       operation: "messages.download",
       errorCode: "rate_limited",
-      ids: { message: "50" },
+      ids: { chat: "50" },
     })
     await recorded.finish("partial", {
       partial: { failed: 1, failures: [{ id: "50", stage: "download", errorCode: "rate_limited" }] },

@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**947 ✅ · 149 ⛔ · 0 ❌** — 326 commands, 770 options.
+**941 ✅ · 151 ⛔ · 0 ❌** — 331 commands, 761 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -428,10 +428,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats charts` | `--timezone` | ✅ |  |
 | `stats charts` | `--output` | ✅ |  |
 | `tasks list` |  | ✅ |  |
-| `tasks list` | `--state` | ✅ |  |
-| `tasks list` | `--chat` | ✅ |  |
-| `tasks list` | `--type` | ✅ |  |
-| `tasks list` | `--before-time` | ✅ |  |
 | `tasks list` | `--limit` | ✅ |  |
 | `tasks add` |  | ✅ |  |
 | `tasks add` | `--type` | ✅ |  |
@@ -467,8 +463,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations build` | `--max-tokens` | ✅ |  |
 | `conversations build` | `--max-chats` | ✅ |  |
 | `conversations list` |  | ✅ |  |
-| `conversations list` | `--chat` | ✅ |  |
-| `conversations list` | `--since-time` | ✅ |  |
 | `conversations list` | `--limit` | ✅ |  |
 | `conversations show` |  | ✅ |  |
 | `conversations related` |  | ✅ |  |
@@ -561,9 +555,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags remove` | `--message` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags remove` | `--source` | ✅ |  |
 | `tags list` |  | ✅ |  |
-| `tags list` | `--tag` | ✅ |  |
-| `tags list` | `--source` | ✅ |  |
-| `tags list` | `--type` | ✅ |  |
+| `mentions list` |  | ✅ |  |
+| `mentions list` | `--limit` | ✅ |  |
+| `mentions list` | `--page` | ✅ |  |
+| `mentions show` |  | ✅ |  |
+| `mentions rebuild` |  | ✅ |  |
 | `metadata get` |  | ✅ |  |
 | `metadata get` | `--chat` | ✅ |  |
 | `metadata refresh` |  | ⛔ | cli-core src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-core 0.174.0) |
@@ -667,6 +663,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `models text download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-core's src/cli/messenger/models-command.test.ts drives it offline |
 | `models text key set` |  | ⛔ | writes a provider key into the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
 | `models text key remove` |  | ⛔ | removes a provider key from the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
+| `models image list` |  | ⛔ | lists picture models from cli-core's shared models command; its image tests (WireCatLabs/cli-core#1102) cover it |
+| `models image download` |  | ⛔ | downloads the picture model over the network; cli-core's shared models command and its image tests (WireCatLabs/cli-core#1102) drive it offline |
 | `polls show` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
 | `polls vote` | `--retract` | ✅ |  |
@@ -1088,7 +1086,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | *global* | `--version` | ✅ |  |
 | *global* | `--verbose` | ✅ |  |
 | *global* | `--json` | ✅ |  |
-| *global* | `--agent-json` | ✅ |  |
 | *global* | `--jsonl` | ✅ |  |
 | *global* | `--quiet` | ✅ |  |
 | *global* | `--trace` | ✅ |  |
@@ -1098,7 +1095,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | *global* | `--no-input` | ✅ |  |
 | *global* | `--max-input-bytes` | ✅ |  |
 | *global* | `--max-output-bytes` | ✅ |  |
-| *global* | `--fields` | ✅ |  |
 | *global* | `--brief` | ⛔ | cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0) |
 | *global* | `--full` | ⛔ | cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0) |
 | *global* | `--dry-run` | ✅ |  |

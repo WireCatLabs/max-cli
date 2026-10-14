@@ -32,8 +32,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 |---|---|
 | `-V, --version` | output the version number. |
 | `-v, --verbose` | more detail in what is shown: -v ids, -vv everything we know. По умолчанию: `0`. |
-| `--json` | machine-readable output: one JSON value on stdout, nothing else. |
-| `--agent-json` | JSON for AI agents: invisible controls are visible; ordinary --json preserves text. |
+| `--json` | machine-readable output: one JSON value on stdout; --json=id,text keeps only those fields. |
 | `--jsonl` | machine-readable output: one JSON object per line, for streaming and jq. |
 | `--quiet` | diagnostics off. |
 | `--trace` | one line per request on stderr: ids and timings, never message content. |
@@ -43,7 +42,6 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--no-input` | never prompt or open interactive login; piped input remains available. |
 | `--max-input-bytes <bytes>` | maximum buffered input bytes (default: 16777216). |
 | `--max-output-bytes <bytes>` | maximum machine output bytes (default: 4194304; 0 disables). |
-| `--fields <paths>` | comma-separated item or object fields: id,text; preserve pagination and operation ids. |
 | `--brief` | found messages and mail as reference, title, time, sender and excerpt only. |
 | `--full` | found messages and mail with their whole text and every provider field. |
 | `--dry-run` | preview parsed arguments and permissions before running the action. |
@@ -2263,15 +2261,15 @@ what waits on you — unanswered questions, mentions, requests, promises — kep
 tasks, oldest first, with their message or note source
 
 ```sh
-max tasks list [options]
+max tasks list [query] [options]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
-| `--state <state>` | only tasks in this state: open, done or dismissed. |
-| `--chat <chat>` | only this chat's tasks; a chat: its id, or part of its title. |
-| `--type <names>` | only these types, comma-separated: question, request, mention, promise. |
-| `--before-time <time>` | only tasks opened before this ISO 8601 time, or 2h / 1d ago. |
 | `--limit <n>` | how many. |
 
 ### `max tasks add`
@@ -2404,13 +2402,16 @@ max conversations build [options]
 a chat's conversations, the newest first: when, how many messages, how many people
 
 ```sh
-max conversations list [options]
+max conversations list <chat> [query] [options]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
-| `--chat <chat>` | a chat: its id, or part of its title. |
-| `--since-time <time>` | only those that started at this ISO 8601 time, or 30m / 2h / 1d ago, or later. |
 | `--limit <n>` | how many. |
 
 ### `max conversations show`
@@ -2750,14 +2751,55 @@ max tags remove <tag> [options]
 what is tagged: this account's chats and messages, and the people of its messenger
 
 ```sh
-max tags list [options]
+max tags list [query]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+## `max mentions`
+
+phones, e-mail, links and documents found in stored messages
+
+### `max mentions list`
+
+this account's mentions matching the query, newest first; local store only
+
+```sh
+max mentions list [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | fields below; a bare word is a value, so 89001234567 finds +79001234567. |
 
 | Опция | Что делает |
 |---|---|
-| `--tag <tag>` | only this tag. |
-| `--source <manual\|auto>` | only labels with this ownership claim. |
-| `--type <names>` | only what is tagged of this type: chat, contact or message. |
+| `--limit <n>` | how many to show. |
+| `--page <n>` | which page, starting at 1. |
+
+### `max mentions show`
+
+one mention, the text around it, and how many other places hold its value
+
+```sh
+max mentions show <id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | the mention's id, from mentions list. |
+
+### `max mentions rebuild`
+
+find the mentions of every stored message again; decisions are kept
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max mentions rebuild
+```
 
 ## `max metadata`
 
@@ -3114,6 +3156,30 @@ max models text key remove <provider>
 | Аргумент | | Что это |
 |---|---|---|
 | `provider` | обязательный | openai, anthropic, or a server's host. |
+
+### `max models image`
+
+models that read pictures, for `images embed` and search by what a picture shows
+
+#### `max models image list`
+
+the picture models, which are downloaded, and which one is the default
+
+```sh
+max models image list
+```
+
+#### `max models image download`
+
+download a picture model once, checked against the sha256 this version expects
+
+```sh
+max models image download <model>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `model` | обязательный | a model id from `models image list`. |
 
 ## `max polls`
 
@@ -4232,7 +4298,7 @@ max bot chats members list <chat> [options]
 
 #### `max bot chats members add`
 
-add people to a chat by user id; the bot must be an admin that may add members
+add people to a chat by user id, at most 100; the bot must be an admin that may add members
 
 **Меняет что-то в MAX.**
 

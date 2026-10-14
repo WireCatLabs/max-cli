@@ -83,7 +83,7 @@ describe("MAX's refusal, as a key", () => {
     const worded = await run("you sent: Привет, как дела")
 
     expect(keyed.response).toMatchObject({ errorCode: "provider_error", providerError: "proto.payload" })
-    expect((keyed.error as CliError).details.providerError).toBe("proto.payload")
+    expect((keyed.error as CliError).details.provider_error).toBe("proto.payload")
     expect(worded.response).not.toHaveProperty("providerError")
   })
 })
@@ -92,7 +92,7 @@ describe("a failed run", () => {
   it("is kept without --record, with every event before the failure and the key MAX gave", async () => {
     const { runs, events } = await recordRun({ keepFailed: true }, async (emit) => {
       emit(REQUEST)
-      throw new CliError("provider_error", "MAX refused opcode 49: proto.payload", { providerError: "proto.payload" })
+      throw new CliError("provider_error", "MAX refused opcode 49: proto.payload", { provider_error: "proto.payload" })
     })
 
     expect(runs).toMatchObject([
@@ -116,7 +116,7 @@ describe("a failed run", () => {
     })
 
     expect(runs[0]).toMatchObject({ errorCode: "generic_failure" })
-    expect(events.at(-1)).toMatchObject({ event: "crash", errorName: "TypeError", frames: expect.any(Array) })
+    expect(events.at(-1)).toMatchObject({ event: "crash", errorClass: "TypeError", frames: expect.any(Array) })
     expect(raw).not.toContain("секрет")
   })
 })

@@ -1626,7 +1626,7 @@ export class MaxClient {
           messageId,
           errorCode: failure.code,
         })
-        if (answerIds.length > 0 && failure.details.providerError === "poll.already.voted") {
+        if (answerIds.length > 0 && failure.details.provider_error === "poll.already.voted") {
           throw new CliError(
             failure.code,
             `${failure.message}; if this poll allows changing votes, run \`polls vote <chat> <message> --retract\` in the same profile before voting again`,
@@ -2708,7 +2708,9 @@ export class MaxClient {
         durationMs: Math.round(performance.now() - started),
         outcome: "error",
         errorCode: failure.code,
-        ...(typeof failure.details.providerError === "string" ? { providerError: failure.details.providerError } : {}),
+        ...(typeof failure.details.provider_error === "string"
+          ? { providerError: failure.details.provider_error }
+          : {}),
       })
       throw failure
     }
@@ -3330,7 +3332,7 @@ const asCliError = (error: unknown): CliError => {
     const refused = asRefusal(error)
     return key === undefined
       ? refused
-      : new CliError(refused.code, refused.message, { ...refused.details, providerError: key })
+      : new CliError(refused.code, refused.message, { ...refused.details, provider_error: key })
   }
 
   const message = error instanceof Error ? error.message : String(error)
@@ -3359,7 +3361,7 @@ const deadLink =
   (link: string) =>
   (error: unknown): never => {
     const failure = asCliError(error)
-    if (failure.details.providerError !== "not.found") throw failure
+    if (failure.details.provider_error !== "not.found") throw failure
     throw new CliError("not_found", `${link.trim()} leads nowhere — the link was reset, or never worked`)
   }
 
