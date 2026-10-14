@@ -49,13 +49,21 @@
       "stream": "stdout",
       "kind": "json",
       "json": {
-        "changed": true,
-        "dryRun": true
+        "item": {
+          "changed": true,
+          "dry_run": true
+        }
       },
       "files": [
         {
           "path": "MAX/CONFIG/config.json",
-          "unchanged": true
+          "json": {
+            "profiles": {
+              "readonly": {
+                "read_only": true
+              }
+            }
+          }
         }
       ]
     },
@@ -66,8 +74,10 @@
       "stream": "stdout",
       "kind": "json",
       "json": {
-        "changed": true,
-        "dryRun": false
+        "item": {
+          "changed": true,
+          "dry_run": false
+        }
       },
       "files": [
         {
@@ -97,7 +107,9 @@
       "stream": "stdout",
       "kind": "json",
       "json": {
-        "changed": false
+        "item": {
+          "changed": false
+        }
       }
     },
     {
@@ -132,16 +144,18 @@
       "stream": "stdout",
       "kind": "json",
       "capture": {
-        "task": "/id"
+        "task": "/item/id"
       },
       "json": {
-        "state": "open"
+        "item": {
+          "state": "open"
+        }
       },
       "allowSensitiveOutput": true
     },
     {
       "id": "task-list",
-      "args": ["contract", "--json", "--trace", "--record", "tasks", "list", "--state", "open"],
+      "args": ["contract", "--json", "--trace", "--record", "tasks", "list", "state:open"],
       "exit": 0,
       "stream": "stdout",
       "kind": "json",
@@ -150,10 +164,7 @@
         "items": [
           {
             "id": "{{task}}",
-            "state": "open",
-            "message": {
-              "text": "wirecat-synthetic-message-canary"
-            }
+            "state": "open"
           }
         ]
       }
@@ -176,14 +187,16 @@
       "stream": "stdout",
       "kind": "json",
       "json": {
-        "state": "dismissed",
-        "reason": "synthetic-check"
+        "item": {
+          "state": "dismissed",
+          "reason": "synthetic-check"
+        }
       },
       "allowSensitiveOutput": true
     },
     {
       "id": "task-persisted",
-      "args": ["contract", "--json", "tasks", "list", "--state", "dismissed"],
+      "args": ["contract", "--json", "tasks", "list", "state:dismissed"],
       "exit": 0,
       "stream": "stdout",
       "kind": "json",

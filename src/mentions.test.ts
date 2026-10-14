@@ -77,4 +77,12 @@ describe("mentions through max", () => {
     expect(rebuilt.code, rebuilt.err).toBe(0)
     expect(JSON.parse(rebuilt.out).item.mentions).toBeGreaterThanOrEqual(2)
   })
+
+  it("rejects a mention's value so it is listed as dismissed", async () => {
+    const [phone] = JSON.parse((await max(["mentions", "list", "kind:phone", "--json"])).out).items
+    const rejected = await max(["mentions", "reject", String(phone.id), "--json"])
+    expect(rejected.code, rejected.err).toBe(0)
+    const dismissed = await max(["mentions", "list", "status:dismissed", "--json"])
+    expect(JSON.parse(dismissed.out).items).toMatchObject([{ kind: "phone", value: "+79000000001" }])
+  })
 })

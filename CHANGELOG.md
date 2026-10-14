@@ -15,12 +15,29 @@
   версия базы 7). `mentions list kind:phone`, `mentions list domain:google.com`; слово без поля — значение в любой
   записи, `89001234567` найдёт `+79001234567`. `mentions show <id>` показывает текст вокруг. Сообщения, сохранённые
   раньше, читает один `max <профиль> mentions rebuild`; новые читаются при записи.
+- **`max mentions confirm|reject`, упоминания в файлах и голосовых, поиск по `phone:`, `email:`, `url:`, `domain:`**
+  (cli-core 0.269.0, версия базы 11). `mentions confirm <id> [person:<uid>|organization:<id>]` записывает, чей это
+  телефон или адрес (организации тоже), `mentions reject <id>` отклоняет значение насовсем; автор записи — агент
+  или владелец (`--as-owner`). Текст из файлов и расшифровки голосовых тоже даёт упоминания (поле `file_text` или
+  `transcript`); сохранённые раньше читает один `mentions rebuild`. Поиск сообщений находит их по `phone:"8 900
+  000-00-01"`, `domain:docs.google.com`, `email:"ana@example.com"`. Старые сборки базу читают как раньше.
+- **Поиск по картинкам: `max <профиль> images embed` и `max <профиль> models image download|list`.** Включается
+  `max <профиль> config set picture_search true` (по умолчанию выключен), модель `clip-b32` скачивается один раз
+  (около 155 МБ), `images embed` считает вектор для каждой картинки в архиве. Поиск сообщений по словам тогда
+  возвращает `pictures` рядом с находками. Почему: найти картинку по тому, что на ней изображено.
+  Что учесть: запрос для картинок только английский, агент переводит его сам. Подробнее — в
+  [поиске](docs/search.md#картинки-поиск-по-тому-что-на-них-изображено).
 
 ### Изменено — может сломать скрипты
 
+- **Сборка на `@wirecat/cli-core` 0.269.0: `contacts timeline` листается как остальные списки.** Список, обрезанный
+  `--limit`, отвечает `page.has_more: true`, `page.cursor` и шагом `page.next` (`--cursor` продолжает с теми же
+  `--scope`, `--since-time` и `--until-time`); раньше было `has_more: false` и `meta.truncated`. `meta.truncated`
+  остаётся для изменений, ещё стоящих в очереди. Заметка «cut at --limit» на stderr исчезла. Что учесть: скрипты,
+  читавшие `meta.truncated` у `contacts timeline`, читают `page.has_more`.
 - **Ключи ошибок — snake_case и у `max bot`, и у отправки без ответа.** Код отказа MAX у бота теперь
   `error.details.max_code` (был `maxCode`); `outcome_unknown` при отправке сообщения отдаёт `send_id` (был `sendId`).
-- **На `@wirecat/cli-core` 0.264.0 и `@wirecat/cli-base` 0.27.1.**
+- **На `@wirecat/cli-core` 0.269.0 и `@wirecat/cli-base` 0.27.2.**
 - **`--json=<поля>` заменяет `--fields` и `--agent-json`, их больше нет.** `--json=id,text` оставляет эти поля каждого
   элемента. JSON в CLI сохраняет текст как есть; ответы MCP по-прежнему показывают невидимые символы.
 - **`tags list`, `tasks list` и `conversations list` принимают запрос вместо флагов-фильтров.**

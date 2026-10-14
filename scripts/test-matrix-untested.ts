@@ -332,12 +332,6 @@ export const UNTESTED: Untested[] = [
       "cli-core src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts",
   },
   {
-    command: "chats members history",
-    option: "--since-time",
-    reason:
-      "cli-core src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts",
-  },
-  {
     command: "chats members fetch",
     reason:
       "cli-core src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts",
@@ -522,7 +516,7 @@ export const UNTESTED: Untested[] = [
     reason:
       "shared chat statistics; cli-core src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts",
   })),
-  ...["", "--budget", "--min-score", "--deep"].map((option) => ({
+  ...["", "--budget", "--deep"].map((option) => ({
     command: "chats members audit",
     ...(option ? { option } : {}),
     reason:
@@ -765,12 +759,6 @@ export const UNTESTED: Untested[] = [
       "removes a provider key from the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring",
   },
   {
-    command: "contacts list",
-    option: "--search-notes",
-    reason:
-      "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
-  },
-  {
     command: "contacts show",
     option: "--with-notes",
     reason:
@@ -837,7 +825,6 @@ export const UNTESTED: Untested[] = [
     ["tasks plan", "--title"],
     ["tasks plan", "--description"],
     ["tasks agenda", "--unanswered"],
-    ["tasks agenda", "--kind"],
   ].map(([command, option]) => ({
     command: command as string,
     option: option as string,
@@ -922,4 +909,21 @@ export const UNTESTED: Untested[] = [
     reason:
       "cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0)",
   })),
+  ...[
+    ["contacts timeline", "--cursor"],
+    ["messages list", "--cursor"],
+  ].map(([command, option]) => ({
+    command: command as string,
+    option,
+    reason:
+      "cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0)",
+  })),
+  ...[["mentions confirm"], ["mentions confirm", "--as-owner"], ["mentions reject", "--as-owner"]].map(
+    ([command, option]) => ({
+      command: command as string,
+      ...(option ? { option } : {}),
+      reason:
+        "cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0)",
+    }),
+  ),
 ]

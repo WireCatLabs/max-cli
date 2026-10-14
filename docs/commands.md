@@ -1242,6 +1242,7 @@ max contacts timeline <person> [options]
 | `--since-time <time>` | nothing older than this ISO 8601 time, or 2h / 1d ago. |
 | `--until-time <time>` | through this ISO 8601 time, or 2h / 1d ago. |
 | `--limit <n>` | at most this many; 50 if not given. |
+| `--cursor <cursor>` | go on from where the last page stopped; page.next gives it, with the same filters. |
 
 ### `max contacts check`
 
@@ -2777,7 +2778,7 @@ max mentions list [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | fields below; a bare word is a value, so 89001234567 finds +79001234567. |
+| `query` | необязательный | fields below; a bare word is a value, so a phone typed with 8 finds it written with +7. |
 
 | Опция | Что делает |
 |---|---|
@@ -2795,6 +2796,43 @@ max mentions show <id>
 | Аргумент | | Что это |
 |---|---|---|
 | `id` | обязательный | the mention's id, from mentions list. |
+
+### `max mentions confirm`
+
+say what a mention is, everywhere its value is written: a phone's owner, the stored document
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max mentions confirm <id> [person] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | the mention's id, from mentions list. |
+| `person` | необязательный | person:<uid> or organization:<id> that owns the phone or the address; a document needs none. |
+
+| Опция | Что делает |
+|---|---|
+| `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
+
+### `max mentions reject`
+
+not a real mention, or not worth keeping: dismiss its value everywhere, and on later syncs
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max mentions reject <id> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | the mention's id, from mentions list. |
+
+| Опция | Что делает |
+|---|---|
+| `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
 ### `max mentions rebuild`
 
@@ -3921,15 +3959,19 @@ max runs list [options]
 
 ### `max runs show`
 
-one run: what it was, how it ended and what went wrong; -v for every event
+one run: what it was, how it ended, and every event it logged
 
 ```sh
-max runs show <run-id>
+max runs show <run-id> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `run-id` | обязательный | an id from `max runs list`. |
+
+| Опция | Что делает |
+|---|---|
+| `--problems` | only failed responses, warnings and crashes. |
 
 ### `max runs search`
 
