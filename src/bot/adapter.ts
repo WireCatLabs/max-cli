@@ -137,7 +137,7 @@ export const toMarkdown = (text: string, markup: readonly Markup[]): string => {
  */
 const withPersonHint = (error: unknown, chat: BotChatRef): unknown => {
   const failure = error as { code?: CliError["code"]; message?: string; details?: CliError["details"] }
-  if (!/^\d+$/.test(chat) || failure.details?.maxCode !== "chat.not.found" || !failure.code) return error
+  if (!/^\d+$/.test(chat) || failure.details?.max_code !== "chat.not.found" || !failure.code) return error
   return new CliError(
     failure.code,
     `${failure.message} — a positive number is usually a person, not a chat: to write to them, use user:${chat}`,

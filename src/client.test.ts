@@ -3,7 +3,7 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@wirecat/cli-base"
 import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { maxMessenger } from "./messenger.js"
@@ -51,6 +51,60 @@ const clientWith = (max: ReturnType<typeof mockMax>, token = "a-token") => {
 }
 
 describe("MaxClient", () => {
+  it("shares initialization between simultaneous resource reads", async () => {
+    const max = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer } })
+    const { client } = clientWith(max)
+    try {
+      await Promise.all([client.account.me(), client.account.me(), client.connect()])
+      expect(max.sent.map((call) => call.opcode)).toEqual([Opcode.SESSION_INIT, Opcode.LOGIN])
+    } finally {
+      await client.close()
+    }
+  })
+
+  it("uses the supplied clock while keeping send ids distinct", () => {
+    const max = mockMax({ answers: {} })
+    const { store } = clientWith(max)
+    const client = new MaxClient({
+      store,
+      sends: "caller",
+      now: () => 1234,
+      connection: new Connection({ createSocket: max.createSocket }),
+    })
+    expect([client.newSendId(), client.newSendId()]).toEqual(["1234", "1235"])
+  })
+
+  it("never logs in after closing during connection setup", async () => {
+    const { store } = clientWith(mockMax({ answers: {} }))
+    let finishOpening: () => void = () => {}
+    let opened: () => void = () => {}
+    const began = new Promise<void>((resolve) => {
+      opened = resolve
+    })
+    const invoke = vi.fn(async () => ({}))
+    const client = new MaxClient({
+      store,
+      sends: "caller",
+      connection: {
+        open: () =>
+          new Promise<void>((resolve) => {
+            finishOpening = resolve
+            opened()
+          }),
+        invoke,
+        close: async () => {
+          finishOpening()
+        },
+      },
+    })
+    const pending = client.connect()
+    await began
+    await client.close()
+    await expect(pending).rejects.toMatchObject({ code: "network_error" })
+    expect(invoke).not.toHaveBeenCalled()
+    await expect(client.connect()).rejects.toMatchObject({ code: "network_error" })
+  })
+
   it("refuses to connect without a session, and names the command that fixes it", async () => {
     const max = mockMax({ answers: {} })
     const { client } = clientWith(max, "")

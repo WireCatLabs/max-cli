@@ -9,6 +9,52 @@ import { encodeFrame, SEQ_MODULO } from "./frame.js"
 const silent = () => undefined
 
 describe("the connection", () => {
+  it("parallel opens wait for the same socket to be ready", async () => {
+    const socket = Object.assign(new EventEmitter(), { readyState: 0, OPEN: 1, CONNECTING: 0, close: vi.fn() })
+    const createSocket = vi.fn(() => socket as unknown as WebSocket)
+    const connection = new Connection({ createSocket })
+    let opened = 0
+    const first = connection.open().then(() => {
+      opened++
+    })
+    const second = connection.open().then(() => {
+      opened++
+    })
+    await Promise.resolve()
+    expect(opened).toBe(0)
+    expect(createSocket).toHaveBeenCalledTimes(1)
+    socket.readyState = 1
+    socket.emit("open")
+    await Promise.all([first, second])
+    expect(opened).toBe(2)
+    await connection.close()
+    await expect(connection.open()).rejects.toThrow("closed")
+  })
+
+  it("closing during open rejects every caller and removes opening listeners", async () => {
+    const socket = Object.assign(new EventEmitter(), { readyState: 0, OPEN: 1, CONNECTING: 0, close: vi.fn() })
+    const connection = new Connection({ createSocket: () => socket as unknown as WebSocket })
+    const first = connection.open().catch((error: Error) => error.message)
+    const second = connection.open().catch((error: Error) => error.message)
+    await connection.close()
+    expect(await first).toContain("closed before it opened")
+    expect(await second).toContain("closed before it opened")
+    expect(socket.listenerCount("open")).toBe(0)
+    expect(socket.listenerCount("close")).toBe(0)
+    await expect(connection.open()).rejects.toThrow("closed")
+  })
+
+  it("a socket closed before opening rejects without waiting for timeout", async () => {
+    const socket = Object.assign(new EventEmitter(), { readyState: 0, OPEN: 1, CONNECTING: 0, close: vi.fn() })
+    const connection = new Connection({ createSocket: () => socket as unknown as WebSocket })
+    const opening = connection.open().catch((error: Error) => error.message)
+    socket.readyState = 3
+    socket.emit("close", 1006)
+    expect(await opening).toContain("1006")
+    expect(socket.listenerCount("open")).toBe(0)
+    await connection.close()
+  })
+
   it("**settles a request that was in flight when it closed**, instead of leaving it forever", async () => {
     const max = mockMax({ answers: { 6: silent } })
     const connection = new Connection({ createSocket: max.createSocket, timeoutMs: 60_000 })
@@ -93,6 +139,33 @@ describe("the connection", () => {
     await expect(connection.invoke(6, {})).resolves.toEqual({ ok: true })
     expect(attempts).toBe(2)
     await connection.close()
+  })
+
+  it("releases the pending timer when a socket refuses a write synchronously", async () => {
+    const socket = Object.assign(new EventEmitter(), {
+      readyState: 1,
+      OPEN: 1,
+      CONNECTING: 0,
+      close: vi.fn(),
+      send: () => {
+        throw new Error("write failed")
+      },
+    })
+    const connection = new Connection({
+      createSocket: () => {
+        queueMicrotask(() => socket.emit("open"))
+        return socket as unknown as WebSocket
+      },
+    })
+    await connection.open()
+    vi.useFakeTimers()
+    try {
+      await expect(connection.invoke(6)).rejects.toThrow("write failed")
+      expect(vi.getTimerCount()).toBe(0)
+    } finally {
+      vi.useRealTimers()
+      await connection.close()
+    }
   })
 
   it("leaves no timer behind when a request cannot be encoded", async () => {

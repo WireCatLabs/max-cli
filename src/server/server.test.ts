@@ -86,11 +86,14 @@ const serve = async (
   profile: string,
   max = scripted(),
   extra: {
+    now?: () => number
     pingEveryMs?: number
     telemetryAfterMs?: number
     refreshEveryMs?: number
     idleMs?: number
     startedByCommand?: boolean
+    maxSubscriberBufferBytes?: number
+    maxSubscriberTotalBufferBytes?: number
   } = {},
 ) => {
   const store = new SessionStore({ profile, keyring: memoryKeyring() })
@@ -140,6 +143,25 @@ const tabReads = (max: ReturnType<typeof scripted>, logins = 1) =>
     () => max.sent.filter((call) => call.opcode === Opcode.ASSETS_UPDATE).length >= 4 * logins,
     `reads after ${logins} login(s)`,
   )
+
+it("uses its injected clock for status and start metadata", async () => {
+  const now = Date.parse("2026-10-01T12:00:00.000Z")
+  const { store } = await serve("server-clock", scripted(), { now: () => now })
+  expect(await serverStatus(store.socketPath())).toMatchObject({
+    at: "2026-10-01T12:00:00.000Z",
+    startedAt: "2026-10-01T12:00:00.000Z",
+  })
+})
+
+it("reports a subscription buffer refusal to watch while leaving the server available", async () => {
+  const { store, server, notes } = await serve("subscriber-budget", scripted(), { maxSubscriberBufferBytes: 1 })
+  await expect(subscribe(store.socketPath(), store.profile, () => {})).rejects.toMatchObject({
+    code: "invalid_response",
+    details: { reason: "output.too-large" },
+  })
+  expect(notes.some((note) => note.includes("output buffer budget"))).toBe(true)
+  expect(server.connected).toBe(true)
+})
 
 describe("max serve", () => {
   it("logs in once and listens on a socket only its owner can open", async () => {

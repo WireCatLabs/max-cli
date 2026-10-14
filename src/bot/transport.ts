@@ -269,7 +269,12 @@ export class BotTransport {
         "outcome_unknown",
         `${operation.id} got ${response.status} from a gateway in front of MAX${reason}; MAX may or may not have ` +
           "carried it out — check before repeating it",
-        { operation: operation.id, status: response.status, retryable: false, ...(maxCode ? { maxCode } : {}) },
+        {
+          operation: operation.id,
+          status: response.status,
+          retryable: false,
+          ...(maxCode ? { max_code: maxCode } : {}),
+        },
       )
     }
     const retryable = response.status === 429 || response.status === 502 || response.status === 503
@@ -281,7 +286,7 @@ export class BotTransport {
         operation: operation.id,
         status: response.status,
         retryable,
-        ...(maxCode ? { maxCode } : {}),
+        ...(maxCode ? { max_code: maxCode } : {}),
         ...(retryAfterMs === undefined ? {} : { retry_after_ms: retryAfterMs }),
       },
     )
@@ -311,7 +316,7 @@ const idsIn = (input: CallInput): Record<string, string> | undefined => {
 const failureOf = (error: unknown): Pick<RequestEvent, "outcome" | "errorCode" | "status" | "providerError"> => {
   if (!(error instanceof CliError)) return { outcome: "error", errorCode: "generic_failure" }
   const status = typeof error.details.status === "number" ? error.details.status : undefined
-  const providerError = providerErrorKey(error.details.maxCode)
+  const providerError = providerErrorKey(error.details.max_code)
   return {
     outcome: "error",
     errorCode: error.code,

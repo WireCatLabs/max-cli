@@ -29,9 +29,10 @@
                       "**/spec/**",
                       "../spec/*",
                       "**/generated/**",
-                      "../generated/*"
+                      "../generated/*",
+                      "**/client/**"
                     ],
-                    "message": "commands and the MCP tools speak the domain model; only src/client.ts may reach the protocol, the specification or the generated wrappers"
+                    "message": "commands and the MCP tools speak the domain model; only src/client.ts and src/client/ may reach the protocol, the specification or the generated wrappers"
                   }
                 ]
               }
