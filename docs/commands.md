@@ -2374,7 +2374,7 @@ max tasks plan <task> [options]
 
 ### `max tasks link`
 
-link a task to what it concerns — messages, chats, people, documents, URLs — to read around later
+link a task to messages, chats, people or URLs — or to another task: task:<id>
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2385,12 +2385,12 @@ max tasks link <task> [targets] [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `task` | обязательный | the task's id or key, as tasks list shows it. |
-| `targets` | необязательный | msg: locators, person:<id>, document:<id>, note:<id>, or a URL. |
+| `targets` | необязательный | msg: locators, person:<id>, document:<id>, note:<id>, a URL; or task:<id>, which links two project tasks. |
 
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat it concerns, repeatable; a chat: its id, or part of its title. |
-| `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from. |
+| `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by or follow-up-of. |
 
 ### `max tasks show`
 

@@ -275,8 +275,8 @@ max personal messages transcribe -1000 100000000000000001 --json   # текст 
 Голосовое — вложение `"kind": "voice"` в `messages list|show|context`, `search messages`, `inbox` и `review`.
 Его текст даёт `max personal messages transcribe`; до минуты на пять минут речи, повторно — сразу из общей
 локальной копии сообщений. Уже расшифрованное голосовое несёт поле `transcript` в
-`messages list` и `inbox`; `--transcribe` там расшифровывает остальные показанные, а не
-расшифрованные называет записью `transcript` в `missing`. При отсутствии модели пакетное чтение сохраняет
+`messages list`, `inbox` и `review`; остальные называет запись `transcript` в `missing` (обзор с ними не полон),
+а `--transcribe` расшифровывает их и называет там то, что не вышло. При отсутствии модели пакетное чтение сохраняет
 сообщения и сообщает причину там же; одиночная `messages transcribe` откажет
 и назовёт `max personal models audio download <id>`: **сказать об этом владельцу и не скачивать самому** — это сотни
 мегабайт, и выбор модели за ним.

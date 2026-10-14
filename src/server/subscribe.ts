@@ -40,7 +40,12 @@ export const subscribe = (
           socket.destroy()
           return
         }
-        onEvent(event as unknown as ServerEvent)
+        try {
+          onEvent(event as unknown as ServerEvent)
+        } catch (error) {
+          reject(error)
+          socket.destroy()
+        }
       }),
     )
     socket.once("error", (error: NodeJS.ErrnoException) => {

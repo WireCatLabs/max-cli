@@ -154,6 +154,9 @@ describe("max review", () => {
 
     expect(nextReview(plain.json)).toBe(startingAt(60))
     expect(plain.json.items[0].attachments[0].kind).toBe("voice")
+    expect(plain.json.missing).toEqual([
+      { field: "transcript", why: expect.stringContaining("--transcribe hears them"), step: "messages.transcribe" },
+    ])
     expect(asked.code).toBe(0)
     expect(asked.json.missing).toEqual([
       { field: "transcript", why: expect.stringMatching(/max models audio download/), step: "messages.transcribe" },

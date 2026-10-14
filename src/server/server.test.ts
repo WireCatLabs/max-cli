@@ -2,7 +2,7 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync
 import { createServer, type Server } from "node:net"
 import { dirname, join } from "node:path"
 import { decode, ExtData } from "@msgpack/msgpack"
-import { type CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
+import { CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
 import { thisMachine, unitScope } from "@wirecat/cli-core/background"
 import { rememberAccount, repliesPathFor } from "@wirecat/cli-core/cli"
 import { guardedWrite, RecipientList, SendJournal } from "@wirecat/cli-core/sends"
@@ -151,6 +151,17 @@ it("uses its injected clock for status and start metadata", async () => {
     at: "2026-10-01T12:00:00.000Z",
     startedAt: "2026-10-01T12:00:00.000Z",
   })
+})
+
+it("ends a subscription with the error its handler threw, rather than crashing the process", async () => {
+  const { store, server } = await serve("subscriber-throws", scripted())
+  const failure = new CliError("authentication_error", "this profile has not logged in yet")
+  await expect(
+    subscribe(store.socketPath(), store.profile, () => {
+      throw failure
+    }),
+  ).rejects.toBe(failure)
+  expect(server.connected).toBe(true)
 })
 
 it("reports a subscription buffer refusal to watch while leaving the server available", async () => {
