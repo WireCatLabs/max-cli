@@ -21,7 +21,6 @@
   "bot callbacks answer --notification",
   "bot callbacks answer --text",
   "bot chats admins add --title",
-  "bot chats members list --marker",
   "bot chats members remove --block",
   "bot chats moderate --no-ban",
   "bot contacts show --all-bots",
