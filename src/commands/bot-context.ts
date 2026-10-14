@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
 import type { ManifestOperation } from "@wirecat/cli-base/codegen"
-import { type EventSink, type Recording, startRecording } from "@wirecat/cli-core/cli"
+import { type EventSink, type Recording, startRecording, useAsProcessRun } from "@wirecat/cli-core/cli"
 import { levelFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
@@ -33,20 +33,25 @@ export const startBotRecording = (command: Command): void => {
   })
   const words: string[] = []
   for (let at: Command | null = command; at?.parent; at = at.parent) words.unshift(at.name())
-  recordings.set(
-    rootOf(command),
-    startRecording({
-      app: MAX_APP,
-      command: words.join(" "),
-      profile: settings.profile,
-      record: settings.record,
-      keepFailed: settings.keepFailedRuns,
-      trace: settings.trace,
-      format,
-      streams,
-      keepDays: settings.keepRunsForDays,
-    }),
-  )
+  const recording = startRecording({
+    app: MAX_APP,
+    command: words.join(" "),
+    profile: settings.profile,
+    record: settings.record,
+    keepFailed: settings.keepFailedRuns,
+    trace: settings.trace,
+    format,
+    streams,
+    keepDays: settings.keepRunsForDays,
+  })
+  recordings.set(rootOf(command), recording)
+  // A hook cannot wrap the action in inRun, so the answer's meta.run_id would name no recorded run.
+  useAsProcessRun({
+    runId: recording.runId,
+    command: words.join(" "),
+    startedAt: Date.now(),
+    ...(recording.traceId ? { traceId: recording.traceId } : {}),
+  })
 }
 
 export const botRecordingOf = (command: Command): Recording | undefined => recordings.get(rootOf(command))
