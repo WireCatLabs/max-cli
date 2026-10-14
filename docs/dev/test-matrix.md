@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**941 ✅ · 151 ⛔ · 0 ❌** — 331 commands, 761 options.
+**930 ✅ · 155 ⛔ · 0 ❌** — 333 commands, 752 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -42,13 +42,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats list` | `--limit` | ✅ |  |
 | `chats list` | `--page` | ✅ |  |
 | `chats list` | `--all` | ✅ |  |
-| `chats list` | `--search` | ✅ |  |
-| `chats list` | `--kind` | ✅ |  |
-| `chats list` | `--unread` | ✅ |  |
 | `chats show` |  | ✅ |  |
 | `chats events` |  | ✅ |  |
-| `chats events` | `--since-time` | ✅ |  |
-| `chats events` | `--type` | ✅ |  |
 | `chats inspect` |  | ✅ |  |
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
@@ -63,10 +58,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members list` | `--all` | ✅ |  |
 | `chats members audit` |  | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members audit` | `--budget` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
-| `chats members audit` | `--min-score` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members audit` | `--deep` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members history` |  | ✅ |  |
-| `chats members history` | `--since-time` | ✅ |  |
 | `chats members fetch` |  | ✅ |  |
 | `chats members fetch` | `--track` | ✅ |  |
 | `chats members fetch` | `--budget` | ✅ |  |
@@ -93,8 +86,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats link reset` |  | ✅ |  |
 | `chats requests list` |  | ✅ |  |
 | `chats requests list` | `--limit` | ✅ |  |
-| `chats requests list` | `--search` | ✅ |  |
-| `chats requests list` | `--link` | ✅ |  |
+| `chats requests list` | `--page` | ✅ |  |
 | `chats requests accept` |  | ✅ |  |
 | `chats requests accept` | `--all` | ✅ |  |
 | `chats requests accept` | `--link` | ✅ |  |
@@ -122,7 +114,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats media` |  | ✅ |  |
 | `chats media` | `--type` | ✅ |  |
 | `chats media` | `--limit` | ✅ |  |
-| `chats media` | `--before-id` | ✅ |  |
+| `chats media` | `--cursor` | ✅ |  |
 | `chats mute` |  | ✅ |  |
 | `chats mute` | `--until` | ✅ |  |
 | `chats unmute` |  | ✅ |  |
@@ -139,8 +131,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--page` | ✅ |  |
 | `contacts list` | `--all` | ✅ |  |
 | `contacts list` | `--order` | ✅ |  |
-| `contacts list` | `--search` | ✅ |  |
-| `contacts list` | `--search-notes` | ⛔ | cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `contacts show` |  | ✅ |  |
 | `contacts show` | `--with-notes` | ✅ |  |
 | `contacts profile` |  | ✅ |  |
@@ -173,16 +163,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts timeline` | `--since-time` | ✅ |  |
 | `contacts timeline` | `--until-time` | ✅ |  |
 | `contacts timeline` | `--limit` | ✅ |  |
+| `contacts timeline` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |
 | `contacts check` |  | ✅ |  |
 | `contacts check` | `--no-registries` | ✅ |  |
 | `contacts link` |  | ⛔ | cli-core src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
 | `contacts unlink` |  | ⛔ | cli-core src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
 | `messages list` |  | ✅ |  |
 | `messages list` | `--limit` | ✅ |  |
-| `messages list` | `--before-id` | ✅ |  |
-| `messages list` | `--before-time` | ✅ |  |
-| `messages list` | `--after-id` | ✅ |  |
-| `messages list` | `--after-time` | ✅ |  |
+| `messages list` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |
 | `messages list` | `--transcribe` | ✅ |  |
 | `messages list` | `--model` | ✅ |  |
 | `messages list` | `--mark-read` | ✅ |  |
@@ -205,7 +193,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages download` | `--output` | ✅ |  |
 | `messages evidence` |  | ✅ |  |
 | `messages evidence` | `--limit` | ✅ |  |
-| `messages evidence` | `--before-id` | ✅ |  |
+| `messages evidence` | `--cursor` | ✅ |  |
 | `messages sync` |  | ✅ |  |
 | `messages sync` | `--all` | ⛔ | cli-core src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-core 0.174.0) |
 | `messages sync` | `--limit` | ✅ |  |
@@ -268,7 +256,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store gaps repair` | `--catch-up-time` | ✅ |  |
 | `store gaps repair` | `--background` | ✅ |  |
 | `store jobs list` |  | ✅ |  |
-| `store jobs list` | `--state` | ✅ |  |
+| `store jobs list` | `--limit` | ✅ |  |
+| `store jobs list` | `--page` | ✅ |  |
+| `store jobs list` | `--all` | ✅ |  |
 | `store jobs show` |  | ✅ |  |
 | `store jobs cancel` |  | ✅ |  |
 | `store jobs retry` |  | ⛔ | cli-core src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
@@ -449,7 +439,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks agenda` | `--unanswered` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks agenda` | `--waiting` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks agenda` | `--kind` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks close` |  | ✅ |  |
 | `tasks close` | `--as` | ✅ |  |
 | `tasks close` | `--reason` | ✅ |  |
@@ -526,8 +515,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments extract` | `--ocr` | ✅ |  |
 | `attachments extract` | `--concurrency` | ✅ |  |
 | `attachments list` |  | ✅ |  |
-| `attachments list` | `--chat` | ✅ |  |
-| `attachments list` | `--needs-text` | ✅ |  |
 | `attachments list` | `--limit` | ✅ |  |
 | `attachments list` | `--page` | ✅ |  |
 | `attachments list` | `--all` | ✅ |  |
@@ -559,6 +546,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mentions list` | `--limit` | ✅ |  |
 | `mentions list` | `--page` | ✅ |  |
 | `mentions show` |  | ✅ |  |
+| `mentions confirm` |  | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
+| `mentions confirm` | `--as-owner` | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
+| `mentions reject` |  | ✅ |  |
+| `mentions reject` | `--as-owner` | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
 | `mentions rebuild` |  | ✅ |  |
 | `metadata get` |  | ✅ |  |
 | `metadata get` | `--chat` | ✅ |  |
@@ -571,7 +562,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search all` | `--source` | ✅ |  |
 | `search all` | `--max-meetings` | ⛔ | cli-core src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through |
 | `search all` | `--limit` | ✅ |  |
-| `search all` | `--offset` | ✅ |  |
+| `search all` | `--page` | ✅ |  |
 | `search all` | `--exact` | ✅ |  |
 | `search all` | `--timezone` | ✅ |  |
 | `search all` | `--backend` | ⛔ | cli-core src/cli/messenger/messenger.test.ts covers archive (never connects), server and both for search all |
@@ -588,11 +579,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--thread-within` | ✅ |  |
 | `search messages` | `--backend` | ✅ |  |
 | `search messages` | `--server-time` | ⛔ | cli-core src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcodes 73 (one chat) and 68 (every chat) |
-| `search messages` | `--chat` | ✅ |  |
 | `search messages` | `--source` | ✅ |  |
-| `search messages` | `--type` | ✅ |  |
 | `search messages` | `--limit` | ✅ |  |
-| `search messages` | `--offset` | ✅ |  |
+| `search messages` | `--page` | ✅ |  |
 | `search messages` | `--newest` | ✅ |  |
 | `search messages` | `--exact` | ✅ |  |
 | `search messages` | `--context` | ✅ |  |
@@ -602,10 +591,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--regex` | ✅ |  |
 | `search messages` | `--saved` | ✅ |  |
 | `search mail` |  | ✅ |  |
-| `search mail` | `--chat` | ✅ |  |
 | `search mail` | `--source` | ✅ |  |
 | `search mail` | `--limit` | ✅ |  |
-| `search mail` | `--offset` | ✅ |  |
+| `search mail` | `--page` | ✅ |  |
 | `search mail` | `--newest` | ✅ |  |
 | `search mail` | `--exact` | ✅ |  |
 | `search mail` | `--context` | ✅ |  |
@@ -613,10 +601,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search notes` |  | ✅ |  |
 | `search notes` | `--type` | ✅ |  |
 | `search notes` | `--source` | ✅ |  |
-| `search notes` | `--tag` | ✅ |  |
 | `search notes` | `--filter` | ✅ |  |
 | `search notes` | `--limit` | ✅ |  |
-| `search notes` | `--offset` | ✅ |  |
+| `search notes` | `--page` | ✅ |  |
 | `search notes` | `--exact` | ✅ |  |
 | `search notes` | `--timezone` | ✅ |  |
 | `search conversations` |  | ✅ |  |
@@ -653,6 +640,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `searches list` |  | ✅ |  |
 | `searches history` |  | ✅ |  |
 | `searches history` | `--limit` | ⛔ | cli-core src/services/searches.test.ts covers bounded newest history and pruning; consumer integration tests cover no-record and named-query preservation |
+| `searches history` | `--page` | ✅ |  |
+| `searches history` | `--all` | ✅ |  |
 | `searches delete` |  | ✅ |  |
 | `searches clear` |  | ✅ |  |
 | `flood clear` |  | ✅ |  |
@@ -685,9 +674,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `recipients clear` |  | ✅ |  |
 | `sends list` |  | ✅ |  |
 | `sends list` | `--limit` | ✅ |  |
+| `sends list` | `--page` | ✅ |  |
+| `sends list` | `--all` | ✅ |  |
 | `inbox` |  | ✅ |  |
 | `inbox` | `--new` | ✅ |  |
-| `inbox` | `--since-time` | ✅ |  |
 | `inbox` | `--limit` | ✅ |  |
 | `inbox` | `--all` | ✅ |  |
 | `inbox` | `--kind` | ✅ |  |
@@ -696,8 +686,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `inbox` | `--mark-read` | ✅ |  |
 | `inbox` | `--no-mark-read` | ✅ |  |
 | `review` |  | ✅ |  |
-| `review` | `--since-time` | ✅ |  |
-| `review` | `--chat` | ✅ |  |
 | `review` | `--kind` | ✅ |  |
 | `review` | `--unanswered` | ✅ |  |
 | `review` | `--all` | ✅ |  |
@@ -751,8 +739,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `replies resume` |  | ✅ |  |
 | `replies status` |  | ✅ |  |
 | `serve` |  | ✅ |  |
-| `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
-| `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--max-subscriber-buffer-bytes` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--max-subscriber-total-buffer-bytes` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
 | `server start` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server start` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server stop` |  | ✅ |  |
@@ -798,7 +788,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `doctor report create` | `--output` | ✅ |  |
 | `runs list` |  | ✅ |  |
 | `runs list` | `--limit` | ✅ |  |
+| `runs list` | `--page` | ✅ |  |
 | `runs show` |  | ✅ |  |
+| `runs show` | `--problems` | ✅ |  |
 | `runs search` |  | ✅ |  |
 | `runs search` | `--status` | ✅ |  |
 | `runs search` | `--error-code` | ✅ |  |
@@ -912,6 +904,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot search messages` | `--all-bots` | ✅ |  |
 | `bot search messages` | `--bots` | ✅ |  |
 | `bot search messages` | `--limit` | ✅ |  |
+| `bot search messages` | `--page` | ✅ |  |
 | `bot search messages` | `--newest` | ✅ |  |
 | `bot search messages` | `--from` | ✅ |  |
 | `bot recipients list` |  | ✅ |  |

@@ -219,6 +219,11 @@ describe("max bot search messages --from", () => {
     expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a1"])
     expect(found.page).toEqual({ limit: 1, has_more: true })
   })
+
+  it("reads the next page with --page", async () => {
+    const found = await json(["first", "bot", "search", "messages", "--from", "@ann", "--limit", "1", "--page", "2"])
+    expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.d1"])
+  })
 })
 
 describe("max bot messages between", () => {

@@ -2,6 +2,7 @@
   "--add",
   "--by",
   "--check",
+  "--cursor",
   "--due",
   "--file",
   "--kind",

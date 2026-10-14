@@ -480,13 +480,18 @@ max personal tags remove news --chat CHAT_ID --source auto
 `status:found|linked|dismissed`, `domain:` (сайт ссылки или адреса; `docs.google.com` значит `google.com`)
 и `value:`; слово без поля — значение в любой записи, `89001234567` найдёт `+79001234567`. Сообщения,
 сохранённые до появления упоминаний, читает один `mentions rebuild`. У каждой строки есть `locator`
-сообщения; текст упоминаний — только владельцу, не в логи и не в файлы.
+сообщения; текст упоминаний — только владельцу, не в логи и не в файлы. Поиск сообщений понимает `phone:`, `email:`,
+`url:` и `domain:` (почта в кавычках: `email:"ana@example.com"`). `mentions confirm <id> [person:<uid>|organization:<id>]`
+записывает, чьё значение, `mentions reject <id>` отклоняет его насовсем; автор записи — агент или владелец
+(`--as-owner`).
 
 ```sh
 max personal mentions list kind:phone --json
 max personal mentions list domain:google.com kind:url --json
 max personal mentions show 12 --json
 max personal mentions rebuild
+max personal mentions confirm 12 person:<uid>
+max personal mentions reject 12
 ```
 
 Рейтинги архива: `max personal stats messages top` / `max personal stats contacts top` — метрика `--measure` или
