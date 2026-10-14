@@ -22,6 +22,10 @@ Published as `@wirecat/max-cli` and working against the real MAX. The commands a
 [`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md); what is left is
 [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md).
 
+Security audits of this repository follow the shared
+[security method](https://github.com/WireCatLabs/cli-testing/tree/main/docs/security) in cli-testing;
+vulnerabilities are reported as the [security policy](SECURITY.md) says.
+
 ## The constraints that shape everything
 
 1. **This is the owner's real personal messenger account.** A mistake here does not fail a test,
