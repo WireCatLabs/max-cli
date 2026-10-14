@@ -139,7 +139,7 @@ max personal account sessions list       # где ещё выполнен вхо
 max personal session end
 ```
 
-`session end` завершает сессию на сервере MAX (`revokedOnServer: true`). Если токен был скопирован
+`session end` завершает сессию на сервере MAX (`revoked_on_server: true`). Если токен был скопирован
 из вкладки web.max.ru, вкладка тоже выйдет.
 
 `account show --json` содержит поля MAX `id`, `name`, `phone`, `description` и `username: null`, как

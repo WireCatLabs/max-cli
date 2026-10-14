@@ -112,7 +112,7 @@ max personal session end              # выйти из MAX и забыть то
 говорит, что получилось:
 
 ```json
-{ "profile": "default", "forgotten": true, "revokedOnServer": true }
+{ "item": { "profile": "default", "forgotten": true, "revoked_on_server": true }, "meta": { … } }
 ```
 
 **Если вход был токеном из вкладки web.max.ru, это одна и та же сессия:** `session end` выведет из MAX

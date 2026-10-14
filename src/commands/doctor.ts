@@ -1,7 +1,7 @@
 import { resolve } from "node:path"
 import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { LOCAL_WRITE, REMOTE_READ, runsDirFor } from "@wirecat/cli-core/cli"
+import { itemOf, LOCAL_WRITE, REMOTE_READ, renderAnswer, runsDirFor, snakeKeys } from "@wirecat/cli-core/cli"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
@@ -38,7 +38,7 @@ export const doctorCommand = (): Command => {
 
   command.action(async function (this: Command) {
     const { online } = this.opts<{ online?: boolean }>()
-    const { renderer, settings, format, run, store, createClient } = forCommand(this)
+    const { renderer, settings, format, streams, run, store, createClient } = forCommand(this)
     const botStore = botStoreFor(this)
 
     await run("doctor", async (events) => {
@@ -56,11 +56,14 @@ export const doctorCommand = (): Command => {
       const bot = online && report.bot.token.present ? [await checkBot(this, botStore(settings.profile))] : []
       const checks = online ? [...personal, ...bot] : undefined
 
-      renderer.result(
-        format === "pretty"
-          ? { ...forPerson(report, settings.profile), ...(checks ? checksForPerson(checks) : {}) }
-          : { ...report, ...(checks ? { online: checks } : {}) },
-      )
+      if (format === "pretty")
+        renderer.result({ ...forPerson(report, settings.profile), ...(checks ? checksForPerson(checks) : {}) })
+      else
+        renderAnswer(
+          this,
+          { renderer, format, streams },
+          itemOf(snakeKeys({ ...report, ...(checks ? { online: checks } : {}) })),
+        )
 
       installNotes(report, renderer.note.bind(renderer))
       // ⚠ Said whenever the environment moved the keyring, because this is the one failure with no

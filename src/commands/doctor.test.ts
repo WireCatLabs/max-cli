@@ -77,10 +77,10 @@ describe("max doctor", () => {
     const { code, stdout } = await inAnEmptyHome(["doctor", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({
+    expect(JSON.parse(stdout).item).toMatchObject({
       token: { present: false, from: "none" },
       session: { exists: false },
-      legacyCache: { exists: false },
+      legacy_cache: { exists: false },
       store: { path: expect.any(String) },
     })
   })
@@ -88,9 +88,9 @@ describe("max doctor", () => {
   it("names an unreadable legacy file on stderr while JSON describes the shared store", async () => {
     const { code, stdout, stderr, home } = await inAnEmptyHome(["doctor", "--json"], { legacy: true })
     expect(code).toBe(0)
-    const answer = JSON.parse(stdout)
+    const answer = JSON.parse(stdout).item
     expect(answer).not.toHaveProperty("cache")
-    expect(answer.legacyCache).toEqual({ file: join(home, "cache", "default.db"), exists: true })
+    expect(answer.legacy_cache).toEqual({ file: join(home, "cache", "default.db"), exists: true })
     expect(answer.store.path).toBe(process.env.MESSAGING_STORE)
     expect(stderr).toContain(join(home, "cache", "default.db"))
     expect(stderr).toContain("max messages sync")
@@ -107,14 +107,14 @@ describe("max doctor", () => {
   it("says the token is there and where from, and **never what it is**", async () => {
     const { stdout } = await inAnEmptyHome(["doctor", "--json"], { token: true })
 
-    expect(JSON.parse(stdout).token).toEqual({ present: true, from: "keyring" })
+    expect(JSON.parse(stdout).item.token).toEqual({ present: true, from: "keyring" })
     expect(stdout).not.toContain("a-token")
   })
 
   it("**names the keyring entry the environment moved** — the failure with no other symptom", async () => {
     const { stdout, stderr } = await inAnEmptyHome(["doctor", "--json"])
 
-    expect(JSON.parse(stdout).keyring.movedByEnvironment).toBe(true)
+    expect(JSON.parse(stdout).item.keyring.moved_by_environment).toBe(true)
     expect(stderr).toContain("MAX_CONFIG_DIR")
   })
 
@@ -122,10 +122,10 @@ describe("max doctor", () => {
     // A pipe is a script until proven otherwise, so only an actual terminal gets the table.
     const person = await inAnEmptyHome(["doctor"], { tty: true })
     expect(person.stdout).toContain("profile")
-    expect(person.stdout).not.toContain("movedByEnvironment")
+    expect(person.stdout).not.toContain("moved_by_environment")
 
     const machine = await inAnEmptyHome(["doctor"])
-    expect(JSON.parse(machine.stdout).keyring).toHaveProperty("movedByEnvironment")
+    expect(JSON.parse(machine.stdout).item.keyring).toHaveProperty("moved_by_environment")
   })
 
   it("**creates nothing** — not the state file it reports on, not the cache", async () => {
@@ -141,7 +141,7 @@ describe("max doctor", () => {
     const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout).session.stateFile).toContain("work.json")
+    expect(JSON.parse(stdout).item.session.state_file).toContain("work.json")
   })
 })
 

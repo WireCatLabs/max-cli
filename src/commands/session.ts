@@ -1,6 +1,6 @@
 import { CliError, indent } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { REMOTE_WRITE } from "@wirecat/cli-core/cli"
+import { itemOf, REMOTE_WRITE, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
 import { Argument, Command } from "commander"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { maskedProfile } from "../domain/map.js"
@@ -58,7 +58,7 @@ export const sessionCommand = (): Command => {
       refuseCommandName(context.settings.profile, commandWords(rootOf(this)))
       await run("session start", async (events) => {
         const { firstLogin, ...answer } = await startSession(context, method, events)
-        renderer.result(answer)
+        renderAnswer(this, context, itemOf(snakeKeys(answer)))
         renderer.success(`logged in as ${answer.profile.name ?? answer.profile.id}`)
         if (firstLogin) renderer.note(TERMS_NOTICE)
         if (await context.shareServer()) renderer.note("`max serve` is up on the new session")
@@ -72,11 +72,12 @@ export const sessionCommand = (): Command => {
   annotate(command.command("end"), { effects: REMOTE_WRITE })
     .description("log this profile out on MAX's side and forget the session here")
     .action(async function (this: Command) {
-      const { renderer, store, run, createClient } = forCommand(this)
+      const context = forCommand(this)
+      const { renderer, store, run, createClient } = context
 
       await run("session end", async (events) => {
         if (store.readToken() === undefined) {
-          renderer.result({ profile: store.profile, forgotten: false, revokedOnServer: false })
+          renderAnswer(this, context, itemOf({ profile: store.profile, forgotten: false, revoked_on_server: false }))
           renderer.note(`there was no session for "${store.profile}"`)
           return
         }
@@ -88,7 +89,11 @@ export const sessionCommand = (): Command => {
 
         const revokedOnServer = await logOut(createClient({ events }))
         const had = store.forget()
-        renderer.result({ profile: store.profile, forgotten: had, revokedOnServer })
+        renderAnswer(
+          this,
+          context,
+          itemOf({ profile: store.profile, forgotten: had, revoked_on_server: revokedOnServer }),
+        )
         renderer.success(`logged "${store.profile}" out of MAX and forgot the session here`)
       })
     })

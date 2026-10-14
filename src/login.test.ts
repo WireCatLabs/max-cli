@@ -266,7 +266,7 @@ describe("max session start token", () => {
       delete process.env.MAX_TOKEN
     }
 
-    expect(JSON.parse(streams.stdout.join("")).profile.phone).toBe("***7890")
+    expect(JSON.parse(streams.stdout.join("")).item.profile.phone).toBe("***7890")
     expect(streams.stdout.join("")).not.toContain("71234567890")
   })
 })
@@ -338,7 +338,7 @@ describe("max session end", () => {
       const streams = captureStreams()
       const code = await run(["s-end", "session", "end", ...flags, "--json"], { ...environment, streams })
       const out = streams.stdout.join("")
-      return { code, json: out === "" ? undefined : JSON.parse(out) }
+      return { code, json: out === "" ? undefined : JSON.parse(out).item }
     }
     const logouts = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGOUT)
     return { store, end, logouts, max }
@@ -348,7 +348,7 @@ describe("max session end", () => {
     const { store, end, logouts } = ending()
     store("s-end").writeToken("a-token")
 
-    expect(await end()).toEqual({ code: 0, json: { profile: "s-end", forgotten: true, revokedOnServer: true } })
+    expect(await end()).toEqual({ code: 0, json: { profile: "s-end", forgotten: true, revoked_on_server: true } })
     expect(logouts().map(({ payload }) => payload)).toEqual([{}])
     expect(store("s-end").readToken()).toBeUndefined()
   })
@@ -365,14 +365,14 @@ describe("max session end", () => {
     const { store, end, logouts } = ending({ loginRefused: "login.token" })
     store("s-end").writeToken("a-token")
 
-    expect((await end()).json).toEqual({ profile: "s-end", forgotten: true, revokedOnServer: true })
+    expect((await end()).json).toEqual({ profile: "s-end", forgotten: true, revoked_on_server: true })
     expect(logouts()).toEqual([])
     expect(store("s-end").readToken()).toBeUndefined()
   })
 
   it("says there was nothing to end, and contacts nobody", async () => {
     const { end, max } = ending()
-    expect((await end()).json).toEqual({ profile: "s-end", forgotten: false, revokedOnServer: false })
+    expect((await end()).json).toEqual({ profile: "s-end", forgotten: false, revoked_on_server: false })
     expect(max.sent).toEqual([])
   })
 })
