@@ -142,8 +142,12 @@ where else this account is logged in — not `max session`, which is this tool's
 every device and app logged in to this account; nothing is ended
 
 ```sh
-max account sessions list
+max account sessions list [query]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 #### `max account sessions end`
 
@@ -355,12 +359,13 @@ who is in a group
 everyone in a group, a page at a time, with their role and when they were last seen
 
 ```sh
-max chats members list <chat> [options]
+max chats members list <chat> [query] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 | Опция | Что делает |
 |---|---|
@@ -662,8 +667,12 @@ your chat folders
 your chat folders, in the order the app shows them
 
 ```sh
-max chats folders list
+max chats folders list [query]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 #### `max chats folders show`
 
@@ -827,7 +836,7 @@ max chats media <chat> [options]
 |---|---|
 | `--type <names>` | only these kinds, comma-separated: photo, video, file, audio, link. |
 | `--limit <n>` | how many to show. |
-| `--cursor <id>` | go on from where page.next says the last page stopped. |
+| `--cursor <cursor>` | go on from where page.next says the last page stopped. |
 
 ### `max chats mute`
 
@@ -1030,12 +1039,13 @@ your private notes on a stored contact, the same in every account that sees them
 
 
 ```sh
-max contacts notes list <person>
+max contacts notes list <person> [query]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный |  |
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 #### `max contacts notes show`
 
@@ -1408,7 +1418,7 @@ max messages evidence <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many, 1–100. |
-| `--cursor <id>` | go on from where page.next says the last packet stopped. |
+| `--cursor <cursor>` | go on from where page.next says the last packet stopped. |
 
 ### `max messages sync`
 
@@ -2844,6 +2854,51 @@ find the mentions of every stored message again; decisions are kept
 max mentions rebuild
 ```
 
+## `max images`
+
+search pictures by what they show, with a model on this machine
+
+### `max images embed`
+
+compute a vector for each picture the store knows and has none for — downloading it through the messenger, keeping only the vector; needs `picture_search` on in the profile and `images models download clip-b32`; resumes where it stopped
+
+```sh
+max images embed [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--limit <n>` | at most this many pictures in one run; 100 if not given. |
+
+### `max images models`
+
+models that read pictures, for `images embed` and picture search
+
+#### `max images models list`
+
+the picture models, which are downloaded, and which one is the default
+
+```sh
+max images models list [query]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
+
+#### `max images models download`
+
+download a picture model once, checked against the sha256 this version expects
+
+```sh
+max images models download <model>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `model` | обязательный | a model id from `images models list`. |
+
 ## `max metadata`
 
 cached group/channel descriptions for local automatic tags
@@ -3065,8 +3120,12 @@ max searches show <name|id>
 the saved searches, by name
 
 ```sh
-max searches list
+max searches list [query]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 ### `max searches history`
 
@@ -3127,8 +3186,12 @@ speech models for transcribing voice messages
 the speech models, most suitable first, which are downloaded, and which one is the default
 
 ```sh
-max models audio list
+max models audio list [query]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 #### `max models audio download`
 
@@ -3151,8 +3214,12 @@ embedding models for searching conversations by meaning
 the embedding models, most suitable first, which are downloaded, and which one is the default
 
 ```sh
-max models text list
+max models text list [query]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 #### `max models text download`
 
@@ -3197,30 +3264,6 @@ max models text key remove <provider>
 | Аргумент | | Что это |
 |---|---|---|
 | `provider` | обязательный | openai, anthropic, or a server's host. |
-
-### `max models image`
-
-models that read pictures, for `images embed` and search by what a picture shows
-
-#### `max models image list`
-
-the picture models, which are downloaded, and which one is the default
-
-```sh
-max models image list
-```
-
-#### `max models image download`
-
-download a picture model once, checked against the sha256 this version expects
-
-```sh
-max models image download <model>
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `model` | обязательный | a model id from `models image list`. |
 
 ## `max polls`
 

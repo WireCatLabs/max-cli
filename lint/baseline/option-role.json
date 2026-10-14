@@ -107,6 +107,7 @@
   "conversations status --model",
   "doctor --online",
   "doctor report create --run",
+  "images embed --chat",
   "inbox --all",
   "inbox --kind",
   "inbox --model",

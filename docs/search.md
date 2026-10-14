@@ -558,11 +558,11 @@ max personal search messages 'счёт chat:"Книжный клуб"' --sync-fi
 
 ```sh
 max personal config set picture_search true
-max personal models image download clip-b32
+max personal images models download clip-b32
 max personal images embed
 ```
 
-`models image download clip-b32` скачивает модель один раз (около 155 МБ). `images embed` обрабатывает
+`images models download clip-b32` скачивает модель один раз (около 155 МБ). `images embed` обрабатывает
 картинки, у которых ещё нет вектора, и продолжает с того места, где остановился; `--chat <чат>` и
 `--limit <n>` ограничивают объём. Ничего не помечается прочитанным.
 

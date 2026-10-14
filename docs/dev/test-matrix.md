@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 155 ⛔ · 0 ❌** — 333 commands, 752 options.
+**930 ✅ · 158 ⛔ · 0 ❌** — 334 commands, 754 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -551,6 +551,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mentions reject` |  | ✅ |  |
 | `mentions reject` | `--as-owner` | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
 | `mentions rebuild` |  | ✅ |  |
+| `images embed` |  | ⛔ | downloads pictures through the messenger and embeds them with cli-core's picture model; cli-core's src/services/pictures.test.ts and src/cli/messenger/images-command.test.ts drive it with stand-ins |
+| `images embed` | `--chat` | ⛔ | narrows cli-core's picture pass to one chat; covered by cli-core's src/services/pictures.test.ts |
+| `images embed` | `--limit` | ⛔ | bounds cli-core's picture pass; covered by cli-core's src/services/pictures.test.ts (limit and resume) |
+| `images models list` |  | ⛔ | lists picture models from cli-core's images command; its image tests (WireCatLabs/cli-core#1102) cover it |
+| `images models download` |  | ⛔ | downloads the picture model over the network; cli-core's images command and its image tests (WireCatLabs/cli-core#1102) drive it offline |
 | `metadata get` |  | ✅ |  |
 | `metadata get` | `--chat` | ✅ |  |
 | `metadata refresh` |  | ⛔ | cli-core src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-core 0.174.0) |
@@ -652,8 +657,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `models text download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-core's src/cli/messenger/models-command.test.ts drives it offline |
 | `models text key set` |  | ⛔ | writes a provider key into the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
 | `models text key remove` |  | ⛔ | removes a provider key from the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
-| `models image list` |  | ⛔ | lists picture models from cli-core's shared models command; its image tests (WireCatLabs/cli-core#1102) cover it |
-| `models image download` |  | ⛔ | downloads the picture model over the network; cli-core's shared models command and its image tests (WireCatLabs/cli-core#1102) drive it offline |
 | `polls show` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
 | `polls vote` | `--retract` | ✅ |  |
