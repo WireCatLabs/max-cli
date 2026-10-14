@@ -321,6 +321,14 @@ describe("sending files", () => {
     expect(code).toBe(0)
   })
 
+  it("**refuses a git credential file handed to the client by path**, before uploading anything", async () => {
+    await writeFile(join(directory, ".git-credentials"), "https://user:synthetic@example.invalid")
+
+    const { error, sends } = await sendDirect("", { files: [join(directory, ".git-credentials")] })
+    expect(sends).toEqual([])
+    expect(error?.message).toContain("--allow-any-file")
+  })
+
   // Windows needs a privilege to make a link.
   it.skipIf(process.platform === "win32")("refuses a link that points into a hidden folder", async () => {
     await mkdir(join(directory, ".ssh"), { recursive: true })

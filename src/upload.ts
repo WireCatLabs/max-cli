@@ -68,14 +68,16 @@ const CREDENTIAL_PLACES = [
   "Library/Application Support/Firefox",
   "Library/Safari",
   "Library/Cookies",
-  "AppData/Local/Google/Chrome/User Data",
-  "AppData/Local/Chromium/User Data",
+  "AppData/Local/Google/Chrome",
+  "AppData/Local/Chromium",
   "AppData/Local/BraveSoftware",
-  "AppData/Local/Microsoft/Edge/User Data",
+  "AppData/Local/Microsoft/Edge",
   "AppData/Roaming/Mozilla/Firefox",
   "AppData/Local/Microsoft/Credentials",
   "AppData/Roaming/Microsoft/Credentials",
   "AppData/Roaming/Microsoft/Protect",
+  "AppData/Roaming/gcloud",
+  "AppData/Roaming/GitHub CLI",
 ].map((place) => place.split("/"))
 
 /** Every WireCat app's folders hold its sessions and tokens; the shared `WireCat` one holds the store. */
@@ -87,6 +89,7 @@ const WIRECAT_APPS = [
   { appName: "zm", prefix: "ZM" },
   { appName: "WireCat", prefix: "WIRECAT" },
   { appName: "cli-messaging", prefix: "MESSAGING" },
+  { appName: "cli-common", prefix: "CLI_COMMON" },
 ]
 
 const PLACES_FOLDED = CREDENTIAL_PLACES.map((place) => place.map((part) => part.toLowerCase()))

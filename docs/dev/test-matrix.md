@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 158 ⛔ · 0 ❌** — 334 commands, 754 options.
+**931 ✅ · 158 ⛔ · 0 ❌** — 334 commands, 755 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -965,6 +965,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot comments delete` | `--allow-dangerous` | ✅ |  |
 | `bot uploads put` |  | ✅ |  |
 | `bot uploads put` | `--type` | ✅ |  |
+| `bot uploads put` | `--allow-any-file` | ✅ |  |
 | `bot api get-my-info` |  | ✅ |  |
 | `bot api edit-my-commands` |  | ✅ |  |
 | `bot api edit-my-commands` | `--body` | ✅ |  |
