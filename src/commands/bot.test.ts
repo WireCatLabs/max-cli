@@ -63,6 +63,17 @@ const max = async (argv: string[], { answer = "" } = {}) => {
 
 const store = (profile = "default") => new BotTokenStore({ profile, keyring })
 
+describe("max config set", () => {
+  it("takes a setting's camelCase name and saves it in snake_case", async () => {
+    const set = await max(["ro", "config", "set", "readOtherBots", "true", "--bot", "--json"])
+    expect(set.code).toBe(0)
+    expect(JSON.parse(set.stdout).item.setting).toBe("read_other_bots")
+    const shown = await max(["ro", "config", "set", "senderColors", "false", "--json"])
+    expect(shown.code).toBe(0)
+    expect(JSON.parse(shown.stdout).item.setting).toBe("sender_colors")
+  })
+})
+
 describe("max bot auth", () => {
   it("keeps a token only after MAX accepted it", async () => {
     const { code, stdout } = await max(["bot", "auth", "set", "--json"], { answer: GOOD })
