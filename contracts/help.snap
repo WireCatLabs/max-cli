@@ -75,6 +75,8 @@ Commands:
                                search finds them
   mentions                     phones, e-mail, links and documents found in
                                stored messages
+  images                       search pictures by what they show, with a model
+                               on this machine
   metadata                     cached group/channel descriptions for local
                                automatic tags
   search                       find things by text: one resource when you know

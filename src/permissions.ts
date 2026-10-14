@@ -64,6 +64,8 @@ export const commandPermission = (command: Command): string | null => {
   if (words[0] === "bot" && words[1] === "comments") return `bot.messages.${words.slice(2).join(".")}`
   const shared = keyForCommand(words)
   if (shared !== undefined) return shared
+  // cli-core 0.270.0 moved the picture models under `images` but keeps only `models` as housekeeping.
+  if (words[0] === "images" && words[1] === "models") return null
   if (["setup"].includes(words[0] ?? "")) return null
   if (
     ["messages", "chats", "contacts", "account", "calls", "stickers", "polls", "reactions", "bot"].includes(
