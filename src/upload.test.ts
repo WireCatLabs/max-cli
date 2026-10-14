@@ -11,7 +11,7 @@ import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
-import { openUpload } from "./upload.js"
+import { openUpload, refusedPlace } from "./upload.js"
 
 let server: Server
 let origin: string
@@ -347,5 +347,55 @@ describe("sending files", () => {
     await truncate(path, 2 ** 31)
 
     expect((await openUpload(path)).size).toBe(2 ** 31)
+  })
+})
+
+describe("which places a file is refused from", () => {
+  const home = "/home/alice"
+  const env = { HOME: home, MESSAGING_STORE: "/home/alice/wirecat.db" }
+
+  it.each([
+    ".netrc",
+    "_netrc",
+    ".git-credentials",
+    ".config/git/credentials",
+    ".config/gh/hosts.yml",
+    ".docker/config.json",
+    ".kube/config",
+    ".config/gcloud/credentials.db",
+    ".aws/credentials",
+    ".azure/msal_token_cache.json",
+    ".claude/.credentials.json",
+    ".codex/auth.json",
+    ".npmrc",
+    ".pypirc",
+    ".env.local",
+    ".local/share/keyrings/login.keyring",
+    ".mozilla/firefox/default/cookies.sqlite",
+    ".config/google-chrome/Default/Cookies",
+    ".local/share/tg-cli/sessions/main.session",
+    ".config/drive-cli/credentials.json",
+    ".local/share/WireCat/backups/wirecat.db",
+    "wirecat.db-wal",
+  ])("~/%s", (place) => {
+    expect(refusedPlace(join(home, place), { env, platform: "linux" })).toBe(true)
+  })
+
+  it.each([
+    "Projects/app/.worktrees/fix/notes.txt",
+    ".cache/report.pdf",
+    ".config/other/settings.json",
+    ".docker/notes.txt",
+    "Downloads/config.json",
+    "Pictures/Chrome/screen.png",
+  ])("not ~/%s", (place) => {
+    expect(refusedPlace(join(home, place), { env, platform: "linux" })).toBe(false)
+  })
+
+  it("**ignores case where the file system does**: macOS and Windows, not Linux", () => {
+    for (const place of [".SSH/id_rsa", ".Config/GH/hosts.yml", "Library/keychains/login.keychain-db"]) {
+      expect(refusedPlace(join(home, place), { env, platform: "darwin" })).toBe(true)
+      expect(refusedPlace(join(home, place), { env, platform: "linux" })).toBe(false)
+    }
   })
 })

@@ -2,6 +2,7 @@ import { openAsBlob, realpathSync } from "node:fs"
 import { stat } from "node:fs/promises"
 import { basename, extname, isAbsolute, relative, resolve, sep } from "node:path"
 import { CliError, isCliError, resolvePaths } from "@wirecat/cli-base"
+import { storePath } from "@wirecat/cli-core/store"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
 const HEADERS = {
@@ -25,40 +26,115 @@ const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".webm", ".mkv"])
 
 export const isVideo = (path: string): boolean => VIDEO_EXTENSIONS.has(extname(path).toLowerCase())
 
-/** Protect known credentials and application state, while allowing hidden developer folders. */
-const refusedPlace = (path: string): boolean => {
-  const own = Object.values(resolvePaths({ appName: "max-cli", prefix: "MAX" }))
+/**
+ * Known credential, keyring and browser-profile locations, as runs of path segments found anywhere in
+ * the path. Hidden folders as such are allowed (`decisions/security-compatibility.md`).
+ */
+const CREDENTIAL_PLACES = [
+  ".ssh",
+  ".gnupg",
+  ".aws",
+  ".azure",
+  ".kube",
+  ".secrets",
+  "secrets",
+  ".password-store",
+  ".env",
+  ".npmrc",
+  ".pypirc",
+  ".netrc",
+  "_netrc",
+  ".git-credentials",
+  "credentials.yml.enc",
+  "master.key",
+  ".config/git/credentials",
+  ".config/gh",
+  ".config/gcloud",
+  ".config/autostart",
+  ".docker/config.json",
+  ".claude/.credentials.json",
+  ".codex/auth.json",
+  ".local/share/keyrings",
+  "Library/Keychains",
+  ".mozilla",
+  ".config/google-chrome",
+  ".config/chromium",
+  ".config/BraveSoftware",
+  ".config/microsoft-edge",
+  "Library/Application Support/Google/Chrome",
+  "Library/Application Support/Chromium",
+  "Library/Application Support/BraveSoftware",
+  "Library/Application Support/Microsoft Edge",
+  "Library/Application Support/Firefox",
+  "Library/Safari",
+  "Library/Cookies",
+  "AppData/Local/Google/Chrome/User Data",
+  "AppData/Local/Chromium/User Data",
+  "AppData/Local/BraveSoftware",
+  "AppData/Local/Microsoft/Edge/User Data",
+  "AppData/Roaming/Mozilla/Firefox",
+  "AppData/Local/Microsoft/Credentials",
+  "AppData/Roaming/Microsoft/Credentials",
+  "AppData/Roaming/Microsoft/Protect",
+].map((place) => place.split("/"))
+
+/** Every WireCat app's folders hold its sessions and tokens; the shared `WireCat` one holds the store. */
+const WIRECAT_APPS = [
+  { appName: "max-cli", prefix: "MAX" },
+  { appName: "tg-cli", prefix: "TG" },
+  { appName: "drive-cli", prefix: "DRIVE" },
+  { appName: "cli-memo", prefix: "MEMO" },
+  { appName: "zm", prefix: "ZM" },
+  { appName: "WireCat", prefix: "WIRECAT" },
+  { appName: "cli-messaging", prefix: "MESSAGING" },
+]
+
+const PLACES_FOLDED = CREDENTIAL_PLACES.map((place) => place.map((part) => part.toLowerCase()))
+
+export const refusedPlace = (
+  path: string,
+  { env = process.env, platform = process.platform }: { env?: NodeJS.ProcessEnv; platform?: NodeJS.Platform } = {},
+): boolean => {
+  // APFS and NTFS match names regardless of case by default, so `~/.SSH` is `~/.ssh` there.
+  const insensitive = platform === "darwin" || platform === "win32"
+  const fold = (value: string) => (insensitive ? value.toLowerCase() : value)
+  const places = insensitive ? PLACES_FOLDED : CREDENTIAL_PLACES
+  const own = WIRECAT_APPS.flatMap((app) => Object.values(resolvePaths({ ...app, env, platform })))
+  // The store file and its -wal and -shm, not its folder: MESSAGING_STORE may sit in the home folder.
+  const store = resolve(storePath(env))
   let real = resolve(path)
   try {
     real = realpathSync(path)
   } catch {}
-  return [resolve(path), real].some(
-    (candidate) =>
-      candidate
-        .split(sep)
-        .some(
-          (part) =>
-            [".ssh", ".gnupg", ".aws", ".secrets", "secrets", ".env", ".npmrc", ".pypirc"].includes(part) ||
-            /^\.env\./.test(part),
-        ) || own.some((dir) => inside(candidate, dir)),
-  )
+  return [resolve(path), real].some((candidate) => {
+    const parts = candidate.split(sep).map(fold)
+    return (
+      parts.some((part) => /^\.env\./.test(part)) ||
+      places.some((place) => parts.some((_, start) => place.every((name, at) => parts[start + at] === name))) ||
+      own.some((dir) => inside(candidate, dir, fold)) ||
+      [store, `${store}-wal`, `${store}-shm`].some((file) => fold(file) === fold(candidate))
+    )
+  })
 }
 
-const inside = (path: string, dir: string): boolean => {
-  const fold = (value: string) => (process.platform === "win32" ? value.toLowerCase() : value)
+const inside = (path: string, dir: string, fold: (value: string) => string): boolean => {
   const way = relative(fold(resolve(dir)), fold(path))
   return way === "" || (!way.startsWith("..") && !isAbsolute(way))
 }
 
-/** The file as a Blob that reads it while it uploads; nothing is held in memory first. */
-export const openUpload = async (path: string, { anyFile = false }: { anyFile?: boolean } = {}): Promise<Blob> => {
+export const refuseProtected = (path: string, { anyFile = false }: { anyFile?: boolean } = {}): void => {
   if (!anyFile && refusedPlace(path)) {
     throw new CliError(
       "validation_error",
-      `cannot send ${path}: credential files and max's own folders are not sent — ` +
+      `cannot send ${path}: known credential files, WireCat apps' folders and the message store are not sent — ` +
         "add --allow-any-file if this file is meant to go",
     )
   }
+}
+
+/** The file as a Blob that reads it while it uploads; nothing is held in memory first. */
+export const openUpload = async (path: string, { anyFile = false }: { anyFile?: boolean } = {}): Promise<Blob> => {
+  refuseProtected(path, { anyFile })
   try {
     if (!(await stat(path)).isFile()) throw new CliError("validation_error", `cannot send ${path}: it is a folder`)
     return await openAsBlob(path)

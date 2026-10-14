@@ -298,6 +298,17 @@ describe("max bot uploads put", () => {
     expect((await journal()).at(-1)).toMatchObject({ kind: "account", chat_id: null, outcome: "sent" })
   })
 
+  it("**refuses a known credential file before asking for an upload URL**, unless --allow-any-file", async () => {
+    const home = mkdtempSync(join(tmpdir(), "bot-home-"))
+    writeFileSync(join(home, ".git-credentials"), "x")
+    const refused = await max(["bot", "uploads", "put", join(home, ".git-credentials"), "--json"])
+    expect(refused.code).toBe(2)
+    expect(refused.stderr).toContain("--allow-any-file")
+    expect(requests.filter((request) => request.url?.startsWith("/uploads?"))).toEqual([])
+    const sent = await max(["bot", "uploads", "put", join(home, ".git-credentials"), "--allow-any-file", "--json"])
+    expect(sent.code).toBe(0)
+  })
+
   it("uploads as the --type given instead of guessing from the extension", async () => {
     const { code, stdout } = await max(["bot", "uploads", "put", file("notes.txt"), "--type", "image", "--json"])
     expect(code).toBe(0)
