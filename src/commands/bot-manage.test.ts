@@ -329,6 +329,17 @@ describe("max bot members and admins", () => {
     expect(requests.at(-1)?.url).toBe("/chats/-100/members?count=5")
   })
 
+  it("answers with the id of the run it recorded, so `runs show` finds it", async () => {
+    const { stdout } = await max(["bot", "chats", "members", "list", "-100", "--record", "--json"])
+    const runs = JSON.parse((await max(["runs", "list", "--json", "--limit", "100"])).stdout).items as {
+      run_id: string
+      command: string
+    }[]
+    expect(runs.filter((run) => run.command === "bot chats members list").map((run) => run.run_id)).toContain(
+      JSON.parse(stdout).meta.run_id,
+    )
+  })
+
   it("says there is no more when MAX gives an empty page without a marker", async () => {
     const { stdout } = await max(["bot", "chats", "members", "list", "-300", "--json"])
     const answer = JSON.parse(stdout)
