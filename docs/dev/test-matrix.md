@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 158 ⛔ · 0 ❌** — 334 commands, 754 options.
+**931 ✅ · 158 ⛔ · 0 ❌** — 334 commands, 755 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -551,6 +551,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mentions reject` |  | ✅ |  |
 | `mentions reject` | `--as-owner` | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
 | `mentions rebuild` |  | ✅ |  |
+| `mentions rebuild` | `--kind` | ✅ |  |
 | `images embed` |  | ⛔ | downloads pictures through the messenger and embeds them with cli-core's picture model; cli-core's src/services/pictures.test.ts and src/cli/messenger/images-command.test.ts drive it with stand-ins |
 | `images embed` | `--chat` | ⛔ | narrows cli-core's picture pass to one chat; covered by cli-core's src/services/pictures.test.ts |
 | `images embed` | `--limit` | ⛔ | bounds cli-core's picture pass; covered by cli-core's src/services/pictures.test.ts (limit and resume) |

@@ -209,6 +209,8 @@ describe("max commands", () => {
       "mentions confirm",
       "mentions reject",
       "mentions rebuild",
+      "images embed",
+      "images models download (reads remotely)",
       "metadata refresh (reads remotely)",
       "searches create",
       "searches delete",
