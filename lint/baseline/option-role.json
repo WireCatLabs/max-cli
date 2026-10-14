@@ -131,7 +131,6 @@
   "mcp setup --allow-send",
   "mcp setup --confirm-send",
   "mcp setup --permission",
-  "mentions rebuild --kind",
   "messages download --pause",
   "messages forward --to",
   "messages list --model",
