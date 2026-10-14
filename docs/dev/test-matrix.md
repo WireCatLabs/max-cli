@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**927 ✅ · 153 ⛔ · 5 ❌** — 333 commands, 752 options.
+**930 ✅ · 155 ⛔ · 0 ❌** — 333 commands, 752 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -86,7 +86,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats link reset` |  | ✅ |  |
 | `chats requests list` |  | ✅ |  |
 | `chats requests list` | `--limit` | ✅ |  |
-| `chats requests list` | `--page` | ❌ |  |
+| `chats requests list` | `--page` | ✅ |  |
 | `chats requests accept` |  | ✅ |  |
 | `chats requests accept` | `--all` | ✅ |  |
 | `chats requests accept` | `--link` | ✅ |  |
@@ -739,10 +739,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `replies resume` |  | ✅ |  |
 | `replies status` |  | ✅ |  |
 | `serve` |  | ✅ |  |
-| `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
-| `serve` | `--max-subscriber-buffer-bytes` | ❌ |  |
-| `serve` | `--max-subscriber-total-buffer-bytes` | ❌ |  |
-| `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--max-subscriber-buffer-bytes` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--max-subscriber-total-buffer-bytes` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
 | `server start` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server start` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server stop` |  | ✅ |  |
@@ -790,7 +790,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `runs list` | `--limit` | ✅ |  |
 | `runs list` | `--page` | ✅ |  |
 | `runs show` |  | ✅ |  |
-| `runs show` | `--problems` | ❌ |  |
+| `runs show` | `--problems` | ✅ |  |
 | `runs search` |  | ✅ |  |
 | `runs search` | `--status` | ✅ |  |
 | `runs search` | `--error-code` | ✅ |  |
@@ -904,7 +904,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot search messages` | `--all-bots` | ✅ |  |
 | `bot search messages` | `--bots` | ✅ |  |
 | `bot search messages` | `--limit` | ✅ |  |
-| `bot search messages` | `--page` | ❌ |  |
+| `bot search messages` | `--page` | ✅ |  |
 | `bot search messages` | `--newest` | ✅ |  |
 | `bot search messages` | `--from` | ✅ |  |
 | `bot recipients list` |  | ✅ |  |

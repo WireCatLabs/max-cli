@@ -96,6 +96,28 @@ describe("the shared runs command in MAX", () => {
     expect(listRuns(dir).map((item) => item.runId)).toEqual(before)
   })
 
+  it("shows only a run's problems with --problems", async () => {
+    vi.stubEnv("MAX_STATE_DIR", mkdtempSync(join(tmpdir(), "max-runs-problems-")))
+    const dir = runsDirFor(MAX_APP)
+    const recorded = startRun({
+      runsDir: dir,
+      profile: "synthetic",
+      command: "chats list",
+      cliVersion: MAX_APP.version,
+      service: MAX_APP.command,
+    })
+    recorded.logger.info({ event: "progress", operation: "chats.list" })
+    recorded.logger.warn({ event: "response", operation: "chats.list", errorCode: "rate_limited" })
+    await recorded.finish("success")
+    const id = listRuns(dir)[0]?.runId ?? ""
+    const all = captureStreams()
+    const problems = captureStreams()
+    expect(await run(["runs", "show", id, "--json"], { streams: all, tty: false })).toBe(0)
+    expect(await run(["runs", "show", id, "--problems", "--json"], { streams: problems, tty: false })).toBe(0)
+    expect(problems.stdout.join("").length).toBeLessThan(all.stdout.join("").length)
+    expect(problems.stdout.join("")).toContain("rate_limited")
+  })
+
   it("**--debug adds the failure's record** as a second line after the error object", async () => {
     vi.stubEnv("MAX_STATE_DIR", mkdtempSync(join(tmpdir(), "max-runs-debug-")))
     const streams = captureStreams()

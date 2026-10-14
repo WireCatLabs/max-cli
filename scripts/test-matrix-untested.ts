@@ -536,11 +536,14 @@ export const UNTESTED: Untested[] = [
     reason:
       "starts a detached `max` that outlives the test; cli-core src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6",
   },
-  ...["", "--idle", "--started-by-command"].map((option) => ({
-    command: "serve",
-    ...(option ? { option } : {}),
-    reason: "runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6",
-  })),
+  ...["", "--idle", "--started-by-command", "--max-subscriber-buffer-bytes", "--max-subscriber-total-buffer-bytes"].map(
+    (option) => ({
+      command: "serve",
+      ...(option ? { option } : {}),
+      reason:
+        "runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6",
+    }),
+  ),
   ...["server start", "server restart"].flatMap((command) =>
     ["", "--idle"].map((option) => ({
       command,

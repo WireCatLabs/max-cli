@@ -153,7 +153,7 @@ describe("joining and leaving", () => {
   it("searches requests by name, and refuses answering them all, which MAX has no call for", async () => {
     const { environment, sent } = messenger({ [Opcode.CHAT_MEMBERS]: { members: [] } })
     const searched = await runWith(
-      ["gr-req-search", "chats", "requests", "list", "-70000000000001", "--limit", "5", "name:Ask"],
+      ["gr-req-search", "chats", "requests", "list", "-70000000000001", "--limit", "5", "--page", "1", "name:Ask"],
       environment,
     )
     const all = await Promise.all(
