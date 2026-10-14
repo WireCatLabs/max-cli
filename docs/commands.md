@@ -2928,6 +2928,55 @@ max mentions rebuild [options]
 |---|---|
 | `--kind <kind>` | only this kind: person-name after people were added or renamed. Одно из: `phone`, `email`, `url`, `document`, `person-name`. |
 
+## `max images`
+
+search pictures by what they show, with a model on this machine
+
+### `max images embed`
+
+compute a vector for each picture the store knows and has none for — downloading it through the messenger, keeping only the vector; needs `picture_search` on in the profile and `images models download clip-b32`; resumes where it stopped
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max images embed [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
+| `--limit <n>` | at most this many pictures in one run; 100 if not given. |
+
+### `max images models`
+
+models that read pictures, for `images embed` and picture search
+
+#### `max images models list`
+
+the picture models, which are downloaded, and which one is the default
+
+```sh
+max images models list [query]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
+
+#### `max images models download`
+
+download a picture model once, checked against the sha256 this version expects
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max images models download <model>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `model` | обязательный | a model id from `images models list`. |
+
 ## `max metadata`
 
 cached group/channel descriptions for local automatic tags

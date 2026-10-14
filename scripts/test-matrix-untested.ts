@@ -736,6 +736,30 @@ export const UNTESTED: Untested[] = [
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
   {
+    command: "images embed",
+    reason:
+      "downloads pictures through the messenger and embeds them with cli-core's picture model; cli-core's src/services/pictures.test.ts and src/cli/messenger/images-command.test.ts drive it with stand-ins",
+  },
+  {
+    command: "images embed",
+    option: "--chat",
+    reason: "narrows cli-core's picture pass to one chat; covered by cli-core's src/services/pictures.test.ts",
+  },
+  {
+    command: "images embed",
+    option: "--limit",
+    reason: "bounds cli-core's picture pass; covered by cli-core's src/services/pictures.test.ts (limit and resume)",
+  },
+  {
+    command: "images models download",
+    reason:
+      "downloads the picture model over the network; cli-core's images command and its image tests (WireCatLabs/cli-core#1102) drive it offline",
+  },
+  {
+    command: "images models list",
+    reason: "lists picture models from cli-core's images command; its image tests (WireCatLabs/cli-core#1102) cover it",
+  },
+  {
     command: "models text download",
     option: "--accept-terms",
     reason:
