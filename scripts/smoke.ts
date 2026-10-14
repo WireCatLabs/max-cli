@@ -90,10 +90,10 @@ const listed = maxHere("runs", "list", "--json")
 check("`runs list` finds the run that was just kept", JSON.parse(listed.stdout).items?.[0]?.status === "success")
 
 const path = maxHere("runs", "path", kept[0] ?? "", "--json")
-check("`runs path` answers with the directory, as one JSON value", JSON.parse(path.stdout).path === runDir)
+check("`runs path` answers with the directory, as one JSON value", JSON.parse(path.stdout).item?.path === runDir)
 
 const shown = maxHere("runs", "show", kept[0] ?? "", "--json")
-check("`runs show` answers with the run and its events", JSON.parse(shown.stdout).runId === kept[0])
+check("`runs show` answers with the run and its events", JSON.parse(shown.stdout).item?.run_id === kept[0])
 check("`runs show` refuses an id it does not have", maxHere("runs", "show", "no-such-run").status !== 0)
 
 const database = await openCache(join(isolated, "smoke.db"))
