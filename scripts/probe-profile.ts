@@ -9,7 +9,7 @@
  * Printed: field paths with their value types, short upper-case codes, and yes/no — never an id,
  * a name, a link or a photo address.
  */
-import { readFileSync } from "node:fs"
+import { openAsBlob } from "node:fs"
 import type { Invoke } from "../dist/generated/client.generated.js"
 import { Connection } from "../dist/protocol/connection.js"
 import { asId } from "../dist/protocol/frame.js"
@@ -146,7 +146,7 @@ try {
         profile: true,
       })
       if (typeof slot?.url !== "string") continue
-      const photoToken = await uploadPhoto(slot.url, file, readFileSync(file))
+      const photoToken = await uploadPhoto(slot.url, file, await openAsBlob(file))
       console.log(`  ${step}: the upload gave a photo token: ${photoToken.length > 0}`)
       const answer = await attempt(`${step}: profile`, accountUpdate, {
         ...names16,
