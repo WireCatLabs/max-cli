@@ -1,6 +1,7 @@
 import type { PersonalMcpTool } from "@wirecat/cli-core/cli"
+import { itemOf, snakeKeys } from "@wirecat/cli-core/cli"
 import * as v from "valibot"
-import { itemAnswer, snakeKeys } from "../envelope.js"
+
 import { finish, MAX_ACTIONS, personal, prepare, sessionPoints } from "../moderation/check.js"
 import { withPermissionApproval } from "../permissions.js"
 import type { SessionStore } from "../session/store.js"
@@ -71,7 +72,7 @@ export const legacyCheckTool = (
             )
 
           const { rows, notes } = await run()
-          return itemAnswer({ rows: snakeKeys(rows), notes })
+          return itemOf({ rows: snakeKeys(rows), notes })
         }),
       )
     },

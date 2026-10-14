@@ -1,8 +1,7 @@
 import { annotate } from "@wirecat/cli-base/commands"
-import { REMOTE_WRITE } from "@wirecat/cli-core/cli"
+import { itemOf, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { UPLOAD_TYPES, type UploadType } from "../bot/uploads.js"
-import { renderItem } from "../envelope.js"
 import { botContext } from "./bot-context.js"
 import { guardedCall, uploaded } from "./bot-sends.js"
 
@@ -21,7 +20,7 @@ export const uploadsCommand = (): Command => {
       const context = botContext(this)
       const type = this.opts<{ type?: UploadType }>().type
       const attachment = await uploaded(context, file, type, (target, input) => guardedCall(context, target, input))
-      renderItem(context.renderer, context.format, attachment)
+      renderAnswer(this, context, itemOf(attachment))
     })
 
   return command

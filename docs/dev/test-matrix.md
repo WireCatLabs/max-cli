@@ -867,7 +867,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot chats members remove` | `--block` | ✅ |  |
 | `bot chats members list` |  | ✅ |  |
 | `bot chats members list` | `--limit` | ✅ |  |
-| `bot chats members list` | `--marker` | ✅ |  |
+| `bot chats members list` | `--cursor` | ✅ |  |
 | `bot chats members add` |  | ✅ |  |
 | `bot chats rules show` |  | ✅ |  |
 | `bot chats rules set` |  | ✅ |  |

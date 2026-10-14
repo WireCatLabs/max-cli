@@ -1,10 +1,18 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installerOf } from "@wirecat/cli-base/update"
-import { httpTokenFile, LOCAL_READ, LOCAL_WRITE, REMOTE_WRITE, revokeAll } from "@wirecat/cli-core/cli"
+import {
+  httpTokenFile,
+  itemOf,
+  LOCAL_READ,
+  LOCAL_WRITE,
+  REMOTE_WRITE,
+  renderAnswer,
+  revokeAll,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
-import { itemAnswer, renderItem, snakeKeys } from "../envelope.js"
 import { ownScript } from "../install.js"
 import { forCommand } from "./context.js"
 
@@ -87,7 +95,7 @@ export const mcpCommand = (): Command => {
     const tokenFile = httpTokenFile(MAX_APP, context.settings.profile, process.env)
     if (own.revoke) {
       revokeAll(tokenFile)
-      renderItem(context.renderer, context.format, { revoked: true, profile: context.settings.profile })
+      renderAnswer(this, context, itemOf({ revoked: true, profile: context.settings.profile }))
       return
     }
     const { allowSend, confirmSend, allowMarkRead, allowDelete, allowModerate } = checked(
@@ -142,7 +150,7 @@ export const mcpCommand = (): Command => {
         })
         // Pasted into a file, so a person gets the same JSON a script does, only indented.
         if (format === "pretty") streams.data(JSON.stringify(entry.config, null, 2))
-        else renderer.result(itemAnswer({ config: entry.config }))
+        else renderAnswer(this, { renderer, format, streams }, itemOf({ config: entry.config }))
         if (entry.warning) renderer.note(entry.warning)
       })
     }),
@@ -156,7 +164,7 @@ export const mcpCommand = (): Command => {
     ).action(async function (this: Command, client: string) {
       if (client !== "codex" && client !== "claude-code")
         throw new CliError("validation_error", "choose codex or claude-code")
-      const { renderer, settings, format } = forCommand(this)
+      const { renderer, settings, format, streams } = forCommand(this)
       const entry = serverEntry({
         profile: settings.profile,
         flags: checked(this.optsWithGlobals<Flags>(), settings.mcpTools),
@@ -174,10 +182,12 @@ export const mcpCommand = (): Command => {
           throw new Error(
             `this profile offers ${potentialWrites.length} tools that may write; review its permissions, then pass --allow-writes to install it`,
           )
-        renderItem(
-          renderer,
-          format,
-          snakeKeys({ ...installStdioEntry(client, name, configuration), potentialWrites: potentialWrites.length }),
+        renderAnswer(
+          this,
+          { renderer, format, streams },
+          itemOf(
+            snakeKeys({ ...installStdioEntry(client, name, configuration), potentialWrites: potentialWrites.length }),
+          ),
         )
       } catch (error) {
         throw new CliError("validation_error", error instanceof Error ? error.message : "MCP setup failed")
@@ -190,7 +200,7 @@ export const mcpCommand = (): Command => {
         "check this profile's local MCP handshake and tool list",
       ),
     ).action(async function (this: Command) {
-      const { renderer, settings, format } = forCommand(this)
+      const { renderer, settings, format, streams } = forCommand(this)
       const entry = serverEntry({
         profile: settings.profile,
         flags: checked(this.optsWithGlobals<Flags>(), settings.mcpTools),
@@ -203,12 +213,16 @@ export const mcpCommand = (): Command => {
       const { probeStdio } = await import("@wirecat/cli-base/mcp")
       try {
         const { tools, potentialWrites } = await probeStdio(server as Parameters<typeof probeStdio>[0])
-        renderItem(renderer, format, {
-          healthy: true,
-          profile: settings.profile,
-          tools: tools.length,
-          potential_writes: potentialWrites.length,
-        })
+        renderAnswer(
+          this,
+          { renderer, format, streams },
+          itemOf({
+            healthy: true,
+            profile: settings.profile,
+            tools: tools.length,
+            potential_writes: potentialWrites.length,
+          }),
+        )
       } catch (error) {
         throw new CliError("validation_error", error instanceof Error ? error.message : "MCP doctor failed")
       }

@@ -1,11 +1,9 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { LOCAL_READ, LOCAL_WRITE } from "@wirecat/cli-core/cli"
+import { itemOf, LOCAL_READ, LOCAL_WRITE, listOf, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
-import { renderItem, snakeKeys } from "../envelope.js"
 import { recipientListFor } from "../sends.js"
 import { forCommand } from "./context.js"
-import { renderList } from "./paging.js"
 
 /**
  * The chats this profile may send to. Off until the first `add`; `off` turns it off again.
@@ -19,11 +17,12 @@ export const recipientsCommand = (): Command => {
   annotate(command.command("list"), { effects: LOCAL_READ })
     .description("the chats on the list; empty and off until the first add")
     .action(async function (this: Command) {
-      const { settings, renderer, format, run } = forCommand(this)
+      const context = forCommand(this)
+      const { settings, renderer, run } = context
       await run("recipients list", async () => {
         const chats = recipientListFor(settings.profile).read()
         const items = (chats ?? []).map(snakeKeys)
-        renderList(renderer, format, items, { limit: items.length, has_more: false })
+        renderAnswer(this, context, listOf("recipients list", { items, limit: items.length, has_more: false }))
         if (!chats) renderer.note("the recipient list is off — this profile may send to any chat")
         else if (chats.length === 0) renderer.note("the recipient list is on and empty — this profile may send nowhere")
       })
@@ -33,7 +32,7 @@ export const recipientsCommand = (): Command => {
     .argument("<chat>", "chat id, or part of a chat name")
     .description("allow sending to this chat; the first add turns the list on")
     .action(async function (this: Command, chat: string) {
-      const { settings, renderer, format, createClient, run } = forCommand(this)
+      const { settings, renderer, format, streams, createClient, run } = forCommand(this)
 
       await run("recipients add", async (events) => {
         const client = createClient({ events })
@@ -46,7 +45,7 @@ export const recipientsCommand = (): Command => {
             ...(partnerId ? { partnerId } : {}),
             addedAt: new Date().toISOString(),
           })
-          renderItem(renderer, format, { id: found.id, title: found.title, added })
+          renderAnswer(this, { renderer, format, streams }, itemOf({ id: found.id, title: found.title, added }))
         } finally {
           await client.close()
         }
@@ -57,20 +56,24 @@ export const recipientsCommand = (): Command => {
     .argument("<chat>", "chat id, or the title as the list shows it")
     .description("stop allowing this chat; the list stays on")
     .action(async function (this: Command, chat: string) {
-      const { settings, renderer, format, run } = forCommand(this)
+      const { settings, renderer, format, streams, run } = forCommand(this)
       await run("recipients remove", async () => {
         const gone = recipientListFor(settings.profile).remove(chat)
         if (!gone) throw new CliError("not_found", `${chat.trim()} is not on the recipient list of ${settings.profile}`)
-        renderItem(renderer, format, { id: gone.id, title: gone.title, removed: true })
+        renderAnswer(this, { renderer, format, streams }, itemOf({ id: gone.id, title: gone.title, removed: true }))
       })
     })
 
   annotate(command.command("clear"), { effects: LOCAL_WRITE })
     .description("empty the list and turn it off: this profile may send to any chat again")
     .action(async function (this: Command) {
-      const { settings, renderer, format, run } = forCommand(this)
+      const { settings, renderer, format, streams, run } = forCommand(this)
       await run("recipients clear", async () => {
-        renderItem(renderer, format, { off: true, was_on: recipientListFor(settings.profile).off() })
+        renderAnswer(
+          this,
+          { renderer, format, streams },
+          itemOf({ off: true, was_on: recipientListFor(settings.profile).off() }),
+        )
       })
     })
 

@@ -1,13 +1,12 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { REMOTE_READ, REMOTE_WRITE } from "@wirecat/cli-core/cli"
+import { itemOf, listOf, REMOTE_READ, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { plainJson } from "../bot/transport.js"
-import { renderItem } from "../envelope.js"
 import { botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, textOf } from "./bot-sends.js"
-import { renderList, wholeNumber } from "./paging.js"
+import { wholeNumber } from "./paging.js"
 
 const format = () => new Option("--format <format>", "how the text is marked up").choices(["markdown", "html"])
 
@@ -30,15 +29,8 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         query: { count: String(limit) },
       })
-      renderList(
-        context.renderer,
-        context.format,
-        (plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? [],
-        {
-          limit,
-          has_more: false,
-        },
-      )
+      const items = (plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? []
+      renderAnswer(this, context, listOf("bot comments list", { items, limit, has_more: false }))
     })
 
   annotate(command.command("get <message> <comment>"), { effects: REMOTE_READ })
@@ -48,7 +40,7 @@ export const commentsCommand = (): Command => {
       const answer = await context.authenticated().call(operation("getCommentById"), {
         path: { messageId: message, commentId: comment },
       })
-      renderItem(context.renderer, context.format, plainJson(answer))
+      renderAnswer(this, context, itemOf(plainJson(answer)))
     })
 
   annotate(command.command("send <message> <text>"), { effects: REMOTE_WRITE })
@@ -60,7 +52,7 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         body: commentBody("sendComment", text, this.opts<{ format?: string }>().format),
       })
-      renderItem(context.renderer, context.format, plainJson(answer))
+      renderAnswer(this, context, itemOf(plainJson(answer)))
     })
 
   annotate(command.command("edit <message> <comment> <text>"), { effects: REMOTE_WRITE })
@@ -73,7 +65,7 @@ export const commentsCommand = (): Command => {
         query: { comment_id: comment },
         body: commentBody("editComment", text, this.opts<{ format?: string }>().format),
       })
-      renderItem(context.renderer, context.format, plainJson(answer) ?? { success: true })
+      renderAnswer(this, context, itemOf(plainJson(answer) ?? { success: true }))
     })
 
   annotate(command.command("delete <message> <comment>"), { effects: REMOTE_WRITE })
@@ -85,7 +77,7 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         query: { comment_id: comment },
       })
-      renderItem(context.renderer, context.format, plainJson(answer) ?? { success: true })
+      renderAnswer(this, context, itemOf(plainJson(answer) ?? { success: true }))
     })
 
   return command

@@ -319,11 +319,19 @@ describe("max bot recipients list", () => {
 })
 
 describe("max bot members and admins", () => {
-  it("lists members with ids above 2^53 as their digits and the marker to continue from", async () => {
+  it("lists members with ids above 2^53 as their digits and the next page as a step to run", async () => {
     const { stdout } = await max(["bot", "chats", "members", "list", "-100", "--limit", "5", "--json"])
     expect(JSON.parse(stdout)).toEqual({
       items: [{ user_id: BIG, name: "Big" }],
       page: { mode: "cursor", limit: 5, has_more: true, next_cursor: "7" },
+      next: [
+        expect.objectContaining({
+          step: "page.next",
+          command: "bot chats members list",
+          args: { chat: "-100", cursor: "7", limit: 5 },
+          safe_to_auto_execute: true,
+        }),
+      ],
       meta: expect.objectContaining({ run_id: expect.any(String) }),
     })
     expect(requests.at(-1)?.url).toBe("/chats/-100/members?count=5")
@@ -349,7 +357,7 @@ describe("max bot members and admins", () => {
 
   it("continues a member list from --marker", async () => {
     expect(
-      (await max(["bot", "chats", "members", "list", "-100", "--limit", "5", "--marker", "7", "--json"])).code,
+      (await max(["bot", "chats", "members", "list", "-100", "--limit", "5", "--cursor", "7", "--json"])).code,
     ).toBe(0)
     expect(requests.at(-1)?.url).toBe("/chats/-100/members?count=5&marker=7")
     const over = await max(["bot", "chats", "members", "list", "-100", "--limit", "101", "--json"])

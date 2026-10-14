@@ -1,9 +1,8 @@
 import { readFileSync } from "node:fs"
 import { captureStreams } from "@wirecat/cli-base"
-import { repliesPathFor } from "@wirecat/cli-core/cli"
+import { repliesPathFor, snakeKeys } from "@wirecat/cli-core/cli"
 import { describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
-import { snakeKeys } from "./envelope.js"
 import { run } from "./program.js"
 
 describe("shared reply editor adoption", () => {
