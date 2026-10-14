@@ -6,6 +6,8 @@ import {
   AI_SETTING_KEYS,
   changeStoreSetting,
   isStoreSetting,
+  LOCAL_READ,
+  LOCAL_WRITE,
   loadSnakeCaseConfig,
   migratePermissionConfig,
   NONE_NAMED,
@@ -65,8 +67,7 @@ export const configCommand = (): Command => {
    * Printed whole: no field the configuration accepts can hold a secret (`src/config.ts`). Whether
    * a profile has a token is not here — reading the keyring is `max doctor`'s (`CLI-12`).
    */
-  command
-    .command("show")
+  annotate(command.command("show"), { effects: LOCAL_READ })
     .description("the profile, the profiles that exist, and each setting with where it came from")
     .option("--bot", "the settings a bot command on this profile gets, rather than the personal account's")
     .action(async function (this: Command, options: { bot?: boolean }) {
@@ -116,7 +117,7 @@ export const configCommand = (): Command => {
     })
 
   command.addCommand(
-    annotate(new Command("migrate"), { mutates: true, local: true })
+    annotate(new Command("migrate"), { effects: LOCAL_WRITE })
       .description("replace legacy access settings with permissions, preserving effective levels")
       .option("--dry-run", "show the migration without writing the file")
       .action(function (this: Command) {
@@ -161,7 +162,7 @@ export const configCommand = (): Command => {
   )
 
   for (const action of ["set", "unset"] as const) {
-    const sub = annotate(command.command(action), { mutates: true, local: true })
+    const sub = annotate(command.command(action), { effects: LOCAL_WRITE })
       .argument("<setting>", `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`)
       .option("--defaults", "change what every profile gets, rather than this profile")
       .option("--personal", "only for personal accounts — the personal section of the file")

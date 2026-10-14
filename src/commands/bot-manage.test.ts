@@ -323,7 +323,7 @@ describe("max bot members and admins", () => {
     const { stdout } = await max(["bot", "chats", "members", "list", "-100", "--limit", "5", "--json"])
     expect(JSON.parse(stdout)).toEqual({
       items: [{ user_id: BIG, name: "Big" }],
-      page: { limit: 5, has_more: true, cursor: "7" },
+      page: { mode: "cursor", limit: 5, has_more: true, next_cursor: "7" },
       meta: expect.objectContaining({ run_id: expect.any(String) }),
     })
     expect(requests.at(-1)?.url).toBe("/chats/-100/members?count=5")
@@ -420,7 +420,7 @@ describe("max bot comments and callbacks", () => {
   it("asks for --limit comments, and refuses more than MAX gives at once", async () => {
     const listed = await max(["bot", "comments", "list", "mid.9", "--limit", "5", "--json"])
     expect(listed.code).toBe(0)
-    expect(JSON.parse(listed.stdout).page).toEqual({ limit: 5, has_more: false })
+    expect(JSON.parse(listed.stdout).page).toEqual({ mode: "page", limit: 5, has_more: false })
     expect(requests.at(-1)?.url).toBe("/messages/mid.9/comments?count=5")
     requests.length = 0
     expect((await max(["bot", "comments", "list", "mid.9", "--limit", "101", "--json"])).code).toBe(2)

@@ -1,5 +1,6 @@
 import { CliError, indent } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
+import { REMOTE_WRITE } from "@wirecat/cli-core/cli"
 import { Argument, Command } from "commander"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { maskedProfile } from "../domain/map.js"
@@ -33,8 +34,7 @@ export const sessionCommand = (): Command => {
    *
    * **A token is never an argument.** argv is read by `ps` and kept by shell history.
    */
-  command
-    .command("start")
+  annotate(command.command("start"), { effects: REMOTE_WRITE })
     .description("log this profile in to MAX")
     .addHelpText(
       "after",
@@ -69,7 +69,7 @@ export const sessionCommand = (): Command => {
    * Ends the session on MAX's side (LOGOUT, opcode 20), then forgets it here, as `tg session end` does
    * (`NEED-821` A). A token copied from a browser tab is that tab's session, so the tab is logged out too.
    */
-  annotate(command.command("end"), { mutates: true })
+  annotate(command.command("end"), { effects: REMOTE_WRITE })
     .description("log this profile out on MAX's side and forget the session here")
     .action(async function (this: Command) {
       const { renderer, store, run, createClient } = forCommand(this)

@@ -207,8 +207,9 @@ describe("max inbox --new", () => {
 
     const { stdout } = await runWith(["i-fresh", "inbox", "--new", "--jsonl"], environment)
 
-    expect(stdout.split("\n").map((line) => JSON.parse(line).text)).toEqual(["today"])
-    expect(JSON.parse(stdout).chat_title).toBe("Chat 111")
+    const [item, end] = stdout.split("\n").map((line) => JSON.parse(line))
+    expect(item.data).toMatchObject({ text: "today", chat_title: "Chat 111" })
+    expect(end).toMatchObject({ type: "end" })
   })
 
   it("a date in the query is a one-off look: the saved point does not move, and `--new` refuses one", async () => {

@@ -139,14 +139,14 @@ describe("forwarding", () => {
     expect(journalOf("e-forward")).toMatchObject([{ chatId: "222", kind: "forward", outcome: "sent" }])
   })
 
-  it("`--send-id` repeats a forward under the cid given, so MAX keeps one copy", async () => {
+  it("`--operation-id` repeats a forward under the cid given, so MAX keeps one copy", async () => {
     const { environment, sentWith } = messenger()
-    const argv = ["e-fwd-id", "messages", "forward", "111", MESSAGE, "--to", "222", "--send-id", "1790000000000"]
+    const argv = ["e-fwd-id", "messages", "forward", "111", MESSAGE, "--to", "222", "--operation-id", "1790000000000"]
     const { code, stdout } = await runWith(argv, environment)
 
     expect(code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { cid: 1790000000000 } })
-    expect(JSON.parse(stdout).item).toMatchObject({ send_id: "1790000000000" })
+    expect(JSON.parse(stdout).item).toMatchObject({ operation_id: "1790000000000" })
   })
 
   it("`--silent` delivers without a notification", async () => {
@@ -169,7 +169,7 @@ describe("forwarding", () => {
     expect(cids[0]).toBe(cids[1])
     const { error } = JSON.parse(lost.stderr)
     expect(error.code).toBe("outcome_unknown")
-    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --send-id ${cids[0]}`)
+    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --operation-id ${cids[0]}`)
     expect(journalOf("e-lost")).toMatchObject([{ kind: "forward", outcome: "outcome_unknown" }])
   })
 

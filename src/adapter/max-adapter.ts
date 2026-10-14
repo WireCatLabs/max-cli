@@ -451,7 +451,7 @@ export const maxAdapter = (
 const cidOf = (sendId: string): number => {
   const cid = Number(sendId)
   if (!Number.isSafeInteger(cid) || String(cid) !== sendId) {
-    throw new CliError("validation_error", `--send-id takes an id MAX gave: "${sendId}" is not one`)
+    throw new CliError("validation_error", `--operation-id takes an id MAX gave: "${sendId}" is not one`)
   }
   return cid
 }

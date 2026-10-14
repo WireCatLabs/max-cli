@@ -1,6 +1,7 @@
 import { resolve } from "node:path"
 import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@wirecat/cli-base"
-import { runsDirFor } from "@wirecat/cli-core/cli"
+import { annotate } from "@wirecat/cli-base/commands"
+import { LOCAL_WRITE, REMOTE_READ, runsDirFor } from "@wirecat/cli-core/cli"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
@@ -31,7 +32,7 @@ import { environmentOf, forCommand } from "./context.js"
  * configured, this one reads what exists.
  */
 export const doctorCommand = (): Command => {
-  const command = new Command("doctor")
+  const command = annotate(new Command("doctor"), { effects: REMOTE_READ })
     .description("the state this installation is in, without contacting MAX unless --online")
     .option("--online", "also log in once, read one chat and start the MCP server; sends nothing")
 
@@ -194,15 +195,16 @@ const EXCLUDES = ["текстов сообщений", "названий чат�
  * steps (`NEED-267`).
  */
 const reportCommand = (): Command => {
-  const report = new Command("report").description("what a problem report holds and where it goes; writes nothing")
+  const report = annotate(new Command("report"), { effects: REMOTE_READ }).description(
+    "what a problem report holds and where it goes; writes nothing",
+  )
 
   report.action(async function (this: Command) {
     const { renderer, format, streams, run } = forCommand(this)
     await run("doctor report", async () => explain(renderer, format, streams))
   })
 
-  report
-    .command("create")
+  annotate(report.command("create"), { effects: LOCAL_WRITE })
     .description("write a problem report to a file, and print how to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
     .option("--output <file>", "where to write it; a new file in this directory if not given")

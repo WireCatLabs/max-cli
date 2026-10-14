@@ -1,6 +1,8 @@
 import { writeFileSync } from "node:fs"
 import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
 import { holdLock, lockPath, releaseLock } from "@wirecat/cli-core/background"
+import { REMOTE_WRITE } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
 import { parseDuration } from "../config.js"
@@ -20,7 +22,7 @@ import { serveStems } from "./serve-stems.js"
  * one is given `--idle`, so it does not outlive the work that started it.
  */
 export const serveCommand = (): Command =>
-  new Command("serve")
+  annotate(new Command("serve"), { effects: REMOTE_WRITE })
     .description("stay connected to MAX and stream new messages to `max watch`, until Ctrl-C")
     .option("--idle <duration>", "stop after this long with nobody using it — 15m, 1h is 60m")
     .option("--max-subscriber-buffer-bytes <bytes>", "buffer per watcher before disconnecting it; 0 is unlimited")

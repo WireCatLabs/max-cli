@@ -66,13 +66,12 @@ beforeAll(async () => {
   })
 })
 describe("retention and freshness SDK adoption", () => {
-  it("declares refresh as a local write in native discovery", async () => {
+  it("declares refresh as a read of MAX kept in the store, in native discovery", async () => {
     const result = await invoke("commands", "stats", "messages", "counters", "refresh")
     expect(result.code, result.stderr).toBe(0)
-    const commands = JSON.parse(result.stdout).commands as { path: string[]; mutates?: boolean; local?: boolean }[]
+    const commands = JSON.parse(result.stdout).commands as { path: string[]; effects?: unknown }[]
     expect(commands.find((command) => command.path.join(" ") === "stats messages counters refresh")).toMatchObject({
-      mutates: true,
-      local: true,
+      effects: { remote: "read", local: "write" },
     })
   })
 

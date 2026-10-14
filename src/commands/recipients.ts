@@ -1,5 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
+import { LOCAL_READ, LOCAL_WRITE } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { renderItem, snakeKeys } from "../envelope.js"
 import { recipientListFor } from "../sends.js"
@@ -15,8 +16,7 @@ import { renderList } from "./paging.js"
 export const recipientsCommand = (): Command => {
   const command = new Command("recipients").description("the chats this profile may send to, when the list is on")
 
-  command
-    .command("list")
+  annotate(command.command("list"), { effects: LOCAL_READ })
     .description("the chats on the list; empty and off until the first add")
     .action(async function (this: Command) {
       const { settings, renderer, format, run } = forCommand(this)
@@ -29,7 +29,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  annotate(command.command("add"), { mutates: true, local: true })
+  annotate(command.command("add"), { effects: LOCAL_WRITE })
     .argument("<chat>", "chat id, or part of a chat name")
     .description("allow sending to this chat; the first add turns the list on")
     .action(async function (this: Command, chat: string) {
@@ -53,7 +53,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  annotate(command.command("remove"), { mutates: true, local: true })
+  annotate(command.command("remove"), { effects: LOCAL_WRITE })
     .argument("<chat>", "chat id, or the title as the list shows it")
     .description("stop allowing this chat; the list stays on")
     .action(async function (this: Command, chat: string) {
@@ -65,7 +65,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  annotate(command.command("clear"), { mutates: true, local: true })
+  annotate(command.command("clear"), { effects: LOCAL_WRITE })
     .description("empty the list and turn it off: this profile may send to any chat again")
     .action(async function (this: Command) {
       const { settings, renderer, format, run } = forCommand(this)

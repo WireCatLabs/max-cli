@@ -62,7 +62,7 @@ export const createDelivery = (deps: Dependencies) => {
           "outcome_unknown",
           `the message may or may not have been scheduled (${failure.message}) — ` +
             `\`max messages scheduled ${chatId}\` shows the queue; sending it again could queue a second copy`,
-          { send_id: cid },
+          { operation_id: String(cid) },
         )
       }
 
@@ -74,8 +74,8 @@ export const createDelivery = (deps: Dependencies) => {
         throw new CliError(
           "outcome_unknown",
           `the message may or may not have been sent (${failure.message}) — ` +
-            `\`${options.repeat ?? "max messages send <chat> <text>"} --send-id ${cid}\` repeats the attempt without risking a second copy`,
-          { send_id: cid },
+            `\`${options.repeat ?? "max messages send <chat> <text>"} --operation-id ${cid}\` repeats the attempt without risking a second copy`,
+          { operation_id: String(cid) },
         )
       }
     }

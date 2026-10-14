@@ -36,7 +36,7 @@ describe("shared MAX audio models", () => {
     const result = await cli(["models", "audio", "list", "--json"], env)
     expect(result.code, result.stderr).toBe(0)
     const json = JSON.parse(result.stdout)
-    expect(json.page).toEqual({ limit: 3, has_more: false })
+    expect(json.page).toEqual({ mode: "page", limit: 3, has_more: false })
     expect(json.items.map((model: { path: string }) => model.path)).toEqual(
       ["gigaam-v3", "gigaam-v3-ctc", "parakeet-v3"].map((id) => join(directory, id)),
     )
@@ -88,7 +88,8 @@ describe("shared MAX audio models", () => {
       jsonl.stdout
         .trim()
         .split("\n")
-        .map((line) => JSON.parse(line).id),
+        .slice(0, -1)
+        .map((line) => JSON.parse(line).data.id),
     ).toEqual(MODELS.map((model) => model.id))
     const pretty = await cli(["models", "audio", "list"], env, true)
     expect(pretty.code, pretty.stderr).toBe(0)

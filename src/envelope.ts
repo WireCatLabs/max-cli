@@ -1,34 +1,29 @@
 import type { Renderer, RenderFormat } from "@wirecat/cli-base"
-import { currentRun } from "@wirecat/cli-core/cli"
+import { itemOf, jsonlRecords, metaNow, sealed } from "@wirecat/cli-core/cli"
 
-/** cli-core builds its own answers with helpers it does not export; max's own commands and tools answer the same shape. */
-const meta = () => {
-  const run = currentRun()
-  return { run_id: run.runId, duration_ms: Math.max(0, Math.round(Date.now() - (run.startedAt ?? Date.now()))) }
+export { snakeKeys } from "@wirecat/cli-core/cli"
+
+export interface ListPage {
+  limit: number
+  has_more: boolean
+  /** Where the next page starts, for a source that pages by its own position. */
+  cursor?: string
 }
 
-export const itemAnswer = <T>(item: T) => ({ item, meta: meta() })
+export const itemAnswer = <T>(item: T) => sealed(itemOf(item))
 
-export const listAnswer = <T>(items: readonly T[], page: { limit: number; has_more: boolean; cursor?: string }) => ({
-  items,
-  page,
-  meta: meta(),
+export const listAnswer = <T>(items: readonly T[], { limit, has_more, cursor }: ListPage) => ({
+  items: [...items],
+  page:
+    cursor === undefined
+      ? { mode: "page" as const, limit, has_more }
+      : { mode: "cursor" as const, limit, has_more, next_cursor: cursor },
+  meta: metaNow(),
 })
 
-const snake = (key: string) => key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
-
-/** Only for records whose keys are field names, never for one keyed by data. */
-export const snakeKeys = (value: unknown): unknown => {
-  if (Array.isArray(value)) return value.map(snakeKeys)
-  if (value === null || typeof value !== "object" || value.constructor !== Object) return value
-  return Object.fromEntries(
-    Object.entries(value).flatMap(([key, inner]) => (inner === undefined ? [] : [[snake(key), snakeKeys(inner)]])),
-  )
-}
-
-/** `--json` gets the envelope, `--jsonl` the item as one line, a person the item alone. */
+/** `--json` gets the envelope, `--jsonl` the item and the end line, a person the item alone. */
 export const renderItem = (renderer: Renderer, format: RenderFormat, item: unknown): void => {
   if (format === "json") renderer.result(itemAnswer(item))
-  else if (format === "jsonl") renderer.stream([item])
+  else if (format === "jsonl") renderer.stream(jsonlRecords(itemOf(item)))
   else renderer.result(item)
 }

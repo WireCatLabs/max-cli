@@ -157,7 +157,7 @@
   `account update`, `account sessions end`, `session end`, `chats join|leave|create|update|start|app`,
   `chats members|admins …`, `chats requests accept|decline`, `chats link reset`, `chats folders create|update|delete|order`, `chats moderate`
   (только то, что разрешают правила группы), `chats mark-read` и `messages list --mark-read` — и каждая делает
-  только то, что написано в набранной строке. `max commands --json` помечает их `mutates`.
+  только то, что написано в набранной строке. `max commands --json` помечает их `effects.remote: "write"`.
 - **Удаление по умолчанию требует подтверждения.** Уровень `ask` для `messages.delete` требует
   ответа в терминале или `--allow-dangerous`; явный `allow` выполняет удаление без вопроса.
   Для удаления у всех нужен также `--for-everyone`; общий MCP-инструмент этого не разрешает.

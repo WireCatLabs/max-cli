@@ -128,7 +128,7 @@ describe("shared rankings adoption", () => {
     const firstPage = JSON.parse(first.stdout)
     expect(firstPage.items).toHaveLength(1)
     expect(firstPage.page).toMatchObject({ limit: 1, has_more: true })
-    expect(firstPage.next).toMatchObject([{ step: "page.next", args: { cursor: firstPage.page.cursor } }])
+    expect(firstPage.next).toMatchObject([{ step: "page.next", args: { cursor: firstPage.page.next_cursor } }])
     const second = await invoke(
       "stats",
       "contacts",
@@ -141,7 +141,7 @@ describe("shared rankings adoption", () => {
       "--limit",
       "1",
       "--cursor",
-      firstPage.page.cursor,
+      firstPage.page.next_cursor,
     )
     expect(second.code, second.stderr).toBe(0)
     const secondPage = JSON.parse(second.stdout)

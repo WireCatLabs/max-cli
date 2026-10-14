@@ -1,7 +1,7 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installerOf } from "@wirecat/cli-base/update"
-import { httpTokenFile, revokeAll } from "@wirecat/cli-core/cli"
+import { httpTokenFile, LOCAL_READ, LOCAL_WRITE, REMOTE_WRITE, revokeAll } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { itemAnswer, renderItem, snakeKeys } from "../envelope.js"
@@ -69,7 +69,7 @@ const checked = (flags: Flags, _mcpTools: readonly string[]): Flags => flags
 
 export const mcpCommand = (): Command => {
   const command = withFlags(
-    new Command("mcp").description(
+    annotate(new Command("mcp"), { effects: REMOTE_WRITE }).description(
       "serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max mcp`",
     ),
   )
@@ -126,7 +126,7 @@ export const mcpCommand = (): Command => {
 
   command.addCommand(
     withFlags(
-      new Command("config").description(
+      annotate(new Command("config"), { effects: LOCAL_READ }).description(
         "print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes nothing",
       ),
     ).action(async function (this: Command) {
@@ -149,7 +149,7 @@ export const mcpCommand = (): Command => {
   )
   command.addCommand(
     withFlags(
-      annotate(new Command("setup"), { mutates: true, local: true })
+      annotate(new Command("setup"), { effects: LOCAL_WRITE })
         .description("add this profile's local MCP server to Codex or Claude Code")
         .argument("<client>", "codex or claude-code")
         .option("--allow-writes", "acknowledge that this profile offers writing tools"),
@@ -185,32 +185,34 @@ export const mcpCommand = (): Command => {
     }),
   )
   command.addCommand(
-    withFlags(new Command("doctor").description("check this profile's local MCP handshake and tool list")).action(
-      async function (this: Command) {
-        const { renderer, settings, format } = forCommand(this)
-        const entry = serverEntry({
+    withFlags(
+      annotate(new Command("doctor"), { effects: LOCAL_READ }).description(
+        "check this profile's local MCP handshake and tool list",
+      ),
+    ).action(async function (this: Command) {
+      const { renderer, settings, format } = forCommand(this)
+      const entry = serverEntry({
+        profile: settings.profile,
+        flags: checked(this.optsWithGlobals<Flags>(), settings.mcpTools),
+        execPath: process.execPath,
+        scriptPath: ownScript(),
+        env: process.env,
+      })
+      const server = Object.values(entry.config.mcpServers)[0]
+      if (!server) throw new CliError("validation_error", "the MCP entry is empty")
+      const { probeStdio } = await import("@wirecat/cli-base/mcp")
+      try {
+        const { tools, potentialWrites } = await probeStdio(server as Parameters<typeof probeStdio>[0])
+        renderItem(renderer, format, {
+          healthy: true,
           profile: settings.profile,
-          flags: checked(this.optsWithGlobals<Flags>(), settings.mcpTools),
-          execPath: process.execPath,
-          scriptPath: ownScript(),
-          env: process.env,
+          tools: tools.length,
+          potential_writes: potentialWrites.length,
         })
-        const server = Object.values(entry.config.mcpServers)[0]
-        if (!server) throw new CliError("validation_error", "the MCP entry is empty")
-        const { probeStdio } = await import("@wirecat/cli-base/mcp")
-        try {
-          const { tools, potentialWrites } = await probeStdio(server as Parameters<typeof probeStdio>[0])
-          renderItem(renderer, format, {
-            healthy: true,
-            profile: settings.profile,
-            tools: tools.length,
-            potential_writes: potentialWrites.length,
-          })
-        } catch (error) {
-          throw new CliError("validation_error", error instanceof Error ? error.message : "MCP doctor failed")
-        }
-      },
-    ),
+      } catch (error) {
+        throw new CliError("validation_error", error instanceof Error ? error.message : "MCP doctor failed")
+      }
+    }),
   )
   return command
 }

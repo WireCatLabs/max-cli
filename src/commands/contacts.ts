@@ -1,5 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
-import { contactsCommand as sharedContactsCommand } from "@wirecat/cli-core/cli"
+import { annotate } from "@wirecat/cli-base/commands"
+import { FETCH, REMOTE_READ, contactsCommand as sharedContactsCommand } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
@@ -30,8 +31,7 @@ export const contactsCommand = (): Command => {
    * ⚠ **The summary is counts.** No name, no username, no description, no phone number — a person
    * in a diagnostic is the one leak this project's sixth constraint is about.
    */
-  command
-    .command("sync")
+  annotate(command.command("sync"), { effects: FETCH })
     .description("forget where the last sync left off and take the whole list again")
     .action(async function (this: Command) {
       const { renderer, createClient, run, store } = forCommand(this)
@@ -55,8 +55,7 @@ export const contactsCommand = (): Command => {
    * ⚠ **The number is asked for, never an argument**: argv is read by `ps` and kept by shell
    * history, and a phone number is what the sixth constraint names.
    */
-  command
-    .command("lookup")
+  annotate(command.command("lookup"), { effects: REMOTE_READ })
     .description("who MAX has under a phone number — asks for it, or reads it from stdin")
     .allowExcessArguments()
     .action(async function (this: Command) {

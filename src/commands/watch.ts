@@ -1,4 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import { REMOTE_READ } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import type { MessageChange, MessageHit } from "../domain/models.js"
 import { renderMessages } from "../rendering/messages.js"
@@ -19,7 +21,7 @@ import { forCommand } from "./context.js"
  * are bare messages, never meets a line of another shape.
  */
 export const watchCommand = (): Command =>
-  new Command("watch")
+  annotate(new Command("watch"), { effects: REMOTE_READ })
     .description("print new messages as they arrive, from a running `max serve`")
     .option(
       "--events",
