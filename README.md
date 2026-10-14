@@ -263,7 +263,7 @@ max personal mcp --permission messages.send=ask               # временно
 Ошибка приходит одной строкой JSON в stderr, stdout остаётся пустым. Код завершения говорит, что
 случилось: `4` — нужно войти, `5` — права не разрешают, `6` — чат или сообщение не найдены, `8` —
 лимит, `9` — MAX не ответил вовремя, `14` — неизвестно, ушло ли сообщение (повторять только с тем же
-`--send-id`). Частичный результат может прийти с кодом `0`: проверьте поля `missing` и `next`.
+`--operation-id`). Частичный результат может прийти с кодом `0`: проверьте поля `missing` и `next`.
 
 Подробнее: [контракт](https://github.com/WireCatLabs/max-cli/blob/main/docs/cli-contract.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/cli-contract)), [все команды и коды](https://github.com/WireCatLabs/max-cli/blob/main/docs/commands.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/commands)).
 

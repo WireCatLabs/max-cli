@@ -1,4 +1,5 @@
-import { generatedApiCommand, botCommand as sharedBotCommand } from "@wirecat/cli-core/cli"
+import { annotate } from "@wirecat/cli-base/commands"
+import { generatedApiCommand, REMOTE_READ, botCommand as sharedBotCommand } from "@wirecat/cli-core/cli"
 import type { Command } from "commander"
 import { botOperations } from "../bot/client.js"
 import { checkBody, checkParameter } from "../bot/input.js"
@@ -23,8 +24,7 @@ export const botCommand = (): Command => {
     })
     .hook("postAction", async (_group, action) => botRecordingOf(action)?.succeed())
 
-  command
-    .command("me")
+  annotate(command.command("me"), { effects: REMOTE_READ })
     .description("the bot this profile's token belongs to: name, id, description, commands")
     .action(async function (this: Command) {
       const { authenticated, renderer } = botContext(this)

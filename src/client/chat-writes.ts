@@ -154,7 +154,7 @@ export const createChatWrites = (deps: Dependencies) => {
         await deps.botWrite(
           () => deps.wire.messages.send({ chatId, message: { cid, attaches: [control] } }),
           "the bot may already have started",
-          { send_id: cid },
+          { operation_id: String(cid) },
         )
         deps.sends?.record({ chatId, kind: "message", sendId: String(cid), outcome: "sent" })
       } catch (error) {

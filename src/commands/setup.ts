@@ -2,7 +2,7 @@ import { accessSync, constants, mkdirSync } from "node:fs"
 import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installSkill, type SkillTarget } from "@wirecat/cli-base/skill"
-import { runtime } from "@wirecat/cli-core/cli"
+import { REMOTE_WRITE, runtime } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
@@ -62,7 +62,7 @@ const agentFor = async (context: CommandContext, given: Agent | undefined, pad: 
 }
 
 export const setupCommand = (): Command =>
-  annotate(new Command("setup"), { mutates: true })
+  annotate(new Command("setup"), { effects: REMOTE_WRITE })
     .description("set up your personal MAX account and connect your agent")
     .configureHelp({ showGlobalOptions: true })
     .addHelpText(

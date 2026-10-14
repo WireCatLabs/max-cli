@@ -689,7 +689,7 @@ describe("sessions", () => {
       items: [
         { current: true, client: "WEB", device: "Chrome", location: null, last_active_at: "2026-09-19T00:00:00.000Z" },
       ],
-      page: { limit: 1, has_more: false },
+      page: { mode: "page", limit: 1, has_more: false },
       meta: expect.any(Object),
     })
   })

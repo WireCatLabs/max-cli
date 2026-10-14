@@ -1,9 +1,11 @@
 import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
 import {
   deleteCommand,
   editCommand,
   forwardCommand,
   pinCommand,
+  REMOTE_READ,
   sendCommand,
   messagesCommand as sharedMessagesCommand,
   unpinCommand,
@@ -48,8 +50,7 @@ export const messagesCommand = (): Command => {
    * fetched, the connection closed, and then the model runs — up to a minute for five minutes of
    * speech, which should not hold a socket open.
    */
-  command
-    .command("transcribe")
+  annotate(command.command("transcribe"), { effects: REMOTE_READ })
     .argument("<chat>", "chat id, or part of a chat name")
     .argument("<message>", "id of a voice message")
     .description("turn a voice message into text, on this machine — the recording goes nowhere")

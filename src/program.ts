@@ -150,7 +150,9 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
           needsProfile: false,
         })
         assertReadable(settings, key)
-        if (metaOf(action).mutates && metaOf(action).local && levelFor(settings.permissions, key).level === "readonly")
+        const effects = metaOf(action).effects
+        const localOnly = effects?.remote === "none" && effects.local === "write"
+        if (localOnly && levelFor(settings.permissions, key).level === "readonly")
           throw new CliError("permission_error", `profile ${settings.profile} does not let ${key} write`, {
             permission: key,
           })

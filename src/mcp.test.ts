@@ -1121,8 +1121,7 @@ describe("the MCP server", () => {
 
     expect(isError).toBe(false)
     expect(body).toMatchObject({ item: { message: { id: "116762160362694590" } } })
-    const item = body.item as { operation_id: string; send_id: string }
-    expect(item.operation_id).toBe(item.send_id)
+    expect(body).toMatchObject({ item: { operation_id: expect.any(String) } })
     expect(max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload).toMatchObject({ chatId: 111 })
   })
 
@@ -1196,7 +1195,7 @@ describe("the MCP server", () => {
   it("refuses an `at_time` that `--at-time` refuses, before sending anything", async () => {
     const { client, max } = await connect({ allowSend: true })
 
-    for (const args of [{ at_time: "30s" }, { at_time: "1h", silent: true }, { at_time: "1h", send_id: "5" }]) {
+    for (const args of [{ at_time: "30s" }, { at_time: "1h", silent: true }, { at_time: "1h", operation_id: "5" }]) {
       const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "x", ...args })
       expect(isError).toBe(true)
       expect(body.error).toMatchObject({ code: "validation_error" })

@@ -245,12 +245,12 @@ describe("closing and creating", () => {
 
   it("creates a poll with the send id given, so a lost one can be repeated", async () => {
     const { environment, sentWith } = messenger()
-    const argv = ["p-create-id", "polls", "create", "111", "Lunch?", "Yes", "No", "--send-id", "1790000000000"]
+    const argv = ["p-create-id", "polls", "create", "111", "Lunch?", "Yes", "No", "--operation-id", "1790000000000"]
     const { code, stdout } = await runWith(argv, environment)
 
     expect(code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { cid: 1790000000000 } })
-    expect(JSON.parse(stdout).item).toMatchObject({ send_id: "1790000000000", operation_id: "1790000000000" })
+    expect(JSON.parse(stdout).item).toMatchObject({ operation_id: "1790000000000" })
   })
 
   it("`--revote` lets people change their vote", async () => {

@@ -1,5 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
+import { REMOTE_READ, REMOTE_WRITE } from "@wirecat/cli-core/cli"
 import type { Command } from "commander"
 import { checkBody } from "../bot/input.js"
 import { plainJson } from "../bot/transport.js"
@@ -49,8 +50,7 @@ const showMembers = (context: ReturnType<typeof botContext>, answer: unknown): v
  * `remove` comes from cli-core with the admins.
  */
 export const addMembersCommands = (members: Command): void => {
-  members
-    .command("list <chat>")
+  annotate(members.command("list <chat>"), { effects: REMOTE_READ })
     .description("members of a chat, a page at a time — --marker takes the `marker` the last page gave")
     .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .option("--marker <marker>", "continue from here")
@@ -64,7 +64,7 @@ export const addMembersCommands = (members: Command): void => {
       showMembers(context, answer)
     })
 
-  annotate(members.command("add <chat> <users...>"), { mutates: true })
+  annotate(members.command("add <chat> <users...>"), { effects: REMOTE_WRITE })
     .description(
       `add people to a chat by user id, at most ${ADD_AT_ONCE}; the bot must be an admin that may add members`,
     )

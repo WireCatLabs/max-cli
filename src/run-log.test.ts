@@ -99,7 +99,7 @@ describe("a failed run", () => {
       { status: "failed", errorCode: "provider_error", providerError: "proto.payload", keptBecauseFailed: true },
     ])
     expect(runs[0]).toMatchObject({ runtime: expect.stringMatching(/^(node|bun) /), platform: process.platform })
-    expect(events).toMatchObject([{ event: "request", operation: "chats.history" }])
+    expect(events).toMatchObject([{ event: "provider.request", operation: "chats.history" }])
   })
 
   it("leaves nothing when it succeeds, or when recording was turned off by name", async () => {
@@ -116,7 +116,11 @@ describe("a failed run", () => {
     })
 
     expect(runs[0]).toMatchObject({ errorCode: "generic_failure" })
-    expect(events.at(-1)).toMatchObject({ event: "crash", error_class: "TypeError", frames: expect.any(Array) })
+    expect(events.at(-1)).toMatchObject({
+      event: "command.crashed",
+      error_class: "TypeError",
+      frames: expect.any(Array),
+    })
     expect(raw).not.toContain("секрет")
   })
 })

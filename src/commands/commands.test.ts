@@ -31,7 +31,7 @@ describe("max commands", () => {
     expect(code).toBe(0)
     expect(stdout).toHaveLength(1)
     expect(stderr).toEqual([])
-    expect(JSON.parse(stdout[0] as string)).toMatchObject({ cli: "max", version: MAX_APP.version, contract: 2 })
+    expect(JSON.parse(stdout[0] as string)).toMatchObject({ cli: "max", version: MAX_APP.version, contract: 3 })
   })
 
   it("lists every command the program has, with the argv path already split", async () => {
@@ -47,16 +47,16 @@ describe("max commands", () => {
     const end = flat(JSON.parse(stdout[0] as string).commands).find(
       (command) => command.path.join(" ") === "session end",
     )
-    expect(end).toMatchObject({ mutates: true })
-    expect(end?.local).toBeFalsy()
+    expect(end?.effects).toEqual({ remote: "write", local: "write" })
   })
 
   it("marks the commands that change something in MAX, and only those", async () => {
     const { stdout } = await commands()
     const writing = flat(JSON.parse(stdout[0] as string).commands)
-      .filter((command) => command.mutates && !command.local)
+      .filter((command) => command.effects?.remote === "write")
       .map((command) => command.path.join(" "))
     expect(writing).toEqual([
+      "session start",
       "session end",
       "setup",
       "account update",
@@ -103,6 +103,10 @@ describe("max commands", () => {
       "polls create",
       "reactions add",
       "reactions remove",
+      "serve",
+      "schedule run",
+      "schedule exec",
+      "mcp",
       "bot chats leave",
       "bot chats action",
       "bot chats admins add",
@@ -115,11 +119,13 @@ describe("max commands", () => {
       "bot messages delete",
       "bot messages pin",
       "bot messages unpin",
+      "bot watch",
       "bot callbacks answer",
       "bot commands set",
       "bot commands clear",
       "bot webhooks set",
       "bot webhooks delete",
+      "bot mcp",
       "bot comments send",
       "bot comments edit",
       "bot comments delete",
@@ -148,12 +154,15 @@ describe("max commands", () => {
     ])
   })
 
-  it("marks the writes that change only this computer as local, still writes", async () => {
+  it("marks the writes that change only this computer as local, and says which read a service first", async () => {
     const { stdout } = await commands()
     const local = flat(JSON.parse(stdout[0] as string).commands)
-      .filter((command) => command.local)
-      .map((command) => `${command.path.join(" ")}${command.mutates ? "" : " (not a write)"}`)
+      .filter((command) => command.effects?.remote !== "write" && command.effects?.local === "write")
+      .map((command) => `${command.path.join(" ")}${command.effects?.remote === "read" ? " (reads remotely)" : ""}`)
     expect(local).toEqual([
+      "chats members fetch (reads remotely)",
+      "chats tracking add",
+      "chats tracking remove",
       "chats rules set",
       "chats rules unset",
       "contacts alias set",
@@ -161,15 +170,54 @@ describe("max commands", () => {
       "contacts notes add",
       "contacts notes edit",
       "contacts notes remove",
+      "contacts sync (reads remotely)",
+      "contacts link",
+      "contacts unlink",
+      "messages download (reads remotely)",
+      "messages sync (reads remotely)",
+      "store gaps repair (reads remotely)",
+      "store jobs cancel",
+      "store jobs retry",
       "store jobs clear",
-      "stats messages counters refresh",
+      "store export",
+      "store clear",
+      "store migrate",
+      "store reindex",
+      "store backup",
+      "store restore",
+      "store decrypt",
+      "store repair",
+      "store reset",
+      "store copies delete",
+      "stats messages counters refresh (reads remotely)",
+      "stats charts",
+      "tasks add",
+      "tasks plan",
+      "tasks link",
+      "tasks close",
+      "conversations build",
+      "conversations links add",
+      "conversations links clear",
+      "conversations consents revoke",
+      "conversations embed",
+      "conversations embed clear",
+      "attachments extract (reads remotely)",
+      "attachments text set",
       "tags auto",
       "tags add",
       "tags remove",
       "mentions confirm",
       "mentions reject",
       "mentions rebuild",
-      "metadata refresh",
+      "metadata refresh (reads remotely)",
+      "searches create",
+      "searches delete",
+      "searches clear",
+      "flood clear",
+      "models audio download (reads remotely)",
+      "models text download (reads remotely)",
+      "models text key set",
+      "models text key remove",
       "recipients add",
       "recipients remove",
       "recipients clear",
@@ -182,9 +230,22 @@ describe("max commands", () => {
       "replies consents revoke",
       "replies consents deny",
       "replies consents allow",
+      "replies pause",
+      "replies resume",
+      "server start",
+      "server stop",
+      "server restart",
+      "server install",
+      "server uninstall",
+      "schedule command",
+      "schedule agent",
+      "schedule remove",
       "config migrate",
       "config set",
       "config unset",
+      "doctor report create",
+      "skill install",
+      "upgrade",
       "mcp setup",
       "bot auth set",
       "bot auth remove",
@@ -193,6 +254,7 @@ describe("max commands", () => {
       "bot recipients add",
       "bot recipients remove",
       "bot recipients clear",
+      "bot store fetch (reads remotely)",
     ])
   })
 

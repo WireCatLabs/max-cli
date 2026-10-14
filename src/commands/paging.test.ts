@@ -16,7 +16,7 @@ const rendered = (format: "json" | "jsonl" | "pretty", page: { limit: number; ha
 }
 
 describe("what a listing answers", () => {
-  it("**one object per line with --jsonl**, and nothing else on stdout", () => {
+  it("**one object per line with --jsonl**, then the end line, and nothing else on stdout", () => {
     const { stdout } = rendered("jsonl", { limit: 2, has_more: true })
 
     expect(
@@ -24,7 +24,11 @@ describe("what a listing answers", () => {
         .trim()
         .split("\n")
         .map((line) => JSON.parse(line)),
-    ).toEqual([{ id: "1" }, { id: "2" }])
+    ).toEqual([
+      { type: "item", data: { id: "1" } },
+      { type: "item", data: { id: "2" } },
+      { type: "end", complete: true, page: { mode: "page", limit: 2, has_more: true } },
+    ])
     expect(stdout).not.toContain("\u001b")
   })
 
@@ -34,14 +38,15 @@ describe("what a listing answers", () => {
     const answer = JSON.parse(stdout)
     expect(answer).toEqual({
       items: [{ id: "1" }, { id: "2" }],
-      page: { limit: 2, has_more: true, cursor: "42" },
-      meta: { run_id: expect.any(String), duration_ms: expect.any(Number) },
+      page: { mode: "cursor", limit: 2, has_more: true, next_cursor: "42" },
+      meta: { run_id: expect.any(String), duration_ms: expect.any(Number), complete: true },
     })
     expect(stderr).toBe("")
   })
 
   it("says there is no more on the last page, with no cursor", () => {
     expect(JSON.parse(rendered("json", { limit: 2, has_more: false }).stdout).page).toEqual({
+      mode: "page",
       limit: 2,
       has_more: false,
     })

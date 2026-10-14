@@ -1,4 +1,5 @@
 import { annotate } from "@wirecat/cli-base/commands"
+import { REMOTE_WRITE } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { UPLOAD_TYPES, type UploadType } from "../bot/uploads.js"
 import { renderItem } from "../envelope.js"
@@ -8,7 +9,7 @@ import { guardedCall, uploaded } from "./bot-sends.js"
 export const uploadsCommand = (): Command => {
   const command = new Command("uploads").description("files uploaded to MAX, to attach to a message")
 
-  annotate(command.command("put <file>"), { mutates: true })
+  annotate(command.command("put <file>"), { effects: REMOTE_WRITE })
     .description(
       "upload a file from disk and print the attachment to put in a message's `attachments` — " +
         "`messages send --file` does both steps at once",

@@ -49,14 +49,15 @@ describe("personal message locator fallback", () => {
           throw new Error("link opened a wire")
         },
       })
-      return { code, stdout: streams.stdout.join(""), stderr: streams.stderr.join("\n") }
+      return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
     }
     for (const flag of ["--json", "--jsonl"]) {
       const result = await cli(["messages", "link", "7", id, flag])
       expect(result.code, result.stderr).toBe(0)
-      expect(result.stdout.trim().split("\n")).toHaveLength(1)
-      const answer = JSON.parse(result.stdout)
-      expect(flag === "--json" ? answer.item : answer).toEqual({
+      const lines = result.stdout.trim().split("\n")
+      expect(lines).toHaveLength(flag === "--json" ? 1 : 2)
+      const answer = JSON.parse(lines[0] ?? "")
+      expect(flag === "--json" ? answer.item : answer.data).toEqual({
         ref: `msg:max/500/7/${id}`,
         url: null,
         access: "unavailable",

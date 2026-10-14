@@ -659,8 +659,9 @@ describe("changing a group", () => {
         .trim()
         .split(/\r?\n/)
         .map((line) => JSON.parse(line))
-      expect(rows).toHaveLength(3)
-      expect(rows[0]).toMatchObject({ type: "create", title: "Team" })
+      expect(rows).toHaveLength(4)
+      expect(rows[0].data).toMatchObject({ type: "create", title: "Team" })
+      expect(rows.at(-1)).toMatchObject({ type: "end" })
       expect(sent(Opcode.CHAT_MARK)).toEqual([])
     })
 

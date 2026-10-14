@@ -574,7 +574,9 @@ describe("the program", () => {
     it("`--jsonl` writes one object per line and nothing else", async () => {
       const { max: _, ...environment } = scriptedMax()
       const { stdout } = await runWith(["messages", "list", "111", "--jsonl"], environment)
-      expect(stdout.split("\n").map((line) => JSON.parse(line).id)).toEqual(["116762160362694583"])
+      const [item, end] = stdout.split("\n").map((line) => JSON.parse(line))
+      expect(item.data.id).toBe("116762160362694583")
+      expect(end).toMatchObject({ type: "end", complete: true })
     })
 
     it("--json keeps message text as written, invisible characters included", async () => {
@@ -805,8 +807,8 @@ describe("the program", () => {
       const listed = JSON.parse(stdout)
       expect(listed.items.map((message: { id: string }) => message.id)).toEqual(["116762160362694584"])
       expect(listed).toMatchObject({
-        page: { has_more: true, cursor: expect.any(String) },
-        next: [{ step: "page.next", args: { cursor: listed.page.cursor } }],
+        page: { mode: "cursor", has_more: true, next_cursor: expect.any(String) },
+        next: [{ step: "page.next", args: { cursor: listed.page.next_cursor } }],
       })
 
       const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
