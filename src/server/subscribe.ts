@@ -1,5 +1,5 @@
 import { connect } from "node:net"
-import { CliError } from "@wirecat/cli-base"
+import { CliError, type ErrorCode, errorCodes } from "@wirecat/cli-base"
 import { asFirstWord } from "../profile.js"
 import { fromLine, lineReader } from "./lines.js"
 import type { ServerEvent } from "./server.js"
@@ -17,13 +17,31 @@ export const subscribe = (
   signal?: AbortSignal,
 ): Promise<void> =>
   new Promise((resolve, reject) => {
+    if (signal?.aborted) {
+      resolve()
+      return
+    }
     const socket = connect(path)
-
-    signal?.addEventListener("abort", () => socket.end(), { once: true })
+    const abort = () => socket.destroy()
+    signal?.addEventListener("abort", abort, { once: true })
     socket.once("connect", () => socket.write(`${JSON.stringify({ subscribe: true })}\n`))
     socket.on(
       "data",
-      lineReader((line) => onEvent(fromLine(line) as unknown as ServerEvent)),
+      lineReader((line) => {
+        const event = fromLine(line)
+        if (event.error && typeof event.error === "object") {
+          const error = event.error as { code?: string; reason?: string; message?: string }
+          const code = errorCodes.includes(error.code as ErrorCode) ? (error.code as ErrorCode) : "provider_error"
+          reject(
+            new CliError(code, error.message ?? "watch subscription failed", {
+              ...(error.reason === undefined ? {} : { reason: error.reason }),
+            }),
+          )
+          socket.destroy()
+          return
+        }
+        onEvent(event as unknown as ServerEvent)
+      }),
     )
     socket.once("error", (error: NodeJS.ErrnoException) => {
       if (error.code === "ENOENT" || error.code === "ECONNREFUSED") {
@@ -33,5 +51,8 @@ export const subscribe = (
         )
       } else reject(error)
     })
-    socket.once("close", () => resolve())
+    socket.once("close", () => {
+      signal?.removeEventListener("abort", abort)
+      resolve()
+    })
   })

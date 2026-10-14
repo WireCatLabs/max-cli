@@ -111,7 +111,7 @@ describe("BotTransport", () => {
     expect(seen).toHaveLength(1)
     expect(error).toMatchObject({
       code: "outcome_unknown",
-      details: { status: 503, maxCode: "service.unavailable", retryable: false },
+      details: { status: 503, max_code: "service.unavailable", retryable: false },
     })
   })
 
@@ -146,7 +146,7 @@ describe("BotTransport", () => {
   it("names MAX's own error code and keeps the token out of the message", async () => {
     handler = answer(401, `{"code": "verify.token", "message": "Invalid access_token ${TOKEN}"}`)
     const error = await failure(transport().call(operation("getMyInfo")))
-    expect(error).toMatchObject({ code: "authentication_error", details: { maxCode: "verify.token", status: 401 } })
+    expect(error).toMatchObject({ code: "authentication_error", details: { max_code: "verify.token", status: 401 } })
     expect(error.message).not.toContain(TOKEN)
     expect(JSON.stringify(error.details)).not.toContain(TOKEN)
   })

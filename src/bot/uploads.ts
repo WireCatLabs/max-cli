@@ -151,9 +151,9 @@ export const uploadFile = async (options: {
 const NOT_READY_WAITS_MS = [500, 1000, 2000, 5000]
 
 const notReady = (error: unknown): boolean => {
-  const failure = error as { code?: ErrorCode; message?: string; details?: { maxCode?: string } }
+  const failure = error as { code?: ErrorCode; message?: string; details?: { max_code?: string } }
   if (failure.code === "outcome_unknown") return false
-  return /not\.ready|not\.processed/.test(`${failure.details?.maxCode ?? ""} ${failure.message ?? ""}`)
+  return /not\.ready|not\.processed/.test(`${failure.details?.max_code ?? ""} ${failure.message ?? ""}`)
 }
 
 /**

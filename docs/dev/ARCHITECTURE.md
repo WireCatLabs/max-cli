@@ -52,8 +52,9 @@ versions and first-failure record before comparing results with another release.
      src/commands/     session · account · chats · contacts · messages · store · runs
             │          speaks the domain model, owns no protocol knowledge
             ▼
-     src/client.ts     MaxClient — the only thing above here that knows MAX exists
+     src/client.ts     MaxClient — composes the resource APIs and their dependencies
             │          client.chats.list() · client.messages.send() · client.account.me()
+     src/client/       resource modules · session · requests · history · writes · uploads
     ┌───────┼────────────────┬──────────────────┐
     ▼       ▼                ▼                  ▼
  src/domain/  src/spec/          src/generated/    src/protocol/
@@ -108,7 +109,7 @@ the adapter.
 | Layer | Knows about | Must never |
 |---|---|---|
 | `commands/` | `Chat`, `Message`, `Contact`, the renderer, exit codes | opcodes, frames, `ws`, MAX field names |
-| `client.ts` | opcodes, the session, the domain model | rendering, `process.stdout`, argv |
+| `client.ts`, `client/` | resource composition, opcodes, the session, the domain model | rendering, `process.stdout`, argv |
 | `domain/` | MAX's wire shapes, and only to translate them out | the network, the session |
 | `spec/` | every operation, its shape and where it came from | the socket, the session, output |
 | `generated/` | what follows from `spec/` | being edited by hand |
@@ -116,8 +117,30 @@ the adapter.
 | `session/` | the keyring, the state file, INIT → LOGIN | anything it can ask `cli-base` for |
 | `runs/` | what a request cost, and where a record of it goes | what a request *said* — §13 |
 
-Why: if MAX's transport changes, only `protocol/` and `client.ts` change. That is why we own the
+Why: if MAX's transport changes, `protocol/` and the owning modules in `client/` change. That is why we own the
 adapter instead of depending on `@bruch/max-client` (`NEED-17`).
+
+### Resource ownership
+
+`client.ts` assembles independent factories. Account, contacts, polls, stickers, folders and live
+operations have their own modules; chat and message reads are separate from writes. A resource's
+local dependency interface names the wire methods, lookups and policies it needs. Resources do
+not import `MaxClient`; where one needs another (chat reads and history need each other), the root
+passes a function, which keeps that coupling visible in one place.
+
+`client/session.ts` owns login state and shares one in-progress initialization between concurrent
+callers. Closing during setup prevents login adoption. `client/people.ts` owns its lookup cache;
+`client/writes.ts` owns send-id sequencing and applied-operation tracking. `client/request.ts`
+owns request telemetry. Clocks can be supplied by the host. Read policies are applied when
+resource APIs are assembled, without a recursive Proxy.
+
+### Watch subscribers
+
+`server/subscribers.ts` gives each `max watch` its own drain-aware queue, 64 MiB per watcher and
+256 MiB in total by default (`max serve --max-subscriber-buffer-bytes`,
+`--max-subscriber-total-buffer-bytes`, `0` for unlimited). A watcher over its own budget is ended
+with `invalid_response` / `output.too-large`; when the total is full, the watcher holding the most
+is ended, not whichever one is written next. Nothing is dropped silently and no watcher blocks another.
 
 ## 3. The WebSocket is binary, as web.max.ru's is, and ids are the reason to be careful
 
