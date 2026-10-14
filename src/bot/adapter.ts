@@ -10,6 +10,7 @@ import type {
   BotWebhook,
   EventSink,
 } from "@wirecat/cli-core/cli"
+import { uploadBlob } from "@wirecat/cli-core/sends"
 import { formatMarkdown, toHtml } from "../format-markdown.js"
 import { type BotApiClient, botOperations } from "./client.js"
 import { checkBody } from "./input.js"
@@ -256,7 +257,7 @@ export const maxBotAdapter = ({
                 : uploadTypeOf(file.name)
         const endpoint = endpointOf(await api.call(operation("getUploadUrl"), { query: { type } }))
         attachment = await uploadFile({
-          content: { name: file.name, bytes: file.bytes },
+          content: { name: file.name, blob: await uploadBlob(file.source) },
           type,
           endpoint,
           fetch: uploadFetch,

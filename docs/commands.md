@@ -2846,7 +2846,7 @@ max tags list [query]
 
 ## `max mentions`
 
-phones, e-mail, links, documents and known people's names found in stored messages
+phones, e-mail, links, documents and people's names found in stored messages
 
 ### `max mentions list`
 
@@ -2921,12 +2921,12 @@ find the mentions of every stored message again; decisions are kept
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max mentions rebuild [options]
+max mentions rebuild [kind]
 ```
 
-| Опция | Что делает |
-|---|---|
-| `--kind <kind>` | only this kind: person-name after people were added or renamed. Одно из: `phone`, `email`, `url`, `document`, `person-name`. |
+| Аргумент | | Что это |
+|---|---|---|
+| `kind` | необязательный | only this kind: person-name after people were added or renamed. Одно из: `phone`, `email`, `url`, `document`, `person-name`. |
 
 ## `max images`
 

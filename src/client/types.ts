@@ -8,7 +8,7 @@ import type { ResumeFrom } from "./values.js"
 
 export interface Upload {
   path: string
-  bytes: Buffer
+  body: Blob
   kind: "photo" | "video" | "file" | "voice"
   voice?: { durationMs: number; wave: Uint8Array }
 }

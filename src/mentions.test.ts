@@ -77,7 +77,7 @@ describe("mentions through max", () => {
     expect(rebuilt.code, rebuilt.err).toBe(0)
     expect(JSON.parse(rebuilt.out).item.mentions).toBeGreaterThanOrEqual(2)
 
-    const phones = await max(["mentions", "rebuild", "--kind", "phone", "--json"])
+    const phones = await max(["mentions", "rebuild", "phone", "--json"])
     expect(phones.code, phones.err).toBe(0)
     expect(JSON.parse(phones.out).item.mentions).toBeGreaterThanOrEqual(1)
   })

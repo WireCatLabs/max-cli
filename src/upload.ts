@@ -1,5 +1,5 @@
-import { realpathSync } from "node:fs"
-import { readFile, stat } from "node:fs/promises"
+import { openAsBlob, realpathSync } from "node:fs"
+import { stat } from "node:fs/promises"
 import { basename, extname, isAbsolute, relative, resolve, sep } from "node:path"
 import { CliError, isCliError, resolvePaths } from "@wirecat/cli-base"
 import { WEB_USER_AGENT } from "./spec/identity.js"
@@ -50,10 +50,8 @@ const inside = (path: string, dir: string): boolean => {
   return way === "" || (!way.startsWith("..") && !isAbsolute(way))
 }
 
-/** Node's readFile refuses larger files (ERR_FS_FILE_TOO_LARGE); the repo's MAX docs give no upload limit. */
-const READ_MAX = 2 ** 31 - 1
-
-export const readUpload = async (path: string, { anyFile = false }: { anyFile?: boolean } = {}): Promise<Buffer> => {
+/** The file as a Blob that reads it while it uploads; nothing is held in memory first. */
+export const openUpload = async (path: string, { anyFile = false }: { anyFile?: boolean } = {}): Promise<Blob> => {
   if (!anyFile && refusedPlace(path)) {
     throw new CliError(
       "validation_error",
@@ -62,13 +60,8 @@ export const readUpload = async (path: string, { anyFile = false }: { anyFile?: 
     )
   }
   try {
-    const { size } = await stat(path)
-    if (size > READ_MAX)
-      throw new CliError(
-        "validation_error",
-        `cannot send ${path}: it is ${(size / 2 ** 30).toFixed(1)} GiB, and max sends files under 2 GiB`,
-      )
-    return await readFile(path)
+    if (!(await stat(path)).isFile()) throw new CliError("validation_error", `cannot send ${path}: it is a folder`)
+    return await openAsBlob(path)
   } catch (error) {
     if (isCliError(error)) throw error
     const reason = (error as NodeJS.ErrnoException).code === "ENOENT" ? "no such file" : "it cannot be read"
@@ -85,10 +78,10 @@ const refused = (kind: string, status: number) =>
   new CliError("network_error", `the ${kind} could not be uploaded: HTTP ${status} — nothing was sent`)
 
 /** Measured 2026-09-24: a multipart POST, field `file`, answers `{photos: {<key>: {token}}}`. */
-export const uploadPhoto = async (url: string, path: string, bytes: Buffer): Promise<string> => {
+export const uploadPhoto = async (url: string, path: string, body: Blob): Promise<string> => {
   const form = new FormData()
   const type = IMAGE_TYPES[extname(path).toLowerCase()] ?? "application/octet-stream"
-  form.append("file", new Blob([bytes], { type }), `image${extname(path).toLowerCase()}`)
+  form.append("file", new Blob([body], { type }), `image${extname(path).toLowerCase()}`)
 
   const response = await fetch(url, { method: "POST", headers: HEADERS, body: form, signal: uploadDeadline() })
   if (!response.ok) throw refused("photo", response.status)
@@ -99,7 +92,7 @@ export const uploadPhoto = async (url: string, path: string, bytes: Buffer): Pro
   return token
 }
 
-const postRaw = async (kind: string, url: string, path: string, bytes: Buffer, range: string): Promise<void> => {
+const postRaw = async (kind: string, url: string, path: string, body: Blob, range: string): Promise<void> => {
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -108,7 +101,7 @@ const postRaw = async (kind: string, url: string, path: string, bytes: Buffer, r
       "Content-Range": range,
       "Content-Type": "application/octet-stream",
     },
-    body: bytes,
+    body,
     signal: uploadDeadline(),
   })
   await response.body?.cancel()
@@ -119,9 +112,9 @@ const postRaw = async (kind: string, url: string, path: string, bytes: Buffer, r
  * Measured 2026-09-24: the bytes raw, with `Content-Range: 0-<end>/<size>` — no `bytes ` unit, as
  * PyMax sends it and MAX accepted.
  */
-export const uploadFile = (url: string, path: string, bytes: Buffer): Promise<void> =>
-  postRaw("file", url, path, bytes, `0-${bytes.length - 1}/${bytes.length}`)
+export const uploadFile = (url: string, path: string, body: Blob): Promise<void> =>
+  postRaw("file", url, path, body, `0-${body.size - 1}/${body.size}`)
 
 /** Measured 2026-09-27 with the `bytes ` unit, which PyMax and the web client send for these. */
-export const uploadMedia = (kind: "video" | "voice message", url: string, path: string, bytes: Buffer) =>
-  postRaw(kind, url, path, bytes, `bytes 0-${bytes.length - 1}/${bytes.length}`)
+export const uploadMedia = (kind: "video" | "voice message", url: string, path: string, body: Blob) =>
+  postRaw(kind, url, path, body, `bytes 0-${body.size - 1}/${body.size}`)

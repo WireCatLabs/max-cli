@@ -1,3 +1,6 @@
+import { mkdtempSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import { MaxClient } from "../client.js"
@@ -67,6 +70,18 @@ describe("the MAX adapter", () => {
         options,
       ),
     ).rejects.toThrow("does not support forum topic addressing")
+    expect(sent(Opcode.LOGIN)).toEqual([])
+    expect(sent(Opcode.MSG_SEND)).toEqual([])
+  })
+
+  it("opens an attachment before connecting, and refuses one that changed since it was checked", async () => {
+    const { adapter, sent } = connected()
+    const path = join(mkdtempSync(join(tmpdir(), "max-adapter-")), "notes.txt")
+    writeFileSync(path, "synthetic")
+    const changed = { kind: "file", path, size: 3 } as const
+    await expect(
+      adapter.send("111", "", { sendId: "42", attachments: [{ kind: "file", name: "notes.txt", source: changed }] }),
+    ).rejects.toThrow(/changed after it was checked — nothing was sent/)
     expect(sent(Opcode.LOGIN)).toEqual([])
     expect(sent(Opcode.MSG_SEND)).toEqual([])
   })
