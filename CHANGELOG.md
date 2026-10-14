@@ -4,6 +4,14 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Что нового
+
+- **`config set` и `config unset` понимают имя настройки в camelCase** (cli-core 0.279.0): `max <профиль> config set
+  senderColors false` пишет `sender_colors`, `max <профиль> config set readOtherBots true --bot` пишет
+  `read_other_bots`. Путь команды после `permissions.` пишется как есть.
+
 ## 0.52.0 — 14.10.2026
 
 ### Что нового

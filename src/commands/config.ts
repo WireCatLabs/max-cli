@@ -62,6 +62,14 @@ const SHOWN: SourcedSetting[] = [
 
 const snakeName = (setting: string) => setting.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
 
+// Permission command paths and model purposes are data and keep their spelling.
+const declaredName = (typed: string) => {
+  const [head = typed, ...rest] = typed.split(".")
+  if (head === "permissions") return typed
+  if (head === "models" && rest.length === 2) return `models.${rest[0]}.${snakeName(rest[1] as string)}`
+  return [snakeName(head), ...rest].join(".")
+}
+
 export const configCommand = (): Command => {
   const command = new Command("config").description("the settings in force, and where each one came from")
 
@@ -183,7 +191,8 @@ export const configCommand = (): Command => {
         .description("save a setting to the configuration file")
     else sub.description("remove a setting from the configuration file")
 
-    sub.action(async function (this: Command, setting: string, given: unknown) {
+    sub.action(async function (this: Command, typed: string, given: unknown) {
+      const setting = declaredName(typed)
       const value = action === "set" ? String(given) : undefined
       const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
       const { settings, renderer, format, streams } = forCommand(this, {
