@@ -12,6 +12,12 @@
   senderColors false` пишет `sender_colors`, `max <профиль> config set readOtherBots true --bot` пишет
   `read_other_bots`. Путь команды после `permissions.` пишется как есть.
 
+### Исправлено
+
+- **Отправку, которую MAX отклонил по лимиту, можно повторить**: если `messages send`, `messages forward` или
+  `polls create` получили отказ по лимиту, в ошибке `retry.safe` теперь `true` — сообщение не ушло. Если лимит
+  пришёл на повтор после потерянного ответа, это по-прежнему `outcome_unknown` и `retry.safe: false`.
+
 ## 0.52.0 — 14.10.2026
 
 ### Что нового

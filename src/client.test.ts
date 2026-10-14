@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-base"
-import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
+import { errorObjectOf, memoryKeyring } from "@wirecat/cli-base"
+import { type DiagnosticEvent, REMOTE_WRITE } from "@wirecat/cli-core/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -795,6 +795,37 @@ describe("MaxClient", () => {
     expect(failure).toMatchObject({ code: "outcome_unknown" })
     expect(String(failure)).toContain("--operation-id")
     expect(max.sent.map((call) => call.opcode)).toContain(Opcode.MSG_SEND)
+  })
+
+  it("**says a send MAX refused for its limit may be repeated**", async () => {
+    const max = mockMax({
+      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer },
+      refuse: { [Opcode.MSG_SEND]: "error.limit.violate" },
+    })
+    const { client } = clientWith(max)
+
+    await client.connect()
+    const failure = await client.messages.send("111", "hello").catch((error: Error) => error)
+    await client.close()
+
+    expect(failure).toMatchObject({ code: "rate_limited", details: { sent: false } })
+    expect(errorObjectOf(failure, { effects: REMOTE_WRITE }).error.retry).toEqual({ safe: true })
+  })
+
+  it("keeps a repeat unsafe when the limit answers the resend of a send that may have gone", async () => {
+    let attempts = 0
+    const max = mockMax({
+      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer, [Opcode.MSG_SEND]: () => undefined },
+      refuse: { [Opcode.MSG_SEND]: () => (++attempts === 2 ? "error.limit.violate" : undefined) },
+    })
+    const { client } = clientWith(max)
+
+    await client.connect()
+    const failure = await client.messages.send("111", "hello").catch((error: Error) => error)
+    await client.close()
+
+    expect(attempts).toBe(2)
+    expect(errorObjectOf(failure, { effects: REMOTE_WRITE }).error.retry).toEqual({ safe: false })
   })
 
   it("closes the socket, so the process can exit", async () => {

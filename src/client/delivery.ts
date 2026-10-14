@@ -56,6 +56,9 @@ export const createDelivery = (deps: Dependencies) => {
       answer = await untilAttachmentsReady(() => deps.wire.messages.send(request))
     } catch (error) {
       const failure = asCliError(error)
+      // MAX refused this, the one write of the delivery, so nothing went out and repeating it is safe.
+      if (failure.code === "rate_limited")
+        throw new CliError(failure.code, failure.message, { ...failure.details, sent: false })
       if (failure.code !== "timeout" && failure.code !== "network_error") throw failure
       if (options.at !== undefined) {
         throw new CliError(
