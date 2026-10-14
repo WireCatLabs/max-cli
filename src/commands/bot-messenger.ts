@@ -1,4 +1,4 @@
-import type { BotMessenger, GlobalFlags, ResolveOptions, RunBotCommand, Settings } from "@wirecat/cli-core/cli"
+import type { BotMcp, BotMessenger, GlobalFlags, ResolveOptions, RunBotCommand, Settings } from "@wirecat/cli-core/cli"
 import { asFirstWord } from "@wirecat/cli-core/cli"
 import { keyForWrite } from "@wirecat/cli-core/sends"
 import { MAX_APP } from "../app.js"
@@ -10,6 +10,7 @@ import { KINDS } from "../bot/map.js"
 import { MAX_BOT_TOOLS } from "../bot/mcp-tools.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { resolveSettings } from "../config.js"
+import type { run } from "../program.js"
 import { readSecret } from "../session/prompt.js"
 import { SKILL } from "../skill.js"
 import { botContext } from "./bot-context.js"
@@ -19,11 +20,17 @@ import { type Environment, environmentOf } from "./context.js"
  * max's `run` as the shared bot MCP server calls it. A test adds its keyring and Bot API stand-in as
  * `extra`.
  */
-export const botMcpRun = async (extra: Environment = {}): Promise<RunBotCommand> => {
-  // Loaded when the server starts: the program imports this file.
-  const { run } = await import("../program.js")
-  return (argv, { streams, tty, answer }) => run(argv, { ...extra, streams, tty, ...(answer ? { answer } : {}) })
-}
+export const botMcpRun =
+  (program: typeof run, extra: Environment = {}): RunBotCommand =>
+  (argv, { streams, tty, answer }) =>
+    program(argv, { ...extra, streams, tty, ...(answer ? { answer } : {}) })
+
+/** `bot mcp`. The program hands in its own `run`: importing it here would close a loop through the program. */
+export const maxBotMcp = (program: typeof run): BotMcp => ({
+  program: async () => botMcpRun(program),
+  tools: MAX_BOT_TOOLS,
+  skill: SKILL,
+})
 
 /** What the shared `bot` commands need from max: its settings, its Bot API client and its test seams. */
 export const maxBot: BotMessenger = {
@@ -101,10 +108,4 @@ export const maxBot: BotMessenger = {
   registry: (command, profile) => environmentOf(command).botRegistry?.(profile) ?? new ChatRegistry(profile),
   readSecret: (command, prompt) =>
     (environmentOf(command).ask ?? ((text: string) => readSecret(text, { echo: false })))(prompt, { secret: true }),
-  mcp: {
-    // Loaded when the server starts: the program imports this file.
-    program: () => botMcpRun(),
-    tools: MAX_BOT_TOOLS,
-    skill: SKILL,
-  },
 }
