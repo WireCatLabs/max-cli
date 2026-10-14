@@ -1,8 +1,7 @@
 import { CliError } from "@wirecat/cli-base"
-import { McpPicture } from "@wirecat/cli-core/cli"
+import { itemOf, McpPicture } from "@wirecat/cli-core/cli"
 import type { MaxClient } from "../client.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
-import { itemAnswer } from "../envelope.js"
 
 const PHOTO_LIMIT = 512 * 1024
 
@@ -44,6 +43,6 @@ export const photoForMcp = async (
   return new McpPicture(
     bytes,
     mimeType,
-    itemAnswer({ chat_id: chatId, message_id: args.message, index, bytes: bytes.length }),
+    itemOf({ chat_id: chatId, message_id: args.message, index, bytes: bytes.length }),
   )
 }

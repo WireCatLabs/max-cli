@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/server"
 import { CliError } from "@wirecat/cli-base"
 import {
   AI_SETTING_KEYS,
+  itemOf,
   type PersonalMcpDefaults,
   type PersonalMcpRegistration,
   type PersonalMcpTool,
@@ -20,7 +21,7 @@ import { MAX_APP } from "../app.js"
 import type { MaxClient } from "../client.js"
 import { type McpToolGroup, resolveSettings } from "../config.js"
 import type { Reach } from "../download.js"
-import { itemAnswer } from "../envelope.js"
+
 import { maxMessenger } from "../messenger.js"
 import { migrateModerationPoints } from "../moderation/points.js"
 import { assertReadable, withPermissionApproval } from "../permissions.js"
@@ -176,7 +177,7 @@ export const registerTools = (
                     ...(defaults.release ? { release: defaults.release } : {}),
                   })
                 ).text
-          return itemAnswer({ message_id: message, text, pending: false, via: "local", model: model.id })
+          return itemOf({ message_id: message, text, pending: false, via: "local", model: model.id })
         } finally {
           await record.close()
         }
@@ -214,7 +215,7 @@ export const registerTools = (
       } catch {
         token = "unreachable"
       }
-      return itemAnswer({
+      return itemOf({
         profile,
         account,
         kind: store.isBot() ? "personal + bot" : "personal",

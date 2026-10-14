@@ -4507,7 +4507,7 @@ max bot chats members remove <chat> <person> [options]
 
 #### `max bot chats members list`
 
-members of a chat, a page at a time — --marker takes the `marker` the last page gave
+members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page gave
 
 ```sh
 max bot chats members list <chat> [options]
@@ -4520,7 +4520,7 @@ max bot chats members list <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many, up to 100. |
-| `--marker <marker>` | continue from here. |
+| `--cursor <cursor>` | continue from here. |
 
 #### `max bot chats members add`
 

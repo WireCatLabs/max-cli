@@ -188,7 +188,7 @@ max sales bot chats admins add "Команда продаж" 4815162342 --can re
 max sales bot chats admins remove "Команда продаж" 4815162342
 ```
 
-`members list` отдаёт до 100 человек и `marker`; следующая страница — `--marker` с этим числом.
+`members list` отдаёт до 100 человек; следующая страница — `--cursor` со значением `page.next_cursor` (его же называет шаг `page.next`).
 Права админа в `--can` — те же слова, что у `max personal chats admins add`: `read`, `members`, `admins`,
 `info`, `pin`, `link`, `edit`, `delete`. `read` — это право читать сообщения группы.
 

@@ -27,10 +27,11 @@ export const MAX_BOT_TOOLS: readonly BotTool[] = [
   {
     words: ["chats", "members", "list"],
     title: "Members of a chat",
-    description: "Members of a group chat or channel, a page at a time; pass marker from the last page to go on.",
-    input: v.object({ chat, limit, marker: v.optional(v.pipe(v.string(), v.regex(/^\d+$/))) }),
+    description:
+      "Members of a group chat or channel, a page at a time; pass cursor from the last page (page.next_cursor) to go on.",
+    input: v.object({ chat, limit, cursor: v.optional(v.pipe(v.string(), v.regex(/^\d+$/))) }),
     invocation: (args) => ({
-      options: [...option("limit", args.limit), ...option("marker", args.marker)],
+      options: [...option("limit", args.limit), ...option("cursor", args.cursor)],
       positionals: [String(args.chat)],
     }),
   },

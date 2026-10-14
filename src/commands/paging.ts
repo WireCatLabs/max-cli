@@ -1,8 +1,6 @@
-import { CliError, type Renderer, type RenderFormat } from "@wirecat/cli-base"
-import { jsonlRecords } from "@wirecat/cli-core/cli"
+import { CliError } from "@wirecat/cli-base"
 import type { Command } from "commander"
 import type { Settings } from "../config.js"
-import { type ListPage, listAnswer } from "../envelope.js"
 
 /** Checked while parsing, so the error can quote what was typed rather than the `NaN` it became. */
 export const wholeNumber =
@@ -35,15 +33,3 @@ export const withPaging = (command: Command): Command =>
  */
 export const window = ({ limit, page, all }: Settings): { limit?: number; offset: number } =>
   all ? { offset: 0 } : { limit, offset: (page - 1) * limit }
-
-/** A list in the envelope; `--jsonl` streams the items and the end line, and a person gets the table. */
-export const renderList = (
-  renderer: Renderer,
-  format: RenderFormat,
-  items: readonly unknown[],
-  page: ListPage,
-): void => {
-  if (format === "json") renderer.result(listAnswer(items, page))
-  else if (format === "jsonl") renderer.stream(jsonlRecords(listAnswer(items, page)))
-  else renderer.stream(items)
-}

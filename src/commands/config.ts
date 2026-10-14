@@ -6,13 +6,16 @@ import {
   AI_SETTING_KEYS,
   changeStoreSetting,
   isStoreSetting,
+  itemOf,
   LOCAL_READ,
   LOCAL_WRITE,
   loadSnakeCaseConfig,
   migratePermissionConfig,
   NONE_NAMED,
   refuseUnknownKey,
+  renderAnswer,
   STORE_SETTINGS,
+  snakeKeys,
   storeSettings,
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
@@ -31,7 +34,6 @@ import {
   scopePath,
 } from "../config.js"
 import { knownProfiles } from "../diagnose.js"
-import { renderItem, snakeKeys } from "../envelope.js"
 import { ModerationRules } from "../moderation/rules.js"
 import { permissionKeyOf } from "../permissions.js"
 import { forCommand } from "./context.js"
@@ -72,41 +74,45 @@ export const configCommand = (): Command => {
     .option("--bot", "the settings a bot command on this profile gets, rather than the personal account's")
     .action(async function (this: Command, options: { bot?: boolean }) {
       const context = forCommand(this, { needsProfile: false })
-      const { renderer, format } = context
+      const { renderer } = context
       const settings = options.bot
         ? resolveSettings(this.optsWithGlobals<GlobalFlags>(), { kind: "bot", needsProfile: false })
         : context.settings
       const overridden = pathsAreOverridden({ appName: "max-cli", prefix: "MAX" })
 
-      renderItem(renderer, format, {
-        profile: settings.sources.profile === NONE_NAMED ? null : settings.profile,
-        profile_from: settings.sources.profile,
-        kind: settings.kind,
-        permissions: settings.permissions,
-        permission_sources: settings.permissionSources,
-        profiles: snakeKeys(knownProfiles({ configured: settings.configuredProfiles })),
-        config_file: settings.configPath,
-        config_found: settings.configFound,
-        paths_overridden: overridden,
-        store_settings: await storeSettings(process.env),
-        settings: SHOWN.filter((setting) =>
-          settings.kind === "personal"
-            ? !(BOT_ONLY_SETTINGS as readonly string[]).includes(setting)
-            : !(PERSONAL_ONLY_SETTINGS as string[]).includes(setting),
-        ).map((setting) => ({
-          setting: snakeName(setting),
-          // No list is every action, and `null` would read as none.
-          value: setting === "allow" ? (settings.allow ?? "all") : (settings[setting] ?? null),
-          from: settings.sources[setting],
-          ...(setting === "models"
-            ? {
-                sources: Object.fromEntries(
-                  Object.entries(settings.sources).filter(([key]) => key.startsWith("models.")),
-                ),
-              }
-            : {}),
-        })),
-      })
+      renderAnswer(
+        this,
+        context,
+        itemOf({
+          profile: settings.sources.profile === NONE_NAMED ? null : settings.profile,
+          profile_from: settings.sources.profile,
+          kind: settings.kind,
+          permissions: settings.permissions,
+          permission_sources: settings.permissionSources,
+          profiles: snakeKeys(knownProfiles({ configured: settings.configuredProfiles })),
+          config_file: settings.configPath,
+          config_found: settings.configFound,
+          paths_overridden: overridden,
+          store_settings: await storeSettings(process.env),
+          settings: SHOWN.filter((setting) =>
+            settings.kind === "personal"
+              ? !(BOT_ONLY_SETTINGS as readonly string[]).includes(setting)
+              : !(PERSONAL_ONLY_SETTINGS as string[]).includes(setting),
+          ).map((setting) => ({
+            setting: snakeName(setting),
+            // No list is every action, and `null` would read as none.
+            value: setting === "allow" ? (settings.allow ?? "all") : (settings[setting] ?? null),
+            from: settings.sources[setting],
+            ...(setting === "models"
+              ? {
+                  sources: Object.fromEntries(
+                    Object.entries(settings.sources).filter(([key]) => key.startsWith("models.")),
+                  ),
+                }
+              : {}),
+          })),
+        }),
+      )
 
       if (overridden) {
         renderer.note(
@@ -121,7 +127,7 @@ export const configCommand = (): Command => {
       .description("replace legacy access settings with permissions, preserving effective levels")
       .option("--dry-run", "show the migration without writing the file")
       .action(function (this: Command) {
-        const { settings, renderer, format } = forCommand(this, { needsProfile: false })
+        const { settings, renderer, format, streams } = forCommand(this, { needsProfile: false })
         const dryRun = this.opts<{ dryRun?: boolean }>().dryRun === true
         if (!dryRun && process.env.MAX_PROFILE_LOCK)
           throw new CliError("permission_error", "config migrate changes every profile — run outside the profile lock")
@@ -151,13 +157,17 @@ export const configCommand = (): Command => {
           if (migrated.changed) saveConfigFile(settings.configPath, checked.output)
           for (const rule of rules) writeSecurely(rule.path, `${JSON.stringify(rule.next, null, 2)}\n`, 0o600)
         }
-        renderItem(renderer, format, {
-          config_file: settings.configPath,
-          changed: migrated.changed || rules.length > 0,
-          rules_files: rules.map((rule) => rule.path),
-          dry_run: dryRun,
-          changes: migrated.changes,
-        })
+        renderAnswer(
+          this,
+          { renderer, format, streams },
+          itemOf({
+            config_file: settings.configPath,
+            changed: migrated.changed || rules.length > 0,
+            rules_files: rules.map((rule) => rule.path),
+            dry_run: dryRun,
+            changes: migrated.changes,
+          }),
+        )
       }),
   )
 
@@ -176,7 +186,7 @@ export const configCommand = (): Command => {
     sub.action(async function (this: Command, setting: string, given: unknown) {
       const value = action === "set" ? String(given) : undefined
       const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
-      const { settings, renderer, format } = forCommand(this, {
+      const { settings, renderer, format, streams } = forCommand(this, {
         needsProfile: !flags.defaults && setting !== "default_profile" && !isStoreSetting(setting),
       })
       if (flags.personal && flags.bot) {
@@ -188,7 +198,7 @@ export const configCommand = (): Command => {
         if (process.env.MAX_PROFILE_LOCK)
           throw new CliError("permission_error", `${setting} changes every profile; run outside MAX_PROFILE_LOCK`)
         const { result, note } = await changeStoreSetting(MAX_APP, process.env, setting, value)
-        renderItem(renderer, format, result)
+        renderAnswer(this, { renderer, format, streams }, itemOf(result))
         renderer.note(note)
         return
       }
@@ -204,12 +214,16 @@ export const configCommand = (): Command => {
       if (value !== undefined) refuseUnknownKey(this, setting, value, permissionKeyOf)
       const scope = { profile: defaults ? undefined : settings.profile, kind }
       const saved = changeSetting(settings.configPath, { ...scope, setting, value })
-      renderItem(renderer, format, {
-        config_file: settings.configPath,
-        scope: setting === "default_profile" ? "default_profile" : scopePath(scope),
-        setting,
-        value: saved,
-      })
+      renderAnswer(
+        this,
+        { renderer, format, streams },
+        itemOf({
+          config_file: settings.configPath,
+          scope: setting === "default_profile" ? "default_profile" : scopePath(scope),
+          setting,
+          value: saved,
+        }),
+      )
     })
   }
 
