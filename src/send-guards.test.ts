@@ -38,7 +38,10 @@ const messenger = () => {
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
   }
   const sends = () => max.sent.filter((request) => request.opcode === Opcode.MSG_SEND)
-  return { max, environment, sends }
+  // A profile with no saved account logs in at connect, before the guard refuses.
+  const writes = () =>
+    max.sent.filter((request) => request.opcode !== Opcode.SESSION_INIT && request.opcode !== Opcode.LOGIN)
+  return { max, environment, sends, writes }
 }
 
 const runWith = async (argv: string[], environment: Environment = {}) => {
@@ -63,33 +66,33 @@ describe("sending", () => {
   })
 
   it("from a read-only profile, refuses a reaction too, and journals it as one", async () => {
-    const { max, environment } = messenger()
-    await runWith(["g-react-read", "config", "set", "readOnly", "true"])
+    const { environment, writes } = messenger()
+    await runWith(["g-react-read", "config", "set", "read_only", "true"])
 
     const refused = await runWith(["g-react-read", "reactions", "add", "111", "116762160362694583", "👍"], environment)
 
     expect(refused.code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(writes()).toEqual([])
     expect(journalOf("g-react-read")).toMatchObject([{ chatId: "111", kind: "reaction", outcome: "refused" }])
   })
 
-  it("from a read-only profile, refuses with 5 and never connects", async () => {
-    const { max, environment } = messenger()
-    await runWith(["g-read", "config", "set", "readOnly", "true"])
+  it("from a read-only profile, refuses with 5 and sends nothing", async () => {
+    const { environment, writes } = messenger()
+    await runWith(["g-read", "config", "set", "read_only", "true"])
 
     const refused = await runWith(["g-read", "messages", "send", "111", TEXT, "--json"], environment)
 
     expect(refused.code).toBe(5)
     expect(refused.stdout).toBe("")
     expect(JSON.parse(refused.stderr).error.code).toBe("permission_error")
-    expect(max.sent).toEqual([])
+    expect(writes()).toEqual([])
     expect(journalOf("g-read")).toMatchObject([{ chatId: "111", outcome: "refused", errorCode: "permission_error" }])
   })
 
   it("with the list on, sends only to the chats on it — by id or by name", async () => {
     const { environment, sends } = messenger()
     const added = await runWith(["g-list", "recipients", "add", "Friends", "--json"], environment)
-    expect(JSON.parse(added.stdout)).toEqual({ id: "111", title: "Friends", added: true })
+    expect(JSON.parse(added.stdout).item).toEqual({ id: "111", title: "Friends", added: true })
 
     const byId = await runWith(["g-list", "messages", "send", "222", TEXT, "--json"], environment)
     expect(byId.code).toBe(7)
@@ -110,7 +113,7 @@ describe("sending", () => {
 
   it("a list that is on and empty sends nowhere", async () => {
     const { environment, sends } = messenger()
-    await runWith(["g-empty", "recipients", "add", "111"], environment)
+    await runWith(["g-empty", "recipients", "add", "Friends"], environment)
     await runWith(["g-empty", "recipients", "remove", "Friends"])
 
     const listed = await runWith(["g-empty", "recipients", "list", "--json"])
@@ -123,7 +126,7 @@ describe("sending", () => {
 
   it("stops at the hourly limit with 8, counting sends and not refusals", async () => {
     const { environment, sends } = messenger()
-    await runWith(["g-limit", "config", "set", "sendsPerHour", "2"])
+    await runWith(["g-limit", "config", "set", "sends_per_hour", "2"])
 
     expect((await runWith(["g-limit", "messages", "send", "111", "one"], environment)).code).toBe(0)
     expect((await runWith(["g-limit", "messages", "send", "111", "two"], environment)).code).toBe(0)
@@ -138,7 +141,7 @@ describe("sending", () => {
   it("keeps sent and refused outcomes, and `sends list` shows them newest first", async () => {
     const { environment } = messenger()
     await runWith(["g-keep", "messages", "send", "111", "first"], environment)
-    await runWith(["g-keep", "config", "set", "readOnly", "true"])
+    await runWith(["g-keep", "config", "set", "read_only", "true"])
     await runWith(["g-keep", "messages", "send", "111", "second"], environment)
 
     const listed = await runWith(["g-keep", "sends", "list", "--json"])
@@ -147,7 +150,7 @@ describe("sending", () => {
       "sent",
     ])
     const cut = JSON.parse((await runWith(["g-keep", "sends", "list", "--limit", "1", "--json"])).stdout)
-    expect(cut).toMatchObject({ limit: 1, hasMore: true })
+    expect(cut.page).toMatchObject({ limit: 1, has_more: true })
     expect(cut.items).toHaveLength(1)
   })
 })
@@ -158,7 +161,7 @@ describe("a process locked to one profile", () => {
     process.env.MAX_PROFILE_LOCK = "agent"
     try {
       const sent = await runWith(["work", "messages", "send", "111", TEXT, "--json"], environment)
-      const widened = await runWith(["config", "set", "sendsPerHour", "1000", "--defaults"])
+      const widened = await runWith(["config", "set", "sends_per_hour", "1000", "--defaults"])
 
       expect(sent.code).toBe(5)
       expect(sent.stderr).toContain("locked to profile agent")
@@ -173,14 +176,14 @@ describe("a process locked to one profile", () => {
 describe("reacting", () => {
   const MESSAGE = "116762160362694583"
 
-  it("from a read-only profile, refuses with 5 and never connects", async () => {
-    const { max, environment } = messenger()
-    await runWith(["g-react-ro", "config", "set", "readOnly", "true"])
+  it("from a read-only profile, refuses with 5 and sends nothing", async () => {
+    const { environment, writes } = messenger()
+    await runWith(["g-react-ro", "config", "set", "read_only", "true"])
 
     const refused = await runWith(["g-react-ro", "reactions", "add", "111", MESSAGE, "👍", "--json"], environment)
 
     expect(refused.code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(writes()).toEqual([])
     expect(journalOf("g-react-ro")).toMatchObject([
       { kind: "reaction", outcome: "refused", errorCode: "permission_error" },
     ])
@@ -190,7 +193,7 @@ describe("reacting", () => {
     const { max, environment } = messenger()
     const reactions = () => max.sent.filter((request) => request.opcode === Opcode.MSG_REACTION)
     await runWith(["g-react-list", "recipients", "add", "111"], environment)
-    await runWith(["g-react-list", "config", "set", "sendsPerHour", "1"])
+    await runWith(["g-react-list", "config", "set", "sends_per_hour", "1"])
     await runWith(["g-react-list", "messages", "send", "111", "one"], environment)
 
     expect((await runWith(["g-react-list", "reactions", "add", "222", MESSAGE, "👍"], environment)).code).toBe(7)

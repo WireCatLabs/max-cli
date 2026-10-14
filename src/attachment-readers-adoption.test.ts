@@ -76,9 +76,9 @@ describe("shared local attachment readers", () => {
   it("transfers retained chunks with a whole-file hash without connecting", async () => {
     const first = await invoke("attachments", "show", "7", "1", "--attachment", "1", "--chunk-bytes", "8")
     expect(first.code, first.stderr).toBe(0)
-    const part = JSON.parse(first.stdout)
+    const part = JSON.parse(first.stdout).item
     expect(Buffer.from(part.base64, "base64")).toEqual(Buffer.from(readerText()).subarray(0, 8))
-    expect(part).toMatchObject({ complete: false, readBytes: 8, nextOffsetBytes: 8 })
+    expect(part).toMatchObject({ complete: false, read_bytes: 8, next_offset_bytes: 8 })
     const next = await invoke(
       "attachments",
       "show",
@@ -90,7 +90,7 @@ describe("shared local attachment readers", () => {
     )
     expect(next.code, next.stderr).toBe(0)
     expect(
-      Buffer.concat([Buffer.from(part.base64, "base64"), Buffer.from(JSON.parse(next.stdout).base64, "base64")]),
+      Buffer.concat([Buffer.from(part.base64, "base64"), Buffer.from(JSON.parse(next.stdout).item.base64, "base64")]),
     ).toEqual(Buffer.from(readerText()))
     const refused = await invoke("attachments", "show", "7", "1", "--if-sha256", "0".repeat(64))
     expect(refused.code).not.toBe(0)
@@ -101,19 +101,19 @@ describe("shared local attachment readers", () => {
     try {
       const result = await invoke("attachments", "extract", "--chat", "7")
       expect(result.code, result.stderr).toBe(0)
-      expect(JSON.parse(result.stdout)).toMatchObject({ extracted: 2, failed: 0 })
+      expect(JSON.parse(result.stdout).item).toMatchObject({ extracted: 2, failed: 0 })
       expect(result.stdout).not.toContain("consumerdocumentneedle")
       for (const [word, id] of [
         ["consumerencodingneedle", "1"],
         ["consumerdocumentneedle", "2"],
       ]) {
-        const found = await invoke("search", "messages", `content:${word}`, "--chat", "7", "--offline")
+        const found = await invoke("search", "messages", `content:${word} chat:7`, "--offline")
         expect(found.code, found.stderr).toBe(0)
-        expect(JSON.parse(found.stdout).items.map((item: { id: string }) => item.id)).toEqual([id])
+        expect(JSON.parse(found.stdout).items.map((item: { ref: string }) => item.ref)).toEqual([`msg:max/511/7/${id}`])
       }
       const repeated = await invoke("attachments", "extract", "--chat", "7")
       expect(repeated.code, repeated.stderr).toBe(0)
-      expect(JSON.parse(repeated.stdout)).toMatchObject({ extracted: 0, unchanged: 2 })
+      expect(JSON.parse(repeated.stdout).item).toMatchObject({ extracted: 0, unchanged: 2 })
       expect(fetcher).not.toHaveBeenCalled()
     } finally {
       fetcher.mockRestore()

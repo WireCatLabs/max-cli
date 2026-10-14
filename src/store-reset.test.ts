@@ -25,7 +25,7 @@ describe("offline store reset", () => {
           throw new Error("reset must stay offline")
         },
       })
-      return { code, stdout: streams.stdout, answer: JSON.parse(streams.stdout[0] ?? "null") }
+      return { code, stdout: streams.stdout, answer: JSON.parse(streams.stdout[0] ?? "null")?.item }
     }
     const refused = await call(["store", "reset", "--json"])
     expect(refused.code).not.toBe(0)
@@ -44,7 +44,7 @@ describe("offline store reset", () => {
     const before = readdirSync(dirname(path)).filter((name) => name.includes(".backup-"))
     const second = await call(["store", "reset", "--no-backup", "--yes", "--json"])
     expect(second.code).toBe(0)
-    expect(second.answer).toMatchObject({ reset: true, backup: null, backedUp: null })
+    expect(second.answer).toMatchObject({ reset: true, backup: null, backed_up: null })
     expect(readdirSync(dirname(path)).filter((name) => name.includes(".backup-"))).toEqual(before)
   })
 })

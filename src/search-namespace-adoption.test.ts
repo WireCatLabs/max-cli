@@ -78,8 +78,8 @@ describe("search <resource> adoption", () => {
       "invoice",
       "--limit",
       "20",
-      "--offset",
-      "0",
+      "--page",
+      "1",
       "--source",
       "all",
       "--exact",
@@ -98,13 +98,11 @@ describe("search <resource> adoption", () => {
     const found = await invoke([
       "search",
       "mail",
-      "invoice",
-      "--chat",
-      "t1",
+      "invoice chat:t1",
       "--limit",
       "5",
-      "--offset",
-      "0",
+      "--page",
+      "1",
       "--source",
       "all",
       "--newest",
@@ -115,27 +113,21 @@ describe("search <resource> adoption", () => {
       "UTC",
     ])
     expect(found.code).toBe(0)
-    expect(found.answer.items.map(({ locator }: { locator: string }) => locator)).toEqual([
-      "msg:email/owner%40example.test/t1/m1",
-    ])
+    expect(found.answer.items.map(({ ref }: { ref: string }) => ref)).toEqual(["msg:email/owner%40example.test/t1/m1"])
     const messages = await invoke([
       "search",
       "messages",
-      "invoice",
+      "invoice NOT has:attachment",
       "--source",
       "all",
-      "--type",
-      "text",
-      "--offset",
-      "0",
+      "--page",
+      "1",
     ])
     expect(messages.code).toBe(0)
-    expect(messages.answer.items.some(({ locator }: { locator: string }) => locator.startsWith("msg:email/"))).toBe(
-      false,
-    )
+    expect(messages.answer.items.some(({ ref }: { ref: string }) => ref.startsWith("msg:email/"))).toBe(false)
   })
 
-  it("search notes narrows by type, tag and filter, rejects an unknown source, and pages with --offset", async () => {
+  it("search notes narrows by type and filter, rejects an unknown source, and pages with --page", async () => {
     const internal = await invoke([
       "search",
       "notes",
@@ -146,15 +138,15 @@ describe("search <resource> adoption", () => {
       "paid",
       "--limit",
       "5",
-      "--offset",
-      "0",
+      "--page",
+      "1",
       "--exact",
       "--timezone",
       "UTC",
     ])
     expect(internal.code).toBe(0)
-    expect(internal.answer.hits).toHaveLength(1)
-    const elsewhere = await invoke(["search", "notes", "invoice", "--source", "notes:fld_none", "--tag", "work"])
+    expect(internal.answer.items).toHaveLength(1)
+    const elsewhere = await invoke(["search", "notes", "invoice", "--source", "notes:fld_none", "--filter", "tag:work"])
     expect(elsewhere.code).toBe(2)
   })
 })

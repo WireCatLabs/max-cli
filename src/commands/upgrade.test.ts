@@ -19,7 +19,7 @@ const upgrade = async (argv: string[], { latest = "99.0.0", scriptPath = PNPM, e
   const streams = captureStreams()
   const code = await run(["upgrade", ...argv, "--json"], { streams, update: environment })
   const [out] = streams.stdout
-  return { code, ran, result: out ? JSON.parse(out) : undefined, stderr: streams.stderr.join("\n") }
+  return { code, ran, result: out ? JSON.parse(out).item : undefined, stderr: streams.stderr.join("\n") }
 }
 
 describe("max upgrade", () => {

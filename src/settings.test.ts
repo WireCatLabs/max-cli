@@ -45,7 +45,9 @@ const runWith = async (argv: string[], environment: Environment) => {
 describe("the owner's own settings", () => {
   it("`chats mute` sends -1 for good, a time with --until, and `unmute` sends 0", async () => {
     const { environment, settings } = messenger()
-    expect((await runWith(["chats", "mute", "111"], environment)).json).toMatchObject({ mutedUntil: "forever" })
+    expect((await runWith(["chats", "mute", "111"], environment)).json).toMatchObject({
+      item: { chat_id: "111", muted_until: "forever" },
+    })
     expect((await runWith(["chats", "mute", "111", "--until", "2h"], environment)).code).toBe(0)
     expect((await runWith(["chats", "unmute", "111"], environment)).code).toBe(0)
 
@@ -66,12 +68,12 @@ describe("the owner's own settings", () => {
 
     expect(code).toBe(0)
     expect(settings()).toEqual([{ user: { INCOMING_CALL: "CONTACTS", HIDDEN: true } }])
-    expect(json.privacy).toEqual({
-      findByPhone: "everyone",
-      phoneNumber: "contacts",
+    expect(json.item.privacy).toEqual({
+      find_by_phone: "everyone",
+      phone_number: "contacts",
       calls: "contacts",
-      chatInvites: "everyone",
-      hideOnline: true,
+      chat_invites: "everyone",
+      hide_online: true,
     })
   })
 
@@ -84,7 +86,7 @@ describe("the owner's own settings", () => {
 
   it("a read-only profile mutes nothing and journals the refusal", async () => {
     const { environment, settings } = messenger()
-    await runWith(["s-readonly", "config", "set", "readOnly", "true"], environment)
+    expect((await runWith(["s-readonly", "config", "set", "read_only", "true"], environment)).code).toBe(0)
     const { code } = await runWith(["s-readonly", "chats", "mute", "111"], environment)
 
     expect(code).toBe(5)

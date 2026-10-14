@@ -77,6 +77,8 @@ const inboxMax = (
   return { max, environment, store, historiesAsked }
 }
 
+const texts = (output: string) => JSON.parse(output).items.map((m: { text: string }) => m.text)
+
 const runWith = async (argv: string[], environment: Environment, { tty = false } = {}) => {
   const streams = captureStreams()
   const code = await run(argv, { ...environment, streams, tty })
@@ -101,9 +103,7 @@ describe("max inbox — unread", () => {
 
     expect(max.unexpected).toEqual([])
     expect(code).toBe(0)
-    const inbox = JSON.parse(stdout)
-    expect(inbox.mode).toBe("unread")
-    expect(inbox.chats[0].messages.map((m: { text: string }) => m.text)).toEqual(["unread 1", "unread 2"])
+    expect(texts(stdout)).toEqual(["unread 1", "unread 2"])
     expect(historiesAsked()).toEqual(["111"])
     expect(max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload).toMatchObject({ backward: 2 })
     expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
@@ -115,9 +115,8 @@ describe("max inbox — unread", () => {
     const first = await runWith(["u-twice", "inbox", "--all", "--json"], environment)
     const second = await runWith(["u-twice", "inbox", "--json"], environment)
 
-    const facts = (output: string) =>
-      JSON.parse(output, (key, value: unknown) => (key === "observedAt" ? undefined : value)).chats
-    expect(facts(second.stdout)).toEqual(facts(first.stdout))
+    expect(JSON.parse(first.stdout).items).toHaveLength(1)
+    expect(JSON.parse(second.stdout).items).toEqual(JSON.parse(first.stdout).items)
     expect(savedPoint("u-twice")).toBeUndefined()
   })
 
@@ -127,10 +126,12 @@ describe("max inbox — unread", () => {
       { unread: { 111: 3 } },
     )
 
-    const { stdout, stderr } = await runWith(["u-more", "inbox", "--limit", "2", "--json"], environment)
+    const { stdout } = await runWith(["u-more", "inbox", "--limit", "2", "--json"], environment)
 
-    expect(JSON.parse(stdout).chats[0]).toMatchObject({ more: true, unreadCount: 3 })
-    expect(stderr).toContain("max messages list 111")
+    const inbox = JSON.parse(stdout)
+    expect(texts(stdout)).toEqual(["b", "c"])
+    expect(inbox.missing).toEqual([{ field: "items", why: "only the newest of Chat 111", step: "messages.list" }])
+    expect(inbox.next).toMatchObject([{ step: "messages.list", args: { chat: "111" } }])
   })
 
   it("says so when nothing is unread", async () => {
@@ -156,9 +157,9 @@ describe("max inbox --new", () => {
     expect(max.unexpected).toEqual([])
     expect(code).toBe(0)
     const inbox = JSON.parse(stdout)
-    expect(inbox.chats).toHaveLength(1)
-    expect(inbox.chats[0]).toMatchObject({ id: "111", more: false })
-    expect(inbox.chats[0].messages.map((m: { text: string }) => m.text)).toEqual(["new"])
+    expect(inbox.items).toMatchObject([{ chat_id: "111", text: "new" }])
+    expect(inbox.items).toHaveLength(1)
+    expect(inbox.missing).toBeUndefined()
     expect(historiesAsked()).toEqual(["111", "111"])
     expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
 
@@ -175,7 +176,7 @@ describe("max inbox --new", () => {
 
     const { stdout } = await runWith(["i-race", "inbox", "--new", "--json"], environment)
 
-    expect(JSON.parse(stdout).chats[0].messages.map((m: { text: string }) => m.text)).toEqual(["seen at login"])
+    expect(texts(stdout)).toEqual(["seen at login"])
     expect(savedPoint("i-race")).toBe(new Date(now - 30 * 60 * 1000).toISOString())
   })
 
@@ -207,20 +208,21 @@ describe("max inbox --new", () => {
     const { stdout } = await runWith(["i-fresh", "inbox", "--new", "--jsonl"], environment)
 
     expect(stdout.split("\n").map((line) => JSON.parse(line).text)).toEqual(["today"])
-    expect(JSON.parse(stdout).chatTitle).toBe("Chat 111")
+    expect(JSON.parse(stdout).chat_title).toBe("Chat 111")
   })
 
-  it("`--since` is a one-off look: the saved point does not move", async () => {
+  it("a date in the query is a one-off look: the saved point does not move, and `--new` refuses one", async () => {
     const { environment, store } = inboxMax({ 111: [message(30, 10000002, "new")] })
     const saved = new Date(now - 5 * 60 * 1000).toISOString()
     store("i-since").writeState({ ...store("i-since").readState(), lastCheckAt: saved })
+    const query = `date>"${new Date(now - HOUR).toISOString()}"`
 
-    const { stdout } = await runWith(
-      ["i-since", "inbox", "--new", "--since-time", new Date(now - HOUR).toISOString(), "--json"],
-      environment,
-    )
+    const { stdout } = await runWith(["i-since", "inbox", query, "--json"], environment)
+    const both = await runWith(["i-since", "inbox", "--new", query, "--json"], environment)
 
-    expect(JSON.parse(stdout).chats[0].messages).toHaveLength(1)
+    expect(texts(stdout)).toEqual(["new"])
+    expect(both.code).toBe(2)
+    expect(JSON.parse(both.stderr).error.message).toContain("--new keeps its own point")
     expect(savedPoint("i-since")).toBe(saved)
   })
 
@@ -229,12 +231,12 @@ describe("max inbox --new", () => {
       111: [message(40, 10000002, "a"), message(30, 10000002, "b"), message(20, 10000002, "c")],
     })
 
-    const { stdout, stderr } = await runWith(["i-more", "inbox", "--new", "--limit", "2", "--json"], environment)
+    const { stdout } = await runWith(["i-more", "inbox", "--new", "--limit", "2", "--json"], environment)
 
-    const [chat] = JSON.parse(stdout).chats
-    expect(chat.more).toBe(true)
-    expect(stderr).toContain("only the newest shown")
-    expect(stderr).toContain("max messages list 111")
+    const inbox = JSON.parse(stdout)
+    expect(texts(stdout)).toEqual(["b", "c"])
+    expect(inbox.missing).toEqual([{ field: "items", why: "only the newest of Chat 111", step: "messages.list" }])
+    expect(inbox.next).toMatchObject([{ step: "messages.list", args: { chat: "111" } }])
   })
 
   it("reads at most twenty chats in one run and names the rest", async () => {
@@ -243,11 +245,13 @@ describe("max inbox --new", () => {
     )
     const { environment, historiesAsked } = inboxMax(histories)
 
-    const { stdout, stderr } = await runWith(["i-many", "inbox", "--new", "--json"], environment)
+    const { stdout } = await runWith(["i-many", "inbox", "--new", "--json"], environment)
 
     expect(new Set(historiesAsked()).size).toBe(20)
-    expect(JSON.parse(stdout).skipped.map((chat: { id: string }) => chat.id)).toEqual(["1001", "1000"])
-    expect(stderr).toContain("skipped 2 chats — too many at once")
+    expect(JSON.parse(stdout).items).toHaveLength(20)
+    expect(JSON.parse(stdout).missing).toEqual([
+      { field: "items", why: "skipped 2 chats — too many at once: Chat 1001, Chat 1000", step: "messages.list" },
+    ])
   })
 
   it("keeps the saved point through the next login of any command", async () => {
@@ -272,7 +276,7 @@ describe("max inbox --new", () => {
     expect(store("i-migrate").readState().lastCheckAt).toBe(old)
     const second = await runWith(["i-migrate", "inbox", "--new", "--json"], environment)
     expect(second.code).toBe(0)
-    expect(JSON.parse(second.stdout).chats).toEqual([])
+    expect(JSON.parse(second.stdout).items).toEqual([])
     expect(savedPoint("i-migrate")).toBe(new Date(now - 30 * 60 * 1000).toISOString())
   })
 
@@ -308,17 +312,16 @@ describe("max inbox and review — by kind, and marking read", () => {
   it("keeps the kinds asked for, and marks read only with --mark-read, never with --no-mark-read", async () => {
     const { max, environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
 
-    const channels = await runWith(
-      ["k-inbox", "inbox", "--since-time", "2h", "--kind", "channel", "--json"],
-      environment,
-    )
-    const unmarked = await runWith(["k-inbox", "inbox", "--since-time", "2h", "--no-mark-read", "--json"], environment)
+    const channels = await runWith(["k-inbox", "inbox", "date>2h", "--kind", "channel", "--json"], environment)
+    const unmarked = await runWith(["k-inbox", "inbox", "date>2h", "--no-mark-read", "--json"], environment)
     expect(marks(max)).toEqual([])
-    const marked = await runWith(["k-inbox", "inbox", "--since-time", "2h", "--mark-read", "--json"], environment)
+    const marked = await runWith(["k-inbox", "inbox", "date>2h", "--mark-read", "--json"], environment)
 
-    expect(JSON.parse(channels.stdout).chats).toEqual([])
-    expect(JSON.parse(unmarked.stdout).chats).toHaveLength(1)
-    expect(JSON.parse(marked.stdout).markedRead).toHaveLength(1)
+    expect(JSON.parse(channels.stdout).items).toEqual([])
+    expect(JSON.parse(unmarked.stdout).items).toHaveLength(1)
+    expect(unmarked.stderr).not.toContain("marked")
+    expect(texts(marked.stdout)).toEqual(["new"])
+    expect(marked.stderr).toContain("marked 1 chat(s) read")
     expect(marks(max)).toEqual(["111"])
   })
 
@@ -332,9 +335,9 @@ describe("max inbox and review — by kind, and marking read", () => {
     const first = await runWith(["k-review", "review", "--new", "--mark-read", "--json"], environment)
     const second = await runWith(["k-review", "review", "--new", "--json"], environment)
 
-    expect(JSON.parse(none.stdout).chats).toEqual([])
-    expect(JSON.parse(first.stdout).chats.map((chat: { id: string }) => chat.id)).toEqual(["111"])
-    expect(JSON.parse(second.stdout).chats).toEqual([])
+    expect(JSON.parse(none.stdout).items).toEqual([])
+    expect(JSON.parse(first.stdout).items.map((item: { chat_id: string }) => item.chat_id)).toEqual(["111"])
+    expect(JSON.parse(second.stdout).items).toEqual([])
     expect(marks(max)).toEqual(["111"])
   })
 })

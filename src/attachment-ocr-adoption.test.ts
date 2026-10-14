@@ -91,18 +91,21 @@ describe("shared attachment OCR adoption", () => {
     try {
       const ordinary = await invoke("attachments", "extract", "--chat", "7")
       expect(ordinary.code).toBe(0)
-      expect(JSON.parse(ordinary.stdout)).toMatchObject({ needsAgent: 1, items: [{ localPath: path, attachment: 1 }] })
+      expect(JSON.parse(ordinary.stdout).item).toMatchObject({
+        needs_agent: 1,
+        files: [{ local_path: path, attachment: 1 }],
+      })
       expect(fetcher).not.toHaveBeenCalled()
       const api = await invoke("attachments", "extract", "--chat", "7", "--ocr", "--concurrency", "2", "--limit", "1")
       expect(api.code).toBe(0)
-      expect(JSON.parse(api.stdout)).toMatchObject({ extracted: 1 })
+      expect(JSON.parse(api.stdout).item).toMatchObject({ extracted: 1 })
       expect(api.stdout + api.stderr).not.toContain("consumerocrneedle")
-      const found = await invoke("search", "messages", "content:consumerocrneedle", "--chat", "7", "--offline")
+      const found = await invoke("search", "messages", "content:consumerocrneedle chat:7", "--offline")
       expect(found.code).toBe(0)
-      expect(JSON.parse(found.stdout).items.map((one: { id: string }) => one.id)).toEqual(["1"])
+      expect(JSON.parse(found.stdout).items.map((one: { ref: string }) => one.ref)).toEqual(["msg:max/500/7/1"])
       const repeated = await invoke("attachments", "extract", "--chat", "7", "--ocr")
       expect(repeated.code).toBe(0)
-      expect(JSON.parse(repeated.stdout)).toMatchObject({ unchanged: 1, extracted: 0 })
+      expect(JSON.parse(repeated.stdout).item).toMatchObject({ unchanged: 1, extracted: 0 })
       expect(fetcher).toHaveBeenCalledTimes(1)
     } finally {
       fetcher.mockRestore()

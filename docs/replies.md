@@ -34,7 +34,7 @@ max personal replies edit away --per-chat 1/12h --per-person 1/1d
 ```
 
 `add` создаёт выключенное правило со всеми текущими настройками. Файл
-`<профиль>.replies.json` находится рядом с `configFile` из `max config show --json`.
+`<профиль>.replies.json` находится рядом с `config_file` из `max config show --json`.
 По умолчанию правила отвечают всем, кого выбрали. Чтобы отвечать только выбранным людям,
 перечислите их id в MAX через запятую; `max personal contacts show <имя> --json` показывает id человека
 в поле `id`:
@@ -128,10 +128,10 @@ max personal serve
 используется `else`. Без него ответ пропускается с объяснением.
 
 Настройте `models.replies.provider` (`openai` или `anthropic`), точный id модели в
-`models.replies.model` и при необходимости `models.replies.baseUrl`. Общие значения
+`models.replies.model` и при необходимости `models.replies.base_url`. Общие значения
 берутся из `models.default`; `provider off` выключает назначение. `config set` и
 `config unset` принимают эти ключи, `config show` показывает источник каждого поля.
-Старые `analysisProvider`, `analysisModel`, `analysisBaseUrl` продолжают работать для анализа.
+Старые `analysis_provider`, `analysis_model`, `analysis_base_url` продолжают работать для анализа.
 Ключ хранится через `max personal models text key set`; для своего сервера имя ключа — его host
 с портом, и ключ публичного провайдера туда не передаётся.
 

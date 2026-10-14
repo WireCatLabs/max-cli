@@ -3,6 +3,7 @@ import { captureStreams } from "@wirecat/cli-base"
 import { repliesPathFor } from "@wirecat/cli-core/cli"
 import { describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
+import { snakeKeys } from "./envelope.js"
 import { run } from "./program.js"
 
 describe("shared reply editor adoption", () => {
@@ -19,7 +20,7 @@ describe("shared reply editor adoption", () => {
         connection,
       })
       expect(code, streams.stderr.join("\n")).toBe(0)
-      return JSON.parse(streams.stdout.join("\n"))
+      return JSON.parse(streams.stdout.join("\n")).item
     }
     expect(await call("add", "away")).toMatchObject({ id: "away", on: false })
     const changed = await call(
@@ -61,16 +62,16 @@ describe("shared reply editor adoption", () => {
     expect(changed).toMatchObject({
       on: false,
       do: ["reply", "task"],
-      where: { kinds: ["dialog", "group"], chats: ["11", "12"], notChats: ["13"] },
+      where: { kinds: ["dialog", "group"], chats: ["11", "12"], not_chats: ["13"] },
       when: {
         words: ["help", "price"],
         question: true,
-        mentionsMe: true,
-        from: { people: ["21"], notPeople: ["22"], contactsOnly: true },
+        mentions_me: true,
+        from: { people: ["21"], not_people: ["22"], contacts_only: true },
         hours: { outside: "09:00-19:00", days: "mon-fri", timezone: "Europe/Madrid" },
       },
-      reply: { template: "Thanks {firstName}", model: "fill-only", asReply: false },
-      limits: { perChat: "2/12h", perPerson: "3/1d" },
+      reply: { template: "Thanks {firstName}", model: "fill-only", as_reply: false },
+      limits: { per_chat: "2/12h", per_person: "3/1d" },
     })
     expect(await call("on", "away")).toMatchObject({ on: true })
     expect(await call("off", "away")).toMatchObject({ on: false })
@@ -84,8 +85,8 @@ describe("shared reply editor adoption", () => {
       "--no-hours",
     )
     expect(cleared).toMatchObject({
-      when: { question: false, mentionsMe: false, from: { contactsOnly: false } },
-      reply: { asReply: true },
+      when: { question: false, mentions_me: false, from: { contacts_only: false } },
+      reply: { as_reply: true },
     })
     expect(cleared.when.hours).toBeNull()
     const audience = await call(
@@ -107,7 +108,7 @@ describe("shared reply editor adoption", () => {
       deny: { people: ["22"], chats: ["13"] },
     })
     const saved = JSON.parse(readFileSync(repliesPathFor(MAX_APP, profile, process.env), "utf8"))
-    expect(saved.rules[0]).toEqual(cleared)
+    expect(snakeKeys(saved.rules[0])).toEqual(cleared)
     expect(connection).not.toHaveBeenCalled()
   })
 })

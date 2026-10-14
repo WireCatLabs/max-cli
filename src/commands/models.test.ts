@@ -36,7 +36,10 @@ describe("shared MAX audio models", () => {
     const result = await cli(["models", "audio", "list", "--json"], env)
     expect(result.code, result.stderr).toBe(0)
     const json = JSON.parse(result.stdout)
-    expect(json).toMatchObject({ directory, page: 1, limit: 3, hasMore: false })
+    expect(json.page).toEqual({ limit: 3, has_more: false })
+    expect(json.items.map((model: { path: string }) => model.path)).toEqual(
+      ["gigaam-v3", "gigaam-v3-ctc", "parakeet-v3"].map((id) => join(directory, id)),
+    )
     expect(json.items.map((model: { id: string }) => model.id)).toEqual(["gigaam-v3", "gigaam-v3-ctc", "parakeet-v3"])
     expect(
       json.items.filter((model: { default: boolean }) => model.default).map((model: { id: string }) => model.id),
@@ -48,7 +51,7 @@ describe("shared MAX audio models", () => {
 
   it("keeps the configured default while preserving model ordering", async () => {
     const { env } = fresh()
-    const changed = await cli(["config", "set", "--defaults", "transcribeModel", "parakeet-v3", "--json"], env)
+    const changed = await cli(["config", "set", "--defaults", "transcribe_model", "parakeet-v3", "--json"], env)
     expect(changed.code, changed.stderr).toBe(0)
     try {
       const result = await cli(["models", "audio", "list", "--json"], env)
@@ -59,7 +62,7 @@ describe("shared MAX audio models", () => {
         expect.objectContaining({ id: "parakeet-v3" }),
       ])
     } finally {
-      await cli(["config", "set", "--defaults", "transcribeModel", DEFAULT_MODEL], env)
+      await cli(["config", "set", "--defaults", "transcribe_model", DEFAULT_MODEL], env)
     }
   })
 

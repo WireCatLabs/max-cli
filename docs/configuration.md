@@ -24,19 +24,19 @@
 | Настройка | Что делает | Встроенное значение |
 |---|---|---|
 | `limit` | сколько строк показывает список, если не указан `--limit` | `20` |
-| `sendsPerHour` | сколько сообщений профиль может отправить за час; останавливает цикл отправок | `30`; у бота — без лимита, пока не задан в разделе `bot` |
-| `requestsPerMinute` | как часто `max` обращается к MAX после короткой серии запросов; `0` выключает темп ([ограничения и ожидания](limits.md)) | `20` |
+| `sends_per_hour` | сколько сообщений профиль может отправить за час; останавливает цикл отправок | `30`; у бота — без лимита, пока не задан в разделе `bot` |
+| `requests_per_minute` | как часто `max` обращается к MAX после короткой серии запросов; `0` выключает темп ([ограничения и ожидания](limits.md)) | `20` |
 | `permissions` | что профилю можно: только читать, спрашивать перед изменением или делать без вопроса ([права](permissions.md)) | всё разрешено, кроме: удаление и ещё несколько необратимых изменений сначала спрашивают; автоответы не отправляют |
 | `record` | записывать каждый запуск, чтобы посмотреть потом ([диагностика](diagnostics.md)) | `false` |
-| `keepRunsForDays` | сколько дней хранятся записи запусков | `30` |
+| `keep_runs_for_days` | сколько дней хранятся записи запусков | `30` |
 | `color` | цвет в таблицах | по терминалу |
-| `senderColors` | свой цвет у каждого автора в списке сообщений | `false` |
-| `timeoutMs` | сколько ждать ответа на **один** запрос к MAX, в миллисекундах. Чтобы ограничить команду целиком, используйте `--timeout` | по транспорту |
-| `catchUpMarksRead` | `inbox` и `review` отмечают показанные чаты прочитанными. Собеседник это видит | `false` |
+| `sender_colors` | свой цвет у каждого автора в списке сообщений | `false` |
+| `timeout_ms` | сколько ждать ответа на **один** запрос к MAX, в миллисекундах. Чтобы ограничить команду целиком, используйте `--timeout` | по транспорту |
+| `catch_up_marks_read` | `inbox` и `review` отмечают показанные чаты прочитанными. Собеседник это видит | `false` |
 | `serve` | запускать фоновый сервер `max personal serve`, когда команде нужен MAX ([один вход на всё](limits.md#один-вход-на-всё)) | `true` |
-| `transcribeModel` | какой моделью распознавать голосовые сообщения | `gigaam-v3` |
-| `updateCheck` | раз в сутки сообщать, что вышла новая версия `max` | `true` |
-| `defaultProfile` | какой профиль берёт команда, если профиль не назван | нет: без имени команда перечисляет профили |
+| `transcribe_model` | какой моделью распознавать голосовые сообщения | `gigaam-v3` |
+| `update_check` | раз в сутки сообщать, что вышла новая версия `max` | `true` |
+| `default_profile` | какой профиль берёт команда, если профиль не назван | нет: без имени команда перечисляет профили |
 
 Секрета в файле не бывает. В нём нет места для токена, номера телефона или идентификатора чата:
 токен хранится в ключнице системы, а где её нет — в файле, который можете читать только вы ([где живёт токен](security.md#где-живёт-токен)).
@@ -48,7 +48,7 @@
 
 ```json
 {
-  "defaults": { "limit": 20, "keepRunsForDays": 30, "sendsPerHour": 30, "updateCheck": true, "skillHint": true },
+  "defaults": { "limit": 20, "keep_runs_for_days": 30, "sends_per_hour": 30, "update_check": true, "skill_hint": true },
   "profiles": {
     "work": { "limit": 50 }
   }
@@ -67,36 +67,36 @@
 
 ```json
 {
-  "defaultProfile": "personal",
+  "default_profile": "personal",
   "defaults": {
     "limit": 20,
-    "keepRunsForDays": 14,
-    "sendsPerHour": 30,
-    "requestsPerMinute": 20,
-    "updateCheck": true,
-    "skillHint": true,
-    "transcribeModel": "gigaam-v3"
+    "keep_runs_for_days": 14,
+    "sends_per_hour": 30,
+    "requests_per_minute": 20,
+    "update_check": true,
+    "skill_hint": true,
+    "transcribe_model": "gigaam-v3"
   },
   "profiles": {
     "personal": {
       "limit": 50,
       "color": true,
-      "senderColors": true,
+      "sender_colors": true,
       "record": true
     },
     "work": {
       "permissions": { "messages": "readonly", "messages.send": "allow" },
-      "sendsPerHour": 10,
+      "sends_per_hour": 10,
       "serve": false
     }
   },
   "personal": {
-    "defaults": { "catchUpMarksRead": false, "searchCatchUp": true }
+    "defaults": { "catch_up_marks_read": false, "search_catch_up": true }
   },
   "bot": {
     "defaults": { "permissions": { "bot": "readonly", "bot.messages.send": "allow" } },
     "profiles": {
-      "shop": { "sendsPerHour": 200, "readOtherBots": false }
+      "shop": { "sends_per_hour": 200, "read_other_bots": false }
     }
   }
 }
@@ -104,10 +104,10 @@
 
 Что делает каждая часть:
 
-- `defaultProfile`: `max chats list` без имени профиля работает с `personal`. Без этой настройки и
+- `default_profile`: `max chats list` без имени профиля работает с `personal`. Без этой настройки и
   без `MAX_PROFILE` такая команда остановится и перечислит профили.
-- `defaults`: эти значения получает каждый профиль, если не задал своё. `updateCheck`, `skillHint` и
-  `transcribeModel` допустимы только здесь: программа и модели речи одни на все профили.
+- `defaults`: эти значения получает каждый профиль, если не задал своё. `update_check`, `skill_hint` и
+  `transcribe_model` допустимы только здесь: программа и модели речи одни на все профили.
 - `profiles.personal`: больше строк, цвета и запись каждого запуска — только для `personal`.
 - `profiles.work`: читать сообщения можно, отправлять можно, остальные изменения сообщений
   запрещены. Не больше 10 отправок в час. Фоновый сервер не запускается: каждая команда входит в
@@ -117,8 +117,8 @@
 - `bot.defaults`: только для команд бота (`max shop bot …`). Боты могут читать и отправлять, и
   больше ничего.
 - `bot.profiles.shop`: бот `shop` может отправить 200 сообщений в час и не читает то, что сохранили
-  другие боты на этом компьютере. `readOtherBots` допустим только в разделе `bot`; `serve`,
-  `senderColors` и `catchUpMarksRead` там, наоборот, не принимаются.
+  другие боты на этом компьютере. `read_other_bots` допустим только в разделе `bot`; `serve`,
+  `sender_colors` и `catch_up_marks_read` там, наоборот, не принимаются.
 
 </details>
 
@@ -156,7 +156,7 @@
 ```sh
 max personal config set limit 50                 # профилю, с которым вы работаете
 max work config set limit 50            # профилю work
-max config set sendsPerHour 10 --defaults   # всем профилям
+max config set sends_per_hour 10 --defaults   # всем профилям
 max personal config unset limit                  # вернуть значение по умолчанию
 max config show                         # проверить, что действует и откуда взялось каждое значение
 ```

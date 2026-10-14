@@ -102,11 +102,12 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 
 - **В pipe или с `--json` stdout — только данные**, одно значение JSON. Всё остальное, включая
   предупреждения, уходит в stderr. Ошибка, завершающая команду, — тоже в stderr, stdout при ней пуст.
-- **Частичные чтения и загрузки могут завершиться кодом `0`**: проверьте `complete`, `batch.failed` и `issue`; JSONL частичной загрузки добавляет `batch_summary`. Успешная часть сохраняется, повторяйте только незавершённое после указанной паузы.
-- **Любой список — объект**, а не массив: `{ "items": [...], "page": 1, "limit": 20, "hasMore": true }`,
-  у бота тоже. У списка без страниц `page` — 1, `limit` — сколько пришло, `hasMore` — `false`.
+- **Частичные чтения и загрузки могут завершиться кодом `0`**: проверьте `missing`, `next`, а у загрузок — `complete`, `batch.failed` и `issue`; JSONL частичной загрузки добавляет `batch_summary`. Успешная часть сохраняется, повторяйте только незавершённое после указанной паузы.
+- **Любой список — объект**, а не массив: `{ "items": [...], "page": { "limit": 20, "has_more": true }, "meta": {…} }`,
+  у бота тоже; одна вещь — `{ "item": {…} }`. Ключи — snake_case. Следующую страницу называет шаг `page.next`
+  в `next` (его `cursor` или `page`); чего в ответе нет — `missing`. У списка без страниц `page.has_more` — `false`.
   `bot chats members list` кладёт рядом `marker` для следующей страницы.
-- **`--jsonl`** — по объекту на строку, удобно для `jq`. Есть ли ещё, пишется только в stderr.
+- **`--jsonl`** — по объекту на строку, удобно для `jq`. Есть ли ещё, пишется только в stderr. Отчёты `stats` `--jsonl` не принимают.
 - **Ветвиться по коду возврата, а не по тексту**: `0` — успех, `2` — неверный ввод, `4` — нет
   входа, `5` — профилю это действие не разрешено (`permissions`; ошибка называет запрещённый ресурс или действие — не обходить), `6` — не найдено, `7` — чата нет в списке разрешённых,
   `8` — лимит: отправок за час, или MAX отказал во входе из-за частых попыток (тогда **не повторять**:
@@ -119,7 +120,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 1. **Id — всегда строки.** Id сообщений 18-значные, больше `Number.MAX_SAFE_INTEGER`. Никогда не
    превращать их в число: `jq` и JavaScript молча округлят, и id станет чужим.
 2. **Первое слово — профиль, если это не команда.** `max work chats list` — профиль `work`.
-   Флага `--profile` нет; то же делает переменная `MAX_PROFILE` или настройка `defaultProfile`.
+   Флага `--profile` нет; то же делает переменная `MAX_PROFILE` или настройка `default_profile`.
    **Профиль не подразумевается, даже единственный:** без имени команда завершается с кодом `2`
    и перечисляет профили (`error.profiles`) — спросите владельца, какой нужен, не берите первый.
    Без профиля работают `--help`, `commands`, `skill show`, `account list`, `config show`. Имя профиля — латиница, цифры,
@@ -132,7 +133,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    `[{ id, name, username }]`. `contacts block`, `unblock`, `rename` и `account update --photo`
    меняют аккаунт владельца — только по его просьбе.
 4. **Код `14` — неизвестный исход записи, а не разрешение повторять её.** Проверьте
-   `max personal sends list --json` по `operationId` и историю целевого чата. `operationId` связывает
+   `max personal sends list --json` по `operation_id` и историю целевого чата. `operation_id` связывает
    запись с журналом, но не является ключом идемпотентности. Повтор сообщения возможен только
    при подтверждённой дедупликации провайдера и с теми же чатом, темой, содержимым и `--send-id`;
    никакой автоматической повторной записи только по коду ошибки.
@@ -145,9 +146,9 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    скачивания модели, со строгими ограничениями и подходящими прямыми ответами. Проверь
    отсутствующие слова, родительские ссылки и сами сообщения; первый результат и его оценка
    не доказывают ответ. Явный синтаксис остаётся строгим.
-   **Без `--discover`, `max personal search messages` с одним чатом (`--chat` или `chat:`) спрашивает и сервер MAX**
+   **Без `--discover`, `max personal search messages` с одним чатом (`chat:` в запросе) спрашивает и сервер MAX**
    (`--backend archive` — только архив). Хороший поиск требует скачанных чатов: если ничего не нашлось, а
-   `coverage.next` задан, выполните его (`max personal messages sync --all --background`) или спросите владельца, прежде чем
+   в `next` есть шаг `messages.sync`, выполните его (`max personal messages sync --all --background`) или спросите владельца, прежде чем
    говорить, что сообщения нет. Слова и фразы находят формы слов; `exact:` или `--exact` — только точную форму.
    Default — строгий профиль Lucene:
    фразы, AND/OR/NOT, field groups и date ranges. `alpha OR beta gamma` = `(alpha OR beta) AND gamma`.
@@ -159,7 +160,8 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    Подсчёт — `max personal stats messages show`. Руководства: [поиск](https://github.com/WireCatLabs/max-cli/blob/main/docs/search.md),
    [поиск по темам](https://github.com/WireCatLabs/max-cli/blob/main/docs/topic-search.md) (разговоры по смыслу),
    [язык запросов](https://github.com/WireCatLabs/max-cli/blob/main/docs/query-language.md).
-5a. **Substring-поиску имён нужны три символа:** --search у chats/contacts list. Строгие message
+5a. **Substring-поиску названий нужны три символа:** `title:` у chats list. Запрос `chats list` отвечает только из
+   локальной копии — с `--offline`; `contacts list name:`/`notes:` отказывают, пока в копии нет контактов. Строгие message
    terms могут быть короче; не заменяйте strict zero hits fuzzy discovery автоматически.
 
 5b. **`max personal store export` выгружает только скачанное и прочитанное** и в MAX не ходит. Какие куски
@@ -177,11 +179,11 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 6. **`messages show` и `messages context` требуют чат и id сообщения** — или одну ссылку `msg:…` из
    `search messages`. Искомое сообщение в JSON помечено `"anchor": true`. Если сообщения нет, это
    `not_found`, а не соседнее сообщение.
-7. **Время сообщения зашито в его id**: `id >> 16` — миллисекунды. Поэтому `--before-id` и
-   `--after-id` работают для любого id, даже не прочитанного раньше. Само сообщение не входит ни в
-   тот, ни в другой ответ. Две из `--before-id`, `--before-time`, `--after-id`, `--after-time` вместе —
-   отказ с кодом `2`. `--since-time`, `--before-time` и `--after-time` понимают и `30m`, `2h`, `1d` —
-   столько назад: `max personal review --since-time 1d`.
+7. **Время сообщения зашито в его id**: `id >> 16` — миллисекунды. Поэтому `id<…` и `id>…` в запросе
+   `messages list` работают для любого id, даже не прочитанного раньше. Само сообщение не входит ни в
+   тот, ни в другой ответ. Две начальные точки (`id<`, `id>`, `date<`, `date>`) вместе — отказ с кодом `2`.
+   `date` понимает и `30m`, `2h`, `1d` — столько назад: `max personal review 'date>1d'`; точное время — в
+   кавычках с секундами и смещением: `'date>"2026-09-23T09:00:00Z"'`. Запрос с `>` берите в одинарные кавычки.
 8. **`MAX_CONFIG_DIR`, `MAX_STATE_DIR` меняют и запись в ключнице.** Устаревший `MAX_CACHE_DIR`
    тоже влияет на неё. С этими переменными профиль ищет другой токен и может ответить
    «нет сессии», хотя владелец вошёл. Файл общей копии задаёт `MESSAGING_STORE`. `max config show`
@@ -194,12 +196,12 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    -1000`. Один перевод строки в самом конце отбрасывается, остальные сохраняются.
 11. **Номер страницы на живом списке может повторить или пропустить строку.** Сверху самое свежее,
    поэтому сообщение, пришедшее между первой страницей и второй, сдвигает кого-то через границу.
-   Для переписки этого нет: `--before-id` привязан ко времени и точен.
+   Для переписки этого нет: `id<…` привязан ко времени и точен.
 12. **`max personal inbox --new` сдвигает место, где владелец остановился.** После него следующий
    `--new` владельца не покажет того, что уже увидел агент. Без сдвига: просто `max personal inbox`
-   (непрочитанное) или `max personal inbox --since-time <время>`.
-13. **`--at-time` ставит сообщение в очередь MAX, а не отправляет.** Ответ — `{sendId, operationId,
-   message, scheduledFor}`; ушедшее сообщение получит другой id. Очередь: `max messages scheduled <чат>`.
+   (непрочитанное) или `max personal inbox 'date>2h'`.
+13. **`--at-time` ставит сообщение в очередь MAX, а не отправляет.** Ответ — `{item: {operation_id, send_id,
+   message, scheduled_for}}`; ушедшее сообщение получит другой id. Очередь: `max messages scheduled <чат>`.
    Через MCP — параметр `at_time` у `max_write` (`command: "messages send"`) и инструмент `max_read` (`command: "messages scheduled"`).
    Отменить можно только в приложении MAX.
 
@@ -222,7 +224,7 @@ Id ниже выдуманные — подставить настоящие и�
 - **Найти договорённость или документ:** найдите нужные чаты и ищите в локальной копии.
   Проверьте покрытие поиска и `store status`; `messages list` показывает только окно сообщений.
   Уточняйте найденное через `messages context` или `messages show`, приводите ссылки на сообщения.
-  Проверьте связанные чаты на поздние изменения. Пустой результат, пустой чат и `hasMore: false`
+  Проверьте связанные чаты на поздние изменения. Пустой результат, пустой чат и `has_more: false`
   не доказывают полноту истории MAX. Если это влияет на ответ, объясните пробел.
   Скачивайте только разрешённый чат и ограниченный период или объём; сначала согласуйте
   с владельцем чат и предел сообщений или период. Без сети недостающую историю скачать нельзя.
@@ -238,48 +240,49 @@ Id ниже выдуманные — подставить настоящие и�
   черновик; не меняйте настройки и не переключайте профили.
 
 ```sh
-max personal chats list --search "проект" --json       # найти чат, взять его id
-max personal chats list --unread --json                 # где есть непрочитанное
+max personal chats list title:проект --offline --json # найти чат, взять его id
+max personal chats list 'unread_count>0' --offline --json   # где есть непрочитанное
 max personal inbox --json                               # непрочитанное во всех чатах
 max personal inbox --new --json                         # что пришло с прошлой проверки, один раз
-max personal review --since-time 2026-09-23T09:00 --json    # всё, свои тоже, для обзора «кто кому должен»
-max personal review --chat -1000 --unanswered 4h --json # вопросы в группе, на которые 4 часа не ответили ни владелец, ни админы
+max personal review 'date>"2026-09-23T09:00:00Z"' --json  # всё, свои тоже, для обзора «кто кому должен»
+max personal review 'chat:"-1000"' --unanswered 4h --json # вопросы в группе, на которые 4 часа не ответили ни владелец, ни админы
 max personal tasks list state:open --json              # что ждёт ответа владельца; задачи открывает и закрывает review
 max personal tasks close <задача> --as dismissed --reason no-reply-needed --json   # только когда владелец так решил
 max personal watch --jsonl                              # новые сообщения по мере прихода; `max personal serve` запустится сам
 max personal watch --events --jsonl                     # плюс правки, удаления, реакции, прочтения, изменения чатов; поле "event"
 max personal server status --json                       # работает ли фоновый сервер, какой версии, подключён ли
 max personal chats show -1000 --json                    # один чат и кто в нём
-max personal chats events -1000 --since-time 2026-09-20T00:00 --json   # кто вступил, вышел, кого добавили и удалили
-max personal chats members list -1000 --all --json            # все участники от MAX: registeredAt, lastSeenAt
+max personal chats events -1000 'time>=2026-09-20' --json   # кто вступил, вышел, кого добавили и удалили
+max personal chats members list -1000 --all --json            # все участники от MAX: registered_at, last_seen_at
 max personal chats requests list -1000 --json           # заявки в канал с одобрением; время неизвестно
 max personal chats requests accept -1000 20000002       # только по просьбе владельца; decline — отказать
 max personal chats rules show -1000 --json              # правила модерации группы; set <ключ> <значение> меняет одно
 max personal chats moderate -1000 --dry-run --json         # что нового нарушает правила; без --dry-run — только по слову владельца
 max personal contacts show @ivan --json                 # один человек и общие чаты
 max personal messages list -1000 --limit 20 --json      # последние сообщения, от старых к новым
-max personal messages list -1000 --after-id 100000000000000001 --json   # что было после этого сообщения
+max personal messages list -1000 'id>100000000000000001' --json   # что было после этого сообщения
 max personal messages context -1000 100000000000000001 --before-n 3 --after-n 3 --json
 max personal messages transcribe -1000 100000000000000001 --json   # текст голосового, на этой машине
 ```
 
 **Обзор «кто кому должен» — `max personal review`**, одним вызовом: все сообщения обеих сторон во всех
-изменившихся чатах. `--since-time` — граница, на которой кончился прошлый обзор; её называет владелец или
+изменившихся чатах. `date>…` в запросе — граница, на которой кончился прошлый обзор; её называет владелец или
 прошлый обзор. Разложить на «я должен», «жду от других», «нужно уточнить» — работа агента; у пункта
-чат, дата и id сообщений. Своё «сделаю» ищите в `"outgoing": true`. При `"complete": false` сказать,
-чего не хватает, и не предлагать новую границу; иначе закончить `--since-time` = `until`. Напоминания —
+чат, дата и id сообщений. Своё «сделаю» ищите в `"outgoing": true`. Если есть `missing`, сказать,
+чего не хватает. Следующий обзор начинать с запроса шага `review.next` из `next`: при неполном обзоре он
+повторяет ту же границу. Напоминания —
 черновики, отправка — только по слову владельца.
 
 Голосовое — вложение `"kind": "voice"` в `messages list|show|context`, `search messages`, `inbox` и `review`.
 Его текст даёт `max personal messages transcribe`; до минуты на пять минут речи, повторно — сразу из общей
 локальной копии сообщений. Уже расшифрованное голосовое несёт поле `transcript` в
 `messages list` и `inbox`; `--transcribe` там расшифровывает остальные показанные, а не
-расшифрованные перечисляет в `unheard`. При отсутствии модели пакетное чтение сохраняет
-сообщения и сообщает `unheard`/`transcribeProblem`; одиночная `messages transcribe` откажет
+расшифрованные называет записью `transcript` в `missing`. При отсутствии модели пакетное чтение сохраняет
+сообщения и сообщает причину там же; одиночная `messages transcribe` откажет
 и назовёт `max personal models audio download <id>`: **сказать об этом владельцу и не скачивать самому** — это сотни
 мегабайт, и выбор модели за ним.
 
-Каталог аудиомоделей общий с Telegram; путь есть в `max personal models audio list --json` (`directory`).
+Каталог аудиомоделей общий с Telegram; путь каждой модели есть в `max personal models audio list --json` (`path`).
 Существующие файлы используются повторно; `WIRECAT_STATE_DIR` задаёт другое место.
 
 Вложение в JSON: `{ "kind": "photo", "url": "https://…", "width": 901, "height": 594 }`. Чтобы
@@ -297,13 +300,13 @@ max personal messages transcribe -1000 100000000000000001 --json   # текст 
 где человек писал и его личный чат с ботом; `bot messages between <кто> <кто>` — их переписка в
 чатах, где писал каждый (`--limit` — на чат). Всё это без сети, кроме `contacts show --refresh`.
 Чужие локальные копии ботов — `--all-bots` или `--bots <профили>` у `search messages`, `contacts show` и
-`messages between`, и только если владелец разрешил `readOtherBots`; иначе отказ с кодом `5` — скажите
+`messages between`, и только если владелец разрешил `read_other_bots`; иначе отказ с кодом `5` — скажите
 владельцу команду из ошибки. `bot watch --jsonl` забирает события у всех других
 читателей бота — запускайте только по просьбе владельца. Отказ с кодом `7`
 значит «чата нет в списке получателей бота»: скажите владельцу, какую команду выполнить, и не
 пишите в обход. Остальные коды бота: `4` — нет токена бота или MAX его не принял, `5` — профиль только
 для чтения или действие не разрешено `allow`, `6` — чат не найден (название, которого бот не видел, или
-человек без `user:`), `8` — исчерпан `sendsPerHour`, `14` — неизвестно, выполнена ли запись. С `--json`
+человек без `user:`), `8` — исчерпан `sends_per_hour`, `14` — неизвестно, выполнена ли запись. С `--json`
 stdout — только данные, в той же форме, что у личного аккаунта; id больше 2^53 приходит строкой.
 Все методы официальной схемы Bot API доступны, включая операции вне удобных команд:
 `max <имя> bot api <операция>`; её флаги —
@@ -332,7 +335,7 @@ MAX-боту; личный протокол явно отказывает неп
 из раздела установки. Убедись, что установленная команда доступна по имени.
 
 Для количества совпадений в архиве используй `max personal stats messages show [запрос] --by chat|sender|day|hour --json`: одна
-запись считается один раз. Проверяй completeness: неполный архив даёт нижнюю границу. `--source max` явно включает
+запись считается один раз. Проверяй `missing`: неполный архив даёт нижнюю границу. Отчёт — один `{item}`, `--jsonl` он не принимает. `--source max` явно включает
 другие сохранённые профили; обычный вызов остаётся в текущей учётной записи.
 
 MCP `max_read` с `command: "stats chats show"` читает активность из архива без запроса вступлений и выходов.
@@ -382,7 +385,7 @@ PDF с текстовым слоем — unpdf. Фото и сканы чита�
 вложениях укажите `--attachment`, начиная с 1.
 
 По умолчанию выполняйте OCR сами средствами чтения файлов и зрения агента. После загрузки и локального
-извлечения обработайте строки `needs-agent`: найдите `localPath` через `attachments list --needs-text`,
+извлечения обработайте строки `needs-agent`: найдите `local_path` через `attachments list is:needs_text`,
 прочитайте фото или скан, затем сохраните буквальную расшифровку через `attachments text set`.
 Сохраняйте locator сообщения и номер вложения; проверьте результат запросом `content:`.
 Не заменяйте этот путь автоматическим вызовом отдельного API. Массовую обработку через API выбирает
@@ -399,7 +402,7 @@ PDF с текстовым слоем — unpdf. Фото и сканы чита�
 ```sh
 max personal attachments extract --chat "Книжный клуб" --download --output-dir ./files
 max personal search messages 'content:договор'
-max personal attachments list --chat "Книжный клуб" --needs-text
+max personal attachments list 'chat:"Книжный клуб" is:needs_text'
 max personal attachments text set "Книжный клуб" 204 --text-file ./scan.txt
 ```
 
@@ -423,7 +426,7 @@ output_dir в MCP также их защищает. Обычные скрыты�
 Локальная речь: полная mono/stereo Ogg Opus запись без 10-минутного предела; длинные записи требуют больше памяти.
 Подготовка после явно разрешённой загрузки: `messages sync <чат> --catch-up` с
 `--catch-up-chunks`, `--catch-up-messages`, `--catch-up-time`; `--no-catch-up` отменяет
-настройку `searchCatchUp`. Модели не скачиваются, удалённый провайдер не вызывается.
+настройку `search_catch_up`. Модели не скачиваются, удалённый провайдер не вызывается.
 Разрывы: сначала локальный `store gaps plan <чат>`, затем только по слову владельца
 `store gaps repair <чат> --fingerprint <хеш>`; ограничивайте `--max-gaps`, `--limit`,
 `--repair-time`, `--page-size`, `--pause`. `--background` использует обычные задания.
@@ -455,7 +458,7 @@ max personal contacts notes show 101 NOTE_ID --json
 max personal contacts notes edit 101 NOTE_ID --revision 1 --file /path/to/own-note.md
 max personal contacts notes remove 101 NOTE_ID
 max personal contacts show 101 --with-notes --json
-max personal contacts list --search-notes 'follow up' --json
+max personal contacts list 'notes:"follow up"' --json
 max personal metadata get --chat CHAT_ID --json
 max personal metadata refresh --chat CHAT_ID --limit 1 --json
 max personal tags auto --chat CHAT_ID --dry-run --json
@@ -488,14 +491,14 @@ max personal mentions rebuild
 
 Рейтинги архива: `max personal stats messages top` / `max personal stats contacts top` — метрика `--measure` или
 `--score helpful|active|engaging`; оценки используют всю допустимую выборку до limit.
-Читай coverage/quality и исключения: неизвестные счётчики не равны нулю, свежесть наблюдений показана по полям; старые значения остаются unknown. Используй drilldown.selection для `stats messages evidence` / `stats contacts evidence`,
-продолжай через nextCursor; при изменении данных начни без cursor.
+Читай coverage/quality и исключения: неизвестные счётчики не равны нулю, свежесть наблюдений показана по полям; старые значения остаются unknown. Используй `selection` строки и шаг `stats.evidence` из `next` для `stats messages evidence` / `stats contacts evidence`,
+продолжай по `cursor` шага `page.next`; при изменении данных начни без cursor.
 Руководство: [рейтинги](https://github.com/WireCatLabs/max-cli/blob/main/docs/rankings.md).
 
 Для вопросов без наблюдаемого ответа используй `stats messages unanswered`; время ответа явно
 выбранных людей — `stats contacts responses --answerer <person>`. Помощь новичкам с известной датой
 вступления — `stats chats newcomers <chat>`, посты каналов с просмотрами и малым обсуждением —
-`stats messages discussion`. Проверяй качество архива и reply-графа, копируй точные drilldown-аргументы
+`stats messages discussion`. Проверяй качество архива и reply-графа, копируй точную `selection` строки
 с `--component report`. Неизвестные история и дата вступления не равны нулю. Отчёты читают только
 сохранённые данные; не выводи из выбранных id, кто был админом в прошлом.
 
@@ -507,22 +510,22 @@ max personal mentions rebuild
 
 
 Удалённому агенту доступны байты сохранённого файла: найдите attachments show через max_tools_search
-и вызовите max_read. Скрытые файлы, папки CLI и хранилище не передаются, включая ссылки. Соберите порции по nextOffsetBytes, передавайте if_sha256 и проверьте хеш.
-Если клиент не может открыть PDF, запросите каждую страницу через page:1..pdf.pageCount;
+и вызовите max_read. Скрытые файлы, папки CLI и хранилище не передаются, включая ссылки. Соберите порции по next_offset_bytes, передавайте if_sha256 и проверьте хеш.
+Если клиент не может открыть PDF, запросите каждую страницу через page:1..pdf.page_count;
 нужны необязательные unpdf/@napi-rs/canvas. Страница возвращается изображением; если видны только
 метаданные, запросите format:base64 и покажите PNG средствами агента. Просмотрите реальные пиксели
-всех страниц, не считайте получение base64 чтением. pdf.sourceSha256 — хеш исходного PDF,
+всех страниц, не считайте получение base64 чтением. pdf.source_sha256 — хеш исходного PDF,
 верхний sha256 — хеш PNG. Нет внешнего OCR API или автоматической записи: сохраните свой буквальный
 текст через attachments text set и проверьте content:. Если показать страницы нельзя, сообщите об этом;
 не подставляйте прежний текст индекса. Качество зависит от разрешения, языка и структуры документа.
 
 Удержание: `max personal stats chats retention <chat> --checkpoints 1d,7d,30d --within 7d --json`.
-Используй только известные joinedAt; partial absence и пропущенные снимки — unknown, будущие окна — pending.
+Используй только известные joined_at; partial absence и пропущенные снимки — unknown, будущие окна — pending.
 Показывай observable знаменатель, неизвестные и фактическую дату снимка; не называй это непрерывным участием.
-Cohort drilldown идёт через `stats messages evidence --component report` с точной selection.
+Сообщения когорты — через `stats messages evidence --component report` с точной `selection` строки.
 
 Счётчики: `max personal stats messages counters show --chat <chat> --counters views,reactions --json`.
-Проверяй observedAt/source/freshness каждого поля (24h по умолчанию). Refresh — remote read + local write:
+Проверяй observed_at/source/freshness каждого поля (24h по умолчанию). Refresh — remote read + local write:
 `stats messages counters refresh --chat <chat> --max-messages 20 --sync-time 30s --dry-run --json`.
 Предпросмотр не подключается. Реальный refresh требует разрешённой записи и явного chat или pinned selection;
 никогда не освежай весь аккаунт неявно. MAX поддерживает views/reactions; comments unsupported.
@@ -539,5 +542,5 @@ Cohort drilldown идёт через `stats messages evidence --component report
 
 Статистический `--answerer` также принимает сохранённое имя, своё имя и @username напрямую,
 без подключения. При неоднозначности используйте возвращённые кандидаты нужного аккаунта,
-не угадывайте. `identityKnown: false` вместе с `status: unknown` означает, что явно выбранный
+не угадывайте. `identity_known: false` вместе с `status: unknown` означает, что явно выбранный
 ID не наблюдался; ноль ответов не доказывает нулевую активность.

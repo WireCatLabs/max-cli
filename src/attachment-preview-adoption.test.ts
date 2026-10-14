@@ -95,24 +95,26 @@ describe("shared PDF page-preview adoption", () => {
   it("returns a retained page image without indexing, then explicitly saves searchable agent text", async () => {
     const shown = await invoke("attachments", "show", "7", "1", "--page", "1", "--if-sha256", sha256)
     expect(shown.code, shown.stderr).toBe(0)
-    const preview = JSON.parse(shown.stdout)
+    const preview = JSON.parse(shown.stdout).item
     expect(preview).toMatchObject({
-      mimeType: "image/png",
+      mime_type: "image/png",
       complete: true,
-      pdf: { page: 1, pageCount: 1, sourceSha256: sha256, sourceBytes: bytes.length },
+      pdf: { page: 1, page_count: 1, source_sha256: sha256, source_bytes: bytes.length },
     })
     const png = Buffer.from(preview.base64, "base64")
     expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
     expect(createHash("sha256").update(png).digest("hex")).toBe(preview.sha256)
-    const before = await invoke("attachments", "list", "--chat", "7", "--needs-text")
+    const before = await invoke("attachments", "list", "chat:7 is:needs_text")
     expect(before.code, before.stderr).toBe(0)
     expect(JSON.parse(before.stdout).items).toHaveLength(1)
     const saved = await invoke("attachments", "text", "set", "7", "1", "--text-file", textFile)
     expect(saved.code, saved.stderr).toBe(0)
-    expect(JSON.parse(saved.stdout)).toMatchObject({ origin: "agent", chars: 16 })
-    const found = await invoke("search", "messages", "content:pdfpreviewneedle", "--chat", "7", "--backend", "archive")
+    expect(JSON.parse(saved.stdout).item).toMatchObject({ origin: "agent", chars: 16 })
+    const after = await invoke("attachments", "list", "chat:7 is:needs_text")
+    expect(JSON.parse(after.stdout).items).toEqual([])
+    const found = await invoke("search", "messages", "content:pdfpreviewneedle chat:7", "--backend", "archive")
     expect(found.code, found.stderr).toBe(0)
-    expect(JSON.parse(found.stdout).items.map((item: { id: string }) => item.id)).toEqual(["1"])
+    expect(JSON.parse(found.stdout).items.map((item: { ref: string }) => item.ref)).toEqual(["msg:max/512/7/1"])
     const outside = await invoke("attachments", "show", "7", "1", "--page", "2")
     expect(outside.code).not.toBe(0)
     const permission = await invoke("config", "set", "permissions.attachments.show", "deny")

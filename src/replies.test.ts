@@ -81,18 +81,18 @@ describe("reply editors and model templates", () => {
       "Europe/Madrid",
     )
     expect(edited.code).toBe(0)
-    expect(JSON.parse(edited.data)).toMatchObject({
+    expect(JSON.parse(edited.data).item).toMatchObject({
       do: ["reply", "task"],
-      where: { kinds: ["dialog", "group"], chats: ["900719925474099399", "20"], notChats: ["21"] },
+      where: { kinds: ["dialog", "group"], chats: ["900719925474099399", "20"], not_chats: ["21"] },
       when: {
         hours: { outside: "22:00-02:00", days: "fri-mon", timezone: "Europe/Madrid" },
         words: ["price", "help"],
         question: true,
-        mentionsMe: true,
-        from: { people: ["11"], notPeople: ["12"], contactsOnly: true },
+        mentions_me: true,
+        from: { people: ["11"], not_people: ["12"], contacts_only: true },
       },
-      reply: { template: "Hi {{ sender.name }}", model: "fill-only", asReply: false },
-      limits: { perChat: "2/12h", perPerson: "3/1d" },
+      reply: { template: "Hi {{ sender.name }}", model: "fill-only", as_reply: false },
+      limits: { per_chat: "2/12h", per_person: "3/1d" },
     })
     expect((await invoke("replies", "on", "away")).code).toBe(0)
     expect((await invoke("replies", "off", "away")).code).toBe(0)
@@ -156,7 +156,7 @@ describe("reply editors and model templates", () => {
       "21",
     )
     expect(result.code).toBe(0)
-    expect(JSON.parse(result.data)).toEqual({
+    expect(JSON.parse(result.data).item).toEqual({
       reply: "listed",
       allow: { people: ["11"], chats: ["20"] },
       deny: { people: ["11"], chats: ["21"] },
@@ -188,31 +188,31 @@ describe("reply editors and model templates", () => {
     for (const [field, value] of [
       ["provider", "openai"],
       ["model", "test-model"],
-      ["baseUrl", "https://example.test/v1"],
+      ["base_url", "https://example.test/v1"],
     ] as const) {
       expect((await invoke("config", "set", `models.replies.${field}`, value)).code).toBe(0)
     }
     const shown = await invoke("config", "show")
-    const models = JSON.parse(shown.data).settings.find((row: { setting: string }) => row.setting === "models")
+    const models = JSON.parse(shown.data).item.settings.find((row: { setting: string }) => row.setting === "models")
     expect(models.value.replies).toEqual({
       provider: "openai",
       model: "test-model",
-      baseUrl: "https://example.test/v1",
+      base_url: "https://example.test/v1",
     })
     expect(models.sources["models.replies.provider"]).toContain("config file")
     expect((await invoke("replies", "consents", "grant")).code).toBe(0)
-    expect(JSON.parse((await invoke("replies", "consents", "deny", "900719925474099399")).data).deniedChats).toEqual([
-      "900719925474099399",
-    ])
-    expect(JSON.parse((await invoke("replies", "consents", "allow", "900719925474099399")).data).deniedChats).toEqual(
-      [],
-    )
-    expect(JSON.parse((await invoke("replies", "consents", "show")).data).provider).toBe(
+    expect(
+      JSON.parse((await invoke("replies", "consents", "deny", "900719925474099399")).data).item.denied_chats,
+    ).toEqual(["900719925474099399"])
+    expect(
+      JSON.parse((await invoke("replies", "consents", "allow", "900719925474099399")).data).item.denied_chats,
+    ).toEqual([])
+    expect(JSON.parse((await invoke("replies", "consents", "show")).data).item.provider).toBe(
       "openai:https://example.test/v1",
     )
     expect((await invoke("replies", "consents", "revoke")).code).toBe(0)
-    expect(JSON.parse((await invoke("replies", "consents", "show")).data).provider).toBeNull()
-    for (const field of ["provider", "model", "baseUrl"])
+    expect(JSON.parse((await invoke("replies", "consents", "show")).data).item.provider).toBeNull()
+    for (const field of ["provider", "model", "base_url"])
       expect((await invoke("config", "unset", `models.replies.${field}`)).code).toBe(0)
     expect((await invoke("replies", "consents", "grant")).code).not.toBe(0)
     expect(never).not.toHaveBeenCalled()
@@ -251,7 +251,7 @@ describe("reply editors and model templates", () => {
     await store.close()
     const taskCounts = await invoke("stats", "tasks", "show", "--chat", "11", "--type", "request")
     expect(taskCounts.code).toBe(0)
-    expect(JSON.parse(taskCounts.data).items).toEqual([])
+    expect(JSON.parse(taskCounts.data).item).toEqual({ open: 0, rows: [] })
     await invoke("replies", "add", "away")
     await invoke(
       "replies",
@@ -275,7 +275,7 @@ describe("reply editors and model templates", () => {
     vi.stubGlobal("fetch", fetcher)
     const preview = await invoke("replies", "test", "--since-time", "1d")
     expect(preview.code).toBe(0)
-    expect(JSON.parse(preview.data).rules[0].would[0]).toMatchObject({
+    expect(JSON.parse(preview.data).item.rules[0].would[0]).toMatchObject({
       text: "Later",
       blocks: [{ instruction: "Greet Ana", fallback: "Later" }],
     })
@@ -286,13 +286,13 @@ describe("reply editors and model templates", () => {
     for (const [field, value] of [
       ["provider", "openai"],
       ["model", "test-model"],
-      ["baseUrl", "https://example.test/v1"],
+      ["base_url", "https://example.test/v1"],
     ] as const)
       await invoke("config", "set", `models.replies.${field}`, value)
     await invoke("replies", "consents", "grant")
     const modeled = await invoke("replies", "test", "--ai")
     expect(modeled.code).toBe(0)
-    expect(JSON.parse(modeled.data).rules[0].would[0].text).toBe("Hello Ana")
+    expect(JSON.parse(modeled.data).item.rules[0].would[0].text).toBe("Hello Ana")
     expect(fetcher).toHaveBeenCalledTimes(1)
     await invoke("config", "set", "permissions.messages", "deny")
     expect((await invoke("replies", "test", "--ai")).code).not.toBe(0)

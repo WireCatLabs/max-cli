@@ -25,7 +25,7 @@
 | --- | --- |
 | Найти вопросы, которые ждут ответа | `max personal review --unanswered` |
 | Увидеть, кто вступил, вышел, кого добавили или удалили | `max personal chats events` |
-| Подвести итог недели: решения, обещания, открытые вопросы | `max personal review --since-time 7d` |
+| Подвести итог недели: решения, обещания, открытые вопросы | `max personal review 'date>7d'` |
 | Вести список того, что ждёт вас | `max personal tasks list` |
 | Убирать спам по своим правилам | `max personal chats rules set`, `max personal chats moderate` |
 | Заменить утёкшую ссылку-приглашение | `max personal chats link reset` |
@@ -57,7 +57,7 @@
 **Команда:**
 
 ```sh
-max personal review --chat "Поход" --unanswered 4h --json
+max personal review 'chat:"Поход"' --unanswered 4h --json
 ```
 
 **Пример ответа агента:**
@@ -85,7 +85,7 @@ max personal review --chat "Поход" --unanswered 4h --json
 **Команда:**
 
 ```sh
-max personal chats events "Поход" --type add --since-time 7d --json
+max personal chats events "Поход" 'time>=7d' --json
 ```
 
 **Пример ответа агента:**
@@ -167,7 +167,7 @@ max personal chats moderate "Поход" --dry-run --json
 **Команда:**
 
 ```sh
-max personal review --chat "Поход" --since-time 7d --json
+max personal review 'chat:"Поход" date>7d' --json
 ```
 
 **Пример ответа агента:**
@@ -200,7 +200,7 @@ max personal review --chat "Поход" --since-time 7d --json
 
 | Команда | Что делает |
 |---|---|
-| `max personal review --chat <чат> --unanswered [длительность]` | вопросы, на которые вы и админы не ответили за указанное время (например, `4h`; по умолчанию `24h`) |
+| `max personal review 'chat:<чат>' --unanswered [длительность]` | вопросы, на которые вы и админы не ответили за указанное время (например, `4h`; по умолчанию `24h`) |
 | `max personal chats events <чат>` | кто вступил, вышел, кого добавили и удалили, кем; по умолчанию за 7 дней |
 | `max personal chats members list <чат>` | страница участников от MAX (`--all` — все доступные, до 5000): кто владелец и админы (сразу после `admins add` роль может быть прежней), когда заведён аккаунт, когда был в сети |
 | `max personal chats rules show\|set\|unset <чат>` | правила группы |
@@ -217,7 +217,7 @@ max personal review --chat "Поход" --since-time 7d --json
 Агент, подключённый через [MCP-сервер](mcp.md), может выполнять те же команды в пределах прав
 профиля.
 
-Команды изменения группы в JSON возвращают `operationId`; карточка после создания,
+Команды изменения группы в JSON возвращают `operation_id`; карточка после создания,
 вступления, изменения или замены ссылки находится в `chat`. Если название или описание
 успело измениться, а запрос настроек не завершился, результат — `outcome_unknown`.
 Прочитайте группу через `chats show` перед повтором: изменение могло примениться частично.
@@ -336,7 +336,7 @@ max personal chats moderate "Поход"
 Агент, подключённый через MCP, действует только там, где уровень — `allow`; действия уровня `ask`
 остаются планом для вас, серверных форм нет.
 
-`chats moderate --json` возвращает `{ chatId, rows }`. `--since-time` принимает время ISO 8601
+`chats moderate --json` возвращает `{ item: { chat_id, rows } }`. `--since-time` принимает время ISO 8601
 или `30m`, `2h`, `1d`, а не номер сообщения, и не сдвигает сохранённое место.
 Место следующей проверки хранится вместе с правилами; старое место из сессии переносится
 автоматически перед первым запуском. CLI и личный MCP используют одно место.
@@ -416,7 +416,7 @@ max personal stats chats show "Поход" --since-time 7d --offline --json
 автоматическое получение; накопленная история остаётся доступной через `max personal chats members history`.
 
 `max personal chats members history` показывает сохранённые вступления, выходы и изменения профиля в порядке
-времени; `--since-time` ограничивает период. Команда не обращается к MAX. Время вступления берётся
+времени; запрос `time>=7d` ограничивает период. Команда не обращается к MAX. Время вступления берётся
 из ответа MAX, если оно известно, иначе это первое обнаружение человека. Время выхода — первый полный
 снимок без него, а не точный момент ухода. Первое чтение создаёт исходный состав: эти люди не обязательно
 вступили в день чтения. `chats members list --offline` показывает последний полностью сохранённый
@@ -453,7 +453,7 @@ max personal stats chats show "Поход" --since-time 7d --by day --timezone E
 ```
 
 ```sh
-max personal chats members history "Поход" --since-time 7d --offline --json
+max personal chats members history "Поход" 'time>=7d' --offline --json
 ```
 
 ```sh

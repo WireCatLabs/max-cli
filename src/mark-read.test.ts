@@ -83,7 +83,7 @@ describe("marking a chat read", () => {
     const given = await runWith(["r-chat", "chats", "mark-read", "Friends", "--until", OLDER], environment)
 
     expect(newest.code).toBe(0)
-    expect(JSON.parse(newest.stdout)).toEqual({ operationId: expect.any(String), chatId: "111", until: null })
+    expect(JSON.parse(newest.stdout).item).toEqual({ operation_id: expect.any(String), chat_id: "111", until: null })
     expect(given.code).toBe(0)
     expect(marks().map(({ messageId }) => messageId)).toEqual([NEWER, OLDER])
   })
@@ -97,12 +97,12 @@ describe("marking a chat read", () => {
     expect(marks).toEqual([timeOfMessageId(OLDER), timeOfMessageId(NEWER)])
   })
 
-  it("a read-only profile refuses before connecting, and prints no messages", async () => {
+  it("a read-only profile refuses, sending nothing past the login, and prints no messages", async () => {
     const { max, environment } = messenger()
-    await runWith(["r-ro", "config", "set", "readOnly", "true"])
+    await runWith(["r-ro", "config", "set", "read_only", "true"])
 
     expect((await runWith(["r-ro", "chats", "mark-read", "111"], environment)).code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(max.sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)).toBe(true)
 
     const listed = await runWith(["r-ro", "messages", "list", "111", "--mark-read"], environment)
     expect(listed.code).toBe(5)

@@ -73,14 +73,14 @@ for resource in messages reactions polls topics chats contacts account bot conve
   max personal config set "permissions.$resource" readonly
 done
 max config show                       # проверить эффективные права
-max personal config set sendsPerHour 5          # или: не больше пяти сообщений в час
+max personal config set sends_per_hour 5          # или: не больше пяти сообщений в час
 max personal recipients add "Иван Петров"       # и писать только в эти чаты
 ```
 
 `readonly` на одном ресурсе не касается остальных: с одним `messages` агент ещё может ставить
 реакции, голосовать или менять чаты. Поэтому цикл задаёт каждый ресурс. Более точный ключ вроде
 `permissions.messages.send: allow` имеет приоритет над ресурсом: удалите такие разрешения, если
-профиль должен только читать. После миграции старый `readOnly` менять нельзя.
+профиль должен только читать. После миграции старый `read_only` менять нельзя.
 
 `permissions` ограничивает и ваши собственные команды, пока вы не снимете запрет:
 `max personal config unset permissions.<ресурс>`. Тогда снова действуют унаследованные настройки и
@@ -150,10 +150,10 @@ max personal recipients add "Иван Петров"       # и писать то
 
 - `max personal inbox` — непрочитанное, как его считает MAX: всё, что вы не открыли ни на одном устройстве.
 - `max personal inbox --new` — с прошлого запуска `--new`. Эту точку знает только `max`, собеседники её не видят.
-- `max personal inbox --since-time 2d` — за последние два дня; сохранённая точка не сдвигается.
+- `max personal inbox 'date>2d'` — за последние два дня; сохранённая точка не сдвигается.
 
 Ни одна из них не отмечает сообщения прочитанными. Если это нужно, добавьте `--mark-read` или
-включите `catchUpMarksRead` в [настройках](configuration.md). Тогда собеседник увидит, что вы
+включите `catch_up_marks_read` в [настройках](configuration.md). Тогда собеседник увидит, что вы
 прочитали.
 
 ### Отдельно личные, группы и каналы
@@ -175,8 +175,8 @@ max personal recipients add "Иван Петров"       # и писать то
 Пишет в MAX: **нет**. Разрешить: `Bash(max personal messages list:*)`.
 
 > Прочитай сообщения в чате «Проект Альфа» за последние 7 дней: `max messages list "Проект Альфа"
-> --after-time 7d --limit 200 --json`. Если в ответе
-> `"hasMore": true`, читай дальше. Составь отчёт: что решили, кто что взял на себя и к какому
+> 'date>7d' --limit 200 --json`. Если в ответе
+> есть шаг `page.next`, читай дальше с его `--cursor`. Составь отчёт: что решили, кто что взял на себя и к какому
 > сроку, какие вопросы остались без ответа. У каждого пункта — дата и автор.
 
 ## Кто кому должен
@@ -197,13 +197,13 @@ max personal recipients add "Иван Петров"       # и писать то
 
 ## Кому вы не ответили
 
-Короче всего — `max personal review --since-time 7d --unanswered --json`: вопросы, на которые никто не
+Короче всего — `max personal review 'date>7d' --unanswered --json`: вопросы, на которые никто не
 ответил, — в личных чатах вам, в группах вам или админам. Рецепт ниже шире: он ловит и просьбы без
 вопросительного знака.
 
 Пишет в MAX: **нет**. Разрешить: `Bash(max personal chats list:*)`, `Bash(max personal messages list:*)`.
 
-> Выполни `max personal chats list --kind dialog --limit 30 --json`. Для каждого чата, где последнее
+> Выполни `max personal chats list kind:dialog --offline --limit 30 --json`. Для каждого чата, где последнее
 > сообщение было за последние 7 дней, прочитай `max personal messages list <id чата> --limit 5 --json`.
 > Покажи чаты, где последнее сообщение не от меня и в нём вопрос или просьба: с кем, о чём и
 > сколько дней прошло.
@@ -238,8 +238,8 @@ max personal recipients add "Иван Петров"       # и писать то
 Пишет в MAX: **только если разрешено правилами группы**. Разрешить: `Bash(max personal review:*)`,
 `Bash(max personal chats events:*)`, `Bash(max personal chats members list:*)`, `Bash(max personal chats moderate:*)`.
 
-> Выполни `max personal review --chat "Поход" --unanswered 4h --json`, `max chats events "Поход" --since-time
-> 7d --json` и `max chats moderate "Поход" --dry-run --json`. Коротко: какие вопросы ждут ответа, от
+> Выполни `max personal review 'chat:"Поход"' --unanswered 4h --json`, `max chats events "Поход"
+> 'time>=7d' --json` и `max chats moderate "Поход" --dry-run --json`. Коротко: какие вопросы ждут ответа, от
 > кого и с какого времени; кто вступил или был добавлен за неделю и кем; что проверка нашла по
 > правилам группы и что предлагает сделать. Никому не отвечай и никого не удаляй сам — перечисли
 > команды, которые сделают это, если я соглашусь.

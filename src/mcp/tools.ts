@@ -20,6 +20,7 @@ import { MAX_APP } from "../app.js"
 import type { MaxClient } from "../client.js"
 import { type McpToolGroup, resolveSettings } from "../config.js"
 import type { Reach } from "../download.js"
+import { itemAnswer } from "../envelope.js"
 import { maxMessenger } from "../messenger.js"
 import { migrateModerationPoints } from "../moderation/points.js"
 import { assertReadable, withPermissionApproval } from "../permissions.js"
@@ -114,6 +115,10 @@ export const registerTools = (
       warn("could not remember the account for local archive tools")
     }
   }
+  // cli-core asks for the account before a write; a profile that never logged in has none until LOGIN answers.
+  const knowAccount = async (client: MaxClient) => {
+    if (store.readState().viewerId === undefined) await client.connect()
+  }
   const adapterFor = (client: MaxClient) => {
     const adapter = maxAdapter(client, store, reach, warn)
     adapters.set(adapter, client)
@@ -149,7 +154,7 @@ export const registerTools = (
     offered.messages_transcribe = {
       ...direct,
       description:
-        "A MAX voice message as text on this machine. Reuses a retained transcript from the same model; never downloads a model. Returns { messageId, text, model, cached? }.",
+        "A MAX voice message as text on this machine. Reuses a retained transcript from the same model; never downloads a model. Answers item { message_id, text, pending, via, model }.",
       online: async (adapter, args, defaults) => {
         const client = adapters.get(adapter)
         if (!client) throw new Error("MAX transcription requires its held adapter")
@@ -160,13 +165,18 @@ export const registerTools = (
         const record = maxRecord({ account: () => store.readState().viewerId })
         try {
           const kept = await record.transcript(chatId, message)
-          if (kept?.source === model.id) return { messageId: message, text: kept.text, model: model.id, cached: true }
-          return await transcribe(client, chatId, message, {
-            model,
-            directory: modelsDirectory(),
-            record,
-            ...(defaults.release ? { release: defaults.release } : {}),
-          })
+          const text =
+            kept?.source === model.id
+              ? kept.text
+              : (
+                  await transcribe(client, chatId, message, {
+                    model,
+                    directory: modelsDirectory(),
+                    record,
+                    ...(defaults.release ? { release: defaults.release } : {}),
+                  })
+                ).text
+          return itemAnswer({ message_id: message, text, pending: false, via: "local", model: model.id })
         } finally {
           await record.close()
         }
@@ -204,22 +214,21 @@ export const registerTools = (
       } catch {
         token = "unreachable"
       }
-      return {
+      return itemAnswer({
         profile,
         account,
-        viewerId: account,
         kind: store.isBot() ? "personal + bot" : "personal",
         token,
-        loggedInHere: store.hasLoggedIn(),
-        hasToken: store.readToken() !== undefined,
-        hasLoggedIn: account !== null,
+        logged_in_here: store.hasLoggedIn(),
+        has_token: store.readToken() !== undefined,
+        has_logged_in: account !== null,
         writes: [
           ...Object.entries(offered)
             .filter(([, one]) => one.annotations.readOnlyHint !== true)
             .map(([name]) => personalMcpCommand(name)),
         ],
         permissions: settings().permissions,
-      }
+      })
     },
   }
   const currentSettings = settings()
@@ -248,6 +257,7 @@ export const registerTools = (
     session: {
       use: (name, work) =>
         session.use(name, async (client, release) => {
+          await knowAccount(client)
           let opened: ReturnType<typeof openStore> | undefined
           const account = {
             provider: "max",
@@ -288,8 +298,9 @@ export const registerTools = (
         }
       }),
     withServices: (work, { name }) =>
-      session.use(name, (client, release) =>
-        withShared(
+      session.use(name, async (client, release) => {
+        await knowAccount(client)
+        return withShared(
           client,
           { store, profile, warn },
           async (services) => {
@@ -303,7 +314,7 @@ export const registerTools = (
             })
           },
           name === "mcp messages link" ? { reads: "store" } : { login: true },
-        ),
-      ),
+        )
+      }),
   })
 }

@@ -94,15 +94,20 @@ describe("max bot messages", () => {
     expect(code).toBe(0)
     const messages = JSON.parse(stdout).items
     expect(requests.at(-1)?.url).toBe("/messages?chat_id=-100&count=3")
-    expect(messages[0]).toMatchObject({ id: "mid.1", chatId: "-100", senderName: "Ann", outgoing: false })
-    expect(messages[1]).toMatchObject({ id: "mid.2", outgoing: true, replyToId: "mid.1", replyTo: { text: "first" } })
+    expect(messages[0]).toMatchObject({ id: "mid.1", chat_id: "-100", sender_name: "Ann", outgoing: false })
+    expect(messages[1]).toMatchObject({
+      id: "mid.2",
+      outgoing: true,
+      reply_to_id: "mid.1",
+      reply_to: { text: "first" },
+    })
     expect(messages[0].timestamp).toBe("2025-09-26T12:14:48.000Z")
   })
 
   it("still shows a message MAX added something unknown to, instead of failing the list", async () => {
     const messages = JSON.parse((await max(["bot", "messages", "list", "-100", "--json"])).stdout).items
     expect(messages[2]).toMatchObject({ id: "mid.3", text: "with something new" })
-    expect(messages[2].providerMetadata.unparsed).toBeDefined()
+    expect(messages[2].provider_metadata.unparsed).toBeDefined()
   })
 
   it("prints messages for a person the way every messaging command does", async () => {
@@ -124,16 +129,16 @@ describe("the local copy", () => {
     expect(requests).toHaveLength(0)
     const kept = JSON.parse(offline.stdout).items
     expect(kept.map((message: { id: string }) => message.id)).toEqual(["mid.1", "mid.2", "mid.3"])
-    expect(kept[1]).toMatchObject({ text: online[1].text, outgoing: true, replyToId: "mid.1" })
+    expect(kept[1]).toMatchObject({ text: online[1].text, outgoing: true, reply_to_id: "mid.1" })
 
     const one = JSON.parse(
       (await max(["copy", "bot", "messages", "show", "-100", "mid.2", "--offline", "--json"])).stdout,
-    )
+    ).item
     expect(one).toMatchObject({ id: "mid.2", outgoing: true })
     expect((await max(["copy", "bot", "messages", "show", "-100", "mid.404", "--offline", "--json"])).code).not.toBe(0)
 
     const found = JSON.parse((await max(["copy", "bot", "search", "messages", "second", "--json"])).stdout).items
-    expect(found).toMatchObject([{ id: "mid.2", locator: expect.stringContaining("max-bot") }])
+    expect(found).toMatchObject([{ id: "mid.2", ref: expect.stringContaining("max-bot") }])
     expect(requests).toHaveLength(0)
   })
 
@@ -173,10 +178,10 @@ describe("max bot chats", () => {
   it("remembers a chat once seen, and finds it by title afterwards", async () => {
     new BotTokenStore({ profile: "fresh", keyring }).write(TOKEN)
     expect(JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout).items).toEqual([])
-    const chat = JSON.parse((await max(["fresh", "bot", "chats", "show", "-100", "--json"])).stdout)
-    expect(chat).toMatchObject({ id: "-100", title: "Team", kind: "group", participantsCount: 3 })
+    const chat = JSON.parse((await max(["fresh", "bot", "chats", "show", "-100", "--json"])).stdout).item
+    expect(chat).toMatchObject({ id: "-100", title: "Team", kind: "group", participants_count: 3 })
     const seen = JSON.parse((await max(["fresh", "bot", "chats", "list", "--json"])).stdout).items
-    expect(seen).toMatchObject([{ id: "-100", title: "Team", firstSeenAt: expect.any(String) }])
+    expect(seen).toMatchObject([{ id: "-100", title: "Team", first_seen_at: expect.any(String) }])
     requests.length = 0
     expect((await max(["fresh", "bot", "messages", "list", "Team", "--json"])).code).toBe(0)
     expect(requests.at(-1)?.url).toContain("chat_id=-100")
@@ -197,11 +202,11 @@ describe("max bot chats", () => {
     })
     expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--notify", "--json"])).code).toBe(0)
     expect(requests.at(-1)?.body).toBe(`{"message_id":"mid.1","notify":true}`)
-    await max(["config", "set", "readOnly", "true"])
+    await max(["config", "set", "read_only", "true"])
     requests.length = 0
     expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--json"])).code).not.toBe(0)
     expect(requests).toHaveLength(0)
-    await max(["config", "set", "readOnly", "false"])
+    await max(["config", "set", "read_only", "false"])
   })
 
   it("unpins, leaves and shows an action with the request each one names", async () => {
@@ -210,7 +215,11 @@ describe("max bot chats", () => {
     expect((await max(["bot", "messages", "unpin", "-100", "mid.7", "--json"])).code).toBe(6)
     const action = await max(["bot", "chats", "action", "-100", "typing", "--json"])
     expect(action.code).toBe(0)
-    expect(JSON.parse(action.stdout)).toMatchObject({ chatId: "-100", action: "typing" })
+    expect(JSON.parse(action.stdout).item).toMatchObject({
+      chat_id: "-100",
+      action: "typing",
+      operation_id: expect.any(String),
+    })
     expect(requests.at(-1)).toMatchObject({
       method: "POST",
       url: "/chats/-100/actions",

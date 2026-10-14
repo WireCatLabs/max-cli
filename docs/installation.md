@@ -227,7 +227,7 @@ max upgrade --check   # только сказать, есть ли новее; �
 
 Раз в сутки `max` сам спрашивает npm о новой версии и, если она есть, пишет после команды одну строку
 в stderr — только человеку в терминале: не в `--json`, не в трубу, не с `--quiet`, не в `CI`.
-Выключается `max config set updateCheck false --defaults`.
+Выключается `max config set update_check false --defaults`.
 
 Из исходников — `git pull && pnpm install && pnpm build`.
 

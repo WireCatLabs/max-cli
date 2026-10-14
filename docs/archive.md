@@ -150,7 +150,7 @@ max personal store jobs list                      # фоновые задани�
 ```
 
 ```sh
-max personal store jobs list --state failed       # только упавшие: running, done, failed, cancelled или died
+max personal store jobs list state:failed        # только упавшие: running, done, partial, failed, cancelled или died
 ```
 
 ```sh
@@ -255,7 +255,7 @@ max personal store export --all --to ~/max-всё
 
 ```sh
 max personal messages evidence -1000 --limit 20 --json
-max personal messages evidence -1000 --before-id <nextBeforeId> --json
+max personal messages evidence -1000 --cursor <курсор из page.next> --json
 ```
 
 Сообщения идут от новых к старым, со ссылками `msg:` и отпечатками содержимого. `--limit` принимает
@@ -263,10 +263,10 @@ max personal messages evidence -1000 --before-id <nextBeforeId> --json
 пакета — сверх этого. JSON и JSONL выдают один целый пакет.
 
 Перед сводкой посмотрите `coverage`: там сколько сообщений выбрано, включено и пропущено, есть ли
-более старые за пределами страницы; полнота истории остаётся `unknown`. Ненулевой `nextBeforeId`
-передайте в `--before-id`, чтобы продолжить и не пропустить сообщения, которые не влезли по размеру.
+более старые за пределами страницы; полнота истории остаётся `unknown`. Если в `next` есть шаг
+`page.next`, передайте его `cursor` в `--cursor`, чтобы продолжить и не пропустить сообщения, которые не влезли по размеру.
 Пустой курсор не доказывает, что копия полна. Если самое новое выбранное сообщение одно больше предела,
-пакет пуст, `truncatedBy: "bytes"` и курсора нет — этот случай нужно обработать явно. Неизвестный
+пакет пуст, `truncated_by: "bytes"` и курсора нет — этот случай нужно обработать явно. Неизвестный
 курсор даёт `not_found`.
 
 Агент может ссылаться на эти ссылки в сводке; сам `max` сводку не пишет. Текст сообщений — данные
@@ -359,7 +359,7 @@ max personal watch --events --jsonl  # ещё правки, удаления, р
   показывает: MAX присылает это только клиенту, который держит чат открытым.
 - **`max personal watch` видит только то, что пришло, пока он и сервер подключены.** Пока связь с MAX
   обрывалась, сообщения шли мимо. Строка `status` с `connected: true` после обрыва — сигнал
-  добрать пропущенное: `max personal inbox --since-time <время из поля at предыдущей строки status>`.
+  добрать пропущенное: `max personal inbox 'date>"<время из поля at предыдущей строки status>"'`.
 
 ## Состояние, копия, восстановление
 

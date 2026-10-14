@@ -152,7 +152,7 @@ describe("voting", () => {
     expect(sentWith(Opcode.SEND_VOTE).map(({ payload }) => payload)).toEqual([
       { chatId: 111, messageId: BigInt(MESSAGE), pollId: 900, answersIds: [1] },
     ])
-    expect(JSON.parse(voted.stdout).poll.answers[0]).toMatchObject({ voters: 3, chosen: true })
+    expect(JSON.parse(voted.stdout).item.poll.answers[0]).toMatchObject({ voters: 3, chosen: true })
     expect(journalOf("p-vote")).toMatchObject([{ chatId: "111", kind: "reaction", outcome: "sent" }])
   })
 
@@ -215,7 +215,7 @@ describe("closing and creating", () => {
         { _type: "POLL", pollId: 900, title: "Lunch?", answers: [{ text: "Yes" }, { text: "No" }], settings: 10 },
       ],
     })
-    expect(JSON.parse(closed.stdout).poll.closed).toBe(true)
+    expect(JSON.parse(closed.stdout).item.poll.closed).toBe(true)
   })
 
   it("refuses to close somebody else's poll", async () => {
@@ -229,9 +229,9 @@ describe("closing and creating", () => {
     const { code, stdout } = await runWith(["p-show", "polls", "show", "111", MESSAGE], environment)
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({
-      chatId: "111",
-      messageId: MESSAGE,
+    expect(JSON.parse(stdout).item).toMatchObject({
+      chat_id: "111",
+      message_id: MESSAGE,
       question: "Lunch?",
       answers: [
         { id: "1", text: "Yes", voters: 2, chosen: true },
@@ -250,7 +250,7 @@ describe("closing and creating", () => {
 
     expect(code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { cid: 1790000000000 } })
-    expect(JSON.parse(stdout)).toMatchObject({ sendId: "1790000000000", operationId: "1790000000000" })
+    expect(JSON.parse(stdout).item).toMatchObject({ send_id: "1790000000000", operation_id: "1790000000000" })
   })
 
   it("`--revote` lets people change their vote", async () => {

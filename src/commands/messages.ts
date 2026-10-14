@@ -9,6 +9,7 @@ import {
   unpinCommand,
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
+import { renderItem } from "../envelope.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
 import { notDownloaded, transcribe } from "../transcribe/index.js"
@@ -79,7 +80,16 @@ export const messagesCommand = (): Command => {
             },
           })
           if (format === "pretty") streams.data(`${transcript.text}\n`)
-          else renderer.result(transcript)
+          else
+            renderItem(renderer, format, {
+              message_id: transcript.messageId,
+              chat_id: transcript.chatId,
+              text: transcript.text,
+              pending: false,
+              via: "local",
+              model: transcript.model,
+              cached: transcript.cached,
+            })
         } finally {
           try {
             await client.close()

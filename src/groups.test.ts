@@ -65,6 +65,10 @@ const runWith = async (argv: string[], environment: Environment = {}) => {
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
 
+// A profile with no saved account id logs in at connect; past that, nothing may reach MAX.
+const sentOnlyLogin = (sent: { opcode: number }[]) =>
+  sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)
+
 const journalOf = (profile: string) => new SendJournal(sendsPathFor(profile)).entries()
 
 describe("joining and leaving", () => {
@@ -74,14 +78,14 @@ describe("joining and leaving", () => {
 
     expect(joined.code).toBe(0)
     expect(sent(Opcode.CHAT_JOIN)).toEqual([{ link: "join/abcdef" }])
-    expect(JSON.parse(joined.stdout)).toMatchObject({
-      operationId: expect.any(String),
+    expect(JSON.parse(joined.stdout).item).toMatchObject({
+      operation_id: expect.any(String),
       chat: {
         id: "-70000000000001",
         title: "Team",
         kind: "group",
         access: "private",
-        settings: { allCanPin: true, onlyAdminsAdd: false, onlyAdminsCall: null },
+        settings: { all_can_pin: true, only_admins_add: false, only_admins_call: null },
       },
     })
     expect(journalOf("gr-join")).toMatchObject([
@@ -103,7 +107,7 @@ describe("joining and leaving", () => {
     const listed = await runWith(["gr-asked", "chats", "list", "--json"], environment)
 
     expect(joined.code).toBe(0)
-    expect(JSON.parse(joined.stdout)).toMatchObject({ requested: true })
+    expect(JSON.parse(joined.stdout).item).toMatchObject({ requested: true })
     expect(JSON.stringify(JSON.parse(listed.stdout))).not.toContain("-70000000000002")
   })
 
@@ -126,13 +130,13 @@ describe("joining and leaving", () => {
       environment,
     )
     const byLink = await runWith(
-      ["gr-requests", "chats", "requests", "list", "-70000000000001", "--link", "https://max.ru/join/x"],
+      ["gr-requests", "chats", "requests", "list", "-70000000000001", 'link:"https://max.ru/join/x"'],
       environment,
     )
 
     expect(listed.code).toBe(0)
     expect(JSON.parse(listed.stdout).items).toEqual([
-      { person: { id: "10000003", name: "Asker", username: null }, requestedAt: null },
+      { person_id: "10000003", name: "Asker", username: null, requested_at: null },
     ])
     expect(sent(Opcode.CHAT_MEMBERS).filter((one) => one.type === "JOIN_REQUEST")).toEqual([
       { chatId: -70000000000001, type: "JOIN_REQUEST", count: expect.any(Number) },
@@ -149,7 +153,7 @@ describe("joining and leaving", () => {
   it("searches requests by name, and refuses answering them all, which MAX has no call for", async () => {
     const { environment, sent } = messenger({ [Opcode.CHAT_MEMBERS]: { members: [] } })
     const searched = await runWith(
-      ["gr-req-search", "chats", "requests", "list", "-70000000000001", "--limit", "5", "--search", "Ask"],
+      ["gr-req-search", "chats", "requests", "list", "-70000000000001", "--limit", "5", "name:Ask"],
       environment,
     )
     const all = await Promise.all(
@@ -178,7 +182,7 @@ describe("joining and leaving", () => {
     const refused = await runWith(["gr-bad-link", "chats", "join", "Team"], environment)
 
     expect(refused.code).toBe(2)
-    expect(max.sent).toEqual([])
+    expect(sentOnlyLogin(max.sent)).toBe(true)
   })
 
   it("a link that was reset leads nowhere: not found, in plain words, for `inspect` and `join`", async () => {
@@ -198,12 +202,12 @@ describe("joining and leaving", () => {
     const read = await runWith(["gr-inspect", "chats", "inspect", "max.ru/join/abcdef", "--json"], environment)
 
     expect(read.code).toBe(0)
-    expect(JSON.parse(read.stdout)).toEqual({
+    expect(JSON.parse(read.stdout).item).toEqual({
       id: String(GROUP.id),
       kind: "group",
       title: "Team",
       username: null,
-      participantsCount: 2,
+      participants_count: 2,
       description: null,
       member: null,
     })
@@ -222,12 +226,12 @@ describe("joining and leaving", () => {
 describe("creating a group", () => {
   it("sends one CONTROL message with the title and the people, and counts it as a send", async () => {
     const { environment, sent } = messenger()
-    await runWith(["gr-create", "config", "set", "sendsPerHour", "1"])
+    await runWith(["gr-create", "config", "set", "sends_per_hour", "1"])
     const created = await runWith(["gr-create", "chats", "create", "Team", "20000002", "--json"], environment)
 
     expect(created.code).toBe(0)
-    expect(JSON.parse(created.stdout)).toMatchObject({
-      operationId: expect.any(String),
+    expect(JSON.parse(created.stdout).item).toMatchObject({
+      operation_id: expect.any(String),
       chat: { id: String(GROUP.id), kind: "group" },
     })
     const [request] = sent(Opcode.MSG_SEND) as { message: { attaches: Payload[] } }[]
@@ -264,7 +268,7 @@ describe("creating a group", () => {
 describe("changing a group", () => {
   it("is refused on a read-only profile before anything reaches MAX, and journalled", async () => {
     const { environment, sent } = messenger()
-    await runWith(["gr-ro", "config", "set", "readOnly", "true"])
+    await runWith(["gr-ro", "config", "set", "read_only", "true"])
     const refused = await runWith(["gr-ro", "chats", "join", "https://max.ru/join/abcdef"], environment)
 
     expect(refused.code).toBe(5)
@@ -327,15 +331,15 @@ describe("changing a group", () => {
       ["gr-members", "chats", "members", "remove", "Team", "20000002", "--json"],
       environment,
     )
-    expect(JSON.parse(added.stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: String(GROUP.id),
+    expect(JSON.parse(added.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: String(GROUP.id),
       added: ["20000002"],
-      notAdded: [],
+      not_added: [],
     })
-    expect(JSON.parse(removed.stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: String(GROUP.id),
+    expect(JSON.parse(removed.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: String(GROUP.id),
       removed: ["20000002"],
     })
 
@@ -429,7 +433,7 @@ describe("changing a group", () => {
   it("`show` reads the settings without sending, and `update` changes only the flags given", async () => {
     const { environment, sent } = messenger()
     const read = await runWith(["gr-settings", "chats", "show", "Team", "--json"], environment)
-    expect(JSON.parse(read.stdout).settings).toMatchObject({ allCanPin: true, onlyAdminsAdd: false })
+    expect(JSON.parse(read.stdout).item.settings).toMatchObject({ all_can_pin: true, only_admins_add: false })
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([])
 
     await runWith(["gr-settings", "chats", "update", "Team", "--all-can-pin", "off"], environment)
@@ -506,23 +510,23 @@ describe("changing a group", () => {
       [profile, "chats", "admins", "add", String(GROUP.id), "20000002", "--can", "members,pin,members", "--json"],
       environment,
     )
-    expect(JSON.parse(add.stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: String(GROUP.id),
-      personId: "20000002",
+    expect(JSON.parse(add.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: String(GROUP.id),
+      person_id: "20000002",
       rights: ["members", "pin"],
     })
     const remove = await runWith(
       [profile, "chats", "admins", "remove", String(GROUP.id), "20000002", "--json"],
       environment,
     )
-    expect(JSON.parse(remove.stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: String(GROUP.id),
-      personId: "20000002",
+    expect(JSON.parse(remove.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: String(GROUP.id),
+      person_id: "20000002",
     })
     const leave = await runWith([profile, "chats", "leave", String(GROUP.id), "--json"], environment)
-    expect(JSON.parse(leave.stdout)).toEqual({ operationId: expect.any(String), chatId: String(GROUP.id) })
+    expect(JSON.parse(leave.stdout).item).toEqual({ operation_id: expect.any(String), chat_id: String(GROUP.id) })
     expect(journalOf(profile)).toHaveLength(3)
   })
 
@@ -530,7 +534,7 @@ describe("changing a group", () => {
     const { environment, sent } = messenger()
     const profile = "gr-card-results"
     const show = await runWith([profile, "chats", "link", "show", String(GROUP.id), "--json"], environment)
-    expect(JSON.parse(show.stdout)).toEqual({ chatId: String(GROUP.id), title: "Team", link: GROUP.link })
+    expect(JSON.parse(show.stdout).item).toEqual({ chat_id: String(GROUP.id), title: "Team", link: GROUP.link })
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([])
     for (const args of [
       ["update", String(GROUP.id), "--title", "Crew"],
@@ -538,8 +542,8 @@ describe("changing a group", () => {
     ]) {
       const result = await runWith([profile, "chats", ...args, "--json"], environment)
       expect(result.code).toBe(0)
-      expect(JSON.parse(result.stdout)).toMatchObject({
-        operationId: expect.any(String),
+      expect(JSON.parse(result.stdout).item).toMatchObject({
+        operation_id: expect.any(String),
         chat: { id: String(GROUP.id) },
       })
     }
@@ -558,14 +562,14 @@ describe("changing a group", () => {
     ["link", "reset", String(GROUP.id)],
   ]
   it.each(writes.map((args, index) => ({ args, index })))(
-    "read-only write $index never logs in",
+    "read-only write $index sends nothing past the login",
     async ({ args, index }) => {
       const { environment, max } = messenger()
       const profile = `gr-guard-${index}`
-      await runWith([profile, "config", "set", "readOnly", "true"])
+      await runWith([profile, "config", "set", "read_only", "true"])
       const result = await runWith([profile, "chats", ...args, "--json"], environment)
       expect(JSON.parse(result.stderr).error.code).toBe("permission_error")
-      expect(max.sent).toEqual([])
+      expect(sentOnlyLogin(max.sent)).toBe(true)
       expect(journalOf(profile)).toMatchObject([{ operationId: expect.any(String), outcome: "refused" }])
     },
   )
@@ -636,9 +640,9 @@ describe("changing a group", () => {
 
       expect(code).toBe(0)
       const found = JSON.parse(stdout)
-      expect(found.items.map((one: { event: string }) => one.event)).toEqual(["create", "add", "remove"])
+      expect(found.items.map((one: { type: string }) => one.type)).toEqual(["create", "add", "remove"])
       expect(found.items[1]).toMatchObject({
-        messageId: "3",
+        message_id: "3",
         by: { id: "10000001", name: "Owner" },
         people: [{ id: "30000003", name: "Newcomer" }],
       })
@@ -647,19 +651,16 @@ describe("changing a group", () => {
       expect(sent(Opcode.CHAT_MARK)).toEqual([])
     })
 
-    it("filters the canonical creation name and streams one JSON value per event", async () => {
+    it("names a creation by its canonical name and streams one JSON value per event", async () => {
       const { environment, sent } = withHistory()
-      const result = await runWith(
-        ["gr-event-jsonl", "chats", "events", "Team", "--type", "create", "--jsonl"],
-        environment,
-      )
+      const result = await runWith(["gr-event-jsonl", "chats", "events", "Team", "--jsonl"], environment)
       expect(result.code).toBe(0)
       const rows = result.stdout
         .trim()
         .split(/\r?\n/)
         .map((line) => JSON.parse(line))
-      expect(rows).toHaveLength(1)
-      expect(rows[0]).toMatchObject({ event: "create", title: "Team" })
+      expect(rows).toHaveLength(3)
+      expect(rows[0]).toMatchObject({ type: "create", title: "Team" })
       expect(sent(Opcode.CHAT_MARK)).toEqual([])
     })
 
@@ -669,33 +670,22 @@ describe("changing a group", () => {
           messages: [{ id: 9n, time: at(50), attaches: [{ _type: "CONTROL", event: "custom-event" }] }],
         },
       })
-      const result = await runWith(
-        ["gr-custom-event", "chats", "events", "Team", "--type", "custom-event", "--json"],
-        environment,
-      )
+      const result = await runWith(["gr-custom-event", "chats", "events", "Team", "--json"], environment)
       expect(result.code).toBe(0)
-      expect(JSON.parse(result.stdout).items).toMatchObject([{ event: "custom-event", messageId: "9" }])
+      expect(JSON.parse(result.stdout).items).toMatchObject([{ type: "custom-event", message_id: "9" }])
     })
 
-    it("keeps only the events --type names, and none from before --since-time", async () => {
+    it("keeps none of the events from before the time the query names", async () => {
       const { environment } = withHistory()
 
-      const { stdout } = await runWith(
-        [
-          "gr-events",
-          "chats",
-          "events",
-          "Team",
-          "--type",
-          "add,remove",
-          "--since-time",
-          new Date(at(60)).toISOString(),
-          "--json",
-        ],
+      const { code, stdout, stderr } = await runWith(
+        ["gr-events", "chats", "events", "Team", `time>="${new Date(at(60)).toISOString()}"`, "--json"],
         environment,
       )
 
-      expect(JSON.parse(stdout).items.map((one: { event: string }) => one.event)).toEqual(["remove"])
+      expect(code, stderr).toBe(0)
+
+      expect(JSON.parse(stdout).items.map((one: { type: string }) => one.type)).toEqual(["remove"])
     })
   })
 
@@ -713,19 +703,27 @@ describe("changing a group", () => {
         environment,
       )
       const history = await runWith(
-        ["gr-history", "chats", "members", "history", "Team", "--since-time", "1d", "--json"],
+        ["gr-history", "chats", "members", "history", "Team", "time>=1d", "--json"],
         environment,
       )
 
       expect(fetched.code, fetched.stderr).toBe(0)
       expect(history.code, history.stderr).toBe(0)
-      expect(JSON.parse(fetched.stdout)).toMatchObject({ read: 2, complete: true, joined: ["1", "2"], tracked: false })
-      expect(JSON.parse(history.stdout).items.map((one: { event: string; id: string }) => [one.event, one.id])).toEqual(
-        [
-          ["joined", "1"],
-          ["joined", "2"],
-        ],
-      )
+      expect(JSON.parse(fetched.stdout).item).toMatchObject({
+        read: 2,
+        complete: true,
+        joined: ["1", "2"],
+        tracked: false,
+      })
+      expect(
+        JSON.parse(history.stdout).items.map((one: { type: string; people: { id: string }[] }) => [
+          one.type,
+          one.people.map((person) => person.id),
+        ]),
+      ).toEqual([
+        ["join", ["1"]],
+        ["join", ["2"]],
+      ])
     })
 
     it("reads every page by marker and lists each person once", async () => {
@@ -761,7 +759,11 @@ describe("changing a group", () => {
         ["gr-window", "chats", "members", "list", "Team", "--limit", "2", "--json"],
         environment,
       )
-      expect(JSON.parse(first.stdout)).toEqual({ items: expect.any(Array), page: 1, limit: 2, hasMore: true })
+      expect(JSON.parse(first.stdout)).toMatchObject({
+        items: expect.any(Array),
+        page: { limit: 2, has_more: true },
+        next: [{ step: "page.next", args: { page: 2, limit: 2 } }],
+      })
       expect(JSON.parse(first.stdout).items.map((one: { id: string }) => one.id)).toEqual(["1", "2"])
       expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(1)
       expect(first.stderr).not.toContain("member list is incomplete")
@@ -770,7 +772,10 @@ describe("changing a group", () => {
         environment,
       )
       expect(JSON.parse(second.stdout).items.map((one: { id: string }) => one.id)).toEqual(["3", "4"])
-      expect(JSON.parse(second.stdout)).toMatchObject({ page: 2, limit: 2, hasMore: true })
+      expect(JSON.parse(second.stdout)).toMatchObject({
+        page: { limit: 2, has_more: true },
+        next: [{ step: "page.next", args: { page: 3 } }],
+      })
       expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(3)
       expect(second.stderr).not.toContain("member list is incomplete")
     })
@@ -792,10 +797,10 @@ describe("changing a group", () => {
       })
       const result = await runWith(["gr-all", "chats", "members", "list", "Team", "--all", "--json"], environment)
       expect(result.code).toBe(0)
-      expect(JSON.parse(result.stdout)).toMatchObject({ page: 1, limit: 2, hasMore: false })
+      expect(JSON.parse(result.stdout)).toMatchObject({ page: { limit: 2, has_more: false } })
       expect(JSON.parse(result.stdout).items).toHaveLength(2)
-      expect(JSON.parse(result.stdout).items[1].registeredAt).toBe(new Date(1789776000000).toISOString())
-      expect(JSON.parse(result.stdout).items[1].lastSeenAt).toBe(new Date(1789776100000).toISOString())
+      expect(JSON.parse(result.stdout).items[1].registered_at).toBe(new Date(1789776000000).toISOString())
+      expect(JSON.parse(result.stdout).items[1].last_seen_at).toBe(new Date(1789776100000).toISOString())
       expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(2)
       expect(sent(Opcode.CHAT_MARK)).toEqual([])
       expect(sent(Opcode.MSG_GET_REACTIONS)).toEqual([])
@@ -821,7 +826,7 @@ describe("changing a group", () => {
         ["gr-empty-page", "chats", "members", "list", "Team", "--page", "2", "--limit", "2", "--json"],
         environment,
       )
-      expect(JSON.parse(result.stdout)).toMatchObject({ items: [], page: 2, hasMore: false })
+      expect(JSON.parse(result.stdout)).toMatchObject({ items: [], page: { limit: 2, has_more: false } })
       expect(result.stderr).toContain("only the first 1 members were read")
     })
 
@@ -854,9 +859,9 @@ describe("changing a group", () => {
     const plain = await runWith(["gr-noroles", "chats", "members", "list", "Team", "--json"], unknown.environment)
 
     expect(JSON.parse(stdout).items.map((one: { role: string }) => one.role)).toEqual(["owner", "admin", "member"])
-    expect(JSON.parse(stdout)).toMatchObject({ hasMore: false })
-    expect(JSON.parse(stdout)).not.toHaveProperty("rolesKnown")
-    expect(JSON.parse(plain.stdout)).not.toHaveProperty("rolesKnown")
+    expect(JSON.parse(stdout)).toMatchObject({ page: { has_more: false } })
+    expect(JSON.parse(stdout)).not.toHaveProperty("roles_known")
+    expect(JSON.parse(plain.stdout)).not.toHaveProperty("roles_known")
     expect(JSON.parse(plain.stdout).items[0].role).toBeUndefined()
     expect(plain.stderr).toContain("who is owner or admin is not known")
   })
@@ -867,16 +872,16 @@ describe("changing a group", () => {
     const next = messenger({ [Opcode.LOGIN]: { profile: { contact: { id: 10000001 } }, chats: [] } })
     const result = await runWith(["gr-delta-show", "chats", "show", "Team", "--json"], next.environment)
     expect(result.code).toBe(0)
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(JSON.parse(result.stdout).item).toMatchObject({
       id: String(GROUP.id),
       title: "Team",
-      link: null,
+      invite_link: null,
       settings: {
-        allCanPin: null,
-        onlyAdminsAdd: null,
-        onlyAdminsCall: null,
-        onlyOwnerEditsInfo: null,
-        membersSeeLink: null,
+        all_can_pin: null,
+        only_admins_add: null,
+        only_admins_call: null,
+        only_owner_edits_info: null,
+        members_see_link: null,
       },
     })
     expect(next.sent(Opcode.CHAT_UPDATE)).toEqual([])
@@ -908,8 +913,8 @@ describe("changing a group", () => {
       environment,
     )
     expect(fetched.code).toBe(0)
-    expect(JSON.parse(fetched.stdout)).toMatchObject({
-      chatId: String(GROUP.id),
+    expect(JSON.parse(fetched.stdout).item).toMatchObject({
+      chat_id: String(GROUP.id),
       read: 2,
       complete: true,
       tracked: false,
@@ -918,39 +923,37 @@ describe("changing a group", () => {
     expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([])
     const before = max.sent.length
     const history = await runWith(
-      [profile, "chats", "members", "history", "Team", "--since-time", "2026-01-01", "--offline", "--json"],
+      [profile, "chats", "members", "history", "Team", "time>=2026-01-01", "--offline", "--json"],
       environment,
     )
     expect(history.code).toBe(0)
     expect(JSON.parse(history.stdout)).toMatchObject({
-      chatId: String(GROUP.id),
-      hasMore: false,
       items: [
-        { event: "joined", id: "30999993" },
-        { event: "joined", id: "30999994" },
+        { chat_id: String(GROUP.id), type: "join", people: [{ id: "30999993" }] },
+        { chat_id: String(GROUP.id), type: "join", people: [{ id: "30999994" }] },
       ],
     })
     expect(max.sent).toHaveLength(before)
     const tracked = await runWith([profile, "chats", "members", "fetch", "Team", "--track", "--json"], environment)
     expect(tracked.code).toBe(0)
-    expect(JSON.parse(tracked.stdout)).toMatchObject({ tracked: true, complete: true })
+    expect(JSON.parse(tracked.stdout).item).toMatchObject({ tracked: true, complete: true })
     expect(sent(Opcode.CHAT_MEMBERS)).toHaveLength(2)
     const afterFetch = max.sent.length
     const list = await runWith([profile, "chats", "tracking", "list", "--json"], environment)
     expect(list.code).toBe(0)
     expect(JSON.parse(list.stdout)).toMatchObject({
-      items: [{ chatId: String(GROUP.id), lastCount: { listed: 2, complete: true } }],
+      items: [{ chat_id: String(GROUP.id), last_count: { listed: 2, complete: true } }],
     })
     const show = await runWith([profile, "chats", "tracking", "show", "Team", "--json"], environment)
     expect(show.code).toBe(0)
-    expect(JSON.parse(show.stdout)).toMatchObject({ chatId: String(GROUP.id), trackedAt: expect.any(String) })
+    expect(JSON.parse(show.stdout).item).toMatchObject({ chat_id: String(GROUP.id), tracked_at: expect.any(String) })
     for (const [verb, enabled] of [
       ["remove", false],
       ["add", true],
     ] as const) {
       const answer = await runWith([profile, "chats", "tracking", verb, "Team", "--json"], environment)
       expect(answer.code).toBe(0)
-      expect(JSON.parse(answer.stdout)).toMatchObject({ chatId: String(GROUP.id), tracked: enabled })
+      expect(JSON.parse(answer.stdout).item).toMatchObject({ chat_id: String(GROUP.id), tracked: enabled })
     }
     expect(max.sent).toHaveLength(afterFetch)
   })
@@ -961,8 +964,8 @@ describe("changing a group", () => {
     const shown = await runWith(["gr-link", "chats", "link", "show", "Team", "--json"], environment)
     const none = await runWith(["gr-link", "chats", "link", "show", "Strangers", "--json"], environment)
 
-    expect(JSON.parse(shown.stdout)).toEqual({
-      chatId: String(GROUP.id),
+    expect(JSON.parse(shown.stdout).item).toEqual({
+      chat_id: String(GROUP.id),
       title: "Team",
       link: "https://max.ru/join/abcdef",
     })

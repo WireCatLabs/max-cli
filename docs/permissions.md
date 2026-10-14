@@ -53,7 +53,7 @@ max work config set permissions.messages readonly
 
 ```sh
 max support config set permissions.bot.messages.send ask --bot
-max support config set sendsPerHour 30 --bot
+max support config set sends_per_hour 30 --bot
 ```
 
 ## Ограничить получателей и повторные отправки

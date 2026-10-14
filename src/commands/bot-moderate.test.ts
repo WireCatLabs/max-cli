@@ -66,7 +66,7 @@ const bot = async (profile: string, argv: string[]) => {
   })
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
-const rows = (stdout: string) => JSON.parse(stdout).rows as { rule: string; action: string; outcome: string }[]
+const rows = (stdout: string) => JSON.parse(stdout).item.rows as { rule: string; action: string; outcome: string }[]
 const deletes = () => calls.filter((call) => call.startsWith("DELETE"))
 
 describe("max bot chats moderate", () => {
@@ -162,7 +162,7 @@ describe("max bot chats moderate", () => {
 
     const { stdout, stderr } = await bot("bc-joins", ["chats", "moderate", "-100", "--json"])
 
-    expect(rows(stdout)).toContainEqual(expect.objectContaining({ kind: "member", rule: "blocked", personId: "55" }))
+    expect(rows(stdout)).toContainEqual(expect.objectContaining({ kind: "member", rule: "blocked", person_id: "55" }))
     expect(stderr).not.toContain("no joins kept")
   })
 })
@@ -173,18 +173,18 @@ describe("max bot chats rules", () => {
     const shown = await bot("br-set", ["chats", "rules", "show", "-100", "--json"])
 
     expect(set.code).toBe(0)
-    expect(JSON.parse(shown.stdout)).toMatchObject({ chatId: "-100", saved: true, rules: { links: "delete" } })
+    expect(JSON.parse(shown.stdout).item).toMatchObject({ chat_id: "-100", saved: true, rules: { links: "delete" } })
   })
 
   it("puts one rule back to its default with unset, leaving the others", async () => {
     await bot("br-unset", ["chats", "rules", "set", "-100", "links", "delete", "--json"])
     await bot("br-unset", ["chats", "rules", "set", "-100", "invites", "remove", "--json"])
-    const defaults = JSON.parse((await bot("br-fresh", ["chats", "rules", "show", "-100", "--json"])).stdout).rules
+    const defaults = JSON.parse((await bot("br-fresh", ["chats", "rules", "show", "-100", "--json"])).stdout).item.rules
 
     const unset = await bot("br-unset", ["chats", "rules", "unset", "-100", "links", "--json"])
 
     expect(unset.code).toBe(0)
-    expect(JSON.parse(unset.stdout).rules).toMatchObject({ links: defaults.links, invites: "remove" })
+    expect(JSON.parse(unset.stdout).item.rules).toMatchObject({ links: defaults.links, invites: "remove" })
     expect(defaults.links).not.toBe("delete")
     expect(calls).toEqual([])
   })

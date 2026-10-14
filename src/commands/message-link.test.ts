@@ -55,8 +55,9 @@ describe("personal message locator fallback", () => {
       const result = await cli(["messages", "link", "7", id, flag])
       expect(result.code, result.stderr).toBe(0)
       expect(result.stdout.trim().split("\n")).toHaveLength(1)
-      expect(JSON.parse(result.stdout)).toEqual({
-        locator: `msg:max/500/7/${id}`,
+      const answer = JSON.parse(result.stdout)
+      expect(flag === "--json" ? answer.item : answer).toEqual({
+        ref: `msg:max/500/7/${id}`,
         url: null,
         access: "unavailable",
         reason: "unsupported_provider",
@@ -65,7 +66,7 @@ describe("personal message locator fallback", () => {
     }
     const offline = await cli(["--offline", "messages", "link", `msg:max/500/7/${id}`, "--json"])
     expect(offline.code).toBe(0)
-    expect(JSON.parse(offline.stdout).reason).toBe("offline")
+    expect(JSON.parse(offline.stdout).item.reason).toBe("offline")
     const mismatch = await cli(["messages", "link", `msg:max/other/7/${id}`, "--json"])
     expect(mismatch.code).not.toBe(0)
     expect(mismatch.stdout).toBe("")

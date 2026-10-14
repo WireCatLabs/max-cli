@@ -116,7 +116,7 @@ describe("a failed run", () => {
     })
 
     expect(runs[0]).toMatchObject({ errorCode: "generic_failure" })
-    expect(events.at(-1)).toMatchObject({ event: "crash", errorClass: "TypeError", frames: expect.any(Array) })
+    expect(events.at(-1)).toMatchObject({ event: "crash", error_class: "TypeError", frames: expect.any(Array) })
     expect(raw).not.toContain("секрет")
   })
 })

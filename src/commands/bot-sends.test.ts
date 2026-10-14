@@ -81,23 +81,23 @@ describe("max bot messages send", () => {
   it("sends, answers with the sent message, and journals it without its text", async () => {
     const { code, stdout } = await max(["bot", "messages", "send", "-100", "hello there", "--silent", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({
-      operationId: expect.any(String),
-      message: { id: "mid.9", chatId: "-100", text: "hello there", outgoing: true },
+    expect(JSON.parse(stdout).item).toMatchObject({
+      operation_id: expect.any(String),
+      message: { id: "mid.9", chat_id: "-100", text: "hello there", outgoing: true },
     })
     expect(requests.at(-1)).toMatchObject({ method: "POST", url: "/messages?chat_id=-100" })
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "hello there", notify: false })
     const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
     expect(journal.at(-1)).toMatchObject({
-      chatId: "-100",
+      chat_id: "-100",
       kind: "message",
       outcome: "sent",
-      messageId: "mid.9",
+      message_id: "mid.9",
       length: 11,
     })
     expect(JSON.stringify(journal)).not.toContain("hello there")
     const kept = JSON.parse((await max(["bot", "search", "messages", "hello there", "--json"])).stdout).items
-    expect(kept).toMatchObject([{ id: "mid.9", chatId: "-100", outgoing: true }])
+    expect(kept).toMatchObject([{ id: "mid.9", chat_id: "-100", outgoing: true }])
   })
 
   it("**suggests user:<id> when a positive chat id is not a chat**", async () => {
@@ -126,7 +126,7 @@ describe("max bot messages send", () => {
     expect((await max(["team", "bot", "messages", "send", "-100", "hi", "--json"])).code).toBe(0)
     expect((await max(["bot", "messages", "send", "-200", "hi", "--json"])).code).toBe(0)
     const refusedRow = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout).items[0]
-    expect(refusedRow).toMatchObject({ chatId: "-200", outcome: "refused" })
+    expect(refusedRow).toMatchObject({ chat_id: "-200", outcome: "refused" })
   })
 
   it("uses MAX-native bold, underline and highlight through the common bot command", async () => {
@@ -175,7 +175,7 @@ describe("max bot messages send", () => {
     expect(out).toContain("outcome_unknown")
     expect(requests.filter((request) => request.url?.includes("-555"))).toHaveLength(1)
     const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
-    expect(journal.at(-1)).toMatchObject({ chatId: "-555", outcome: "outcome_unknown" })
+    expect(journal.at(-1)).toMatchObject({ chat_id: "-555", outcome: "outcome_unknown" })
   })
 })
 
@@ -238,8 +238,8 @@ describe("every bot write, whichever command sends it", () => {
     expect(requests.filter((request) => request.method !== "GET")).toHaveLength(0)
     const journal = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout).items
     expect(journal.slice(-2)).toMatchObject([
-      { chatId: "-200", kind: "message", outcome: "refused" },
-      { chatId: "-200", kind: "pin", outcome: "refused" },
+      { chat_id: "-200", kind: "message", outcome: "refused" },
+      { chat_id: "-200", kind: "pin", outcome: "refused" },
     ])
   })
 

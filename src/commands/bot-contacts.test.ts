@@ -93,8 +93,8 @@ beforeAll(async () => {
     new BotTokenStore({ profile: bot, keyring }).write(bot)
     for (const chat of Object.keys(HISTORY[bot] ?? {})) await json([bot, "bot", "messages", "list", chat])
   }
-  await max(["first", "config", "set", "--bot", "readOtherBots", "true"])
-  await max(["second", "config", "set", "--bot", "readOtherBots", "first"])
+  await max(["first", "config", "set", "--bot", "read_other_bots", "true"])
+  await max(["second", "config", "set", "--bot", "read_other_bots", "first"])
 })
 beforeEach(() => {
   requests.length = 0
@@ -102,7 +102,7 @@ beforeEach(() => {
 
 describe("max bot contacts show", () => {
   it("shows a person by @username: the chats they wrote in and their private chat, from the local copy", async () => {
-    const card = await json(["first", "bot", "contacts", "show", "@ann"])
+    const card = (await json(["first", "bot", "contacts", "show", "@ann"])).item
     expect(card).toMatchObject({ id: "42", name: "Ann", username: "ann" })
     expect(card.chats.map((chat: { id: string; kind: string }) => [chat.id, chat.kind])).toEqual([
       ["-100", "group"],
@@ -113,7 +113,7 @@ describe("max bot contacts show", () => {
   })
 
   it("looks through every bot on this machine with --all-bots", async () => {
-    const card = await json(["first", "bot", "contacts", "show", "42", "--all-bots"])
+    const card = (await json(["first", "bot", "contacts", "show", "42", "--all-bots"])).item
     expect(card.chats.map((chat: { id: string }) => chat.id).toSorted()).toEqual(["-100", "-200", "-300", "500"])
   })
 
@@ -122,18 +122,18 @@ describe("max bot contacts show", () => {
     expect(alone.code).not.toBe(0)
     expect(alone.stdout).toBe("")
 
-    const everywhere = await json(["second", "bot", "contacts", "show", "44", "--all-bots"])
+    const everywhere = (await json(["second", "bot", "contacts", "show", "44", "--all-bots"])).item
     expect(everywhere).toMatchObject({ id: "44", name: "Anna" })
   })
 
-  it("refuses to read another bot's copy unless readOtherBots allows it, and names the setting", async () => {
+  it("refuses to read another bot's copy unless read_other_bots allows it, and names the setting", async () => {
     const { code, stderr } = await max(["third", "bot", "contacts", "show", "44", "--all-bots", "--json"])
     expect(code).toBe(5)
-    expect(JSON.parse(stderr).error.message).toContain("config set --bot readOtherBots")
+    expect(JSON.parse(stderr).error.message).toContain("config set --bot read_other_bots")
   })
 
-  it("reads only the bots on the readOtherBots list, and refuses one that is not", async () => {
-    const card = await json(["second", "bot", "contacts", "show", "44", "--bots", "first"])
+  it("reads only the bots on the read_other_bots list, and refuses one that is not", async () => {
+    const card = (await json(["second", "bot", "contacts", "show", "44", "--bots", "first"])).item
     expect(card).toMatchObject({ id: "44", name: "Anna" })
 
     const { code, stderr } = await max(["second", "bot", "contacts", "show", "44", "--bots", "third", "--json"])
@@ -176,7 +176,7 @@ describe("max bot contacts show", () => {
   })
 
   it("keeps only the latest --limit messages of the private chat", async () => {
-    const card = await json(["first", "bot", "contacts", "show", "@ann", "--limit", "1"])
+    const card = (await json(["first", "bot", "contacts", "show", "@ann", "--limit", "1"])).item
     expect(card.messages.map((message: { text: string }) => message.text)).toEqual(["hello Ann \u001b[2J"])
     expect(requests).toEqual([])
   })
@@ -217,13 +217,13 @@ describe("max bot search messages --from", () => {
   it("stops at --limit and says there is more", async () => {
     const found = await json(["first", "bot", "search", "messages", "--from", "@ann", "--limit", "1"])
     expect(found.items.map((message: { id: string }) => message.id)).toEqual(["mid.a1"])
-    expect(found).toMatchObject({ limit: 1, hasMore: true })
+    expect(found.page).toEqual({ limit: 1, has_more: true })
   })
 })
 
 describe("max bot messages between", () => {
   it("keeps only the chats every one of them wrote in, grouped by chat, oldest first", async () => {
-    const answer = await json(["first", "bot", "messages", "between", "@ann", "Bob", "--all-bots"])
+    const answer = (await json(["first", "bot", "messages", "between", "@ann", "Bob", "--all-bots"])).item
     expect(answer.basis).toBe("messages seen")
     expect(
       answer.chats.map((chat: { id: string; messages: { id: string }[] }) => [chat.id, chat.messages.map((m) => m.id)]),
@@ -235,7 +235,7 @@ describe("max bot messages between", () => {
 
   it("with --bots reads the named bot's copy too, and without it only this bot's", async () => {
     const chats = async (argv: string[]) =>
-      (await json(["first", "bot", "messages", "between", "@ann", "Bob", ...argv])).chats.map(
+      (await json(["first", "bot", "messages", "between", "@ann", "Bob", ...argv])).item.chats.map(
         (chat: { id: string }) => chat.id,
       )
     expect(await chats([])).toEqual(["-100"])
@@ -244,8 +244,8 @@ describe("max bot messages between", () => {
 
   it("counts --limit per chat, so a busy chat does not hide the others", async () => {
     const answer = await json(["first", "bot", "messages", "between", "@ann", "Bob", "--all-bots", "--limit", "1"])
-    expect(answer.chats.map((chat: { messages: unknown[] }) => chat.messages.length)).toEqual([1, 1])
-    expect(answer.hasMore).toBe(true)
+    expect(answer.item.chats.map((chat: { messages: unknown[] }) => chat.messages.length)).toEqual([1, 1])
+    expect(answer.meta.truncated).toBe(true)
   })
 
   it("needs two people", async () => {
