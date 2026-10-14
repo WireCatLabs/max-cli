@@ -161,8 +161,7 @@ describe("max store", () => {
     expect(transcript.stdout).toMatch(/^# Друзья/)
     expect(JSON.parse(written.stdout).item).toMatchObject({ path: file, count: 70 })
     if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600)
-    // A file keeps its own format; stdout streams `message` items.
-    expect(readFileSync(file, "utf8").split("\n")[0]).toContain('"chatId":"111"')
+    expect(JSON.parse(readFileSync(file, "utf8").split("\n")[0] as string)).toMatchObject({ chat_id: "111" })
     expect(JSON.parse(lines.stdout.split("\n")[0] as string)).toMatchObject({ chat_id: "111", text: "message 0" })
   })
 
