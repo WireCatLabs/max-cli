@@ -9,7 +9,7 @@ import { mcpCommandsClient } from "@wirecat/cli-core/testing"
 import type { Command } from "commander"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
-import { botMcpRun, maxBot } from "./commands/bot-messenger.js"
+import { botMcpRun, maxBot, maxBotMcp } from "./commands/bot-messenger.js"
 import { ModerationRules, moderationPathFor } from "./moderation/rules.js"
 import { createProgram, run } from "./program.js"
 import { SKILL } from "./skill.js"
@@ -91,14 +91,13 @@ const connect = async (
   const profile = `bm-${++profiles}`
   new BotTokenStore({ profile, keyring }).write("bot-token")
   const group = createProgram().commands.find((one) => one.name() === "bot") as Command
-  const mcp = maxBot.mcp
-  if (!mcp) throw new Error("max hands in no bot MCP")
+  const mcp = maxBotMcp(run)
   const { build } = createBotServer({
-    bot: maxBot,
+    bot: { ...maxBot, mcp },
     commandAt: commandLookup(group),
     settings: { profile, permissions, readOtherBots },
     env: process.env,
-    run: await botMcpRun(testEnvironment()),
+    run: botMcpRun(run, testEnvironment()),
     tools: mcp.tools ?? [],
     ...(mcp.skill ? { skill: mcp.skill } : {}),
     ...options,

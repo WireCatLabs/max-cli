@@ -12,6 +12,21 @@
       "!lint/baseline"
     ]
   },
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noImportCycles": "error"
+      },
+      "style": {
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 1000
+          }
+        }
+      }
+    }
+  },
   "overrides": [
     {
       "includes": ["src/commands/**", "src/mcp/**"],
@@ -212,6 +227,16 @@
                 ]
               }
             }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "test/**", "**/generated/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noExcessiveLinesPerFile": "off"
           }
         }
       }

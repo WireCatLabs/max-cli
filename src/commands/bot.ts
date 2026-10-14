@@ -4,18 +4,19 @@ import type { Command } from "commander"
 import { botOperations } from "../bot/client.js"
 import { checkBody, checkParameter } from "../bot/input.js"
 import { plainJson } from "../bot/transport.js"
+import type { run } from "../program.js"
 import { commentsCommand } from "./bot-comments.js"
 import { assertAllowed, botContext, botRecordingOf, startBotRecording } from "./bot-context.js"
 import { addMembersCommands } from "./bot-members.js"
-import { maxBot } from "./bot-messenger.js"
+import { maxBot, maxBotMcp } from "./bot-messenger.js"
 import { guardedCall } from "./bot-sends.js"
 import { uploadsCommand } from "./bot-setup.js"
 
 /** Every command under `node`, itself included. */
 const allOf = (node: Command): Command[] => [node, ...node.commands.flatMap(allOf)]
 
-export const botCommand = (): Command => {
-  const command = sharedBotCommand(maxBot)
+export const botCommand = (program: typeof run): Command => {
+  const command = sharedBotCommand({ ...maxBot, mcp: maxBotMcp(program) })
   // The shared commands record their own run; max's hooks record the ones still its own.
   const shared = new Set(allOf(command))
   command

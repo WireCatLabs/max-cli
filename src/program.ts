@@ -117,7 +117,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     upgradeCommand(),
     completeCommand(),
     mcpCommand(),
-    botCommand(),
+    botCommand(run),
   ],
   configure: (program) => {
     program.addHelpText(
