@@ -131,7 +131,9 @@ describe("max messages list --transcribe", () => {
     const page = JSON.parse(stdout[0] as string)
     expect(page.items).toHaveLength(2)
     expect(page.items[0].transcript).toBeUndefined()
-    expect(page.unheard).toHaveLength(1)
+    expect(page.missing).toEqual([
+      { field: "transcript", why: expect.stringContaining("not transcribed"), step: "messages.transcribe" },
+    ])
     expect(stderr).toMatch(/max models audio download gigaam-v3/)
     expect(stderr).toContain("not transcribed")
   })
@@ -148,7 +150,7 @@ describe("max messages list --transcribe", () => {
     const page = JSON.parse(first.stdout[0] as string)
     expect(page.items[0]).toMatchObject({ id: String(voice.id), transcript: "перезвоню вечером" })
     expect(page.items[1].transcript).toBeUndefined()
-    expect(page).toMatchObject({ unheard: [] })
+    expect(page.missing).toBeUndefined()
     expect(events).toEqual(["closed", "recognized"])
     expect(mock.sent.filter(({ opcode }) => opcode === Opcode.LOGIN)).toHaveLength(1)
     expect(mock.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
@@ -157,7 +159,7 @@ describe("max messages list --transcribe", () => {
     const fetched = audioFetched
     const again = await max(["h-list", "messages", "list", "111", "--json"], environment)
     expect(JSON.parse(again.stdout[0] as string).items[0].transcript).toBe("перезвоню вечером")
-    expect(JSON.parse(again.stdout[0] as string).unheard).toBeUndefined()
+    expect(JSON.parse(again.stdout[0] as string).missing).toBeUndefined()
     expect(events).not.toContain("recognized")
     expect(audioFetched).toBe(fetched)
 
@@ -183,21 +185,21 @@ describe("max messages list --transcribe", () => {
 })
 
 describe("max inbox --transcribe", () => {
-  it("puts the transcript on the message and the unheard list beside the chats", async () => {
+  it("puts the transcript on the message and leaves nothing unheard", async () => {
     installModel()
     const voice = wire(10, THEM, "", true)
     const { max: mock, environment } = setup([voice])
 
     const { code, stdout } = await max(
-      ["h-inbox", "inbox", "--since-time", new Date(now - 60 * 60 * 1000).toISOString(), "--transcribe", "--json"],
+      ["h-inbox", "inbox", `date>"${new Date(now - 60 * 60 * 1000).toISOString()}"`, "--transcribe", "--json"],
       environment,
     )
 
     expect(code).toBe(0)
     expect(stdout).toHaveLength(1)
     const inbox = JSON.parse(stdout[0] as string)
-    expect(inbox.chats[0].messages[0]).toMatchObject({ id: String(voice.id), transcript: "перезвоню вечером" })
-    expect(inbox.unheard).toEqual([])
+    expect(inbox.items).toMatchObject([{ ref: `msg:max/${ME}/111/${voice.id}`, transcript: "перезвоню вечером" }])
+    expect(inbox.missing).toBeUndefined()
     expect(mock.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
   })
 })
@@ -211,8 +213,7 @@ describe("max review --transcribe", () => {
       [
         "h-review",
         "review",
-        "--since-time",
-        new Date(now - 60 * 60 * 1000).toISOString(),
+        `date>"${new Date(now - 60 * 60 * 1000).toISOString()}"`,
         "--transcribe",
         "--model",
         "gigaam-v3",
@@ -245,13 +246,11 @@ describe("voice questions in unanswered review", () => {
     }
     const fetched = audioFetched
     const answer = await max(
-      ["h-question-kept", "review", "--chat", "111", "--since-time", "1h", "--unanswered", "1m", "--json"],
+      ["h-question-kept", "review", "chat:111", "date>1h", "--unanswered", "1m", "--json"],
       environment,
     )
     expect(answer.code).toBe(0)
-    expect(JSON.parse(answer.stdout[0] as string).chats[0]?.messages).toMatchObject([
-      { text: "", transcript: "Можно завтра?" },
-    ])
+    expect(JSON.parse(answer.stdout[0] as string).items).toMatchObject([{ text: "", transcript: "Можно завтра?" }])
     expect(events).not.toContain("recognized")
     expect(audioFetched).toBe(fetched)
   })
@@ -268,24 +267,11 @@ describe("voice questions in unanswered review", () => {
       free: () => {},
     })
     const answer = await max(
-      [
-        "h-question-fresh",
-        "review",
-        "--chat",
-        "111",
-        "--since-time",
-        "1h",
-        "--unanswered",
-        "1m",
-        "--transcribe",
-        "--json",
-      ],
+      ["h-question-fresh", "review", "chat:111", "date>1h", "--unanswered", "1m", "--transcribe", "--json"],
       environment,
     )
     expect(answer.code).toBe(0)
-    expect(JSON.parse(answer.stdout[0] as string).chats[0]?.messages).toMatchObject([
-      { text: "", transcript: "Можно завтра?" },
-    ])
+    expect(JSON.parse(answer.stdout[0] as string).items).toMatchObject([{ text: "", transcript: "Можно завтра?" }])
     expect(events).toEqual(["closed", "recognized"])
     expect(mock.sent.filter(({ opcode }) => opcode === Opcode.LOGIN)).toHaveLength(1)
     expect(mock.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
@@ -306,10 +292,10 @@ describe("--model and max messages transcribe", () => {
 
     const since = new Date(now - 60 * 60 * 1000).toISOString()
     const inbox = await max(
-      ["h-model-inbox", "inbox", "--since-time", since, "--transcribe", "--model", "gigaam-v3", "--json"],
+      ["h-model-inbox", "inbox", `date>"${since}"`, "--transcribe", "--model", "gigaam-v3", "--json"],
       environment,
     )
-    expect(JSON.parse(inbox.stdout[0] as string).chats[0].messages[0].transcript).toBe("перезвоню вечером")
+    expect(JSON.parse(inbox.stdout[0] as string).items[0].transcript).toBe("перезвоню вечером")
   })
 
   it("refuses a model that is not one of the known ones, before hearing anything", async () => {
@@ -335,7 +321,7 @@ describe("--model and max messages transcribe", () => {
 
     expect(stderr).toContain("transcribing with gigaam-v3 on this machine")
     expect(code).toBe(0)
-    expect(JSON.parse(stdout[0] as string)).toMatchObject({ text: "перезвоню вечером", model: "gigaam-v3" })
+    expect(JSON.parse(stdout[0] as string).item).toMatchObject({ text: "перезвоню вечером", model: "gigaam-v3" })
     expect(events).toContain("recognized")
     const store = await openStore()
     expect(await store.transcript({ provider: "max", account: String(ME) }, "111", String(voice.id))).toEqual({
@@ -373,7 +359,11 @@ describe("--model and max messages transcribe", () => {
     )
 
     expect(answer.code).toBe(0)
-    expect(JSON.parse(answer.stdout[0] as string)).toMatchObject({ chatId: "111", text: "kept words", cached: true })
+    expect(JSON.parse(answer.stdout[0] as string).item).toMatchObject({
+      chat_id: "111",
+      text: "kept words",
+      cached: true,
+    })
     expect(audioFetched).toBe(fetched)
     expect(events).not.toContain("recognized")
     expect(events).toContain("closed")
@@ -398,7 +388,7 @@ describe("--model and max messages transcribe", () => {
     )
 
     expect(answer.code).toBe(0)
-    expect(JSON.parse(answer.stdout[0] as string)).toMatchObject({ text: "kept words", cached: true })
+    expect(JSON.parse(answer.stdout[0] as string).item).toMatchObject({ text: "kept words", cached: true })
     expect(mock.sent).toEqual([])
     expect(events).not.toContain("recognized")
   })

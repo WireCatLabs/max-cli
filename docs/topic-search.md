@@ -155,10 +155,9 @@ max personal conversations show 91                       # 6. прочитать
 - ссылка на сообщение (`msg:…`), которую принимают `max personal messages show` и `max personal messages context`;
 - `stale`, если текст изменили после подсчёта вектора: оценка — для старого текста.
 
-С `--json` в ответе ещё есть `meaning` (`searched` или `unavailable`), `model` и `readiness`: какие чаты
-просмотрены по смыслу, какие только по словам, какие устарели и какие ни разу не построены. Если поиск
-что-то ограничило, stderr называет чаты и команду, которая это исправит, например
-`conversations embed --chat <чат>`.
+С `--json` то, что поиск не смог просмотреть по смыслу, — записи в `missing`: модель не скачана, векторы
+устарели, чат ни разу не построен или не скачан. Рядом в `next` — команда, которая это исправит, например
+`conversations embed --chat <чат>`; аккаунты — в `meta.accounts`.
 
 ```sh
 max personal conversations list "Книжный клуб" started_at>=7d
@@ -205,7 +204,7 @@ max personal search conversations "условия договора" --filter 'ha
 **Начать с одного сообщения.** Вы нашли сообщение поиском по словам и хотите всё остальное на эту тему:
 
 ```sh
-max personal search messages '"вернули залог"' --chat "Valencia expats"
+max personal search messages '"вернули залог" chat:"Valencia expats"'
 max personal conversations related "Valencia expats" 5120
 ```
 

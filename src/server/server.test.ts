@@ -959,7 +959,7 @@ describe("the send guard, in the server", () => {
   const journal = (profile: string) => new SendJournal(sendsPathFor(profile)).entries()
 
   it("refuses a send over the socket on a read-only profile, before MAX, and journals the refusal", async () => {
-    await cli(["g-ro", "config", "set", "readOnly", "true"])
+    expect(await cli(["g-ro", "config", "set", "read_only", "true"])).toBe(0)
     const { store, max } = await serve("g-ro")
 
     const answer = await ask(store, {
@@ -983,7 +983,7 @@ describe("the send guard, in the server", () => {
       })
 
     expect((await send(1)).error).toBeUndefined()
-    await cli(["g-later", "config", "set", "readOnly", "true"])
+    expect(await cli(["g-later", "config", "set", "read_only", "true"])).toBe(0)
     expect((await send(2)).error).toMatchObject({ code: "permission_error" })
     expect(max.sent.filter((call) => call.opcode === Opcode.MSG_SEND)).toHaveLength(1)
   })
@@ -1027,7 +1027,7 @@ describe("the send guard, in the server", () => {
   })
 
   it("a command's client handed an undefined send guard is guarded as if none was handed", async () => {
-    await cli(["g-undefined", "config", "set", "readOnly", "true"])
+    expect(await cli(["g-undefined", "config", "set", "read_only", "true"])).toBe(0)
     const max = mockMax({ answers: {} })
     const store = new SessionStore({ profile: "g-undefined", keyring: memoryKeyring() })
     const context = contextFor(
@@ -1049,7 +1049,7 @@ describe("the send guard, in the server", () => {
     const { store } = await serve("g-exit")
     const context = contextFor({ profile: "g-exit" }, { store: () => store, streams: captureStreams() })
     const client = context.createClient()
-    await cli(["g-exit", "config", "set", "sendsPerHour", "1"])
+    expect(await cli(["g-exit", "config", "set", "sends_per_hour", "1"])).toBe(0)
     await client.messages.send("111", "one")
 
     await expect(client.messages.send("111", "two")).rejects.toMatchObject({ code: "rate_limited" })
@@ -1089,7 +1089,7 @@ describe("the send guard, in the server", () => {
       },
     })
     const { store } = await serve("g-retry", max)
-    await cli(["g-retry", "config", "set", "sendsPerHour", "2"])
+    expect(await cli(["g-retry", "config", "set", "sends_per_hour", "2"])).toBe(0)
     const context = contextFor({ profile: "g-retry" }, { store: () => store, streams: captureStreams() })
     const client = context.createClient()
 
@@ -1106,7 +1106,7 @@ describe("the send guard, in the server", () => {
 
   it("counts a cid that was already sent as a new send, in its own chat or another", async () => {
     const { store, max } = await serve("g-reuse")
-    await cli(["g-reuse", "config", "set", "sendsPerHour", "1"])
+    expect(await cli(["g-reuse", "config", "set", "sends_per_hour", "1"])).toBe(0)
     const context = contextFor({ profile: "g-reuse" }, { store: () => store, streams: captureStreams() })
     const client = context.createClient()
     await client.messages.send("111", "sent")
@@ -1126,7 +1126,7 @@ describe("the send guard, in the server", () => {
   })
 
   it("refuses a request shape no command sends: a field the spec does not have, a control attachment in a message", async () => {
-    await cli(["g-shape", "config", "set", "allow", "send"])
+    expect(await cli(["g-shape", "config", "set", "allow", "send"])).toBe(0)
     const { store, max } = await serve("g-shape")
 
     const extra = await ask(store, {
@@ -1192,7 +1192,7 @@ describe("max server", () => {
   it("status: says nothing runs, as a result a script can read, and exits 0", async () => {
     const { code, out } = await max(["x-none", "server", "status", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toMatchObject({ profile: "x-none", running: false, cliVersion: VERSION })
+    expect(JSON.parse(out).item).toMatchObject({ profile: "x-none", running: false, cli_version: VERSION })
   })
 
   it("status: pid, start time, version and whether MAX is connected", async () => {
@@ -1200,16 +1200,16 @@ describe("max server", () => {
     const { code, out, err } = await max(["x-status", "server", "status", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toMatchObject({
+    expect(JSON.parse(out).item).toMatchObject({
       profile: "x-status",
       running: true,
       connected: true,
       pid: process.pid,
       by: "hand",
       version: VERSION,
-      cliVersion: VERSION,
+      cli_version: VERSION,
     })
-    expect(Date.parse(JSON.parse(out).startedAt)).toBeLessThanOrEqual(Date.now())
+    expect(Date.parse(JSON.parse(out).item.started_at)).toBeLessThanOrEqual(Date.now())
     expect(err).toBe("")
   })
 
@@ -1225,11 +1225,13 @@ describe("max server", () => {
     )
     await new Promise<void>((resolve) => old.listen(store.socketPath(), resolve))
 
-    const { out, err } = await max(["x-old", "server", "status", "--json"])
+    const { out } = await max(["x-old", "server", "status", "--json"])
     old.close()
 
-    expect(JSON.parse(out)).toMatchObject({ running: true, version: "0.8.0", cliVersion: VERSION })
-    expect(err).toContain("max server restart")
+    expect(JSON.parse(out)).toMatchObject({
+      item: { running: true, version: "0.8.0", cli_version: VERSION },
+      next: [{ step: "server.restart", command: "server restart" }],
+    })
   })
 
   it("stop: stops one started by hand, and says so", async () => {
@@ -1237,7 +1239,7 @@ describe("max server", () => {
     const { code, out } = await max(["x-stop", "server", "stop", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toMatchObject({ profile: "x-stop", stopped: true, by: "hand" })
+    expect(JSON.parse(out).item).toMatchObject({ profile: "x-stop", stopped: true, by: "hand" })
     await expect(server.done).resolves.toBeUndefined()
   })
 
@@ -1260,7 +1262,7 @@ describe("max server", () => {
     const unit = join(process.env.XDG_CONFIG_HOME ?? "", "systemd", "user", name)
     expect(unit.startsWith(process.env.MAX_STATE_DIR?.replace(/state$/, "") ?? "/nowhere")).toBe(true)
 
-    expect((await call(["x-unit", "server", "install", "--json"])).answer).toMatchObject({
+    expect((await call(["x-unit", "server", "install", "--json"])).answer.item).toMatchObject({
       path: unit,
       replaced: false,
     })
@@ -1269,19 +1271,22 @@ describe("max server", () => {
     expect(text).toContain("RestartPreventExitStatus=4 8 11")
     expect(text).not.toContain("MAX_TOKEN")
 
-    expect((await call(["x-unit", "server", "logs", "--lines", "5", "--json"])).answer).toMatchObject({
-      unit: name,
-    })
+    expect((await call(["x-unit", "server", "logs", "--lines", "5", "--json"])).answer.items).toEqual([
+      "LoadState=loaded",
+      "ActiveState=inactive",
+      "SubState=dead",
+      "MainPID=0",
+    ])
     expect(ran.at(-1)).toEqual(["journalctl", "--user", "-u", name, "-n", "5", "--no-pager"])
 
-    expect((await call(["x-unit", "server", "uninstall", "--json"])).answer).toMatchObject({ removed: true })
+    expect((await call(["x-unit", "server", "uninstall", "--json"])).answer.item).toMatchObject({ removed: true })
     expect(existsSync(unit)).toBe(false)
     expect(ran.some((argv) => argv[0] === "systemctl" && argv.includes("start"))).toBe(false)
   })
 
   it("stop: with nothing running, stopped is false", async () => {
     const { out } = await max(["x-idle", "server", "stop", "--json"])
-    expect(JSON.parse(out)).toEqual({ profile: "x-idle", stopped: false })
+    expect(JSON.parse(out).item).toEqual({ profile: "x-idle", stopped: false })
   })
 })
 
@@ -1625,14 +1630,16 @@ describe("auto-replies in max serve", () => {
       return JSON.parse(streams.stdout.join(""))
     }
 
-    expect(await json("replies", "status")).toMatchObject({
+    expect((await json("replies", "status")).item).toMatchObject({
       send: "deny",
       audience: { reply: "listed", allow: 1 },
       rules: [{ id: "away" }],
     })
-    expect(await json("replies", "test", "--since-time", "1d")).toMatchObject({ rules: [{ id: "away", would: [] }] })
-    expect(await json("replies", "pause")).toMatchObject({ paused: true })
-    expect(await json("replies", "resume")).toMatchObject({ paused: false })
+    expect((await json("replies", "test", "--since-time", "1d")).item).toMatchObject({
+      rules: [{ id: "away", would: [] }],
+    })
+    expect((await json("replies", "pause")).item).toMatchObject({ paused: true })
+    expect((await json("replies", "resume")).item).toMatchObject({ paused: false })
   })
 
   it("never answers what arrived before it started", async () => {

@@ -103,14 +103,14 @@ max personal runs path <id>            # каталог, для jq и grep
 Итог записывается **на любом пути** — в том числе когда команда упала, не успев подключиться:
 
 ```json
-{ "runId": "…", "command": "chats list", "profile": "default", "status": "failed",
-  "requests": 0, "errorCode": "authentication_error", "durationMs": 12 }
+{ "run_id": "…", "command": "chats list", "profile": "default", "status": "failed",
+  "requests": 0, "error_code": "authentication_error", "duration_ms": 12 }
 ```
 
 ## Неудачный запуск сохраняется всегда
 
 Если команда кончилась ошибкой, её запуск сохраняется и без `--record` — с пометкой
-`"keptBecauseFailed": true` в `run.json`. Это касается любой команды и любой ошибки: неверного
+`"kept_because_failed": true` в `run.json`. Это касается любой команды и любой ошибки: неверного
 флага, неизвестной команды, проверки до начала работы, команд, которые в MAX не ходят (`models`,
 `server`, `watch`, `upgrade`). В записи — только слова команды, например `messages list`, без того,
 что было написано после них.
@@ -141,7 +141,7 @@ max personal chats list --no-record          # но не этот запуск
 
 ## Сколько это живёт
 
-**30 дней**, или `keepRunsForDays` в [настройках](configuration.md). Старое удаляется только тогда,
+**30 дней**, или `keep_runs_for_days` в [настройках](configuration.md). Старое удаляется только тогда,
 когда что-то записывается: инструменту, который ничего не пишет, незачем ходить по этому каталогу.
 Удаляется днями целиком, по имени каталога, поэтому ничего не нужно открывать, чтобы решить.
 
@@ -225,16 +225,16 @@ max personal doctor report create --run <id>   # об этом запуске
 ## Что делать с записями
 
 Записи — это JSON, поэтому на вопросы о них отвечает `jq`. `max personal runs list --json` отвечает
-`{ items, page, limit, hasMore }`, а `items` — это `run.json` запусков, новые сверху:
+`{ items, page: { limit, has_more } }`, а `items` — это `run.json` запусков, новые сверху:
 
 ```sh
 # какие запуски закончились плохо
-max personal runs list --json | jq '.items[] | select(.status=="failed") | {runId, command, errorCode}'
+max personal runs list --json | jq '.items[] | select(.status=="failed") | {run_id, command, error_code}'
 
 # сколько времени ушло на вход в последних запусках
-for id in $(max personal runs list --json | jq -r '.items[].runId'); do
-  jq -r 'select(.operation=="session.login" and .event=="response") | "\(.durationMs)ms"' \
-    "$(max personal runs path "$id" --json | jq -r .path)/events.jsonl"
+for id in $(max personal runs list --json | jq -r '.items[].run_id'); do
+  jq -r 'select(.operation=="session.login" and .event=="response") | "\(.duration_ms)ms"' \
+    "$(max personal runs path "$id" --json | jq -r .item.path)/events.jsonl"
 done
 ```
 
@@ -256,12 +256,12 @@ max personal runs search --status partial --since-time 2026-10-01 --json
 
 `runs search` ищет буквальный текст в метаданных и безопасных диагностических событиях;
 `--operation`, `--profile`, `--since-time`, `--limit` и `--page` уточняют поиск. Одна страница — до 100
-запусков; в запуске возвращается до 100 совпавших событий, `eventsTruncated` сообщает о сокращении.
+запусков; в запуске возвращается до 100 совпавших событий, `events_truncated` сообщает о сокращении.
 Ошибка отдельного файла или страницы истории создаёт частичную запись `status: "partial"` с
 неудачными ID, этапами и кодами. Текст сообщений и текст отказа сервера в неё не копируются.
 Запись сохраняется по умолчанию, если её явно не выключили. Поиск сам не создаёт новый запуск.
 
 В MCP вызовите `max_read` с `command: "runs search"`; поля `arguments`: `query`, `status`, `error_code`, `operation`, `since_time`, `limit`,
 `page`. Он читает только записи активного профиля, не подключается к MAX и не открывает сырые
-журналы фоновых заданий. Полный результат частичной команды содержит действия для восстановления;
+журналы фоновых заданий. Полный результат частичной команды называет неудачные элементы и коды их ошибок;
 диагностическая запись сохраняет только безопасные идентификаторы и коды.

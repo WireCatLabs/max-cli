@@ -81,10 +81,13 @@ describe("shared search adoption", () => {
     const result = await invoke(["search", "messages", query, "--discover", "--timezone", "UTC"])
     expect(result.code).toBe(0)
     const body = JSON.parse(result.stdout)
-    expect(body.query.discovery).toMatchObject({ method: "lexical-partial" })
-    expect(body.items.map((m: { id: string }) => m.id)).toContain("9902")
-    expect(body.items.map((m: { id: string }) => m.id)).not.toContain("9903")
-    expect(body.items.find((m: { id: string }) => m.id === "9902").discovery.parent).toBe("msg:max/500/990/9901")
+    const refs = body.items.map((m: { ref: string }) => m.ref)
+    expect(refs).toContain("msg:max/500/990/9902")
+    expect(refs).not.toContain("msg:max/500/990/9903")
+    expect(body.items.find((m: { ref: string }) => m.ref === "msg:max/500/990/9902").discovery).toMatchObject({
+      parent: "msg:max/500/990/9901",
+      missing_terms: [],
+    })
     const strict = await invoke(["search", "messages", query, "--timezone", "UTC"])
     expect(strict.code).toBe(0)
     expect(JSON.parse(strict.stdout).items).toEqual([])
@@ -105,7 +108,9 @@ describe("shared search adoption", () => {
       "1h",
     ])
     expect(result.code).toBe(0)
-    expect(JSON.parse(result.stdout).query.language).toBe("lucene-v1")
+    const hits = JSON.parse(result.stdout).items
+    expect(hits.length).toBeGreaterThan(0)
+    for (const hit of hits) expect(hit.context.length).toBeLessThanOrEqual(3)
     const context = await invoke([
       "messages",
       "context",
@@ -121,7 +126,9 @@ describe("shared search adoption", () => {
       "1h",
     ])
     expect(context.code).toBe(0)
-    expect(JSON.parse(context.stdout).items.some((row: { id: string }) => row.id === "101")).toBe(true)
+    const packet = JSON.parse(context.stdout).item
+    expect(packet.bounds).toEqual({ max_hops: 2, max_messages: 3, max_bytes: 4096, within_ms: 3_600_000 })
+    expect(packet.items.some((row: { id: string }) => row.id === "101")).toBe(true)
   })
   it.each([
     ["search", "messages", "кафе", "--sync-first", "--max-chats", "1", "--sync-time", "1s", "--max-messages", "2"],
@@ -142,7 +149,11 @@ describe("shared search adoption", () => {
   ])("reports incomplete refresh and retains local results in offline mode: %j", async (...argv) => {
     const result = await invoke(argv)
     expect(result.code).toBe(0)
-    expect(JSON.parse(result.stdout).refreshed).toMatchObject({ complete: false })
+    expect(JSON.parse(result.stdout).missing).toContainEqual({
+      field: "coverage",
+      why: expect.stringContaining("stopped early"),
+      step: "messages.sync",
+    })
   })
   it("filters word-only conversations without loading a model", async () => {
     expect((await invoke(["conversations", "build", "--chat", "7"])).code).toBe(0)
@@ -158,7 +169,11 @@ describe("shared search adoption", () => {
       "UTC",
     ])
     expect(result.code).toBe(0)
-    expect(JSON.parse(result.stdout).meaning).toBe("unavailable")
+    expect(JSON.parse(result.stdout).missing).toContainEqual({
+      field: "by",
+      why: expect.stringContaining("only words were searched"),
+      step: "models.download",
+    })
   })
   it("refuses scoped filters during local graph refresh", async () => {
     const result = await invoke([
@@ -203,7 +218,7 @@ describe("shared search adoption", () => {
     expect(JSON.parse(listed.stdout).items).toEqual([])
     const revoked = await invoke(["conversations", "consents", "revoke", "--chat", "7", "--provider", "synthetic"])
     expect(revoked.code).toBe(0)
-    expect(JSON.parse(revoked.stdout)).toEqual({ revoked: true })
+    expect(JSON.parse(revoked.stdout).item).toEqual({ revoked: true })
   })
   it("writes agent attachment text and searches its contents", async () => {
     const result = await invoke([
@@ -219,21 +234,21 @@ describe("shared search adoption", () => {
     ])
     expect(result.code).toBe(0)
     const found = await invoke(["search", "messages", "content:agentfiletoken"])
-    expect(JSON.parse(found.stdout).items.map((row: { id: string }) => row.id)).toEqual(["105"])
-    const listed = await invoke(["attachments", "list", "--chat", "7", "--needs-text", "--limit", "1", "--page", "1"])
+    expect(JSON.parse(found.stdout).items).toMatchObject([{ ref: "msg:max/500/7/105", matched_in: "file" }])
+    const listed = await invoke(["attachments", "list", "chat:7 is:needs_text", "--limit", "1", "--page", "1"])
     expect(listed.code).toBe(0)
     expect(JSON.parse(listed.stdout).items.every((row: { text: unknown }) => !row.text)).toBe(true)
-    expect((await invoke(["attachments", "list", "--chat", "7", "--all"])).code).toBe(0)
+    expect((await invoke(["attachments", "list", "chat:7", "--all"])).code).toBe(0)
     const extracted = await invoke(["attachments", "extract", "--chat", "7", "--limit", "1"])
     expect(extracted.code).toBe(0)
-    expect(JSON.parse(extracted.stdout).extracted).toBe(0)
+    expect(JSON.parse(extracted.stdout).item.extracted).toBe(0)
   })
   it("plans recorded gaps locally and validates preparation bounds before connecting", async () => {
     await db.markRange(account, "19", 1, 3)
     await db.markRange(account, "19", 7, 9)
     const plan = await invoke(["store", "gaps", "plan", "19"])
     expect(plan.code, plan.stderr).toBe(0)
-    expect(JSON.parse(plan.stdout)).toMatchObject({
+    expect(JSON.parse(plan.stdout).item).toMatchObject({
       scope: "interior",
       gaps: [{ from: 4, to: 6 }],
       unknown: { older: true, newer: true },
@@ -363,7 +378,7 @@ describe("shared search adoption", () => {
       "1",
     ])
     expect(scoped.code, scoped.stderr).toBe(0)
-    expect(JSON.parse(scoped.stdout).extracted).toBe(0)
+    expect(JSON.parse(scoped.stdout).item.extracted).toBe(0)
     const mixed = await invoke([
       "attachments",
       "extract",

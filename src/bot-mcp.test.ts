@@ -172,7 +172,9 @@ describe("max bot mcp", () => {
     const send = await names((await connect({ permissions: { bot: "readonly", "bot.messages.send": "allow" } })).client)
     expect(send).toEqual(expect.arrayContaining(["max_bot_messages_send", "max_bot_comments_send"]))
     expect(send).not.toContain("max_bot_messages_edit")
-    expect((await call((await connect()).client, "max_bot_me")).body).toMatchObject({ username: "helper_bot" })
+    expect((await call((await connect()).client, "max_bot_me")).body).toMatchObject({
+      item: { username: "helper_bot" },
+    })
   })
 
   it("serves SKILL.md as max://skill, and names it last in instructions within 2048 characters", async () => {
@@ -199,8 +201,8 @@ describe("max bot mcp", () => {
   it("answers max_bot_status with the token's source, the bot and the writing tools that are on", async () => {
     const { client } = await connect()
     const { body } = await call(client, "max_bot_status")
-    expect(body).toMatchObject({ kind: "bot", auth: { username: "helper_bot" } })
-    expect(body.writes).toContain("messages send")
+    expect(body).toMatchObject({ item: { kind: "bot", auth: { username: "helper_bot" } } })
+    expect((body.item as { writes: string[] }).writes).toContain("messages send")
     expect(JSON.stringify(body)).not.toContain("bot-token")
   })
 
@@ -294,7 +296,7 @@ describe("max bot mcp", () => {
       rules.set("-100", null, "consent.delete", "allow")
       const result = await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since, dry_run: true })
       expect(result.isError).toBe(false)
-      expect(result.body.rows).toEqual([expect.objectContaining({ outcome: "planned" })])
+      expect(result.body.item).toMatchObject({ rows: [expect.objectContaining({ outcome: "planned" })] })
       expect(deletes()).toEqual([])
     })
 
@@ -304,7 +306,7 @@ describe("max bot mcp", () => {
       const { isError, body } = await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since })
       expect(isError).toBe(false)
       expect(forms).toEqual([])
-      expect(body.rows).toEqual([expect.objectContaining({ action: "delete", outcome: "planned" })])
+      expect(body.item).toMatchObject({ rows: [expect.objectContaining({ action: "delete", outcome: "planned" })] })
       expect(deletes()).toEqual([])
     })
   })

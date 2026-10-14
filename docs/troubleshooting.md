@@ -183,7 +183,7 @@ max shop bot messages list -100
 ### «is not a valid config»
 
 ```json
-{"error":{"code":"configuration_error","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, sendsPerHour, senderColors, serve, mcpTools"}}
+{"error":{"code":"configuration_error","reason":"config.invalid","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, read_only, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools"}}
 ```
 
 Код `3`. В файле настроек поле, которого нет в схеме — почти всегда опечатка, и сообщение
@@ -194,17 +194,17 @@ max shop bot messages list -100
 
 Код `2`. То же для `--page`. Без этой проверки нечисловое значение тихо обрезало бы список до пустого.
 
-### «--before-time takes an ISO 8601 time or 30m, 2h, 1d ago»
+### «query.invalid-date … use an ISO date, today, yesterday, 30m/2h/7d ago, or a quoted timestamp with offset»
 
-Код `2`. `--before-time` или `--after-time` не понял значение. Он принимает время в ISO 8601 или
-«сколько назад»:
+Код `2`. Запрос не понял время в `date<…` или `date>…`. Он принимает дату ISO 8601, `today`,
+`yesterday`, «сколько назад» или точное время в кавычках, с секундами и смещением:
 
 ```sh
-max personal messages list 0 --before-time 2026-09-20T01:00:00Z
-max personal messages list 0 --before-time 2h
+max personal messages list 0 'date<"2026-09-20T01:00:00Z"'
+max personal messages list 0 'date<2h'
 ```
 
-Id сообщения — в `--before-id`: время берётся из самого id, читать чат раньше не нужно.
+Id сообщения — в `id<…`: время берётся из самого id, читать чат раньше не нужно.
 
 ### «--at-time takes a time like 2026-09-25T09:00 or a delay like 30m, 2h, 1d»
 
@@ -244,9 +244,9 @@ Id сообщения — в `--before-id`: время берётся из са�
 
 ### «profile … has sent N messages in the hour …»
 
-Код `8`. Сработал собственный лимит профиля в час — `sendsPerHour`, по умолчанию 30. В ошибке
+Код `8`. Сработал собственный лимит профиля в час — `sends_per_hour`, по умолчанию 30. В ошибке
 сказано, когда можно отправить снова. Поднимайте лимит, только если действительно собирались
-отправить столько: `max personal config set sendsPerHour <n>`.
+отправить столько: `max personal config set sends_per_hour <n>`.
 
 ### «chat … is not on the recipient list of profile …»
 
@@ -306,7 +306,7 @@ max personal chats list --trace
 max personal chats list --timeout 30s     # на команду целиком, включая вход
 ```
 
-Поле `timeoutMs` в [настройках](configuration.md) ограничивает **один ответ**, а команда делает
+Поле `timeout_ms` в [настройках](configuration.md) ограничивает **один ответ**, а команда делает
 несколько запросов подряд, так что общее время кратно ему. Если нужен предел на всё — это
 `--timeout`, и он завершает команду кодом `9`, закрыв соединение за собой.
 
@@ -416,16 +416,16 @@ max personal doctor report create   # записать отчёт в файл и
 
 ## Частичный результат и действия при ошибке
 
-Каждый неудавшийся элемент частичного результата содержит `actions`: что проверить, какую настройку
-изменить, сколько подождать или какой элемент пропустить. `retryable` не разрешает автоматически повторять запись: при
+Каждый неудавшийся элемент частичного результата содержит `error` с кодом, сообщением и `retryable`:
+можно ли повторить этот элемент. `retryable` не разрешает автоматически повторять запись: при
 `outcome_unknown` сначала проверьте, произошло ли действие. Ограничения API нельзя увеличить
 локальной настройкой; для них уменьшите или разделите входные данные.
 
-HTTP 429 при скачивании вложения прекращает новые файлы в пакете; пауза `Retry-After` попадает в действие ожидания, если сервер её сообщил. HTTP 413 означает ограничение провайдера: увеличение локального лимита его не меняет.
+HTTP 429 при скачивании вложения прекращает новые файлы в пакете. HTTP 413 означает ограничение провайдера: увеличение локального лимита его не меняет.
 
 У пакетной загрузки или чтения истории отдельный отказ возвращает частичный результат с кодом
 выхода `0`, `complete: false` и `batch` или `issue`. Файлы и предыдущие страницы остаются сохранены.
-После долгой паузы сервера `messages sync` одного чата содержит `issue.retryAfterMs` и границу
+После долгой паузы сервера `messages sync` одного чата содержит `issue.retry_after_ms` и границу
 `resume`; запрос всех чатов возвращает отдельные `issue`, а загрузка использует checkpoint. До
 окончания паузы не повторяйте запросы. Частичное фоновое задание имеет состояние `partial` и
 повторяется через `max personal store jobs retry`. Проверяйте полноту ответа, а не только код выхода.

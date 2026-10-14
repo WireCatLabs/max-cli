@@ -2,6 +2,7 @@ import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { Command, Option } from "commander"
 import { plainJson } from "../bot/transport.js"
+import { renderItem } from "../envelope.js"
 import { botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, textOf } from "./bot-sends.js"
@@ -33,6 +34,10 @@ export const commentsCommand = (): Command => {
         context.renderer,
         context.format,
         (plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? [],
+        {
+          limit,
+          has_more: false,
+        },
       )
     })
 
@@ -44,7 +49,7 @@ export const commentsCommand = (): Command => {
       const answer = await context.authenticated().call(operation("getCommentById"), {
         path: { messageId: message, commentId: comment },
       })
-      context.renderer.result(plainJson(answer))
+      renderItem(context.renderer, context.format, plainJson(answer))
     })
 
   annotate(command.command("send <message> <text>"), { mutates: true })
@@ -56,7 +61,7 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         body: commentBody("sendComment", text, this.opts<{ format?: string }>().format),
       })
-      context.renderer.result(plainJson(answer))
+      renderItem(context.renderer, context.format, plainJson(answer))
     })
 
   annotate(command.command("edit <message> <comment> <text>"), { mutates: true })
@@ -69,7 +74,7 @@ export const commentsCommand = (): Command => {
         query: { comment_id: comment },
         body: commentBody("editComment", text, this.opts<{ format?: string }>().format),
       })
-      context.renderer.result(plainJson(answer) ?? { success: true })
+      renderItem(context.renderer, context.format, plainJson(answer) ?? { success: true })
     })
 
   annotate(command.command("delete <message> <comment>"), { mutates: true })
@@ -81,7 +86,7 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         query: { comment_id: comment },
       })
-      context.renderer.result(plainJson(answer) ?? { success: true })
+      renderItem(context.renderer, context.format, plainJson(answer) ?? { success: true })
     })
 
   return command

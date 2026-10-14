@@ -31,7 +31,7 @@ describe("max commands", () => {
     expect(code).toBe(0)
     expect(stdout).toHaveLength(1)
     expect(stderr).toEqual([])
-    expect(JSON.parse(stdout[0] as string)).toMatchObject({ cli: "max", version: MAX_APP.version, contract: 1 })
+    expect(JSON.parse(stdout[0] as string)).toMatchObject({ cli: "max", version: MAX_APP.version, contract: 2 })
   })
 
   it("lists every command the program has, with the argv path already split", async () => {

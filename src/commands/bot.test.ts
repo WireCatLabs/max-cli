@@ -67,7 +67,7 @@ describe("max bot auth", () => {
   it("keeps a token only after MAX accepted it", async () => {
     const { code, stdout } = await max(["bot", "auth", "set", "--json"], { answer: GOOD })
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ profile: "default", bot: "Helper", id: "9007199254740993" })
+    expect(JSON.parse(stdout).item).toMatchObject({ profile: "default", bot: "Helper", id: "9007199254740993" })
     expect(store().read()?.token).toBe(GOOD)
     expect(stdout).not.toContain(GOOD)
   })
@@ -92,7 +92,7 @@ describe("max bot auth", () => {
     store("staging").write(GOOD)
     const { code, stdout } = await max(["bot", "auth", "remove", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toEqual({ profile: "default", removed: ["keyring"] })
+    expect(JSON.parse(stdout).item).toEqual({ profile: "default", removed: ["keyring"] })
     expect(store().read()).toBeUndefined()
     expect(store("staging").read()?.token).toBe(GOOD)
     expect(requests).toHaveLength(0)
@@ -167,7 +167,7 @@ describe("max bot api, guarded like the personal account", () => {
   beforeEach(() => store().write(GOOD))
 
   it("refuses every bot write on a read-only profile, and still reads", async () => {
-    await max(["ro", "config", "set", "readOnly", "true"])
+    await max(["ro", "config", "set", "read_only", "true"])
     store("ro").write(GOOD)
     const write = await max([
       "ro",
@@ -320,9 +320,9 @@ describe("the run log for a bot command", () => {
 
   it("**records a shared bot command once, with its request**, as max's own bot commands are", async () => {
     const added = async (command: string, argv: string[]) => {
-      const before = new Set((await runsOf(command)).map((run) => run.runId))
+      const before = new Set((await runsOf(command)).map((run) => run.run_id))
       await max(argv)
-      return (await runsOf(command)).filter((run) => !before.has(run.runId))
+      return (await runsOf(command)).filter((run) => !before.has(run.run_id))
     }
 
     expect(await added("bot auth show", ["bot", "auth", "show", "--record", "--json"])).toEqual([
@@ -337,7 +337,7 @@ describe("the run log for a bot command", () => {
     const { code } = await max(["bot", "api", "get-pinned-message", "--chat-id", "404", "--json"])
     expect(code).not.toBe(0)
     expect(await runsOf("bot api get-pinned-message")).toEqual([
-      expect.objectContaining({ status: "failed", requests: 1, errorCode: "not_found", keptBecauseFailed: true }),
+      expect.objectContaining({ status: "failed", requests: 1, error_code: "not_found", kept_because_failed: true }),
     ])
   })
 })

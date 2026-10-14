@@ -28,8 +28,10 @@ describe("the shared runs command in MAX", () => {
     expect(await run(["runs", "list", "--limit", "1", "--jsonl"], { streams, tty: false })).toBe(0)
     expect(streams.stdout).toHaveLength(1)
     expect(JSON.parse(streams.stdout[0] ?? "")).toMatchObject({ command: "chats list", profile: "synthetic" })
-    expect(streams.stderr.join("\n")).toContain("--limit")
-    expect(streams.stderr.join("\n")).not.toContain("--page")
+    expect(streams.stderr.join("\n")).toContain("runs list --page 2 --limit 1")
+    const rest = captureStreams()
+    expect(await run(["runs", "list", "--page", "2", "--limit", "1", "--jsonl"], { streams: rest, tty: false })).toBe(0)
+    expect(rest.stdout.map((line) => JSON.parse(line).run_id)).toEqual(before.slice(1))
     expect(listRuns(dir).map((item) => item.runId)).toEqual(before)
     const metadata = listRuns(dir)[0]
     if (!metadata) throw new Error("no synthetic run")

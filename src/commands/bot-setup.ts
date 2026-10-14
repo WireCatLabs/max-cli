@@ -1,6 +1,7 @@
 import { annotate } from "@wirecat/cli-base/commands"
 import { Command, Option } from "commander"
 import { UPLOAD_TYPES, type UploadType } from "../bot/uploads.js"
+import { renderItem } from "../envelope.js"
 import { botContext } from "./bot-context.js"
 import { guardedCall, uploaded } from "./bot-sends.js"
 
@@ -19,7 +20,7 @@ export const uploadsCommand = (): Command => {
       const context = botContext(this)
       const type = this.opts<{ type?: UploadType }>().type
       const attachment = await uploaded(context, file, type, (target, input) => guardedCall(context, target, input))
-      context.renderer.result(attachment)
+      renderItem(context.renderer, context.format, attachment)
     })
 
   return command

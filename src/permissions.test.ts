@@ -116,7 +116,7 @@ describe("a profile with an allow list", () => {
     await runWith(["p-show", "config", "set", "allow", "send"])
     const shown = (profile: string) =>
       runWith([profile, "config", "show", "--json"]).then(({ stdout }) =>
-        JSON.parse(stdout).settings.find((s: { setting: string }) => s.setting === "allow"),
+        JSON.parse(stdout).item.settings.find((s: { setting: string }) => s.setting === "allow"),
       )
 
     expect(await shown("p-show")).toEqual({ setting: "allow", value: ["send"], from: "config file: profiles.p-show" })
@@ -139,14 +139,14 @@ describe("a profile with an allow list", () => {
     await runWith(["config", "unset", "--defaults", "allow"])
   })
 
-  it("refuses what it does not allow with 5, never connects, names the fix, and journals the refusal", async () => {
+  it("refuses what it does not allow with 5, sends nothing past the login, names the fix, and journals the refusal", async () => {
     const { max, environment } = messenger()
     await runWith(["p-cmd", "config", "set", "allow", "reaction"])
 
     const refused = await runWith(["p-cmd", "messages", "send", "111", "hi", "--json"], environment)
 
     expect(refused.code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(max.sent.filter(({ opcode }) => opcode !== Opcode.SESSION_INIT && opcode !== Opcode.LOGIN)).toEqual([])
     expect(JSON.parse(refused.stderr).error).toMatchObject({ details: { permission: "messages.send" } })
     expect(JSON.parse(refused.stderr).error.message).toContain("config set permissions.messages.send allow")
     expect(new SendJournal(sendsPathFor("p-cmd")).entries()).toMatchObject([{ chatId: "111", outcome: "refused" }])

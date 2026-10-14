@@ -21,7 +21,7 @@
 | Скачать модель | `max personal models audio download <модель>` |
 | Расшифровать одно голосовое | `max personal messages transcribe <чат> <сообщение>` |
 | Расшифровать голосовые в показанном списке | `--transcribe` у `messages list` и `inbox` |
-| Выбрать модель для всех следующих запусков | `max config set --defaults transcribeModel <модель>` |
+| Выбрать модель для всех следующих запусков | `max config set --defaults transcribe_model <модель>` |
 
 ## Быстрый запуск
 
@@ -54,7 +54,7 @@ max personal messages transcribe "Учебная группа" 204 --model parak
 Для всех следующих запусков:
 
 ```sh
-max config set --defaults transcribeModel parakeet-v3
+max config set --defaults transcribe_model parakeet-v3
 ```
 
 Не путайте группы команд. `models audio` — модели речи. `models text` — модели для поиска и
@@ -74,7 +74,7 @@ max personal inbox --transcribe --json
 Текст сохраняется под вашим аккаунтом в общей локальной копии сообщений. Его видят просмотр
 сообщений, входящие, обзор и MCP-сервер. Если то же сообщение уже расшифровано той же моделью,
 `max` может вернуть сохранённый текст. В JSON текст лежит в поле `transcript`. Записи, которые
-не удалось распознать, перечислены в `unheard`, а причина печатается в stderr.
+не удалось распознать, и причина названы в `missing`.
 
 ## Форматы и ограничения
 

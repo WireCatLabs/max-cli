@@ -64,8 +64,8 @@ describe("stickers", () => {
       { id: "6", title: "Set 6", count: 2, link: null },
     ])
     expect(one.json.items).toEqual([
-      { id: "51", setId: "5", emoji: ["🐱"], url: "https://x/s.webp" },
-      { id: "52", setId: "5", emoji: ["🐱"], url: "https://x/s.webp" },
+      { id: "51", set_id: "5", emoji: ["🐱"], url: "https://x/s.webp" },
+      { id: "52", set_id: "5", emoji: ["🐱"], url: "https://x/s.webp" },
     ])
   })
 

@@ -88,8 +88,11 @@ const review = async (argv: string[], environment: Environment) => {
   return { code, json: JSON.parse(streams.stdout.join("\n") || "null"), stderr: streams.stderr.join("\n") }
 }
 
-const texts = (chat: { messages: { text: string }[] }) => chat.messages.map((m) => m.text)
+const texts = (answer: { items: { text: string }[] }) => answer.items.map((m) => m.text)
 const since = (minutesAgo: number) => new Date(now - minutesAgo * 60 * 1000).toISOString()
+const startingAt = (minutesAgo: number) => `date>"${since(minutesAgo)}"`
+const nextReview = (answer: { next?: { step: string; args: { query: string } }[] }) =>
+  answer.next?.find(({ step }) => step === "review.next")?.args.query
 
 describe("max review", () => {
   it("reads both sides of every chat that changed, and nothing from before or from quiet chats", async () => {
@@ -98,13 +101,14 @@ describe("max review", () => {
       222: [message(500, THEM, "quiet chat")],
     })
 
-    const { code, json } = await review(["r-both", "review", "--since-time", since(60), "--json"], environment)
+    const { code, json } = await review(["r-both", "review", startingAt(60), "--json"], environment)
 
     expect(code).toBe(0)
-    expect(json.chats.map((chat: { id: string }) => chat.id)).toEqual(["111"])
-    expect(texts(json.chats[0])).toEqual(["can you send it?", "I'll send it Friday"])
-    expect(json.chats[0].messages[1].outgoing).toBe(true)
-    expect(json).toMatchObject({ complete: true, skipped: [], unheard: [], until: since(40) })
+    expect(json.items.map((item: { chat_id: string }) => item.chat_id)).toEqual(["111", "111"])
+    expect(texts(json)).toEqual(["can you send it?", "I'll send it Friday"])
+    expect(json.items[1].outgoing).toBe(true)
+    expect(json.missing).toBeUndefined()
+    expect(nextReview(json)).toBe(startingAt(40))
     expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
   })
 
@@ -114,20 +118,20 @@ describe("max review", () => {
       { lastEventMinutesAgo: { 111: 30 } },
     )
 
-    const { json } = await review(["r-cut", "review", "--since-time", since(60), "--json"], environment)
+    const { json } = await review(["r-cut", "review", startingAt(60), "--json"], environment)
 
-    expect(texts(json.chats[0])).toEqual(["before the login"])
-    expect(json.until).toBe(since(30))
+    expect(texts(json)).toEqual(["before the login"])
+    expect(nextReview(json)).toBe(startingAt(30))
   })
 
   it("pages through a busy chat instead of taking only the newest", async () => {
     const busy = Array.from({ length: 150 }, (_, i) => message(200 - i, THEM, `m${i}`))
     const { environment, historiesAsked } = reviewMax({ 111: busy })
 
-    const { json } = await review(["r-busy", "review", "--since-time", since(201), "--all", "--json"], environment)
+    const { json } = await review(["r-busy", "review", startingAt(201), "--all", "--json"], environment)
 
-    expect(json.chats[0].messages).toHaveLength(150)
-    expect(json.chats[0].more).toBe(false)
+    expect(json.items).toHaveLength(150)
+    expect(json.missing).toBeUndefined()
     expect(historiesAsked()).toBe(3)
   })
 
@@ -138,21 +142,23 @@ describe("max review", () => {
 
     const { json } = await review(["r-default", "review", "--json"], environment)
 
-    expect(texts(json.chats[0])).toEqual(["two days ago"])
+    expect(texts(json)).toEqual(["two days ago"])
   })
 
-  it("lists an unheard voice message and calls the review incomplete; --transcribe without a model still answers", async () => {
+  it("calls a review with an unheard voice message incomplete; --transcribe without a model still answers", async () => {
     const voice = message(10, THEM, "", [{ _type: "AUDIO", audioId: 5, duration: 3000, url: "https://x" }])
     const { environment } = reviewMax({ 111: [voice] })
 
-    const plain = await review(["r-voice", "review", "--since-time", since(60), "--json"], environment)
-    const asked = await review(["r-voice", "review", "--since-time", since(60), "--transcribe", "--json"], environment)
+    const plain = await review(["r-voice", "review", startingAt(60), "--json"], environment)
+    const asked = await review(["r-voice", "review", startingAt(60), "--transcribe", "--json"], environment)
 
-    expect(plain.json).toMatchObject({ complete: false, unheard: [{ chatId: "111", messageId: String(voice.id) }] })
-    expect(plain.json.chats[0].messages[0].attachments[0].kind).toBe("voice")
+    expect(nextReview(plain.json)).toBe(startingAt(60))
+    expect(plain.json.items[0].attachments[0].kind).toBe("voice")
     expect(asked.code).toBe(0)
-    expect(asked.json.transcribeProblem).toMatch(/max models audio download/)
-    expect(asked.stderr).toContain("incomplete")
+    expect(asked.json.missing).toEqual([
+      { field: "transcript", why: expect.stringMatching(/max models audio download/), step: "messages.transcribe" },
+    ])
+    expect(asked.stderr).toContain("not transcribed")
   })
 
   describe("--unanswered", () => {
@@ -184,48 +190,44 @@ describe("max review", () => {
       )
 
       const { code, json, stderr } = await review(
-        ["r-open", "review", "--since-time", since(500), "--unanswered", "1h", "--json"],
+        ["r-open", "review", startingAt(500), "--unanswered", "1h", "--json"],
         environment,
       )
 
       expect(code).toBe(0)
-      expect(texts(json.chats[0])).toEqual(["that clashes with the market", "anyone know the address?"])
-      expect(json.chats[0].answeredBy).toBe("owner-and-admins")
-      expect(json.unanswered).toEqual({ olderThanHours: 1 })
-      expect(stderr).not.toContain("the next review starts")
+      expect(texts(json)).toEqual(["that clashes with the market", "anyone know the address?"])
+      expect(stderr).toContain("still open after 1 hours")
+      expect(stderr).not.toContain("admins are not known")
+      expect(nextReview(json)).toBeUndefined()
     })
 
     it("says so when a group's admins are not known, and then counts only the owner's answers", async () => {
       const { environment } = reviewMax({ 111: [message(300, THEM, "when is it?"), message(290, ADMIN, "Sunday")] })
 
       const { json, stderr } = await review(
-        ["r-unknown", "review", "--since-time", since(400), "--unanswered", "--json"],
+        ["r-unknown", "review", startingAt(400), "--unanswered", "--json"],
         environment,
       )
 
-      expect(json.chats).toEqual([])
-      const loose = await review(
-        ["r-unknown", "review", "--since-time", since(400), "--unanswered", "1ms", "--json"],
-        environment,
-      )
-      expect(texts(loose.json.chats[0])).toEqual(["when is it?"])
-      expect(loose.json.chats[0].answeredBy).toBe("owner")
+      expect(json.items).toEqual([])
+      const loose = await review(["r-unknown", "review", startingAt(400), "--unanswered", "1ms", "--json"], environment)
+      expect(texts(loose.json)).toEqual(["when is it?"])
       expect(loose.stderr).toContain("admins are not known")
       expect(stderr).not.toContain("admins are not known")
     })
 
-    it("reads only the chat --chat names", async () => {
+    it("reads only the chat `chat:` names", async () => {
       const { environment } = reviewMax({
         111: [message(300, THEM, "one?")],
         222: [message(300, THEM, "two?")],
       })
 
       const { json } = await review(
-        ["r-chat", "review", "--since-time", since(400), "--chat", "222", "--unanswered", "1ms", "--json"],
+        ["r-chat", "review", startingAt(400), "chat:222", "--unanswered", "1ms", "--json"],
         environment,
       )
 
-      expect(json.chats.map((chat: { id: string }) => chat.id)).toEqual(["222"])
+      expect(json.items.map((item: { chat_id: string }) => item.chat_id)).toEqual(["222"])
     })
 
     it("refuses an invalid unanswered duration", async () => {

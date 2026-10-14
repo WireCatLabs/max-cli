@@ -71,10 +71,10 @@ describe("mentions through max", () => {
 
     const shown = await max(["mentions", "show", String(phone.id), "--json"])
     expect(shown.code, shown.err).toBe(0)
-    expect(JSON.parse(shown.out)).toMatchObject({ written: "+7 900 000-00-01", before: "звони " })
+    expect(JSON.parse(shown.out).item).toMatchObject({ written: "+7 900 000-00-01", before: "звони " })
 
     const rebuilt = await max(["mentions", "rebuild", "--json"])
     expect(rebuilt.code, rebuilt.err).toBe(0)
-    expect(JSON.parse(rebuilt.out).mentions).toBeGreaterThanOrEqual(2)
+    expect(JSON.parse(rebuilt.out).item.mentions).toBeGreaterThanOrEqual(2)
   })
 })

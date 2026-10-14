@@ -72,7 +72,7 @@ describe("contacts check on MAX", () => {
     const quiet = await cli(["contacts", "check", "77", "--offline", "--no-registries", "--json"])
 
     expect(offline.code).toBe(0)
-    const answer = JSON.parse(offline.stdout)
+    const answer = JSON.parse(offline.stdout).item
     expect(answer.person).toMatchObject({ id: "77", provider: "max" })
     expect(answer.reasons.map(({ reason }: { reason: string }) => reason)).toEqual(
       expect.arrayContaining(["same_text", "no_username"]),

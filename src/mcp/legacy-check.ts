@@ -1,5 +1,6 @@
 import type { PersonalMcpTool } from "@wirecat/cli-core/cli"
 import * as v from "valibot"
+import { itemAnswer, snakeKeys } from "../envelope.js"
 import { finish, MAX_ACTIONS, personal, prepare, sessionPoints } from "../moderation/check.js"
 import { withPermissionApproval } from "../permissions.js"
 import type { SessionStore } from "../session/store.js"
@@ -33,8 +34,8 @@ export const legacyCheckTool = (
     description:
       "Judge what is new in a group since its last check — messages and people who joined — by the " +
       "owner's rules for it (`max chats rules`), and act where the rules and their consent levels allow. Only " +
-      "when the owner asked for a check of this group. Returns { items, … } of rows { kind, rule, personId, personName, " +
-      "messageId?, action, outcome, reason?, command? } and notes; a row not done carries the command that would " +
+      "when the owner asked for a check of this group. Answers item { rows, notes }, each row { kind, rule, person_id, " +
+      "person_name, message_id?, action, outcome, reason?, command? }; a row not done carries the command that would " +
       `do it. ${UNTRUSTED}`,
     input: v.strictObject({
       chat,
@@ -69,7 +70,8 @@ export const legacyCheckTool = (
               ),
             )
 
-          return run()
+          const { rows, notes } = await run()
+          return itemAnswer({ rows: snakeKeys(rows), notes })
         }),
       )
     },

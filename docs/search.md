@@ -29,12 +29,11 @@
 Для управления из командной строки:
 
 ```sh
-max personal search messages 'Во сколько ежедневная выгрузка проекта Маяк?' --discover --chat 990 --json
+max personal search messages 'Во сколько ежедневная выгрузка проекта Маяк? chat:990' --discover --json
 ```
 
 Это поиск только в локальном архиве. Ограничения чата, автора и даты сохраняются. В MCP передайте
-`discover: true` инструменту поиска сообщений. `query.discovery` описывает ограниченную выборку;
-`items[].discovery.missingTerms` показывает отсутствующие слова, а `parent` связывает прямой ответ
+`discover: true` инструменту поиска сообщений. `items[].discovery.missing_terms` показывает отсутствующие слова, а `parent` связывает прямой ответ
 с подходящим родителем. Высокая оценка не означает уверенность в ответе: первым может оказаться
 вопрос, предложение или старое решение. Прочитайте основания и проверьте
 [покрытие архива](archive.md), прежде чем считать факт отсутствующим.
@@ -68,7 +67,7 @@ max personal search all 'договор' --only messages,notes  # без поч�
 ```
 
 ```sh
-max personal search messages 'договор' --chat Друзья     # только сообщения мессенджеров, без почты
+max personal search messages 'договор chat:Друзья'     # только сообщения мессенджеров, без почты
 ```
 
 ```sh
@@ -85,8 +84,8 @@ max personal search conversations 'переезд на дачу'      # разг
 
 `search all` у каждой находки пишет, что это — сообщение (`msg:…`) или заметка (`note:…`).
 `search messages` никогда не возвращает почту, а `search mail` — сообщения мессенджеров; вместе их
-ищет только `search all`. `--type` у `search messages` оставляет только текст, голосовые или файлы
-(`text|voice|file`), у `search notes` — заметки из memo или из папки (`internal|file`). У почты
+ищет только `search all`. В `search messages` `NOT has:attachment`, `has:voice` и `has:file` в запросе
+оставляют только текст, голосовые или файлы; `--type` у `search notes` — заметки из memo или из папки (`internal|file`). У почты
 `chat:` выбирает цепочку писем, а `from:` — отправителя. Если поле не подходит — `kind:`/`topic:`
 для почты или `chat:`/`from:` для заметок — `search all` пропускает этот источник и объясняет почему.
 
@@ -107,7 +106,7 @@ max personal search conversations 'переезд на дачу'      # разг
 **Команда:**
 
 ```sh
-max personal search messages '"счёт оплачен"' --chat "Книжный клуб" --backend archive --json
+max personal search messages '"счёт оплачен" chat:"Книжный клуб"' --backend archive --json
 ```
 
 **Пример ответа агента:**
@@ -149,7 +148,7 @@ max personal store jobs show                    # сколько уже скач
 searched 12,430 messages in 37 chats — 5 never fetched; `max personal messages sync --all --background` fetches them
 ```
 
-С `--json` то же в `coverage`: `messages`, `chats`, до десяти чатов в `attention` и `next`. Если ничего
+С `--json` то же — запись `coverage` в `missing` и шаг `messages.sync` в `next`. Если ничего
 не нашлось, а `next` задан, выполните эту команду (или попросите агента), прежде чем решать, что
 сообщения нет.
 
@@ -200,10 +199,6 @@ max personal search messages 'from:me date:7d'            # что вы писа
 
 ```sh
 max personal search messages 'chat:"Книжный клуб" библиотека'
-```
-
-```sh
-max personal search messages библиотека --chat "Книжный клуб"   # то же, опцией
 ```
 
 ```sh
@@ -284,7 +279,7 @@ max personal search messages 'content:договор'
 ```
 
 ```sh
-max personal attachments list --chat "Книжный клуб" --needs-text
+max personal attachments list 'chat:"Книжный клуб" is:needs_text'
 ```
 
 ```sh
@@ -503,12 +498,12 @@ max personal stats messages show --by hour                     # все сохр
 Когда в запросе есть слова и не задан `--discover`, `max` по умолчанию спрашивает и сервер, и архив
 (`--backend both`). `--discover` всегда читает только архив, в том числе с `--backend both`.
 
-С чатом (`--chat` или `chat:`) сервер ищет в этом чате. Без чата сервер ищет во всех чатах так же, как строка
+С чатом (`chat:` в запросе) сервер ищет в этом чате. Без чата сервер ищет во всех чатах так же, как строка
 поиска на web.max.ru: одним запросом, и из каждого чата возвращает одно сообщение — лучшее совпадение. Остальные
 совпадения в этих чатах находит архив, если они в нём есть. Название чата и публичные каналы в ответ не попадают.
 
 ```sh
-max personal search messages 'счёт' --chat "Книжный клуб"                    # архив и сервер MAX, один чат
+max personal search messages 'счёт chat:"Книжный клуб"'                    # архив и сервер MAX, один чат
 ```
 
 ```sh
@@ -516,7 +511,7 @@ max personal search messages 'счёт'                                         
 ```
 
 ```sh
-max personal search messages 'счёт' --chat "Книжный клуб" --backend server   # только то, что нашёл сервер
+max personal search messages 'счёт chat:"Книжный клуб"' --backend server   # только то, что нашёл сервер
 ```
 
 ```sh
@@ -528,15 +523,14 @@ max personal search messages 'счёт' --backend archive                       
 кавычки и порядок результатов значат то же, что и без сервера, а сообщение не повторяется. `max` ждёт сервер
 не дольше 5 секунд (`--server-time`, до 60 с) и ничего не помечает прочитанным.
 
-С `--json` у каждого сообщения есть `source` (`archive`, `server` или `both`), а блок `server` говорит, что вернул
-сервер. При поиске в обоих источниках недоступный сервер или профиль только для чтения оставляют ответ
+С `--json` у каждого сообщения есть `found_in` (`archive`, `server` или `both`). При поиске в обоих источниках недоступный сервер или профиль только для чтения оставляют ответ
 из архива. Явный `--backend server` отказывает, если профиль не разрешает серверный поиск. Разрешение —
 `messages.server-search`.
 
 ## Сначала скачать новое: `--sync-first`
 
 ```sh
-max personal search messages 'счёт' --chat "Книжный клуб" --sync-first
+max personal search messages 'счёт chat:"Книжный клуб"' --sync-first
 ```
 
 `--sync-first` сначала скачивает новые сообщения, ничего не помечая прочитанным: не больше 5 чатов,
@@ -583,7 +577,7 @@ MCP эти команды находятся через `max_tools_search`, пл
 
 **Подготовить поиск по темам при скачивании.** `max personal messages sync <чат> --catch-up` сразу после загрузки
 строит разговоры и локальные векторы только этого чата — для [поиска по темам](topic-search.md). По
-умолчанию это выключено; настройка профиля `searchCatchUp: true` включает, а `--no-catch-up` отменяет на
+умолчанию это выключено; настройка профиля `search_catch_up: true` включает, а `--no-catch-up` отменяет на
 один запуск. Границы: `--catch-up-chunks 500 --catch-up-messages 10000 --catch-up-time 30s`. Модель
 автоматически не скачивается, удалённый сервис не вызывается. Поле `prepared` отдельно сообщает,
 завершилась ли подготовка; скачанная история сохраняется в любом случае.

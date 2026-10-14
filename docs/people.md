@@ -35,7 +35,7 @@ max personal contacts profile 20000002 --json
 ```
 
 Команда показывает, что MAX сообщает о человеке, и сколько его сообщений лежит в локальной копии
-в каждом общем чате:
+в каждом общем чате. В JSON это поле `item` ответа, как и у `contacts context` и `contacts check` ниже:
 
 ```json
 {
@@ -46,17 +46,17 @@ max personal contacts profile 20000002 --json
   "phone": "***0123",
   "flags": { "bot": false },
   "registered": { "at": "2021-03-14T00:00:00.000Z", "source": "max", "precision": "day" },
-  "hasPhoto": true,
+  "has_photo": true,
   "seen": "2026-10-08T07:12:00.000Z",
   "chats": [
-    { "id": "30000003", "title": "Пример Примеров", "kind": "dialog", "theirMessages": 128,
-      "firstAt": "2024-02-11T09:14:00.000Z", "lastAt": "2026-10-05T18:02:00.000Z", "complete": true },
-    { "id": "-40000004", "title": "Книжный клуб", "kind": "group", "theirMessages": 37,
-      "firstAt": "2025-06-01T10:00:00.000Z", "lastAt": "2026-09-30T20:41:00.000Z", "complete": false }
+    { "id": "30000003", "title": "Пример Примеров", "kind": "dialog", "their_messages": 128,
+      "first_at": "2024-02-11T09:14:00.000Z", "last_at": "2026-10-05T18:02:00.000Z", "complete": true },
+    { "id": "-40000004", "title": "Книжный клуб", "kind": "group", "their_messages": 37,
+      "first_at": "2025-06-01T10:00:00.000Z", "last_at": "2026-09-30T20:41:00.000Z", "complete": false }
   ],
   "aliases": [
-    { "name": "Пример П.", "firstSeenAt": "2024-03-02T08:00:00.000Z",
-      "lastSeenAt": "2024-03-02T08:00:00.000Z", "source": "profile" }
+    { "name": "Пример П.", "first_seen_at": "2024-03-02T08:00:00.000Z",
+      "last_seen_at": "2024-03-02T08:00:00.000Z", "source": "profile" }
   ]
 }
 ```
@@ -64,7 +64,7 @@ max personal contacts profile 20000002 --json
 - **`registered`** — день создания аккаунта по данным самого MAX (`source: max`). Это не оценка.
 - **`flags`** — `bot: true` у бота. Отметок вроде «мошенник» или «подтверждён» MAX для личных
   аккаунтов не присылает.
-- **`hasPhoto`** — есть ли у человека своё фото.
+- **`has_photo`** — есть ли у человека своё фото.
 - **`seen`** — когда человек был в MAX последний раз, или `online`. MAX отвечает на это отдельным
   запросом при каждом вызове. Поля нет, если MAX ничего не сказал.
 - **`phone`** — только последние четыре цифры и только если MAX показывает вам номер. `--show-phone`
@@ -80,8 +80,8 @@ max personal contacts profile 20000002 --json
 
 ### Числа — это то, что лежит в копии
 
-`theirMessages`, `firstAt` и `lastAt` считаются по локальной копии, а не спрашиваются у MAX. Если
-`complete: false`, чат сохранён не с начала: число — это минимум, а `firstAt` может быть позже его
+`their_messages`, `first_at` и `last_at` считаются по локальной копии, а не спрашиваются у MAX. Если
+`complete: false`, чат сохранён не с начала: число — это минимум, а `first_at` может быть позже его
 настоящего первого сообщения. Чтобы дополнить, скачайте чат:
 
 ```sh
@@ -145,13 +145,13 @@ max personal contacts check 20000002
     { "reason": "link_first", "weight": 2, "source": "store" }
   ],
   "registries": [
-    { "name": "cas", "answer": "unknown", "checkedAt": "2026-10-07T08:00:00.000Z",
+    { "name": "cas", "answer": "unknown", "checked_at": "2026-10-07T08:00:00.000Z",
       "detail": "lists Telegram accounts only, not max" },
-    { "name": "lols", "answer": "unknown", "checkedAt": "2026-10-07T08:00:00.000Z",
+    { "name": "lols", "answer": "unknown", "checked_at": "2026-10-07T08:00:00.000Z",
       "detail": "lists Telegram accounts only, not max" }
   ],
   "unknown": [],
-  "checkedAt": "2026-10-07T08:00:00.000Z"
+  "checked_at": "2026-10-07T08:00:00.000Z"
 }
 ```
 
@@ -214,7 +214,7 @@ max personal contacts notes list "Борис Пример"
 max personal contacts notes edit "Борис Пример" <id> --revision 1 --file note.txt
 max personal contacts notes remove "Борис Пример" <id>
 max personal contacts show "Борис Пример" --with-notes
-max personal contacts list --search-notes квартира             # люди, в чьих заметках есть этот текст
+max personal contacts list notes:квартира                     # люди, в чьих заметках есть этот текст
 ```
 
 Псевдонимы и заметки хранятся в локальной копии и никогда не уходят в MAX. Псевдоним действует

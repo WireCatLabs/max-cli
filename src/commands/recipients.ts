@@ -1,6 +1,7 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { Command } from "commander"
+import { renderItem, snakeKeys } from "../envelope.js"
 import { recipientListFor } from "../sends.js"
 import { forCommand } from "./context.js"
 import { renderList } from "./paging.js"
@@ -21,7 +22,8 @@ export const recipientsCommand = (): Command => {
       const { settings, renderer, format, run } = forCommand(this)
       await run("recipients list", async () => {
         const chats = recipientListFor(settings.profile).read()
-        renderList(renderer, format, chats ?? [])
+        const items = (chats ?? []).map(snakeKeys)
+        renderList(renderer, format, items, { limit: items.length, has_more: false })
         if (!chats) renderer.note("the recipient list is off — this profile may send to any chat")
         else if (chats.length === 0) renderer.note("the recipient list is on and empty — this profile may send nowhere")
       })
@@ -31,7 +33,7 @@ export const recipientsCommand = (): Command => {
     .argument("<chat>", "chat id, or part of a chat name")
     .description("allow sending to this chat; the first add turns the list on")
     .action(async function (this: Command, chat: string) {
-      const { settings, renderer, createClient, run } = forCommand(this)
+      const { settings, renderer, format, createClient, run } = forCommand(this)
 
       await run("recipients add", async (events) => {
         const client = createClient({ events })
@@ -44,7 +46,7 @@ export const recipientsCommand = (): Command => {
             ...(partnerId ? { partnerId } : {}),
             addedAt: new Date().toISOString(),
           })
-          renderer.result({ id: found.id, title: found.title, added })
+          renderItem(renderer, format, { id: found.id, title: found.title, added })
         } finally {
           await client.close()
         }
@@ -55,20 +57,20 @@ export const recipientsCommand = (): Command => {
     .argument("<chat>", "chat id, or the title as the list shows it")
     .description("stop allowing this chat; the list stays on")
     .action(async function (this: Command, chat: string) {
-      const { settings, renderer, run } = forCommand(this)
+      const { settings, renderer, format, run } = forCommand(this)
       await run("recipients remove", async () => {
         const gone = recipientListFor(settings.profile).remove(chat)
         if (!gone) throw new CliError("not_found", `${chat.trim()} is not on the recipient list of ${settings.profile}`)
-        renderer.result({ id: gone.id, title: gone.title, removed: true })
+        renderItem(renderer, format, { id: gone.id, title: gone.title, removed: true })
       })
     })
 
   annotate(command.command("clear"), { mutates: true, local: true })
     .description("empty the list and turn it off: this profile may send to any chat again")
     .action(async function (this: Command) {
-      const { settings, renderer, run } = forCommand(this)
+      const { settings, renderer, format, run } = forCommand(this)
       await run("recipients clear", async () => {
-        renderer.result({ cleared: true, wasOn: recipientListFor(settings.profile).off() })
+        renderItem(renderer, format, { off: true, was_on: recipientListFor(settings.profile).off() })
       })
     })
 

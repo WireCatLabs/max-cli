@@ -220,7 +220,7 @@ message id** and **one** copy, also across two connections and logins — the ca
   anything of the owner's can write to its socket, not only a command that checked first. Every
   request is first checked against the operation's strict schema, as `buildRequest` checks it in a
   command, so a field the specification does not have is refused there too. It reads
-  the configuration again for each write, so `config set readOnly true` needs no restart. The
+  the configuration again for each write, so `config set read_only true` needs no restart. The
   command still checks — a refusal before an upload — and journals only its own refusals; the
   server writes the rest, with the outcome it saw — one line per attempt. A retry after no answer
   repeats the `cid` in the same chat and leaves `outcome_unknown` then its outcome; the limit counts

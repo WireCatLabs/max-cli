@@ -1,7 +1,7 @@
-import { CliError, type Renderer, type RenderFormat, type Streams } from "@wirecat/cli-base"
+import { CliError, type Renderer, type RenderFormat } from "@wirecat/cli-base"
 import type { Command } from "commander"
 import type { Settings } from "../config.js"
-import type { Page } from "../domain/models.js"
+import { listAnswer } from "../envelope.js"
 
 /** Checked while parsing, so the error can quote what was typed rather than the `NaN` it became. */
 export const wholeNumber =
@@ -35,67 +35,13 @@ export const withPaging = (command: Command): Command =>
 export const window = ({ limit, page, all }: Settings): { limit?: number; offset: number } =>
   all ? { offset: 0 } : { limit, offset: (page - 1) * limit }
 
-/**
- * A list with no pages — folders, members, runs, everything a bot lists — in the envelope a paged
- * one uses (`NEED-358`), so an agent reads one shape. `--jsonl` streams it and a person gets the table.
- * `extra` goes beside it: a Bot API list paged by `marker` carries its marker and `hasMore`.
- */
+/** A list in the envelope; `--jsonl` streams the items and a person gets the table. */
 export const renderList = (
   renderer: Renderer,
   format: RenderFormat,
   items: readonly unknown[],
-  extra: { hasMore?: boolean } & Record<string, unknown> = {},
+  page: { limit: number; has_more: boolean; cursor?: string },
 ): void => {
-  if (format === "json") renderer.result({ ...listed(items), ...extra })
+  if (format === "json") renderer.result(listAnswer(items, page))
   else renderer.stream(items)
-}
-
-export const listed = (items: readonly unknown[]) => ({ items, page: 1, limit: items.length, hasMore: false })
-
-/**
- * **One shape for every listing**, and the caller never has to work out which one it got.
- *
- * In the machine modes stdout carries the envelope. For a person it carries the table it always
- * did, and the line about there being another page goes to **stderr** as a note — stdout is data
- * in every mode, and a pager's hint is not data.
- *
- * It is a helper each command calls rather than something inside `renderer.result`, because
- * `account show` and `session start` are not lists and keep answering a bare object.
- */
-export const renderPage = <T>(
-  {
-    renderer,
-    format,
-    settings,
-    streams,
-  }: { renderer: Renderer; format: RenderFormat; settings: Settings; streams: Streams },
-  { items, hasMore }: Page<T>,
-  view?: (items: T[]) => string,
-  /** What to type for the rest, when the listing is not paged by `--page`. */
-  more?: (items: T[]) => string,
-  /** Fields beside the page in `--json`. */
-  extra: object = {},
-): void => {
-  if (format === "jsonl") {
-    renderer.stream(items)
-    if (!settings.all && hasMore)
-      renderer.note(more ? more(items) : `more — \`--page ${settings.page + 1}\` for the next`)
-    return
-  }
-
-  if (format !== "pretty") {
-    renderer.result({
-      items,
-      page: settings.all ? 1 : settings.page,
-      limit: settings.all ? items.length : settings.limit,
-      hasMore: settings.all ? false : hasMore,
-      ...extra,
-    })
-    return
-  }
-
-  if (view) streams.data(view(items))
-  else renderer.result(items)
-  if (!settings.all && hasMore)
-    renderer.note(more ? more(items) : `page ${settings.page} of more — \`--page ${settings.page + 1}\` for the next`)
 }

@@ -73,10 +73,10 @@ describe("answering and reacting", () => {
     expect(String(max.sent.find((call) => call.opcode === Opcode.MSG_CANCEL_REACTION)?.payload.messageId)).toBe(
       "116762160362694583",
     )
-    expect(JSON.parse(stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: "0",
-      messageId: "116762160362694583",
+    expect(JSON.parse(stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: "0",
+      message_id: "116762160362694583",
       reaction: null,
     })
   })
@@ -88,10 +88,10 @@ describe("answering and reacting", () => {
     expect(max.sent.find((call) => call.opcode === Opcode.MSG_REACTION)?.payload).toMatchObject({
       reaction: { reactionType: "EMOJI", id: "👍" },
     })
-    expect(JSON.parse(stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: "0",
-      messageId: "116762160362694583",
+    expect(JSON.parse(stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: "0",
+      message_id: "116762160362694583",
       reaction: "👍",
     })
   })

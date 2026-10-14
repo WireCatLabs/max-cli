@@ -73,7 +73,7 @@ max personal search all "встреча Алиса"
 обзора, ваши сообщения и голосовые текстом.
 
 ```sh
-max personal review --since-time 3d --transcribe
+max personal review 'date>3d' --transcribe
 ```
 
 Ещё: сводки утром и вечером, итог недели по рабочему чату, кому вы обещали ответить, черновики
@@ -196,7 +196,7 @@ max sales bot list --check                                     # все боты
 ## Группы, которые вы ведёте
 
 ```sh
-max personal review --chat "Поход" --unanswered            # вопросы, на которые сутки никто не ответил
+max personal review chat:"Поход" --unanswered              # вопросы, на которые сутки никто не ответил
 max personal chats events "Поход"                          # кто вступил и вышел
 max personal chats members list "Поход" --all              # все участники: когда заведён аккаунт
 max personal chats rules set "Поход" invites delete        # приглашения в чужие чаты — удалять
@@ -217,7 +217,7 @@ max personal chats moderate "Поход" --dry-run              # что нар�
 
 ```sh
 max personal search all "договор"                             # сообщения, почта и заметки сразу
-max personal search messages "договор" --chat "Проект Альфа"  # только один чат
+max personal search messages 'договор chat:"Проект Альфа"'  # только один чат
 max personal messages sync "Проект Альфа" --last 500            # последние 500 сообщений — в копию
 max personal store export "Проект Альфа" --format markdown --output alfa.md
 max personal chats list --offline                             # без подключения к MAX
@@ -257,13 +257,13 @@ max personal mcp --permission messages.send=ask               # временно
 программа (`max … | jq`). Любой список приходит в одной форме:
 
 ```json
-{ "items": [ … ], "page": 1, "limit": 20, "hasMore": true }
+{ "items": [ … ], "page": { "limit": 20, "has_more": true }, "meta": { … } }
 ```
 
 Ошибка приходит одной строкой JSON в stderr, stdout остаётся пустым. Код завершения говорит, что
 случилось: `4` — нужно войти, `5` — права не разрешают, `6` — чат или сообщение не найдены, `8` —
 лимит, `9` — MAX не ответил вовремя, `14` — неизвестно, ушло ли сообщение (повторять только с тем же
-`--send-id`). Частичный результат может прийти с кодом `0`: проверьте поле `complete`.
+`--send-id`). Частичный результат может прийти с кодом `0`: проверьте поля `missing` и `next`.
 
 Подробнее: [контракт](https://github.com/WireCatLabs/max-cli/blob/main/docs/cli-contract.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/cli-contract)), [все команды и коды](https://github.com/WireCatLabs/max-cli/blob/main/docs/commands.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/commands)).
 
@@ -278,7 +278,7 @@ max personal session start qr          # повторный вход, когда
 ```
 
 Профиль называется **первым словом** в каждой команде — `max personal chats list`, — или
-`export MAX_PROFILE=personal` на всю сессию оболочки, или `max config set defaultProfile personal`
+`export MAX_PROFILE=personal` на всю сессию оболочки, или `max config set default_profile personal`
 насовсем. `max` никогда не выбирает профиль сам, даже единственный: без имени команда останавливается
 и перечисляет профили этого компьютера. Имя `personal` — пример: любое подойдёт.
 
@@ -291,9 +291,9 @@ max personal session start qr          # повторный вход, когда
 | Настройка | Что делает | По умолчанию |
 |---|---|---|
 | `permissions` | что можно: `deny`, `readonly`, `ask`, `allow` — для команды или группы команд | всё, кроме удаления и других необратимых действий: они спрашивают |
-| `sendsPerHour` | сколько сообщений профиль отправит за час | `30` |
-| `requestsPerMinute` | темп обращений к MAX | `20` |
-| `catchUpMarksRead` | `inbox` и `review` отмечают показанное прочитанным | `false` |
+| `sends_per_hour` | сколько сообщений профиль отправит за час | `30` |
+| `requests_per_minute` | темп обращений к MAX | `20` |
+| `catch_up_marks_read` | `inbox` и `review` отмечают показанное прочитанным | `false` |
 | `limit` | сколько строк в списке | `20` |
 
 ```sh

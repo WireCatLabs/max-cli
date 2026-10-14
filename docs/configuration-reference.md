@@ -60,7 +60,7 @@ max config show --json     # то же одним объектом
 
 Против каждой настройки — откуда она: `flag`, `default` или `config file:` с ключом, из которого
 она прочитана, например `config file: bot.profiles.test`. Против профиля — `first word`,
-`MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: defaultProfile` или `none named` — профиль не назван,
+`MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: default_profile` или `none named` — профиль не назван,
 и `profile` тогда `null`.
 
 С `--json` в ответе есть и `storeSettings` — настройки общего архива (`searchStemmers.*`) и
@@ -84,23 +84,28 @@ max config show --json     # то же одним объектом
 
 `~/.config/max-cli/config.json` на Linux; пути на других системах — в
 [руководстве по настройкам](configuration.md#где-лежит-файл). Первая команда, читающая настройки,
-создаёт его с `limit`, `keepRunsForDays`, `sendsPerHour`, `updateCheck` и `skillHint` в `defaults`.
+создаёт его с `limit`, `keep_runs_for_days`, `sends_per_hour`, `update_check` и `skill_hint` в `defaults`.
 Файл создаётся с правами `0600`, а `max personal config set` записывает его с правами `0644`: секретов в нём нет.
+
+Имена настроек пишутся в snake_case: `sends_per_hour`, `read_only`, `models.<назначение>.base_url`. Файл со
+старыми именами (`sendsPerHour`, `readOnly`, `baseUrl`) первое же чтение переименовывает само, один раз и
+только если результат проходит проверку. Имена профилей, пути в `permissions` и назначения моделей не
+меняются. Одна настройка под обоими именами с разными значениями — ошибка.
 
 ```json
 {
-  "defaultProfile": "personal",
-  "defaults": { "keepRunsForDays": 14 },
+  "default_profile": "personal",
+  "defaults": { "keep_runs_for_days": 14 },
   "profiles": {
-    "personal": { "limit": 50, "timeoutMs": 20000, "color": true },
+    "personal": { "limit": 50, "timeout_ms": 20000, "color": true },
     "work": { "limit": 10 }
   },
   "personal": {
-    "defaults": { "sendsPerHour": 30 }
+    "defaults": { "sends_per_hour": 30 }
   },
   "bot": {
     "defaults": { "permissions": { "bot": "readonly", "bot.messages.send": "allow" } },
-    "profiles": { "shop": { "sendsPerHour": 200 } }
+    "profiles": { "shop": { "sends_per_hour": 200 } }
   }
 }
 ```
@@ -112,40 +117,40 @@ max config show --json     # то же одним объектом
 
 | Поле | Что делает | Что перекрывает на один запуск | По умолчанию |
 |---|---|---|---|
-| `defaultProfile` | какой профиль, если первым словом ничего не названо и `MAX_PROFILE` не задан | первое слово (`max work …`), `MAX_PROFILE` | нет: без имени команда перечисляет профили |
+| `default_profile` | какой профиль, если первым словом ничего не названо и `MAX_PROFILE` не задан | первое слово (`max work …`), `MAX_PROFILE` | нет: без имени команда перечисляет профили |
 | `limit` | сколько записей показывать, когда `--limit` не передан | `--limit` | `20` |
-| `timeoutMs` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
+| `timeout_ms` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
-| `senderColors` | в `max personal messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
-| `catchUpMarksRead` | `max personal inbox` и `max personal review` отмечают прочитанным каждый показанный чат — до последнего показанного сообщения. Собеседник видит отметку. Только для личного аккаунта | `--mark-read`, `--no-mark-read` | `false` |
-| `searchCatchUp` | после `messages sync` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
+| `sender_colors` | в `max personal messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
+| `catch_up_marks_read` | `max personal inbox` и `max personal review` отмечают прочитанным каждый показанный чат — до последнего показанного сообщения. Собеседник видит отметку. Только для личного аккаунта | `--mark-read`, `--no-mark-read` | `false` |
+| `search_catch_up` | после `messages sync` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
 | `record` | записывать ли каждый запуск, как будто передан `--record` ([диагностика](diagnostics.md)) | `--record`, `--no-record` | `false` |
-| `keepRunsForDays` | сколько дней хранятся записи запусков | — | `30` |
+| `keep_runs_for_days` | сколько дней хранятся записи запусков | — | `30` |
 | `permissions` | уровни прав по ресурсам и командам: `deny`, `readonly`, `ask`, `allow`; более точный ключ имеет приоритет ([ниже](#права-доступа)) | —; `--yes` и `--allow-dangerous` только отвечают на `ask`, `deny` они не снимают | всё `allow`, кроме: удаление, завершение других сессий и ещё несколько необратимых изменений — `ask`; автоответы `replies.send` — `deny` |
-| `sendsPerHour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями, добавленными в группы людьми и принятыми заявками на вступление; сверх — отказ с кодом `8`. **Боту** лимит задаётся только в разделе `bot`; без него бот не ограничен ([защита от отправки](security.md#защита-от-отправки-не-туда)) | — | `30`, у бота — нет |
-| `requestsPerMinute` | сколько запросов в минуту профиль делает к MAX — после первых 10 подряд, вместе во всех процессах этого профиля; `0` — без ограничения ([ограничения и ожидания](limits.md)) | `MAX_REQUESTS_PER_MINUTE` | `20` |
+| `sends_per_hour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями, добавленными в группы людьми и принятыми заявками на вступление; сверх — отказ с кодом `8`. **Боту** лимит задаётся только в разделе `bot`; без него бот не ограничен ([защита от отправки](security.md#защита-от-отправки-не-туда)) | — | `30`, у бота — нет |
+| `requests_per_minute` | сколько запросов в минуту профиль делает к MAX — после первых 10 подряд, вместе во всех процессах этого профиля; `0` — без ограничения ([ограничения и ожидания](limits.md)) | `MAX_REQUESTS_PER_MINUTE` | `20` |
 | `serve` | запускать ли `max personal serve` в фоне, когда команде нужен MAX, а сервера нет. С `MAX_TOKEN` сервер не запускается. Только для личного аккаунта | `--serve`, `--no-serve` | `true` |
-| `transcribeModel` | какой моделью `max personal messages transcribe` распознаёт речь. **Только в `defaults`** | `--model` у `messages transcribe` и рядом с `--transcribe` | `gigaam-v3` |
-| `readOtherBots` | может ли бот читать копии других ботов, когда команда просит это `--all-bots` или `--bots`: `false`, `true` — всех, или список профилей ботов. **Только в разделе `bot`** ([боты](bot.md)) | —; `--all-bots` и `--bots` просят, поле разрешает | `false` |
-| `updateCheck` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | —; выключают `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER`, `CI` | `true` |
-| `skillHint` | раз в сутки говорить агенту в stderr, что навыка `max` у него нет или он старше программы и что его ставит `max skill install`. Агента узнаём по переменной `AI_AGENT` или `CLAUDECODE`. **Только в `defaults`** | — | `true` |
-| `readOnly`, `allow`, `mcpTools` | старые настройки, читаются для совместимости; `config migrate` переводит их в `permissions` | — | после миграции изменять их нельзя |
-| `embeddingProvider` | локальная модель (`local`) или `openai` | `--provider` | `local` |
-| `embeddingModel` | модель векторов | `--model` | по сервису |
-| `embeddingBaseUrl` | адрес API векторов | `--base-url` | по сервису |
-| `embeddingDims` | размер вектора, целое 1–65 536 | `--dims` | по модели |
-| `analysisProvider` | агент (`agent`), `openai` или `anthropic` | `build --provider` | `agent` |
-| `analysisModel` | модель анализа | `build --model` | нет; для `--analyze` задайте явно |
-| `analysisBaseUrl` | адрес API анализа | `build --base-url` | по сервису |
+| `transcribe_model` | какой моделью `max personal messages transcribe` распознаёт речь. **Только в `defaults`** | `--model` у `messages transcribe` и рядом с `--transcribe` | `gigaam-v3` |
+| `read_other_bots` | может ли бот читать копии других ботов, когда команда просит это `--all-bots` или `--bots`: `false`, `true` — всех, или список профилей ботов. **Только в разделе `bot`** ([боты](bot.md)) | —; `--all-bots` и `--bots` просят, поле разрешает | `false` |
+| `update_check` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | —; выключают `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER`, `CI` | `true` |
+| `skill_hint` | раз в сутки говорить агенту в stderr, что навыка `max` у него нет или он старше программы и что его ставит `max skill install`. Агента узнаём по переменной `AI_AGENT` или `CLAUDECODE`. **Только в `defaults`** | — | `true` |
+| `read_only`, `allow`, `mcp_tools` | старые настройки, читаются для совместимости; `config migrate` переводит их в `permissions` | — | после миграции изменять их нельзя |
+| `embedding_provider` | локальная модель (`local`) или `openai` | `--provider` | `local` |
+| `embedding_model` | модель векторов | `--model` | по сервису |
+| `embedding_base_url` | адрес API векторов | `--base-url` | по сервису |
+| `embedding_dims` | размер вектора, целое 1–65 536 | `--dims` | по модели |
+| `analysis_provider` | агент (`agent`), `openai` или `anthropic` | `build --provider` | `agent` |
+| `analysis_model` | модель анализа | `build --model` | нет; для `--analyze` задайте явно |
+| `analysis_base_url` | адрес API анализа | `build --base-url` | по сервису |
 | `models` | внешние модели по назначению ([ниже](#модели-по-назначению)) | переменные `MAX_MODELS_*` | нет |
 | `searchStemmers.cyrillic`, `searchStemmers.latin` | языки основ слов для поиска во всём общем архиве ([ниже](#языки-поиска)) | — | `russian`, `english,spanish` |
 
-⚠ **`timeoutMs` и `--timeout` — разные вещи, и перепутать их дорого.** `timeoutMs` — это сколько
+⚠ **`timeout_ms` и `--timeout` — разные вещи, и перепутать их дорого.** `timeout_ms` — это сколько
 ждать **один ответ** от MAX. `--timeout` — сколько отведено **команде целиком**. Одно чтение — это
-подключение, INIT, LOGIN, разбор имени чата и сам запрос, поэтому время работы кратно `timeoutMs`
+подключение, INIT, LOGIN, разбор имени чата и сам запрос, поэтому время работы кратно `timeout_ms`
 и никогда ему не равно.
 
-Записываются они по-разному нарочно, чтобы их нельзя было спутать: `timeoutMs` — число
+Записываются они по-разному нарочно, чтобы их нельзя было спутать: `timeout_ms` — число
 миллисекунд в файле, `--timeout` — длительность с единицей на командной строке (`30s`, `2m`,
 `500ms`). Единица обязательна: `--timeout 30` отвергается, потому что рядом лежит поле в
 миллисекундах, а все остальные программы пишут так секунды — ошибиться можно в тридцать раз в
@@ -200,7 +205,7 @@ max config show --json     # то же одним объектом
 ```
 
 Это работает в обе стороны: `messages: allow` у профиля закрывает и `messages.delete: deny` из
-`defaults`, и тогда удаление снова спрашивает, как по умолчанию. Старые `readOnly` и `allow`
+`defaults`, и тогда удаление снова спрашивает, как по умолчанию. Старые `read_only` и `allow`
 действуют в том разделе, где записаны.
 
 **По умолчанию разрешено всё, кроме нескольких изменений, которые трудно отменить.** Спрашивают: `messages.delete`,
@@ -228,10 +233,10 @@ max personal config unset permissions.messages.delete         # вернуть �
 
 ### Старые настройки, которые ещё работают
 
-`readOnly: true` читается как `readonly` для каждого ресурса. Список в `allow` (`send`, `forward`,
+`read_only: true` читается как `readonly` для каждого ресурса. Список в `allow` (`send`, `forward`,
 `reaction`, `edit`, `pin`, `read`, `delete`, `groups`, `contacts`, `profile`, `folders`, `sessions`)
 читается как `allow` для этих действий и `readonly` для остальных; удаление всё равно спрашивает.
-Ключ в `permissions` того же раздела важнее обоих. `mcpTools` читается, но доступ больше не меняет.
+Ключ в `permissions` того же раздела важнее обоих. `mcp_tools` читается, но доступ больше не меняет.
 
 ### Перевод старых настроек
 
@@ -244,7 +249,7 @@ max config migrate
 
 Миграция сохраняет действовавшие права, настройки MAX и отметки модерации; старые уровни правил
 `forbid/flag/confirm` становятся `deny/ask/ask`. `--dry-run` ничего не пишет. После появления
-`permissions` команды изменения `readOnly`, `allow` и `mcpTools` отказывают с указанием новой настройки.
+`permissions` команды изменения `read_only`, `allow` и `mcp_tools` отказывают с указанием новой настройки.
 Под `MAX_PROFILE_LOCK` миграция всего файла запрещена; предпросмотр доступен.
 
 ## Изменить, не открывая файл
@@ -252,18 +257,18 @@ max config migrate
 ```sh
 max personal config set limit 50        # профилю personal
 max work config set record true         # профилю work
-max config set keepRunsForDays 7 --defaults   # всем профилям сразу
+max config set keep_runs_for_days 7 --defaults   # всем профилям сразу
 max work config unset limit             # убрать; снова решает defaults или встроенное
 max agent config set permissions.messages readonly  # чтение сообщений без записи
-max shop config set --bot sendsPerHour 200    # только боту shop
+max shop config set --bot sends_per_hour 200    # только боту shop
 max config set --personal --defaults limit 30 # всем личным аккаунтам
-max config set defaultProfile work      # какой профиль без первого слова
+max config set default_profile work      # какой профиль без первого слова
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max personal config set limit 0`
-откажет, и файл останется прежним. `serve`, `senderColors`, `catchUpMarksRead`, `searchCatchUp` и
-`mcpTools` с `--bot` не принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного, а
-старое `mcpTools` относится только к личному аккаунту.
+откажет, и файл останется прежним. `serve`, `sender_colors`, `catch_up_marks_read`, `search_catch_up` и
+`mcp_tools` с `--bot` не принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного, а
+старое `mcp_tools` относится только к личному аккаунту.
 
 ### Языки поиска
 
@@ -279,7 +284,7 @@ max config set defaultProfile work      # какой профиль без пе�
 Неизвестное поле отвергается с именем поля и кодом `configuration_error` (возврат `3`):
 
 ```json
-{"error":{"code":"configuration_error","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays, readOnly, allow, permissions, sendsPerHour, senderColors, serve, mcpTools"}}
+{"error":{"code":"configuration_error","reason":"config.invalid","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, read_only, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools"}}
 ```
 
 Значение не того вида называет поле и то, что допустимо: `profiles.default.limit: has to be a
@@ -297,7 +302,7 @@ whole number, 1 or more, not "20"`.
 | `MAX_PROFILE` | профиль на всю сессию оболочки; то же, что первое слово |
 | `MAX_PROFILE_LOCK` | запирает процесс на одном профиле: другой профиль — первым словом или через `MAX_PROFILE` — и `config set --defaults` получают отказ. Держит только там, где агент не может сам поменять окружение: в настройках MCP-клиента или в скрипте-обёртке. Агент с доступом к оболочке снимет переменную сам |
 | `MAX_TIMEOUT` | ограничение на команду целиком, на всю сессию оболочки; то же, что `--timeout` |
-| `MAX_REQUESTS_PER_MINUTE` | то же, что `requestsPerMinute`, и сильнее файла |
+| `MAX_REQUESTS_PER_MINUTE` | то же, что `requests_per_minute`, и сильнее файла |
 | `MAX_TOKEN` | токен напрямую, в обход ключницы — для CI и разовых запусков |
 | `MAX_BOT_TOKEN` | токен бота для `max sales bot`, в обход ключницы |
 | `MAX_CONFIG_DIR` | где лежат `config.json` и, при отсутствии ключницы, файл с токеном |
@@ -342,29 +347,29 @@ max personal chats list
 
 | Ключ | Допустимый тип или значение | Область |
 |---|---|---|
-| `defaultProfile` | строка с именем профиля | корень файла |
-| `limit`, `timeoutMs`, `keepRunsForDays`, `sendsPerHour` | целое число ≥ 1 | профиль |
-| `requestsPerMinute` | целое число ≥ 0 | профиль |
-| `color`, `record`, `readOnly` | boolean | профиль |
-| `senderColors`, `catchUpMarksRead`, `searchCatchUp`, `serve` | boolean | личный аккаунт |
+| `default_profile` | строка с именем профиля | корень файла |
+| `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
+| `requests_per_minute` | целое число ≥ 0 | профиль |
+| `color`, `record`, `read_only` | boolean | профиль |
+| `sender_colors`, `catch_up_marks_read`, `search_catch_up`, `serve` | boolean | личный аккаунт |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |
 | `allow` | массив разрешённых действий; старый формат | профиль |
-| `mcpTools` | массив `contacts`, `polls`, `groups`, `profile`; старый формат | личный аккаунт |
-| `readOtherBots` | boolean или массив имён профилей | только `bot` |
-| `updateCheck`, `skillHint` | boolean | только `defaults` |
-| `transcribeModel` | строковый id из `max personal models audio list` | только `defaults` |
-| `embeddingProvider` | `local` или `openai` | профиль |
-| `embeddingModel`, `analysisModel` | непустая строка, не более 200 символов | профиль |
-| `embeddingBaseUrl`, `analysisBaseUrl` | URL HTTP(S) без credentials, query и fragment | профиль |
-| `embeddingDims` | целое 1–65 536 | профиль |
-| `analysisProvider` | `agent`, `openai`, `anthropic` | профиль |
+| `mcp_tools` | массив `contacts`, `polls`, `groups`, `profile`; старый формат | личный аккаунт |
+| `read_other_bots` | boolean или массив имён профилей | только `bot` |
+| `update_check`, `skill_hint` | boolean | только `defaults` |
+| `transcribe_model` | строковый id из `max personal models audio list` | только `defaults` |
+| `embedding_provider` | `local` или `openai` | профиль |
+| `embedding_model`, `analysis_model` | непустая строка, не более 200 символов | профиль |
+| `embedding_base_url`, `analysis_base_url` | URL HTTP(S) без credentials, query и fragment | профиль |
+| `embedding_dims` | целое 1–65 536 | профиль |
+| `analysis_provider` | `agent`, `openai`, `anthropic` | профиль |
 | `models` | объект назначений моделей; поля описаны ниже | профиль |
 | `searchStemmers.cyrillic` | `russian`, `none` | общий архив, через `config set` |
 | `searchStemmers.latin` | `english`, `spanish`, оба через запятую, `none` | общий архив, через `config set` |
 
 ### Модели по назначению
 
-`models.<назначение>` содержит только `provider`, `model`, `baseUrl`.
+`models.<назначение>` содержит только `provider`, `model`, `base_url`.
 Назначение — строчные латинские буквы, цифры и дефисы, с буквы в начале.
 `default` задаёт общие значения; `analysis` и `replies` переопределяют их по полям.
 Другие корректные имена можно сохранить заранее: это не включает отсутствующий use case.
@@ -374,7 +379,7 @@ max personal chats list
 |---|---|---|
 | `models.<назначение>.provider` | `off`, `openai`, `anthropic` | не задан; внешнего вызова нет |
 | `models.<назначение>.model` | непустая строка, не более 200 символов | не задан; включённому провайдеру нужен явный id |
-| `models.<назначение>.baseUrl` | URL HTTP(S) без credentials, query и fragment | адрес провайдера |
+| `models.<назначение>.base_url` | URL HTTP(S) без credentials, query и fragment | адрес провайдера |
 
 В каждом поле сначала действует `MAX_MODELS_<НАЗНАЧЕНИЕ>_PROVIDER`, `_MODEL` или `_BASE_URL`,
 затем ближайшая запись файла для назначения, затем явные старые `analysis*` для `analysis`,
@@ -398,7 +403,7 @@ max personal chats list
 
 ## Дальше
 
-- [Безопасность](security.md): что защищают `permissions`, список получателей и `sendsPerHour`
+- [Безопасность](security.md): что защищают `permissions`, список получателей и `sends_per_hour`
 - [Профили и вход](sessions.md): как устроены профили и где лежит токен
 - [Все команды](commands.md): каждая команда и опция и полная таблица кодов возврата
 - [Решение проблем](troubleshooting.md): что делать, когда не работает

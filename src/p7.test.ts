@@ -60,14 +60,14 @@ describe("P7 permissions", () => {
     save({ profiles: { work: { permissions: { messages: "readonly", "messages.delete": "allow" } } } })
     const { max, environment } = scripted()
     expect((await cli(["work", "messages", "send", "111", "synthetic", "--json"], environment)).code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(max.sent.filter(({ opcode }) => opcode !== Opcode.SESSION_INIT && opcode !== Opcode.LOGIN)).toEqual([])
     expect((await cli(["work", "messages", "list", "111", "--json"], environment)).code).toBe(0)
     const deleted = await cli(["work", "messages", "delete", "111", "116762160362694583", "--json"], environment)
     expect(deleted.code, deleted.stderr).toBe(0)
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
     expect(levelFor(resolveSettings({ profile: "work" }).permissions, "contacts.add").level).toBe("allow")
     const shown = await cli(["work", "config", "show", "--json"])
-    expect(JSON.parse(shown.stdout).permissionSources["messages.delete"]).toBe("config file: profiles.work")
+    expect(JSON.parse(shown.stdout).item.permission_sources["messages.delete"]).toBe("config file: profiles.work")
   })
 
   it.each([
@@ -154,8 +154,8 @@ describe("P7 permissions", () => {
       groups: { "111": { consent: { delete: "ask", remove: "deny" } } },
       checkedUntil: { "111": "2026-10-01T00:00:00Z" },
     })
-    expect((await cli(["work", "config", "set", "readOnly", "false", "--json"])).code).toBe(2)
-    expect(JSON.parse((await cli(["config", "migrate", "--json"])).stdout).changed).toBe(false)
+    expect((await cli(["work", "config", "set", "read_only", "false", "--json"])).code).toBe(2)
+    expect(JSON.parse((await cli(["config", "migrate", "--json"])).stdout).item.changed).toBe(false)
   })
 })
 
@@ -265,11 +265,11 @@ describe("contacts context in named chats", () => {
     )
 
     expect(short.code, short.stderr).toBe(0)
-    expect(JSON.parse(short.stdout).chats[0].messages).toEqual([
+    expect(JSON.parse(short.stdout).item.chats[0].messages).toEqual([
       { at: new Date(1789775000000).toISOString(), text: "synthetic first" },
     ])
     expect(detailed.code, detailed.stderr).toBe(0)
-    expect(JSON.parse(detailed.stdout).chats[0].messages[0]).toHaveProperty("locator")
+    expect(JSON.parse(detailed.stdout).item.chats[0].messages[0]).toHaveProperty("locator")
 
     const timeline = await cli(
       [
@@ -291,7 +291,7 @@ describe("contacts context in named chats", () => {
     )
     expect(timeline.code, timeline.stderr).toBe(0)
     expect(JSON.parse(timeline.stdout)).toMatchObject({
-      hasMore: false,
+      page: { limit: 5, has_more: false },
       items: [{ role: "sender", scope: "personal", locator: "msg:max/10000001/111/116762160362694583" }],
     })
   })

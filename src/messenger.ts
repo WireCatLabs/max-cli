@@ -3,7 +3,7 @@ import { AI_SETTING_KEYS } from "@wirecat/cli-core/cli"
 import type { GuardRequest, SendGuard } from "@wirecat/cli-core/sends"
 import { moderationService } from "@wirecat/cli-core/services"
 import type { Command } from "commander"
-import { maxAdapter } from "./adapter/max-adapter.js"
+import { type MaxAdapter, maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
 import { environmentOf, forCommand } from "./commands/context.js"
@@ -139,6 +139,7 @@ export const maxMessenger: Messenger = {
     const { createClient, store, reach, settings } = forCommand(command)
     if (command.name() === "moderate") migrateModerationPoints(store, context.env)
     const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
+    let opened: MaxAdapter | undefined
     try {
       const client = createClient({
         sends: "caller",
@@ -150,6 +151,9 @@ export const maxMessenger: Messenger = {
       const adapter = maxAdapter(client, store, reach, (message) => context.renderer.note(message), {
         reactions: command.name() !== "moderate",
       })
+      opened = adapter
+      // cli-core names the account once, at connect; a profile that never logged in has no id until LOGIN answers.
+      if (adapter.self() === null) await client.connect()
       return {
         ...adapter,
         close: async () => {
@@ -161,7 +165,11 @@ export const maxMessenger: Messenger = {
         },
       }
     } catch (error) {
-      await record.close()
+      try {
+        await opened?.close()
+      } finally {
+        await record.close()
+      }
       throw error
     }
   },

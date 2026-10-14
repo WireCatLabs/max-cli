@@ -2,6 +2,7 @@ import { CliError } from "@wirecat/cli-base"
 import { McpPicture } from "@wirecat/cli-core/cli"
 import type { MaxClient } from "../client.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
+import { itemAnswer } from "../envelope.js"
 
 const PHOTO_LIMIT = 512 * 1024
 
@@ -40,5 +41,9 @@ export const photoForMcp = async (
   })
   const mimeType = IMAGE_TYPES.find(([, is]) => is(bytes))?.[0]
   if (!mimeType) throw new CliError("validation_error", `the photo is not JPEG, PNG or WebP — ${saveIt}`)
-  return new McpPicture(bytes, mimeType, { chatId, messageId: args.message, index, bytes: bytes.length })
+  return new McpPicture(
+    bytes,
+    mimeType,
+    itemAnswer({ chat_id: chatId, message_id: args.message, index, bytes: bytes.length }),
+  )
 }

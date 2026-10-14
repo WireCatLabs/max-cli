@@ -3,6 +3,7 @@ import { annotate } from "@wirecat/cli-base/commands"
 import type { Command } from "commander"
 import { checkBody } from "../bot/input.js"
 import { plainJson } from "../bot/transport.js"
+import { renderItem } from "../envelope.js"
 import { botContext } from "./bot-context.js"
 import { chatIdOf } from "./bot-reads.js"
 import { guardedCall, operation } from "./bot-sends.js"
@@ -32,11 +33,15 @@ const limitOf = (limit: number): string => {
   return String(limit)
 }
 
-/** The Bot API's page of members, in our envelope with string ids (`NEED-358`); `marker` asks for the next. */
+/** The Bot API's page of members, in our envelope with string ids (`NEED-358`); `page.cursor` is the `--marker` for the next. */
 const showMembers = (context: ReturnType<typeof botContext>, answer: unknown): void => {
   const { members, marker } = plainJson(answer) as { members?: Record<string, unknown>[]; marker?: unknown }
   const items = (members ?? []).map((member) => ({ ...member, user_id: String(member.user_id) }))
-  renderList(context.renderer, context.format, items, { marker: marker ?? null, hasMore: marker != null })
+  renderList(context.renderer, context.format, items, {
+    limit: context.settings.limit,
+    has_more: marker != null,
+    ...(marker == null ? {} : { cursor: String(marker) }),
+  })
 }
 
 /**
@@ -74,6 +79,6 @@ export const addMembersCommands = (members: Command): void => {
         path: { chatId: chatIdOf(chat, context.registry) },
         body: checked("addMembers", `{"user_ids": ${userIdsJson(users)}}`),
       })
-      context.renderer.result(plainJson(answer) ?? { success: true })
+      renderItem(context.renderer, context.format, plainJson(answer) ?? { success: true })
     })
 }
