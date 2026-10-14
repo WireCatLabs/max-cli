@@ -736,16 +736,6 @@ export const UNTESTED: Untested[] = [
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
   {
-    command: "models image download",
-    reason:
-      "downloads the picture model over the network; cli-core's shared models command and its image tests (WireCatLabs/cli-core#1102) drive it offline",
-  },
-  {
-    command: "models image list",
-    reason:
-      "lists picture models from cli-core's shared models command; its image tests (WireCatLabs/cli-core#1102) cover it",
-  },
-  {
     command: "models text download",
     option: "--accept-terms",
     reason:

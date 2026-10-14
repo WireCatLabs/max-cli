@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 155 ⛔ · 0 ❌** — 333 commands, 752 options.
+**930 ✅ · 153 ⛔ · 0 ❌** — 331 commands, 752 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -652,8 +652,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `models text download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-core's src/cli/messenger/models-command.test.ts drives it offline |
 | `models text key set` |  | ⛔ | writes a provider key into the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
 | `models text key remove` |  | ⛔ | removes a provider key from the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
-| `models image list` |  | ⛔ | lists picture models from cli-core's shared models command; its image tests (WireCatLabs/cli-core#1102) cover it |
-| `models image download` |  | ⛔ | downloads the picture model over the network; cli-core's shared models command and its image tests (WireCatLabs/cli-core#1102) drive it offline |
 | `polls show` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
 | `polls vote` | `--retract` | ✅ |  |
