@@ -74,7 +74,7 @@ check("`runs list` says on stderr why it is empty", empty.stderr.includes("--rec
 // the atomic `run.json` and the log stream all work under this runtime.
 const recordedRun = maxHere("session", "end", "--record", "--json")
 check("a recorded command exits cleanly", recordedRun.status === 0)
-check("a recorded command still prints its own answer", JSON.parse(recordedRun.stdout).forgotten === false)
+check("a recorded command still prints its own answer", JSON.parse(recordedRun.stdout).item?.forgotten === false)
 
 const days = readdirSync(join(isolated, "state", "runs"))
 const day = days[0] ?? ""
