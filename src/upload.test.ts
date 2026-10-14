@@ -11,18 +11,20 @@ import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
-import { readUpload } from "./upload.js"
+import { openUpload } from "./upload.js"
 
 let server: Server
 let origin: string
 let directory: string
 const ranges: Record<string, string | undefined> = {}
+const lengths: Record<string, string | undefined> = {}
 
 beforeAll(async () => {
   server = createServer((request, response) => {
     request.resume()
     request.on("end", () => {
       ranges[request.url ?? ""] = request.headers["content-range"]
+      lengths[request.url ?? ""] = request.headers["content-length"]
       if (request.url === "/broken") return response.writeHead(500).end()
       if (request.url === "/photo") return response.end(JSON.stringify({ photos: { a: { token: "photo-token" } } }))
       if (request.url === "/voice") return response.end("{}")
@@ -213,7 +215,8 @@ describe("sending a video and a voice message", () => {
     const attach = (sends.at(-1) as Sent).message.attaches[0]
     expect(attach).toMatchObject({ _type: "VIDEO", token: "media-token", videoType: 0 })
     expect(String(attach?.videoId)).toBe("77")
-    expect(ranges["/video"]).toMatch(/^bytes 0-\d+\/\d+$/)
+    expect(ranges["/video"]).toBe("bytes 0-17/18")
+    expect(lengths["/video"]).toBe("18")
   })
 
   it("sends a video as a plain file with --as-file", async () => {
@@ -338,11 +341,11 @@ describe("sending files", () => {
   })
 
   // Windows would write the 2 GiB out; elsewhere the file is sparse.
-  it.skipIf(process.platform === "win32")("refuses a file of 2 GiB or more, which Node cannot read", async () => {
+  it.skipIf(process.platform === "win32")("opens a file of 2 GiB without reading it into memory", async () => {
     const path = join(directory, "huge.bin")
     await writeFile(path, "")
     await truncate(path, 2 ** 31)
 
-    await expect(readUpload(path)).rejects.toThrow("2.0 GiB, and max sends files under 2 GiB")
+    expect((await openUpload(path)).size).toBe(2 ** 31)
   })
 })

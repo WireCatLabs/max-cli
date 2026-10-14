@@ -100,7 +100,7 @@ export const createMessageWrites = (deps: Dependencies) => {
         anyFile?: boolean
         at?: number
         /** Files already read and checked by the caller — the shared services read their own. */
-        uploads?: { name: string; bytes: Uint8Array; kind: Upload["kind"] }[]
+        uploads?: { name: string; body: Blob; kind: Upload["kind"] }[]
         /** Marks already taken out of `text`, in MAX's names. */
         markup?: Markup[]
       } = {},
@@ -147,7 +147,7 @@ export const createMessageWrites = (deps: Dependencies) => {
         throw error
       }
 
-      const attachments = files.map(({ bytes, kind }) => ({ kind, bytes: bytes.length }))
+      const attachments = files.map(({ body, kind }) => ({ kind, bytes: body.size }))
       const summary = {
         ...(attachments.length > 0 ? { attachments } : {}),
         ...(options.at === undefined ? {} : { scheduledFor: new Date(options.at).toISOString() }),

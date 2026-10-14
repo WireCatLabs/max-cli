@@ -11,7 +11,7 @@ import type {
   SendOptions,
   ServerReads,
 } from "@wirecat/cli-core/cli"
-import type { Upload } from "@wirecat/cli-core/sends"
+import { type Upload, uploadBlob } from "@wirecat/cli-core/sends"
 import type { MaxClient } from "../client.js"
 import type * as Max from "../domain/models.js"
 import { httpOnly, LARGEST_VOICE, type Reach, streamBytes } from "../download.js"
@@ -355,6 +355,13 @@ export const maxAdapter = (
       if (noPreview) {
         throw new CliError("validation_error", "MAX's own client has no way to send a link without its preview")
       }
+      const uploads = await Promise.all(
+        attachments.map(async (upload) => ({
+          name: upload.name,
+          kind: uploadKind(upload),
+          body: await uploadBlob(upload.source),
+        })),
+      )
       const message = await client.messages.send(to, text, {
         cid: cidOf(sendId),
         ...(silent ? { notify: false } : {}),
@@ -363,9 +370,7 @@ export const maxAdapter = (
         ...((formatting ?? markup).length === 0
           ? {}
           : { markup: formatting ? formatting.map(toNativeMarkup) : markup.map(toMaxMarkup) }),
-        ...(attachments.length === 0
-          ? {}
-          : { uploads: attachments.map((upload) => ({ ...upload, kind: uploadKind(upload) })) }),
+        ...(uploads.length === 0 ? {} : { uploads }),
         ...(sticker === undefined ? {} : { sticker }),
       })
       return { message: toMessage(message), sendId }
@@ -457,7 +462,7 @@ const cidOf = (sendId: string): number => {
 }
 
 /** As `max messages send --file` always sent them: a picture as a photo, a video as a video unless `--as-file`. */
-const uploadKind = ({ name, kind, asFile }: Upload) =>
+const uploadKind = ({ name, kind, asFile }: Upload): "photo" | "video" | "file" | "voice" =>
   kind === "voice" ? kind : isImage(name) ? "photo" : isVideo(name) && asFile !== true ? "video" : kind
 
 const toPoll = ({ chatId, messageId, poll }: Max.PollMessage): Poll => ({

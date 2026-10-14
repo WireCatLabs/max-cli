@@ -62,9 +62,9 @@ const UPLOAD_TIMEOUT_MS = 10 * 60_000
  * Video and audio answer XML and are named by step one's token; image and file by the answer.
  */
 export const uploadFile = async (options: {
-  /** A file on disk, or one already read — `content` — as the shared commands hand it over. */
+  /** A file on disk, or the Blob the shared commands hand over — `content`. */
   path?: string
-  content?: { name: string; bytes: Uint8Array }
+  content?: { name: string; blob: Blob }
   type: UploadType
   endpoint: UploadEndpoint
   fetch: FetchLike
@@ -76,7 +76,7 @@ export const uploadFile = async (options: {
   const { path, content, type, endpoint } = options
   const name = content ? content.name : basename(path ?? "")
   const size = content
-    ? content.bytes.byteLength
+    ? content.blob.size
     : (() => {
         try {
           const stat = statSync(path ?? "")
@@ -87,7 +87,7 @@ export const uploadFile = async (options: {
       })()
   if (size === undefined) throw new CliError("not_found", `no file at ${path}`)
   const form = new FormData()
-  form.append("data", content ? new Blob([content.bytes]) : await openAsBlob(path ?? ""), name)
+  form.append("data", content ? content.blob : await openAsBlob(path ?? ""), name)
   const signals = [
     AbortSignal.timeout(options.timeoutMs ?? UPLOAD_TIMEOUT_MS),
     ...(options.signal ? [options.signal] : []),
