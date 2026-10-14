@@ -5,7 +5,6 @@ import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { botInstructions, commandLookup, createBotServer } from "@wirecat/cli-core/cli"
-import { mcpCommandsClient } from "@wirecat/cli-core/testing"
 import type { Command } from "commander"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
@@ -13,6 +12,7 @@ import { botMcpRun, maxBot, maxBotMcp } from "./commands/bot-messenger.js"
 import { ModerationRules, moderationPathFor } from "./moderation/rules.js"
 import { createProgram, run } from "./program.js"
 import { SKILL } from "./skill.js"
+import { surfaceOf } from "./testing/mcp-surface.js"
 
 const BOT = `{"user_id": 900, "first_name": "Helper", "username": "helper_bot", "is_bot": true, "last_activity_time": 1}`
 const now = Date.now()
@@ -118,35 +118,35 @@ const connect = async (
     await client.close()
     await server.close()
   })
-  return { client: mcpCommandsClient(client, "max_bot"), rawClient: client, profile, forms }
+  return { client: surfaceOf(client, "max_bot"), rawClient: client, profile, forms }
 }
 
-const call = async (client: Client, name: string, args: Record<string, unknown> = {}) => {
-  const result = await client.callTool({ name, arguments: args })
+const call = async (client: ReturnType<typeof surfaceOf>, command: string, args: Record<string, unknown> = {}) => {
+  const result = await client.run({ command, arguments: args })
   const body = result.structuredContent as Record<string, unknown>
   return { isError: result.isError === true, body, error: body?.error as { code?: string; message?: string } }
 }
-const names = async (client: Client) => (await client.listTools()).tools.map((tool) => tool.name)
+const names = (client: ReturnType<typeof surfaceOf>) => client.commands()
 const posts = () => calls.filter((one) => one.method === "POST")
 const deletes = () => calls.filter((one) => one.method === "DELETE")
 
 const READS = [
-  "max_bot_chats_list",
-  "max_bot_chats_show",
-  "max_bot_messages_list",
-  "max_bot_messages_show",
-  "max_bot_search_messages",
-  "max_bot_messages_between",
-  "max_bot_contacts_show",
-  "max_bot_chats_members_list",
-  "max_bot_chats_admins_list",
-  "max_bot_comments_list",
-  "max_bot_comments_get",
-  "max_bot_commands_list",
-  "max_bot_sends_list",
-  "max_bot_recipients_list",
-  "max_bot_me",
-  "max_bot_status",
+  "chats list",
+  "chats show",
+  "messages list",
+  "messages show",
+  "search messages",
+  "messages between",
+  "contacts show",
+  "chats members list",
+  "chats admins list",
+  "comments list",
+  "comments get",
+  "commands list",
+  "sends list",
+  "recipients list",
+  "me",
+  "status",
 ]
 
 describe("max bot mcp", () => {
@@ -156,38 +156,36 @@ describe("max bot mcp", () => {
 
     const all = await names((await connect()).client)
     expect(all).toHaveLength(29)
-    expect(all).toEqual(
-      expect.arrayContaining(["max_bot_messages_send", "max_bot_chats_moderate", "max_bot_comments_delete"]),
-    )
+    expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete"]))
     expect(all.some((name) => /recipients_(add|remove|clear)|webhooks|auth|api|uploads|_mcp/.test(name))).toBe(false)
   })
 
   it("**bot: deny leaves what no level stops**, and a key opened under it offers that write alone", async () => {
     expect((await names((await connect({ permissions: { bot: "deny" } })).client)).sort()).toEqual([
-      "max_bot_recipients_list",
-      "max_bot_sends_list",
-      "max_bot_status",
+      "recipients list",
+      "sends list",
+      "status",
     ])
     const send = await names((await connect({ permissions: { bot: "readonly", "bot.messages.send": "allow" } })).client)
-    expect(send).toEqual(expect.arrayContaining(["max_bot_messages_send", "max_bot_comments_send"]))
-    expect(send).not.toContain("max_bot_messages_edit")
-    expect((await call((await connect()).client, "max_bot_me")).body).toMatchObject({
+    expect(send).toEqual(expect.arrayContaining(["messages send", "comments send"]))
+    expect(send).not.toContain("messages edit")
+    expect((await call((await connect()).client, "me")).body).toMatchObject({
       item: { username: "helper_bot" },
     })
   })
 
   it("serves SKILL.md as max://skill, and names it last in instructions within 2048 characters", async () => {
-    const { client } = await connect()
+    const { rawClient } = await connect()
     const text = botInstructions({
       command: "max",
       name: "MAX",
       profile: "a-profile-name-of-some-length",
-      writes: ["max_bot_messages_send"],
+      writes: ["messages send"],
       skill: "`max skill install` installs it as an agent skill.",
     })
 
-    const { resources } = await client.listResources()
-    const read = await client.readResource({ uri: "max://skill" })
+    const { resources } = await rawClient.listResources()
+    const read = await rawClient.readResource({ uri: "max://skill" })
 
     expect(resources.map(({ uri }) => uri)).toEqual(["max://skill"])
     expect(read.contents).toEqual([
@@ -199,7 +197,7 @@ describe("max bot mcp", () => {
 
   it("answers max_bot_status with the token's source, the bot and the writing tools that are on", async () => {
     const { client } = await connect()
-    const { body } = await call(client, "max_bot_status")
+    const { body } = await call(client, "status")
     expect(body).toMatchObject({ item: { kind: "bot", auth: { username: "helper_bot" } } })
     expect((body.item as { writes: string[] }).writes).toContain("messages send")
     expect(JSON.stringify(body)).not.toContain("bot-token")
@@ -208,8 +206,7 @@ describe("max bot mcp", () => {
   it("offers all_bots and bots on the three copy readers only when readOtherBots allows it", async () => {
     const schema = async (readOtherBots: boolean | string[]) => {
       const { client } = await connect({ readOtherBots })
-      const { tools } = await client.listTools()
-      return tools.find((tool) => tool.name === "max_bot_contacts_show")?.inputSchema.properties ?? {}
+      return (await client.describe("contacts show"))?.arguments.properties ?? {}
     }
     expect(Object.keys(await schema(false))).not.toContain("all_bots")
     expect(Object.keys(await schema(["other"]))).toEqual(expect.arrayContaining(["all_bots", "bots"]))
@@ -217,17 +214,17 @@ describe("max bot mcp", () => {
 
   it("sends through the command, so the journal has it — and a text starting with - is text", async () => {
     const { client } = await connect()
-    const { isError } = await call(client, "max_bot_messages_send", { chat: "-100", text: "-5 градусов" })
+    const { isError } = await call(client, "messages send", { chat: "-100", text: "-5 градусов" })
     expect(isError).toBe(false)
     expect(JSON.parse(posts().at(-1)?.body ?? "{}")).toEqual({ text: "-5 градусов" })
-    const journal = (await call(client, "max_bot_sends_list")).body.items as { outcome: string }[]
+    const journal = (await call(client, "sends list")).body.items as { outcome: string }[]
     expect(journal.at(-1)).toMatchObject({ outcome: "sent" })
   })
 
   it("**reaches the shared admins and members commands** under their tool names", async () => {
     const { client } = await connect()
-    expect((await call(client, "max_bot_chats_admins_list", { chat: "-100" })).body).toMatchObject({ items: [] })
-    const removed = await call(client, "max_bot_chats_members_remove", { chat: "-100", user: "42", block: true })
+    expect((await call(client, "chats admins list", { chat: "-100" })).body).toMatchObject({ items: [] })
+    const removed = await call(client, "chats members remove", { chat: "-100", user: "42", block: true })
     expect(removed.isError).toBe(false)
     expect(deletes().at(-1)?.url).toBe("/chats/-100/members?user_id=42&block=true")
   })
@@ -235,7 +232,7 @@ describe("max bot mcp", () => {
   it("meets the bot's recipient list, and the refusal is the command's", async () => {
     const { client, profile } = await connect()
     await owner(profile, ["recipients", "add", "-200"])
-    const { isError, error } = await call(client, "max_bot_messages_send", { chat: "-100", text: "hi" })
+    const { isError, error } = await call(client, "messages send", { chat: "-100", text: "hi" })
     expect(isError).toBe(true)
     expect(error.code).toBe("confirmation_required")
     expect(posts()).toHaveLength(0)
@@ -243,22 +240,20 @@ describe("max bot mcp", () => {
 
   it("refuses an argument that would become a flag or read stdin, before running anything", async () => {
     const { client } = await connect()
-    const flagged = await call(client, "max_bot_messages_send", {
+    const flagged = await call(client, "messages send", {
       chat: "-100",
       text: "x",
       reply_to: "--allow-dangerous",
     })
-    const stdin = await call(client, "max_bot_messages_send", { chat: "-100", text: "-" })
-    const seen = await call(client, "max_bot_chats_action", { chat: "-100", action: "mark_seen" })
+    const stdin = await call(client, "messages send", { chat: "-100", text: "-" })
+    const seen = await call(client, "chats action", { chat: "-100", action: "mark_seen" })
     for (const refused of [flagged, stdin, seen]) expect(refused.isError).toBe(true)
     expect(calls).toHaveLength(0)
   })
 
   it("deletes a requested comment at ask without a server form", async () => {
     const declined = await connect({}, { form: () => ({ action: "decline" }) })
-    expect((await call(declined.client, "max_bot_comments_delete", { message: "mid.2", comment: "c1" })).isError).toBe(
-      false,
-    )
+    expect((await call(declined.client, "comments delete", { message: "mid.2", comment: "c1" })).isError).toBe(false)
     expect(deletes()).toHaveLength(1)
     expect(declined.forms).toEqual([])
   })
@@ -269,18 +264,18 @@ describe("max bot mcp", () => {
         { permissions: { "bot.messages.send": "ask" } },
         { form: () => ({ action: "decline" }) },
       )
-      expect((await call(client, "max_bot_messages_send", { chat: "-100", text: "hello" })).isError).toBe(false)
+      expect((await call(client, "messages send", { chat: "-100", text: "hello" })).isError).toBe(false)
       expect(forms).toEqual([])
       expect(posts()).toHaveLength(1)
     })
     it.each(["deny", "readonly"] as const)("refuses an unavailable send under %s", async (level) => {
       const { client } = await connect({ permissions: { "bot.messages.send": level } })
-      expect((await call(client, "max_bot_messages_send", { chat: "-100", text: "hello" })).isError).toBe(true)
+      expect((await call(client, "messages send", { chat: "-100", text: "hello" })).isError).toBe(true)
       expect(posts()).toHaveLength(0)
     })
   })
 
-  describe("max_bot_chats_moderate", () => {
+  describe("chats moderate", () => {
     const confirmDeletes = (profile: string) => {
       const rules = new ModerationRules(moderationPathFor(profile))
       rules.set("-100", null, "invites", "delete")
@@ -293,7 +288,7 @@ describe("max bot mcp", () => {
       const rules = new ModerationRules(moderationPathFor(profile))
       rules.set("-100", null, "invites", "delete")
       rules.set("-100", null, "consent.delete", "allow")
-      const result = await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since, dry_run: true })
+      const result = await call(client, "chats moderate", { chat: "-100", since_time: since, dry_run: true })
       expect(result.isError).toBe(false)
       expect(result.body.item).toMatchObject({ rows: [expect.objectContaining({ outcome: "planned" })] })
       expect(deletes()).toEqual([])
@@ -302,7 +297,7 @@ describe("max bot mcp", () => {
     it("plans moderation actions requiring separate rule consent without a server form", async () => {
       const { client, profile, forms } = await connect({}, { form: () => ({ action: "accept", content: {} }) })
       confirmDeletes(profile)
-      const { isError, body } = await call(client, "max_bot_chats_moderate", { chat: "-100", since_time: since })
+      const { isError, body } = await call(client, "chats moderate", { chat: "-100", since_time: since })
       expect(isError).toBe(false)
       expect(forms).toEqual([])
       expect(body.item).toMatchObject({ rows: [expect.objectContaining({ action: "delete", outcome: "planned" })] })

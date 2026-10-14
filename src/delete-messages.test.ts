@@ -8,6 +8,7 @@ import { Connection } from "./protocol/connection.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+import { READ_ONLY } from "./testing/read-only.js"
 
 const FIRST = "116762160362694580"
 const SECOND = "116762160362694583"
@@ -156,7 +157,7 @@ describe("deleting messages", () => {
 
   it("a read-only profile refuses, sending nothing past the login", async () => {
     const { environment, beyondLogin } = messenger()
-    await runWith(["d-ro", "config", "set", "read_only", "true"])
+    await runWith(["d-ro", "config", "set", "permissions", READ_ONLY])
 
     expect((await runWith(["d-ro", "messages", "delete", "111", FIRST, "--allow-dangerous"], environment)).code).toBe(5)
     expect(beyondLogin()).toEqual([])

@@ -19,8 +19,6 @@ const guarded = (options: Pick<SendGuardOptions, "permissions" | "ask"> = {}) =>
     sendGuard({
       profile: "p",
       command: "max",
-      readOnly: false,
-      readOnlyFrom: "default",
       sendsPerHour: 1,
       journal,
       recipients: new RecipientList(join(dir, "recipients.json"), "max"),

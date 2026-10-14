@@ -181,7 +181,7 @@ describe("max mcp --http", () => {
   it("passes startup permissions and ignores retired confirmation mode without changing saved config", async () => {
     const file = join(process.env.MAX_CONFIG_DIR ?? "", "config.json")
     mkdirSync(dirname(file), { recursive: true })
-    const saved = JSON.stringify({ defaults: { read_only: true, permissions: { "messages.send": "deny" } } })
+    const saved = JSON.stringify({ defaults: { permissions: { "messages.send": "deny" } } })
     writeFileSync(file, saved)
     const { code } = await cli([
       "mcp",

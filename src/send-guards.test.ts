@@ -10,6 +10,7 @@ import { Connection } from "./protocol/connection.js"
 import { recipientsPathFor, sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+import { READ_ONLY } from "./testing/read-only.js"
 
 const TEXT = "a sentence that must never reach a file"
 
@@ -67,7 +68,7 @@ describe("sending", () => {
 
   it("from a read-only profile, refuses a reaction too, and journals it as one", async () => {
     const { environment, writes } = messenger()
-    await runWith(["g-react-read", "config", "set", "read_only", "true"])
+    await runWith(["g-react-read", "config", "set", "permissions", READ_ONLY])
 
     const refused = await runWith(["g-react-read", "reactions", "add", "111", "116762160362694583", "👍"], environment)
 
@@ -78,7 +79,7 @@ describe("sending", () => {
 
   it("from a read-only profile, refuses with 5 and sends nothing", async () => {
     const { environment, writes } = messenger()
-    await runWith(["g-read", "config", "set", "read_only", "true"])
+    await runWith(["g-read", "config", "set", "permissions", READ_ONLY])
 
     const refused = await runWith(["g-read", "messages", "send", "111", TEXT, "--json"], environment)
 
@@ -141,7 +142,7 @@ describe("sending", () => {
   it("keeps sent and refused outcomes, and `sends list` shows them newest first", async () => {
     const { environment } = messenger()
     await runWith(["g-keep", "messages", "send", "111", "first"], environment)
-    await runWith(["g-keep", "config", "set", "read_only", "true"])
+    await runWith(["g-keep", "config", "set", "permissions", READ_ONLY])
     await runWith(["g-keep", "messages", "send", "111", "second"], environment)
 
     const listed = await runWith(["g-keep", "sends", "list", "--json"])
@@ -178,7 +179,7 @@ describe("reacting", () => {
 
   it("from a read-only profile, refuses with 5 and sends nothing", async () => {
     const { environment, writes } = messenger()
-    await runWith(["g-react-ro", "config", "set", "read_only", "true"])
+    await runWith(["g-react-ro", "config", "set", "permissions", READ_ONLY])
 
     const refused = await runWith(["g-react-ro", "reactions", "add", "111", MESSAGE, "👍", "--json"], environment)
 
@@ -209,8 +210,6 @@ describe("the send guard", () => {
   const guardAt = (profile: string, time: string, sendsPerHour: number) =>
     sendGuard({
       profile,
-      readOnly: false,
-      readOnlyFrom: "default",
       sendsPerHour,
       journal: new SendJournal(sendsPathFor(profile)),
       recipients: new RecipientList(recipientsPathFor(profile), "max"),
@@ -238,8 +237,6 @@ describe("two senders at once", () => {
   const guard = (profile: string, sendsPerHour: number, time = "2026-09-24T09:00:00Z") =>
     sendGuard({
       profile,
-      readOnly: false,
-      readOnlyFrom: "default",
       sendsPerHour,
       journal: new SendJournal(sendsPathFor(profile)),
       recipients: new RecipientList(recipientsPathFor(profile), "max"),
@@ -298,8 +295,7 @@ describe("a reaction", () => {
   const guardFor = (profile: string, options: { readOnly?: boolean; sendsPerHour?: number } = {}) =>
     sendGuard({
       profile,
-      readOnly: options.readOnly ?? false,
-      readOnlyFrom: "config file: profiles.work",
+      ...(options.readOnly ? { permissions: { messages: "readonly" as const, reactions: "readonly" as const } } : {}),
       sendsPerHour: options.sendsPerHour ?? 1,
       journal: new SendJournal(sendsPathFor(profile)),
       recipients: new RecipientList(recipientsPathFor(profile), "max"),
@@ -308,7 +304,7 @@ describe("a reaction", () => {
 
   it("is refused by a read-only profile and by the recipient list, but not counted by the limit", () => {
     expect(() => guardFor("g-react-ro", { readOnly: true }).check({ chatId: "111", kind: "reaction" })).toThrow(
-      "cannot send, react, change chats or change the account",
+      "does not let reactions write",
     )
 
     new RecipientList(recipientsPathFor("g-react-list"), "max").add({

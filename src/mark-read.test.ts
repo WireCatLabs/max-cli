@@ -9,6 +9,7 @@ import { Connection } from "./protocol/connection.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+import { READ_ONLY } from "./testing/read-only.js"
 
 const OLDER = "116762160362694580"
 const NEWER = "116762160362694583"
@@ -99,7 +100,7 @@ describe("marking a chat read", () => {
 
   it("a read-only profile refuses, sending nothing past the login, and prints no messages", async () => {
     const { max, environment } = messenger()
-    await runWith(["r-ro", "config", "set", "read_only", "true"])
+    await runWith(["r-ro", "config", "set", "permissions", READ_ONLY])
 
     expect((await runWith(["r-ro", "chats", "mark-read", "111"], environment)).code).toBe(5)
     expect(max.sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)).toBe(true)

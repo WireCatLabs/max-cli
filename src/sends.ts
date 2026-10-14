@@ -14,7 +14,7 @@ import {
   sendsPathFor as sharedSendsPath,
 } from "@wirecat/cli-core/sends"
 import { MAX_APP } from "./app.js"
-import { type Settings, setCommandFor } from "./config.js"
+import type { Settings } from "./config.js"
 import { approvePermission } from "./permissions.js"
 
 export const sendsPathFor = (profile: string, env: NodeJS.ProcessEnv = process.env): string =>
@@ -78,22 +78,14 @@ export const operating = (guard: SendGuard, key?: string): SendGuard => {
 
 /**
  * The guard a profile's configuration asks for — the command's, and `max serve`'s for every write
- * it forwards. Built per request in the server, so `config set read_only true` needs no restart.
+ * it forwards. Built per request in the server, so `config set permissions.messages readonly` needs no restart.
  */
 export const guardFor = (settings: Settings, warn: (message: string) => void, ask?: Asker, key?: string): SendGuard => {
   const guard = operating(
     sendGuard({
       profile: settings.profile,
       command: MAX_APP.command,
-      readOnly: settings.readOnly,
-      readOnlyFrom: settings.sources.readOnly,
-      ...(settings.allow
-        ? {
-            allow: settings.allow,
-            allowFrom: settings.sources.allow,
-            allowFix: setCommandFor(settings.sources.allow, settings.profile, "allow"),
-          }
-        : {}),
+      ...(settings.readOnlyLock ? { readOnlyLock: settings.readOnlyLock } : {}),
       permissions: settings.permissions,
       permissionSources: settings.permissionSources,
       ...(ask ? { ask } : {}),

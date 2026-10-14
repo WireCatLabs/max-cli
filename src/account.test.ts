@@ -12,6 +12,7 @@ import { Connection } from "./protocol/connection.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+import { READ_ONLY } from "./testing/read-only.js"
 
 const PHONE = "+71234567890"
 
@@ -328,7 +329,7 @@ describe("contacts", () => {
     async (action) => {
       const { environment, sent } = account()
       const profile = `contact-readonly-${action}`
-      expect((await runWith([profile, "config", "set", "read_only", "true"])).code).toBe(0)
+      expect((await runWith([profile, "config", "set", "permissions", READ_ONLY])).code).toBe(0)
       const result = await runWith(
         [profile, "contacts", action, "20000002", ...(action === "rename" ? ["Neighbour"] : [])],
         environment,
@@ -388,7 +389,7 @@ describe("the profile", () => {
 
   it("a read-only profile refuses before anything is sent, and journals the refusal", async () => {
     const { environment, sent } = account()
-    expect((await runWith(["a-readonly", "config", "set", "read_only", "true"])).code).toBe(0)
+    expect((await runWith(["a-readonly", "config", "set", "permissions", READ_ONLY])).code).toBe(0)
 
     const refused = await runWith(["a-readonly", "account", "update", "--first-name", "X"], environment)
 
@@ -613,7 +614,7 @@ describe("folders", () => {
 
   it("read-only folders order never writes and journals one refusal", async () => {
     const { environment, sent } = account()
-    expect((await runWith(["folder-readonly-order", "config", "set", "read_only", "true"])).code).toBe(0)
+    expect((await runWith(["folder-readonly-order", "config", "set", "permissions", READ_ONLY])).code).toBe(0)
     const result = await runWith(["folder-readonly-order", "chats", "folders", "order", "Personal"], environment)
     expect(JSON.parse(result.stderr).error.code).toBe("permission_error")
     expect(sent(Opcode.FOLDERS_REORDER)).toEqual([])
@@ -627,7 +628,7 @@ describe("folders", () => {
     async (action) => {
       const { environment, sent } = account()
       const profile = `folder-readonly-${action}`
-      expect((await runWith([profile, "config", "set", "read_only", "true"])).code).toBe(0)
+      expect((await runWith([profile, "config", "set", "permissions", READ_ONLY])).code).toBe(0)
       const args =
         action === "create"
           ? ["New", "--chat", "111"]
@@ -782,7 +783,7 @@ describe("sessions", () => {
   it.each(["offline", "read_only"])("refuses session closure with %s before login", async (flag) => {
     const { environment, sent } = account()
     const profile = `a-end-${flag}`
-    if (flag === "read_only") expect((await runWith([profile, "config", "set", "read_only", "true"])).code).toBe(0)
+    if (flag === "read_only") expect((await runWith([profile, "config", "set", "permissions", READ_ONLY])).code).toBe(0)
     const result = await runWith(
       [profile, "account", "sessions", "end", "--others", "--yes", ...(flag === "offline" ? ["--offline"] : [])],
       environment,

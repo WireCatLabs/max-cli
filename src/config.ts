@@ -1,6 +1,6 @@
 import { CliError, saveConfigFile } from "@wirecat/cli-base"
 import { AI_ENTRIES, type AISettings, first, loadSnakeCaseConfig, settingsFor } from "@wirecat/cli-core/cli"
-import { type Level, PERMISSIONS, type Permission } from "@wirecat/cli-core/sends"
+import type { Level } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
 import { knownProfiles } from "./diagnose.js"
@@ -22,10 +22,6 @@ export type McpToolGroup = (typeof MCP_TOOL_GROUPS)[number]
 const mcpToolList = v.array(
   v.picklist(MCP_TOOL_GROUPS, (issue) => `has to be one of ${MCP_TOOL_GROUPS.join(", ")}, not ${issue.received}`),
   plain("has to be a list of tool groups, like contacts,polls"),
-)
-const permissionList = v.array(
-  v.picklist(PERMISSIONS, (issue) => `has to be one of ${PERMISSIONS.join(", ")}, not ${issue.received}`),
-  plain("has to be a list of actions, like send,reaction"),
 )
 
 /** valibot's own words ("Expected never but received …") mean nothing to someone editing a file. */
@@ -54,8 +50,6 @@ const sharedEntries = {
   /** The run log reads these two; nothing records anything until it exists. */
   record: v.optional(flag),
   keep_runs_for_days: v.optional(count),
-  read_only: v.optional(flag),
-  allow: v.optional(permissionList),
   permissions: settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries.permissions,
   sends_per_hour: v.optional(count),
   requests_per_minute: v.optional(countOrZero),
@@ -205,9 +199,8 @@ export interface Settings extends AISettings {
   keepFailedRuns: boolean
   serve: boolean
   keepRunsForDays: number
-  readOnly: boolean
-  /** `undefined` is every action, as before `CLI-37`; a list is only those. */
-  allow: readonly Permission[] | undefined
+  /** The variable that made this process read-only, above every level (`MAX_READ_ONLY`). */
+  readOnlyLock?: string
   sendsPerHour: number
   /** Calls a minute across every process of the profile; 0 is no pace. Unset: MAX's default. */
   requestsPerMinute?: number
@@ -261,8 +254,6 @@ export type SourcedSetting =
   | "record"
   | "serve"
   | "keepRunsForDays"
-  | "readOnly"
-  | "allow"
   | "sendsPerHour"
   | "requestsPerMinute"
   | "mcpTools"
@@ -380,23 +371,6 @@ export interface SettingScope {
 export const scopePath = ({ profile, kind }: SettingScope): string =>
   [kind, profile === undefined ? "defaults" : `profiles.${profile}`].filter(Boolean).join(".")
 
-/** The `config set` that writes where a value came from, so a refusal can say what to type. */
-export const setCommandFor = (from: Source, profile: string, setting: string): string => {
-  const path = from.startsWith("config file: ") ? from.slice("config file: ".length) : `profiles.${profile}`
-  const [first, second] = path.split(".")
-  const kind = first === "personal" || first === "bot" ? first : undefined
-  const everyone = (kind ? second : first) === "defaults"
-  const words = [
-    "max",
-    ...(everyone ? [] : [profile]),
-    "config set",
-    ...(kind ? [`--${kind}`] : []),
-    ...(everyone ? ["--defaults"] : []),
-    setting,
-  ]
-  return words.join(" ")
-}
-
 /**
  * Sets or removes one setting of one profile, or of `defaults`, and writes the file back.
  * `defaultProfile` is the one top-level key, and takes no scope.
@@ -414,7 +388,7 @@ export const changeSetting = (
     throw new CliError("validation_error", `no setting called "${setting}" — one of: ${ALL_SETTINGS.join(", ")}`)
   }
   const config = readConfig(path)
-  if (["read_only", "allow", "mcp_tools"].includes(setting) && hasPermissionConfig(config))
+  if (setting === "mcp_tools" && hasPermissionConfig(config))
     throw new CliError("validation_error", `${setting} is a legacy setting — use permissions instead`)
   if (setting === "default_profile") {
     if (kind !== undefined)
@@ -461,7 +435,7 @@ export const changeSetting = (
   } else if (value === undefined) delete scope[setting]
   else if (setting === "read_other_bots")
     scope[setting] = value === "true" || value === "false" ? value === "true" : parseList(value)
-  else scope[setting] = setting === "allow" || setting === "mcp_tools" ? parseList(value) : parseValue(value)
+  else scope[setting] = setting === "mcp_tools" ? parseList(value) : parseValue(value)
   const empty = Object.keys(scope).length === 0
 
   const place = (holder: { defaults?: unknown; profiles?: Record<string, unknown> }) => {

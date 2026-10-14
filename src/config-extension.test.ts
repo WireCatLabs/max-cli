@@ -9,9 +9,9 @@ it("keeps MAX extension values and sources at their personal/profile/default sco
   writeFileSync(
     join(configDir, "config.json"),
     JSON.stringify({
-      defaults: { serve: false, mcpTools: ["contacts"], transcribeModel: "gigaam-v3" },
-      profiles: { work: { serve: true, mcpTools: ["groups"] } },
-      personal: { defaults: { serve: false }, profiles: { work: { serve: false, mcpTools: ["profile"] } } },
+      defaults: { serve: false, mcp_tools: ["contacts"], transcribe_model: "gigaam-v3" },
+      profiles: { work: { serve: true, mcp_tools: ["groups"] } },
+      personal: { defaults: { serve: false }, profiles: { work: { serve: false, mcp_tools: ["profile"] } } },
     }),
   )
   const personal = resolveSettings({ profile: "work" }, { env: {}, configDir })

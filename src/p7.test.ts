@@ -1,5 +1,5 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { dirname, join } from "node:path"
+import { mkdirSync, writeFileSync } from "node:fs"
+import { dirname } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { rememberAccount } from "@wirecat/cli-core/cli"
 import { levelFor } from "@wirecat/cli-core/sends"
@@ -128,35 +128,6 @@ describe("P7 permissions", () => {
     }
     walk(createProgram())
   })
-
-  it("migrates legacy settings and group consent, previews without writing, and refuses retired setters", async () => {
-    save({ defaults: { allow: ["send", "pin"] }, profiles: { work: { readOnly: true }, home: { serve: false } } })
-    const path = join(process.env.MAX_STATE_DIR ?? "", "profiles", "work.moderation.json")
-    const { defaultRules } = await import("./moderation/rules.js")
-    mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(
-      path,
-      JSON.stringify({
-        groups: { "111": { ...defaultRules("Synthetic"), consent: { delete: "flag", remove: "forbid" } } },
-        checkedUntil: { "111": "2026-10-01T00:00:00Z" },
-      }),
-    )
-    const before = readFileSync(configPath(), "utf8")
-    const rulesBefore = readFileSync(path, "utf8")
-    expect((await cli(["config", "migrate", "--dry-run", "--json"])).code).toBe(0)
-    expect(readFileSync(configPath(), "utf8")).toBe(before)
-    expect(readFileSync(path, "utf8")).toBe(rulesBefore)
-    expect((await cli(["config", "migrate", "--json"])).code).toBe(0)
-    expect(resolveSettings({ profile: "home" }).serve).toBe(false)
-    expect(levelFor(resolveSettings({ profile: "work" }).permissions, "messages.send").level).toBe("readonly")
-    expect(levelFor(resolveSettings({ profile: "home" }).permissions, "messages.unpin").level).toBe("allow")
-    expect(JSON.parse(readFileSync(path, "utf8"))).toMatchObject({
-      groups: { "111": { consent: { delete: "ask", remove: "deny" } } },
-      checkedUntil: { "111": "2026-10-01T00:00:00Z" },
-    })
-    expect((await cli(["work", "config", "set", "read_only", "false", "--json"])).code).toBe(2)
-    expect(JSON.parse((await cli(["config", "migrate", "--json"])).stdout).item.changed).toBe(false)
-  })
 })
 
 it("refuses a permission key that names no command, and takes max's own bot keys", async () => {
@@ -178,22 +149,6 @@ it("keeps a native read child override and checks nested native read groups", as
     expect(await client.account.me()).toMatchObject({ id: "10000001" })
   } finally {
     await client.close()
-  }
-})
-
-it("allows migration preview under a profile lock and refuses the whole-file write", async () => {
-  save({ profiles: { work: { readOnly: true } } })
-  const before = readFileSync(configPath(), "utf8")
-  const { MAX_PROFILE } = process.env
-  delete process.env.MAX_PROFILE
-  process.env.MAX_PROFILE_LOCK = "work"
-  try {
-    expect((await cli(["config", "migrate", "--json"])).code).toBe(5)
-    expect((await cli(["config", "migrate", "--dry-run", "--json"])).code).toBe(0)
-    expect(readFileSync(configPath(), "utf8")).toBe(before)
-  } finally {
-    delete process.env.MAX_PROFILE_LOCK
-    process.env.MAX_PROFILE = MAX_PROFILE
   }
 })
 

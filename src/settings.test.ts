@@ -9,6 +9,7 @@ import { Connection } from "./protocol/connection.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+import { READ_ONLY } from "./testing/read-only.js"
 
 const messenger = () => {
   const max = mockMax({
@@ -86,7 +87,7 @@ describe("the owner's own settings", () => {
 
   it("a read-only profile mutes nothing and journals the refusal", async () => {
     const { environment, settings } = messenger()
-    expect((await runWith(["s-readonly", "config", "set", "read_only", "true"], environment)).code).toBe(0)
+    expect((await runWith(["s-readonly", "config", "set", "permissions", READ_ONLY], environment)).code).toBe(0)
     const { code } = await runWith(["s-readonly", "chats", "mute", "111"], environment)
 
     expect(code).toBe(5)
