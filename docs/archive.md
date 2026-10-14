@@ -349,9 +349,9 @@ max personal watch --events --jsonl  # ещё правки, удаления, р
   чат изменился — всё это он учитывает. Если MAX сообщил о том, чего он учесть не может (удалены
   сообщения), сервер в фоне входит заново — не чаще раза в минуту.
 - **С `--events` строки другие:** `{"event": "message", "message": …}`, `{"event": "edit", "message": …}`,
-  `{"event": "delete", "chatId", "chatTitle", "messageId"}`,
-  `{"event": "reaction", "chatId", "chatTitle", "messageId", "reactions"}`,
-  `{"event": "read", "chatId", "chatTitle", "userId", "upToTime", "unreadCount"}` — кто-то прочитал чат
+  `{"event": "delete", "chat_id", "chat_title", "message_id"}`,
+  `{"event": "reaction", "chat_id", "chat_title", "message_id", "reactions"}`,
+  `{"event": "read", "chat_id", "chat_title", "user_id", "up_to_time", "unread_count"}` — кто-то прочитал чат
   до сообщения с этим временем; это может быть и сам владелец на другом устройстве,
   `{"event": "chat", "chat"}` — у чата сменилось название или участники, или владелец из него вышел.
   Пометка «непрочитанным» событием не считается.

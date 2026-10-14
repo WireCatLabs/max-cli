@@ -1044,7 +1044,9 @@ describe("the MCP server", () => {
       step: "messages.transcribe",
       why: expect.stringMatching(/max models audio download/),
     }
-    expect(plain.body.missing).toBeUndefined()
+    expect(plain.body.missing).toEqual([
+      { field: "transcript", step: "messages.transcribe", why: expect.stringContaining("--transcribe hears them") },
+    ])
     expect(asked.isError).toBe(false)
     expect(asked.body).toMatchObject({ items: [{ id: "116762160362694583" }], missing: [unheard] })
     expect(inbox.body).toMatchObject({ missing: [unheard] })

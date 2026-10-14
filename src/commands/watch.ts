@@ -1,7 +1,9 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { REMOTE_READ } from "@wirecat/cli-core/cli"
+import { messageItem, REMOTE_READ, snakeKeys } from "@wirecat/cli-core/cli"
+import type { AccountKey } from "@wirecat/cli-core/store"
 import { Command } from "commander"
+import { toMessage } from "../adapter/max-adapter.js"
 import type { MessageChange, MessageHit } from "../domain/models.js"
 import { renderMessages } from "../rendering/messages.js"
 import type { ServerEvent } from "../server/server.js"
@@ -12,7 +14,7 @@ import { forCommand } from "./context.js"
 /**
  * `max watch` — new messages as they arrive, from a running `max serve`, until Ctrl-C.
  *
- * `--jsonl` gives one message per line in the shape `messages list` uses, which is what a script,
+ * `--jsonl` gives one message per line in the shape `messages list` answers (`messageItem`), which is what a script,
  * an n8n node or an agent reads. It never marks anything read: the server only listens.
  *
  * `--events` adds edits, deletions and reactions (`MAX-34`), reads and chat changes (`MAX-67`), and then
@@ -44,6 +46,7 @@ export const watchCommand = (): Command =>
           profile: settings.profile,
         })
       let seen = false
+      let reader: AccountKey | undefined
       await run("watch", async () => {
         try {
           const listen = () =>
@@ -62,10 +65,12 @@ export const watchCommand = (): Command =>
                   )
                   seen ||= event.connected
                 } else {
+                  reader ??= readerOf(store.readState().viewerId)
                   const line = watchLine(event, {
                     events: options.events === true,
                     pretty: format === "pretty",
                     render,
+                    reader,
                   })
                   if (line !== undefined) streams.data(line)
                 }
@@ -95,14 +100,31 @@ export const watchCommand = (): Command =>
  */
 export const watchLine = (
   event: Exclude<ServerEvent, { event: "status" }>,
-  { events, pretty, render }: { events: boolean; pretty: boolean; render: (message: MessageHit) => string },
+  {
+    events,
+    pretty,
+    render,
+    reader,
+  }: { events: boolean; pretty: boolean; render: (message: MessageHit) => string; reader: AccountKey },
 ): string | undefined => {
+  const item = (message: MessageHit) => messageItem({ ...toMessage(message), chatTitle: message.chatTitle }, reader)
   if (event.event === "change") {
     if (!events) return undefined
-    return pretty ? describeChange(event.change, render) : JSON.stringify(event.change)
+    if (pretty) return describeChange(event.change, render)
+    const { change } = event
+    return JSON.stringify(
+      change.event === "edit" ? { event: "edit", message: item(change.message) } : snakeKeys(change),
+    )
   }
   if (pretty) return render(event.message)
-  return JSON.stringify(events ? { event: "message", message: event.message } : event.message)
+  return JSON.stringify(events ? { event: "message", message: item(event.message) } : item(event.message))
+}
+
+/** A message's `ref` names the account that read it; `max serve` saved it when it logged in. */
+const readerOf = (viewerId: string | undefined): AccountKey => {
+  if (viewerId === undefined)
+    throw new CliError("authentication_error", "this profile has not logged in yet — `max session start`")
+  return { provider: "max", account: viewerId }
 }
 
 const describeChange = (change: MessageChange, render: (message: MessageHit) => string): string => {
