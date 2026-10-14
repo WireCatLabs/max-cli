@@ -14,6 +14,8 @@
 
 ### Изменено — может сломать скрипты
 
+- **Следующий шаг к команде, которая меняет только этот компьютер, не запускается сам** (cli-core 0.273.0):
+  у шагов `server restart` и `store reindex` стоит `safe_to_auto_execute: false`.
 - **`mentions rebuild` принимает вид аргументом**: `max <профиль> mentions rebuild person-name`, а не `--kind`
   (cli-core 0.272.0).
 
