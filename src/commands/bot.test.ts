@@ -167,7 +167,7 @@ describe("max bot api, guarded like the personal account", () => {
   beforeEach(() => store().write(GOOD))
 
   it("refuses every bot write on a read-only profile, and still reads", async () => {
-    await max(["ro", "config", "set", "read_only", "true"])
+    await max(["ro", "config", "set", "permissions.bot", "readonly"])
     store("ro").write(GOOD)
     const write = await max([
       "ro",
@@ -184,6 +184,7 @@ describe("max bot api, guarded like the personal account", () => {
     expect(write.stdout + write.stderr).toContain("does not allow bot.messages.send to write")
     expect(requests).toHaveLength(0)
     expect((await max(["ro", "bot", "me", "--json"])).code).toBe(0)
+    await max(["ro", "config", "unset", "permissions.bot"])
   })
 
   it("maps a bot write onto the allow list, and refuses one the list cannot name", async () => {

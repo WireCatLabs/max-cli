@@ -16,13 +16,6 @@ const count = v.pipe(v.number(wholeNumber), v.integer(wholeNumber), v.minValue(1
 const zeroOrMore = plain("has to be a whole number, 0 or more")
 const countOrZero = v.pipe(v.number(zeroOrMore), v.integer(zeroOrMore), v.minValue(0, zeroOrMore))
 const flag = v.boolean(plain("has to be true or false"))
-/** MCP tools that change the account beyond messages, each group off until named here (`NEED-350`). */
-export const MCP_TOOL_GROUPS = ["contacts", "polls", "groups", "profile"] as const
-export type McpToolGroup = (typeof MCP_TOOL_GROUPS)[number]
-const mcpToolList = v.array(
-  v.picklist(MCP_TOOL_GROUPS, (issue) => `has to be one of ${MCP_TOOL_GROUPS.join(", ")}, not ${issue.received}`),
-  plain("has to be a list of tool groups, like contacts,polls"),
-)
 const permissionList = v.array(
   v.picklist(PERMISSIONS, (issue) => `has to be one of ${PERMISSIONS.join(", ")}, not ${issue.received}`),
   plain("has to be a list of actions, like send,reaction"),
@@ -54,7 +47,6 @@ const sharedEntries = {
   /** The run log reads these two; nothing records anything until it exists. */
   record: v.optional(flag),
   keep_runs_for_days: v.optional(count),
-  read_only: v.optional(flag),
   allow: v.optional(permissionList),
   permissions: settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries.permissions,
   sends_per_hour: v.optional(count),
@@ -71,8 +63,6 @@ const personalEntries = {
   search_catch_up: v.optional(flag),
   /** Start `max serve` in the background when a command needs MAX and none is running (`MAX-35`). */
   serve: v.optional(flag),
-  /** Only the file turns these on — no `max mcp` flag does (`NEED-350`). */
-  mcp_tools: v.optional(mcpToolList),
 }
 /**
  * Whether this bot may read other bots' local copies, when a command asks with `--all-bots` or
@@ -213,7 +203,6 @@ export interface Settings extends AISettings {
   requestsPerMinute?: number
   permissions: Record<string, Level>
   permissionSources: Record<string, string>
-  mcpTools: readonly McpToolGroup[]
   /** For a bot command: which other bots' copies it may read when asked (`--all-bots`, `--bots`). */
   readOtherBots: boolean | readonly string[]
   /** Whether a person at a terminal hears, once a day, that a newer version exists. */
@@ -265,7 +254,6 @@ export type SourcedSetting =
   | "allow"
   | "sendsPerHour"
   | "requestsPerMinute"
-  | "mcpTools"
   | "permissions"
   | "readOtherBots"
   | "updateCheck"
@@ -414,7 +402,7 @@ export const changeSetting = (
     throw new CliError("validation_error", `no setting called "${setting}" — one of: ${ALL_SETTINGS.join(", ")}`)
   }
   const config = readConfig(path)
-  if (["read_only", "allow", "mcp_tools"].includes(setting) && hasPermissionConfig(config))
+  if (setting === "allow" && hasPermissionConfig(config))
     throw new CliError("validation_error", `${setting} is a legacy setting — use permissions instead`)
   if (setting === "default_profile") {
     if (kind !== undefined)
@@ -461,7 +449,7 @@ export const changeSetting = (
   } else if (value === undefined) delete scope[setting]
   else if (setting === "read_other_bots")
     scope[setting] = value === "true" || value === "false" ? value === "true" : parseList(value)
-  else scope[setting] = setting === "allow" || setting === "mcp_tools" ? parseList(value) : parseValue(value)
+  else scope[setting] = setting === "allow" ? parseList(value) : parseValue(value)
   const empty = Object.keys(scope).length === 0
 
   const place = (holder: { defaults?: unknown; profiles?: Record<string, unknown> }) => {
@@ -556,23 +544,21 @@ const sharedSettings = settingsFor(MAX_APP, {
   schema: configSchema,
   // A MAX session or bot lives in max's own state files, which the shared list cannot see.
   profiles: (env) => knownProfiles({ env }).map(({ name }) => name),
-  profile: { serve: personalEntries.serve, mcp_tools: personalEntries.mcp_tools },
+  profile: { serve: personalEntries.serve },
   defaults: { transcribe_model: defaultsEntries.transcribe_model },
   sourcePaths: true,
   parseDuration,
   resolve: ({ flags, settings, fromLayers }) => {
     const serveFlag = (flags as GlobalFlags).serve
     const serve = serveFlag === undefined ? fromLayers("serve", true) : { value: serveFlag, from: "flag" }
-    const mcpTools = fromLayers<readonly McpToolGroup[]>("mcp_tools", [])
     const transcribeModel = first<string>(
       [["config file: defaults", settings.shared.transcribe_model as string | undefined]],
       DEFAULT_MODEL,
     )
     return {
-      values: { serve: serve.value, mcpTools: mcpTools.value, transcribeModel: transcribeModel.value },
+      values: { serve: serve.value, transcribeModel: transcribeModel.value },
       sources: {
         serve: serve.from,
-        mcpTools: mcpTools.from,
         transcribeModel: transcribeModel.from,
         permissions: "default",
       },

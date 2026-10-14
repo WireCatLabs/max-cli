@@ -67,7 +67,7 @@ describe("sending", () => {
 
   it("from a read-only profile, refuses a reaction too, and journals it as one", async () => {
     const { environment, writes } = messenger()
-    await runWith(["g-react-read", "config", "set", "read_only", "true"])
+    await runWith(["g-react-read", "config", "set", "permissions.reactions", "readonly"])
 
     const refused = await runWith(["g-react-read", "reactions", "add", "111", "116762160362694583", "👍"], environment)
 
@@ -78,7 +78,7 @@ describe("sending", () => {
 
   it("from a read-only profile, refuses with 5 and sends nothing", async () => {
     const { environment, writes } = messenger()
-    await runWith(["g-read", "config", "set", "read_only", "true"])
+    await runWith(["g-read", "config", "set", "permissions.messages", "readonly"])
 
     const refused = await runWith(["g-read", "messages", "send", "111", TEXT, "--json"], environment)
 
@@ -141,7 +141,7 @@ describe("sending", () => {
   it("keeps sent and refused outcomes, and `sends list` shows them newest first", async () => {
     const { environment } = messenger()
     await runWith(["g-keep", "messages", "send", "111", "first"], environment)
-    await runWith(["g-keep", "config", "set", "read_only", "true"])
+    await runWith(["g-keep", "config", "set", "permissions.messages", "readonly"])
     await runWith(["g-keep", "messages", "send", "111", "second"], environment)
 
     const listed = await runWith(["g-keep", "sends", "list", "--json"])
@@ -178,7 +178,7 @@ describe("reacting", () => {
 
   it("from a read-only profile, refuses with 5 and sends nothing", async () => {
     const { environment, writes } = messenger()
-    await runWith(["g-react-ro", "config", "set", "read_only", "true"])
+    await runWith(["g-react-ro", "config", "set", "permissions.reactions", "readonly"])
 
     const refused = await runWith(["g-react-ro", "reactions", "add", "111", MESSAGE, "👍", "--json"], environment)
 

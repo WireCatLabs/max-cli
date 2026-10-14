@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 158 ⛔ · 0 ❌** — 334 commands, 754 options.
+**914 ✅ · 146 ⛔ · 0 ❌** — 333 commands, 727 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -190,7 +190,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages download` | `--all` | ✅ |  |
 | `messages download` | `--pause` | ✅ |  |
 | `messages download` | `--extract` | ✅ |  |
-| `messages download` | `--output` | ✅ |  |
 | `messages evidence` |  | ✅ |  |
 | `messages evidence` | `--limit` | ✅ |  |
 | `messages evidence` | `--cursor` | ✅ |  |
@@ -773,8 +772,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `config show` |  | ✅ |  |
 | `config show` | `--bot` | ✅ |  |
-| `config migrate` |  | ✅ |  |
-| `config migrate` | `--dry-run` | ✅ |  |
 | `config set` |  | ✅ |  |
 | `config set` | `--defaults` | ✅ |  |
 | `config set` | `--personal` | ✅ |  |
@@ -813,42 +810,17 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `complete` |  | ✅ |  |
 | `mcp` |  | ✅ |  |
 | `mcp` | `--permission` | ✅ |  |
-| `mcp` | `--allow-dangerous` | ✅ |  |
-| `mcp` | `--allow-send` | ✅ |  |
-| `mcp` | `--confirm-send` | ✅ |  |
-| `mcp` | `--allow-mark-read` | ✅ |  |
-| `mcp` | `--allow-delete` | ✅ |  |
-| `mcp` | `--allow-moderate` | ✅ |  |
 | `mcp` | `--http` | ✅ |  |
-| `mcp` | `--http-confirmation` | ✅ |  |
 | `mcp` | `--port` | ✅ |  |
 | `mcp` | `--public-url` | ✅ |  |
 | `mcp` | `--revoke` | ✅ |  |
 | `mcp config` |  | ✅ |  |
 | `mcp config` | `--permission` | ✅ |  |
-| `mcp config` | `--allow-dangerous` | ✅ |  |
-| `mcp config` | `--allow-send` | ✅ |  |
-| `mcp config` | `--confirm-send` | ✅ |  |
-| `mcp config` | `--allow-mark-read` | ✅ |  |
-| `mcp config` | `--allow-delete` | ✅ |  |
-| `mcp config` | `--allow-moderate` | ✅ |  |
 | `mcp setup` |  | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--permission` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-dangerous` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--confirm-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-mark-read` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-delete` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-moderate` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--permission` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-dangerous` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-send` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--confirm-send` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-mark-read` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-delete` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-moderate` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `bot auth set` |  | ✅ |  |
 | `bot auth show` |  | ✅ |  |
 | `bot auth remove` |  | ✅ |  |

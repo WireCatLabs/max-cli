@@ -86,7 +86,7 @@ describe("the owner's own settings", () => {
 
   it("a read-only profile mutes nothing and journals the refusal", async () => {
     const { environment, settings } = messenger()
-    expect((await runWith(["s-readonly", "config", "set", "read_only", "true"], environment)).code).toBe(0)
+    expect((await runWith(["s-readonly", "config", "set", "permissions.chats", "readonly"], environment)).code).toBe(0)
     const { code } = await runWith(["s-readonly", "chats", "mute", "111"], environment)
 
     expect(code).toBe(5)

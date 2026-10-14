@@ -1,6 +1,4 @@
-import { existsSync, readdirSync, readFileSync } from "node:fs"
-import { join } from "node:path"
-import { CliError, pathsAreOverridden, resolvePaths, saveConfigFile, writeSecurely } from "@wirecat/cli-base"
+import { CliError, pathsAreOverridden } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import {
   AI_SETTING_KEYS,
@@ -9,8 +7,6 @@ import {
   itemOf,
   LOCAL_READ,
   LOCAL_WRITE,
-  loadSnakeCaseConfig,
-  migratePermissionConfig,
   NONE_NAMED,
   refuseUnknownKey,
   renderAnswer,
@@ -19,13 +15,11 @@ import {
   storeSettings,
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
-import * as v from "valibot"
 import { MAX_APP } from "../app.js"
 import {
   ALL_SETTINGS,
   BOT_ONLY_SETTINGS,
   changeSetting,
-  configSchema,
   type GlobalFlags,
   PERSONAL_ONLY_SETTINGS,
   type ProfileKind,
@@ -34,7 +28,6 @@ import {
   scopePath,
 } from "../config.js"
 import { knownProfiles } from "../diagnose.js"
-import { ModerationRules } from "../moderation/rules.js"
 import { permissionKeyOf } from "../permissions.js"
 import { forCommand } from "./context.js"
 
@@ -121,55 +114,6 @@ export const configCommand = (): Command => {
         )
       }
     })
-
-  command.addCommand(
-    annotate(new Command("migrate"), { effects: LOCAL_WRITE })
-      .description("replace legacy access settings with permissions, preserving effective levels")
-      .option("--dry-run", "show the migration without writing the file")
-      .action(function (this: Command) {
-        const { settings, renderer, format, streams } = forCommand(this, { needsProfile: false })
-        const dryRun = this.opts<{ dryRun?: boolean }>().dryRun === true
-        if (!dryRun && process.env.MAX_PROFILE_LOCK)
-          throw new CliError("permission_error", "config migrate changes every profile — run outside the profile lock")
-        const migrated = migratePermissionConfig(
-          loadSnakeCaseConfig(settings.configPath, configSchema, () => ({ profiles: {} })),
-        )
-        const checked = v.safeParse(configSchema, migrated.config)
-        if (!checked.success)
-          throw new CliError("configuration_error", "the migrated config is invalid — nothing was written")
-        const directory = join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).state, "profiles")
-        const rules = (existsSync(directory) ? readdirSync(directory) : [])
-          .filter((name) => name.endsWith(".moderation.json"))
-          .map((name) => {
-            const path = join(directory, name)
-            const raw = JSON.parse(readFileSync(path, "utf8")) as {
-              groups: Record<string, unknown>
-              checkedUntil?: Record<string, string>
-            }
-            const reader = new ModerationRules(path)
-            reader.read("")
-            const groups = Object.fromEntries(Object.keys(raw.groups ?? {}).map((id) => [id, reader.read(id)]))
-            const next = { ...raw, groups }
-            return { path, next, changed: JSON.stringify(next) !== JSON.stringify(raw) }
-          })
-          .filter((rule) => rule.changed)
-        if (!dryRun) {
-          if (migrated.changed) saveConfigFile(settings.configPath, checked.output)
-          for (const rule of rules) writeSecurely(rule.path, `${JSON.stringify(rule.next, null, 2)}\n`, 0o600)
-        }
-        renderAnswer(
-          this,
-          { renderer, format, streams },
-          itemOf({
-            config_file: settings.configPath,
-            changed: migrated.changed || rules.length > 0,
-            rules_files: rules.map((rule) => rule.path),
-            dry_run: dryRun,
-            changes: migrated.changes,
-          }),
-        )
-      }),
-  )
 
   for (const action of ["set", "unset"] as const) {
     const sub = annotate(command.command(action), { effects: LOCAL_WRITE })

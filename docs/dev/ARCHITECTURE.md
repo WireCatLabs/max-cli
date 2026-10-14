@@ -196,7 +196,7 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
 
 `CHAT_HISTORY` (49) and `CHAT_MARK` (50) are separate. Nothing that reads sends 50;
 `src/client.test.ts` asserts opcode 50 is absent from everything a read sends. It goes out from `client.chats.markRead` only —
-`max chats mark-read`, `messages list --mark-read`, and the MCP tool behind `--allow-mark-read` — through
+`max chats mark-read`, `messages list --mark-read`, and the MCP mark-read tool — through
 the send guard as kind `read`. Its request is PyMax's shape, not measured (`src/spec/operations/chats.ts`).
 
 ⚠ Until the spec landed (2026-09-19) that assertion compared against a missing `Opcode.CHAT_MARK`,
@@ -234,8 +234,7 @@ message id** and **one** copy, also across two connections and logins — the ca
   the operation-id wrapper retains one prepared request object
   across `ask` and `check`, because the shared guard binds confirmation to that object.
   The client-side server wrapper forwards `ask` too; a matching operation id on a different
-  request grants no confirmation. MAX now uses canonical permission levels; legacy configuration is translated at read time
-  until `config migrate` writes the canonical file. CLI, native reads, MCP tools and resources,
+  request grants no confirmation. MAX uses canonical permission levels; only the old `allow` list is still translated at read time. CLI, native reads, MCP tools and resources,
   and raw server requests enforce the same resource policy. Confirmed writes carry explicit
   permission keys to the server, which rechecks the current configuration; neither confirmation
   nor moderation consent bypasses a denied or read-only action.
@@ -243,7 +242,7 @@ message id** and **one** copy, also across two connections and logins — the ca
   anything of the owner's can write to its socket, not only a command that checked first. Every
   request is first checked against the operation's strict schema, as `buildRequest` checks it in a
   command, so a field the specification does not have is refused there too. It reads
-  the configuration again for each write, so `config set read_only true` needs no restart. The
+  the configuration again for each write, so a changed permission needs no restart. The
   command still checks — a refusal before an upload — and journals only its own refusals; the
   server writes the rest, with the outcome it saw — one line per attempt. A retry after no answer
   repeats the `cid` in the same chat and leaves `outcome_unknown` then its outcome; the limit counts
@@ -480,7 +479,7 @@ starts, whole days by directory name. Rules not stated there:
 
 ## 14. Settings, and the order one is decided in
 
-common settings resolve through cli-core `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve`, `mcpTools` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
+common settings resolve through cli-core `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
 
 **Flag → environment → config file → built-in default**, decided once in `resolveSettings`
 (`src/config.ts`). Commands take what they are given; one that re-derived the order would disagree.

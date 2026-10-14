@@ -11,62 +11,26 @@ import { registerResources } from "./resources.js"
 import { MaxSession, type SessionOptions } from "./session.js"
 import { registerTools } from "./tools.js"
 
-export interface ServerOptions extends SessionOptions {
-  allowSend?: boolean
-  yes?: boolean
-  allowDangerous?: boolean
-  confirmSend?: boolean
-  allowMarkRead?: boolean
-  allowDelete?: boolean
-  allowModerate?: boolean
-}
+export type ServerOptions = SessionOptions
 
 /**
  * A factory of servers over one session. `serveStdio` may build a probe instance and throw it away
  * before settling on the protocol era, so each call is a fresh server — and all of them share the
  * one connection to MAX, which is the thing that must not be opened twice.
  */
-export const createMaxServer = (
-  context: CommandContext,
-  {
-    allowSend = true,
-    yes = false,
-    allowDangerous = false,
-    confirmSend = false,
-    allowMarkRead = false,
-    allowDelete = false,
-    allowModerate = false,
-    ...sessionOptions
-  }: ServerOptions,
-) => {
+export const createMaxServer = (context: CommandContext, sessionOptions: ServerOptions) => {
   const embedders = warmEmbedders()
   const session = new MaxSession(context, { ...sessionOptions, dispose: () => embedders.close() })
-  const permitted = undefined
-  const toolGroups = ["contacts", "polls", "groups", "profile"] as const
   const build = (): McpServer => {
     const server = new McpServer(
       { name: "max", version: VERSION },
       {
         instructions: instructions({
-          allowSend,
-          confirmSend,
-          allowMarkRead,
-          allowDelete,
-          allowModerate,
           profile: context.settings.profile,
-          permitted,
-          toolGroups,
         }),
       },
     )
     registerTools(server, session, {
-      allowSend,
-      confirmSend,
-      yes,
-      allowDangerous,
-      allowMarkRead,
-      allowDelete,
-      allowModerate,
       store: context.store,
       defaultLimit: context.settings.limit,
       history: context.settings.keepFailedRuns,
@@ -75,8 +39,6 @@ export const createMaxServer = (
         context.settings.permissionSources[key] === "flag" ? [`${key}=${level}`] : [],
       ),
       transcribeModel: context.settings.transcribeModel,
-      permitted,
-      toolGroups,
       warn: context.renderer.note,
       reach: context.reach,
       embedders,

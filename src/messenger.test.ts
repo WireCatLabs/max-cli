@@ -47,7 +47,7 @@ const SHARED = [
 const CONFIG = {
   defaultProfile: "work",
   defaults: { limit: 7, sendsPerHour: 3 },
-  profiles: { work: { readOnly: true, allow: ["reaction", "read"], record: true }, home: {} },
+  profiles: { work: { allow: ["reaction", "read"], record: true }, home: {} },
 }
 
 describe("the MAX messenger's settings", () => {

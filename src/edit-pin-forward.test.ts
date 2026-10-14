@@ -237,7 +237,7 @@ describe("pinning", () => {
 describe("a read-only profile", () => {
   it("refuses an edit, a forward, a pin and an unpin, and sends none of them", async () => {
     const { max, environment } = messenger()
-    await runWith(["e-read", "config", "set", "read_only", "true"])
+    await runWith(["e-read", "config", "set", "permissions.messages", "readonly"])
 
     for (const argv of [
       ["messages", "edit", "111", MESSAGE, "new"],

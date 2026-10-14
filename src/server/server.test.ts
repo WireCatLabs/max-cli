@@ -992,7 +992,7 @@ describe("the send guard, in the server", () => {
   const journal = (profile: string) => new SendJournal(sendsPathFor(profile)).entries()
 
   it("refuses a send over the socket on a read-only profile, before MAX, and journals the refusal", async () => {
-    expect(await cli(["g-ro", "config", "set", "read_only", "true"])).toBe(0)
+    expect(await cli(["g-ro", "config", "set", "permissions.messages", "readonly"])).toBe(0)
     const { store, max } = await serve("g-ro")
 
     const answer = await ask(store, {
@@ -1016,7 +1016,7 @@ describe("the send guard, in the server", () => {
       })
 
     expect((await send(1)).error).toBeUndefined()
-    expect(await cli(["g-later", "config", "set", "read_only", "true"])).toBe(0)
+    expect(await cli(["g-later", "config", "set", "permissions.messages", "readonly"])).toBe(0)
     expect((await send(2)).error).toMatchObject({ code: "permission_error" })
     expect(max.sent.filter((call) => call.opcode === Opcode.MSG_SEND)).toHaveLength(1)
   })
@@ -1060,7 +1060,7 @@ describe("the send guard, in the server", () => {
   })
 
   it("a command's client handed an undefined send guard is guarded as if none was handed", async () => {
-    expect(await cli(["g-undefined", "config", "set", "read_only", "true"])).toBe(0)
+    expect(await cli(["g-undefined", "config", "set", "permissions.messages", "readonly"])).toBe(0)
     const max = mockMax({ answers: {} })
     const store = new SessionStore({ profile: "g-undefined", keyring: memoryKeyring() })
     const context = contextFor(
@@ -1159,7 +1159,7 @@ describe("the send guard, in the server", () => {
   })
 
   it("refuses a request shape no command sends: a field the spec does not have, a control attachment in a message", async () => {
-    expect(await cli(["g-shape", "config", "set", "allow", "send"])).toBe(0)
+    expect(await cli(["g-shape", "config", "set", "permissions.messages.send", "allow"])).toBe(0)
     const { store, max } = await serve("g-shape")
 
     const extra = await ask(store, {

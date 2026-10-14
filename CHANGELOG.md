@@ -4,6 +4,17 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Изменено — может сломать скрипты
+
+- **Удалён код совместимости.** `max mcp` и `mcp config|setup|doctor` больше не принимают `--allow-send`,
+  `--confirm-send`, `--allow-mark-read`, `--allow-delete`, `--allow-moderate`, `--allow-dangerous` и
+  `--http-confirmation`; доступ задают `permissions`. `messages download --output` убран, остаётся `--output-dir`.
+  Команды `config migrate` больше нет. Настройки `read_only` и `mcp_tools` удалены: файл с ними не читается,
+  вместо `read_only` задайте `permissions.<ресурс> readonly`. `doctor` не ищет старый файл кэша
+  (`legacy_cache`), а `inbox` больше не переносит старую отметку `lastCheckAt`.
+
 ## 0.52.0 — 14.10.2026
 
 ### Что нового

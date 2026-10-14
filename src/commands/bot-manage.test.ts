@@ -131,9 +131,9 @@ const file = (name: string, content = "bytes") => {
 }
 
 describe("max bot messages send to a positive number", () => {
-  it("names accepted bot config commands for read_only and allow, preserving the old allow list", async () => {
+  it("names the bot config command that allows a refused write", async () => {
     new BotTokenStore({ profile: "hintbot", keyring }).write(TOKEN)
-    await max(["hintbot", "config", "set", "--bot", "read_only", "true"])
+    await max(["hintbot", "config", "set", "--bot", "permissions.bot", "readonly"])
     const readonly = await max(["hintbot", "bot", "messages", "edit", "-100", "mid.9", "synthetic", "--json"])
     expect(readonly.code).toBe(5)
     const firstHint = JSON.parse(readonly.stderr).error.message.split("to allow it: ")[1] as string

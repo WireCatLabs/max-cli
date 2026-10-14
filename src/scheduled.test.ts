@@ -135,7 +135,7 @@ describe("sending later with --at-time", () => {
 
   it("is refused by a read-only profile like any other send", async () => {
     const { max, environment } = messenger()
-    await runWith(["s-read", "config", "set", "read_only", "true"])
+    await runWith(["s-read", "config", "set", "permissions.messages", "readonly"])
 
     expect((await runWith(["s-read", "messages", "send", "111", "x", "--at-time", "1h"], environment)).code).toBe(5)
     expect(max.sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)).toBe(true)

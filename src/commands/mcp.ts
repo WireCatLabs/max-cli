@@ -18,14 +18,7 @@ import { forCommand } from "./context.js"
 
 interface Flags {
   yes?: boolean
-  allowDangerous?: boolean
-  allowSend?: boolean
-  confirmSend?: boolean
-  allowMarkRead?: boolean
-  allowDelete?: boolean
-  allowModerate?: boolean
   permission?: string[]
-  httpConfirmation?: string
   http?: boolean
   port?: string
   publicUrl?: string
@@ -60,20 +53,11 @@ const portOf = (given: string | undefined): number => {
 }
 
 const withFlags = (command: Command): Command =>
-  command
-    .option(
-      "--permission <key=level>",
-      "override a permission for this server only; repeat for more keys",
-      (value: string, previous: string[] = []) => [...previous, value],
-    )
-    .option("--allow-dangerous", "no longer used — writes show no form; the profile's permissions decide")
-    .option("--allow-send", "deprecated: use permissions.messages.send in config; does not grant access")
-    .option("--confirm-send", "no longer used — writes show no form; the profile's permissions decide")
-    .option("--allow-mark-read", "deprecated: use permissions.chats.mark-read in config; does not grant access")
-    .option("--allow-delete", "deprecated: use permissions.messages.delete in config; does not grant access")
-    .option("--allow-moderate", "deprecated: use permissions.chats.moderate and group rules; does not grant access")
-
-const checked = (flags: Flags, _mcpTools: readonly string[]): Flags => flags
+  command.option(
+    "--permission <key=level>",
+    "override a permission for this server only; repeat for more keys",
+    (value: string, previous: string[] = []) => [...previous, value],
+  )
 
 export const mcpCommand = (): Command => {
   const command = withFlags(
@@ -85,7 +69,6 @@ export const mcpCommand = (): Command => {
       "--http",
       "serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide",
     )
-    .option("--http-confirmation <mode>", "no longer used — writes show no form; the profile's permissions decide")
     .option("--port <port>", `the local port for --http (default ${DEFAULT_PORT})`)
     .option("--public-url <url>", "the tunnel's https address the browser apps use, e.g. https://<name>.ts.net")
     .option("--revoke", "forget every login given to a browser app; each must log in again")
@@ -98,21 +81,6 @@ export const mcpCommand = (): Command => {
       renderAnswer(this, context, itemOf({ revoked: true, profile: context.settings.profile }))
       return
     }
-    const { allowSend, confirmSend, allowMarkRead, allowDelete, allowModerate } = checked(
-      this.opts<Flags>(),
-      context.settings.mcpTools,
-    )
-    for (const flag of [
-      "allowSend",
-      "allowMarkRead",
-      "allowDelete",
-      "allowModerate",
-      "confirmSend",
-      "allowDangerous",
-      "httpConfirmation",
-    ] as const)
-      if (this.opts<Flags>()[flag])
-        context.renderer.note(`${flag} no longer changes MCP access or confirmation — use permissions in config`)
     if (own.http) {
       const publicUrl = publicUrlOf(own.publicUrl)
       const { serveOverHttpUntilStopped } = await import("../mcp/server.js")
@@ -121,15 +89,7 @@ export const mcpCommand = (): Command => {
     }
     // Loaded here, not at the top: every other command would otherwise pay for the SDK and zod.
     const { serveOverStdio } = await import("../mcp/server.js")
-    await serveOverStdio(context, {
-      allowSend: allowSend === true,
-      yes: this.optsWithGlobals<Flags>().yes === true,
-      allowDangerous: this.optsWithGlobals<Flags>().allowDangerous === true,
-      confirmSend: confirmSend === true,
-      allowMarkRead: allowMarkRead === true,
-      allowDelete: allowDelete === true,
-      allowModerate: allowModerate === true,
-    })
+    await serveOverStdio(context, {})
   })
 
   command.addCommand(
@@ -139,7 +99,7 @@ export const mcpCommand = (): Command => {
       ),
     ).action(async function (this: Command) {
       const { renderer, settings, format, streams, run } = forCommand(this)
-      const flags = checked(this.optsWithGlobals<Flags>(), settings.mcpTools)
+      const flags = this.optsWithGlobals<Flags>()
       await run("mcp config", async () => {
         const entry = serverEntry({
           profile: settings.profile,
@@ -167,7 +127,7 @@ export const mcpCommand = (): Command => {
       const { renderer, settings, format, streams } = forCommand(this)
       const entry = serverEntry({
         profile: settings.profile,
-        flags: checked(this.optsWithGlobals<Flags>(), settings.mcpTools),
+        flags: this.optsWithGlobals<Flags>(),
         execPath: process.execPath,
         scriptPath: ownScript(),
         env: process.env,
@@ -203,7 +163,7 @@ export const mcpCommand = (): Command => {
       const { renderer, settings, format, streams } = forCommand(this)
       const entry = serverEntry({
         profile: settings.profile,
-        flags: checked(this.optsWithGlobals<Flags>(), settings.mcpTools),
+        flags: this.optsWithGlobals<Flags>(),
         execPath: process.execPath,
         scriptPath: ownScript(),
         env: process.env,
@@ -230,16 +190,6 @@ export const mcpCommand = (): Command => {
   )
   return command
 }
-
-const FLAG_ARGS: [keyof Flags, string][] = [
-  ["allowSend", "--allow-send"],
-  ["confirmSend", "--confirm-send"],
-  ["yes", "--yes"],
-  ["allowDangerous", "--allow-dangerous"],
-  ["allowMarkRead", "--allow-mark-read"],
-  ["allowDelete", "--allow-delete"],
-  ["allowModerate", "--allow-moderate"],
-]
 
 /**
  * They choose the keyring entry and the store, so a server without them would answer "no session" or search
@@ -279,7 +229,7 @@ export const serverEntry = ({
     profile,
     "mcp",
     ...(flags.permission ?? []).flatMap((entry) => ["--permission", entry]),
-    ...FLAG_ARGS.filter(([key]) => flags[key] === true).map(([, flag]) => flag),
+    ...(flags.yes === true ? ["--yes"] : []),
   ]
   const directories = Object.fromEntries(DIRECTORIES.flatMap((name) => (env[name] ? [[name, env[name]]] : [])))
   const server = {

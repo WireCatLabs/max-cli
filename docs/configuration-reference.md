@@ -87,8 +87,8 @@ max config show --json     # то же одним объектом
 создаёт его с `limit`, `keep_runs_for_days`, `sends_per_hour`, `update_check` и `skill_hint` в `defaults`.
 Файл создаётся с правами `0600`, а `max personal config set` записывает его с правами `0644`: секретов в нём нет.
 
-Имена настроек пишутся в snake_case: `sends_per_hour`, `read_only`, `models.<назначение>.base_url`. Файл со
-старыми именами (`sendsPerHour`, `readOnly`, `baseUrl`) первое же чтение переименовывает само, один раз и
+Имена настроек пишутся в snake_case: `sends_per_hour`, `keep_runs_for_days`, `models.<назначение>.base_url`. Файл со
+старыми именами (`sendsPerHour`, `keepRunsForDays`, `baseUrl`) первое же чтение переименовывает само, один раз и
 только если результат проходит проверку. Имена профилей, пути в `permissions` и назначения моделей не
 меняются. Одна настройка под обоими именами с разными значениями — ошибка.
 
@@ -134,7 +134,7 @@ max config show --json     # то же одним объектом
 | `read_other_bots` | может ли бот читать копии других ботов, когда команда просит это `--all-bots` или `--bots`: `false`, `true` — всех, или список профилей ботов. **Только в разделе `bot`** ([боты](bot.md)) | —; `--all-bots` и `--bots` просят, поле разрешает | `false` |
 | `update_check` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | —; выключают `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER`, `CI` | `true` |
 | `skill_hint` | раз в сутки говорить агенту в stderr, что навыка `max` у него нет или он старше программы и что его ставит `max skill install`. Агента узнаём по переменной `AI_AGENT` или `CLAUDECODE`. **Только в `defaults`** | — | `true` |
-| `read_only`, `allow`, `mcp_tools` | старые настройки, читаются для совместимости; `config migrate` переводит их в `permissions` | — | после миграции изменять их нельзя |
+| `allow` | старая настройка, читается для совместимости; вместо неё — `permissions` | — | при заданных `permissions` изменять её нельзя |
 | `embedding_provider` | локальная модель (`local`) или `openai` | `--provider` | `local` |
 | `embedding_model` | модель векторов | `--model` | по сервису |
 | `embedding_base_url` | адрес API векторов | `--base-url` | по сервису |
@@ -205,8 +205,8 @@ max config show --json     # то же одним объектом
 ```
 
 Это работает в обе стороны: `messages: allow` у профиля закрывает и `messages.delete: deny` из
-`defaults`, и тогда удаление снова спрашивает, как по умолчанию. Старые `read_only` и `allow`
-действуют в том разделе, где записаны.
+`defaults`, и тогда удаление снова спрашивает, как по умолчанию. Старый `allow`
+действует в том разделе, где записан.
 
 **По умолчанию разрешено всё, кроме нескольких изменений, которые трудно отменить.** Спрашивают: `messages.delete`,
 `bot.messages.delete`, `chats.delete`, `chats.clear`, `topics.enable`, `topics.delete` и
@@ -228,29 +228,14 @@ max personal config unset permissions.messages.delete         # вернуть �
 
 В MCP формы подтверждения отсутствуют: `ask` разрешает вызванную запись, `deny` и `readonly`
 по-прежнему запрещают её. `--permission ключ=уровень` временно переопределяет права процесса.
-Старые флаги подтверждения больше не определяют доступ; для CLI уровни `ask` по-прежнему
-требуют ответа или явного флага. Подключение описано в [руководстве по MCP](mcp.md).
+Для CLI уровни `ask` по-прежнему требуют ответа или явного флага. Подключение описано в [руководстве по MCP](mcp.md).
 
-### Старые настройки, которые ещё работают
+### Старая настройка `allow`
 
-`read_only: true` читается как `readonly` для каждого ресурса. Список в `allow` (`send`, `forward`,
-`reaction`, `edit`, `pin`, `read`, `delete`, `groups`, `contacts`, `profile`, `folders`, `sessions`)
-читается как `allow` для этих действий и `readonly` для остальных; удаление всё равно спрашивает.
-Ключ в `permissions` того же раздела важнее обоих. `mcp_tools` читается, но доступ больше не меняет.
-
-### Перевод старых настроек
-
-Перед переводом старого файла можно посмотреть изменения:
-
-```sh
-max config migrate --dry-run
-max config migrate
-```
-
-Миграция сохраняет действовавшие права, настройки MAX и отметки модерации; старые уровни правил
-`forbid/flag/confirm` становятся `deny/ask/ask`. `--dry-run` ничего не пишет. После появления
-`permissions` команды изменения `read_only`, `allow` и `mcp_tools` отказывают с указанием новой настройки.
-Под `MAX_PROFILE_LOCK` миграция всего файла запрещена; предпросмотр доступен.
+Список в `allow` (`send`, `forward`, `reaction`, `edit`, `pin`, `read`, `delete`, `groups`, `contacts`,
+`profile`, `folders`, `sessions`) читается как `allow` для этих действий и `readonly` для остальных;
+удаление всё равно спрашивает. Ключ в `permissions` того же раздела важнее. Когда в файле есть
+`permissions`, `config set allow` отказывает и называет новую настройку.
 
 ## Изменить, не открывая файл
 
@@ -266,9 +251,8 @@ max config set default_profile work      # какой профиль без пе
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max personal config set limit 0`
-откажет, и файл останется прежним. `serve`, `sender_colors`, `catch_up_marks_read`, `search_catch_up` и
-`mcp_tools` с `--bot` не принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного, а
-старое `mcp_tools` относится только к личному аккаунту.
+откажет, и файл останется прежним. `serve`, `sender_colors`, `catch_up_marks_read` и `search_catch_up`
+с `--bot` не принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного.
 
 ### Языки поиска
 
@@ -284,7 +268,7 @@ max config set default_profile work      # какой профиль без пе
 Неизвестное поле отвергается с именем поля и кодом `configuration_error` (возврат `3`):
 
 ```json
-{"error":{"code":"configuration_error","reason":"config.invalid","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, read_only, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools"}}
+{"error":{"code":"configuration_error","reason":"config.invalid","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve"}}
 ```
 
 Значение не того вида называет поле и то, что допустимо: `profiles.default.limit: has to be a
@@ -350,11 +334,10 @@ max personal chats list
 | `default_profile` | строка с именем профиля | корень файла |
 | `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
 | `requests_per_minute` | целое число ≥ 0 | профиль |
-| `color`, `record`, `read_only` | boolean | профиль |
+| `color`, `record` | boolean | профиль |
 | `sender_colors`, `catch_up_marks_read`, `search_catch_up`, `serve` | boolean | личный аккаунт |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |
 | `allow` | массив разрешённых действий; старый формат | профиль |
-| `mcp_tools` | массив `contacts`, `polls`, `groups`, `profile`; старый формат | личный аккаунт |
 | `read_other_bots` | boolean или массив имён профилей | только `bot` |
 | `update_check`, `skill_hint` | boolean | только `defaults` |
 | `transcribe_model` | строковый id из `max personal models audio list` | только `defaults` |

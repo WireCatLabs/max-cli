@@ -202,11 +202,11 @@ describe("max bot chats", () => {
     })
     expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--notify", "--json"])).code).toBe(0)
     expect(requests.at(-1)?.body).toBe(`{"message_id":"mid.1","notify":true}`)
-    await max(["config", "set", "read_only", "true"])
+    await max(["config", "set", "permissions.bot", "readonly"])
     requests.length = 0
     expect((await max(["bot", "messages", "pin", "-100", "mid.1", "--json"])).code).not.toBe(0)
     expect(requests).toHaveLength(0)
-    await max(["config", "set", "read_only", "false"])
+    await max(["config", "unset", "permissions.bot"])
   })
 
   it("unpins, leaves and shows an action with the request each one names", async () => {

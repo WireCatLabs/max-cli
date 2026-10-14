@@ -109,7 +109,7 @@ const download = async (
   const keyring = memoryKeyring()
   const streams = captureStreams()
   const code = await run(
-    args ?? ["messages", "download", "111", "116762160362694583", "--output", directory, "--json"],
+    args ?? ["messages", "download", "111", "116762160362694583", "--output-dir", directory, "--json"],
     {
       streams,
       tty: false,
@@ -204,15 +204,6 @@ describe("max messages download", () => {
     })
     expect(result.code).toBe(0)
     expect(await readFile(join(directory, "report.pdf"), "utf8")).toBe("file bytes")
-  })
-
-  it("refuses conflicting directory flags before connecting", async () => {
-    const result = await download("unused", {
-      args: ["messages", "download", "111", "42", "--output", "one", "--output-dir", "two", "--json"],
-    })
-    expect(result.code).toBe(2)
-    expect(result.max.sent).toEqual([])
-    expect(result.stderr).toContain("must name the same directory")
   })
 
   it("downloads and resumes a whole chat using MAX time keys", async () => {

@@ -78,7 +78,7 @@ export const operating = (guard: SendGuard, key?: string): SendGuard => {
 
 /**
  * The guard a profile's configuration asks for — the command's, and `max serve`'s for every write
- * it forwards. Built per request in the server, so `config set read_only true` needs no restart.
+ * it forwards. Built per request in the server, so a changed permission needs no restart.
  */
 export const guardFor = (settings: Settings, warn: (message: string) => void, ask?: Asker, key?: string): SendGuard => {
   const guard = operating(

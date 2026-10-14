@@ -201,16 +201,6 @@ describe("permissions across sections", () => {
     expect(levelFor(permissions, "messages.send").level).toBe("readonly")
     expect(permissionSources).toEqual({ messages: "config file: profiles.agent" })
   })
-
-  it("reads an old `read_only` in the profile as nearer than `defaults.permissions`", () => {
-    withConfig(
-      JSON.stringify({
-        defaults: { permissions: { "messages.send": "allow" } },
-        profiles: { agent: { read_only: true } },
-      }),
-    )
-    expect(levelFor(settings({ profile: "agent" }).permissions, "messages.send").level).toBe("readonly")
-  })
 })
 
 describe("a process locked to one profile", () => {
@@ -351,19 +341,18 @@ describe("personal and bot sections", () => {
   it("take the most specific entry: this profile's side, the profile, the side, everyone", () => {
     withConfig(
       JSON.stringify({
-        defaults: { limit: 1, keep_runs_for_days: 1, timeout_ms: 1, read_only: true },
+        defaults: { limit: 1, keep_runs_for_days: 1, timeout_ms: 1 },
         bot: { defaults: { limit: 2, keep_runs_for_days: 2, timeout_ms: 2 }, profiles: { test: { limit: 4 } } },
         profiles: { test: { limit: 3, keep_runs_for_days: 3 } },
         personal: { profiles: { test: { limit: 9 } } },
       }),
     )
 
-    expect(bot({ profile: "test" })).toMatchObject({ limit: 4, keepRunsForDays: 3, timeoutMs: 2, readOnly: true })
+    expect(bot({ profile: "test" })).toMatchObject({ limit: 4, keepRunsForDays: 3, timeoutMs: 2 })
     expect(bot({ profile: "test" }).sources).toMatchObject({
       limit: "config file: bot.profiles.test",
       keepRunsForDays: "config file: profiles.test",
       timeoutMs: "config file: bot.defaults",
-      readOnly: "config file: defaults",
     })
     expect(settings({ profile: "test" }).limit).toBe(9)
     expect(settings({ profile: "test" }).timeoutMs).toBe(1)
@@ -538,12 +527,12 @@ describe("the request pace", () => {
 })
 
 describe("a file written before setting names were snake_case", () => {
-  it("is rewritten to snake_case on first read, keeps profile names and permission paths, and stays read-only", () => {
+  it("is rewritten to snake_case on first read, keeps profile names and permission paths", () => {
     withConfig(
       JSON.stringify({
         defaultProfile: "workBot",
         defaults: { permissions: { "messages.send": "allow", "chats.mute": "deny" } },
-        profiles: { workBot: { readOnly: true, sendsPerHour: 7 } },
+        profiles: { workBot: { keepRunsForDays: 3, sendsPerHour: 7 } },
       }),
     )
 
@@ -552,9 +541,9 @@ describe("a file written before setting names were snake_case", () => {
     expect(JSON.parse(readFileSync(join(configDir, "config.json"), "utf8"))).toEqual({
       default_profile: "workBot",
       defaults: { permissions: { "messages.send": "allow", "chats.mute": "deny" } },
-      profiles: { workBot: { read_only: true, sends_per_hour: 7 } },
+      profiles: { workBot: { keep_runs_for_days: 3, sends_per_hour: 7 } },
     })
-    expect(resolved).toMatchObject({ profile: "workBot", readOnly: true, sendsPerHour: 7 })
-    expect(levelFor(resolved.permissions, "messages.send").level).toBe("readonly")
+    expect(resolved).toMatchObject({ profile: "workBot", keepRunsForDays: 3, sendsPerHour: 7 })
+    expect(levelFor(resolved.permissions, "messages.send").level).toBe("allow")
   })
 })
