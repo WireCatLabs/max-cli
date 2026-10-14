@@ -9,7 +9,6 @@ import type { Payload } from "./protocol/frame.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
-import { READ_ONLY } from "./testing/read-only.js"
 
 const OWNER = 10000001
 const MESSAGE = "116762160362694583"
@@ -238,7 +237,7 @@ describe("pinning", () => {
 describe("a read-only profile", () => {
   it("refuses an edit, a forward, a pin and an unpin, and sends none of them", async () => {
     const { max, environment } = messenger()
-    await runWith(["e-read", "config", "set", "permissions", READ_ONLY])
+    await runWith(["e-read", "config", "set", "permissions.messages", "readonly"])
 
     for (const argv of [
       ["messages", "edit", "111", MESSAGE, "new"],

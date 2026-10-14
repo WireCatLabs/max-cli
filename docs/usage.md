@@ -1553,8 +1553,7 @@ max config set --defaults permissions.contacts readonly
 Уровни `deny`, `readonly`, `ask`, `allow` применяются и в CLI, и в MCP. Более точный ключ имеет
 приоритет: отдельно разрешённое удаление не разрешает отправку. При `ask` терминал спрашивает;
 в JSON нужен явный флаг подтверждения. `allow` не спрашивает. Другие ресурсы и лимиты этим
-примером не меняются. Старые `read_only`, `allow`, `mcp_tools` переводятся через `config migrate`;
-предпросмотр — `config migrate --dry-run`. Подробнее — [настройки](configuration.md).
+примером не меняются. Подробнее — [настройки](configuration.md).
 
 ## Один человек
 

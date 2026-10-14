@@ -6,11 +6,16 @@
 
 ## 0.53.0 — 15.10.2026
 
-### Что нового
+### Изменено — может сломать скрипты
 
-- **`config set` и `config unset` понимают имя настройки в camelCase** (cli-core 0.279.0): `max <профиль> config set
-  senderColors false` пишет `sender_colors`, `max <профиль> config set readOtherBots true --bot` пишет
-  `read_other_bots`. Путь команды после `permissions.` пишется как есть.
+- **Удалён код совместимости.** `max mcp` и `mcp config|setup|doctor` больше не принимают `--allow-send`,
+  `--confirm-send`, `--allow-mark-read`, `--allow-delete`, `--allow-moderate`, `--allow-dangerous` и
+  `--http-confirmation`; доступ задают `permissions`. `messages download --output` убран, остаётся `--output-dir`.
+  Команды `config migrate` больше нет. Настройки `read_only`, `allow` и `mcp_tools` удалены: файл с ними не читается,
+  вместо них задайте `permissions.<ресурс> readonly`. `config set` принимает только имя настройки в snake_case.
+  `doctor` не ищет старый файл кэша (`legacy_cache`), а `inbox` больше не переносит старую отметку `lastCheckAt`.
+- **max больше не переносит папки при запуске** (из `~/Library` и в папку WireCat): перенос уже сделан.
+- **`MAX_READ_ONLY` теперь запрещает запись и в max**: раньше эта переменная до проверки записи не доходила.
 
 ### Исправлено
 

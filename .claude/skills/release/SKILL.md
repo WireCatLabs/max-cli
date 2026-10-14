@@ -90,8 +90,7 @@ How to run one — `bin/max`, the shape-only helper, snapshot and restore — is
    plan's "Not run, and why" table rules out, whatever the diff says.
 3. Run with `bin/max` from the release worktree, after `pnpm build`. It copies the owner's sessions
    from the installed `max` on first use, so no profile needs `session start`.
-4. MCP scenarios (X2): `pnpm mcp:tools -- mcp`, `-- mcp --allow-send`, `-- mcp --allow-send
-   --confirm-send`, `-- <bot> bot mcp` — the count and names per flag set. Compare with the previous
+4. MCP scenarios (X2): `pnpm mcp:tools -- mcp`, `-- <bot> bot mcp` — the count and names per server. Compare with the previous
    X2 row in the Latest results table; a count that moved needs a PR that explains it.
 5. `pnpm smoke:live` — every write once in Saved messages, cleaned up after. Any `FAIL`: no release.
 6. Follow the plan's rules: `--json`, a timeout on everything, the shape recorded and never the

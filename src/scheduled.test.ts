@@ -9,7 +9,6 @@ import { Connection } from "./protocol/connection.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
-import { READ_ONLY } from "./testing/read-only.js"
 
 const MINUTE = 60_000
 const FIRE = 1_790_285_820_000
@@ -136,7 +135,7 @@ describe("sending later with --at-time", () => {
 
   it("is refused by a read-only profile like any other send", async () => {
     const { max, environment } = messenger()
-    await runWith(["s-read", "config", "set", "permissions", READ_ONLY])
+    await runWith(["s-read", "config", "set", "permissions.messages", "readonly"])
 
     expect((await runWith(["s-read", "messages", "send", "111", "x", "--at-time", "1h"], environment)).code).toBe(5)
     expect(max.sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)).toBe(true)

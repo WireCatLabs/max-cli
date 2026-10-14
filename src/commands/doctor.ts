@@ -89,11 +89,6 @@ export const doctorCommand = (): Command => {
           `the message store needs a newer max (schema ${report.store.schema}, this one speaks ${report.store.speaks})`,
         )
       }
-      if (report.legacyCache.exists) {
-        renderer.note(
-          `the old local copy ${report.legacyCache.file} is no longer used by shared reads — you can remove it; use \`max messages sync\` to fetch history again`,
-        )
-      }
 
       if (report.session.loginPausedUntil) {
         renderer.note(

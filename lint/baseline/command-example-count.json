@@ -106,7 +106,6 @@
   "chats update",
   "commands schema",
   "complete",
-  "config migrate",
   "config set",
   "config show",
   "config unset",

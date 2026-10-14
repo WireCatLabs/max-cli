@@ -193,12 +193,12 @@ describe("max bot watch", () => {
   })
 
   it("**watches on a read-only profile**: taking updates is a read", async () => {
-    await max(["config", "set", "readOnly", "true"])
+    await max(["config", "set", "permissions.bot", "readonly"])
     try {
       expect((await max(["bot", "watch", "--jsonl"])).code).toBe(0)
       expect(polls).toHaveLength(1)
     } finally {
-      await max(["config", "set", "readOnly", "false"])
+      await max(["config", "unset", "permissions.bot"])
     }
   })
 })

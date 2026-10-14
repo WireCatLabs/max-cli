@@ -13,13 +13,13 @@ import {
   rememberAccount,
   stored,
 } from "@wirecat/cli-core/cli"
-import { levelFor, type Permission } from "@wirecat/cli-core/sends"
+import { levelFor } from "@wirecat/cli-core/sends"
 import { openStore } from "@wirecat/cli-core/store"
 import * as v from "valibot"
 import { maxAdapter } from "../adapter/max-adapter.js"
 import { MAX_APP } from "../app.js"
 import type { MaxClient } from "../client.js"
-import { type McpToolGroup, resolveSettings } from "../config.js"
+import { resolveSettings } from "../config.js"
 import type { Reach } from "../download.js"
 
 import { maxMessenger } from "../messenger.js"
@@ -39,21 +39,12 @@ const PASS = { check: () => {}, record: () => {} }
 const READ = { readOnlyHint: true, destructiveHint: false, openWorldHint: true }
 
 interface Options {
-  allowSend: boolean
-  confirmSend?: boolean
-  yes?: boolean
-  allowDangerous?: boolean
-  allowMarkRead?: boolean
-  allowDelete?: boolean
-  allowModerate?: boolean
   store: SessionStore
   defaultLimit: number
   history?: boolean
   profile: string
   permission?: string[]
   transcribeModel?: string
-  permitted?: readonly Permission[]
-  toolGroups?: readonly McpToolGroup[]
   warn?: (message: string) => void
   reach?: Reach
   embedders?: PersonalMcpDefaults["embedders"]

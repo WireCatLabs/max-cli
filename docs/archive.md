@@ -407,7 +407,7 @@ max personal store clear --left --allow-dangerous  # удалить их из о
 индекса слов и индекса основ. Основа — часть слова, которая не меняется в его формах; по основам
 строгий поиск находит формы слов, а `exact:` и `--exact` выбирают точную форму.
 
-`config set searchStemmers.cyrillic` принимает `russian` или `none`, `config set searchStemmers.latin`
+`config set search_stemmers.cyrillic` принимает `russian` или `none`, `config set search_stemmers.latin`
 — `english`, `spanish` или оба через запятую (по умолчанию `english,spanish`: латинское слово ищется по
 основам обоих языков), либо `none`; `none` отключает основы для этого алфавита. После своей настройки
 выполните `store reindex`. Если основы строятся заново — после обновления `max`, сменившего настройку

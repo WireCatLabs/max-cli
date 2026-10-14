@@ -586,7 +586,7 @@ export class MaxServer {
     let guard: SendGuard
     try {
       entry = { ...operation.guard(request), ...(operationId === undefined ? {} : { operationId }) }
-      // Read again for every write, so `config set permissions.messages readonly` needs no restart.
+      // Read again for every write, so a changed permission needs no restart.
       guard =
         this.#options.guard?.() ??
         guardFor(resolveSettings({ profile: this.#options.store.profile }), this.#options.note, async (key) => {

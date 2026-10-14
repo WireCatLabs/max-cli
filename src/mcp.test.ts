@@ -159,10 +159,7 @@ const connect = async (
       connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     },
   )
-  const { session, build } = createMaxServer(context, {
-    allowSend: false,
-    ...options,
-  })
+  const { session, build } = createMaxServer(context, options)
   if (http) {
     const codes: string[] = []
     const port = await freePort()
@@ -558,8 +555,8 @@ describe("the MCP server", () => {
     }
   })
 
-  it("ignores retired confirm-send on local writes and still requires a stored account", async () => {
-    const { client, max } = await connect({ confirmSend: true }, { token: false })
+  it("refuses a local write without a stored account", async () => {
+    const { client, max } = await connect({}, { token: false })
     const refused = await call(client, "conversations refresh")
     expect(refused.isError).toBe(true)
     expect(refused.body.error).not.toMatchObject({ code: "confirmation_required" })
@@ -577,7 +574,7 @@ describe("the MCP server", () => {
     expect(logins()).toBe(0)
   })
   it("answers max_status without logging in", async () => {
-    const { client, logins } = await connect({ allowSend: true })
+    const { client, logins } = await connect()
     const { isError, body } = await call(client, "status")
 
     expect(isError).toBe(false)
@@ -608,7 +605,7 @@ describe("the MCP server", () => {
   })
 
   it("marks messenger mutations as destructive and local refresh as a local write", async () => {
-    const { client } = await connect({ allowSend: true })
+    const { client } = await connect()
     const writing = (await client.listed()).filter(({ writes }) => writes)
 
     expect(writing.map(({ command }) => command)).toEqual(
@@ -696,7 +693,6 @@ describe("the MCP server", () => {
     const reopened = await connect({}, { profile })
     const result = await call(reopened.client, "search messages", {
       text: 'x chat:"Team Alpha"',
-      language: "lucene",
       timezone: "Europe/Madrid",
       limit: 5,
       backend: "archive",
@@ -708,8 +704,6 @@ describe("the MCP server", () => {
       missing: [{ field: "coverage", step: "messages.sync", why: expect.stringContaining("1 never fetched") }],
       meta: { accounts: ["max:10000001"] },
     })
-    const legacy = await call(reopened.client, "search messages", { text: "invoice", language: "legacy" })
-    expect(legacy.isError).toBe(false)
     const ast = await call(reopened.client, "search messages", {
       ast: parseLucene("invoice"),
       backend: "archive",
@@ -830,7 +824,7 @@ describe("the MCP server", () => {
     const id = "116762160362694888"
     const original = { id: BigInt(id), time: 1789776000000, sender: 10000001, text: "original archived", attaches: [] }
     const { client } = await connect(
-      { allowSend: true, allowDelete: true, allowDangerous: true },
+      {},
       {
         answers: {
           [Opcode.CHAT_HISTORY]: { messages: [original] },
@@ -1084,7 +1078,7 @@ describe("the MCP server", () => {
   })
 
   it("refuses a name that matches several chats, with the candidates, and sends nothing", async () => {
-    const { client, max } = await connect({ allowSend: true })
+    const { client, max } = await connect()
 
     const { isError, body } = await call(client, "messages send", { chat: "Team", text: "hello" })
 
@@ -1095,7 +1089,7 @@ describe("the MCP server", () => {
 
   it("sends to a chat named exactly, and answers the message sent", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_SEND]: {
@@ -1139,7 +1133,7 @@ describe("the MCP server", () => {
   })
 
   it("hands back the operation id when it cannot tell whether a send went out", async () => {
-    const { client } = await connect({ allowSend: true }, { answers: { [Opcode.MSG_SEND]: () => undefined } })
+    const { client } = await connect({}, { answers: { [Opcode.MSG_SEND]: () => undefined } })
 
     const { isError, body } = await call(client, "messages send", { chat: "111", text: "hello" })
 
@@ -1149,7 +1143,7 @@ describe("the MCP server", () => {
 
   it("schedules with `at_time` the way `--at-time` does, and answers scheduledFor", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_SEND]: (request) => ({
@@ -1181,7 +1175,7 @@ describe("the MCP server", () => {
   })
 
   it("refuses an `at_time` that `--at-time` refuses, before sending anything", async () => {
-    const { client, max } = await connect({ allowSend: true })
+    const { client, max } = await connect()
 
     for (const args of [{ at_time: "30s" }, { at_time: "1h", silent: true }, { at_time: "1h", operation_id: "5" }]) {
       const { isError, body } = await call(client, "messages send", { chat: "111", text: "x", ...args })
@@ -1191,7 +1185,7 @@ describe("the MCP server", () => {
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEND)
   })
 
-  it("reads the queue of scheduled messages without --allow-send", async () => {
+  it("reads the queue of scheduled messages", async () => {
     const { client, max } = await connect()
 
     const { isError } = await call(client, "messages scheduled", { chat: "111" })
@@ -1205,7 +1199,7 @@ describe("the MCP server", () => {
   it("goes through the send guards: a read-only profile refuses, and nothing is sent", async () => {
     const profile = "mcp-read-only"
     legacyFor(profile, { permissions: { messages: "readonly" } })
-    const { client, max } = await connect({ allowSend: true }, { profile })
+    const { client, max } = await connect({}, { profile })
 
     expect(await client.commands()).not.toContain("messages send")
     expect((await call(client, "messages send", { chat: "111", text: "hello" })).isError).toBe(true)
@@ -1213,13 +1207,10 @@ describe("the MCP server", () => {
   })
 
   it("offers marking a chat read by the profile permissions", async () => {
-    const names = async (options: Partial<ServerOptions>) => await (await connect(options)).client.commands()
-
-    expect(await names({ allowSend: true })).toContain("chats mark-read")
-    expect(await names({ allowMarkRead: true })).toContain("chats mark-read")
+    expect(await (await connect()).client.commands()).toContain("chats mark-read")
   })
 
-  describe("tools that change the account (mcpTools)", () => {
+  describe("tools that change the account", () => {
     const ACCOUNT = [
       "contacts add",
       "contacts remove",
@@ -1234,24 +1225,15 @@ describe("the MCP server", () => {
       "chats admins remove",
       "account update",
     ]
-    const offered = async (profile: string) =>
-      (
-        await connect({ allowSend: true, allowDelete: true, allowMarkRead: true, allowModerate: true }, { profile })
-      ).client.commands()
-    const configure = (profile: string, key: string, value: string) => legacyFor(profile, { [key]: value.split(",") })
+    const offered = async (profile: string) => (await connect({}, { profile })).client.commands()
 
-    it("ignore retired mcpTools and follow the profile permissions", async () => {
+    it("follow the profile permissions", async () => {
       expect((await offered("mcp-no-groups")).filter((name) => ACCOUNT.includes(name)).sort()).toEqual(
         [...ACCOUNT].sort(),
       )
-
-      await configure("mcp-groups", "mcp_tools", "contacts,polls")
-      const names = await offered("mcp-groups")
-      expect(names.filter((name) => ACCOUNT.includes(name)).sort()).toEqual([...ACCOUNT].sort())
     })
 
     it("go through the client like the command: block sends CONTACT_UPDATE with BLOCK", async () => {
-      await configure("mcp-block", "mcp_tools", "contacts")
       const { client, max } = await connect(
         {},
         {
@@ -1269,29 +1251,16 @@ describe("the MCP server", () => {
     })
 
     it("refuse on a read-only profile, and nothing goes out", async () => {
-      await configure("mcp-block-ro", "mcp_tools", "contacts")
       legacyFor("mcp-block-ro", { permissions: { contacts: "readonly" } })
       const { client, max } = await connect({}, { profile: "mcp-block-ro" })
       expect(await client.commands()).not.toContain("contacts block")
       expect((await call(client, "contacts block", { person: "20000002" })).isError).toBe(true)
       expect(max.sent.filter(({ opcode }) => opcode === Opcode.CONTACT_UPDATE)).toEqual([])
     })
-
-    it("cannot be named in the bot section", async () => {
-      const { stderr } = await (async () => {
-        const streams = captureStreams()
-        await run(["mcp-bot", "config", "set", "--bot", "mcp_tools", "contacts"], { streams, tty: false })
-        return { stderr: streams.stderr.join("\n") }
-      })()
-      expect(stderr).toContain("legacy setting")
-    })
   })
 
   it("marks a chat read up to the message given, through the send guards", async () => {
-    const { client, max } = await connect(
-      { allowMarkRead: true },
-      { answers: { [Opcode.CHAT_MARK]: { unread: 0, mark: 1789776100000 } } },
-    )
+    const { client, max } = await connect({}, { answers: { [Opcode.CHAT_MARK]: { unread: 0, mark: 1789776100000 } } })
 
     const { isError, body } = await call(client, "chats mark-read", { chat: "111", until: "116762160362694583" })
 
@@ -1302,10 +1271,9 @@ describe("the MCP server", () => {
   })
 
   it("offers deleting by permissions, with confirmation skipped explicitly, and only for the owner", async () => {
-    const names = async (options: Partial<ServerOptions>) => await (await connect(options)).client.commands()
-    expect(await names({ allowSend: true, allowMarkRead: true })).toContain("messages delete")
+    expect(await (await connect()).client.commands()).toContain("messages delete")
 
-    const { client, max } = await connect({ allowDangerous: true }, { answers: { [Opcode.MSG_DELETE]: {} } })
+    const { client, max } = await connect({}, { answers: { [Opcode.MSG_DELETE]: {} } })
     const { isError } = await call(client, "messages delete", {
       chat: "111",
       messages: ["116762160362694583"],
@@ -1368,7 +1336,7 @@ describe("the MCP server", () => {
     it.each(["legacy", "modern"] as const)("uses profile permissions over stdio and HTTP (%s)", async (era) => {
       for (const http of [false, true]) {
         const { client, max, forms } = await connect(
-          { confirmSend: true },
+          {},
           {
             era,
             http,
@@ -1486,7 +1454,7 @@ describe("what the MCP server offers beyond the basics", () => {
 
   it("a reply carries the REPLY link and Markdown goes out as markup", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_SEND]: {
@@ -1514,7 +1482,7 @@ describe("what the MCP server offers beyond the basics", () => {
 
   it("puts a reaction on a message", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_REACTION]: {
@@ -1600,16 +1568,8 @@ describe("what the MCP server offers beyond the basics", () => {
     expect(JSON.stringify(result)).not.toContain("secret-token")
   })
 
-  it("keeps its instructions within the 2048 characters a client shows, with every flag on", () => {
-    const text = instructions({
-      allowSend: true,
-      confirmSend: true,
-      allowMarkRead: true,
-      allowDelete: true,
-      allowModerate: true,
-      profile: "a-profile-name-of-some-length",
-      permitted: ["send", "forward", "reaction", "edit", "pin", "read", "delete"],
-    })
+  it("keeps its instructions within the 2048 characters a client shows", () => {
+    const text = instructions({ profile: "a-profile-name-of-some-length" })
 
     expect(text.length).toBeLessThanOrEqual(2048)
     expect(text).toMatch(/max:\/\/skill; `max skill install` installs it as an agent skill\.$/)
@@ -1756,7 +1716,7 @@ describe("chats check", () => {
   it("is offered by permissions, and plans without acting on dry_run", async () => {
     withRules("ck-mcp-dry", "allow")
     const off = await connect({}, { profile: "ck-mcp-dry", answers: groupAnswers })
-    const { client, max } = await connect({ allowModerate: true }, { profile: "ck-mcp-dry", answers: groupAnswers })
+    const { client, max } = await connect({}, { profile: "ck-mcp-dry", answers: groupAnswers })
 
     const tools = await off.client.commands()
     const { body } = await call(client, "chats check", { chat: "111", dry_run: true })
@@ -1778,7 +1738,7 @@ describe("chats check", () => {
 
   it("plans actions requiring separate rule consent despite retired flags", async () => {
     withRules("ck-mcp-flag", "ask")
-    const { client, max } = await connect({ allowDangerous: true }, { profile: "ck-mcp-flag", answers: groupAnswers })
+    const { client, max } = await connect({}, { profile: "ck-mcp-flag", answers: groupAnswers })
 
     const { body } = await call(client, "chats check", { chat: "111" })
 
@@ -1789,7 +1749,7 @@ describe("chats check", () => {
   it("plans moderation actions at rule ask without a server form", async () => {
     withRules("ck-mcp-yes", "ask")
     const { client, max, forms } = await connect(
-      { allowModerate: true },
+      {},
       { profile: "ck-mcp-yes", answers: groupAnswers, form: () => ({ action: "accept", content: {} }) },
     )
 
@@ -1903,7 +1863,7 @@ describe("P7 MCP policy", () => {
     expect(
       await run([profile, "config", "set", "permissions.messages", "deny"], { streams: captureStreams(), tty: false }),
     ).toBe(0)
-    const { client, max, rawClient } = await connect({ allowSend: true, allowDelete: true }, { profile })
+    const { client, max, rawClient } = await connect({}, { profile })
     const names = await client.commands()
     expect(names.some((name) => name.startsWith("messages ") || name === "inbox" || name === "review")).toBe(false)
     expect((await rawClient.listResources()).resources).toEqual([])

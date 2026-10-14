@@ -183,7 +183,7 @@ max shop bot messages list -100
 ### «is not a valid config»
 
 ```json
-{"error":{"code":"configuration_error","reason":"config.invalid","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, read_only, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools"}}
+{"error":{"code":"configuration_error","reason":"config.invalid","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve"}}
 ```
 
 Код `3`. В файле настроек поле, которого нет в схеме — почти всегда опечатка, и сообщение

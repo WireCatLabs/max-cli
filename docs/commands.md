@@ -1417,7 +1417,6 @@ max messages download <chat> [message] [options]
 | `--all` | every file of the chat, newest first; run it again to continue where it stopped. |
 | `--pause <duration>` | with --all, a pause between pages, to stay under the provider's limits. По умолчанию: `5s`. |
 | `--extract` | read text layers from the files this download maps into the local content index. |
-| `--output <dir>` | compatibility alias for --output-dir. |
 
 ### `max messages evidence`
 
@@ -2641,7 +2640,6 @@ max conversations embed [options]
 | `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
-| `--workers <n>` | local: sessions in parallel, each with its own copy of the model (\~0.7 GB each). |
 | `--threads <n>` | local: threads in all (default: min(8, cores)). |
 | `--concurrency <n>` | remote: requests at once (default: 4). |
 | `--max-tokens <n>` | remote: stop before a run that could send more tokens than this. |
@@ -3047,7 +3045,7 @@ max search messages [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges; --language legacy keeps discovery; with --saved, more words AND-ed to it. |
+| `query` | необязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges; with --saved, more words AND-ed to it. |
 
 | Опция | Что делает |
 |---|---|
@@ -3069,9 +3067,7 @@ max search messages [query] [options]
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
 | `--discover` | find partial lexical matches and eligible replies in the local archive; results are evidence, not confirmed answers. |
-| `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
-| `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
 ### `max search mail`
@@ -3176,9 +3172,7 @@ max searches create <name> [query] [options]
 | `--newest` | newest first instead of best first. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit. |
-| `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
-| `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 | `--by <chat\|sender\|day\|hour>` | what stats messages show --saved counts by. |
 | `--selection <json>` | save the resolved parent ranking query and options from a drilldown. |
 | `--replace` | overwrite a saved search of the same name. |
@@ -4031,7 +4025,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin. |
 | `value` | обязательный | a number, true or false, or a list like contacts,polls. |
 
 | Опция | Что делает |
@@ -4052,7 +4046,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin. |
 
 | Опция | Что делает |
 |---|---|
@@ -4243,14 +4237,7 @@ max mcp [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 | `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
-| `--http-confirmation <mode>` | no longer used — writes show no form; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
 | `--revoke` | forget every login given to a browser app; each must log in again. |
@@ -4266,12 +4253,6 @@ max mcp config [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ### `max mcp setup`
 
@@ -4291,12 +4272,6 @@ max mcp setup <client> [options]
 |---|---|
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ### `max mcp doctor`
 
@@ -4309,12 +4284,6 @@ max mcp doctor [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ## `max bot`
 
@@ -4750,7 +4719,7 @@ find what this bot's local copy holds, by text
 
 #### `max bot search messages`
 
-search the messages this bot has read, sent or received on this machine — the local copy only, best match first; every word must appear; "a phrase", -word, a OR b, from: chat: after: before: has:; by text, by --from, or both
+search the messages this bot has read, sent or received on this machine — the local copy only, best match first; a Lucene query: every word must appear; "a phrase", -word, a OR b, from: chat: date: has:; by text, by --from, or both
 
 ```sh
 max bot search messages [query] [options]

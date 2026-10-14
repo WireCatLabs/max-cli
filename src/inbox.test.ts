@@ -1,5 +1,5 @@
-import { existsSync, readFileSync } from "node:fs"
-import { join } from "node:path"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
@@ -17,6 +17,11 @@ const savedPoint = (profile: string, chat = "111"): string | undefined => {
   if (!existsSync(pointFor(profile))) return undefined
   const saved = JSON.parse(readFileSync(pointFor(profile), "utf8"))
   return saved.chats?.[chat] ?? saved.lastCheckAt
+}
+
+const seedPoint = (profile: string, lastCheckAt: string) => {
+  mkdirSync(dirname(pointFor(profile)), { recursive: true })
+  writeFileSync(pointFor(profile), JSON.stringify({ lastCheckAt }))
 }
 
 const ME = 10000001
@@ -146,11 +151,11 @@ describe("max inbox — unread", () => {
 
 describe("max inbox --new", () => {
   it("shows other people's new messages from changed chats, and saves where it stopped", async () => {
-    const { max, environment, store, historiesAsked } = inboxMax({
+    const { max, environment, historiesAsked } = inboxMax({
       111: [message(120, 10000002, "old"), message(30, 10000002, "new"), message(10, ME, "my reply")],
       222: [message(300, 10000002, "unchanged")],
     })
-    store("i-first").writeState({ ...store("i-first").readState(), lastCheckAt: new Date(now - HOUR).toISOString() })
+    seedPoint("i-first", new Date(now - HOUR).toISOString())
 
     const { stdout, code } = await runWith(["i-first", "inbox", "--new", "--json"], environment)
 
@@ -168,11 +173,11 @@ describe("max inbox --new", () => {
   })
 
   it("leaves a message that arrived during the run for the next one, and does not step over it", async () => {
-    const { environment, store } = inboxMax(
+    const { environment } = inboxMax(
       { 111: [message(30, 10000002, "seen at login"), message(2, 10000002, "arrived mid-run")] },
       { lastEventMinutesAgo: { 111: 30 } },
     )
-    store("i-race").writeState({ ...store("i-race").readState(), lastCheckAt: new Date(now - HOUR).toISOString() })
+    seedPoint("i-race", new Date(now - HOUR).toISOString())
 
     const { stdout } = await runWith(["i-race", "inbox", "--new", "--json"], environment)
 
@@ -181,9 +186,9 @@ describe("max inbox --new", () => {
   })
 
   it("says there is nothing new, prints nothing on stdout, and leaves the saved point alone", async () => {
-    const { environment, store } = inboxMax({ 111: [message(120, 10000002, "old")] })
+    const { environment } = inboxMax({ 111: [message(120, 10000002, "old")] })
     const saved = new Date(now - HOUR).toISOString()
-    store("i-quiet").writeState({ ...store("i-quiet").readState(), lastCheckAt: saved })
+    seedPoint("i-quiet", saved)
 
     const { stdout, stderr, code } = await runWith(["i-quiet", "inbox", "--new"], environment, { tty: true })
 
@@ -213,9 +218,9 @@ describe("max inbox --new", () => {
   })
 
   it("a date in the query is a one-off look: the saved point does not move, and `--new` refuses one", async () => {
-    const { environment, store } = inboxMax({ 111: [message(30, 10000002, "new")] })
+    const { environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
     const saved = new Date(now - 5 * 60 * 1000).toISOString()
-    store("i-since").writeState({ ...store("i-since").readState(), lastCheckAt: saved })
+    seedPoint("i-since", saved)
     const query = `date>"${new Date(now - HOUR).toISOString()}"`
 
     const { stdout } = await runWith(["i-since", "inbox", query, "--json"], environment)
@@ -266,25 +271,10 @@ describe("max inbox --new", () => {
     expect(savedPoint("i-keep")).toBe(saved)
   })
 
-  it("preserves the shared checkpoint after migration even when the legacy point stays older", async () => {
-    const { environment, store } = inboxMax({ 111: [message(30, 10000002, "new")] })
+  it("a failed inbox leaves the saved point where it was", async () => {
+    const { environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
     const old = new Date(now - HOUR).toISOString()
-    store("i-migrate").writeState({ ...store("i-migrate").readState(), lastCheckAt: old })
-
-    const first = await runWith(["i-migrate", "inbox", "--new", "--json"], environment)
-    expect(first.code).toBe(0)
-    expect(savedPoint("i-migrate")).toBe(new Date(now - 30 * 60 * 1000).toISOString())
-    expect(store("i-migrate").readState().lastCheckAt).toBe(old)
-    const second = await runWith(["i-migrate", "inbox", "--new", "--json"], environment)
-    expect(second.code).toBe(0)
-    expect(JSON.parse(second.stdout).items).toEqual([])
-    expect(savedPoint("i-migrate")).toBe(new Date(now - 30 * 60 * 1000).toISOString())
-  })
-
-  it("a failed inbox leaves the migrated checkpoint where it was", async () => {
-    const { environment, store } = inboxMax({ 111: [message(30, 10000002, "new")] })
-    const old = new Date(now - HOUR).toISOString()
-    store("i-failed").writeState({ ...store("i-failed").readState(), lastCheckAt: old })
+    seedPoint("i-failed", old)
     const result = await runWith(["i-failed", "inbox", "--new", "--json"], {
       ...environment,
       connection: () => {

@@ -126,15 +126,24 @@ describe("SDK148 local commands through the consumer", () => {
     expect(cleared.code, cleared.err).toBe(0)
     expect(JSON.parse(cleared.out)).toMatchObject({ item: { cleared: { deadlines: [], send_block: null } } })
   })
+  it("refuses a camelCase setting name as an unknown setting", async () => {
+    for (const typed of ["keepRunsForDays", "searchStemmers.latin"]) {
+      const refused = await cli(["config", "set", typed, "7", "--defaults", "--json"])
+      expect(refused.code).toBe(2)
+      expect(JSON.parse(refused.err).error.message).toContain(`no setting called "${typed}"`)
+    }
+    expect((await cli(["config", "set", "keep_runs_for_days", "7", "--defaults", "--json"])).code).toBe(0)
+    expect((await cli(["config", "unset", "keep_runs_for_days", "--defaults", "--json"])).code).toBe(0)
+  })
   it("uses store-wide stem settings and refuses them under a profile lock", async () => {
-    const set = await cli(["config", "set", "searchStemmers.latin", "english", "--json"])
+    const set = await cli(["config", "set", "search_stemmers.latin", "english", "--json"])
     expect(set.code, set.err).toBe(0)
     expect(JSON.parse(set.out)).toMatchObject({ item: { scope: "store", value: "english" } })
-    expect((await cli(["config", "set", "searchStemmers.latin", "english", "--defaults", "--json"])).code).toBe(2)
+    expect((await cli(["config", "set", "search_stemmers.latin", "english", "--defaults", "--json"])).code).toBe(2)
     const before = process.env.MAX_PROFILE_LOCK
     process.env.MAX_PROFILE_LOCK = profile
     try {
-      expect((await cli(["config", "unset", "searchStemmers.latin", "--json"])).code).toBe(5)
+      expect((await cli(["config", "unset", "search_stemmers.latin", "--json"])).code).toBe(5)
     } finally {
       if (before === undefined) delete process.env.MAX_PROFILE_LOCK
       else process.env.MAX_PROFILE_LOCK = before

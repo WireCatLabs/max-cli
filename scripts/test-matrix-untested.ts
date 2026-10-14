@@ -437,19 +437,7 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "searches create",
-    option: "--language",
-    reason:
-      "cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
-  },
-  {
-    command: "searches create",
     option: "--timezone",
-    reason:
-      "cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
-  },
-  {
-    command: "searches create",
-    option: "--regex",
     reason:
       "cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record",
   },
@@ -556,36 +544,22 @@ export const UNTESTED: Untested[] = [
     ...(option ? { option } : {}),
     reason: "needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6",
   })),
-  ...["", "--allow-send", "--confirm-send", "--allow-mark-read", "--allow-delete", "--allow-moderate"].map(
-    (option) => ({
-      command: "mcp",
-      ...(option ? { option } : {}),
-      reason:
-        "serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options",
-    }),
-  ),
-  ...[
-    "",
-    "--allow-writes",
-    "--allow-send",
-    "--confirm-send",
-    "--allow-mark-read",
-    "--allow-delete",
-    "--allow-moderate",
-  ].map((option) => ({
+  {
+    command: "mcp",
+    reason:
+      "serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options",
+  },
+  ...["", "--allow-writes"].map((option) => ({
     command: "mcp setup",
     ...(option ? { option } : {}),
     reason:
       "changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex",
   })),
-  ...["", "--allow-send", "--confirm-send", "--allow-mark-read", "--allow-delete", "--allow-moderate"].map(
-    (option) => ({
-      command: "mcp doctor",
-      ...(option ? { option } : {}),
-      reason:
-        "starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
-    }),
-  ),
+  {
+    command: "mcp doctor",
+    reason:
+      "starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
+  },
   ...["", "--allow-send", "--confirm-send", "--allow-dangerous", "--allow-delete", "--allow-moderate"].map(
     (option) => ({
       command: "bot mcp",
@@ -678,12 +652,6 @@ export const UNTESTED: Untested[] = [
   {
     command: "conversations embed",
     option: "--dims",
-    reason:
-      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
-  },
-  {
-    command: "conversations embed",
-    option: "--workers",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
   },
