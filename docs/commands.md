@@ -2846,7 +2846,7 @@ max tags list [query]
 
 ## `max mentions`
 
-phones, e-mail, links and documents found in stored messages
+phones, e-mail, links, documents and known people's names found in stored messages
 
 ### `max mentions list`
 
@@ -2879,7 +2879,7 @@ max mentions show <id>
 
 ### `max mentions confirm`
 
-say what a mention is, everywhere its value is written: a phone's owner, the stored document
+say what a mention is: a phone's owner everywhere it is written, the stored document, who a name means
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2890,7 +2890,7 @@ max mentions confirm <id> [person] [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `id` | обязательный | the mention's id, from mentions list. |
-| `person` | необязательный | person:<uid> or organization:<id> that owns the phone or the address; a document needs none. |
+| `person` | необязательный | person:<uid> or organization:<id> that owns the phone or the address; person:<uid> a name means; a document needs none. |
 
 | Опция | Что делает |
 |---|---|
@@ -2898,7 +2898,7 @@ max mentions confirm <id> [person] [options]
 
 ### `max mentions reject`
 
-not a real mention, or not worth keeping: dismiss its value everywhere, and on later syncs
+not a real mention: dismiss its value everywhere and on later syncs; a name only where it is
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2921,8 +2921,12 @@ find the mentions of every stored message again; decisions are kept
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max mentions rebuild
+max mentions rebuild [options]
 ```
+
+| Опция | Что делает |
+|---|---|
+| `--kind <kind>` | only this kind: person-name after people were added or renamed. Одно из: `phone`, `email`, `url`, `document`, `person-name`. |
 
 ## `max metadata`
 
