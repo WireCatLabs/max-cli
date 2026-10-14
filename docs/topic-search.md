@@ -30,7 +30,7 @@
 | Задача | Команда |
 |---|---|
 | Найти обсуждение по теме — в одном чате или во всех подготовленных | `max personal search conversations "<вопрос>"` |
-| Посмотреть разговоры чата, новые сверху | `max personal conversations list --chat <чат>` |
+| Посмотреть разговоры чата, новые сверху | `max personal conversations list <чат>` |
 | Прочитать один разговор от начала до конца | `max personal conversations show <id>` |
 | Открыть весь разговор, в котором есть сообщение | `max personal conversations show <чат> <сообщение>` |
 | Найти другие разговоры о том же, во всех чатах | `max personal conversations related <чат> <сообщение>` |
@@ -161,7 +161,7 @@ max personal conversations show 91                       # 6. прочитать
 `conversations embed --chat <чат>`.
 
 ```sh
-max personal conversations list --chat "Книжный клуб" --since-time 7d
+max personal conversations list "Книжный клуб" started_at>=7d
 max personal conversations show 91                       # один разговор, от старых к новым
 max personal conversations show "Книжный клуб" 204       # разговор, в котором сообщение 204
 max personal conversations related "Книжный клуб" 204    # другие разговоры о том же, во всех чатах

@@ -231,11 +231,11 @@ max personal review --chat "Поход" --since-time 7d --json
 Посмотрите, что ждёт вас, старые сверху, а затем только вопросы и упоминания в одной группе:
 
 ```sh
-max personal tasks list --state open
+max personal tasks list state:open
 ```
 
 ```sh
-max personal tasks list --chat "Поход" --type question,mention
+max personal tasks list chat:<id чата> "(kind:question OR kind:mention)"
 ```
 
 Добавьте то, чего правила не видят, например своё обещание, или закройте задачу, на которую не нужно отвечать:

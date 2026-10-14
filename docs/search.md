@@ -381,7 +381,7 @@ max personal tags add work --contact "Борис Тестов"
 ```
 
 ```sh
-max personal tags list --tag work --type chat
+max personal tags list tag:work type:chat
 ```
 
 ```sh
@@ -421,7 +421,7 @@ max personal tags auto                                # записать авт�
 ```
 
 ```sh
-max personal tags list --source auto                  # только автоматические
+max personal tags list sources:auto                  # только автоматические
 ```
 
 Автоматическая метка не трогает ваши: повторный запуск убирает только устаревшие автоматические. Если вы

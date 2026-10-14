@@ -24,9 +24,8 @@ description: >-
 
 `max commands schema messages list --json` показывает схемы и эффекты одной команды.
 Используйте `--json --no-input` для работы без вопросов; секреты передавайте явно через pipe.
-`--fields id,text` выбирает поля каждого элемента списка, сохраняя страницу, полноту и
-идентификаторы операций. Для id достаточно `--fields id`; `items.id` также поддерживается,
-а синтаксис `items[].id` не нужен. `--max-output-bytes` и `--max-input-bytes` задают byte budgets;
+`--json=id,text` оставляет эти поля каждого элемента списка вместе со страницей и полнотой. Для id
+достаточно `--json=id`. `--max-output-bytes` и `--max-input-bytes` задают byte budgets;
 одноразовые действия имеют срок 30 секунд, меняемый через `--timeout`.
 Перед чувствительной записью `--dry-run` проверяет форму запроса и права до действия;
 общий preview не подключается к мессенджеру, не резервирует запись и оставляет цели непроверенными.
@@ -245,7 +244,7 @@ max personal inbox --json                               # непрочитанн
 max personal inbox --new --json                         # что пришло с прошлой проверки, один раз
 max personal review --since-time 2026-09-23T09:00 --json    # всё, свои тоже, для обзора «кто кому должен»
 max personal review --chat -1000 --unanswered 4h --json # вопросы в группе, на которые 4 часа не ответили ни владелец, ни админы
-max personal tasks list --state open --json              # что ждёт ответа владельца; задачи открывает и закрывает review
+max personal tasks list state:open --json              # что ждёт ответа владельца; задачи открывает и закрывает review
 max personal tasks close <задача> --as dismissed --reason no-reply-needed --json   # только когда владелец так решил
 max personal watch --jsonl                              # новые сообщения по мере прихода; `max personal serve` запустится сам
 max personal watch --events --jsonl                     # плюс правки, удаления, реакции, прочтения, изменения чатов; поле "event"
@@ -461,7 +460,7 @@ max personal metadata get --chat CHAT_ID --json
 max personal metadata refresh --chat CHAT_ID --limit 1 --json
 max personal tags auto --chat CHAT_ID --dry-run --json
 max personal tags auto --chat CHAT_ID --refresh-metadata --limit 1 --json
-max personal tags list --source auto --json
+max personal tags list sources:auto --json
 max personal tags remove news --chat CHAT_ID --source auto
 ```
 
@@ -472,6 +471,20 @@ max personal tags remove news --chat CHAT_ID --source auto
 Оценка правила не является вероятностью. Ручные метки сохраняются при повторной классификации.
 Без `--source` удаление метки убирает оба источника; следующий явный запуск `tags auto` может
 создать автоматическую метку снова. Связывание людей не объединяет их личные заметки.
+
+Телефоны, почта, ссылки и документы Google из сохранённых сообщений хранятся как упоминания: их находят
+правила при каждой записи в базу. `mentions list` принимает запрос: `kind:phone|email|url|document`,
+`status:found|linked|dismissed`, `domain:` (сайт ссылки или адреса; `docs.google.com` значит `google.com`)
+и `value:`; слово без поля — значение в любой записи, `89001234567` найдёт `+79001234567`. Сообщения,
+сохранённые до появления упоминаний, читает один `mentions rebuild`. У каждой строки есть `locator`
+сообщения; текст упоминаний — только владельцу, не в логи и не в файлы.
+
+```sh
+max personal mentions list kind:phone --json
+max personal mentions list domain:google.com kind:url --json
+max personal mentions show 12 --json
+max personal mentions rebuild
+```
 
 Рейтинги архива: `max personal stats messages top` / `max personal stats contacts top` — метрика `--measure` или
 `--score helpful|active|engaging`; оценки используют всю допустимую выборку до limit.

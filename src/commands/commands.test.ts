@@ -166,6 +166,7 @@ describe("max commands", () => {
       "tags auto",
       "tags add",
       "tags remove",
+      "mentions rebuild",
       "metadata refresh",
       "recipients add",
       "recipients remove",

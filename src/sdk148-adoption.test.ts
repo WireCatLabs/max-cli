@@ -95,7 +95,7 @@ describe("SDK148 local commands through the consumer", () => {
     const added = await cli(["tags", "add", "Work", "--chat", "7", "--json"])
     expect(added.code, added.err).toBe(0)
     expect(JSON.parse(added.out)).toMatchObject({ added: ["work"] })
-    const listed = await cli(["tags", "list", "--tag", "work", "--type", "chat", "--json"])
+    const listed = await cli(["tags", "list", "tag:work", "type:chat", "--json"])
     expect(JSON.parse(listed.out).items).toHaveLength(1)
     const found = await cli(["search", "messages", "tag:work", "--json"])
     expect(found.code, found.err).toBe(0)

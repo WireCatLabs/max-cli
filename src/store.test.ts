@@ -225,7 +225,7 @@ describe("max conversations", () => {
 
     const built = await max(["c-build", "conversations", "build", "--chat", "111", "--json"], environment)
     const listed = await max(
-      ["c-build", "conversations", "list", "--chat", "111", "--since-time", "2026-08-01", "--limit", "5", "--json"],
+      ["c-build", "conversations", "list", "111", "started_at>=2026-08-01", "--limit", "5", "--json"],
       environment,
     )
     const [conversation] = JSON.parse(listed.stdout).items
@@ -233,7 +233,8 @@ describe("max conversations", () => {
     const links = await max(["c-build", "messages", "links", "111", String(second), "--json"], environment)
 
     expect(JSON.parse(built.stdout)).toMatchObject({ chat: "111", messages: 70, conversations: 1 })
-    expect(conversation).toMatchObject({ messageCount: 70, firstMessageId: first })
+    expect(conversation).toMatchObject({ messages_count: 70 })
+    expect(conversation.first_message).toMatch(new RegExp(`/${first}$`))
     expect(JSON.parse(shown.stdout).messages).toHaveLength(70)
     expect(links.code).toBe(0)
     expect(links.stdout).toContain(String(first))

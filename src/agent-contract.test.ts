@@ -27,9 +27,7 @@ describe("the adopted agent CLI contract", () => {
       "stats",
       "messages",
       "show",
-      "--json",
-      "--fields",
-      "schemaVersion",
+      "--json=schemaVersion",
     ])
     expect(code).toBe(0)
     expect(JSON.parse(streams.stdout.join(""))).toMatchObject({ schemaVersion: 1 })
