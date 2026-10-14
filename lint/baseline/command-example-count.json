@@ -173,8 +173,6 @@
   "metadata refresh",
   "models audio download",
   "models audio list",
-  "models image download",
-  "models image list",
   "models text download",
   "models text key remove",
   "models text key set",
