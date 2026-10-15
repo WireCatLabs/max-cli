@@ -2,6 +2,7 @@ import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installerOf } from "@wirecat/cli-base/update"
 import {
+  grantsAuthority,
   httpTokenFile,
   itemOf,
   LOCAL_READ,
@@ -117,7 +118,7 @@ export const mcpCommand = (): Command => {
   )
   command.addCommand(
     withFlags(
-      annotate(new Command("setup"), { effects: LOCAL_WRITE })
+      grantsAuthority(annotate(new Command("setup"), { effects: LOCAL_WRITE }))
         .description("add this profile's local MCP server to Codex or Claude Code")
         .argument("<client>", "codex or claude-code")
         .option("--allow-writes", "acknowledge that this profile offers writing tools"),
