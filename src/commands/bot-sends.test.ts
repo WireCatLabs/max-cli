@@ -31,7 +31,6 @@ beforeAll(async () => {
     request.on("end", () => {
       requests.push({ method: request.method, url: request.url, body })
       const url = request.url ?? ""
-      if (url.includes("chat_id=-555")) return
       if (url.includes("chat_id=42")) {
         response.writeHead(404, { "content-type": "application/json" })
         return response.end(`{"code": "chat.not.found", "message": "Chat 42 not found"}`)
@@ -171,9 +170,18 @@ describe("max bot messages send", () => {
   })
 
   it("records a send that got no answer as an unknown outcome, and does not repeat it", async () => {
-    const { out } = await max(["bot", "messages", "send", "-555", "hi", "--json"], 300)
+    // Counted at the fetch, not at a server: a send the deadline aborts may never reach one.
+    let sends = 0
+    const silent: FetchLike = (input, init) => {
+      if (!String(input).includes("chat_id=-555")) return fetch(input, init)
+      sends += 1
+      const signal = init?.signal
+      if (signal?.aborted) return Promise.reject(signal.reason)
+      return new Promise((_, reject) => signal?.addEventListener("abort", () => reject(signal.reason), { once: true }))
+    }
+    const { out } = await max(["bot", "messages", "send", "-555", "hi", "--json"], 300, silent)
     expect(out).toContain("outcome_unknown")
-    expect(requests.filter((request) => request.url?.includes("-555"))).toHaveLength(1)
+    expect(sends).toBe(1)
     const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
     expect(journal.at(-1)).toMatchObject({ chat_id: "-555", outcome: "outcome_unknown" })
   })
