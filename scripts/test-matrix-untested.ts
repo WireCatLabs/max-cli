@@ -549,9 +549,9 @@ export const UNTESTED: Untested[] = [
     reason:
       "serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options",
   },
-  ...["", "--allow-writes"].map((option) => ({
+  ...["--allow-writes", "--permission"].map((option) => ({
     command: "mcp setup",
-    ...(option ? { option } : {}),
+    option,
     reason:
       "changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex",
   })),
