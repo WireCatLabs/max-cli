@@ -5168,6 +5168,7 @@ max bot uploads put <file> [options]
 | Опция | Что делает |
 |---|---|
 | `--type <type>` | upload as this kind instead of guessing by extension. Одно из: `image`, `video`, `audio`, `file`. |
+| `--allow-any-file` | upload a file even from credential folders or WireCat apps' folders. |
 
 ### `max bot api`
 
