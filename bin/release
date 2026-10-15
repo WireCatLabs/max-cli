@@ -99,10 +99,15 @@ if [ "$next" != "$version" ]; then
   signed=$(git rev-parse HEAD)
   branch="release/$next"
   git switch -q -c "$branch"
-  node -e 'const fs = require("fs"); const [o, n] = process.argv.slice(1)
+  # A version npm already has keeps its section; «Не выпущено» becomes the new version. Otherwise the
+  # prepared section that another session's release took moves to the next number.
+  taken=$(published && echo 1 || true)
+  node -e 'const fs = require("fs"); const [o, n, taken] = process.argv.slice(1)
     const swap = (file, from, to) => fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(from, to))
+    const today = new Date().toLocaleDateString("ru-RU", { timeZone: "Europe/Madrid" })
     swap("package.json", `"version": "${o}"`, `"version": "${n}"`)
-    swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next"
+    if (taken) swap("CHANGELOG.md", "\n## Не выпущено\n", `\n## ${n} — ${today}\n`)
+    else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next" "$taken"
   pnpm exec cli-dev version --sync >/dev/null
   git commit -q -am "chore(release): $next" -m "bin/release: $why."
   git push -q -u origin "$branch"
