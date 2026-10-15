@@ -192,7 +192,8 @@ export const configCommand = (): Command => {
     else sub.description("remove a setting from the configuration file")
 
     sub.action(async function (this: Command, typed: string, given: unknown) {
-      const setting = declaredName(typed)
+      const head = typed.split(".")[0] ?? typed
+      const setting = isStoreSetting(typed) || ALL_SETTINGS.includes(head) ? typed : declaredName(typed)
       const value = action === "set" ? String(given) : undefined
       const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
       const { settings, renderer, format, streams } = forCommand(this, {
