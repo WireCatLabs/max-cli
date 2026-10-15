@@ -25,7 +25,10 @@
   `tag:<имя>`, `--category <имя>` → `category:<имя>`, `--claimed` → `claimed:any`; `tasks duplicates --unsure` →
   `decision:unsure`. В MCP `tasks_agenda` и `tasks_duplicates` принимают `query`.
 - **Каждый ответ `--json` — конверт `item` или `items` + `page`**: предпросмотр `--dry-run` отвечает под `item`
-  с ключами `action_invoked` и `write_reserved`, ресурс MCP `max://chat/<id>` — тоже под `item`.
+  с ключами `action_invoked` и `write_reserved`, ресурс MCP `max://chat/<id>` — тоже под `item`. Под `item`
+  теперь отвечают и `bot me`, `bot api …` (ответ Bot API — внутри `item` без изменений, пустой ответ — `null`),
+  `contacts sync`, `contacts lookup` (`displayName` → `display_name`, `lastMessagedAt` → `last_messaged_at`),
+  `doctor report`, `doctor report create` (`sendTo` → `send_to`) и `setup` (`chats.hasMore` → `chats.has_more`).
 
 ## 0.54.0 — 15.10.2026
 

@@ -104,7 +104,7 @@ describe("max bot me", () => {
     store().write(GOOD)
     const { code, stdout } = await max(["bot", "me", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ user_id: "9007199254740993", first_name: "Helper" })
+    expect(JSON.parse(stdout).item).toMatchObject({ user_id: "9007199254740993", first_name: "Helper" })
   })
 })
 
@@ -273,7 +273,7 @@ describe("the run log for a bot command", () => {
   it("traces each request on stderr and keeps stdout to the answer", async () => {
     const { code, stdout, stderr } = await max(["bot", "api", "get-chat", "--chat-id", "7", "--trace", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toEqual({ success: true })
+    expect(JSON.parse(stdout).item).toEqual({ success: true })
     const events = stderr.split("\n").map((line) => JSON.parse(line))
     expect(events).toEqual([
       { event: "request", operation: "getChat", ids: { chat: "7" } },

@@ -1,7 +1,15 @@
 import { resolve } from "node:path"
-import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@wirecat/cli-base"
+import { CliError, writeSecurely } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { itemOf, LOCAL_WRITE, REMOTE_READ, renderAnswer, runsDirFor, snakeKeys } from "@wirecat/cli-core/cli"
+import {
+  type AnswerOutput,
+  itemOf,
+  LOCAL_WRITE,
+  REMOTE_READ,
+  renderAnswer,
+  runsDirFor,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
@@ -199,7 +207,7 @@ const reportCommand = (): Command => {
 
   report.action(async function (this: Command) {
     const { renderer, format, streams, run } = forCommand(this)
-    await run("doctor report", async () => explain(renderer, format, streams))
+    await run("doctor report", async () => explain(this, { renderer, format, streams }))
   })
 
   annotate(report.command("create"), { effects: LOCAL_WRITE })
@@ -235,7 +243,11 @@ const reportCommand = (): Command => {
           : "Неудачных запусков не записано. Если проблема повторяется, повторите команду, которая не работает, и создайте отчёт снова: неудачный запуск сохранится сам."
 
         if (format !== "pretty") {
-          renderer.result({ path, sendTo: REPORT_URL, issue, run: built.run?.metadata.runId ?? null, steps })
+          renderAnswer(
+            this,
+            { renderer, format, streams },
+            itemOf({ path, send_to: REPORT_URL, issue, run: built.run?.metadata.runId ?? null, steps }),
+          )
           if (noRun) renderer.note(noRun)
           return
         }
@@ -259,14 +271,14 @@ const reportCommand = (): Command => {
   return report
 }
 
-const explain = (renderer: Renderer, format: RenderFormat, streams: Streams): void => {
+const explain = (command: Command, output: AnswerOutput): void => {
+  const { format, streams } = output
   if (format !== "pretty") {
-    renderer.result({
-      sendTo: REPORT_URL,
-      includes: INCLUDES,
-      excludes: EXCLUDES,
-      create: "max doctor report create",
-    })
+    renderAnswer(
+      command,
+      output,
+      itemOf({ send_to: REPORT_URL, includes: INCLUDES, excludes: EXCLUDES, create: "max doctor report create" }),
+    )
     return
   }
   streams.data(

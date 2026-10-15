@@ -22,11 +22,12 @@ describe("max doctor report", () => {
     const { code, stdout } = await runWith(["doctor", "report", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({
-      sendTo: "https://github.com/WireCatLabs/max-cli/issues/new",
+    const { item } = JSON.parse(stdout)
+    expect(item).toMatchObject({
+      send_to: "https://github.com/WireCatLabs/max-cli/issues/new",
       create: "max doctor report create",
     })
-    expect(JSON.parse(stdout).excludes).toContain("токена")
+    expect(item.excludes).toContain("токена")
   })
 
   it("with no failed run yet, still writes the report and says how to get one", async () => {
@@ -34,7 +35,7 @@ describe("max doctor report", () => {
     const { code, stdout, stderr } = await runWith(["doctor", "report", "create", "--output", file, "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ path: file, run: null })
+    expect(JSON.parse(stdout).item).toMatchObject({ path: file, run: null })
     expect(stderr).toContain("Неудачных запусков не записано")
   })
 
@@ -43,7 +44,7 @@ describe("max doctor report", () => {
     const file = output("report.json")
 
     const { code, stdout } = await runWith(["doctor", "report", "create", "--output", file, "--json"])
-    const answer = JSON.parse(stdout)
+    const answer = JSON.parse(stdout).item
     const report = JSON.parse(readFileSync(file, "utf8")) as Report
 
     expect(code).toBe(0)
