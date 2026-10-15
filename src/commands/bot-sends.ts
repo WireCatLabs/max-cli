@@ -39,16 +39,11 @@ const files = (profile: string) => ({
 const recipientsOf = (context: Context) =>
   new RecipientList(files(context.settings.profile).recipients, `max ${botWords(context.settings.profile)}`)
 
-/**
- * cli-core's guard with the bot's own recipient list and journal. `readOnly` and `allow` are
- * checked before it, with the bot's permission names; no hourly limit unless `bot.*` sets one (`NEED-305`, `NEED-356`).
- */
+/** cli-core's guard with the bot's own recipient list and journal; no hourly limit unless `bot.*` sets one (`NEED-305`, `NEED-356`). */
 const guardOf = (context: Context) =>
   sendGuard({
     profile: botWords(context.settings.profile),
     command: "max",
-    readOnly: false,
-    readOnlyFrom: "default",
     sendsPerHour: context.settings.sendsPerHour,
     journal: new SendJournal(files(context.settings.profile).journal, {
       service: MAX_APP.command,

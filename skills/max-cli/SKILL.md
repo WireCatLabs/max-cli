@@ -151,7 +151,6 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    говорить, что сообщения нет. Слова и фразы находят формы слов; `exact:` или `--exact` — только точную форму.
    Default — строгий профиль Lucene:
    фразы, AND/OR/NOT, field groups и date ranges. `alpha OR beta gamma` = `(alpha OR beta) AND gamma`.
-   Для прежних filters/discovery — `--language legacy`; --regex — отдельный JS iu mode с пределами.
    Для version/coverage используйте --json; пустая выдача не доказывает отсутствие сообщения.
    `--timezone` задаёт календарную zone; kind:bot и in:bots имеют разные смыслы.
    Term/body regex различаются. Даты — `date:today`, `date:7d`; файл — `filename:*.pdf`, `size>10MB`

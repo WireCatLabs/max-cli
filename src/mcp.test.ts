@@ -12,7 +12,6 @@ import { parseLucene } from "@wirecat/cli-base/query"
 import { personalMcpTools, serveOverHttp } from "@wirecat/cli-core/cli"
 import { servicesFor, storedDeps } from "@wirecat/cli-core/services"
 import { openStore } from "@wirecat/cli-core/store"
-import { mcpCommandsClient } from "@wirecat/cli-core/testing"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { contextFor } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -24,6 +23,7 @@ import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { SKILL } from "./skill.js"
+import { surfaceOf } from "./testing/mcp-surface.js"
 import { type MockMaxOptions, mockMax } from "./testing/mock-max.js"
 
 const scriptedMax = (extra: MockMaxOptions["answers"] = {}) => {
@@ -159,10 +159,7 @@ const connect = async (
       connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     },
   )
-  const { session, build } = createMaxServer(context, {
-    allowSend: false,
-    ...options,
-  })
+  const { session, build } = createMaxServer(context, options)
   if (http) {
     const codes: string[] = []
     const port = await freePort()
@@ -199,7 +196,7 @@ const connect = async (
       await session.close()
     })
     const logins = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGIN).length
-    return { client: mcpCommandsClient(client, "max"), rawClient: client, session, max, streams, logins, forms }
+    return { client: surfaceOf(client, "max"), rawClient: client, session, max, streams, logins, forms }
   }
   const [serverSide, clientSide] = InMemoryTransport.createLinkedPair()
   // The modern era is chosen by `serveStdio`, as in `max mcp`; a server connected directly only speaks the legacy one.
@@ -229,7 +226,7 @@ const connect = async (
   })
 
   const logins = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGIN).length
-  return { client: mcpCommandsClient(client, "max"), rawClient: client, session, max, streams, logins, forms }
+  return { client: surfaceOf(client, "max"), rawClient: client, session, max, streams, logins, forms }
 }
 
 describe("max mcp --http, served until stopped", () => {
@@ -297,8 +294,8 @@ describe("max mcp --http, served until stopped", () => {
   })
 })
 
-const call = async (client: Client, name: string, args: Record<string, unknown> = {}) => {
-  const result = await client.callTool({ name, arguments: args })
+const call = async (client: ReturnType<typeof surfaceOf>, command: string, args: Record<string, unknown> = {}) => {
+  const result = await client.run({ command, arguments: args })
   return { isError: result.isError === true, body: result.structuredContent as Record<string, unknown> }
 }
 
@@ -319,9 +316,9 @@ describe("the MCP server", () => {
     "offers stored chart PNGs over %s MCP without another MAX request",
     async (era) => {
       const { client, max } = await connect({}, { era })
-      await call(client, "max_messages_list", { chat: "111" })
+      await call(client, "messages list", { chat: "111" })
       const sent = max.sent.length
-      const result = await client.callTool({ name: "max_stats_charts", arguments: { chat: "111", format: "png" } })
+      const result = await client.run({ command: "stats charts", arguments: { chat: "111", format: "png" } })
       expect(result.isError).not.toBe(true)
       const content = result.content as { type: string; mimeType?: string; data?: string; text?: string }[]
       expect(content[0]).toMatchObject({ type: "image", mimeType: "image/png" })
@@ -329,7 +326,7 @@ describe("the MCP server", () => {
       expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a")
       expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([800, 400])
       expect(JSON.parse(content[1]?.text ?? "null")).toMatchObject({ item: { version: 1, kind: "bar" } })
-      expect((await call(client, "max_stats_charts", { chat: "111" })).body).toMatchObject({
+      expect((await call(client, "stats charts", { chat: "111" })).body).toMatchObject({
         item: { version: 1, kind: "bar" },
       })
       expect(max.sent).toHaveLength(sent)
@@ -337,9 +334,9 @@ describe("the MCP server", () => {
   )
 
   it("offers the shared linking prompt without connecting to MAX", async () => {
-    const { client, logins } = await connect({}, { token: false })
-    expect((await client.listPrompts()).prompts.map(({ name }) => name)).toContain("link-conversations")
-    const [first] = (await client.getPrompt({ name: "link-conversations" })).messages
+    const { logins, rawClient } = await connect({}, { token: false })
+    expect((await rawClient.listPrompts()).prompts.map(({ name }) => name)).toContain("link-conversations")
+    const [first] = (await rawClient.getPrompt({ name: "link-conversations" })).messages
     expect(first?.content).toMatchObject({
       type: "text",
       text: expect.stringContaining("conversations batches status"),
@@ -354,18 +351,16 @@ describe("the MCP server", () => {
       "max_tools_search",
       "max_write",
     ])
-    const { tools } = await client.listTools()
     const catalogue = personalMcpTools(maxMessenger)
+    const commandOf = (name: string) => name.replaceAll("_", " ").replace("mark read", "mark-read")
     const expected = Object.keys(catalogue)
       .filter((name) => !name.startsWith("topics_"))
-      .map((name) => `max_${name}`)
-    expect(tools.map(({ name }) => name).sort()).toEqual(
-      [...expected, "max_status", "max_chats_check", "max_chats_rules"].sort(),
-    )
+      .map(commandOf)
+    expect((await client.commands()).sort()).toEqual([...expected, "status", "chats check", "chats rules"].sort())
     for (const [name, definition] of Object.entries(catalogue)) {
       if (name.startsWith("topics_")) continue
       const schema = toStandardJsonSchema(definition.input)["~standard"].jsonSchema.input({ target: "draft-2020-12" })
-      expect(tools.find((tool) => tool.name === `max_${name}`)?.inputSchema.properties).toEqual(schema.properties)
+      expect((await client.describe(commandOf(name)))?.arguments.properties).toEqual(schema.properties)
     }
     expect(logins()).toBe(0)
   })
@@ -387,15 +382,15 @@ describe("the MCP server", () => {
         },
       },
     )
-    const sessions = await call(client, "max_account_sessions")
+    const sessions = await call(client, "account sessions")
     expect(sessions.isError).toBe(false)
     expect(sessions.body).toMatchObject({ items: [{ current: true }] })
     expect(JSON.stringify(sessions)).not.toContain("secret-session")
-    const found = await call(client, "max_contacts_lookup", { phone: `+${phone}` })
+    const found = await call(client, "contacts lookup", { phone: `+${phone}` })
     expect(found.isError).toBe(false)
     expect(found.body).toMatchObject({ item: { id: "20000002", name: "Found Person" } })
     expect(JSON.stringify(found)).not.toContain(phone)
-    const invalid = await call(client, "max_contacts_lookup", { phone: "bad-sensitive-phone" })
+    const invalid = await call(client, "contacts lookup", { phone: "bad-sensitive-phone" })
     expect(invalid.body.error).toMatchObject({ code: "validation_error" })
     expect(JSON.stringify(invalid)).not.toContain("bad-sensitive-phone")
     expect(
@@ -425,12 +420,12 @@ describe("the MCP server", () => {
         },
       },
     )
-    expect((await call(client, "max_chats_folders_list")).body).toMatchObject({ items: [{ id: folder.id }] })
-    expect((await call(client, "max_chats_folders_create", { title: "New", chats: ["111"] })).isError).toBe(false)
+    expect((await call(client, "chats folders list")).body).toMatchObject({ items: [{ id: folder.id }] })
+    expect((await call(client, "chats folders create", { title: "New", chats: ["111"] })).isError).toBe(false)
     expect(
-      (await call(client, "max_chats_folders_update", { folder: folder.id, title: "Renamed", add: ["222"] })).isError,
+      (await call(client, "chats folders update", { folder: folder.id, title: "Renamed", add: ["222"] })).isError,
     ).toBe(false)
-    expect((await call(client, "max_chats_folders_delete", { folder: folder.id })).isError).toBe(false)
+    expect((await call(client, "chats folders delete", { folder: folder.id })).isError).toBe(false)
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.FOLDERS_UPDATE)).toHaveLength(2)
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.FOLDERS_DELETE)).toHaveLength(1)
   })
@@ -442,13 +437,8 @@ describe("the MCP server", () => {
       await run([profile, "config", "set", `permissions.${key}`, "deny"], { streams, tty: false })
     }
     const { client, logins } = await connect({}, { profile })
-    const names = (await client.listTools()).tools.map(({ name }) => name)
-    for (const name of [
-      "max_account_sessions",
-      "max_contacts_lookup",
-      "max_chats_folders_list",
-      "max_chats_folders_delete",
-    ])
+    const names = await client.commands()
+    for (const name of ["account sessions", "contacts lookup", "chats folders list", "chats folders delete"])
       expect(names).not.toContain(name)
     expect(logins()).toBe(0)
   })
@@ -500,8 +490,8 @@ describe("the MCP server", () => {
       await store.close()
     }
     const { client, logins } = await connect({}, { profile, token: false })
-    const answer = await client.callTool({
-      name: "max_attachments_show",
+    const answer = await client.run({
+      command: "attachments show",
       arguments: { message: "msg:max/10000091/111/908" },
     })
     expect(answer.isError).not.toBe(true)
@@ -529,16 +519,16 @@ describe("the MCP server", () => {
       await store.close()
     }
     const { client, logins } = await connect({}, { profile, token: false })
-    const planned = await call(client, "max_store_gaps_plan", { chat: "111" })
+    const planned = await call(client, "store gaps plan", { chat: "111" })
     expect(planned.isError).toBe(false)
     expect(planned.body).toMatchObject({ item: { scope: "interior", ordering: "time", gaps: [{ from: 4, to: 6 }] } })
-    const repair = await call(client, "max_store_gaps_repair", { chat: "111", catch_up: true })
+    const repair = await call(client, "store gaps repair", { chat: "111", catch_up: true })
     expect(repair.isError).toBe(true)
     expect(repair.body.error).toMatchObject({
       code: "permission_error",
       details: { permission: "conversations.links" },
     })
-    const extracted = await call(client, "max_attachments_extract", { chat: "111", limit: 1 })
+    const extracted = await call(client, "attachments extract", { chat: "111", limit: 1 })
     expect(extracted.isError).toBe(false)
     expect(extracted.body).toMatchObject({ item: { extracted: 0 } })
     expect(logins()).toBe(0)
@@ -554,20 +544,20 @@ describe("the MCP server", () => {
       const state = new SessionStore({ profile, keyring: memoryKeyring() })
       state.writeState({ ...state.readState(), viewerId: "10000041" })
       const { client, max } = await connect({}, { profile, token: false })
-      const names = (await client.listTools()).tools.map(({ name }) => name)
-      if (level === "readonly") expect(names).not.toContain("max_conversations_refresh")
+      const names = await client.commands()
+      if (level === "readonly") expect(names).not.toContain("conversations refresh")
       else {
-        expect(names).toContain("max_conversations_refresh")
-        const refused = await call(client, "max_conversations_refresh")
+        expect(names).toContain("conversations refresh")
+        const refused = await call(client, "conversations refresh")
         expect(refused.body.error).not.toMatchObject({ code: "confirmation_required" })
       }
       expect(max.sent).toEqual([])
     }
   })
 
-  it("ignores retired confirm-send on local writes and still requires a stored account", async () => {
-    const { client, max } = await connect({ confirmSend: true }, { token: false })
-    const refused = await call(client, "max_conversations_refresh")
+  it("refuses a local write without a stored account", async () => {
+    const { client, max } = await connect({}, { token: false })
+    const refused = await call(client, "conversations refresh")
     expect(refused.isError).toBe(true)
     expect(refused.body.error).not.toMatchObject({ code: "confirmation_required" })
     expect(max.sent).toEqual([])
@@ -575,8 +565,8 @@ describe("the MCP server", () => {
 
   it("rejects retired scheduling fields before sending instead of silently sending immediately", async () => {
     const { client, max, logins } = await connect()
-    const result = await client.callTool({
-      name: "max_messages_send",
+    const result = await client.run({
+      command: "messages send",
       arguments: { chat: "111", text: "later", at: "2h" },
     })
     expect(result.isError).toBe(true)
@@ -584,8 +574,8 @@ describe("the MCP server", () => {
     expect(logins()).toBe(0)
   })
   it("answers max_status without logging in", async () => {
-    const { client, logins } = await connect({ allowSend: true })
-    const { isError, body } = await call(client, "max_status")
+    const { client, logins } = await connect()
+    const { isError, body } = await call(client, "status")
 
     expect(isError).toBe(false)
     expect(body).toMatchObject({
@@ -597,36 +587,29 @@ describe("the MCP server", () => {
 
   it("offers writes by default without retired flags", async () => {
     const { client } = await connect()
-    const { tools } = await client.listTools()
+    const tools = await client.listed()
 
-    expect(tools.map(({ name }) => name)).toContain("max_messages_send")
-    expect(tools.some(({ annotations }) => annotations?.readOnlyHint === false)).toBe(true)
+    expect(tools.map(({ command }) => command)).toContain("messages send")
+    expect(tools.some(({ writes }) => writes)).toBe(true)
   })
 
   it.each([false, true])("native MCP search history honors explicit recording %s", async (record) => {
     const { client } = await connect({}, { record })
-    await call(client, "max_messages_list", { chat: "111" })
-    const found = await call(client, "max_search_messages", { text: "hi", backend: "archive" })
-    const counted = await call(client, "max_stats_messages_show", { text: "hi" })
+    await call(client, "messages list", { chat: "111" })
+    const found = await call(client, "search messages", { text: "hi", backend: "archive" })
+    const counted = await call(client, "stats messages show", { text: "hi" })
     expect(found.isError).toBe(false)
     expect(counted.body).toMatchObject({ item: { total: 1 } })
-    const history = await call(client, "max_searches_history", {})
+    const history = await call(client, "searches history", {})
     expect(history.body.items).toHaveLength(record ? 2 : 0)
   })
 
   it("marks messenger mutations as destructive and local refresh as a local write", async () => {
-    const { client } = await connect({ allowSend: true })
-    const { tools } = await client.listTools()
-    const writing = tools.filter(({ annotations }) => annotations?.readOnlyHint === false)
+    const { client } = await connect()
+    const writing = (await client.listed()).filter(({ writes }) => writes)
 
-    expect(writing.map(({ name }) => name)).toEqual(
-      expect.arrayContaining([
-        "max_messages_send",
-        "max_messages_delete",
-        "max_contacts_block",
-        "max_account_update",
-        "max_chats_create",
-      ]),
+    expect(writing.map(({ command }) => command)).toEqual(
+      expect.arrayContaining(["messages send", "messages delete", "contacts block", "account update", "chats create"]),
     )
     const { rawClient } = await connect()
     const macros = (await rawClient.listTools()).tools
@@ -641,8 +624,8 @@ describe("the MCP server", () => {
   it("answers listings in the CLI's envelope, logs in once for several calls, and marks nothing read", async () => {
     const { client, max, streams, logins } = await connect()
 
-    const chats = await call(client, "max_chats_list", { limit: 1 })
-    const messages = await call(client, "max_messages_list", { chat: "111" })
+    const chats = await call(client, "chats list", { limit: 1 })
+    const messages = await call(client, "messages list", { chat: "111" })
 
     expect(chats.body).toMatchObject({ page: { limit: 1, has_more: true } })
     expect((messages.body.items as { ref: string }[])[0]?.ref).toBe("msg:max/10000001/111/116762160362694583")
@@ -673,12 +656,12 @@ describe("the MCP server", () => {
         },
       },
     )
-    await call(client, "max_messages_list", { chat: "111" })
+    await call(client, "messages list", { chat: "111" })
     await session.close()
     const before = max.sent.length
     // A fresh server answers the archived search without logging in.
     const reopened = await connect({}, { profile })
-    const result = await call(reopened.client, "max_search_messages", { text: "searchable", backend: "archive" })
+    const result = await call(reopened.client, "search messages", { text: "searchable", backend: "archive" })
     expect(result.isError).toBe(false)
     expect(result.body).toMatchObject({
       items: [{ ref: "msg:max/10000001/111/116762160362694583", excerpt: "searchable history" }],
@@ -705,12 +688,11 @@ describe("the MCP server", () => {
         },
       },
     )
-    await call(original.client, "max_messages_list", { chat: "111" })
+    await call(original.client, "messages list", { chat: "111" })
     await original.session.close()
     const reopened = await connect({}, { profile })
-    const result = await call(reopened.client, "max_search_messages", {
+    const result = await call(reopened.client, "search messages", {
       text: 'x chat:"Team Alpha"',
-      language: "lucene",
       timezone: "Europe/Madrid",
       limit: 5,
       backend: "archive",
@@ -722,15 +704,13 @@ describe("the MCP server", () => {
       missing: [{ field: "coverage", step: "messages.sync", why: expect.stringContaining("1 never fetched") }],
       meta: { accounts: ["max:10000001"] },
     })
-    const legacy = await call(reopened.client, "max_search_messages", { text: "invoice", language: "legacy" })
-    expect(legacy.isError).toBe(false)
-    const ast = await call(reopened.client, "max_search_messages", {
+    const ast = await call(reopened.client, "search messages", {
       ast: parseLucene("invoice"),
       backend: "archive",
     })
     expect(ast.isError).toBe(false)
     expect(ast.body).toMatchObject({ items: [{ ref: "msg:max/10000001/111/116762160362694599" }] })
-    const missing = await call(reopened.client, "max_search_messages", {})
+    const missing = await call(reopened.client, "search messages", {})
     expect(missing.isError).toBe(true)
     expect(reopened.logins()).toBe(0)
     expect(reopened.max.sent).toEqual([])
@@ -771,9 +751,9 @@ describe("the MCP server", () => {
       await store.close()
     }
     const { client, max, logins } = await connect({}, { profile })
-    const offered = (await client.listTools()).tools.find((one) => one.name === "max_messages_link")
-    expect(offered?.annotations?.readOnlyHint).toBe(true)
-    const result = await call(client, "max_messages_link", { chat: "331", message: "9007199254740993123" })
+    const offered = await client.describe("messages link")
+    expect(offered?.writes).toBe(false)
+    const result = await call(client, "messages link", { chat: "331", message: "9007199254740993123" })
     expect(result.isError).toBe(false)
     expect(result.body.item).toEqual({
       ref: "msg:max/10000031/331/9007199254740993123",
@@ -781,7 +761,7 @@ describe("the MCP server", () => {
       access: "unavailable",
       reason: "unsupported_provider",
     })
-    const evidence = await call(client, "max_messages_evidence", { chat: "331" })
+    const evidence = await call(client, "messages evidence", { chat: "331" })
     expect(evidence.isError).toBe(false)
     expect(evidence.body).toMatchObject({
       item: {
@@ -797,22 +777,22 @@ describe("the MCP server", () => {
     } finally {
       await archive.close()
     }
-    const listed = await call(client, "max_conversations_list", { chat: "331" })
+    const listed = await call(client, "conversations list", { chat: "331" })
     expect(listed.isError).toBe(false)
     const items = listed.body.items as { id: string; first_message: string }[]
     expect(items).toMatchObject([{ first_message: "msg:max/10000031/331/9007199254740993123" }])
-    const shown = await call(client, "max_conversations_show", { id: items[0]?.id })
+    const shown = await call(client, "conversations show", { id: items[0]?.id })
     expect(shown.isError).toBe(false)
     expect(shown.body).toMatchObject({ item: { messages: [{ id: "9007199254740993123", text: "synthetic body" }] } })
     const otherProfile = "mcp-local-other"
     const otherState = new SessionStore({ profile: otherProfile, keyring: memoryKeyring() })
     otherState.writeState({ ...otherState.readState(), viewerId: "10000002" })
     const other = await connect({}, { profile: otherProfile, token: false })
-    const hidden = await call(other.client, "max_conversations_show", { id: items[0]?.id })
+    const hidden = await call(other.client, "conversations show", { id: items[0]?.id })
     expect(hidden.isError).toBe(true)
     expect(JSON.stringify(hidden.body)).not.toContain("synthetic body")
     expect(other.max.sent).toEqual([])
-    const mismatch = await call(client, "max_messages_link", { chat: "msg:max/other/111/9007199254740993123" })
+    const mismatch = await call(client, "messages link", { chat: "msg:max/other/111/9007199254740993123" })
     expect(mismatch.isError).toBe(true)
     expect(logins()).toBe(0)
     expect(max.sent).toEqual([])
@@ -832,10 +812,10 @@ describe("the MCP server", () => {
         },
       },
     )
-    const context = await call(client, "max_messages_context", { chat: "111", message: id, before_n: 0, after_n: 0 })
+    const context = await call(client, "messages context", { chat: "111", message: id, before_n: 0, after_n: 0 })
     expect(context.isError).toBe(false)
     expect(context.body).toMatchObject({ items: [{ id, anchor: true, text: "context archive" }] })
-    const search = await call(client, "max_search_messages", { text: "context chat:111", backend: "archive" })
+    const search = await call(client, "search messages", { text: "context chat:111", backend: "archive" })
     expect(search.isError).toBe(false)
     expect(search.body).toMatchObject({ items: [{ ref: `msg:max/10000001/111/${id}`, excerpt: "context archive" }] })
   })
@@ -844,7 +824,7 @@ describe("the MCP server", () => {
     const id = "116762160362694888"
     const original = { id: BigInt(id), time: 1789776000000, sender: 10000001, text: "original archived", attaches: [] }
     const { client } = await connect(
-      { allowSend: true, allowDelete: true, allowDangerous: true },
+      {},
       {
         answers: {
           [Opcode.CHAT_HISTORY]: { messages: [original] },
@@ -853,27 +833,27 @@ describe("the MCP server", () => {
         },
       },
     )
-    await call(client, "max_messages_list", { chat: "111" })
+    await call(client, "messages list", { chat: "111" })
+    expect((await call(client, "messages edit", { chat: "111", message: id, text: "updated archived" })).isError).toBe(
+      false,
+    )
     expect(
-      (await call(client, "max_messages_edit", { chat: "111", message: id, text: "updated archived" })).isError,
-    ).toBe(false)
-    expect(
-      (await call(client, "max_search_messages", { text: "updated chat:111", backend: "archive" })).body,
+      (await call(client, "search messages", { text: "updated chat:111", backend: "archive" })).body,
     ).toMatchObject({
       items: [{ ref: `msg:max/10000001/111/${id}`, excerpt: "updated archived" }],
     })
     expect(
-      (await call(client, "max_search_messages", { text: "original chat:111", backend: "archive" })).body.items,
+      (await call(client, "search messages", { text: "original chat:111", backend: "archive" })).body.items,
     ).toEqual([])
-    expect((await call(client, "max_messages_delete", { chat: "111", messages: [id] })).isError).toBe(false)
+    expect((await call(client, "messages delete", { chat: "111", messages: [id] })).isError).toBe(false)
     expect(
-      (await call(client, "max_search_messages", { text: "updated chat:111", backend: "archive" })).body.items,
+      (await call(client, "search messages", { text: "updated chat:111", backend: "archive" })).body.items,
     ).toEqual([])
   })
 
   it("keeps another account's stored messages and resources out of this profile", async () => {
-    const { client } = await connect()
-    await call(client, "max_messages_list", { chat: "111" })
+    const { client, rawClient } = await connect()
+    await call(client, "messages list", { chat: "111" })
     const store = await openStore()
     try {
       const owner = { provider: "max" as const, account: "10000001" }
@@ -889,10 +869,10 @@ describe("the MCP server", () => {
     } finally {
       await store.close()
     }
-    const search = await call(client, "max_search_messages", { text: "foreign", backend: "archive" })
+    const search = await call(client, "search messages", { text: "foreign", backend: "archive" })
     expect(search.isError).toBe(false)
     expect(search.body.items).toEqual([])
-    expect((await client.listResources()).resources.map(({ uri }) => uri)).not.toContain("max://chat/333")
+    expect((await rawClient.listResources()).resources.map(({ uri }) => uri)).not.toContain("max://chat/333")
   })
 
   it("answers online history and warns when the shared store cannot open", async () => {
@@ -900,7 +880,7 @@ describe("the MCP server", () => {
     process.env.MESSAGING_STORE = dirname(saved as string)
     try {
       const { client, streams } = await connect()
-      const result = await call(client, "max_messages_list", { chat: "111" })
+      const result = await call(client, "messages list", { chat: "111" })
       expect(result.isError).toBe(false)
       expect(result.body).toMatchObject({ items: [{ text: "hi" }] })
       expect(streams.stderr.join("")).toContain("not saved to the local store")
@@ -911,7 +891,7 @@ describe("the MCP server", () => {
 
   it("refuses a local search for an unknown account without logging in", async () => {
     const { client, logins } = await connect()
-    const result = await call(client, "max_search_messages", { text: "searchable" })
+    const result = await call(client, "search messages", { text: "searchable" })
     expect(result.isError).toBe(true)
     expect(logins()).toBe(0)
   })
@@ -937,8 +917,8 @@ describe("the MCP server", () => {
         },
       },
     )
-    const listed = await call(client, "max_contacts_list")
-    const shown = await call(client, "max_contacts_show", { person: "Partner" })
+    const listed = await call(client, "contacts list")
+    const shown = await call(client, "contacts show", { person: "Partner" })
     expect(listed.isError).toBe(false)
     expect(listed.body).toMatchObject({ items: [{ id: "20000002", name: "Partner" }] })
     expect(shown.isError).toBe(false)
@@ -978,7 +958,7 @@ describe("the MCP server", () => {
         },
       },
     )
-    const reviewed = await call(client, "max_review", { query: 'date>"2026-09-01T00:00:00Z" chat:111', unanswered: 0 })
+    const reviewed = await call(client, "review", { query: 'date>"2026-09-01T00:00:00Z" chat:111', unanswered: 0 })
     expect(reviewed.isError).toBe(false)
     expect(reviewed.body).toMatchObject({ items: [{ chat_id: "111", text: "", transcript: "Can we meet tomorrow?" }] })
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
@@ -1009,10 +989,10 @@ describe("the MCP server", () => {
       },
     )
 
-    const listed = await call(client, "max_messages_list", { chat: "111", transcribe: true })
-    const inbox = await call(client, "max_inbox", { query: 'date>"2026-09-01T00:00:00Z"', transcribe: true })
-    const reviewed = await call(client, "max_review", { query: 'date>"2026-09-01T00:00:00Z"', transcribe: true })
-    const direct = await call(client, "max_messages_transcribe", { chat: "111", message: id })
+    const listed = await call(client, "messages list", { chat: "111", transcribe: true })
+    const inbox = await call(client, "inbox", { query: 'date>"2026-09-01T00:00:00Z"', transcribe: true })
+    const reviewed = await call(client, "review", { query: 'date>"2026-09-01T00:00:00Z"', transcribe: true })
+    const direct = await call(client, "messages transcribe", { chat: "111", message: id })
 
     for (const result of [listed, inbox, reviewed, direct]) {
       expect(result.isError).toBe(false)
@@ -1035,9 +1015,9 @@ describe("the MCP server", () => {
       { answers: { [Opcode.CHAT_HISTORY]: { messages: [voice] }, [Opcode.CONTACT_INFO]: { contacts: [] } } },
     )
 
-    const plain = await call(client, "max_messages_list", { chat: "111" })
-    const asked = await call(client, "max_messages_list", { chat: "111", transcribe: true })
-    const inbox = await call(client, "max_inbox", { query: 'date>"2026-09-01T00:00:00Z"', transcribe: true })
+    const plain = await call(client, "messages list", { chat: "111" })
+    const asked = await call(client, "messages list", { chat: "111", transcribe: true })
+    const inbox = await call(client, "inbox", { query: 'date>"2026-09-01T00:00:00Z"', transcribe: true })
 
     const unheard = {
       field: "transcript",
@@ -1057,9 +1037,9 @@ describe("the MCP server", () => {
     const { client, logins } = await connect()
 
     const answers = await Promise.all([
-      call(client, "max_chats_list"),
-      call(client, "max_messages_list", { chat: "111" }),
-      call(client, "max_account_show"),
+      call(client, "chats list"),
+      call(client, "messages list", { chat: "111" }),
+      call(client, "account show"),
     ])
 
     expect(answers.map(({ isError }) => isError)).toEqual([false, false, false])
@@ -1069,7 +1049,7 @@ describe("the MCP server", () => {
   it("`max_account_show` never hands an agent the whole phone number", async () => {
     const { client } = await connect()
 
-    const { body } = await call(client, "max_account_show")
+    const { body } = await call(client, "account show")
 
     expect(body).toMatchObject({ item: { phone: "***7890" } })
   })
@@ -1077,9 +1057,9 @@ describe("the MCP server", () => {
   it("logs in again once the connection has been idle", async () => {
     const { client, logins } = await connect({ idleMs: 5 })
 
-    await call(client, "max_chats_list")
+    await call(client, "chats list")
     await new Promise((resolve) => setTimeout(resolve, 30))
-    await call(client, "max_chats_list")
+    await call(client, "chats list")
 
     expect(logins()).toBe(2)
   })
@@ -1088,19 +1068,19 @@ describe("the MCP server", () => {
     let now = 0
     const { client, logins } = await connect({ maxAgeMs: 1000, now: () => now })
 
-    await call(client, "max_chats_list")
+    await call(client, "chats list")
     now = 999
-    await call(client, "max_chats_list")
+    await call(client, "chats list")
     now = 1000
-    await call(client, "max_chats_list")
+    await call(client, "chats list")
 
     expect(logins()).toBe(2)
   })
 
   it("refuses a name that matches several chats, with the candidates, and sends nothing", async () => {
-    const { client, max } = await connect({ allowSend: true })
+    const { client, max } = await connect()
 
-    const { isError, body } = await call(client, "max_messages_send", { chat: "Team", text: "hello" })
+    const { isError, body } = await call(client, "messages send", { chat: "Team", text: "hello" })
 
     expect(isError).toBe(true)
     expect(body.error).toMatchObject({ details: { candidates: [{ id: "111" }, { id: "222" }] } })
@@ -1109,7 +1089,7 @@ describe("the MCP server", () => {
 
   it("sends to a chat named exactly, and answers the message sent", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_SEND]: {
@@ -1119,7 +1099,7 @@ describe("the MCP server", () => {
       },
     )
 
-    const { isError, body } = await call(client, "max_messages_send", { chat: "Team Alpha", text: "hello" })
+    const { isError, body } = await call(client, "messages send", { chat: "Team Alpha", text: "hello" })
 
     expect(isError).toBe(false)
     expect(body).toMatchObject({ item: { message: { id: "116762160362694590" } } })
@@ -1143,7 +1123,7 @@ describe("the MCP server", () => {
         },
       },
     )
-    const result = await call(client, "max_messages_send", { chat: "111", text: "synthetic" })
+    const result = await call(client, "messages send", { chat: "111", text: "synthetic" })
     expect(result.isError).toBe(false)
     expect(result.body).toMatchObject({
       item: { message: { id: "116762160362694590" }, operation_id: expect.any(String) },
@@ -1153,9 +1133,9 @@ describe("the MCP server", () => {
   })
 
   it("hands back the operation id when it cannot tell whether a send went out", async () => {
-    const { client } = await connect({ allowSend: true }, { answers: { [Opcode.MSG_SEND]: () => undefined } })
+    const { client } = await connect({}, { answers: { [Opcode.MSG_SEND]: () => undefined } })
 
-    const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "hello" })
+    const { isError, body } = await call(client, "messages send", { chat: "111", text: "hello" })
 
     expect(isError).toBe(true)
     expect(body.error).toMatchObject({ code: "outcome_unknown", details: { operation_id: expect.any(String) } })
@@ -1163,7 +1143,7 @@ describe("the MCP server", () => {
 
   it("schedules with `at_time` the way `--at-time` does, and answers scheduledFor", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_SEND]: (request) => ({
@@ -1179,7 +1159,7 @@ describe("the MCP server", () => {
       },
     )
 
-    const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "later", at_time: "2h" })
+    const { isError, body } = await call(client, "messages send", { chat: "111", text: "later", at_time: "2h" })
 
     expect(isError).toBe(false)
     const sent = max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload as {
@@ -1195,20 +1175,20 @@ describe("the MCP server", () => {
   })
 
   it("refuses an `at_time` that `--at-time` refuses, before sending anything", async () => {
-    const { client, max } = await connect({ allowSend: true })
+    const { client, max } = await connect()
 
     for (const args of [{ at_time: "30s" }, { at_time: "1h", silent: true }, { at_time: "1h", operation_id: "5" }]) {
-      const { isError, body } = await call(client, "max_messages_send", { chat: "111", text: "x", ...args })
+      const { isError, body } = await call(client, "messages send", { chat: "111", text: "x", ...args })
       expect(isError).toBe(true)
       expect(body.error).toMatchObject({ code: "validation_error" })
     }
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEND)
   })
 
-  it("reads the queue of scheduled messages without --allow-send", async () => {
+  it("reads the queue of scheduled messages", async () => {
     const { client, max } = await connect()
 
-    const { isError } = await call(client, "max_messages_scheduled", { chat: "111" })
+    const { isError } = await call(client, "messages scheduled", { chat: "111" })
 
     expect(isError).toBe(false)
     expect(max.sent.find(({ opcode }) => opcode === Opcode.CHAT_HISTORY)?.payload).toMatchObject({
@@ -1218,90 +1198,42 @@ describe("the MCP server", () => {
 
   it("goes through the send guards: a read-only profile refuses, and nothing is sent", async () => {
     const profile = "mcp-read-only"
-    legacyFor(profile, { readOnly: true })
-    const { client, max } = await connect({ allowSend: true }, { profile })
+    legacyFor(profile, { permissions: { messages: "readonly" } })
+    const { client, max } = await connect({}, { profile })
 
-    expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_messages_send")
-    expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(true)
+    expect(await client.commands()).not.toContain("messages send")
+    expect((await call(client, "messages send", { chat: "111", text: "hello" })).isError).toBe(true)
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEND)
   })
 
   it("offers marking a chat read by the profile permissions", async () => {
-    const names = async (options: Partial<ServerOptions>) =>
-      (await (await connect(options)).client.listTools()).tools.map(({ name }) => name)
-
-    expect(await names({ allowSend: true })).toContain("max_chats_mark_read")
-    expect(await names({ allowMarkRead: true })).toContain("max_chats_mark_read")
+    expect(await (await connect()).client.commands()).toContain("chats mark-read")
   })
 
-  it("does not offer a tool the profile's allow list leaves out, whatever the flags", async () => {
-    const profile = "mcp-allow"
-    legacyFor(profile, { allow: ["send", "pin"] })
-    const { client } = await connect({ allowSend: true, allowDelete: true, allowMarkRead: true }, { profile })
-
-    const names = (await client.listTools()).tools.map(({ name }) => name)
-
-    expect(names).toEqual(expect.arrayContaining(["max_messages_send", "max_messages_pin", "max_messages_unpin"]))
-    expect(names).not.toContain("max_messages_edit")
-    expect(names).not.toContain("max_messages_forward")
-    expect(names).not.toContain("max_messages_delete")
-    expect(names).not.toContain("max_chats_mark_read")
-    expect(names).toContain("max_messages_list")
-  })
-
-  describe("tools that change the account (mcpTools)", () => {
+  describe("tools that change the account", () => {
     const ACCOUNT = [
-      "max_contacts_add",
-      "max_contacts_remove",
-      "max_contacts_block",
-      "max_contacts_unblock",
-      "max_contacts_rename",
-      "max_polls_close",
-      "max_chats_join",
-      "max_chats_leave",
-      "max_chats_create",
-      "max_chats_admins_add",
-      "max_chats_admins_remove",
-      "max_account_update",
+      "contacts add",
+      "contacts remove",
+      "contacts block",
+      "contacts unblock",
+      "contacts rename",
+      "polls close",
+      "chats join",
+      "chats leave",
+      "chats create",
+      "chats admins add",
+      "chats admins remove",
+      "account update",
     ]
-    const offered = async (profile: string) =>
-      (
-        await (
-          await connect({ allowSend: true, allowDelete: true, allowMarkRead: true, allowModerate: true }, { profile })
-        ).client.listTools()
-      ).tools.map(({ name }) => name)
-    const configure = (profile: string, key: string, value: string) =>
-      legacyFor(profile, { [key]: key === "read_only" ? value === "true" : value.split(",") })
+    const offered = async (profile: string) => (await connect({}, { profile })).client.commands()
 
-    it("ignore retired mcpTools and follow the profile permissions", async () => {
+    it("follow the profile permissions", async () => {
       expect((await offered("mcp-no-groups")).filter((name) => ACCOUNT.includes(name)).sort()).toEqual(
         [...ACCOUNT].sort(),
       )
-
-      await configure("mcp-groups", "mcp_tools", "contacts,polls")
-      const names = await offered("mcp-groups")
-      expect(names.filter((name) => ACCOUNT.includes(name)).sort()).toEqual([...ACCOUNT].sort())
-    })
-
-    it("are still hidden when the profile's allow list leaves their action out", async () => {
-      await configure("mcp-groups-allow", "mcp_tools", "contacts,profile")
-      await configure("mcp-groups-allow", "allow", "contacts")
-      const names = await offered("mcp-groups-allow")
-      expect(names).toContain("max_contacts_block")
-      expect(names).not.toContain("max_account_update")
-    })
-
-    it("closing a poll is an edit, as `polls close` is", async () => {
-      await configure("mcp-poll-edit", "mcp_tools", "polls")
-      await configure("mcp-poll-edit", "allow", "edit")
-      await configure("mcp-poll-reaction", "mcp_tools", "polls")
-      await configure("mcp-poll-reaction", "allow", "reaction")
-      expect(await offered("mcp-poll-edit")).toContain("max_polls_close")
-      expect(await offered("mcp-poll-reaction")).not.toContain("max_polls_close")
     })
 
     it("go through the client like the command: block sends CONTACT_UPDATE with BLOCK", async () => {
-      await configure("mcp-block", "mcp_tools", "contacts")
       const { client, max } = await connect(
         {},
         {
@@ -1309,7 +1241,7 @@ describe("the MCP server", () => {
           answers: { [Opcode.CONTACT_UPDATE]: { contact: { id: 20000002, names: [{ name: "Found Person" }] } } },
         },
       )
-      const { isError } = await call(client, "max_contacts_block", { person: "20000002" })
+      const { isError } = await call(client, "contacts block", { person: "20000002" })
       expect(isError).toBe(false)
       expect(
         max.sent
@@ -1319,31 +1251,18 @@ describe("the MCP server", () => {
     })
 
     it("refuse on a read-only profile, and nothing goes out", async () => {
-      await configure("mcp-block-ro", "mcp_tools", "contacts")
-      await configure("mcp-block-ro", "read_only", "true")
+      legacyFor("mcp-block-ro", { permissions: { contacts: "readonly" } })
       const { client, max } = await connect({}, { profile: "mcp-block-ro" })
-      expect((await client.listTools()).tools.map(({ name }) => name)).not.toContain("max_contacts_block")
-      expect((await call(client, "max_contacts_block", { person: "20000002" })).isError).toBe(true)
+      expect(await client.commands()).not.toContain("contacts block")
+      expect((await call(client, "contacts block", { person: "20000002" })).isError).toBe(true)
       expect(max.sent.filter(({ opcode }) => opcode === Opcode.CONTACT_UPDATE)).toEqual([])
-    })
-
-    it("cannot be named in the bot section", async () => {
-      const { stderr } = await (async () => {
-        const streams = captureStreams()
-        await run(["mcp-bot", "config", "set", "--bot", "mcp_tools", "contacts"], { streams, tty: false })
-        return { stderr: streams.stderr.join("\n") }
-      })()
-      expect(stderr).toContain("legacy setting")
     })
   })
 
   it("marks a chat read up to the message given, through the send guards", async () => {
-    const { client, max } = await connect(
-      { allowMarkRead: true },
-      { answers: { [Opcode.CHAT_MARK]: { unread: 0, mark: 1789776100000 } } },
-    )
+    const { client, max } = await connect({}, { answers: { [Opcode.CHAT_MARK]: { unread: 0, mark: 1789776100000 } } })
 
-    const { isError, body } = await call(client, "max_chats_mark_read", { chat: "111", until: "116762160362694583" })
+    const { isError, body } = await call(client, "chats mark-read", { chat: "111", until: "116762160362694583" })
 
     expect(isError).toBe(false)
     expect(body.item).toEqual({ operation_id: expect.any(String), chat_id: "111", until: "116762160362694583" })
@@ -1352,12 +1271,10 @@ describe("the MCP server", () => {
   })
 
   it("offers deleting by permissions, with confirmation skipped explicitly, and only for the owner", async () => {
-    const names = async (options: Partial<ServerOptions>) =>
-      (await (await connect(options)).client.listTools()).tools.map(({ name }) => name)
-    expect(await names({ allowSend: true, allowMarkRead: true })).toContain("max_messages_delete")
+    expect(await (await connect()).client.commands()).toContain("messages delete")
 
-    const { client, max } = await connect({ allowDangerous: true }, { answers: { [Opcode.MSG_DELETE]: {} } })
-    const { isError } = await call(client, "max_messages_delete", {
+    const { client, max } = await connect({}, { answers: { [Opcode.MSG_DELETE]: {} } })
+    const { isError } = await call(client, "messages delete", {
       chat: "111",
       messages: ["116762160362694583"],
     })
@@ -1370,7 +1287,7 @@ describe("the MCP server", () => {
   it("starts without a session and says which command logs in", async () => {
     const { client } = await connect({}, { token: false })
 
-    const { isError, body } = await call(client, "max_account_show")
+    const { isError, body } = await call(client, "account show")
 
     expect(isError).toBe(true)
     expect(body.error).toMatchObject({ code: "authentication_error" })
@@ -1409,7 +1326,7 @@ describe("the MCP server", () => {
   it("closes the socket to MAX when the session closes", async () => {
     const { client, session, max } = await connect()
 
-    await call(client, "max_chats_list")
+    await call(client, "chats list")
     await session.close()
 
     expect(max.closed).toBe(true)
@@ -1419,7 +1336,7 @@ describe("the MCP server", () => {
     it.each(["legacy", "modern"] as const)("uses profile permissions over stdio and HTTP (%s)", async (era) => {
       for (const http of [false, true]) {
         const { client, max, forms } = await connect(
-          { confirmSend: true },
+          {},
           {
             era,
             http,
@@ -1432,14 +1349,14 @@ describe("the MCP server", () => {
             },
           },
         )
-        expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(false)
+        expect((await call(client, "messages send", { chat: "111", text: "hello" })).isError).toBe(false)
         expect(forms).toEqual([])
         expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)).toHaveLength(1)
       }
     })
     it.each(["deny", "readonly"])("refuses a startup send permission of %s before connecting", async (level) => {
       const { client, max } = await connect({}, { permission: [`messages.send=${level}`] })
-      expect((await call(client, "max_messages_send", { chat: "111", text: "hello" })).isError).toBe(true)
+      expect((await call(client, "messages send", { chat: "111", text: "hello" })).isError).toBe(true)
       expect(max.sent).toEqual([])
     })
     it("schedules exactly once without requesting a form", async () => {
@@ -1453,9 +1370,7 @@ describe("the MCP server", () => {
           },
         },
       )
-      expect((await call(client, "max_messages_send", { chat: "111", text: "hello", at_time: "2h" })).isError).toBe(
-        false,
-      )
+      expect((await call(client, "messages send", { chat: "111", text: "hello", at_time: "2h" })).isError).toBe(false)
       const payload = max.sent.find(({ opcode }) => opcode === Opcode.MSG_SEND)?.payload as {
         message: { delayedAttributes: { timeToFire: number } }
       }
@@ -1527,8 +1442,8 @@ describe("what the MCP server offers beyond the basics", () => {
     const store = new SessionStore({ profile, keyring: memoryKeyring() })
     store.writeState({ ...store.readState(), lastCheckAt: "2026-09-20T10:00:00.000Z" })
 
-    const unread = await call(client, "max_inbox")
-    const since = await call(client, "max_inbox", { query: 'date>"2026-09-01T00:00:00Z"' })
+    const unread = await call(client, "inbox")
+    const since = await call(client, "inbox", { query: 'date>"2026-09-01T00:00:00Z"' })
 
     expect(unread.isError).toBe(false)
     expect((unread.body.items as { chat_id: string }[]).map(({ chat_id }) => chat_id)).toEqual(["111", "222"])
@@ -1539,7 +1454,7 @@ describe("what the MCP server offers beyond the basics", () => {
 
   it("a reply carries the REPLY link and Markdown goes out as markup", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_SEND]: {
@@ -1549,7 +1464,7 @@ describe("what the MCP server offers beyond the basics", () => {
       },
     )
 
-    const { isError } = await call(client, "max_messages_send", {
+    const { isError } = await call(client, "messages send", {
       chat: "111",
       text: "**yes**",
       reply_to: "116762160362694583",
@@ -1565,20 +1480,9 @@ describe("what the MCP server offers beyond the basics", () => {
     expect(message).toMatchObject({ text: "yes", elements: [{ type: "STRONG", from: 0, length: 3 }] })
   })
 
-  it("offers reactions with --allow-send, and not on a profile whose allow list lacks them", async () => {
-    legacyFor("mcp-no-reactions", { allow: ["send"] })
-    const names = async (profile?: string) =>
-      (await (await connect({ allowSend: true }, profile ? { profile } : {})).client.listTools()).tools.map(
-        ({ name }) => name,
-      )
-
-    expect(await names()).toEqual(expect.arrayContaining(["max_reactions_add", "max_reactions_remove"]))
-    expect(await names("mcp-no-reactions")).not.toContain("max_reactions_add")
-  })
-
   it("puts a reaction on a message", async () => {
     const { client, max } = await connect(
-      { allowSend: true },
+      {},
       {
         answers: {
           [Opcode.MSG_REACTION]: {
@@ -1588,7 +1492,7 @@ describe("what the MCP server offers beyond the basics", () => {
       },
     )
 
-    const { isError, body } = await call(client, "max_reactions_add", {
+    const { isError, body } = await call(client, "reactions add", {
       chat: "111",
       message: "116762160362694583",
       emoji: "👍",
@@ -1610,8 +1514,8 @@ describe("what the MCP server offers beyond the basics", () => {
     serving(webp(81_164))
     const { client } = await connect({}, { answers: withPhoto })
 
-    const result = await client.callTool({
-      name: "max_messages_photo",
+    const result = await client.run({
+      command: "messages photo",
       arguments: { chat: "111", message: "116762160362694583" },
     })
 
@@ -1654,8 +1558,8 @@ describe("what the MCP server offers beyond the basics", () => {
       },
     )
 
-    const result = await client.callTool({
-      name: "max_messages_photo",
+    const result = await client.run({
+      command: "messages photo",
       arguments: { chat: "111", message: "116762160362694583", ...extra },
     })
 
@@ -1664,16 +1568,8 @@ describe("what the MCP server offers beyond the basics", () => {
     expect(JSON.stringify(result)).not.toContain("secret-token")
   })
 
-  it("keeps its instructions within the 2048 characters a client shows, with every flag on", () => {
-    const text = instructions({
-      allowSend: true,
-      confirmSend: true,
-      allowMarkRead: true,
-      allowDelete: true,
-      allowModerate: true,
-      profile: "a-profile-name-of-some-length",
-      permitted: ["send", "forward", "reaction", "edit", "pin", "read", "delete"],
-    })
+  it("keeps its instructions within the 2048 characters a client shows", () => {
+    const text = instructions({ profile: "a-profile-name-of-some-length" })
 
     expect(text.length).toBeLessThanOrEqual(2048)
     expect(text).toMatch(/max:\/\/skill; `max skill install` installs it as an agent skill\.$/)
@@ -1682,10 +1578,10 @@ describe("what the MCP server offers beyond the basics", () => {
 
 describe("MCP prompts and resources", () => {
   it("lists the prompts with their arguments, and builds one without asking MAX for anything", async () => {
-    const { client, rawClient, max } = await connect()
+    const { rawClient, max } = await connect()
 
-    const { prompts } = await client.listPrompts()
-    const reply = await client.getPrompt({ name: "reply", arguments: { chat: "Team Alpha" } })
+    const { prompts } = await rawClient.listPrompts()
+    const reply = await rawClient.getPrompt({ name: "reply", arguments: { chat: "Team Alpha" } })
 
     expect(
       prompts.map(({ name, arguments: args }) => [name, args?.map(({ name, required }) => [name, required])]),
@@ -1715,7 +1611,7 @@ describe("MCP prompts and resources", () => {
     for (const name of ["catch-up", "reply", "review", "find"]) {
       const args: Record<string, string> =
         name === "reply" ? { chat: "Team Alpha" } : name === "find" ? { text: "invoice" } : {}
-      const prompt = await client.getPrompt({ name, arguments: args })
+      const prompt = await rawClient.getPrompt({ name, arguments: args })
       const references = JSON.stringify(prompt).match(/\bmax_[a-z_]+\b/g) ?? []
       expect(references.length).toBeGreaterThan(0)
       for (const tool of references) expect(available.has(tool), `${name} refers to unavailable ${tool}`).toBe(true)
@@ -1724,9 +1620,9 @@ describe("MCP prompts and resources", () => {
   })
 
   it("builds the commitment review with its boundary and groups as data, and sends only after approval", async () => {
-    const { client, max } = await connect()
+    const { max, rawClient } = await connect()
 
-    const { messages } = await client.getPrompt({
+    const { messages } = await rawClient.getPrompt({
       name: "review",
       arguments: { since: "2026-09-20T09:00:00Z", groups: "Team Beta" },
     })
@@ -1745,12 +1641,12 @@ describe("MCP prompts and resources", () => {
   })
 
   it("lists chats from the local copy without logging in, and reads one over a single login", async () => {
-    const { client, logins } = await connect()
+    const { client, logins, rawClient } = await connect()
 
-    const before = await client.listResources()
-    await call(client, "max_chats_list")
-    const after = await client.listResources()
-    const read = await client.readResource({ uri: "max://chat/111" })
+    const before = await rawClient.listResources()
+    await call(client, "chats list")
+    const after = await rawClient.listResources()
+    const read = await rawClient.readResource({ uri: "max://chat/111" })
 
     expect(before.resources.map(({ uri }) => uri)).toEqual(["max://skill"])
     expect(after.resources.map(({ uri, name }) => [uri, name])).toEqual([
@@ -1767,7 +1663,7 @@ describe("MCP prompts and resources", () => {
 describe("the skill as an MCP resource", () => {
   it("makes hidden Unicode visible when a chat is read as a resource", async () => {
     const hidden = "a\u{e0041}\u0085\u202e\ufeffb"
-    const { client } = await connect(
+    const { rawClient } = await connect(
       {},
       {
         answers: {
@@ -1777,14 +1673,14 @@ describe("the skill as an MCP resource", () => {
         },
       },
     )
-    const read = await client.readResource({ uri: "max://chat/111" })
+    const read = await rawClient.readResource({ uri: "max://chat/111" })
     const first = read.contents[0]
     expect(first && "text" in first && JSON.parse(first.text).messages[0].text).toBe("a\\u{e0041}\\x85\\u202e\\ufeffb")
   })
   it("serves SKILL.md as max://skill without logging in", async () => {
-    const { client, logins } = await connect()
+    const { logins, rawClient } = await connect()
 
-    const read = await client.readResource({ uri: "max://skill" })
+    const read = await rawClient.readResource({ uri: "max://skill" })
 
     expect(read.contents).toEqual([
       { uri: "max://skill", mimeType: "text/markdown", text: readFileSync(SKILL, "utf8") },
@@ -1793,7 +1689,7 @@ describe("the skill as an MCP resource", () => {
   })
 })
 
-describe("max_chats_check", () => {
+describe("chats check", () => {
   const invite = {
     id: (BigInt(Date.now() - 60_000) << 16n) + 5n,
     time: Date.now() - 60_000,
@@ -1820,12 +1716,12 @@ describe("max_chats_check", () => {
   it("is offered by permissions, and plans without acting on dry_run", async () => {
     withRules("ck-mcp-dry", "allow")
     const off = await connect({}, { profile: "ck-mcp-dry", answers: groupAnswers })
-    const { client, max } = await connect({ allowModerate: true }, { profile: "ck-mcp-dry", answers: groupAnswers })
+    const { client, max } = await connect({}, { profile: "ck-mcp-dry", answers: groupAnswers })
 
-    const { tools } = await off.client.listTools()
-    const { body } = await call(client, "max_chats_check", { chat: "111", dry_run: true })
+    const tools = await off.client.commands()
+    const { body } = await call(client, "chats check", { chat: "111", dry_run: true })
 
-    expect(tools.map(({ name }) => name)).toContain("max_chats_check")
+    expect(tools).toContain("chats check")
     expect(rows(body).map((row) => row.outcome)).toEqual(["planned"])
     expect(deletes(max)).toEqual([])
   })
@@ -1833,7 +1729,7 @@ describe("max_chats_check", () => {
   it("executes moderation permitted by the separate rules exactly once", async () => {
     withRules("ck-mcp-allowed", "allow")
     const { client, max, forms } = await connect({}, { profile: "ck-mcp-allowed", answers: groupAnswers })
-    const result = await call(client, "max_chats_check", { chat: "111" })
+    const result = await call(client, "chats check", { chat: "111" })
     expect(result.isError).toBe(false)
     expect(rows(result.body).map((row) => row.outcome)).toEqual(["done"])
     expect(deletes(max)).toHaveLength(1)
@@ -1842,9 +1738,9 @@ describe("max_chats_check", () => {
 
   it("plans actions requiring separate rule consent despite retired flags", async () => {
     withRules("ck-mcp-flag", "ask")
-    const { client, max } = await connect({ allowDangerous: true }, { profile: "ck-mcp-flag", answers: groupAnswers })
+    const { client, max } = await connect({}, { profile: "ck-mcp-flag", answers: groupAnswers })
 
-    const { body } = await call(client, "max_chats_check", { chat: "111" })
+    const { body } = await call(client, "chats check", { chat: "111" })
 
     expect(rows(body).map((row) => row.outcome)).toEqual(["planned"])
     expect(deletes(max)).toHaveLength(0)
@@ -1853,11 +1749,11 @@ describe("max_chats_check", () => {
   it("plans moderation actions at rule ask without a server form", async () => {
     withRules("ck-mcp-yes", "ask")
     const { client, max, forms } = await connect(
-      { allowModerate: true },
+      {},
       { profile: "ck-mcp-yes", answers: groupAnswers, form: () => ({ action: "accept", content: {} }) },
     )
 
-    const { body } = await call(client, "max_chats_check", { chat: "111" })
+    const { body } = await call(client, "chats check", { chat: "111" })
 
     expect(forms).toEqual([])
     expect(rows(body).map((row) => row.outcome)).toEqual(["planned"])
@@ -1904,10 +1800,10 @@ describe("group reads", () => {
       },
     )
 
-    const events = await call(client, "max_chats_events", { chat: "111" })
-    const members = await call(client, "max_chats_members", { chat: "111" })
-    const rules = await call(client, "max_chats_rules", { chat: "111" })
-    const other = await call(client, "max_chats_rules", { chat: "222" })
+    const events = await call(client, "chats events", { chat: "111" })
+    const members = await call(client, "chats members", { chat: "111" })
+    const rules = await call(client, "chats rules", { chat: "111" })
+    const other = await call(client, "chats rules", { chat: "222" })
 
     expect(events.body).toMatchObject({ page: { has_more: false } })
     expect(events.body.items).toEqual([
@@ -1934,18 +1830,12 @@ describe("P7 MCP policy", () => {
     ).toBe(0)
     const form = vi.fn(() => ({ action: "decline" as const }))
     const { client, max } = await connect({}, { profile, answers: { [Opcode.MSG_DELETE]: {} }, form })
-    const names = (await client.listTools()).tools.map(({ name }) => name)
-    expect(names).toContain("max_messages_list")
-    expect(names).toContain("max_messages_delete")
-    for (const name of [
-      "max_messages_send",
-      "max_messages_edit",
-      "max_messages_forward",
-      "max_messages_pin",
-      "max_messages_unpin",
-    ])
+    const names = await client.commands()
+    expect(names).toContain("messages list")
+    expect(names).toContain("messages delete")
+    for (const name of ["messages send", "messages edit", "messages forward", "messages pin", "messages unpin"])
       expect(names).not.toContain(name)
-    const result = await call(client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })
+    const result = await call(client, "messages delete", { chat: "111", messages: ["116762160362694583"] })
     expect(result.isError, JSON.stringify(result.body)).toBe(false)
     expect(form).not.toHaveBeenCalled()
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
@@ -1954,7 +1844,7 @@ describe("P7 MCP policy", () => {
   it("executes default ask deletion without a server form", async () => {
     const noForm = await connect({}, { answers: { [Opcode.MSG_DELETE]: {} } })
     expect(
-      (await call(noForm.client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })).isError,
+      (await call(noForm.client, "messages delete", { chat: "111", messages: ["116762160362694583"] })).isError,
     ).toBe(false)
     expect(noForm.max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
     const accepted = await connect(
@@ -1962,7 +1852,7 @@ describe("P7 MCP policy", () => {
       { answers: { [Opcode.MSG_DELETE]: {} }, form: () => ({ action: "accept", content: {} }) },
     )
     expect(
-      (await call(accepted.client, "max_messages_delete", { chat: "111", messages: ["116762160362694583"] })).isError,
+      (await call(accepted.client, "messages delete", { chat: "111", messages: ["116762160362694583"] })).isError,
     ).toBe(false)
     expect(accepted.forms).toEqual([])
     expect(accepted.max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
@@ -1973,13 +1863,11 @@ describe("P7 MCP policy", () => {
     expect(
       await run([profile, "config", "set", "permissions.messages", "deny"], { streams: captureStreams(), tty: false }),
     ).toBe(0)
-    const { client, max } = await connect({ allowSend: true, allowDelete: true }, { profile })
-    const names = (await client.listTools()).tools.map(({ name }) => name)
-    expect(
-      names.some((name) => name.startsWith("max_messages_") || name === "max_inbox" || name === "max_review"),
-    ).toBe(false)
-    expect((await client.listResources()).resources).toEqual([])
-    expect((await call(client, "max_messages_list", { chat: "111" })).isError).toBe(true)
+    const { client, max, rawClient } = await connect({}, { profile })
+    const names = await client.commands()
+    expect(names.some((name) => name.startsWith("messages ") || name === "inbox" || name === "review")).toBe(false)
+    expect((await rawClient.listResources()).resources).toEqual([])
+    expect((await call(client, "messages list", { chat: "111" })).isError).toBe(true)
     expect(max.sent).toEqual([])
   })
 })

@@ -200,7 +200,7 @@ describe("max bot search messages --from", () => {
       (await json(["first", "bot", "search", "messages", ...argv])).items.map((message: { id: string }) => message.id)
 
     expect((await ids("team", "--newest")).length).toBeGreaterThan(0)
-    expect(await ids("team", "from:@ann")).toEqual(["mid.a1"])
+    expect(await ids('team from:"@ann"')).toEqual(["mid.a1"])
     expect(await ids("team -team")).toEqual([])
   })
 

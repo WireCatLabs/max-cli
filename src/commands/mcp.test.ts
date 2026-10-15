@@ -33,11 +33,11 @@ describe("max mcp config", () => {
     })
   })
 
-  it("puts the profile first and carries the write flags over", () => {
-    const { mcpServers } = entry({ profile: "work", flags: { allowSend: true, confirmSend: true } }).config
+  it("puts the profile first and carries --yes over", () => {
+    const { mcpServers } = entry({ profile: "work", flags: { yes: true } }).config
 
     expect(mcpServers).toEqual({
-      "max-work": expect.objectContaining({ args: [SCRIPT, "work", "mcp", "--allow-send", "--confirm-send"] }),
+      "max-work": expect.objectContaining({ args: [SCRIPT, "work", "mcp", "--yes"] }),
     })
   })
 
@@ -73,31 +73,10 @@ describe("the config commands, through the CLI", () => {
     return { code, json: JSON.parse(streams.stdout.join("")) }
   }
 
-  it("`mcp config` carries every write flag into the server's arguments", async () => {
-    const flags = [
-      "--allow-send",
-      "--confirm-send",
-      "--yes",
-      "--allow-dangerous",
-      "--allow-mark-read",
-      "--allow-delete",
-      "--allow-moderate",
-    ]
-    const { code, json } = await cli(["work", "mcp", "config", ...flags, "--json"])
+  it("`mcp config` carries --yes into the server's arguments", async () => {
+    const { code, json } = await cli(["work", "mcp", "config", "--yes", "--json"])
     expect(code).toBe(0)
-    expect(json.item.config.mcpServers["max-work"].args.slice(-8)).toEqual(["mcp", ...flags])
-  })
-
-  it("`mcp config --confirm-send` works with permission-based default writes", async () => {
-    const refused = captureStreams()
-    expect(
-      await run(["mcp-confirm", "mcp", "config", "--confirm-send", "--json"], { streams: refused, tty: false }),
-    ).toBe(0)
-
-    await run(["mcp-confirm", "config", "set", "mcp_tools", "contacts"], { streams: captureStreams(), tty: false })
-    const { code, json } = await cli(["mcp-confirm", "mcp", "config", "--confirm-send", "--json"])
-    expect(code).toBe(0)
-    expect(json.item.config.mcpServers["max-mcp-confirm"].args.slice(-2)).toEqual(["mcp", "--confirm-send"])
+    expect(json.item.config.mcpServers["max-work"].args.slice(-2)).toEqual(["mcp", "--yes"])
   })
 
   it("`bot mcp config` names the bot's server and carries --confirm-send, not the retired flags", async () => {
@@ -125,30 +104,22 @@ describe("the config commands, through the CLI", () => {
   })
 })
 
-it("starts MCP with explicit confirmation flags and warns about retired grants on stderr", async () => {
+it("starts MCP over stdio with nothing on stdout", async () => {
   const streams = captureStreams()
   vi.mocked(serveOverStdio).mockClear()
-  const code = await run(
-    [
-      "work",
-      "mcp",
-      "--allow-send",
-      "--allow-delete",
-      "--allow-mark-read",
-      "--allow-moderate",
-      "--allow-dangerous",
-      "--yes",
-      "--confirm-send",
-    ],
-    { streams, tty: false },
-  )
+  const code = await run(["work", "mcp", "--yes"], { streams, tty: false })
   expect(code).toBe(0)
   expect(streams.stdout).toEqual([])
-  expect(streams.stderr.join("")).toContain("no longer changes MCP access or confirmation")
   expect(serveOverStdio).toHaveBeenCalledExactlyOnceWith(
     expect.objectContaining({ settings: expect.objectContaining({ profile: "work" }) }),
-    expect.objectContaining({ yes: true, allowDangerous: true, confirmSend: true }),
+    {},
   )
+})
+
+it("refuses the removed MCP access flags", async () => {
+  vi.mocked(serveOverStdio).mockClear()
+  expect(await run(["work", "mcp", "--allow-send"], { streams: captureStreams(), tty: false })).not.toBe(0)
+  expect(serveOverStdio).not.toHaveBeenCalled()
 })
 
 describe("max mcp --http", () => {
@@ -178,18 +149,16 @@ describe("max mcp --http", () => {
     )
   })
 
-  it("passes startup permissions and ignores retired confirmation mode without changing saved config", async () => {
+  it("passes startup permissions without changing saved config", async () => {
     const file = join(process.env.MAX_CONFIG_DIR ?? "", "config.json")
     mkdirSync(dirname(file), { recursive: true })
-    const saved = JSON.stringify({ defaults: { read_only: true, permissions: { "messages.send": "deny" } } })
+    const saved = JSON.stringify({ defaults: { permissions: { "messages.send": "deny" } } })
     writeFileSync(file, saved)
     const { code } = await cli([
       "mcp",
       "--http",
       "--public-url",
       "https://device.example",
-      "--http-confirmation",
-      "permissions",
       "--permission",
       "messages.send=allow",
     ])
@@ -214,15 +183,14 @@ describe("max mcp --http", () => {
     expect(serveOverHttpUntilStopped).not.toHaveBeenCalled()
   })
 
-  it.each([
-    ["--http", "--http-confirmation", "automatic"],
-    ["--http", "--http-confirmation", "permissions", "--confirm-send"],
-    ["--http", "--permission", "messages.send=yes"],
-  ])("refuses invalid startup options before opening the server: %j", async (...args) => {
-    const { code } = await cli(["mcp", ...args, "--json"])
-    expect(code).not.toBe(0)
-    expect(serveOverHttpUntilStopped).not.toHaveBeenCalled()
-  })
+  it.each([["--http", "--permission", "messages.send=yes"]])(
+    "refuses invalid startup options before opening the server: %j",
+    async (...args) => {
+      const { code } = await cli(["mcp", ...args, "--json"])
+      expect(code).not.toBe(0)
+      expect(serveOverHttpUntilStopped).not.toHaveBeenCalled()
+    },
+  )
 
   it("--revoke forgets every browser login of the profile", async () => {
     const file = httpTokenFile(MAX_APP, "default", process.env)

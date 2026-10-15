@@ -260,7 +260,10 @@ describe("max chats moderate", () => {
     const profile = "ck-permission"
     const { environment, deletes } = group()
     deleting(profile)
-    const config = await check([profile, "config", "set", "allow", "groups", "--json"], environment)
+    const config = await check(
+      [profile, "config", "set", "permissions", '{"messages":"readonly","chats.moderate":"allow"}', "--json"],
+      environment,
+    )
     expect(config.code, config.stderr).toBe(0)
     const result = await check([profile, "chats", "moderate", "Team", "--json"], environment)
     expect(result.json).toEqual([

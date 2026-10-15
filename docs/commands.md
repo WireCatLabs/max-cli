@@ -1417,7 +1417,6 @@ max messages download <chat> [message] [options]
 | `--all` | every file of the chat, newest first; run it again to continue where it stopped. |
 | `--pause <duration>` | with --all, a pause between pages, to stay under the provider's limits. По умолчанию: `5s`. |
 | `--extract` | read text layers from the files this download maps into the local content index. |
-| `--output <dir>` | compatibility alias for --output-dir. |
 
 ### `max messages evidence`
 
@@ -2346,6 +2345,7 @@ max tasks add <message> [options]
 | Опция | Что делает |
 |---|---|
 | `--type <name>` | the task's type: question, request, mention or promise. |
+| `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …. |
 | `--title <text>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
 | `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
@@ -2353,7 +2353,7 @@ max tasks add <message> [options]
 
 ### `max tasks plan`
 
-set a task's title, description, due date and next check; nothing reaches the messenger
+set a task's title, description, due date, next check and category; nothing reaches the messenger
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2367,6 +2367,7 @@ max tasks plan <task> [options]
 
 | Опция | Что делает |
 |---|---|
+| `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …; a change is kept in the task's history. |
 | `--title <text>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
 | `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
@@ -2390,7 +2391,7 @@ max tasks link <task> [targets] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat it concerns, repeatable; a chat: its id, or part of its title. |
-| `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by or follow-up-of. |
+| `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by, follow-up-of, duplicate-of or discovered-from. |
 
 ### `max tasks show`
 
@@ -2422,6 +2423,53 @@ max tasks agenda [query] [options]
 | `--unanswered <span>` | list chats where someone else wrote last this long ago (default 1d). |
 | `--waiting <span>` | list chats where you wrote last this long ago (default 7d). |
 | `--within <span>` | leave out chats silent longer than this: they ended (default 30d). |
+| `--claimed` | also list tasks someone else holds (tasks claim); hidden by default. |
+| `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
+
+### `max tasks categories`
+
+the categories a task takes, with what each means and the words a rule picks it by
+
+```sh
+max tasks categories
+```
+
+### `max tasks claim`
+
+take an open task so no other agent works it at once; the claim lapses by itself
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks claim <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--for <span>` | how long the claim lasts: 30m, 2h (default 30m); claiming again extends it. |
+| `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
+
+### `max tasks release`
+
+give back a task you claimed, before the claim lapses; the owner may release any
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks release <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
 ### `max tasks close`
 
@@ -2641,7 +2689,6 @@ max conversations embed [options]
 | `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
-| `--workers <n>` | local: sessions in parallel, each with its own copy of the model (\~0.7 GB each). |
 | `--threads <n>` | local: threads in all (default: min(8, cores)). |
 | `--concurrency <n>` | remote: requests at once (default: 4). |
 | `--max-tokens <n>` | remote: stop before a run that could send more tokens than this. |
@@ -2772,7 +2819,7 @@ max attachments text set <chat> [message] [options]
 
 ## `max tags`
 
-your own labels on chats, people and messages, kept in the local store and never sent; tag: in a search finds them
+your own labels on chats, people, messages and tasks, kept in the local store and never sent; tag: in a search finds them
 
 ### `max tags auto`
 
@@ -2793,7 +2840,7 @@ max tags auto [options]
 
 ### `max tags add`
 
-put tags on one chat, person or message
+put tags on one chat, person, message or task
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2810,10 +2857,11 @@ max tags add <tag> [options]
 | `--chat <chat>` | the chat to tag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to tag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to tag: its id in --chat, or a msg: locator alone. |
+| `--task <task>` | the task to tag: its id or key, as tasks list shows it. |
 
 ### `max tags remove`
 
-take tags off one chat, person or message
+take tags off one chat, person, message or task
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2830,11 +2878,12 @@ max tags remove <tag> [options]
 | `--chat <chat>` | the chat to untag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to untag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to untag: its id in --chat, or a msg: locator alone. |
+| `--task <task>` | the task to untag: its id or key, as tasks list shows it. |
 | `--source <manual\|auto>` | remove only this ownership claim. |
 
 ### `max tags list`
 
-what is tagged: this account's chats and messages, and the people of its messenger
+what is tagged: this account's chats, messages and tasks, and the people of its messenger
 
 ```sh
 max tags list [query]
@@ -3047,7 +3096,7 @@ max search messages [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges; --language legacy keeps discovery; with --saved, more words AND-ed to it. |
+| `query` | необязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges; with --saved, more words AND-ed to it. |
 
 | Опция | Что делает |
 |---|---|
@@ -3069,9 +3118,7 @@ max search messages [query] [options]
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
 | `--discover` | find partial lexical matches and eligible replies in the local archive; results are evidence, not confirmed answers. |
-| `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
-| `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
 ### `max search mail`
@@ -3176,9 +3223,7 @@ max searches create <name> [query] [options]
 | `--newest` | newest first instead of best first. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--context <n>` | messages before and after each hit. |
-| `--language <lucene\|legacy>` | the query language: strict Lucene or legacy discovery. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
-| `--regex` | the words are one regular expression, case-insensitive, tested against every stored text. |
 | `--by <chat\|sender\|day\|hour>` | what stats messages show --saved counts by. |
 | `--selection <json>` | save the resolved parent ranking query and options from a drilldown. |
 | `--replace` | overwrite a saved search of the same name. |
@@ -4019,20 +4064,6 @@ max config show [options]
 |---|---|
 | `--bot` | the settings a bot command on this profile gets, rather than the personal account's. |
 
-### `max config migrate`
-
-replace legacy access settings with permissions, preserving effective levels
-
-**Меняет что-то только на этом компьютере.**
-
-```sh
-max config migrate [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--dry-run` | show the migration without writing the file. |
-
 ### `max config set`
 
 save a setting to the configuration file
@@ -4045,8 +4076,8 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, read_only, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, searchStemmers.cyrillic, searchStemmers.latin. |
-| `value` | обязательный | a number, true or false, or for allow a list like send,reaction. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin. |
+| `value` | обязательный | a number, true or false, or a list like contacts,polls. |
 
 | Опция | Что делает |
 |---|---|
@@ -4066,7 +4097,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, read_only, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, mcp_tools, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, searchStemmers.cyrillic, searchStemmers.latin. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin. |
 
 | Опция | Что делает |
 |---|---|
@@ -4257,14 +4288,7 @@ max mcp [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 | `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
-| `--http-confirmation <mode>` | no longer used — writes show no form; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
 | `--revoke` | forget every login given to a browser app; each must log in again. |
@@ -4280,12 +4304,6 @@ max mcp config [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ### `max mcp setup`
 
@@ -4305,12 +4323,6 @@ max mcp setup <client> [options]
 |---|---|
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ### `max mcp doctor`
 
@@ -4323,12 +4335,6 @@ max mcp doctor [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | deprecated: use permissions.messages.send in config; does not grant access. |
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-mark-read` | deprecated: use permissions.chats.mark-read in config; does not grant access. |
-| `--allow-delete` | deprecated: use permissions.messages.delete in config; does not grant access. |
-| `--allow-moderate` | deprecated: use permissions.chats.moderate and group rules; does not grant access. |
 
 ## `max bot`
 
@@ -4764,7 +4770,7 @@ find what this bot's local copy holds, by text
 
 #### `max bot search messages`
 
-search the messages this bot has read, sent or received on this machine — the local copy only, best match first; every word must appear; "a phrase", -word, a OR b, from: chat: after: before: has:; by text, by --from, or both
+search the messages this bot has read, sent or received on this machine — the local copy only, best match first; a Lucene query: every word must appear; "a phrase", -word, a OR b, from: chat: date: has:; by text, by --from, or both
 
 ```sh
 max bot search messages [query] [options]

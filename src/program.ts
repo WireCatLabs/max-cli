@@ -55,7 +55,6 @@ import { stickersCommand } from "./commands/stickers.js"
 import { upgradeCommand } from "./commands/upgrade.js"
 import { watchCommand } from "./commands/watch.js"
 import { resolveSettings } from "./config.js"
-import { migrateInboxPoint } from "./inbox-point.js"
 import { maxMessenger } from "./messenger.js"
 import { assertReadable, commandPermission, permissionScope } from "./permissions.js"
 import { rootOf } from "./profile.js"
@@ -102,7 +101,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     reactionsCommand(maxMessenger),
     recipientsCommand(),
     sendsCommand(),
-    inboxCommand(maxMessenger).hook("preAction", (command) => migrateInboxPoint(command)),
+    inboxCommand(maxMessenger),
     reviewCommand(maxMessenger),
     repliesCommand(maxMessenger),
     serveCommand(),

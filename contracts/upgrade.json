@@ -8,7 +8,7 @@
   "fixtures": [
     {
       "path": "MAX/CONFIG/config.json",
-      "text": "{\"defaults\": {\"limit\": 7}, \"profiles\": {\"readonly\": {\"readOnly\": true}, \"contract\": {}}}"
+      "text": "{\"defaults\": {\"limit\": 7}, \"profiles\": {\"contract\": {}}}"
     }
   ],
   "canaries": ["wirecat-synthetic-message-canary"],
@@ -43,76 +43,6 @@
       }
     },
     {
-      "id": "migration-preview",
-      "args": ["config", "migrate", "--dry-run", "--json"],
-      "exit": 0,
-      "stream": "stdout",
-      "kind": "json",
-      "json": {
-        "item": {
-          "changed": true,
-          "dry_run": true
-        }
-      },
-      "files": [
-        {
-          "path": "MAX/CONFIG/config.json",
-          "json": {
-            "profiles": {
-              "readonly": {
-                "read_only": true
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "migration-apply",
-      "args": ["config", "migrate", "--json"],
-      "exit": 0,
-      "stream": "stdout",
-      "kind": "json",
-      "json": {
-        "item": {
-          "changed": true,
-          "dry_run": false
-        }
-      },
-      "files": [
-        {
-          "path": "MAX/CONFIG/config.json",
-          "json": {
-            "defaults": {
-              "limit": 7
-            },
-            "personal": {
-              "profiles": {
-                "readonly": {
-                  "permissions": {
-                    "messages": "readonly",
-                    "tasks": "readonly"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "migration-repeat",
-      "args": ["config", "migrate", "--json"],
-      "exit": 0,
-      "stream": "stdout",
-      "kind": "json",
-      "json": {
-        "item": {
-          "changed": false
-        }
-      }
-    },
-    {
       "id": "candidate-store-migrate",
       "args": ["contract", "store", "migrate", "--json"],
       "exit": 0,
@@ -139,7 +69,18 @@
     },
     {
       "id": "task-add",
-      "args": ["contract", "--json", "--record", "tasks", "add", "msg:max/601/7/101", "--type", "promise"],
+      "args": [
+        "contract",
+        "--json",
+        "--record",
+        "tasks",
+        "add",
+        "msg:max/601/7/101",
+        "--type",
+        "promise",
+        "--category",
+        "other"
+      ],
       "exit": 0,
       "stream": "stdout",
       "kind": "json",

@@ -1,4 +1,3 @@
-import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import {
   deleteCommand,
@@ -32,17 +31,7 @@ export const messagesCommand = (): Command => {
   const localLinks = sharedMessagesCommand({ ...maxMessenger, history: "store" })
   command.addCommand(sharedSubcommand(localLinks, "link"))
 
-  const download = sharedSubcommand(shared, "download")
-    .option("--output <dir>", "compatibility alias for --output-dir")
-    .hook("preAction", (action) => {
-      const { output, outputDir } = action.opts<{ output?: string; outputDir: string }>()
-      if (output === undefined) return
-      if (action.getOptionValueSource("outputDir") !== "default" && outputDir !== output) {
-        throw new CliError("validation_error", "--output and --output-dir must name the same directory")
-      }
-      action.setOptionValue("outputDir", output)
-    })
-  command.addCommand(download)
+  command.addCommand(sharedSubcommand(shared, "download"))
   command.addCommand(sharedSubcommand(shared, "evidence"))
   command.addCommand(sharedSubcommand(shared, "sync"))
 

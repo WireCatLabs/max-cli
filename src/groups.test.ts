@@ -268,7 +268,7 @@ describe("creating a group", () => {
 describe("changing a group", () => {
   it("is refused on a read-only profile before anything reaches MAX, and journalled", async () => {
     const { environment, sent } = messenger()
-    await runWith(["gr-ro", "config", "set", "read_only", "true"])
+    await runWith(["gr-ro", "config", "set", "permissions.chats", "readonly"])
     const refused = await runWith(["gr-ro", "chats", "join", "https://max.ru/join/abcdef"], environment)
 
     expect(refused.code).toBe(5)
@@ -566,7 +566,7 @@ describe("changing a group", () => {
     async ({ args, index }) => {
       const { environment, max } = messenger()
       const profile = `gr-guard-${index}`
-      await runWith([profile, "config", "set", "read_only", "true"])
+      await runWith([profile, "config", "set", "permissions.chats", "readonly"])
       const result = await runWith([profile, "chats", ...args, "--json"], environment)
       expect(JSON.parse(result.stderr).error.code).toBe("permission_error")
       expect(sentOnlyLogin(max.sent)).toBe(true)

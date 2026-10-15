@@ -338,20 +338,6 @@ describe("the program", () => {
     expect(search.stdout).toContain("local store")
   })
 
-  it("`search messages --regex` tests one pattern against what the store holds", async () => {
-    const { environment } = acquaintedMax()
-    await runWith(["t-regex", "messages", "list", "111", "--json"], environment)
-
-    const found = await runWith(["t-regex", "search", "messages", "^lat", "--regex", "--json"], environment)
-
-    expect(found.code).toBe(0)
-    expect(
-      JSON.parse(found.stdout)
-        .items.map((hit: { excerpt: string }) => hit.excerpt)
-        .sort(),
-    ).toEqual(["later", "latest"])
-  })
-
   it("**finds a chat for a search by its stored name**, without connecting", async () => {
     const { max, environment } = acquaintedMax()
     await runWith(["t-search-name", "messages", "list", "111", "--json"], environment)
@@ -693,19 +679,7 @@ describe("the program", () => {
       await runWith(["t-search", "messages", "list", "111", "--json"], environment)
 
       const capped = await runWith(
-        [
-          "t-search",
-          "search",
-          "messages",
-          "lat*",
-          "--language",
-          "lucene",
-          "--timezone",
-          "Europe/Madrid",
-          "--limit",
-          "1",
-          "--json",
-        ],
+        ["t-search", "search", "messages", "lat*", "--timezone", "Europe/Madrid", "--limit", "1", "--json"],
         environment,
       )
       const all = await runWith(["t-search", "search", "messages", "lat*", "--json"], environment)
@@ -721,19 +695,14 @@ describe("the program", () => {
       expect(JSON.parse(capped.stdout).next).toContainEqual(
         expect.objectContaining({
           step: "page.next",
-          args: expect.objectContaining({ query: "lat*", language: "lucene", timezone: "Europe/Madrid" }),
+          args: expect.objectContaining({ query: "lat*", timezone: "Europe/Madrid" }),
         }),
       )
       const strict = await runWith(
         ["t-search", "search", "messages", "lat", "--backend", "archive", "--json"],
         environment,
       )
-      const legacy = await runWith(
-        ["t-search", "search", "messages", "lat", "--language", "legacy", "--json"],
-        environment,
-      )
       expect(JSON.parse(strict.stdout).items.map((message: { excerpt: string }) => message.excerpt)).toEqual(["later"])
-      expect(JSON.parse(legacy.stdout).items).toHaveLength(2)
     })
 
     it("`search messages --newest` orders hits newest first, and `--context` brings the messages around each", async () => {

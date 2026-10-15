@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 158 ⛔ · 0 ❌** — 334 commands, 755 options.
+**922 ✅ · 146 ⛔ · 0 ❌** — 336 commands, 732 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -190,7 +190,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages download` | `--all` | ✅ |  |
 | `messages download` | `--pause` | ✅ |  |
 | `messages download` | `--extract` | ✅ |  |
-| `messages download` | `--output` | ✅ |  |
 | `messages evidence` |  | ✅ |  |
 | `messages evidence` | `--limit` | ✅ |  |
 | `messages evidence` | `--cursor` | ✅ |  |
@@ -421,11 +420,13 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks list` | `--limit` | ✅ |  |
 | `tasks add` |  | ✅ |  |
 | `tasks add` | `--type` | ✅ |  |
+| `tasks add` | `--category` | ✅ |  |
 | `tasks add` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks add` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks add` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks add` | `--check` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks plan` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--category` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks plan` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks plan` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks plan` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
@@ -439,6 +440,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks agenda` | `--unanswered` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks agenda` | `--waiting` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--claimed` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--holder` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks categories` |  | ✅ |  |
+| `tasks claim` |  | ✅ |  |
+| `tasks claim` | `--for` | ✅ |  |
+| `tasks claim` | `--holder` | ✅ |  |
+| `tasks release` |  | ✅ |  |
+| `tasks release` | `--holder` | ✅ |  |
 | `tasks close` |  | ✅ |  |
 | `tasks close` | `--as` | ✅ |  |
 | `tasks close` | `--reason` | ✅ |  |
@@ -487,7 +496,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations embed` | `--provider` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--base-url` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--dims` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--workers` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--threads` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--concurrency` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--max-tokens` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
@@ -536,10 +544,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags add` | `--chat` | ✅ |  |
 | `tags add` | `--contact` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags add` | `--message` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags add` | `--task` | ✅ |  |
 | `tags remove` |  | ✅ |  |
 | `tags remove` | `--chat` | ✅ |  |
 | `tags remove` | `--contact` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags remove` | `--message` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags remove` | `--task` | ✅ |  |
 | `tags remove` | `--source` | ✅ |  |
 | `tags list` |  | ✅ |  |
 | `mentions list` |  | ✅ |  |
@@ -591,9 +601,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--exact` | ✅ |  |
 | `search messages` | `--context` | ✅ |  |
 | `search messages` | `--discover` | ✅ |  |
-| `search messages` | `--language` | ✅ |  |
 | `search messages` | `--timezone` | ✅ |  |
-| `search messages` | `--regex` | ✅ |  |
 | `search messages` | `--saved` | ✅ |  |
 | `search mail` |  | ✅ |  |
 | `search mail` | `--source` | ✅ |  |
@@ -635,9 +643,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `searches create` | `--newest` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--exact` | ✅ |  |
 | `searches create` | `--context` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--language` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--timezone` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--regex` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--by` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--selection` | ✅ |  |
 | `searches create` | `--replace` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
@@ -773,8 +779,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `config show` |  | ✅ |  |
 | `config show` | `--bot` | ✅ |  |
-| `config migrate` |  | ✅ |  |
-| `config migrate` | `--dry-run` | ✅ |  |
 | `config set` |  | ✅ |  |
 | `config set` | `--defaults` | ✅ |  |
 | `config set` | `--personal` | ✅ |  |
@@ -813,42 +817,17 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `complete` |  | ✅ |  |
 | `mcp` |  | ✅ |  |
 | `mcp` | `--permission` | ✅ |  |
-| `mcp` | `--allow-dangerous` | ✅ |  |
-| `mcp` | `--allow-send` | ✅ |  |
-| `mcp` | `--confirm-send` | ✅ |  |
-| `mcp` | `--allow-mark-read` | ✅ |  |
-| `mcp` | `--allow-delete` | ✅ |  |
-| `mcp` | `--allow-moderate` | ✅ |  |
 | `mcp` | `--http` | ✅ |  |
-| `mcp` | `--http-confirmation` | ✅ |  |
 | `mcp` | `--port` | ✅ |  |
 | `mcp` | `--public-url` | ✅ |  |
 | `mcp` | `--revoke` | ✅ |  |
 | `mcp config` |  | ✅ |  |
 | `mcp config` | `--permission` | ✅ |  |
-| `mcp config` | `--allow-dangerous` | ✅ |  |
-| `mcp config` | `--allow-send` | ✅ |  |
-| `mcp config` | `--confirm-send` | ✅ |  |
-| `mcp config` | `--allow-mark-read` | ✅ |  |
-| `mcp config` | `--allow-delete` | ✅ |  |
-| `mcp config` | `--allow-moderate` | ✅ |  |
 | `mcp setup` |  | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp setup` | `--permission` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-dangerous` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--confirm-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-mark-read` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-delete` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-moderate` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
 | `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--permission` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-dangerous` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-send` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--confirm-send` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-mark-read` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-delete` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-moderate` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `bot auth set` |  | ✅ |  |
 | `bot auth show` |  | ✅ |  |
 | `bot auth remove` |  | ✅ |  |

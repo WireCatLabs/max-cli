@@ -63,17 +63,6 @@ const max = async (argv: string[], { answer = "" } = {}) => {
 
 const store = (profile = "default") => new BotTokenStore({ profile, keyring })
 
-describe("max config set", () => {
-  it("takes a setting's camelCase name and saves it in snake_case", async () => {
-    const set = await max(["ro", "config", "set", "readOtherBots", "true", "--bot", "--json"])
-    expect(set.code).toBe(0)
-    expect(JSON.parse(set.stdout).item.setting).toBe("read_other_bots")
-    const shown = await max(["ro", "config", "set", "senderColors", "false", "--json"])
-    expect(shown.code).toBe(0)
-    expect(JSON.parse(shown.stdout).item.setting).toBe("sender_colors")
-  })
-})
-
 describe("max bot auth", () => {
   it("keeps a token only after MAX accepted it", async () => {
     const { code, stdout } = await max(["bot", "auth", "set", "--json"], { answer: GOOD })
@@ -178,7 +167,7 @@ describe("max bot api, guarded like the personal account", () => {
   beforeEach(() => store().write(GOOD))
 
   it("refuses every bot write on a read-only profile, and still reads", async () => {
-    await max(["ro", "config", "set", "read_only", "true"])
+    await max(["ro", "config", "set", "permissions.bot", "readonly"])
     store("ro").write(GOOD)
     const write = await max([
       "ro",
@@ -195,37 +184,7 @@ describe("max bot api, guarded like the personal account", () => {
     expect(write.stdout + write.stderr).toContain("does not allow bot.messages.send to write")
     expect(requests).toHaveLength(0)
     expect((await max(["ro", "bot", "me", "--json"])).code).toBe(0)
-  })
-
-  it("maps a bot write onto the allow list, and refuses one the list cannot name", async () => {
-    await max(["narrow", "config", "set", "allow", "send"])
-    store("narrow").write(GOOD)
-    const body = `{"text": "hi"}`
-    expect((await max(["narrow", "bot", "api", "send-message", "--chat-id", "1", "--body", body, "--json"])).code).toBe(
-      0,
-    )
-    const pin = await max([
-      "narrow",
-      "bot",
-      "api",
-      "pin-message",
-      "--chat-id",
-      "1",
-      "--body",
-      `{"message_id": "m"}`,
-      "--json",
-    ])
-    expect(pin.stdout + pin.stderr).toContain("does not allow bot.messages.pin to write")
-    const hook = await max([
-      "narrow",
-      "bot",
-      "api",
-      "subscribe",
-      "--body",
-      `{"url": "https://example.test/h"}`,
-      "--json",
-    ])
-    expect(hook.stdout + hook.stderr).toContain("does not allow bot.webhooks.set to write")
+    await max(["ro", "config", "unset", "permissions.bot"])
   })
 
   it("keeps message text out of what it prints and of every file it writes", async () => {

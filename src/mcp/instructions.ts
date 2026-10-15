@@ -1,19 +1,6 @@
-import type { Permission } from "@wirecat/cli-core/sends"
-import type { McpToolGroup } from "../config.js"
 import { SKILL_RESOURCE } from "../skill.js"
 
-export const instructions = ({
-  profile,
-}: {
-  profile: string
-  allowSend?: boolean
-  confirmSend?: boolean
-  allowMarkRead?: boolean
-  allowDelete?: boolean
-  allowModerate?: boolean
-  permitted?: readonly Permission[]
-  toolGroups?: readonly McpToolGroup[]
-}): string =>
+export const instructions = ({ profile }: { profile: string }): string =>
   [
     `The owner's personal MAX Messenger account (profile "${profile}"). A mistake here reaches a real person.`,
     "Use max_tools_search to discover a command, then max_read or max_write with { command, arguments }. Personal per-command tool names are removed; status is a readable command.",

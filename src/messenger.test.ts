@@ -34,8 +34,6 @@ const SHARED = [
   "record",
   "keepFailedRuns",
   "keepRunsForDays",
-  "readOnly",
-  "allow",
   "sendsPerHour",
   "updateCheck",
   "configPath",
@@ -45,9 +43,9 @@ const SHARED = [
 ] as const
 
 const CONFIG = {
-  defaultProfile: "work",
-  defaults: { limit: 7, sendsPerHour: 3 },
-  profiles: { work: { readOnly: true, allow: ["reaction", "read"], record: true }, home: {} },
+  default_profile: "work",
+  defaults: { limit: 7, sends_per_hour: 3 },
+  profiles: { work: { permissions: { messages: "readonly" }, record: true }, home: {} },
 }
 
 describe("the MAX messenger's settings", () => {
@@ -73,11 +71,11 @@ describe("the MAX messenger's settings", () => {
       JSON.stringify({
         profiles: {
           work: {
-            embeddingProvider: "openai",
-            embeddingModel: "synthetic-model",
-            embeddingBaseUrl: "https://example.test/v1",
-            embeddingDims: 128,
-            analysisProvider: "anthropic",
+            embedding_provider: "openai",
+            embedding_model: "synthetic-model",
+            embedding_base_url: "https://example.test/v1",
+            embedding_dims: 128,
+            analysis_provider: "anthropic",
           },
         },
       }),

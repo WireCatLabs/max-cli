@@ -1,6 +1,6 @@
 import { CliError, saveConfigFile } from "@wirecat/cli-base"
 import { AI_ENTRIES, type AISettings, first, loadSnakeCaseConfig, settingsFor } from "@wirecat/cli-core/cli"
-import { type Level, PERMISSIONS, type Permission } from "@wirecat/cli-core/sends"
+import type { Level } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
 import { knownProfiles } from "./diagnose.js"
@@ -16,17 +16,6 @@ const count = v.pipe(v.number(wholeNumber), v.integer(wholeNumber), v.minValue(1
 const zeroOrMore = plain("has to be a whole number, 0 or more")
 const countOrZero = v.pipe(v.number(zeroOrMore), v.integer(zeroOrMore), v.minValue(0, zeroOrMore))
 const flag = v.boolean(plain("has to be true or false"))
-/** MCP tools that change the account beyond messages, each group off until named here (`NEED-350`). */
-export const MCP_TOOL_GROUPS = ["contacts", "polls", "groups", "profile"] as const
-export type McpToolGroup = (typeof MCP_TOOL_GROUPS)[number]
-const mcpToolList = v.array(
-  v.picklist(MCP_TOOL_GROUPS, (issue) => `has to be one of ${MCP_TOOL_GROUPS.join(", ")}, not ${issue.received}`),
-  plain("has to be a list of tool groups, like contacts,polls"),
-)
-const permissionList = v.array(
-  v.picklist(PERMISSIONS, (issue) => `has to be one of ${PERMISSIONS.join(", ")}, not ${issue.received}`),
-  plain("has to be a list of actions, like send,reaction"),
-)
 
 /** valibot's own words ("Expected never but received …") mean nothing to someone editing a file. */
 const objectMessage =
@@ -54,8 +43,6 @@ const sharedEntries = {
   /** The run log reads these two; nothing records anything until it exists. */
   record: v.optional(flag),
   keep_runs_for_days: v.optional(count),
-  read_only: v.optional(flag),
-  allow: v.optional(permissionList),
   permissions: settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries.permissions,
   sends_per_hour: v.optional(count),
   requests_per_minute: v.optional(countOrZero),
@@ -71,8 +58,6 @@ const personalEntries = {
   search_catch_up: v.optional(flag),
   /** Start `max serve` in the background when a command needs MAX and none is running (`MAX-35`). */
   serve: v.optional(flag),
-  /** Only the file turns these on — no `max mcp` flag does (`NEED-350`). */
-  mcp_tools: v.optional(mcpToolList),
 }
 /**
  * Whether this bot may read other bots' local copies, when a command asks with `--all-bots` or
@@ -205,15 +190,13 @@ export interface Settings extends AISettings {
   keepFailedRuns: boolean
   serve: boolean
   keepRunsForDays: number
-  readOnly: boolean
-  /** `undefined` is every action, as before `CLI-37`; a list is only those. */
-  allow: readonly Permission[] | undefined
+  /** The variable that made this process read-only, above every level (`MAX_READ_ONLY`). */
+  readOnlyLock?: string
   sendsPerHour: number
   /** Calls a minute across every process of the profile; 0 is no pace. Unset: MAX's default. */
   requestsPerMinute?: number
   permissions: Record<string, Level>
   permissionSources: Record<string, string>
-  mcpTools: readonly McpToolGroup[]
   /** For a bot command: which other bots' copies it may read when asked (`--all-bots`, `--bots`). */
   readOtherBots: boolean | readonly string[]
   /** Whether a person at a terminal hears, once a day, that a newer version exists. */
@@ -261,11 +244,8 @@ export type SourcedSetting =
   | "record"
   | "serve"
   | "keepRunsForDays"
-  | "readOnly"
-  | "allow"
   | "sendsPerHour"
   | "requestsPerMinute"
-  | "mcpTools"
   | "permissions"
   | "readOtherBots"
   | "updateCheck"
@@ -380,23 +360,6 @@ export interface SettingScope {
 export const scopePath = ({ profile, kind }: SettingScope): string =>
   [kind, profile === undefined ? "defaults" : `profiles.${profile}`].filter(Boolean).join(".")
 
-/** The `config set` that writes where a value came from, so a refusal can say what to type. */
-export const setCommandFor = (from: Source, profile: string, setting: string): string => {
-  const path = from.startsWith("config file: ") ? from.slice("config file: ".length) : `profiles.${profile}`
-  const [first, second] = path.split(".")
-  const kind = first === "personal" || first === "bot" ? first : undefined
-  const everyone = (kind ? second : first) === "defaults"
-  const words = [
-    "max",
-    ...(everyone ? [] : [profile]),
-    "config set",
-    ...(kind ? [`--${kind}`] : []),
-    ...(everyone ? ["--defaults"] : []),
-    setting,
-  ]
-  return words.join(" ")
-}
-
 /**
  * Sets or removes one setting of one profile, or of `defaults`, and writes the file back.
  * `defaultProfile` is the one top-level key, and takes no scope.
@@ -414,8 +377,6 @@ export const changeSetting = (
     throw new CliError("validation_error", `no setting called "${setting}" — one of: ${ALL_SETTINGS.join(", ")}`)
   }
   const config = readConfig(path)
-  if (["read_only", "allow", "mcp_tools"].includes(setting) && hasPermissionConfig(config))
-    throw new CliError("validation_error", `${setting} is a legacy setting — use permissions instead`)
   if (setting === "default_profile") {
     if (kind !== undefined)
       throw new CliError("validation_error", "default_profile is one for the whole file — drop --personal or --bot")
@@ -461,7 +422,7 @@ export const changeSetting = (
   } else if (value === undefined) delete scope[setting]
   else if (setting === "read_other_bots")
     scope[setting] = value === "true" || value === "false" ? value === "true" : parseList(value)
-  else scope[setting] = setting === "allow" || setting === "mcp_tools" ? parseList(value) : parseValue(value)
+  else scope[setting] = parseValue(value)
   const empty = Object.keys(scope).length === 0
 
   const place = (holder: { defaults?: unknown; profiles?: Record<string, unknown> }) => {
@@ -542,37 +503,25 @@ const readConfig = (path: string): Config => {
   }
 }
 
-export const hasPermissionConfig = (config: Config): boolean =>
-  [
-    config.defaults,
-    ...Object.values(config.profiles),
-    config.personal?.defaults,
-    ...Object.values(config.personal?.profiles ?? {}),
-    config.bot?.defaults,
-    ...Object.values(config.bot?.profiles ?? {}),
-  ].some((scope) => scope?.permissions !== undefined)
-
 const sharedSettings = settingsFor(MAX_APP, {
   schema: configSchema,
   // A MAX session or bot lives in max's own state files, which the shared list cannot see.
   profiles: (env) => knownProfiles({ env }).map(({ name }) => name),
-  profile: { serve: personalEntries.serve, mcp_tools: personalEntries.mcp_tools },
+  profile: { serve: personalEntries.serve },
   defaults: { transcribe_model: defaultsEntries.transcribe_model },
   sourcePaths: true,
   parseDuration,
   resolve: ({ flags, settings, fromLayers }) => {
     const serveFlag = (flags as GlobalFlags).serve
     const serve = serveFlag === undefined ? fromLayers("serve", true) : { value: serveFlag, from: "flag" }
-    const mcpTools = fromLayers<readonly McpToolGroup[]>("mcp_tools", [])
     const transcribeModel = first<string>(
       [["config file: defaults", settings.shared.transcribe_model as string | undefined]],
       DEFAULT_MODEL,
     )
     return {
-      values: { serve: serve.value, mcpTools: mcpTools.value, transcribeModel: transcribeModel.value },
+      values: { serve: serve.value, transcribeModel: transcribeModel.value },
       sources: {
         serve: serve.from,
-        mcpTools: mcpTools.from,
         transcribeModel: transcribeModel.from,
         permissions: "default",
       },

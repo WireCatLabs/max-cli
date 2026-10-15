@@ -156,7 +156,7 @@ What holds for every command, how to produce it, and the test that pins it.
 | `--quiet` | any command | notes gone, data and errors kept | `src/inbox.test.ts`, `src/client.test.ts` |
 | No session | a profile never logged in | exit 4, names `max <p> setup` | `src/every-failure.test.ts`, `src/client.test.ts` |
 | A bot-only profile | a personal command on it | exit 4, names `max <p> bot …` | `src/client.test.ts` |
-| Read-only | `config set readOnly true` | every write refused, exit 5, nothing sent | `src/send-guards.test.ts`, `src/permissions.test.ts` |
+| Read-only | `config set permissions.messages readonly` | every write refused, exit 5, nothing sent | `src/send-guards.test.ts`, `src/permissions.test.ts` |
 | `allow` | `config set allow send` | other writes refused with the `config set` that allows them | `src/permissions.test.ts`, `src/commands/bot.test.ts` |
 | Locked profile | `MAX_PROFILE_LOCK=a max b …` | refused, exit 5 | `src/config.test.ts`, `src/send-guards.test.ts` |
 | Login paused | MAX refused logins for too many attempts | no login until the time given, exit 8 | `src/login-limit.test.ts` |

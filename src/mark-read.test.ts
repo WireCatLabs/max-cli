@@ -99,7 +99,8 @@ describe("marking a chat read", () => {
 
   it("a read-only profile refuses, sending nothing past the login, and prints no messages", async () => {
     const { max, environment } = messenger()
-    await runWith(["r-ro", "config", "set", "read_only", "true"])
+    await runWith(["r-ro", "config", "set", "permissions.chats", "readonly"])
+    await runWith(["r-ro", "config", "set", "permissions.messages", "readonly"])
 
     expect((await runWith(["r-ro", "chats", "mark-read", "111"], environment)).code).toBe(5)
     expect(max.sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)).toBe(true)

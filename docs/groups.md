@@ -241,7 +241,7 @@ max personal tasks list chat:<id чата> "(kind:question OR kind:mention)"
 Добавьте то, чего правила не видят, например своё обещание, или закройте задачу, на которую не нужно отвечать:
 
 ```sh
-max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promise
+max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promise --category other
 ```
 
 ```sh

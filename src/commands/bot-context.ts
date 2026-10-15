@@ -125,7 +125,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   }
 }
 
-/** The personal account's `readOnly` and `allow` hold for the bot too; a prompt was waived (`NEED-304`), a refusal was not. */
+/** The profile's levels hold for the bot too; a prompt was waived (`NEED-304`), a refusal was not. */
 export const assertAllowed = (operation: ManifestOperation, settings: Settings): void => {
   const key = BOT_KEYS[operation.id]
   if (!key) throw new CliError("configuration_error", `unmapped Bot API permission: ${operation.id}`)
