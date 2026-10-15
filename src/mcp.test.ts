@@ -1262,7 +1262,7 @@ describe("the MCP server", () => {
   it("marks a chat read up to the message given, through the send guards", async () => {
     const { client, max } = await connect({}, { answers: { [Opcode.CHAT_MARK]: { unread: 0, mark: 1789776100000 } } })
 
-    const { isError, body } = await call(client, "chats mark-read", { chat: "111", until: "116762160362694583" })
+    const { isError, body } = await call(client, "chats mark-read", { chat: "111", until_id: "116762160362694583" })
 
     expect(isError).toBe(false)
     expect(body.item).toEqual({ operation_id: expect.any(String), chat_id: "111", until: "116762160362694583" })
@@ -1655,7 +1655,9 @@ describe("MCP prompts and resources", () => {
       ["max://chat/222", "Team Beta"],
     ])
     const body = JSON.parse(String((read.contents[0] as { text: string }).text))
-    expect(body).toMatchObject({ chat: { id: "111", title: "Team Alpha" }, messages: [{ id: "116762160362694583" }] })
+    expect(body).toMatchObject({
+      item: { chat: { id: "111", title: "Team Alpha" }, messages: [{ id: "116762160362694583" }] },
+    })
     expect(logins()).toBe(1)
   })
 })
@@ -1675,7 +1677,9 @@ describe("the skill as an MCP resource", () => {
     )
     const read = await rawClient.readResource({ uri: "max://chat/111" })
     const first = read.contents[0]
-    expect(first && "text" in first && JSON.parse(first.text).messages[0].text).toBe("a\\u{e0041}\\x85\\u202e\\ufeffb")
+    expect(first && "text" in first && JSON.parse(first.text).item.messages[0].text).toBe(
+      "a\\u{e0041}\\x85\\u202e\\ufeffb",
+    )
   })
   it("serves SKILL.md as max://skill without logging in", async () => {
     const { logins, rawClient } = await connect()

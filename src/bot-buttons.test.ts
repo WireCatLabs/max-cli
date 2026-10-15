@@ -130,7 +130,7 @@ describe("a bot's buttons on the personal account", () => {
 
   it("starts a bot with the web client's service message, guarded as a send", async () => {
     const { environment, sentWith } = messenger()
-    const started = await runWith(["b-start", "chats", "start", String(DIALOG), "--payload", "ref1"], environment)
+    const started = await runWith(["b-start", "chats", "start", String(DIALOG), "--start", "ref1"], environment)
 
     expect(started.code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([

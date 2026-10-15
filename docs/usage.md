@@ -958,7 +958,7 @@ max personal chats mark-read "Иван Петров"                  # до п�
 ```
 
 ```sh
-max personal chats mark-read "Иван Петров" --until 100000000000000001   # до этого сообщения включительно
+max personal chats mark-read "Иван Петров" --until-id 100000000000000001   # до этого сообщения включительно
 ```
 
 ```sh
@@ -1127,7 +1127,7 @@ max personal chats start <бот>                                 # запуст
 ```
 
 ```sh
-max personal chats start <бот> --payload ref1                  # с параметром, как ссылка max.ru/<бот>?start=ref1
+max personal chats start <бот> --start ref1                    # с параметром, как ссылка max.ru/<бот>?start=ref1
 ```
 
 ```sh

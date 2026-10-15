@@ -80,7 +80,7 @@ describe("max bot chats moderate", () => {
     expect(deletes()).toEqual([])
   })
 
-  it("deletes what a rule allows, and bans on removal unless --no-ban", async () => {
+  it("deletes what a rule allows, and bans on removal unless --no-block", async () => {
     const rules = new ModerationRules(moderationPathFor("bc-act"))
     rules.set("-100", null, "invites", "remove")
     rules.set("-100", null, "consent.remove", "allow")
@@ -99,7 +99,7 @@ describe("max bot chats moderate", () => {
       "-100",
       "--since-time",
       new Date(now - 3_600_000).toISOString(),
-      "--no-ban",
+      "--no-block",
       "--json",
     ])
 

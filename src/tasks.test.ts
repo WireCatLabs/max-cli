@@ -91,7 +91,7 @@ describe("tasks through max", () => {
     expect(added.code, added.err).toBe(0)
     const { id } = JSON.parse(added.out).item
 
-    const claimed = await cli(["tasks", "claim", id, "--holder", "agent-a", "--for", "10m", "--json"])
+    const claimed = await cli(["tasks", "claim", id, "--holder", "agent-a", "--lease", "10m", "--json"])
     expect(claimed.code, claimed.err).toBe(0)
     expect(JSON.parse(claimed.out).item).toMatchObject({ claimed_by: "agent-a" })
     expect((await cli(["tasks", "claim", id, "--holder", "agent-b", "--json"])).code).not.toBe(0)

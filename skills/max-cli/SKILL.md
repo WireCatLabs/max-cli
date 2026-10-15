@@ -166,7 +166,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    чата скачаны целиком, показывает `max personal store status <чат>`; прежде чем отдать файл как «всю
    переписку», сверьтесь с ним.
 5c. **`max personal messages sync` скачивает историю сразу — только по слову владельца**: это сотни запросов с
-   его аккаунта. Посчитать заранее нельзя: `--estimate` для MAX отказывает. Скажите владельцу, что
+   его аккаунта. Посчитать заранее нельзя: `--dry-run` для MAX отказывает. Скажите владельцу, что
    один запуск — до 40 страниц по 30 сообщений с паузой 5–10 с, то есть 3–7 минут.
 5d. **Ошибку, которую не удаётся объяснить, — в отчёт автору.** Предложите владельцу
    `max personal doctor report create`: команда пишет файл без текстов сообщений и печатает ссылку на новую
@@ -246,7 +246,7 @@ max personal review 'date>"2026-09-23T09:00:00Z"' --json  # всё, свои т�
 max personal review 'chat:"-1000"' --unanswered 4h --json # вопросы в группе, на которые 4 часа не ответили ни владелец, ни админы
 max personal tasks list state:open --json              # что ждёт ответа владельца; задачи открывает и закрывает review
 max personal tasks add <ссылка> --type request --category documents --json
-# выход 2 task.duplicate-candidates: возможно, это та же задача; повторите с --attach <задача> или --new
+# выход 2 task.duplicate-candidates: возможно, это та же задача; повторите с --into <задача> или --new
 max personal tasks duplicates --json               # пары, которые могут быть одной задачей; tasks merge <дубль> --into <задача>
 max personal tasks close <задача> --as dismissed --reason no-reply-needed --json   # только когда владелец так решил
 max personal watch --jsonl                              # новые сообщения по мере прихода; `max personal serve` запустится сам
@@ -299,7 +299,7 @@ max personal messages transcribe -1000 100000000000000001 --json   # текст 
 и отправленное ботом хранится локально: `bot messages list <чат> --offline` — без сети,
 `bot search messages <текст>` — поиск, `--from <кто>` — только его сообщения. `bot contacts show <кто>` —
 где человек писал и его личный чат с ботом; `bot messages between <кто> <кто>` — их переписка в
-чатах, где писал каждый (`--limit` — на чат). Всё это без сети, кроме `contacts show --refresh`.
+чатах, где писал каждый (`--limit` — на чат). Всё это без сети, кроме `contacts show --sync-first`.
 Чужие локальные копии ботов — `--all-bots` или `--bots <профили>` у `search messages`, `contacts show` и
 `messages between`, и только если владелец разрешил `read_other_bots`; иначе отказ с кодом `5` — скажите
 владельцу команду из ошибки. `bot watch --jsonl` забирает события у всех других
@@ -463,7 +463,7 @@ max personal contacts list 'notes:"follow up"' --json
 max personal metadata get --chat CHAT_ID --json
 max personal metadata refresh --chat CHAT_ID --limit 1 --json
 max personal tags auto --chat CHAT_ID --dry-run --json
-max personal tags auto --chat CHAT_ID --refresh-metadata --limit 1 --json
+max personal tags auto --chat CHAT_ID --sync-first --limit 1 --json
 max personal tags list sources:auto --json
 max personal tags remove news --chat CHAT_ID --source auto
 ```
@@ -471,7 +471,7 @@ max personal tags remove news --chat CHAT_ID --source auto
 Автоматические метки определяются по ключевым словам в сохранённых названиях, адресах и
 описаниях групп и каналов. Модель и тексты сообщений не используются. Обновление описания
 запрашивается явно; удалённый чат не меняется. `--dry-run` читает только сохранённые данные
-и не сочетается с `--refresh-metadata`. За запуск обрабатывается не более 500 чатов.
+и не сочетается с `--sync-first`. За запуск обрабатывается не более 500 чатов.
 Оценка правила не является вероятностью. Ручные метки сохраняются при повторной классификации.
 Без `--source` удаление метки убирает оба источника; следующий явный запуск `tags auto` может
 создать автоматическую метку снова. Связывание людей не объединяет их личные заметки.
@@ -516,7 +516,7 @@ max personal mentions reject 12
 
 
 Удалённому агенту доступны байты сохранённого файла: найдите attachments show через max_tools_search
-и вызовите max_read. Скрытые файлы, папки CLI и хранилище не передаются, включая ссылки. Соберите порции по next_offset_bytes, передавайте if_sha256 и проверьте хеш.
+и вызовите max_read. Скрытые файлы, папки CLI и хранилище не передаются, включая ссылки. Соберите порции по next_offset_bytes, передавайте expected_fingerprint и проверьте хеш.
 Если клиент не может открыть PDF, запросите каждую страницу через page:1..pdf.page_count;
 нужны необязательные unpdf/@napi-rs/canvas. Страница возвращается изображением; если видны только
 метаданные, запросите format:base64 и покажите PNG средствами агента. Просмотрите реальные пиксели

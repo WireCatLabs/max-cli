@@ -1,17 +1,1 @@
-[
-  "attachments show --if-sha256",
-  "bot contacts show --refresh",
-  "chats members audit --budget",
-  "chats members fetch --budget",
-  "contacts context --refresh",
-  "messages sync --estimate",
-  "replies edit --chats",
-  "replies edit --not-chats",
-  "replies edit --not-people",
-  "replies edit --people",
-  "schedule agent --once",
-  "schedule command --once",
-  "search conversations --refresh",
-  "server logs --lines",
-  "tags auto --refresh-metadata"
-]
+[]

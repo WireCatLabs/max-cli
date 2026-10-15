@@ -35,7 +35,7 @@
 | Открыть весь разговор, в котором есть сообщение | `max personal conversations show <чат> <сообщение>` |
 | Найти другие разговоры о том же, во всех чатах | `max personal conversations related <чат> <сообщение>` |
 | Ограничить результат человеком, периодом или словом | `max personal search conversations "<вопрос>" --filter '<запрос>'` |
-| Узнать, что устарело, и догнать | `max personal conversations status`, `max personal search conversations "<вопрос>" --refresh` |
+| Узнать, что устарело, и догнать | `max personal conversations status`, `max personal search conversations "<вопрос>" --catch-up` |
 | Попросить своего ИИ-агента точнее связать сообщения | `max skill show link-conversations` |
 
 ## Поиск по темам или поиск по словам?
@@ -232,14 +232,14 @@ max personal search conversations "где встречаемся" --chat "Кни
 max personal conversations status                         # что отстало, по чатам
 max personal conversations build                          # все изменившиеся чаты и группы, ни разу не построенные
 max personal conversations embed                          # все построенные чаты, где остались куски
-max personal search conversations "аренда квартиры" --refresh   # сначала догнать, потом искать
+max personal search conversations "аренда квартиры" --catch-up  # сначала догнать, потом искать
 ```
 
 `status` считает для каждого построенного чата сообщения, которых `build` ещё не видел (новые,
 изменённые, удалённые), куски с актуальным, устаревшим или отсутствующим вектором, и сколько групп ни
-разу не построено. Без `--chat` команды `build`, `embed` и `search --refresh` берут за раз не больше
+разу не построено. Без `--chat` команды `build`, `embed` и `search conversations --catch-up` берут за раз не больше
 20 чатов (`--max-chats`) и считают не больше 2000 кусков (`--max-chunks`); запустите ещё раз, чтобы
-продолжить. Модель они не скачивают. `--refresh` нельзя сочетать с `--filter` и `--source`: сначала
+продолжить. Модель они не скачивают. `--catch-up` нельзя сочетать с `--filter` и `--source`: сначала
 постройте и посчитайте нужные чаты.
 
 Когда в новой версии меняются правила, `status` и `max personal store check` называют чаты, построенные по

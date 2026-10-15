@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**917 ✅ · 163 ⛔ · 0 ❌** — 342 commands, 738 options.
+**917 ✅ · 159 ⛔ · 0 ❌** — 342 commands, 734 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -47,7 +47,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats inspect` |  | ✅ |  |
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
-| `chats mark-read` | `--until` | ✅ |  |
+| `chats mark-read` | `--until-id` | ✅ |  |
 | `chats mark-read` | `--topic` | ✅ |  |
 | `chats leave` |  | ✅ |  |
 | `chats create` |  | ✅ |  |
@@ -57,12 +57,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members list` | `--page` | ✅ |  |
 | `chats members list` | `--all` | ✅ |  |
 | `chats members audit` |  | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
-| `chats members audit` | `--budget` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members audit` | `--max-pages` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members audit` | `--deep` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members history` |  | ✅ |  |
 | `chats members fetch` |  | ✅ |  |
 | `chats members fetch` | `--track` | ✅ |  |
-| `chats members fetch` | `--budget` | ✅ |  |
+| `chats members fetch` | `--max-pages` | ✅ |  |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
@@ -123,7 +123,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats clear` |  | ✅ |  |
 | `chats clear` | `--allow-dangerous` | ✅ |  |
 | `chats start` |  | ✅ |  |
-| `chats start` | `--payload` | ✅ |  |
+| `chats start` | `--start` | ✅ |  |
 | `chats app` |  | ✅ |  |
 | `chats app` | `--start` | ✅ |  |
 | `contacts list` |  | ✅ |  |
@@ -157,7 +157,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts context` | `--limit` | ⛔ | cli-core src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and archive gaps; this consumer mounts the shared command |
 | `contacts context` | `--since-time` | ⛔ | cli-core src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing |
 | `contacts context` | `--chat` | ✅ |  |
-| `contacts context` | `--refresh` | ✅ |  |
+| `contacts context` | `--sync-first` | ✅ |  |
 | `contacts timeline` |  | ✅ |  |
 | `contacts timeline` | `--scope` | ✅ |  |
 | `contacts timeline` | `--since-time` | ✅ |  |
@@ -206,7 +206,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages sync` | `--catch-up-messages` | ✅ |  |
 | `messages sync` | `--catch-up-time` | ✅ |  |
 | `messages sync` | `--background` | ⛔ | starts a detached `max` that outlives the test; cli-core src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6 |
-| `messages sync` | `--estimate` | ✅ |  |
+| `messages sync` | `--dry-run` | ✅ |  |
 | `messages transcribe` |  | ✅ |  |
 | `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
@@ -267,8 +267,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store export` | `--format` | ✅ |  |
 | `store export` | `--since-time` | ✅ |  |
 | `store export` | `--output` | ✅ |  |
-| `store export` | `--to` | ✅ |  |
-| `store export` | `--kind` | ✅ |  |
+| `store export` | `--output-dir` | ✅ |  |
+| `store export` | `--include` | ✅ |  |
 | `store export` | `--all` | ✅ |  |
 | `store export` | `--encrypt` | ✅ |  |
 | `store clear` |  | ✅ |  |
@@ -421,44 +421,40 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks add` |  | ✅ |  |
 | `tasks add` | `--type` | ✅ |  |
 | `tasks add` | `--category` | ✅ |  |
-| `tasks add` | `--attach` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks add` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks add` | `--new` | ✅ |  |
 | `tasks add` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks add` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks add` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks add` | `--check` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks add` | `--remind-time` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks plan` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks plan` | `--category` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks plan` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks plan` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks plan` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks plan` | `--check` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--remind-time` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks link` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks link` | `--chat` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks link` | `--kind` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks show` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks similar` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists the tasks that may be the same job") drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks similar` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
-| `tasks duplicates` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks duplicates` | `--unsure` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks related` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists the tasks that may be the same job") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks related` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
+| `tasks duplicates` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks duplicates` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
 | `tasks duplicates reject` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks duplicates unsure` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks merge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks merge` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks duplicates defer` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks merge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks merge` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks unmerge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks agenda` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks agenda` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--due-within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--unanswered` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks agenda` | `--waiting` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks agenda` | `--claimed` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks agenda` | `--category` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("keys, categorizes, tags and claims a task") filters the agenda by category and tag through the shared handler MAX mounts (0.285.0) |
-| `tasks agenda` | `--tag` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("keys, categorizes, tags and claims a task") filters the agenda by category and tag through the shared handler MAX mounts (0.285.0) |
 | `tasks agenda` | `--holder` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks categories` |  | ✅ |  |
 | `tasks claim` |  | ✅ |  |
-| `tasks claim` | `--for` | ✅ |  |
+| `tasks claim` | `--lease` | ✅ |  |
 | `tasks claim` | `--holder` | ✅ |  |
 | `tasks release` |  | ✅ |  |
 | `tasks release` | `--holder` | ✅ |  |
@@ -545,14 +541,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments show` | `--page` | ✅ |  |
 | `attachments show` | `--offset-bytes` | ✅ |  |
 | `attachments show` | `--chunk-bytes` | ✅ |  |
-| `attachments show` | `--if-sha256` | ✅ |  |
+| `attachments show` | `--expected-fingerprint` | ✅ |  |
 | `attachments text set` |  | ✅ |  |
 | `attachments text set` | `--attachment` | ✅ |  |
 | `attachments text set` | `--text-file` | ✅ |  |
 | `tags auto` |  | ✅ |  |
 | `tags auto` | `--chat` | ✅ |  |
 | `tags auto` | `--limit` | ✅ |  |
-| `tags auto` | `--refresh-metadata` | ⛔ | cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
+| `tags auto` | `--sync-first` | ⛔ | cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `tags auto` | `--dry-run` | ✅ |  |
 | `tags add` |  | ✅ |  |
 | `tags add` | `--chat` | ✅ |  |
@@ -647,7 +643,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search conversations` | `--source` | ✅ |  |
 | `search conversations` | `--timezone` | ✅ |  |
 | `search conversations` | `--limit` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
-| `search conversations` | `--refresh` | ✅ |  |
+| `search conversations` | `--catch-up` | ✅ |  |
 | `searches create` |  | ✅ |  |
 | `searches create` | `--chat` | ✅ |  |
 | `searches create` | `--source` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
@@ -721,15 +717,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `replies edit` |  | ✅ |  |
 | `replies edit` | `--do` | ✅ |  |
 | `replies edit` | `--kinds` | ✅ |  |
-| `replies edit` | `--chats` | ✅ |  |
-| `replies edit` | `--not-chats` | ✅ |  |
+| `replies edit` | `--allow-chats` | ✅ |  |
+| `replies edit` | `--deny-chats` | ✅ |  |
 | `replies edit` | `--words` | ✅ |  |
 | `replies edit` | `--question` | ✅ |  |
 | `replies edit` | `--no-question` | ✅ |  |
 | `replies edit` | `--mentions-me` | ✅ |  |
 | `replies edit` | `--no-mentions-me` | ✅ |  |
-| `replies edit` | `--people` | ✅ |  |
-| `replies edit` | `--not-people` | ✅ |  |
+| `replies edit` | `--allow-people` | ✅ |  |
+| `replies edit` | `--deny-people` | ✅ |  |
 | `replies edit` | `--contacts-only` | ✅ |  |
 | `replies edit` | `--no-contacts-only` | ✅ |  |
 | `replies edit` | `--template` | ✅ |  |
@@ -771,18 +767,18 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `server restart` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server status` |  | ✅ |  |
 | `server logs` |  | ✅ |  |
-| `server logs` | `--lines` | ✅ |  |
+| `server logs` | `--limit` | ✅ |  |
 | `server install` |  | ✅ |  |
 | `server uninstall` |  | ✅ |  |
 | `schedule command` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule command` | `--every` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule command` | `--at` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
-| `schedule command` | `--once` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1) |
+| `schedule command` | `--at-time` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --at-time is parsed by the same code (0.250.1) |
 | `schedule agent` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--max-cost` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--every` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--at` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
-| `schedule agent` | `--once` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1) |
+| `schedule agent` | `--at-time` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --at-time is parsed by the same code (0.250.1) |
 | `schedule list` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule run` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
 | `schedule remove` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
@@ -867,7 +863,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot chats moderate` | `--since-time` | ✅ |  |
 | `bot chats moderate` | `--dry-run` | ✅ |  |
 | `bot chats moderate` | `--allow-dangerous` | ✅ |  |
-| `bot chats moderate` | `--no-ban` | ✅ |  |
+| `bot chats moderate` | `--no-block` | ✅ |  |
 | `bot chats moderate` | `--max-actions` | ✅ |  |
 | `bot messages send` |  | ✅ |  |
 | `bot messages send` | `--reply-to` | ✅ |  |
@@ -925,7 +921,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot contacts show` | `--all-bots` | ✅ |  |
 | `bot contacts show` | `--bots` | ✅ |  |
 | `bot contacts show` | `--limit` | ✅ |  |
-| `bot contacts show` | `--refresh` | ✅ |  |
+| `bot contacts show` | `--sync-first` | ✅ |  |
 | `bot store fetch` |  | ✅ |  |
 | `bot store fetch` | `--limit` | ✅ |  |
 | `bot store fetch` | `--page-size` | ✅ |  |

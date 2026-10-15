@@ -1304,7 +1304,7 @@ describe("max server", () => {
     expect(text).toContain("RestartPreventExitStatus=4 8 11")
     expect(text).not.toContain("MAX_TOKEN")
 
-    expect((await call(["x-unit", "server", "logs", "--lines", "5", "--json"])).answer.items).toEqual([
+    expect((await call(["x-unit", "server", "logs", "--limit", "5", "--json"])).answer.items).toEqual([
       "LoadState=loaded",
       "ActiveState=inactive",
       "SubState=dead",

@@ -1,24 +1,11 @@
 [
   "--add",
   "--by",
-  "--check",
-  "--due",
   "--file",
-  "--for",
   "--kind",
   "--limit",
-  "--max-meetings",
   "--model",
-  "--payload",
   "--provider",
-  "--revision",
-  "--scope",
   "--source",
-  "--task",
-  "--title",
-  "--to",
-  "--type",
-  "--unanswered",
-  "--until",
-  "--within"
+  "--type"
 ]

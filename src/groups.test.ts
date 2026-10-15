@@ -700,7 +700,7 @@ describe("changing a group", () => {
 
       rememberAccount(MAX_APP, "gr-history", "10000001", process.env)
       const fetched = await runWith(
-        ["gr-history", "chats", "members", "fetch", "Team", "--budget", "1", "--json"],
+        ["gr-history", "chats", "members", "fetch", "Team", "--max-pages", "1", "--json"],
         environment,
       )
       const history = await runWith(
@@ -910,7 +910,7 @@ describe("changing a group", () => {
     const profile = "gr-roster-adoption"
     expect((await runWith([profile, "chats", "list", "--json"], environment)).code).toBe(0)
     const fetched = await runWith(
-      [profile, "chats", "members", "fetch", "Team", "--budget", "1", "--json"],
+      [profile, "chats", "members", "fetch", "Team", "--max-pages", "1", "--json"],
       environment,
     )
     expect(fetched.code).toBe(0)

@@ -170,7 +170,7 @@ it("refuses a readonly command child when the parent allows writes", async () =>
 })
 
 describe("contacts context in named chats", () => {
-  it("reads the chat from MAX with --refresh and answers one person's messages, short unless -v, then their timeline", async () => {
+  it("reads the chat from MAX with --sync-first and answers one person's messages, short unless -v, then their timeline", async () => {
     const profile = "context-chats"
     rememberAccount(MAX_APP, profile, "10000001", process.env)
     const store = await openStore()
@@ -211,7 +211,7 @@ describe("contacts context in named chats", () => {
     }
 
     const short = await cli(
-      [profile, "contacts", "context", "20000002", "--chat", "111", "--refresh", "--json"],
+      [profile, "contacts", "context", "20000002", "--chat", "111", "--sync-first", "--json"],
       environment,
     )
     const detailed = await cli(

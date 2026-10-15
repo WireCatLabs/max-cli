@@ -44,8 +44,7 @@ describe("the adopted agent CLI contract", () => {
     ])
     expect(code).toBe(0)
     expect(JSON.parse(streams.stdout.join(""))).toMatchObject({
-      preview: true,
-      effects: { actionInvoked: false, writeReserved: false },
+      item: { preview: true, effects: { action_invoked: false, write_reserved: false } },
     })
     expect(streams.stdout.join("")).not.toContain("synthetic-payload")
     expect(opened).not.toHaveBeenCalled()
