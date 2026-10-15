@@ -4,31 +4,64 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
-## Не выпущено
+## 0.55.0 — 15.10.2026
 
 ### Изменено — может сломать скрипты
 
-- **Флаги называются так, как их называет общий словарь** (cli-core 0.287.0, cli-base 0.32.0), старые имена
-  больше не принимаются: `--budget` → `--max-pages`, `--estimate` → `--dry-run`, `--refresh` и
-  `--refresh-metadata` → `--sync-first` (в `search conversations` — `--catch-up`), `--if-sha256` →
-  `--expected-fingerprint`, `replies edit --chats/--not-chats/--people/--not-people` →
-  `--allow-chats/--deny-chats/--allow-people/--deny-people`, `schedule --once` → `--at-time`, `--no-ban` →
-  `--no-block`, `chats mark-read --until` → `--until-id`, `tasks --check` → `--remind-time`,
-  `store export --to/--kind` → `--output-dir/--include`.
-- **Команды задач и сервера тоже называются по словарю** (следующий cli-core, cli-base 0.33.0), без старых имён:
-  `tasks similar` → `tasks related`; `tasks duplicates unsure` → `tasks duplicates defer` (ключ разрешения
-  `tasks.duplicates.defer`, в базе решение по-прежнему `unsure`); `tasks add --attach` → `--into`; `tasks claim
-  --for` → `--lease`; `tasks agenda --due` → `--due-within`; `server logs --lines` → `--limit` (`-n` остаётся);
-  `chats start --payload` → `--start`, как в `chats app`. Инструменты MCP — следом: `tasks_related`,
-  `tasks_duplicates_defer`, `into`, `lease`, `due_within`.
+- **Флаги общих команд называются по общему словарю, старые имена больше не принимаются** (cli-core 0.288.0):
+  `--budget` → `--max-pages`; `messages sync --estimate` → `--dry-run` (в max он по-прежнему отклоняется: id
+  сообщений MAX не говорят, сколько их пропущено); `contacts context --refresh`, `bot contacts show --refresh` и
+  `tags auto --refresh-metadata` → `--sync-first`; `search conversations --refresh` → `--catch-up`;
+  `attachments show --if-sha256` → `--expected-fingerprint`; в `replies edit` `--chats`, `--not-chats`, `--people`,
+  `--not-people` → `--allow-chats`, `--deny-chats`, `--allow-people`, `--deny-people` (файл правил не меняется);
+  `schedule --once` → `--at-time`; `bot chats moderate --no-ban` → `--no-block`; `chats mark-read --until` →
+  `--until-id`; `tasks add|plan --check` → `--remind-time`; `tasks add --attach` → `--into`; `tasks claim --for` →
+  `--lease`; `tasks agenda --due` → `--due-within`; `server logs --lines` → `--limit` (`-n` остаётся); в `chats start`
+  `--payload` → `--start`, как в `chats app`; `store export --to/--kind` → `--output-dir/--include`.
+  Почему: у max, tg и других CLI WireCat одно слово значит одно и то же, и агенту не нужно помнить имя флага для
+  каждой программы.
+  Что учесть: старое имя завершает команду с кодом 2 («unknown option») до подключения к MAX — проверьте скрипты и
+  расписания (`schedule list`). В MCP аргумент — новое имя флага в snake_case, например `max_pages`, `until_id`,
+  `expected_fingerprint`, `output_dir`, `allow_chats`, `at_time`. В `search conversations` не меняйте `--refresh` на
+  `--sync-first`: этот флаг уже был и сначала читает новые сообщения из MAX, а прежнюю сборку поиска делает
+  `--catch-up`.
+- **`tasks similar` теперь `tasks related`, а `tasks duplicates unsure` — `tasks duplicates defer`**, без старых имён.
+  Почему: тот же общий словарь.
+  Что учесть: в MCP ищите команды `tasks related` и `tasks duplicates defer` через `max_tools_search`. Ключ прав —
+  `tasks.duplicates.defer`. Старый ключ `tasks.duplicates.unsure` в файле настроек теперь только предупреждает в
+  stderr и не действует, так что команда получает уровень `tasks`: уберите его через `config unset` и задайте
+  тот же уровень ключу `tasks.duplicates.defer`. В базе решение по-прежнему называется `unsure`.
 - **`tasks agenda` и `tasks duplicates` фильтруют полями запроса, а не флагами**: `tasks agenda --tag <имя>` →
-  `tag:<имя>`, `--category <имя>` → `category:<имя>`, `--claimed` → `claimed:any`; `tasks duplicates --unsure` →
-  `decision:unsure`. В MCP `tasks_agenda` и `tasks_duplicates` принимают `query`.
-- **Каждый ответ `--json` — конверт `item` или `items` + `page`**: предпросмотр `--dry-run` отвечает под `item`
-  с ключами `action_invoked` и `write_reserved`, ресурс MCP `max://chat/<id>` — тоже под `item`. Под `item`
-  теперь отвечают и `bot me`, `bot api …` (ответ Bot API — внутри `item` без изменений, пустой ответ — `null`),
-  `contacts sync`, `contacts lookup` (`displayName` → `display_name`, `lastMessagedAt` → `last_messaged_at`),
+  `tag:<имя>`, `--category <имя>` → `category:<имя>`, `--claimed` → `claimed:any` (ещё `none`, `mine`, `others`; по
+  умолчанию, как раньше, — ничьи и свои); `tasks duplicates --unsure` → `decision:unsure` (по умолчанию
+  `decision:review`).
+  Почему: список фильтрует база, как у остальных списков, а не программа после чтения.
+  Что учесть: OR или NOT, который смешивает поля задачи с `chat_kind:`, отклоняется (`query.unsupported-placement`).
+  В MCP эти команды принимают `query` вместо `tag`, `category`, `claimed` и `unsure`.
+- **Каждый ответ `--json` — конверт: `item` для одной вещи или `items` + `page` для списка, и `meta`.** Теперь так
+  отвечают и те, что отдавали голый объект: предпросмотр `--dry-run --json` (под `item`, ключи в snake_case:
+  `business_rules`, `action_invoked`, `write_reserved`, `messenger_contacted`, `configuration_read`),
+  `mentions confirm|reject` и `images embed --json`, `max_tools_search` в MCP (`{items, more}` →
+  `{items, page, meta}`) и ресурс MCP `max://chat/<id>` (чат и сообщения под `item`), а также `bot me`, `bot api …` (ответ Bot API — внутри `item` без изменений, пустой ответ —
+  `null`), `contacts sync`, `contacts lookup` (`displayName` → `display_name`, `lastMessagedAt` → `last_messaged_at`),
   `doctor report`, `doctor report create` (`sendTo` → `send_to`) и `setup` (`chats.hasMore` → `chats.has_more`).
+  Почему: агент разбирает любой ответ одним способом.
+  Что учесть: читайте поля из `.item`; вместо `more` — `page.has_more`.
+- **Повреждённая локальная копия переписки — ошибка, а не пустая копия** (cli-core 0.286.0). Раньше команда с
+  подключением к MAX молча обходилась без неё. Копию пропускают, только если её нет, если аккаунт ещё не записан
+  или если другой процесс (`serve`) держит её дольше 5 секунд.
+  Почему: ответ без копии выглядел полным, хотя в нём не хватало сохранённого.
+  Что учесть: такая ошибка — повод для `max <профиль> store repair --dry-run`.
+
+### Исправлено
+
+- **Подсказка следующего шага содержит профиль** (cli-core 0.286.0): после `max personal …` строка `→ …` тоже
+  начинается с `max personal`, и вставленная как есть она работает, а не просит выбрать профиль.
+
+### Удалено
+
+- **Открытие базы больше не удаляет старый файл `messages.db`** и не пишет об этом в stderr (cli-core 0.286.0).
+  Если файл остался от давних версий, удалите его сами.
 
 ## 0.54.0 — 15.10.2026
 
