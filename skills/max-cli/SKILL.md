@@ -248,6 +248,11 @@ max personal tasks list state:open --json              # что ждёт отв�
 max personal tasks add <ссылка> --type request --category documents --json
 # выход 2 task.duplicate-candidates: возможно, это та же задача; повторите с --into <задача> или --new
 max personal tasks duplicates --json               # пары, которые могут быть одной задачей; tasks merge <дубль> --into <задача>
+max personal tasks duplicates reject <дубль> <задача>   # не одна задача; defer — решит владелец (decision:unsure); tasks unmerge <дубль> отменяет merge
+max personal tasks related <задача> --json         # похожие задачи с полосой likely|maybe|different; ничего не меняет
+max personal tasks agenda category:money tag:urgent --json   # план на сегодня; claimed:any — и занятые другими
+max personal tasks claim <задача> --json           # занять, пока работаешь (30m, --lease); tasks release <задача> — отдать
+max personal tasks categories --json             # категории; список один на хранилище (tg, max, memo), меняет его только владелец: max config set task_categories.<имя>
 max personal tasks close <задача> --as dismissed --reason no-reply-needed --json   # только когда владелец так решил
 max personal watch --jsonl                              # новые сообщения по мере прихода; `max personal serve` запустится сам
 max personal watch --events --jsonl                     # плюс правки, удаления, реакции, прочтения, изменения чатов; поле "event"
@@ -492,6 +497,9 @@ max personal mentions list domain:google.com kind:url --json
 max personal mentions show 12 --json
 max personal mentions rebuild
 max personal mentions confirm 12 person:<uid>
+max personal mentions confirm 12 person:<uid> --all-in-chat   # имя: и все нерешённые места с ним в этом чате
+max personal mentions list --new --json        # нерешённое с прошлого --new
+max personal mentions domains --json           # сайты, на которые ведут ссылки, самые частые сверху
 max personal mentions reject 12
 ```
 

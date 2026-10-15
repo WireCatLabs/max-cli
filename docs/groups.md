@@ -257,6 +257,36 @@ max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promi
 max personal tasks close <задача> --as dismissed --reason no-reply-needed
 ```
 
+Пару, которая не одна задача, `tasks duplicates reject` убирает насовсем; `tasks duplicates defer` оставляет
+её вам, и её показывает `tasks duplicates decision:unsure`. `tasks related <задача>` оценивает похожие задачи
+и ничего не меняет, а `tasks unmerge` отменяет объединение:
+
+```sh
+max personal tasks related <задача>
+max personal tasks duplicates decision:unsure
+max personal tasks duplicates reject <дубль> <задача>
+max personal tasks unmerge <дубль>
+```
+
+План на сегодня фильтруется полями запроса. Когда работают два агента, один сначала занимает задачу;
+бронь заканчивается сама через 30 минут, `--lease` меняет срок, `tasks release` отдаёт задачу раньше:
+
+```sh
+max personal tasks agenda category:money tag:urgent
+max personal tasks claim <задача> --lease 2h
+max personal tasks release <задача>
+```
+
+`tasks categories` показывает список категорий. Он один на всё хранилище и общий для `tg`, `max` и
+`memo`; `config set task_categories.<имя>` добавляет или меняет категорию — смысл, затем слова, по которым её
+выбирает правило:
+
+```sh
+max config set task_categories.travel "поездки и билеты | рейс, отель, es:vuelo"
+```
+
+Подробнее — на странице [Задачи](https://wirecat.dev/ru/docs/tasks).
+
 Посмотрите открытые задачи по чатам, самую старую и медиану времени до закрытия:
 
 ```sh
