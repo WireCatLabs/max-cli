@@ -547,7 +547,7 @@ export const UNTESTED: Untested[] = [
   {
     command: "mcp",
     reason:
-      "serves MCP over stdio until the client closes; src/mcp.test.ts drives createMaxServer with the same options",
+      "serves MCP over stdio until the client closes; it is cli-core's mcpCommand, tested there with a fake messenger",
   },
   ...["--allow-writes", "--permission"].map((option) => ({
     command: "mcp setup",
@@ -560,14 +560,11 @@ export const UNTESTED: Untested[] = [
     reason:
       "starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
   },
-  ...["", "--allow-send", "--confirm-send", "--allow-dangerous", "--allow-delete", "--allow-moderate"].map(
-    (option) => ({
-      command: "bot mcp",
-      ...(option ? { option } : {}),
-      reason:
-        "serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools",
-    }),
-  ),
+  {
+    command: "bot mcp",
+    reason:
+      "serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools",
+  },
   {
     command: "doctor",
     option: "--online",

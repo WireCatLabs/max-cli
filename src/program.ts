@@ -8,6 +8,7 @@ import {
   floodCommand,
   imagesCommand,
   inboxCommand,
+  mcpCommand,
   mentionsCommand,
   metadataCommand,
   type ProgramDefinition,
@@ -40,7 +41,6 @@ import { configCommand } from "./commands/config.js"
 import { contactsCommand } from "./commands/contacts.js"
 import { type Environment, provide } from "./commands/context.js"
 import { doctorCommand } from "./commands/doctor.js"
-import { mcpCommand } from "./commands/mcp.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
 import { recipientsCommand } from "./commands/recipients.js"
@@ -115,7 +115,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     commandsCommand(),
     upgradeCommand(),
     completeCommand(),
-    mcpCommand(),
+    mcpCommand(maxMessenger),
     botCommand(run),
   ],
   configure: (program) => {

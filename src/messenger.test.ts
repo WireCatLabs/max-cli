@@ -153,6 +153,24 @@ describe("the MAX messenger's connection", () => {
       { chatId: "111", kind: "reaction", outcome: "sent", operationId: "op-1" },
     ])
   })
+  it("over MCP asks no one: the asker the server hands it lets a write at level ask go ahead", async () => {
+    const { program } = commandFor("m-ask")
+    const settings = maxMessenger.resolveSettings({ profile: "m-ask" })
+    const asked: string[] = []
+    const request = { chatId: "111", kind: "delete" as const, count: 1, key: "messages.delete" }
+    const overMcp = maxMessenger.guard?.(
+      program,
+      settings,
+      () => {},
+      async (key) => {
+        asked.push(key)
+      },
+    )
+    await expect(overMcp?.ask?.(request)).resolves.toBeUndefined()
+    expect(asked).toEqual(["messages.delete"])
+    await expect(maxMessenger.guard?.(program, settings, () => {})?.ask?.(request)).rejects.toThrow()
+  })
+
   it("consumes the applied receipt only for its operation", async () => {
     const profile = "m-applied"
     const { program } = commandFor(profile, { [Opcode.SESSIONS_CLOSE]: {} }, { [Opcode.SESSIONS_INFO]: "login.token" })

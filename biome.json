@@ -29,7 +29,7 @@
   },
   "overrides": [
     {
-      "includes": ["src/commands/**", "src/mcp/**"],
+      "includes": ["src/commands/**"],
       "linter": {
         "rules": {
           "style": {
