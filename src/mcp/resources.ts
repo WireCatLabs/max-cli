@@ -1,6 +1,6 @@
 import { type McpServer, ResourceTemplate } from "@modelcontextprotocol/server"
 import { visibleControls } from "@wirecat/cli-base"
-import { answerMcpTool } from "@wirecat/cli-core/cli"
+import { answerMcpTool, itemOf } from "@wirecat/cli-core/cli"
 import { openStore } from "@wirecat/cli-core/store"
 import type { SessionStore } from "../session/store.js"
 import { SKILL_RESOURCE } from "../skill.js"
@@ -60,7 +60,11 @@ export const registerResources = (
       })
       return {
         contents: [
-          { uri: uri.href, mimeType: "application/json", text: JSON.stringify(answerMcpTool(body).structuredContent) },
+          {
+            uri: uri.href,
+            mimeType: "application/json",
+            text: JSON.stringify(answerMcpTool(itemOf(body)).structuredContent),
+          },
         ],
       }
     },

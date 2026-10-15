@@ -1655,7 +1655,9 @@ describe("MCP prompts and resources", () => {
       ["max://chat/222", "Team Beta"],
     ])
     const body = JSON.parse(String((read.contents[0] as { text: string }).text))
-    expect(body).toMatchObject({ chat: { id: "111", title: "Team Alpha" }, messages: [{ id: "116762160362694583" }] })
+    expect(body).toMatchObject({
+      item: { chat: { id: "111", title: "Team Alpha" }, messages: [{ id: "116762160362694583" }] },
+    })
     expect(logins()).toBe(1)
   })
 })
@@ -1675,7 +1677,9 @@ describe("the skill as an MCP resource", () => {
     )
     const read = await rawClient.readResource({ uri: "max://chat/111" })
     const first = read.contents[0]
-    expect(first && "text" in first && JSON.parse(first.text).messages[0].text).toBe("a\\u{e0041}\\x85\\u202e\\ufeffb")
+    expect(first && "text" in first && JSON.parse(first.text).item.messages[0].text).toBe(
+      "a\\u{e0041}\\x85\\u202e\\ufeffb",
+    )
   })
   it("serves SKILL.md as max://skill without logging in", async () => {
     const { logins, rawClient } = await connect()
