@@ -268,11 +268,19 @@ max personal tasks duplicates reject <дубль> <задача>
 max personal tasks unmerge <дубль>
 ```
 
-План на сегодня фильтруется полями запроса. Когда работают два агента, один сначала занимает задачу;
-бронь заканчивается сама через 30 минут, `--lease` меняет срок, `tasks release` отдаёт задачу раньше:
+`tasks agenda` и `tasks duplicates` фильтруются полями запроса:
+
+- `tag:` и `category:` оставляют задачи с этой меткой или категорией: `tag:urgent`, `category:money`.
+- `claimed:` — чья бронь на задаче: `none`, `mine`, `others` или `any`. Без этого поля план показывает
+  свободные задачи и ваши; `claimed:any` показывает все.
+- `decision:` выбирает пары дублей: `review`, по умолчанию, ждут проверяющего агента, а `unsure` ждут вас:
+  `decision:unsure`.
+
+Когда работают два агента, один сначала занимает задачу; бронь заканчивается сама через 30 минут,
+`--lease` меняет срок, `tasks release` отдаёт задачу раньше:
 
 ```sh
-max personal tasks agenda category:money tag:urgent
+max personal tasks agenda category:money tag:urgent claimed:any
 max personal tasks claim <задача> --lease 2h
 max personal tasks release <задача>
 ```
