@@ -54,10 +54,10 @@ describe("MAX guided setup", () => {
     const h = harness()
     expect(await h.setup("--json")).toBe(0)
     const output = h.streams.stdout.join("\n")
-    expect(JSON.parse(output)).toMatchObject({
+    expect(JSON.parse(output).item).toMatchObject({
       profile: "setup-test",
       session: { reused: true },
-      chats: { checked: 5, hasMore: true },
+      chats: { checked: 5, has_more: true },
       agent: { name: "none", written: [] },
       next: { instructions: "max setup-test skill show", chats: "max setup-test chats list --limit 5" },
     })
@@ -77,7 +77,7 @@ describe("MAX guided setup", () => {
     h.environment.stdin = input
     expect(await h.setup("--method", "token", "--agent", "none", "--json")).toBe(0)
     expect(h.store.readToken()).toBe("new-setup-token")
-    expect(JSON.parse(h.streams.stdout.join("\n"))).toMatchObject({ session: { reused: false } })
+    expect(JSON.parse(h.streams.stdout.join("\n")).item).toMatchObject({ session: { reused: false } })
     expect(h.streams.stdout.join("\n") + h.streams.stderr.join("\n")).not.toContain("new-setup-token")
   })
 
@@ -226,7 +226,7 @@ describe("MAX guided setup", () => {
     vi.stubEnv("USERPROFILE", home)
     const h = harness()
     expect(await h.setup("--agent", agent, "--json")).toBe(0)
-    const { agent: result } = JSON.parse(h.streams.stdout.join("\n"))
+    const { agent: result } = JSON.parse(h.streams.stdout.join("\n")).item
     expect(result.name).toBe(agent)
     expect(result.written).toHaveLength(agent === "all" ? 2 : 1)
     for (const path of result.written) {
@@ -252,7 +252,7 @@ describe("MAX guided setup", () => {
     const h = harness()
     h.environment.update = { scriptPath: "/tmp/.npm/_npx/abc/node_modules/@wirecat/max-cli/dist/bin/max.js" }
     expect(await h.setup("--json")).toBe(0)
-    expect(JSON.parse(h.streams.stdout.join("\n")).next.instructions).toContain(
+    expect(JSON.parse(h.streams.stdout.join("\n")).item.next.instructions).toContain(
       "exec --yes --package=@wirecat/max-cli -- max setup-test skill show",
     )
   })

@@ -190,8 +190,9 @@ describe("contacts", () => {
         .map((login) => login.contactsSync)
         .slice(1),
     ).toEqual([1789776000000, 0])
-    expect(Object.keys(JSON.parse(synced.stdout)).sort()).toEqual(["added", "changed", "full", "known"])
-    expect(JSON.parse(synced.stdout)).toMatchObject({ full: true })
+    const { item } = JSON.parse(synced.stdout)
+    expect(Object.keys(item).sort()).toEqual(["added", "changed", "full", "known"])
+    expect(item).toMatchObject({ full: true })
     for (const name of ["Carol", "Alice", "Bob"]) expect(synced.stdout + synced.stderr).not.toContain(name)
   })
 
@@ -201,7 +202,7 @@ describe("contacts", () => {
 
     expect(found.code).toBe(0)
     expect(sent(Opcode.CONTACT_INFO_BY_PHONE)).toEqual([{ phone: PHONE }])
-    expect(JSON.parse(found.stdout)).toMatchObject({ id: "20000002", name: "Found Person" })
+    expect(JSON.parse(found.stdout).item).toMatchObject({ id: "20000002", name: "Found Person" })
     expect(found.stderr).not.toContain("1234567890")
     expectNowhereOnDisk("1234567890")
   })

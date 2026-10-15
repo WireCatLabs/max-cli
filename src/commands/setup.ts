@@ -2,7 +2,7 @@ import { accessSync, constants, mkdirSync } from "node:fs"
 import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installSkill, type SkillTarget } from "@wirecat/cli-base/skill"
-import { REMOTE_WRITE, runtime } from "@wirecat/cli-core/cli"
+import { itemOf, REMOTE_WRITE, renderAnswer, runtime, snakeKeys } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
@@ -98,7 +98,7 @@ export const setupCommand = (): Command =>
     )
     .action(async function (this: Command) {
       const context = forCommand(this)
-      const { settings, renderer, store } = context
+      const { settings, store } = context
       const options = this.opts<{ agent?: Agent; method: Method }>()
       refuseCommandName(settings.profile, commandWords(rootOf(this)))
       if (this.optsWithGlobals().offline)
@@ -178,7 +178,7 @@ export const setupCommand = (): Command =>
           next,
         }
       })
-      if (context.format !== "pretty") renderer.result(answer)
+      if (context.format !== "pretty") renderAnswer(this, context, itemOf(snakeKeys(answer)))
       else {
         const rows = {
           "Try now": answer.next.chats,

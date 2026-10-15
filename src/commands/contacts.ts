@@ -1,6 +1,13 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { FETCH, REMOTE_READ, contactsCommand as sharedContactsCommand } from "@wirecat/cli-core/cli"
+import {
+  FETCH,
+  itemOf,
+  REMOTE_READ,
+  renderAnswer,
+  contactsCommand as sharedContactsCommand,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
@@ -34,7 +41,8 @@ export const contactsCommand = (): Command => {
   annotate(command.command("sync"), { effects: FETCH })
     .description("forget where the last sync left off and take the whole list again")
     .action(async function (this: Command) {
-      const { renderer, createClient, run, store } = forCommand(this)
+      const context = forCommand(this)
+      const { renderer, createClient, run, store } = context
       const record = maxRecord({ account: () => store.readState().viewerId })
 
       await run("contacts sync", async (events) => {
@@ -42,7 +50,7 @@ export const contactsCommand = (): Command => {
 
         try {
           const summary = await client.contacts.sync()
-          renderer.result(summary)
+          renderAnswer(this, context, itemOf(snakeKeys(summary)))
           renderer.success(`${summary.added} new, ${summary.changed} changed, ${summary.known} people known`)
         } finally {
           await client.close()
@@ -65,7 +73,8 @@ export const contactsCommand = (): Command => {
           "the phone number is never an argument — pipe it in, or type it when asked",
         )
       }
-      const { renderer, createClient, run, ask, store } = forCommand(this)
+      const context = forCommand(this)
+      const { createClient, run, ask, store } = context
       const phone = await ask("phone number: ")
       const record = maxRecord({ account: () => store.readState().viewerId })
 
@@ -73,7 +82,7 @@ export const contactsCommand = (): Command => {
         const client = createClient({ events, record })
 
         try {
-          renderer.result(await client.contacts.lookup(phone))
+          renderAnswer(this, context, itemOf(snakeKeys(await client.contacts.lookup(phone))))
         } finally {
           await client.close()
           await record.close()
