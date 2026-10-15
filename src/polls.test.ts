@@ -1,4 +1,5 @@
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { pollLines } from "@wirecat/cli-core"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
@@ -6,7 +7,6 @@ import { toPoll } from "./domain/map.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
-import { pollLines } from "./rendering/messages.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { buildRequest } from "./spec/define.js"
@@ -97,29 +97,30 @@ const journalOf = (profile: string) => new SendJournal(sendsPathFor(profile)).en
 
 describe("reading a poll", () => {
   it("unpacks the settings bits and marks the owner's own answer", () => {
-    expect(toPoll(pollAttach({ settings: MULTIPLE | CLOSED, mine: true }))).toEqual({
-      id: "900",
+    expect(toPoll(pollAttach({ settings: MULTIPLE | CLOSED, mine: true }), "111", MESSAGE)).toEqual({
+      chatId: "111",
+      messageId: MESSAGE,
       question: "Lunch?",
       answers: [
-        { id: "1", text: "Yes", votes: 2, mine: true },
-        { id: "2", text: "No", votes: 1, mine: false },
+        { id: "1", text: "Yes", voters: 2, chosen: true },
+        { id: "2", text: "No", voters: 1, chosen: false },
       ],
-      total: 3,
+      closed: true,
       multiple: true,
       anonymous: false,
-      revote: false,
-      closed: true,
+      voters: 3,
       quiz: false,
+      revote: false,
     })
   })
 
   it("reads version 2, which MAX gives every new poll, and nothing newer", () => {
-    expect(toPoll(pollAttach({ version: 2 }))?.id).toBe("900")
-    expect(toPoll(pollAttach({ version: 3 }))).toBeUndefined()
+    expect(toPoll(pollAttach({ version: 2 }), "111", MESSAGE)?.question).toBe("Lunch?")
+    expect(toPoll(pollAttach({ version: 3 }), "111", MESSAGE)).toBeUndefined()
   })
 
   it("prints the answer ids `polls vote` takes, the votes, and a tick on the owner's own", () => {
-    const poll = toPoll(pollAttach({ settings: CLOSED, mine: true }))
+    const poll = toPoll(pollAttach({ settings: CLOSED, mine: true }), "111", MESSAGE)
     expect(poll && pollLines(poll)).toEqual(["📊 Lunch?", "  [1] Yes — 2 ✓", "  [2] No — 1", "  3 voted · closed"])
   })
 })

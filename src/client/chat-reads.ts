@@ -1,20 +1,11 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Chat, ChatEvents, Contact, Id, JoinRequest, Message, Page } from "@wirecat/cli-core"
 import { namesFrom, toChat, toGroupCard, toGroupMember } from "../domain/map.js"
-import type {
-  Chat,
-  ChatCard,
-  ChatEvents,
-  Contact,
-  GroupCard,
-  Id,
-  JoinRequest,
-  Message,
-  Page,
-} from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { MaxRecord } from "../record.js"
 import { isId, pickChat } from "../resolve.js"
+import { type ChatCard, type GroupCard, maxRef } from "./shapes.js"
 import {
   asArray,
   checkedQuery,
@@ -140,14 +131,15 @@ export const createChatReads = (deps: Dependencies) => {
       const { messages: read, more } = await deps.chatsSince(chatId, since)
 
       const found = read.flatMap((message) =>
-        message.attachments
-          .filter((attachment) => attachment.kind === "control" && attachment.event !== undefined)
-          .map((attachment) => ({ message, attachment })),
+        message.attachments.flatMap((attachment) => {
+          const { event, userIds = [] } = maxRef(attachment)
+          return attachment.kind === "control" && event !== undefined ? [{ message, attachment, event, userIds }] : []
+        }),
       )
       const contacts = namesFrom(deps.session().contacts)
       const ids = [
         ...new Set([
-          ...found.flatMap(({ attachment }) => attachment.userIds ?? []),
+          ...found.flatMap(({ userIds }) => userIds),
           ...found.flatMap(({ message }) =>
             message.senderName === null && message.senderId ? [message.senderId] : [],
           ),
@@ -160,12 +152,12 @@ export const createChatReads = (deps: Dependencies) => {
         chatId,
         since: new Date(since).toISOString(),
         more,
-        events: found.map(({ message, attachment }) => ({
+        events: found.map(({ message, attachment, event, userIds }) => ({
           messageId: message.id,
           timestamp: message.timestamp,
-          event: attachment.event ?? "",
+          event,
           by: { id: message.senderId, name: message.senderName ?? (message.senderId && nameOf(message.senderId)) },
-          people: (attachment.userIds ?? []).map((id) => ({ id, name: nameOf(id) })),
+          people: userIds.map((id) => ({ id, name: nameOf(id) })),
           ...(attachment.title ? { title: attachment.title } : {}),
         })),
       }

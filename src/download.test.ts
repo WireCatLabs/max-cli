@@ -3,8 +3,8 @@ import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
 import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import type { AttachmentLink } from "@wirecat/cli-core"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
-import type { AttachmentLink } from "./domain/models.js"
 import { fetchBytes, httpOnly, type Reach, streamBytes, watchdog } from "./download.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -351,7 +351,7 @@ describe("max messages download", () => {
 })
 
 describe("fetchBytes, for a voice message", () => {
-  const voice = (path: string): AttachmentLink => ({ kind: "audio", url: `${origin}${path}` })
+  const voice = (path: string): AttachmentLink => ({ kind: "voice", url: `${origin}${path}` })
 
   it("refuses a body its length says is too large, without reading it", async () => {
     await expect(fetchBytes(voice("/huge"), anywhere)).rejects.toMatchObject({ code: "validation_error" })

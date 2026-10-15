@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Chat, Id, Message, MessageHit, Page, Poll } from "@wirecat/cli-core"
 import { namesFrom, toMessage, toPoll, toReactions } from "../domain/map.js"
-import type { Chat, Id, Message, MessageHit, Page, Poll } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { SessionStore } from "../session/store.js"
@@ -108,19 +108,23 @@ export const createHistory = (deps: Dependencies) => {
     return (await deps.chatsList()).items.find((candidate) => candidate.id === chatId)?.title ?? null
   }
 
-  async function poll(chatId: Id, messageId: Id): Promise<{ attach: Payload; poll: Poll; outgoing: boolean }> {
+  async function poll(
+    chatId: Id,
+    messageId: Id,
+  ): Promise<{ attach: Payload; poll: Poll; pollId: Id; outgoing: boolean }> {
     const raw = await rawMessage(chatId, messageId)
     const attach = asArray(raw.attaches).find((each) => each._type === "POLL")
     if (!attach) throw new CliError("validation_error", `message ${messageId} carries no poll`)
-    const poll = toPoll(attach)
-    if (!poll)
+    const poll = toPoll(attach, chatId, messageId)
+    const pollId = asId(attach.pollId)
+    if (!poll || !pollId)
       throw new CliError(
         "validation_error",
         `the poll of message ${messageId} is a newer kind this version cannot read`,
       )
     if (poll.closed) throw new CliError("validation_error", `the poll of message ${messageId} is closed`)
     const lookup = { names: namesFrom(deps.session().contacts), ...viewer(deps.store) }
-    return { attach, poll, outgoing: toMessage(raw, chatId, lookup).outgoing === true }
+    return { attach, poll, pollId, outgoing: toMessage(raw, chatId, lookup).outgoing === true }
   }
   return {
     history: history,

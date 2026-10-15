@@ -91,11 +91,13 @@ the adapter.
   `src/generated/`**: a Biome rule fails the build with that sentence. Verified by writing the
   forbidden import, both directions.
 - **A second rule marks what any messenger CLI could share** (`CLI-30`, `NEED-147`; was `CLI-26`, a number taken three times):
-  `src/domain/models.ts`, `src/rendering/` and `src/resolve.ts` may not import the
-  protocol, the specification, the generated wrappers, the session, the client or the commands.
-  The files stay where they are; a future `cli-messenger` package is a move of exactly these, not
-  an untangling. `src/domain/map.ts` is outside it on purpose — it is where MAX becomes the model.
-  Verified by a forbidden import in each of the four places.
+  `src/resolve.ts` may not import the protocol, the specification, the generated wrappers, the
+  session, the client or the commands. The domain model and the message feed are cli-core's own
+  (`Message`, `Attachment`, `Poll`…, `renderMessages`); `src/domain/map.ts` builds them straight from
+  the wire, and keeps what only MAX has — a file's or a video's id, a service message's event —
+  under `Attachment.providerRef`. The few shapes cli-core has no place for (`max watch --events`'s
+  reads and chat changes, a group's access and settings, a contact import) live in
+  `src/client/shapes.ts` and stay inside the client and the adapter.
 - **The newer directories have rules too** (2026-10-01): `src/adapter/` keeps off the wire, the
   commands, MCP, `max serve`, the shared store and the bot; `src/session/` off the commands, MCP, the shared store,
   the adapter and the bot; `src/server/` off the commands, MCP, the adapter, `program.ts` and the

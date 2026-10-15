@@ -5,10 +5,10 @@ holds, and what an attachment carries.
 
 ## The feed
 
-`messages list` and `search messages` print a feed, not a table (`src/rendering/messages.ts`):
+`messages list`, `search messages` and `max watch` print a feed, not a table (cli-core's `renderMessages`):
 
 - a date line when the day changes; `hh:mm:ss  sender` and the text below, aligned;
-- `↳` for what a reply answers, `↪` for a forward, `📎` per attachment, and a line of reactions;
+- `↳` for what a reply answers, `↪` for a forward, `📎` per attachment, `📊` and its answers for a poll, and a line of reactions;
 - `-v` adds ids, `-vv` everything the model holds.
 
 Pure functions return the string; the command writes it. Widths use `string-width`, never `length`,

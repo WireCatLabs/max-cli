@@ -1,7 +1,7 @@
 import { CliError } from "@wirecat/cli-base"
+import type { AccountSession, CallRecord, Id, Page, PrivacySettings, Profile } from "@wirecat/cli-core"
 import type { Upload as SharedUpload } from "@wirecat/cli-core/sends"
 import { fromPrivacy, toCallRecord, toPrivacy, toProfile, toSession } from "../domain/map.js"
-import type { AccountSession, CallRecord, Id, Page, PrivacySettings, Profile } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asFirstWord } from "../profile.js"
 import { asId, type Payload } from "../protocol/frame.js"

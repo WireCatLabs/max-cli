@@ -1,12 +1,13 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Chat, ChatKind, Id, Message, Page } from "@wirecat/cli-core"
 import { providerErrorKey } from "@wirecat/cli-core/cli"
 import type { ChatAction, Upload as SharedUpload } from "@wirecat/cli-core/sends"
-import type { Chat, ChatKind, GroupCard, Id, Message, Page } from "../domain/models.js"
 import { ProtocolError } from "../protocol/connection.js"
 import type { Payload } from "../protocol/frame.js"
 import type { Resume } from "../session/handshake.js"
 import { loginPausedUntil, type SessionState, type SessionStore } from "../session/store.js"
 import type { ASSET_TYPES } from "../spec/operations/assets.js"
+import type { GroupCard } from "./shapes.js"
 
 export interface ChatChange {
   chatId: Id
@@ -80,6 +81,11 @@ export const CONTACT_INFO_BATCH = 100
 
 export const CHATS_PAGE_SEEN = 26
 
+/**
+ * When a message was sent, read from its id: **`id >> 16` is the send time in milliseconds**, the
+ * low 16 bits a counter. Measured 2026-09-22 on three messages across two days, exact every time.
+ * `undefined` for anything that is not a message id.
+ */
 export const timeOfMessageId = (id: Id): number | undefined => {
   if (!/^\d{10,20}$/.test(id)) return undefined
   const time = Number(BigInt(id) >> 16n)

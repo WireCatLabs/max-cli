@@ -1,4 +1,5 @@
 import { realSleep } from "@wirecat/cli-base"
+import type { Id } from "@wirecat/cli-core"
 import { createAccount } from "./client/account.js"
 import { createChatMembers } from "./client/chat-members.js"
 import { createChatReads } from "./client/chat-reads.js"
@@ -18,7 +19,6 @@ import { createSession } from "./client/session.js"
 import { createStickers } from "./client/stickers.js"
 import { createUploadTransport } from "./client/upload-transport.js"
 import { createWrites } from "./client/writes.js"
-import type { Id } from "./domain/models.js"
 import { type Invoke, wireClient } from "./generated/client.generated.js"
 import { Connection, type Wire } from "./protocol/connection.js"
 

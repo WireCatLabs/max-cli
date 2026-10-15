@@ -9,7 +9,7 @@ import { Connection } from "../protocol/connection.js"
 import type { Payload } from "../protocol/frame.js"
 import { SessionStore } from "../session/store.js"
 import { mockMax } from "../testing/mock-max.js"
-import { maxAdapter, toMessage } from "./max-adapter.js"
+import { maxAdapter } from "./max-adapter.js"
 
 const OWNER = 10000001
 const MESSAGE = "116762160362694583"
@@ -187,9 +187,7 @@ describe("the MAX adapter", () => {
     const page = await adapter.history("Friends", { limit: 5 })
     const direct = await client.messages.list("111", { limit: 5 })
 
-    expect(page.items.map(({ counterObservations: _observations, ...message }) => message)).toEqual(
-      direct.items.map(toMessage),
-    )
+    expect(page.items.map(({ counterObservations: _observations, ...message }) => message)).toEqual(direct.items)
     expect(page.items[0]?.attachments).toMatchObject([
       { kind: "photo" },
       { kind: "file", name: "notes.pdf", providerRef: { fileId: "77" } },

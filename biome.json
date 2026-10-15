@@ -57,7 +57,7 @@
       }
     },
     {
-      "includes": ["src/domain/models.ts", "src/rendering/**", "src/resolve.ts"],
+      "includes": ["src/resolve.ts"],
       "linter": {
         "rules": {
           "style": {

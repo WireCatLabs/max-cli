@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Id } from "@wirecat/cli-core"
 import { toChat, toContact, toProfile } from "../domain/map.js"
-import type { Id } from "../domain/models.js"
 import type { Invoke, wireClient } from "../generated/client.generated.js"
 import { asFirstWord } from "../profile.js"
 import type { Wire } from "../protocol/connection.js"
