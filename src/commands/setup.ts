@@ -2,6 +2,7 @@ import { accessSync, constants, mkdirSync } from "node:fs"
 import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installSkill, type SkillTarget } from "@wirecat/cli-base/skill"
+import { type StepDefinition, stepOf } from "@wirecat/cli-base/standards"
 import { itemOf, REMOTE_WRITE, renderAnswer, runtime, snakeKeys } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { maskedProfile } from "../domain/map.js"
@@ -59,6 +60,22 @@ const agentFor = async (context: CommandContext, given: Agent | undefined, pad: 
   if (!AGENTS.includes(answer as Agent))
     throw new CliError("validation_error", `unknown agent — choose ${AGENTS.join(", ")} with --agent`)
   return answer as Agent
+}
+
+const SKILL_SHOW: StepDefinition = {
+  id: "setup.instructions",
+  kind: "command",
+  command: "skill show",
+  args: [],
+  why: "MAX is ready; this shows an agent how to use max",
+}
+
+const CHATS_LIST: StepDefinition = {
+  id: "setup.chats",
+  kind: "command",
+  command: "chats list",
+  args: [{ name: "limit", required: false }],
+  why: "this shows the newest chats; choose one before syncing its history",
 }
 
 export const setupCommand = (): Command =>
@@ -161,12 +178,6 @@ export const setupCommand = (): Command =>
           agent === "all" ? ["claude", "agents"] : [agent === "claude" ? "claude" : "agents"]
         context.signal.throwIfAborted()
         const written = agent === "none" ? [] : installSkill(SKILL_APP, SKILL, { targets, env: process.env })
-        const next = {
-          instructions: `${runner}skill show`,
-          chats: `${runner}chats list --limit 5`,
-          history: `${runner}messages sync <chat> --last 100`,
-          ...(agent === "none" ? { skill: `${runner}skill install` } : {}),
-        }
         return {
           profile: settings.profile,
           runtime: runtime(),
@@ -175,19 +186,23 @@ export const setupCommand = (): Command =>
           account: maskedProfile(account),
           chats: { checked: chats.items.length, hasMore: chats.hasMore },
           agent: { name: agent, written },
-          next,
         }
       })
-      if (context.format !== "pretty") renderAnswer(this, context, itemOf(snakeKeys(answer)))
+      if (context.format !== "pretty")
+        renderAnswer(
+          this,
+          context,
+          itemOf(snakeKeys(answer), { next: [stepOf(SKILL_SHOW), stepOf(CHATS_LIST, { args: { limit: 5 } })] }),
+        )
       else {
         const rows = {
-          "Try now": answer.next.chats,
-          History: `${answer.next.history}  (choose the chat and the amount first)`,
+          "Try now": `${runner}chats list --limit 5`,
+          History: `${runner}messages sync <chat> --last 100  (choose the chat and the amount first)`,
           "Agent skill":
             answer.agent.name === "none"
-              ? `skipped — install later: ${answer.next.skill}`
+              ? `skipped — install later: ${runner}skill install`
               : `installed for ${answer.agent.name}; start a new agent session if it is not found`,
-          "For an agent": answer.next.instructions,
+          "For an agent": `${runner}skill show`,
         }
         context.streams.data(
           `\n✓ MAX is ready — profile ${settings.profile}, ${chatCount(answer.chats.checked)} checked\n\n` +
