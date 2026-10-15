@@ -1,6 +1,14 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { itemOf, LOCAL_READ, LOCAL_WRITE, listOf, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
+import {
+  grantsAuthority,
+  itemOf,
+  LOCAL_READ,
+  LOCAL_WRITE,
+  listOf,
+  renderAnswer,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { recipientListFor } from "../sends.js"
 import { forCommand } from "./context.js"
@@ -28,7 +36,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  annotate(command.command("add"), { effects: LOCAL_WRITE })
+  grantsAuthority(annotate(command.command("add"), { effects: LOCAL_WRITE }))
     .argument("<chat>", "chat id, or part of a chat name")
     .description("allow sending to this chat; the first add turns the list on")
     .action(async function (this: Command, chat: string) {
@@ -52,7 +60,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  annotate(command.command("remove"), { effects: LOCAL_WRITE })
+  grantsAuthority(annotate(command.command("remove"), { effects: LOCAL_WRITE }))
     .argument("<chat>", "chat id, or the title as the list shows it")
     .description("stop allowing this chat; the list stays on")
     .action(async function (this: Command, chat: string) {
@@ -64,7 +72,7 @@ export const recipientsCommand = (): Command => {
       })
     })
 
-  annotate(command.command("clear"), { effects: LOCAL_WRITE })
+  grantsAuthority(annotate(command.command("clear"), { effects: LOCAL_WRITE }))
     .description("empty the list and turn it off: this profile may send to any chat again")
     .action(async function (this: Command) {
       const { settings, renderer, format, streams, run } = forCommand(this)

@@ -141,3 +141,22 @@ describe("the owner's own settings", () => {
     }
   })
 })
+
+describe("the read-only lock on max's own commands", () => {
+  it("refuses the local writes that would let a later run send, and still reads", async () => {
+    const { environment } = messenger()
+    const locked: Environment = { ...environment, env: { ...process.env, MAX_READ_ONLY: "1" } }
+    for (const argv of [
+      ["config", "set", "permissions.chats", "readonly"],
+      ["config", "unset", "permissions.chats"],
+      ["recipients", "add", "111"],
+      ["recipients", "clear"],
+      ["mcp", "setup", "claude-code"],
+    ]) {
+      const { code, stderr } = await runWith(["s-locked", ...argv], locked)
+      expect(code, argv.join(" ")).toBe(5)
+      expect(stderr).toContain("MAX_READ_ONLY")
+    }
+    expect((await runWith(["s-locked", "config", "show"], locked)).code).toBe(0)
+  })
+})
