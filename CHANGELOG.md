@@ -9,26 +9,28 @@
 ### Изменено — может сломать скрипты
 
 - **Флаги общих команд называются по общему словарю, старые имена больше не принимаются** (cli-core 0.288.0):
-  `--budget` → `--max-pages`; `messages sync --estimate` → `--dry-run`; `contacts context --refresh`,
-  `bot contacts show --refresh` и `tags auto --refresh-metadata` → `--sync-first`; `search conversations --refresh` →
-  `--catch-up`; `attachments show --if-sha256` → `--expected-fingerprint`; в `replies edit` `--chats`, `--not-chats`,
-  `--people`, `--not-people` → `--allow-chats`, `--deny-chats`, `--allow-people`, `--deny-people` (файл правил не
-  меняется); `schedule --once` → `--at-time`; `bot chats moderate --no-ban` → `--no-block`; `chats mark-read --until` →
+  `--budget` → `--max-pages`; `messages sync --estimate` → `--dry-run` (в max он по-прежнему отклоняется: id
+  сообщений MAX не говорят, сколько их пропущено); `contacts context --refresh`, `bot contacts show --refresh` и
+  `tags auto --refresh-metadata` → `--sync-first`; `search conversations --refresh` → `--catch-up`;
+  `attachments show --if-sha256` → `--expected-fingerprint`; в `replies edit` `--chats`, `--not-chats`, `--people`,
+  `--not-people` → `--allow-chats`, `--deny-chats`, `--allow-people`, `--deny-people` (файл правил не меняется);
+  `schedule --once` → `--at-time`; `bot chats moderate --no-ban` → `--no-block`; `chats mark-read --until` →
   `--until-id`; `tasks add|plan --check` → `--remind-time`; `tasks add --attach` → `--into`; `tasks claim --for` →
   `--lease`; `tasks agenda --due` → `--due-within`; `server logs --lines` → `--limit` (`-n` остаётся); в `chats start`
   `--payload` → `--start`, как в `chats app`; `store export --to/--kind` → `--output-dir/--include`.
   Почему: у max, tg и других CLI WireCat одно слово значит одно и то же, и агенту не нужно помнить имя флага для
   каждой программы.
   Что учесть: старое имя завершает команду с кодом 2 («unknown option») до подключения к MAX — проверьте скрипты и
-  расписания (`schedule list`). В MCP аргументы переименованы так же: `max_pages`, `until_id`,
-  `expected_fingerprint`, `sync_first`, `remind_time`, `into`, `lease`, `due_within`. В `search conversations` не
-  меняйте `--refresh` на `--sync-first`: этот флаг уже был и сначала читает новые сообщения из MAX, а прежнюю
-  сборку поиска делает `--catch-up`.
+  расписания (`schedule list`). В MCP аргумент — новое имя флага в snake_case, например `max_pages`, `until_id`,
+  `expected_fingerprint`, `output_dir`, `allow_chats`, `at_time`. В `search conversations` не меняйте `--refresh` на
+  `--sync-first`: этот флаг уже был и сначала читает новые сообщения из MAX, а прежнюю сборку поиска делает
+  `--catch-up`.
 - **`tasks similar` теперь `tasks related`, а `tasks duplicates unsure` — `tasks duplicates defer`**, без старых имён.
   Почему: тот же общий словарь.
   Что учесть: в MCP ищите команды `tasks related` и `tasks duplicates defer` через `max_tools_search`. Ключ прав —
-  `tasks.duplicates.defer`: если в `permissions` был `tasks.duplicates.unsure`, переименуйте его. В базе решение
-  по-прежнему называется `unsure`.
+  `tasks.duplicates.defer`. Старый ключ `tasks.duplicates.unsure` в файле настроек теперь только предупреждает в
+  stderr и не действует, так что команда получает уровень `tasks`: уберите его через `config unset` и задайте
+  тот же уровень ключу `tasks.duplicates.defer`. В базе решение по-прежнему называется `unsure`.
 - **`tasks agenda` и `tasks duplicates` фильтруют полями запроса, а не флагами**: `tasks agenda --tag <имя>` →
   `tag:<имя>`, `--category <имя>` → `category:<имя>`, `--claimed` → `claimed:any` (ещё `none`, `mine`, `others`; по
   умолчанию, как раньше, — ничьи и свои); `tasks duplicates --unsure` → `decision:unsure` (по умолчанию
@@ -48,6 +50,7 @@
 - **Повреждённая локальная копия переписки — ошибка, а не пустая копия** (cli-core 0.286.0). Раньше команда с
   подключением к MAX молча обходилась без неё. Копию пропускают, только если её нет, если аккаунт ещё не записан
   или если другой процесс (`serve`) держит её дольше 5 секунд.
+  Почему: ответ без копии выглядел полным, хотя в нём не хватало сохранённого.
   Что учесть: такая ошибка — повод для `max <профиль> store repair --dry-run`.
 
 ### Исправлено
