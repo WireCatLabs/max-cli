@@ -70,7 +70,7 @@ beforeAll(async () => {
 
 describe("tasks through max", () => {
   it("adds, lists, counts and closes a task in the local store without connecting", async () => {
-    const added = await cli(["tasks", "add", PROMISE, "--type", "promise", "--json"])
+    const added = await cli(["tasks", "add", PROMISE, "--type", "promise", "--category", "other", "--json"])
     expect(added.code, added.err).toBe(0)
     const { id } = JSON.parse(added.out).item
 
@@ -86,7 +86,32 @@ describe("tasks through max", () => {
     expect(JSON.parse(closed.out).item).toMatchObject({ state: "dismissed", reason: "no-reply-needed" })
   })
 
+  it("claims, tags and releases a task, and lists the categories", async () => {
+    const added = await cli(["tasks", "add", PROMISE, "--type", "request", "--category", "money", "--json"])
+    expect(added.code, added.err).toBe(0)
+    const { id } = JSON.parse(added.out).item
+
+    const claimed = await cli(["tasks", "claim", id, "--holder", "agent-a", "--for", "10m", "--json"])
+    expect(claimed.code, claimed.err).toBe(0)
+    expect(JSON.parse(claimed.out).item).toMatchObject({ claimed_by: "agent-a" })
+    expect((await cli(["tasks", "claim", id, "--holder", "agent-b", "--json"])).code).not.toBe(0)
+
+    expect((await cli(["tags", "add", "invoice", "--task", id, "--json"])).code).toBe(0)
+    expect((await cli(["tags", "remove", "invoice", "--task", id, "--json"])).code).toBe(0)
+
+    const released = await cli(["tasks", "release", id, "--holder", "agent-a", "--json"])
+    expect(released.code, released.err).toBe(0)
+    expect(JSON.parse(released.out).item).toMatchObject({ claimed_by: null })
+
+    const categories = await cli(["tasks", "categories", "--json"])
+    expect(categories.code, categories.err).toBe(0)
+    expect(categories.out).toContain("money")
+  })
+
   it("refuses task writes on a profile where tasks are read-only", async () => {
-    expect((await cli(["tasks", "add", PROMISE, "--type", "promise", "--json"], "tasks-readonly")).code).toBe(5)
+    expect(
+      (await cli(["tasks", "add", PROMISE, "--type", "promise", "--category", "other", "--json"], "tasks-readonly"))
+        .code,
+    ).toBe(5)
   })
 })

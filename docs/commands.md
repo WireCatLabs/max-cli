@@ -2345,6 +2345,7 @@ max tasks add <message> [options]
 | Опция | Что делает |
 |---|---|
 | `--type <name>` | the task's type: question, request, mention or promise. |
+| `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …. |
 | `--title <text>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
 | `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
@@ -2352,7 +2353,7 @@ max tasks add <message> [options]
 
 ### `max tasks plan`
 
-set a task's title, description, due date and next check; nothing reaches the messenger
+set a task's title, description, due date, next check and category; nothing reaches the messenger
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2366,6 +2367,7 @@ max tasks plan <task> [options]
 
 | Опция | Что делает |
 |---|---|
+| `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …; a change is kept in the task's history. |
 | `--title <text>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
 | `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
@@ -2389,7 +2391,7 @@ max tasks link <task> [targets] [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat it concerns, repeatable; a chat: its id, or part of its title. |
-| `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by or follow-up-of. |
+| `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by, follow-up-of, duplicate-of or discovered-from. |
 
 ### `max tasks show`
 
@@ -2421,6 +2423,53 @@ max tasks agenda [query] [options]
 | `--unanswered <span>` | list chats where someone else wrote last this long ago (default 1d). |
 | `--waiting <span>` | list chats where you wrote last this long ago (default 7d). |
 | `--within <span>` | leave out chats silent longer than this: they ended (default 30d). |
+| `--claimed` | also list tasks someone else holds (tasks claim); hidden by default. |
+| `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
+
+### `max tasks categories`
+
+the categories a task takes, with what each means and the words a rule picks it by
+
+```sh
+max tasks categories
+```
+
+### `max tasks claim`
+
+take an open task so no other agent works it at once; the claim lapses by itself
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks claim <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--for <span>` | how long the claim lasts: 30m, 2h (default 30m); claiming again extends it. |
+| `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
+
+### `max tasks release`
+
+give back a task you claimed, before the claim lapses; the owner may release any
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks release <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
 ### `max tasks close`
 
@@ -2770,7 +2819,7 @@ max attachments text set <chat> [message] [options]
 
 ## `max tags`
 
-your own labels on chats, people and messages, kept in the local store and never sent; tag: in a search finds them
+your own labels on chats, people, messages and tasks, kept in the local store and never sent; tag: in a search finds them
 
 ### `max tags auto`
 
@@ -2791,7 +2840,7 @@ max tags auto [options]
 
 ### `max tags add`
 
-put tags on one chat, person or message
+put tags on one chat, person, message or task
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2808,10 +2857,11 @@ max tags add <tag> [options]
 | `--chat <chat>` | the chat to tag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to tag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to tag: its id in --chat, or a msg: locator alone. |
+| `--task <task>` | the task to tag: its id or key, as tasks list shows it. |
 
 ### `max tags remove`
 
-take tags off one chat, person or message
+take tags off one chat, person, message or task
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2828,11 +2878,12 @@ max tags remove <tag> [options]
 | `--chat <chat>` | the chat to untag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to untag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to untag: its id in --chat, or a msg: locator alone. |
+| `--task <task>` | the task to untag: its id or key, as tasks list shows it. |
 | `--source <manual\|auto>` | remove only this ownership claim. |
 
 ### `max tags list`
 
-what is tagged: this account's chats and messages, and the people of its messenger
+what is tagged: this account's chats, messages and tasks, and the people of its messenger
 
 ```sh
 max tags list [query]

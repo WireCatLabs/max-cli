@@ -279,10 +279,13 @@
   "tags remove",
   "tasks add",
   "tasks agenda",
+  "tasks categories",
+  "tasks claim",
   "tasks close",
   "tasks link",
   "tasks list",
   "tasks plan",
+  "tasks release",
   "tasks show",
   "upgrade",
   "watch"

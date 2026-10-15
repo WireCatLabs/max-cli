@@ -70,9 +70,9 @@ Commands:
                                wrote next
   attachments                  the files of stored messages: their text in the
                                local store, where search finds it
-  tags                         your own labels on chats, people and messages,
-                               kept in the local store and never sent; tag: in a
-                               search finds them
+  tags                         your own labels on chats, people, messages and
+                               tasks, kept in the local store and never sent;
+                               tag: in a search finds them
   mentions                     phones, e-mail, links, documents and people's
                                names found in stored messages
   images                       search pictures by what they show, with a model

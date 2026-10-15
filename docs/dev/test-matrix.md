@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**912 ✅ · 143 ⛔ · 0 ❌** — 333 commands, 722 options.
+**922 ✅ · 146 ⛔ · 0 ❌** — 336 commands, 732 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -420,11 +420,13 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks list` | `--limit` | ✅ |  |
 | `tasks add` |  | ✅ |  |
 | `tasks add` | `--type` | ✅ |  |
+| `tasks add` | `--category` | ✅ |  |
 | `tasks add` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks add` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks add` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks add` | `--check` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks plan` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--category` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks plan` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks plan` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks plan` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
@@ -438,6 +440,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks agenda` | `--unanswered` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks agenda` | `--waiting` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--claimed` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--holder` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks categories` |  | ✅ |  |
+| `tasks claim` |  | ✅ |  |
+| `tasks claim` | `--for` | ✅ |  |
+| `tasks claim` | `--holder` | ✅ |  |
+| `tasks release` |  | ✅ |  |
+| `tasks release` | `--holder` | ✅ |  |
 | `tasks close` |  | ✅ |  |
 | `tasks close` | `--as` | ✅ |  |
 | `tasks close` | `--reason` | ✅ |  |
@@ -534,10 +544,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tags add` | `--chat` | ✅ |  |
 | `tags add` | `--contact` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags add` | `--message` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags add` | `--task` | ✅ |  |
 | `tags remove` |  | ✅ |  |
 | `tags remove` | `--chat` | ✅ |  |
 | `tags remove` | `--contact` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
 | `tags remove` | `--message` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags remove` | `--task` | ✅ |  |
 | `tags remove` | `--source` | ✅ |  |
 | `tags list` |  | ✅ |  |
 | `mentions list` |  | ✅ |  |
@@ -932,6 +944,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot comments delete` | `--allow-dangerous` | ✅ |  |
 | `bot uploads put` |  | ✅ |  |
 | `bot uploads put` | `--type` | ✅ |  |
+| `bot uploads put` | `--allow-any-file` | ✅ |  |
 | `bot api get-my-info` |  | ✅ |  |
 | `bot api edit-my-commands` |  | ✅ |  |
 | `bot api edit-my-commands` | `--body` | ✅ |  |

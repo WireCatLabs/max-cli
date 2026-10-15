@@ -4,14 +4,16 @@ import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { refusedPlace } from "@wirecat/cli-core/sends"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { MAX_APP } from "./app.js"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
-import { openUpload, refusedPlace } from "./upload.js"
+import { openUpload } from "./upload.js"
 
 let server: Server
 let origin: string
@@ -386,7 +388,7 @@ describe("which places a file is refused from", () => {
     ".local/share/WireCat/backups/wirecat.db",
     "wirecat.db-wal",
   ])("~/%s", (place) => {
-    expect(refusedPlace(join(home, place), { env, platform: "linux" })).toBe(true)
+    expect(refusedPlace(join(home, place), MAX_APP, env, "linux")).toBe(true)
   })
 
   it.each([
@@ -397,13 +399,13 @@ describe("which places a file is refused from", () => {
     "Downloads/config.json",
     "Pictures/Chrome/screen.png",
   ])("not ~/%s", (place) => {
-    expect(refusedPlace(join(home, place), { env, platform: "linux" })).toBe(false)
+    expect(refusedPlace(join(home, place), MAX_APP, env, "linux")).toBe(false)
   })
 
   it("**ignores case where the file system does**: macOS and Windows, not Linux", () => {
     for (const place of [".SSH/id_rsa", ".Config/GH/hosts.yml", "Library/keychains/login.keychain-db"]) {
-      expect(refusedPlace(join(home, place), { env, platform: "darwin" })).toBe(true)
-      expect(refusedPlace(join(home, place), { env, platform: "linux" })).toBe(false)
+      expect(refusedPlace(join(home, place), MAX_APP, env, "darwin")).toBe(true)
+      expect(refusedPlace(join(home, place), MAX_APP, env, "linux")).toBe(false)
     }
   })
 })

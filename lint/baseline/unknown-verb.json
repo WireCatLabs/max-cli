@@ -54,5 +54,8 @@
   "store reindex",
   "tags auto",
   "tasks agenda",
-  "tasks plan"
+  "tasks categories",
+  "tasks claim",
+  "tasks plan",
+  "tasks release"
 ]

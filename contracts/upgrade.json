@@ -69,7 +69,18 @@
     },
     {
       "id": "task-add",
-      "args": ["contract", "--json", "--record", "tasks", "add", "msg:max/601/7/101", "--type", "promise"],
+      "args": [
+        "contract",
+        "--json",
+        "--record",
+        "tasks",
+        "add",
+        "msg:max/601/7/101",
+        "--type",
+        "promise",
+        "--category",
+        "other"
+      ],
       "exit": 0,
       "stream": "stdout",
       "kind": "json",

@@ -4,18 +4,48 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
-## 0.53.0 — 15.10.2026
+## Не выпущено
+
+### Что нового
+
+- **Задачи можно занять, пометить тегом и разложить по категориям**: `tasks claim <задача> [--for 30m]`,
+  `tasks release`, `tasks categories`, `tags add|remove --task`, `tasks agenda --claimed` (cli-core 0.282.0).
 
 ### Изменено — может сломать скрипты
 
-- **Удалён код совместимости.** `max mcp` и `mcp config|setup|doctor` больше не принимают `--allow-send`,
-  `--confirm-send`, `--allow-mark-read`, `--allow-delete`, `--allow-moderate`, `--allow-dangerous` и
-  `--http-confirmation`; доступ задают `permissions`. `messages download --output` убран, остаётся `--output-dir`.
-  Команды `config migrate` больше нет. Настройки `read_only`, `allow` и `mcp_tools` удалены: файл с ними не читается,
-  вместо них задайте `permissions.<ресурс> readonly`. `config set` принимает только имя настройки в snake_case.
-  `doctor` не ищет старый файл кэша (`legacy_cache`), а `inbox` больше не переносит старую отметку `lastCheckAt`.
-- **max больше не переносит папки при запуске** (из `~/Library` и в папку WireCat): перенос уже сделан.
+- **Настройки называются только в snake_case** (cli-core 0.283.0): `config set` и `config unset` больше не понимают
+  camelCase, а ключ в camelCase в файле настроек считается неизвестным. Общие настройки хранилища теперь
+  `search_stemmers.cyrillic`, `search_stemmers.latin` и `account_groups.<имя>`.
+- **`tasks add` требует `--category <имя>`** из списка `tasks categories` (`money`, `documents`, `meeting` и другие);
+  если ничего не подходит — `--category other`.
 - **`MAX_READ_ONLY` теперь запрещает запись и в max**: раньше эта переменная до проверки записи не доходила.
+
+### Безопасность
+
+- **Список мест, из которых файл не отправляется, теперь один на все приложения WireCat** (cli-core 0.283.0): max
+  берёт его из cli-core, а не держит свою копию. Запрещённых мест не стало меньше; если файла ещё нет, ссылки в
+  папках над ним тоже раскрываются.
+
+### Удалено
+
+- **Код совместимости.** `max mcp` и `mcp config|setup|doctor` больше не принимают `--allow-send`, `--confirm-send`,
+  `--allow-mark-read`, `--allow-delete`, `--allow-moderate`, `--allow-dangerous` и `--http-confirmation`; доступ
+  задают `permissions`. `messages download --output` убран, остаётся `--output-dir`. Команды `config migrate` больше
+  нет. Настройки `read_only`, `allow` и `mcp_tools` удалены: файл с ними не читается, вместо них задайте
+  `permissions.<ресурс> readonly`. `doctor` не ищет старый файл кэша (`legacy_cache`), а `inbox` больше не переносит
+  старую отметку `lastCheckAt`.
+- **Перенос папок при запуске** (из `~/Library` и в папку WireCat): он уже сделан.
+- **Старый язык поиска**: у `search messages` и `searches create` больше нет `--language` и `--regex`. Сохранённый
+  поиск на старом языке сохраните заново.
+- **`conversations embed --workers`.**
+
+## 0.53.0 — 15.10.2026
+
+### Что нового
+
+- **`config set` и `config unset` понимают имя настройки в camelCase** (cli-core 0.279.0): `max <профиль> config set
+  senderColors false` пишет `sender_colors`, `max <профиль> config set readOtherBots true --bot` пишет
+  `read_other_bots`. Путь команды после `permissions.` пишется как есть.
 
 ### Исправлено
 
