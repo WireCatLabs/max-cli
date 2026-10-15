@@ -54,13 +54,23 @@ describe("MAX guided setup", () => {
     const h = harness()
     expect(await h.setup("--json")).toBe(0)
     const output = h.streams.stdout.join("\n")
-    expect(JSON.parse(output).item).toMatchObject({
+    const answer = JSON.parse(output)
+    expect(answer.item).toMatchObject({
       profile: "setup-test",
       session: { reused: true },
       chats: { checked: 5, has_more: true },
       agent: { name: "none", written: [] },
-      next: { instructions: "max setup-test skill show", chats: "max setup-test chats list --limit 5" },
     })
+    expect(answer.item.next).toBeUndefined()
+    expect(answer.next).toEqual([
+      expect.objectContaining({ kind: "command", command: "skill show", args: {}, safe_to_auto_execute: true }),
+      expect.objectContaining({
+        kind: "command",
+        command: "chats list",
+        args: { limit: 5 },
+        safe_to_auto_execute: true,
+      }),
+    ])
     expect(output).not.toContain("setup-token")
     expect(h.max.sent.map((x) => x.opcode)).not.toContain(Opcode.CHAT_HISTORY)
     expect(h.max.sent.map((x) => x.opcode)).not.toContain(Opcode.GET_QR)
@@ -251,8 +261,11 @@ describe("MAX guided setup", () => {
   it("keeps an npm exec runner in next commands", async () => {
     const h = harness()
     h.environment.update = { scriptPath: "/tmp/.npm/_npx/abc/node_modules/@wirecat/max-cli/dist/bin/max.js" }
-    expect(await h.setup("--json")).toBe(0)
-    expect(JSON.parse(h.streams.stdout.join("\n")).item.next.instructions).toContain(
+    h.environment.tty = true
+    h.environment.interactive = true
+    h.environment.ask = async () => "none"
+    expect(await h.setup()).toBe(0)
+    expect(stripVTControlCharacters(h.streams.stdout.join("\n"))).toContain(
       "exec --yes --package=@wirecat/max-cli -- max setup-test skill show",
     )
   })
