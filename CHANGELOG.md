@@ -4,10 +4,12 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
-## Не выпущено
+## 0.54.0 — 15.10.2026
 
 ### Что нового
 
+- **Задачи можно занять, пометить тегом и разложить по категориям**: `tasks claim <задача> [--for 30m]`,
+  `tasks release`, `tasks categories`, `tags add|remove --task`, `tasks agenda --claimed` (cli-core 0.282.0).
 - **Задачи, которые могут быть одной работой** (cli-core 0.285.0): `tasks similar <задача>` оценивает похожие
   задачи; `tasks duplicates [--unsure]` показывает пары, найденные правилами, `tasks merge <задача> --into <другая>`
   объединяет их, `tasks unmerge` отменяет объединение, `tasks duplicates reject|unsure` решает пару. `tasks agenda`
@@ -21,6 +23,12 @@
 
 ### Изменено — может сломать скрипты
 
+- **Настройки называются только в snake_case** (cli-core 0.283.0): `config set` и `config unset` больше не понимают
+  camelCase, а ключ в camelCase в файле настроек считается неизвестным. Общие настройки хранилища теперь
+  `search_stemmers.cyrillic`, `search_stemmers.latin` и `account_groups.<имя>`.
+- **`tasks add` требует `--category <имя>`** из списка `tasks categories` (`money`, `documents`, `meeting` и другие);
+  если ничего не подходит — `--category other`.
+- **`MAX_READ_ONLY` теперь запрещает запись и в max**: раньше эта переменная до проверки записи не доходила.
 - **`tasks add` отказывает, если задача может быть той же работой**, что открытая или закрытая за последние 14 дней
   (cli-core 0.285.0): выход 2, причина `task.duplicate-candidates`, кандидаты в `details.candidates`. Повторите с
   `--attach <задача>`, чтобы привязать сообщение к ней, или с `--new`, чтобы открыть новую; через MCP `tasks add`
@@ -39,22 +47,6 @@
 - Заголовок с заглавными кириллическими буквами находится запросом в нижнем регистре (cli-core 0.285.0).
 - **Вредный HTML во вложении больше не подвешивает чтение** (cli-core 0.285.0): страница из незакрытых тегов или
   комментариев читается за время, линейное по её размеру.
-
-## 0.54.0 — 15.10.2026
-
-### Что нового
-
-- **Задачи можно занять, пометить тегом и разложить по категориям**: `tasks claim <задача> [--for 30m]`,
-  `tasks release`, `tasks categories`, `tags add|remove --task`, `tasks agenda --claimed` (cli-core 0.282.0).
-
-### Изменено — может сломать скрипты
-
-- **Настройки называются только в snake_case** (cli-core 0.283.0): `config set` и `config unset` больше не понимают
-  camelCase, а ключ в camelCase в файле настроек считается неизвестным. Общие настройки хранилища теперь
-  `search_stemmers.cyrillic`, `search_stemmers.latin` и `account_groups.<имя>`.
-- **`tasks add` требует `--category <имя>`** из списка `tasks categories` (`money`, `documents`, `meeting` и другие);
-  если ничего не подходит — `--category other`.
-- **`MAX_READ_ONLY` теперь запрещает запись и в max**: раньше эта переменная до проверки записи не доходила.
 
 ### Безопасность
 
