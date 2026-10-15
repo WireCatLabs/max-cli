@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**917 ✅ · 159 ⛔ · 0 ❌** — 342 commands, 734 options.
+**912 ✅ · 154 ⛔ · 0 ❌** — 342 commands, 724 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -929,17 +929,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot store fetch` | `--since-time` | ✅ |  |
 | `bot store fetch` | `--last` | ✅ |  |
 | `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools |
-| `bot mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-dangerous` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-delete` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-moderate` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools |
 | `bot mcp config` |  | ✅ |  |
-| `bot mcp config` | `--confirm-send` | ✅ |  |
-| `bot mcp config` | `--allow-dangerous` | ✅ |  |
-| `bot mcp config` | `--allow-send` | ✅ |  |
-| `bot mcp config` | `--allow-delete` | ✅ |  |
-| `bot mcp config` | `--allow-moderate` | ✅ |  |
 | `bot me` |  | ✅ |  |
 | `bot comments list` |  | ✅ |  |
 | `bot comments list` | `--limit` | ✅ |  |

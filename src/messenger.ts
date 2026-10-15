@@ -1,6 +1,6 @@
 import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@wirecat/cli-core/cli"
 import { AI_SETTING_KEYS } from "@wirecat/cli-core/cli"
-import type { GuardRequest, SendGuard } from "@wirecat/cli-core/sends"
+import type { Asker, GuardRequest, SendGuard } from "@wirecat/cli-core/sends"
 import { moderationService } from "@wirecat/cli-core/services"
 import type { Command } from "commander"
 import { type MaxAdapter, maxAdapter } from "./adapter/max-adapter.js"
@@ -8,11 +8,11 @@ import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
 import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
-import { migrateModerationPoints } from "./moderation/points.js"
 import { askerFor, assertReadable, commandPermission, permissionKeyOf } from "./permissions.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
+import { SKILL } from "./skill.js"
 import { SPEECH_MODELS } from "./transcribe/models.js"
 
 /** The client each command connected, so its guard can tell whether `max serve` journals for it. */
@@ -55,6 +55,18 @@ export const maxMessenger: Messenger = {
   stickers: true,
   app: MAX_APP,
   provider: "max",
+  topics: false,
+  skill: SKILL,
+  diagnose: async (command) => {
+    const { store } = forCommand(command)
+    let token: string
+    try {
+      token = store.tokenSource() ?? "none"
+    } catch {
+      token = "unreachable"
+    }
+    return { kind: store.isBot() ? "personal + bot" : "personal", token, logged_in_here: store.hasLoggedIn() }
+  },
   counterFields: ["views", "reactions"],
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
@@ -74,13 +86,13 @@ export const maxMessenger: Messenger = {
   // A named chat goes to opcode 73, no chat to 68 — the best message of each chat (measured 2026-10-11).
   serverSearch: true,
 
-  guard: (command, { profile }, warn) => {
+  guard: (command, { profile }, warn, ask?: Asker) => {
     const client = () => clients.get(rootOf(command))
     const guard = overServer(
       guardFor(
         resolveSettings({ profile }),
         warn,
-        askerFor(command.optsWithGlobals(), environmentOf(command)),
+        ask ?? askerFor(command.optsWithGlobals(), environmentOf(command)),
         commandPermission(command) ?? undefined,
       ),
       () => client()?.server,
@@ -137,7 +149,6 @@ export const maxMessenger: Messenger = {
 
   connect: async (command, context, { events } = {}) => {
     const { createClient, store, reach, settings } = forCommand(command)
-    if (command.name() === "moderate") migrateModerationPoints(store, context.env)
     const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
     let opened: MaxAdapter | undefined
     try {

@@ -5117,35 +5117,13 @@ max bot store fetch <chat> [options]
 
 serve this bot to an agent over MCP, on stdin and stdout — `claude mcp add sales-bot -- max sales bot mcp`
 
-**Меняет что-то в MAX.**
-
-```sh
-max bot mcp [options]
-```
-
-| Опция | Что делает |
-|---|---|
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | no longer used — the profile's permissions decide; kept so an old setup still starts. |
-| `--allow-delete` | no longer used — the profile's permissions decide. |
-| `--allow-moderate` | no longer used — the profile's permissions decide. |
-
 #### `max bot mcp config`
 
 print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes nothing
 
 ```sh
-max bot mcp config [options]
+max bot mcp config
 ```
-
-| Опция | Что делает |
-|---|---|
-| `--confirm-send` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-dangerous` | no longer used — writes show no form; the profile's permissions decide. |
-| `--allow-send` | no longer used — the profile's permissions decide; kept so an old setup still starts. |
-| `--allow-delete` | no longer used — the profile's permissions decide. |
-| `--allow-moderate` | no longer used — the profile's permissions decide. |
 
 ### `max bot me`
 

@@ -168,42 +168,6 @@ describe("max chats moderate", () => {
     expect(later.json).toEqual([])
     expect(saved.json).toEqual([expect.objectContaining({ message_id: String(history[0]?.id), rule: "invites" })])
   })
-  it("starts the first shared run at legacy session progress, and keeps the numeric group's title", async () => {
-    const profile = "ck-migrate"
-    const { environment, keyring, deletes, max } = group()
-    const store = new SessionStore({ profile, keyring })
-    const point = new Date(at(25)).toISOString()
-    store.writeState({ ...store.readState(), checkedUntil: { [String(GROUP.id)]: point } })
-    const rules = new ModerationRules(moderationPathFor(profile))
-    rules.set(String(GROUP.id), "Team", "invites", "delete")
-    rules.set(String(GROUP.id), "Team", "consent.delete", "allow")
-    const result = await check([profile, "chats", "moderate", String(GROUP.id), "--json"], environment)
-    expect(result.code, result.stderr).toBe(0)
-    expect(result.json).toEqual([])
-    expect(deletes()).toEqual([])
-    const shown = await check([profile, "chats", "rules", "show", String(GROUP.id), "--json"], environment)
-    expect(shown.code, shown.stderr).toBe(0)
-    expect(shown.body.item).toMatchObject({ title: "Team", chat_id: String(GROUP.id) })
-    expect(new SharedRules(rules.path).checkedUntil(String(GROUP.id))).toBe(
-      new Date(history[1]?.time ?? 0).toISOString(),
-    )
-    expect(store.readState().checkedUntil?.[String(GROUP.id)]).toBe(point)
-    expect(max.sent.some((call) => call.opcode === Opcode.CHAT_MARK || call.opcode === Opcode.MSG_GET_REACTIONS)).toBe(
-      false,
-    )
-  })
-
-  it("refuses a broken legacy checkpoint before connecting or deleting", async () => {
-    const profile = "ck-bad-point"
-    const { environment, keyring, max } = group()
-    const store = new SessionStore({ profile, keyring })
-    store.writeState({ ...store.readState(), checkedUntil: { [String(GROUP.id)]: "broken" } })
-    const result = await check([profile, "chats", "moderate", "Team", "--json"], environment)
-    expect(result.code).not.toBe(0)
-    expect(result.stderr).toContain("saved moderation time")
-    expect(max.sent).toEqual([])
-  })
-
   it.each(["--offline", "--read-only"])(
     "%s refuses before any request and preserves session progress",
     async (flag) => {

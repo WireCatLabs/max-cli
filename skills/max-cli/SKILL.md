@@ -260,8 +260,8 @@ max personal server status --json                       # работает ли 
 max personal chats show -1000 --json                    # один чат и кто в нём
 max personal chats events -1000 'time>=2026-09-20' --json   # кто вступил, вышел, кого добавили и удалили
 max personal chats members list -1000 --all --json            # все участники от MAX: registered_at, last_seen_at
-max personal chats requests list -1000 --json           # заявки в канал с одобрением; время неизвестно
-max personal chats requests accept -1000 20000002       # только по просьбе владельца; decline — отказать
+max personal chats requests list -1000 --json           # заявки в канал с одобрением; ни времени, ни порядка
+max personal chats requests accept -1000 20000002       # по одному человеку и только по просьбе владельца; decline — отказать
 max personal chats rules show -1000 --json              # правила модерации группы; set <ключ> <значение> меняет одно
 max personal chats moderate -1000 --dry-run --json         # что нового нарушает правила; без --dry-run — только по слову владельца
 max personal contacts show @ivan --json                 # один человек и общие чаты

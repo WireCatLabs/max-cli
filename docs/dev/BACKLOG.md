@@ -113,7 +113,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   has and we lack means maintaining MAX's whole surface (§10).
 
 **Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
-`docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46`, MCP `max_chats_check` as `CLI-47`.
+`docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46` (now cli-core's `chats rules show` and `chats moderate`, which MCP serves as `chats_moderate`).
 
 - **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
   lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had

@@ -571,32 +571,20 @@ shared services search the account's `messages.db`; `MaxClient`
 no longer implements local search. Search finds recorded history, not unread history that has
 never been fetched. `messages sync` fills it; `--offline` reads it without connecting.
 
-## 17. The MCP server is a second adapter, and it keeps the connection for minutes
+## 17. The MCP server is cli-core's, as in tg
 
-`max mcp` (`src/mcp/`) mounts `personalMcpTools(maxMessenger)` from the shared SDK through
-`registerPersonalMcpTools`. MAX retains `MaxSession`, native permission guards and account-scoped
-archive services. Unsupported forum tools are filtered out; photo previews and cached direct
-transcripts retain native callbacks under the shared input schemas. Legacy `chats_check` and
-`chats_rules` names remain available.
+`max mcp` is cli-core's `mcpCommand(maxMessenger)`, the same command tg mounts. What is MAX's comes from the
+descriptor: `topics: false` hides the forum tools, `skill` serves `max://skill`, `diagnose` adds the token source and
+the account kind to `status`, and the guard hook builds max's send guard — over MCP with the server's asker, so a
+write at level `ask` goes ahead without a form.
 
-- **One connection per agent session, never for long**: calls serialize; the connection closes
-  after 2 minutes idle, after 5 minutes since login, on a connection failure and on stdin EOF.
-  Local evidence and conversation callbacks use the profile's known account without connecting.
-- **Profile permissions govern discovery and execution.** The mounting scope rechecks the exact
-  key, including local reads. Native write guards retain recipient checks and the journal.
-  Retired access flags grant no permissions.
-- **MCP writes use effective profile permissions.** `ask` and `allow` execute without a server
-  confirmation form; `readonly` rejects writes and `deny` rejects access. Retired confirmation
-  flags emit a diagnostic and change nothing. Native recipient and send-journal guards still apply.
-- **Local inference releases the connection.** Warm embedding models are disposed on shutdown;
-  speech models are never downloaded by a tool. Native transcription retains same-model cache reuse.
-- **Discovery uses search, read and write tools.** `max_tools_search` finds command definitions;
-  `max_read` and `max_write` execute a command path with its argument object. Exact command
-  permissions are rechecked during execution; a client permitting `max_write` does not bypass them.
-- **stdout is the protocol.** Nothing in `src/mcp/` writes data through the renderer; notes go to
-  stderr. The process exits on stdin EOF — measured 110 ms under Node and Bun, 2026-09-24.
-- `serveStdio` may build a probe server before settling on the protocol era, so the server is a
-  factory over one `MaxSession`, never one instance.
+- **One connection per agent session, never for long**: calls serialize; the connection closes after 2 minutes idle,
+  after 5 minutes since login, on a connection failure and on stdin EOF (cli-core `MessengerSession`).
+- **Every write goes through the guard**: permissions, the read-only lock, the recipient list, the hourly limit and
+  the send journal, as in the CLI. `readonly` rejects writes and `deny` rejects access.
+- **Discovery uses search, read and write tools**: `max_tools_search`, then `max_read` or `max_write` with a command
+  path and its arguments; the exact command's permission is checked again when it runs.
+- **stdout is the protocol.** Notes go to stderr; the process exits on stdin EOF.
 
 User side: [`../mcp.md`](../mcp.md). The research behind the choices is local-only
 (`docs_ai/plans/2026-09-23-mcp-research.md`).
