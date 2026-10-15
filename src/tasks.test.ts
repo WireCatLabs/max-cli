@@ -87,7 +87,7 @@ describe("tasks through max", () => {
   })
 
   it("claims, tags and releases a task, and lists the categories", async () => {
-    const added = await cli(["tasks", "add", PROMISE, "--type", "request", "--category", "money", "--json"])
+    const added = await cli(["tasks", "add", PROMISE, "--type", "request", "--category", "money", "--new", "--json"])
     expect(added.code, added.err).toBe(0)
     const { id } = JSON.parse(added.out).item
 

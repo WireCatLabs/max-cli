@@ -2,8 +2,8 @@
 
 Нужно найти то, что было написано: сообщение, договорённость, присланный файл, код многомесячной
 давности. Эта страница показывает, как искать во всём, что `max` сохранил на этом компьютере, —
-в сообщениях MAX, а также в почте и заметках, которые импортировал
-[memo](https://github.com/WireCatLabs/cli-memo), — и как заодно спросить сервер MAX.
+в сообщениях MAX и в заметках, — и как заодно спросить сервер MAX. Почту ищет
+[memo](https://github.com/WireCatLabs/cli-memo): `memo search mail`.
 
 Прочитав её, вы сможете находить сообщения по словам, людям, чатам, датам, файлам и ссылкам,
 сохранять поиск и запускать его снова, считать совпадения и отличать настоящее «не найдено» от
@@ -49,28 +49,24 @@ AST, `--exact` и `--newest` сохраняют строгую семантик�
 
 | Задача | Команда |
 |---|---|
-| Искать сразу в сообщениях, почте и заметках | `max personal search all '<запрос>'` |
+| Искать сразу в сообщениях и заметках | `max personal search all '<запрос>'` |
 | Искать только сообщения мессенджеров, без `--discover`, в одном чате — и на сервере MAX | `max personal search messages '<запрос>'` |
-| Искать только почту, которую импортировал memo | `max personal search mail '<запрос>'` |
+| Искать почту | `memo search mail '<запрос>'` — у `max` этой команды нет |
 | Искать заметки из memo или из папки | `max personal search notes '<запрос>'` |
 | Найти обсуждение по тому, о чём оно было | `max personal search conversations '<вопрос>'` ([поиск по темам](topic-search.md)) |
 | Посчитать совпадения по чатам, людям, дням или часам | `max personal stats messages show '<запрос>'` |
 | Сохранить поиск и запускать его снова | `max personal searches create`, `max personal search messages --saved <имя>` |
 
 ```sh
-max personal search all 'договор аренды'                 # сообщения, почта и заметки, лучшее первым
+max personal search all 'договор аренды'                 # сообщения и заметки, лучшее первым
 ```
 
 ```sh
-max personal search all 'договор' --only messages,notes  # без почты
+max personal search messages 'договор chat:Друзья'     # только сообщения мессенджеров
 ```
 
 ```sh
-max personal search messages 'договор chat:Друзья'     # только сообщения мессенджеров, без почты
-```
-
-```sh
-max personal search mail 'счёт'                          # только почта, которую привёл memo sync --mail
+memo search mail 'счёт'                                  # почта — это memo; max search mail подскажет его
 ```
 
 ```sh
@@ -82,14 +78,12 @@ max personal search conversations 'переезд на дачу'      # разг
 ```
 
 `search all` у каждой находки пишет, что это — сообщение (`msg:…`) или заметка (`note:…`).
-`search messages` никогда не возвращает почту, а `search mail` — сообщения мессенджеров; вместе их
-ищет только `search all`. В `search messages` `NOT has:attachment`, `has:voice` и `has:file` в запросе
-оставляют только текст, голосовые или файлы; `--type` у `search notes` — заметки из memo или из папки (`internal|file`). У почты
-`chat:` выбирает цепочку писем, а `from:` — отправителя. Если поле не подходит — `kind:`/`topic:`
-для почты или `chat:`/`from:` для заметок — `search all` пропускает этот источник и объясняет почему.
+Почту `max` не ищет: ни `search messages`, ни `search all`; `max personal search mail` отвечает
+подсказкой «mail is memo's: install @wirecat/cli-memo, then `memo search mail …`». В `search messages` `NOT has:attachment`, `has:voice` и `has:file` в запросе
+оставляют только текст, голосовые или файлы; `--type` у `search notes` — заметки из memo или из папки (`internal|file`). Если поле не подходит — например, `chat:`/`from:` для заметок — `search all`
+пропускает этот источник и объясняет почему.
 
-Почта и заметки попадают в архив через memo: `memo sync --mail` и `memo import`. Без них
-`search all` ищет только сообщения.
+Заметки попадают в архив через memo: `memo import`. Без них `search all` ищет только сообщения.
 
 Дальше на этой странице — поиск сообщений, `max personal search messages`. Без `--discover` поиск в одном чате спрашивает ещё и
 сервер MAX ([ниже](#поиск-на-сервере-max---backend)).

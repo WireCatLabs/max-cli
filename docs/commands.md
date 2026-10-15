@@ -2346,6 +2346,8 @@ max tasks add <message> [options]
 |---|---|
 | `--type <name>` | the task's type: question, request, mention or promise. |
 | `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …. |
+| `--attach <task>` | when tasks add listed tasks that may be the same job: link the message to this one instead of opening a task. |
+| `--new` | when tasks add listed tasks that may be the same job: open the task anyway. |
 | `--title <text>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
 | `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
@@ -2405,6 +2407,97 @@ max tasks show <task>
 |---|---|---|
 | `task` | обязательный | the task's id or key, as tasks list shows it. |
 
+### `max tasks similar`
+
+tasks that may be the same job as this one, best first, each with a band — likely, maybe, different — and the reasons; merges nothing
+
+```sh
+max tasks similar <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many, at most 40 (default 10). |
+
+### `max tasks duplicates`
+
+pairs of tasks a rule opened that may be one job, newest first, with score and reasons: merge, reject or mark each unsure; --unsure lists the ones left for the owner
+
+```sh
+max tasks duplicates [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--unsure` | only the pairs the reviewing agent marked unsure. |
+| `--limit <n>` | how many. |
+
+#### `max tasks duplicates reject`
+
+two tasks are not the same job: the pair leaves the list and is never offered again
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks duplicates reject <dup> <task>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dup` | обязательный | the task listed as the duplicate, by its id or key. |
+| `task` | обязательный | the task it was paired with. |
+
+#### `max tasks duplicates unsure`
+
+the fields and the text cannot tell: leave the pair to the owner, who lists it with --unsure
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks duplicates unsure <dup> <task>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dup` | обязательный | the task listed as the duplicate, by its id or key. |
+| `task` | обязательный | the task it was paired with. |
+
+### `max tasks merge`
+
+one job seen twice: link every message of the duplicate to the task and close the duplicate dismissed, duplicate-of the task; nothing is deleted, and tasks unmerge undoes it
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks merge <dup> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dup` | обязательный | the duplicate, by its id or key; it must be open. |
+
+| Опция | Что делает |
+|---|---|
+| `--into <task>` | the task that stays. |
+
+### `max tasks unmerge`
+
+undo a merge: reopen the task and remove its duplicate-of relation; messages the merge linked stay linked
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks unmerge <dup>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dup` | обязательный | the merged task, by its id or key. |
+
 ### `max tasks agenda`
 
 what needs a look today, from the local store and without message text: tasks overdue, due or to check, chats where you owe an answer, chats where you wait for one
@@ -2424,6 +2517,8 @@ max tasks agenda [query] [options]
 | `--waiting <span>` | list chats where you wrote last this long ago (default 7d). |
 | `--within <span>` | leave out chats silent longer than this: they ended (default 30d). |
 | `--claimed` | also list tasks someone else holds (tasks claim); hidden by default. |
+| `--category <name>` | only tasks of this category, from the list tasks categories prints. |
+| `--tag <name>` | only tasks with this tag (tags add --task). |
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
 ### `max tasks categories`
@@ -2473,7 +2568,7 @@ max tasks release <task> [options]
 
 ### `max tasks close`
 
-close a task: done, or dismissed when it needs no answer; a closed task stays closed
+close a task: done, or dismissed when it needs no answer; a closed task stays closed, unless tasks unmerge reopens a merged one
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2899,7 +2994,7 @@ phones, e-mail, links, documents and people's names found in stored messages
 
 ### `max mentions list`
 
-this account's mentions matching the query, newest first; local store only
+this account's mentions matching the query, newest first; --new for those found since the last review
 
 ```sh
 max mentions list [query] [options]
@@ -2908,6 +3003,24 @@ max mentions list [query] [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `query` | необязательный | fields below; a bare word is a value, so a phone typed with 8 finds it written with +7. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many to show. |
+| `--page <n>` | which page, starting at 1. |
+| `--new` | undecided mentions found since the last --new run that showed them all; the first run shows every one. |
+
+### `max mentions domains`
+
+the sites this account's links point to, most linked first, with chats and first and last time
+
+```sh
+max mentions domains [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | narrows the links counted: the fields below; dismissed links are never counted. |
 
 | Опция | Что делает |
 |---|---|
@@ -2943,6 +3056,7 @@ max mentions confirm <id> [person] [options]
 
 | Опция | Что делает |
 |---|---|
+| `--all-in-chat` | a name: also every undecided place of the same name in its chat. |
 | `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
 ### `max mentions reject`
@@ -2961,6 +3075,7 @@ max mentions reject <id> [options]
 
 | Опция | Что делает |
 |---|---|
+| `--all-in-chat` | a name: also every undecided place of the same name in its chat. |
 | `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
 ### `max mentions rebuild`
@@ -3060,11 +3175,11 @@ max metadata refresh [options]
 
 ## `max search`
 
-find things by text: one resource when you know it (mail, messages, notes), or search all across messages, mail and notes
+find things by text: one resource when you know it (messages, notes), or search all across messages and notes; mail is memo search mail
 
 ### `max search all`
 
-search messenger messages, mail and notes in the local store, and the messenger's server for messages (--backend; mail and notes are local only), and a meeting account's transcripts when --source names one — best match first; not tasks, people, memories or projects. Use it when you do not know where something was written; search mail, messages or notes reads one kind with all its fields
+search messenger messages and notes in the local store, and the messenger's server for messages (--backend; notes are local only), and a meeting account's transcripts when --source names one — best match first; not mail (memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
 
 ```sh
 max search all <query> [options]
@@ -3076,7 +3191,7 @@ max search all <query> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--only <resources>` | only these resources, separated by commas: messages, mail, notes; meetings when --source names a meeting account. |
+| `--only <resources>` | only these resources, separated by commas: messages, notes; meetings when --source names a meeting account. |
 | `--source <accounts>` | only these accounts, separated by commas: provider:account as a hit shows it, a provider, a kind or group:<name>; each resource reads the ones of its kind, and meetings only when it names one. |
 | `--max-meetings <n\|all>` | how many of the meeting account's meetings to look through, newest first; all looks through every one (default 100). |
 | `--limit <n>` | how many. |
@@ -3111,7 +3226,7 @@ max search messages [query] [options]
 | `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
 | `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
-| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice,email:me@example.com. |
+| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice. |
 | `--limit <n>` | how many. |
 | `--page <n>` | which page, starting at 1. |
 | `--newest` | newest first instead of best first. |
@@ -3120,28 +3235,6 @@ max search messages [query] [options]
 | `--discover` | find partial lexical matches and eligible replies in the local archive; results are evidence, not confirmed answers. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
-
-### `max search mail`
-
-search the mail imported into the local store — memo sync --mail brings it in
-
-```sh
-max search mail [query] [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `query` | необязательный | strict Lucene query: words, "phrases", AND/OR/NOT, field groups and date ranges. |
-
-| Опция | Что делает |
-|---|---|
-| `--source <accounts>` | only these mail accounts, separated by commas: email:<address> as a hit shows it, email, mail or group:<name>; every mail account when unset. |
-| `--limit <n>` | how many. |
-| `--page <n>` | which page, starting at 1. |
-| `--newest` | newest first instead of best first. |
-| `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
-| `--context <n>` | messages before and after each hit; 2 in the terminal, 0 otherwise. |
-| `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 
 ### `max search notes`
 
@@ -4076,7 +4169,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>. |
 | `value` | обязательный | a number, true or false, or a list like contacts,polls. |
 
 | Опция | Что делает |
@@ -4097,7 +4190,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>. |
 
 | Опция | Что делает |
 |---|---|

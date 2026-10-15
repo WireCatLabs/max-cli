@@ -595,7 +595,7 @@ max personal contacts list name:петров            # люди по имен
 ```
 
 ```sh
-max personal search all "договор"                 # сообщения, почта и заметки на этом компьютере
+max personal search all "договор"                 # сообщения и заметки на этом компьютере
 ```
 
 ```sh

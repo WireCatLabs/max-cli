@@ -244,6 +244,15 @@ max personal tasks list chat:<id чата> "(kind:question OR kind:mention)"
 max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promise --category other
 ```
 
+Если задача может оказаться той же работой, что открытая или закрытая за последние 14 дней, `tasks add`
+отказывает с кодом выхода 2 и называет кандидатов. Повторите с `--attach <задача>`, чтобы привязать сообщение к
+ней, или с `--new`, чтобы всё же открыть новую. `tasks duplicates` показывает пары, которые нашли правила, а
+`tasks merge <задача> --into <другая>` объединяет их:
+
+```sh
+max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promise --category other --attach <задача>
+```
+
 ```sh
 max personal tasks close <задача> --as dismissed --reason no-reply-needed
 ```
