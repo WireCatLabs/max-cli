@@ -138,9 +138,19 @@ carry() {
 
 # A session that merges after the version was dated, but before it was published, adds «Не выпущено» above it.
 # cli-dev is pinned rather than taken from the dependencies: cli-core accepts only an older cli-base.
+# --land folds on a fresh main through its own pull request, and folds again once if main moves under it.
 folded=""
-published ||
-  folded=$(npx -y -p @wirecat/cli-base@0.34.0 cli-dev changelog fold --version "$version" --unreleased "Не выпущено")
+if ! published; then
+  signed_at=$(git rev-parse HEAD)
+  folded=$(npx -y -p @wirecat/cli-base@0.36.0 cli-dev changelog fold --land --version "$version" --unreleased "Не выпущено")
+fi
+if [ -n "$folded" ]; then
+  echo "$folded"
+  committed
+  signed=$signed_at
+  carry "$version" "bin/release folded «Не выпущено» into $version." \
+    "docs(releases): $version carried to the folded changelog by bin/release"
+fi
 
 # Two sessions preparing the same number is normal; the second takes the next free one (2026-09-29).
 latest=$(npm view @wirecat/max-cli version --prefer-online 2>/dev/null || true)
@@ -161,18 +171,10 @@ if [ "$next" != "$version" ]; then
     else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next" "$taken"
   pnpm exec cli-dev version --sync >/dev/null
   body="bin/release: $why. Only the number changes: package.json, src/version.ts, the CHANGELOG heading."
-  [ -z "$folded" ] || body="bin/release: $why. The number changes, and «Не выпущено» is folded into its section."
   land "release/$next" "chore(release): $next" "$body"
   carry "$next" "Renumbered by bin/release: $version → $next ($why)." \
     "docs(releases): $version → $next, renumbered by bin/release"
   version=$next
-elif [ -n "$folded" ]; then
-  echo "$folded"
-  committed
-  land "release/fold-$version" "chore(release): fold «Не выпущено» into $version" \
-    "bin/release: $version is dated but not on npm, and «Не выпущено» sat above it. Only CHANGELOG.md changes."
-  carry "$version" "bin/release folded «Не выпущено» into $version." \
-    "docs(releases): $version carried to the folded changelog by bin/release"
 fi
 if published; then
   echo "$version is already on npm — raise the version first" >&2
