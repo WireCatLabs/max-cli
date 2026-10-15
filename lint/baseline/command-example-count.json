@@ -281,11 +281,16 @@
   "tasks categories",
   "tasks claim",
   "tasks close",
+  "tasks duplicates reject",
+  "tasks duplicates unsure",
   "tasks link",
   "tasks list",
+  "tasks merge",
   "tasks plan",
   "tasks release",
   "tasks show",
+  "tasks similar",
+  "tasks unmerge",
   "upgrade",
   "watch"
 ]

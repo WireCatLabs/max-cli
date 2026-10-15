@@ -245,6 +245,9 @@ max personal inbox --new --json                         # что пришло с
 max personal review 'date>"2026-09-23T09:00:00Z"' --json  # всё, свои тоже, для обзора «кто кому должен»
 max personal review 'chat:"-1000"' --unanswered 4h --json # вопросы в группе, на которые 4 часа не ответили ни владелец, ни админы
 max personal tasks list state:open --json              # что ждёт ответа владельца; задачи открывает и закрывает review
+max personal tasks add <ссылка> --type request --category documents --json
+# выход 2 task.duplicate-candidates: возможно, это та же задача; повторите с --attach <задача> или --new
+max personal tasks duplicates --json               # пары, которые могут быть одной задачей; tasks merge <дубль> --into <задача>
 max personal tasks close <задача> --as dismissed --reason no-reply-needed --json   # только когда владелец так решил
 max personal watch --jsonl                              # новые сообщения по мере прихода; `max personal serve` запустится сам
 max personal watch --events --jsonl                     # плюс правки, удаления, реакции, прочтения, изменения чатов; поле "event"
