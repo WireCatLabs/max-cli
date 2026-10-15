@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Id, Sticker, StickerSet } from "@wirecat/cli-core"
 import { toSticker, toStickerSet } from "../domain/map.js"
-import type { Id, Sticker, StickerSet } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asArray, numbers, record } from "./values.js"
 

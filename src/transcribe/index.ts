@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
+import type { AttachmentLink, Id, Message } from "@wirecat/cli-core"
 import type { MaxClient } from "../client.js"
-import type { AttachmentLink, Id, Message } from "../domain/models.js"
 import { fetchBytes, LARGEST_VOICE } from "../download.js"
 import type { MaxRecord } from "../record.js"
 import { installedBytes, isInstalled, megabytes, modelPath, vadPath } from "./install.js"
@@ -52,7 +52,7 @@ const fetchVoice = async (
   fetchAudio: (link: AttachmentLink) => Promise<Uint8Array>,
 ): Promise<Uint8Array> => {
   const { links } = await client.messages.links(chatId, messageId)
-  const voice = links.find((link) => link.kind === "audio")
+  const voice = links.find((link) => link.kind === "voice")
   if (!voice) throw new CliError("validation_error", `message ${messageId} has no voice recording to transcribe`)
   const bytes = await fetchAudio(voice)
   if (bytes.length > LARGEST_VOICE) {
@@ -184,7 +184,7 @@ export const hearAll = async (
   return { transcripts, unheard, ...(problem === undefined ? {} : { problem }) }
 }
 
-export const isVoice = (message: Message): boolean => message.attachments.some(({ kind }) => kind === "audio")
+export const isVoice = (message: Message): boolean => message.attachments.some(({ kind }) => kind === "voice")
 
 /** A message with its transcript, when there is one; others pass through unchanged. */
 export const withTranscript = <T extends Pick<Message, "id" | "chatId">>(

@@ -1,6 +1,6 @@
 import { CliError, type SleepLike } from "@wirecat/cli-base"
+import type { Id, Message } from "@wirecat/cli-core"
 import { namesFrom, toMessage } from "../domain/map.js"
-import type { Id, Message } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { type Markup, parseMarkdown } from "../markdown.js"
 import type { Payload } from "../protocol/frame.js"

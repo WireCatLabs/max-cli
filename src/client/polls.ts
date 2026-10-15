@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Id, Message, Poll } from "@wirecat/cli-core"
 import { POLL_CLOSED, pollSettings, toPoll } from "../domain/map.js"
-import type { Id, Message, Poll, PollMessage } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import type { Markup } from "../markdown.js"
 import type { Payload } from "../protocol/frame.js"
@@ -9,7 +9,7 @@ import { asArray, asCliError, record } from "./values.js"
 
 interface Dependencies {
   connectOnce: () => Promise<void>
-  poll: (chatId: Id, messageId: Id) => Promise<{ attach: Payload; poll: Poll; outgoing: boolean }>
+  poll: (chatId: Id, messageId: Id) => Promise<{ attach: Payload; poll: Poll; pollId: Id; outgoing: boolean }>
   readonly offline: boolean
   readonly wire: Pick<ReturnType<typeof wireClient>, "messages">
   nextCid: () => number
@@ -36,17 +36,17 @@ interface Dependencies {
 
 export const createPolls = (deps: Dependencies) => {
   const resource = {
-    show: async (chatId: Id, messageId: Id): Promise<PollMessage> => {
+    show: async (chatId: Id, messageId: Id): Promise<Poll> => {
       await deps.connectOnce()
-      return { chatId, messageId, poll: (await deps.poll(chatId, messageId)).poll }
+      return (await deps.poll(chatId, messageId)).poll
     },
-    vote: async (chatId: Id, messageId: Id, answerIds: Id[]): Promise<PollMessage> => {
+    vote: async (chatId: Id, messageId: Id, answerIds: Id[]): Promise<Poll> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot vote")
 
       try {
         await deps.connectOnce()
-        const { attach, poll } = await deps.poll(chatId, messageId)
-        const voted = poll.answers.some((answer) => answer.mine)
+        const { attach, poll, pollId } = await deps.poll(chatId, messageId)
+        const voted = poll.answers.some((answer) => answer.chosen)
         if (answerIds.length === 0 && !voted) {
           throw new CliError("validation_error", `you have not voted in the poll of message ${messageId}`)
         }
@@ -76,11 +76,11 @@ export const createPolls = (deps: Dependencies) => {
         const answer = await deps.wire.messages.pollVote({
           chatId,
           messageId,
-          pollId: poll.id,
+          pollId,
           answersIds: answerIds.map(Number),
         })
         const state = record(answer.state)
-        return { chatId, messageId, poll: (state && toPoll({ ...attach, state })) ?? poll }
+        return (state && toPoll({ ...attach, state }, chatId, messageId)) ?? poll
       } catch (error) {
         const failure = asCliError(error)
         if (answerIds.length > 0 && failure.details.provider_error === "poll.already.voted") {
@@ -93,7 +93,7 @@ export const createPolls = (deps: Dependencies) => {
         throw error
       }
     },
-    close: async (chatId: Id, messageId: Id): Promise<PollMessage> => {
+    close: async (chatId: Id, messageId: Id): Promise<Poll> => {
       if (deps.offline)
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot close a poll")
       await deps.connectOnce()
@@ -110,7 +110,7 @@ export const createPolls = (deps: Dependencies) => {
       }
       const answer = await deps.wire.messages.edit({ chatId, messageId, attachments: [closed] })
       const after = asArray(record(answer.message)?.attaches).find((each) => each._type === "POLL")
-      return { chatId, messageId, poll: (after && toPoll(after)) ?? { ...poll, closed: true } }
+      return (after && toPoll(after, chatId, messageId)) ?? { ...poll, closed: true }
     },
     create: async (
       chatId: Id,

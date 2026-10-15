@@ -18,8 +18,7 @@ export default defineConfig({
         "src/testing/**",
         "src/generated/**",
         "src/bot/generated/**",
-        // Types only, the entry point, and the Bun driver that `pnpm smoke:bun` runs.
-        "src/domain/models.ts",
+        // The entry point, and the Bun driver that `pnpm smoke:bun` runs.
         "src/bin/**",
         "src/cache/drivers/bun-sqlite.ts",
         // Start a process that runs until stopped, or download a model: checked live, not here.

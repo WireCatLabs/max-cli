@@ -2,8 +2,10 @@ import { chmodSync, mkdirSync, rmSync } from "node:fs"
 import { connect, createServer, type Server, type Socket } from "node:net"
 import { dirname } from "node:path"
 import { CliError } from "@wirecat/cli-base"
+import type { MessageHit } from "@wirecat/cli-core"
 import type { SendGuard } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
+import type { MessageChange } from "../client/shapes.js"
 import {
   FIRST_TAB_SYNC,
   isJoinRequest,
@@ -13,7 +15,6 @@ import {
   type TabSync,
 } from "../client.js"
 import { resolveSettings } from "../config.js"
-import type { MessageChange, MessageHit } from "../domain/models.js"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { assertReadable } from "../permissions.js"
 import { Connection, type ConnectionOptions, ProtocolError } from "../protocol/connection.js"

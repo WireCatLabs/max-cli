@@ -1,7 +1,7 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Contact, Id, Reactions } from "@wirecat/cli-core"
 import { type ChatAction, currentOperation } from "@wirecat/cli-core/sends"
 import { toContact, toGroupCard, toReactions } from "../domain/map.js"
-import type { Contact, Id, Reactions } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import type { Payload } from "../protocol/frame.js"
 import type { MaxRecord } from "../record.js"

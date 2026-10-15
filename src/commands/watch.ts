@@ -1,15 +1,16 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
+import { type MessageHit, renderMessages } from "@wirecat/cli-core"
 import { messageItem, REMOTE_READ, snakeKeys } from "@wirecat/cli-core/cli"
 import type { AccountKey } from "@wirecat/cli-core/store"
 import { Command } from "commander"
-import { toMessage } from "../adapter/max-adapter.js"
-import type { MessageChange, MessageHit } from "../domain/models.js"
-import { renderMessages } from "../rendering/messages.js"
+import { MAX_APP } from "../app.js"
 import type { ServerEvent } from "../server/server.js"
 import { ensureServer } from "../server/start.js"
 import { subscribe } from "../server/subscribe.js"
 import { forCommand } from "./context.js"
+
+type MessageChange = Extract<ServerEvent, { event: "change" }>["change"]
 
 /**
  * `max watch` — new messages as they arrive, from a running `max serve`, until Ctrl-C.
@@ -44,6 +45,8 @@ export const watchCommand = (): Command =>
           verbosity: settings.detail,
           width: process.stdout.columns ?? 80,
           profile: settings.profile,
+          provider: "max",
+          locale: MAX_APP.locale,
         })
       let seen = false
       let reader: AccountKey | undefined
@@ -107,7 +110,7 @@ export const watchLine = (
     reader,
   }: { events: boolean; pretty: boolean; render: (message: MessageHit) => string; reader: AccountKey },
 ): string | undefined => {
-  const item = (message: MessageHit) => messageItem({ ...toMessage(message), chatTitle: message.chatTitle }, reader)
+  const item = (message: MessageHit) => messageItem(message, reader)
   if (event.event === "change") {
     if (!events) return undefined
     if (pretty) return describeChange(event.change, render)

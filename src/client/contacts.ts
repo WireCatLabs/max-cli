@@ -1,10 +1,11 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Contact, Id, PersonCard, ProfileFacts } from "@wirecat/cli-core"
 import { toContact, toProfileFacts, toSeen } from "../domain/map.js"
-import type { Contact, ContactImport, Id, PersonCard, ProfileFacts } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { MaxRecord, SyncSummary } from "../record.js"
 import type { SessionStore } from "../session/store.js"
+import type { ContactImport } from "./shapes.js"
 import { asArray, type ContactWire, type PhoneBookEntry, record, wirePhone } from "./values.js"
 
 interface Dependencies {

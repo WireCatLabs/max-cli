@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import type { ChatKind, Id, Message } from "@wirecat/cli-core"
+import type { ChatKind, Id, Message, MessageHit } from "@wirecat/cli-core"
 import {
   NO_RULES,
   openRequestTask,
@@ -15,7 +15,6 @@ import { type MessageStore, openStore } from "@wirecat/cli-core/store"
 import { MAX_APP } from "../app.js"
 import type { MaxClient } from "../client.js"
 import { resolveSettings } from "../config.js"
-import type { MessageHit } from "../domain/models.js"
 
 export interface RepliesOptions {
   profile: string

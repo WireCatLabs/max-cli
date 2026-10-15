@@ -1,5 +1,5 @@
+import type { Chat } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
-import type { Chat } from "./domain/models.js"
 import { pickChat } from "./resolve.js"
 
 const chat = (id: string, title: string): Chat => ({

@@ -1,10 +1,11 @@
 import { CliError } from "@wirecat/cli-base"
+import type { AttachmentLink, Button, Id, MediaKind, Message, Page, WindowedMessage } from "@wirecat/cli-core"
 import { delayMs } from "../config.js"
 import { namesFrom, toButtons, toMessage } from "../domain/map.js"
-import type { AttachmentLink, Button, Id, MediaKind, Message, Page, WindowedMessage } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { SessionStore } from "../session/store.js"
+import { maxRef } from "./shapes.js"
 import { asArray, keyboardOf, largestMp4, MEDIA_TYPES, record, timeOfMessageId, viewer } from "./values.js"
 
 interface Dependencies {
@@ -151,18 +152,19 @@ export const createMessageReads = (deps: Dependencies) => {
       const skipped: string[] = []
       for (const attachment of message.attachments) {
         const { kind, name } = attachment
-        if (attachment.fileId) {
-          const answer = await deps.wire.attachments.file({ chatId, messageId, fileId: attachment.fileId })
+        const { fileId, videoId } = maxRef(attachment)
+        if (fileId) {
+          const answer = await deps.wire.attachments.file({ chatId, messageId, fileId })
           const url = typeof answer.url === "string" ? answer.url : undefined
           if (url)
             links.push({ kind, url, ...(name ? { name } : {}), ...(answer.unsafe === true ? { unsafe: true } : {}) })
           else skipped.push(kind)
-        } else if (attachment.videoId) {
-          const answer = await deps.wire.attachments.video({ chatId, messageId, videoId: attachment.videoId })
+        } else if (videoId) {
+          const answer = await deps.wire.attachments.video({ chatId, messageId, videoId })
           const url = largestMp4(answer)
           if (url) links.push({ kind, url })
           else skipped.push(kind)
-        } else if (attachment.url && (kind === "photo" || kind === "audio")) {
+        } else if (attachment.url && (kind === "photo" || kind === "voice")) {
           links.push({ kind, url: attachment.url })
         } else {
           skipped.push(kind)

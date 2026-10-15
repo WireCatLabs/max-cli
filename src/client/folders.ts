@@ -1,5 +1,5 @@
+import type { Folder, Id } from "@wirecat/cli-core"
 import { toFolder } from "../domain/map.js"
-import type { Folder, Id } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import type { Payload } from "../protocol/frame.js"
 import { ALL_CHATS_FOLDER, type FolderChange, folderTitle, pickFolder, record } from "./values.js"

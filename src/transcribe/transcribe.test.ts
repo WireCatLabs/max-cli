@@ -2,11 +2,10 @@ import { createHash } from "node:crypto"
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import type { Message } from "@wirecat/cli-core"
 import { openStore } from "@wirecat/cli-core/store"
 import { describe, expect, it } from "vitest"
-import { toMessage } from "../adapter/max-adapter.js"
 import type { MaxClient } from "../client.js"
-import type { Message } from "../domain/models.js"
 import { maxRecord } from "../record.js"
 import { hearAll, transcribe } from "./index.js"
 import { install, isInstalled, vadPath } from "./install.js"
@@ -101,14 +100,14 @@ describe("transcribing a voice message", () => {
     const env = { MESSAGING_STORE: join(directory, "messages.db") }
     const account = { provider: "max", account: "10000001" }
     const store = await openStore({ env })
-    await store.saveMessages(account, "1", [toMessage(voice)], { via: "history" })
+    await store.saveMessages(account, "1", [voice], { via: "history" })
     const record = maxRecord({ account: () => account.account, env })
     const calls: string[] = []
     const client = {
       messages: {
         links: async () => {
           calls.push("links")
-          return { links: [{ kind: "audio", url: "https://example.test/voice.ogg" }], skipped: [] }
+          return { links: [{ kind: "voice", url: "https://example.test/voice.ogg" }], skipped: [] }
         },
       },
     } as unknown as MaxClient
@@ -170,7 +169,7 @@ describe("transcribing a voice message", () => {
     const { store, account, client, options } = await setup()
     await transcribe(client, "1", "2", options)
 
-    await store.saveMessages(account, "1", [toMessage(voice)], { via: "history" })
+    await store.saveMessages(account, "1", [voice], { via: "history" })
 
     expect(await store.transcript(account, "1", "2")).toEqual({ text: "привет", source: "tiny" })
     await options.record.close()

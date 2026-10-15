@@ -1,7 +1,7 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Contact, Id, Message, QuotedMessage } from "@wirecat/cli-core"
 import { pickPerson as pickStoredPerson } from "@wirecat/cli-core"
 import { toChat, toContact } from "../domain/map.js"
-import type { Contact, Id, Message, QuotedMessage } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import type { Payload } from "../protocol/frame.js"
 import type { MaxRecord } from "../record.js"

@@ -1,12 +1,13 @@
 import { CliError } from "@wirecat/cli-base"
+import type { GroupSettings, Id, Message, ReadMark } from "@wirecat/cli-core"
 import type { ChatAction, Upload as SharedUpload } from "@wirecat/cli-core/sends"
 import { SETTING_FLAGS, toGroupCard } from "../domain/map.js"
-import type { ChatCard, GroupCard, GroupMembers, GroupSettings, Id, Message, ReadMark } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { SessionStore } from "../session/store.js"
 import type { RequestOf } from "../spec/index.js"
 import type { chatsUpdateMembers } from "../spec/operations/chats.js"
+import type { ChatCard, GroupCard, GroupMembers } from "./shapes.js"
 import {
   ADMIN_RIGHTS,
   type AdminRight,
@@ -249,7 +250,7 @@ export const createChatWrites = (deps: Dependencies) => {
       }
 
       const options = Object.fromEntries(
-        entries.map(([ours, value]) => [SETTING_FLAGS[ours as keyof GroupSettings], value as boolean]),
+        entries.map(([ours, value]) => [SETTING_FLAGS[ours as keyof typeof SETTING_FLAGS], value as boolean]),
       )
       return deps.changeChat(async () => {
         const answer = await deps.wire.chats.update({ chatId, options })

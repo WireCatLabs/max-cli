@@ -1,5 +1,5 @@
+import type { Chat } from "@wirecat/cli-core"
 import { isId, pickChat as pickChatFrom } from "@wirecat/cli-core"
-import type { Chat } from "./domain/models.js"
 
 export { isId }
 

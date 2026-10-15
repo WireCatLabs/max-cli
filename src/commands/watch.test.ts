@@ -1,5 +1,6 @@
+import { type MessageHit, renderMessages } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
-import type { MessageHit } from "../domain/models.js"
+import { toMessage } from "../domain/map.js"
 import { watchLine } from "./watch.js"
 
 const message: MessageHit = {
@@ -80,5 +81,29 @@ describe("max watch lines", () => {
       "chat changed: Renamed\n",
     )
     expect(watchLine({ event: "change", change: read }, { ...pretty, events: false })).toBeUndefined()
+  })
+
+  it("draws a poll for a person and leaves it out of the JSON", () => {
+    const poll = {
+      _type: "POLL",
+      pollId: 900,
+      title: "Lunch?",
+      settings: 0,
+      answers: [
+        { answerId: 1, text: "Yes" },
+        { answerId: 2, text: "No" },
+      ],
+      state: { total: 2, result: [{ answerId: 1, voteCount: 2, options: 1 }] },
+    }
+    const wire = { id: 116762160362694583n, time: 1789776000000, sender: 7, text: "", attaches: [poll] }
+    const polled = { ...toMessage(wire, "111"), chatTitle: "First" }
+    const render = (one: MessageHit) => renderMessages([one], { provider: "max", timeZone: "UTC" })
+
+    expect(watchLine({ event: "message", message: polled }, { ...plain, pretty: true, render })).toContain(
+      "📊 Lunch?\n            [1] Yes — 2 ✓\n            [2] No — 0\n            2 voted",
+    )
+    expect(JSON.parse(watchLine({ event: "message", message: polled }, plain) ?? "").attachments).toEqual([
+      { kind: "poll", title: "Lunch?" },
+    ])
   })
 })

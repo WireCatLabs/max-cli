@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
+import type { Deletion, Id, Message, Pin, Reactions } from "@wirecat/cli-core"
 import { namesFrom, toChat, toMessage } from "../domain/map.js"
-import type { Deletion, Id, Message, Pin, Reactions } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { type Markup, parseMarkdown } from "../markdown.js"
 import { asId, type Payload } from "../protocol/frame.js"

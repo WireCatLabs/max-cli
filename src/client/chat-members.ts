@@ -1,8 +1,9 @@
 import { CliError } from "@wirecat/cli-base"
+import type { GroupMember, Id } from "@wirecat/cli-core"
 import { toGroupMember } from "../domain/map.js"
-import type { GroupMember, GroupMembers, Id } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asId, type Payload } from "../protocol/frame.js"
+import type { GroupMembers } from "./shapes.js"
 import { asArray, MEMBERS_PAGE, MEMBERS_READ, record } from "./values.js"
 
 interface Dependencies {

@@ -1,10 +1,11 @@
+import type { Id, MessageHit } from "@wirecat/cli-core"
 import { toChat, toReactions } from "../domain/map.js"
-import type { Id, MessageChange, MessageHit } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
 import type { Wire } from "../protocol/connection.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { SessionStore } from "../session/store.js"
 import { ASSET_TYPES } from "../spec/operations/assets.js"
+import type { MessageChange } from "./shapes.js"
 import {
   asArray,
   CHANGES_CHATS,
