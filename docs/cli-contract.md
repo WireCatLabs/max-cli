@@ -97,12 +97,13 @@ JSONL частичной загрузки добавляет `batch_summary`; у
 ## Короткий результат и что принимает команда
 
 ```sh
-max personal messages list <чат> --json=id,text
+max personal messages list <чат> --json=ref,text,reply_to.text
 max commands messages list --json
 max commands schema messages list --json
 ```
 
 `--json=<поля>` оставляет только перечисленные через запятую поля каждого элемента.
+Точка выбирает вложенное поле: `reply_to.text` оставляет текст сообщения, на которое ответили.
 Сведения о странице в выбранном формате сохраняются. Для `page` и `page.has_more` используйте `--json`:
 JSONL-списки выводят элементы без общей обёртки. Отсутствующее поле остаётся отсутствующим и не
 превращается в ноль.
