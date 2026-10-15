@@ -958,7 +958,7 @@ max personal chats mark-read "Иван Петров"                  # до п�
 ```
 
 ```sh
-max personal chats mark-read "Иван Петров" --until 100000000000000001   # до этого сообщения включительно
+max personal chats mark-read "Иван Петров" --until-id 100000000000000001   # до этого сообщения включительно
 ```
 
 ```sh

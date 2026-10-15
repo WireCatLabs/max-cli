@@ -1262,7 +1262,7 @@ describe("the MCP server", () => {
   it("marks a chat read up to the message given, through the send guards", async () => {
     const { client, max } = await connect({}, { answers: { [Opcode.CHAT_MARK]: { unread: 0, mark: 1789776100000 } } })
 
-    const { isError, body } = await call(client, "chats mark-read", { chat: "111", until: "116762160362694583" })
+    const { isError, body } = await call(client, "chats mark-read", { chat: "111", until_id: "116762160362694583" })
 
     expect(isError).toBe(false)
     expect(body.item).toEqual({ operation_id: expect.any(String), chat_id: "111", until: "116762160362694583" })

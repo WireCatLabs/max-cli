@@ -93,7 +93,7 @@ const invoke = async (...args: string[]) => {
 
 describe("shared PDF page-preview adoption", () => {
   it("returns a retained page image without indexing, then explicitly saves searchable agent text", async () => {
-    const shown = await invoke("attachments", "show", "7", "1", "--page", "1", "--if-sha256", sha256)
+    const shown = await invoke("attachments", "show", "7", "1", "--page", "1", "--expected-fingerprint", sha256)
     expect(shown.code, shown.stderr).toBe(0)
     const preview = JSON.parse(shown.stdout).item
     expect(preview).toMatchObject({

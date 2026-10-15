@@ -132,7 +132,7 @@ max personal messages sync --all                    # все чаты, самы�
 сколько ждать, поэтому `max` не ждёт и не повторяет запрос. На любой другой ошибке команда тоже
 останавливается. Скачанное остаётся, следующий запуск продолжает с того же места
 ([пределы MAX](limits.md)). Реакции `messages sync` не читает, прочитанным ничего не отмечает.
-`--estimate` для MAX не работает: id сообщений MAX не позволяют сосчитать, сколько не хватает.
+`--dry-run` для MAX не работает: id сообщений MAX не позволяют сосчитать, сколько не хватает.
 
 Найти и заполнить пропуски внутри сохранённой истории и сразу подготовить поиск по темам
 (`--catch-up`) — в разделе [если ничего не нашлось](search.md#если-ничего-не-нашлось).
@@ -210,20 +210,20 @@ max personal store export 111 --format jsonl --since-time 2026-09-01 > чат.js
 
 ### Выгружать в папку и добавлять только новое
 
-`--to <папка>` пишет чаты в папку: по файлу JSONL на чат и `manifest.json`. Повторный запуск в ту же
+`--output-dir <папка>` пишет чаты в папку: по файлу JSONL на чат и `manifest.json`. Повторный запуск в ту же
 папку добавляет только то, что изменилось с прошлого раза: новые сообщения, правки (в том числе старых
 сообщений) и удаления. Удалённое сообщение записывается без текста — `{ "id", "chat_id", "deleted": true }`.
 
 ```sh
-max personal store export Друзья Работа --to ~/max-архив
+max personal store export Друзья Работа --output-dir ~/max-архив
 ```
 
 ```sh
-max personal store export --kind group --to ~/max-группы
+max personal store export --include group --output-dir ~/max-группы
 ```
 
 ```sh
-max personal store export --all --to ~/max-всё
+max personal store export --all --output-dir ~/max-всё
 ```
 
 Папку с чужими файлами или выгрузку другого аккаунта `max` не трогает. Изменение одних реакций
@@ -231,7 +231,7 @@ max personal store export --all --to ~/max-всё
 
 ### Пароль
 
-`--encrypt` у `store export` (с `--output` или `--to`) и у `store backup` сжимает файл и шифрует его
+`--encrypt` у `store export` (с `--output` или `--output-dir`) и у `store backup` сжимает файл и шифрует его
 паролем. Внешние программы не нужны. Открыть такой файл — `max personal store decrypt <файл> --output <новый файл>`;
 `max personal store restore` сам спросит пароль зашифрованной копии.
 

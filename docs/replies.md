@@ -84,9 +84,9 @@ max personal serve
 | Поля | Опции |
 |---|---|
 | Действия | `--do reply,task` — ответ, задача или оба действия |
-| Чаты | `--kinds dialog,group`, `--chats`, `--not-chats` |
+| Чаты | `--kinds dialog,group`, `--allow-chats`, `--deny-chats` |
 | Условия | `--words`, `--question` / `--no-question`, `--mentions-me` / `--no-mentions-me` |
-| Отправители | `--people`, `--not-people`, `--contacts-only` / `--no-contacts-only` |
+| Отправители | `--allow-people`, `--deny-people`, `--contacts-only` / `--no-contacts-only` |
 | Ответ | `--template`, `--as-reply` / `--no-as-reply` |
 | Лимиты | `--per-chat`, `--per-person`, например `1/12h` |
 | Рабочее время | `--outside`, `--days`, `--timezone`, `--no-hours` |

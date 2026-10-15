@@ -85,14 +85,14 @@ describe("shared local attachment readers", () => {
       "msg:max/511/7/1",
       "--offset-bytes",
       "8",
-      "--if-sha256",
+      "--expected-fingerprint",
       part.sha256,
     )
     expect(next.code, next.stderr).toBe(0)
     expect(
       Buffer.concat([Buffer.from(part.base64, "base64"), Buffer.from(JSON.parse(next.stdout).item.base64, "base64")]),
     ).toEqual(Buffer.from(readerText()))
-    const refused = await invoke("attachments", "show", "7", "1", "--if-sha256", "0".repeat(64))
+    const refused = await invoke("attachments", "show", "7", "1", "--expected-fingerprint", "0".repeat(64))
     expect(refused.code).not.toBe(0)
   })
 

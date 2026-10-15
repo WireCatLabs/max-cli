@@ -181,8 +181,8 @@ describe("max bot contacts show", () => {
     expect(requests).toEqual([])
   })
 
-  it("re-reads the private chat from MAX with --refresh, in exactly one request", async () => {
-    await json(["first", "bot", "contacts", "show", "@ann", "--refresh"])
+  it("re-reads the private chat from MAX with --sync-first, in exactly one request", async () => {
+    await json(["first", "bot", "contacts", "show", "@ann", "--sync-first"])
     expect(requests).toEqual(["GET /messages?chat_id=500&count=20"])
   })
 })

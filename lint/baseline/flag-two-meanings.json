@@ -1,7 +1,6 @@
 [
   "--add",
   "--by",
-  "--check",
   "--due",
   "--file",
   "--for",
@@ -16,9 +15,6 @@
   "--source",
   "--task",
   "--title",
-  "--to",
   "--type",
-  "--unanswered",
-  "--until",
-  "--within"
+  "--unanswered"
 ]

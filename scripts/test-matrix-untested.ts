@@ -338,7 +338,7 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "chats members fetch",
-    option: "--budget",
+    option: "--max-pages",
     reason:
       "cli-core src/services/members-fetch.test.ts and src/cli/messenger/messenger.test.ts cover member snapshots, tracking and history; max mounts the shared chats command and its MAX member list is driven by groups.test.ts",
   },
@@ -504,7 +504,7 @@ export const UNTESTED: Untested[] = [
     reason:
       "shared chat statistics; cli-core src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts",
   })),
-  ...["", "--budget", "--deep"].map((option) => ({
+  ...["", "--max-pages", "--deep"].map((option) => ({
     command: "chats members audit",
     ...(option ? { option } : {}),
     reason:
@@ -763,7 +763,7 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "tags auto",
-    option: "--refresh-metadata",
+    option: "--sync-first",
     reason:
       "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
   },
@@ -787,10 +787,10 @@ export const UNTESTED: Untested[] = [
   ...[
     ["tasks add", "--title"],
     ["tasks add", "--due"],
-    ["tasks add", "--check"],
+    ["tasks add", "--remind-time"],
     ["tasks plan"],
     ["tasks plan", "--due"],
-    ["tasks plan", "--check"],
+    ["tasks plan", "--remind-time"],
     ["tasks link"],
     ["tasks link", "--chat"],
     ["tasks link", "--kind"],
@@ -835,9 +835,9 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "schedule command",
-    option: "--once",
+    option: "--at-time",
     reason:
-      "cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1)",
+      "cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --at-time is parsed by the same code (0.250.1)",
   },
   {
     command: "schedule agent",
@@ -864,9 +864,9 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "schedule agent",
-    option: "--once",
+    option: "--at-time",
     reason:
-      "cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --once is parsed by the same code (0.250.1)",
+      "cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --at-time is parsed by the same code (0.250.1)",
   },
   {
     command: "schedule list",

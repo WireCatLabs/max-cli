@@ -80,7 +80,7 @@ describe("marking a chat read", () => {
   it("`chats mark-read` marks up to the newest message, or to the one given", async () => {
     const { environment, marks } = messenger()
     const newest = await runWith(["r-chat", "chats", "mark-read", "111"], environment)
-    const given = await runWith(["r-chat", "chats", "mark-read", "Friends", "--until", OLDER], environment)
+    const given = await runWith(["r-chat", "chats", "mark-read", "Friends", "--until-id", OLDER], environment)
 
     expect(newest.code).toBe(0)
     expect(JSON.parse(newest.stdout).item).toEqual({ operation_id: expect.any(String), chat_id: "111", until: null })
@@ -90,7 +90,7 @@ describe("marking a chat read", () => {
 
   it("marks with the read message's own time, as the web client does, so nothing newer is marked", async () => {
     const { max, environment } = messenger()
-    await runWith(["r-time", "chats", "mark-read", "111", "--until", OLDER], environment)
+    await runWith(["r-time", "chats", "mark-read", "111", "--until-id", OLDER], environment)
     await runWith(["r-time", "chats", "mark-read", "111"], environment)
 
     const marks = max.sent.filter(({ opcode }) => opcode === Opcode.CHAT_MARK).map(({ payload }) => payload.mark)

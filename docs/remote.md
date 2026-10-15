@@ -304,18 +304,18 @@ max personal attachments show msg:max/511/7/204 --attachment 1 --json
 не что его текст распознан.
 
 Декодируйте каждую часть base64, соединяйте части по смещению и идите по `next_offset_bytes`, пока он
-не станет null. На следующих запросах передавайте первый SHA256 как `--if-sha256`: если исходный
+не станет null. На следующих запросах передавайте первый SHA256 как `--expected-fingerprint`: если исходный
 файл изменился, запрос завершится ошибкой и не вернёт изменённые байты. Сверьте собранный файл с
 этим хэшем.
 
 ```sh
-max personal attachments show msg:max/511/7/204 --attachment 1 --offset-bytes 524288 --if-sha256 <sha256> --json
+max personal attachments show msg:max/511/7/204 --attachment 1 --offset-bytes 524288 --expected-fingerprint <sha256> --json
 ```
 
 ### Через MCP
 
 `attachments show` находится обычными тремя инструментами. Аргументы: `message` (locator или id
-вместе с `chat`), `attachment`, `offset_bytes`, `chunk_bytes` и `if_sha256`. Целое изображение PNG,
+вместе с `chat`), `attachment`, `offset_bytes`, `chunk_bytes` и `expected_fingerprint`. Целое изображение PNG,
 JPEG или WebP до 8000 пикселей по каждой стороне и до 20 миллионов пикселей всего приходит
 изображением; остальные файлы — встроенным бинарным ресурсом. Частичный ресурс — набор байтов, а не
 целый PDF или изображение. URI ресурса — имя, а не адрес для скачивания.
@@ -360,7 +360,7 @@ max personal attachments show msg:max/511/7/204 --attachment 1 --page 1 --json
 одном формате, сообщите об ограничении приложения вместо выдуманного текста.
 
 `pdf.source_sha256` и `pdf.source_bytes` описывают исходный PDF; верхние `sha256` и `total_bytes` —
-изображение страницы. `--if-sha256` проверяет исходный PDF. `--page` нельзя сочетать с
+изображение страницы. `--expected-fingerprint` проверяет исходный PDF. `--page` нельзя сочетать с
 `--offset-bytes` или `--chunk-bytes`. По умолчанию PDF может быть до 50 МиБ без отдельного предела страниц; PNG — до 4000
 пикселей по каждой стороне и 8 МиБ на страницу. Все три значения можно изменить.
 

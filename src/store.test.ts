@@ -134,10 +134,10 @@ describe("max store", () => {
     expect(pages.map((request) => request?.backward)).toEqual([10, 10])
   })
 
-  it("refuses --estimate: MAX's ids do not count the messages missing", async () => {
+  it("refuses --dry-run: MAX's ids do not count the messages missing", async () => {
     const { environment, sent } = setup()
 
-    const estimate = await max(["s-estimate", "messages", "sync", "111", "--estimate"], environment)
+    const estimate = await max(["s-estimate", "messages", "sync", "111", "--dry-run"], environment)
 
     expect(estimate.code).toBe(2)
     expect(sent(Opcode.CHAT_HISTORY)).toEqual([])
@@ -251,11 +251,20 @@ describe("max conversations", () => {
     const password = { ...environment, stdin: Object.assign(Readable.from(["pw one\n"]), { isTTY: false }) }
     const again = () => ({ ...environment, stdin: Object.assign(Readable.from(["pw one\n"]), { isTTY: false }) })
 
-    const first = await max(["s-folder", "store", "export", "111", "--to", join(root, "one"), "--json"], environment)
-    const second = await max(["s-folder", "store", "export", "111", "--to", join(root, "one"), "--json"], environment)
-    const all = await max(["s-folder", "store", "export", "--all", "--to", join(root, "all"), "--json"], environment)
+    const first = await max(
+      ["s-folder", "store", "export", "111", "--output-dir", join(root, "one"), "--json"],
+      environment,
+    )
+    const second = await max(
+      ["s-folder", "store", "export", "111", "--output-dir", join(root, "one"), "--json"],
+      environment,
+    )
+    const all = await max(
+      ["s-folder", "store", "export", "--all", "--output-dir", join(root, "all"), "--json"],
+      environment,
+    )
     const kind = await max(
-      ["s-folder", "store", "export", "--kind", "dialog,group", "--to", join(root, "kind"), "--json"],
+      ["s-folder", "store", "export", "--include", "dialog,group", "--output-dir", join(root, "kind"), "--json"],
       environment,
     )
     const sealed = await max(

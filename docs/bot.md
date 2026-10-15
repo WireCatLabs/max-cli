@@ -228,7 +228,7 @@ max sales bot store fetch "Команда продаж" --since-time 7d # за �
 
 ```sh
 max sales bot contacts show @ann                 # где писала, и её личный чат с ботом
-max sales bot contacts show @ann --refresh       # сначала перечитать личный чат у MAX
+max sales bot contacts show @ann --sync-first    # сначала перечитать личный чат у MAX
 max sales bot search messages --from @ann        # всё, что она написала
 max sales bot search messages "счёт" --from @ann --from Борис
 max sales bot messages between @ann Борис --limit 20
@@ -288,7 +288,7 @@ max sales bot chats moderate -72894839451 --dry-run              # только 
 
 - **Удалённого бот банит**: вернуться по ссылке человек не сможет — у него ссылка открывается как
   «устаревшая или не работает», у остальных работает. Вернуть его может админ, добавив вручную
-  (`max personal chats members add`). `--no-ban` — удалить без бана. Бан работает только в чатах со
+  (`max personal chats members add`). `--no-block` — удалить без бана. Бан работает только в чатах со
   ссылкой-приглашением.
 - **Кто вступил, бот знает только от `watch`.** MAX отдаёт каждое событие одному читателю,
   поэтому проверка берёт вступления из того, что сохранил `watch`. Пока `watch` не запущен, проверка

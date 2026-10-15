@@ -182,14 +182,14 @@ describe("shared search adoption", () => {
       "кафе",
       "--filter",
       "from:me",
-      "--refresh",
+      "--catch-up",
       "--max-chats",
       "1",
       "--max-chunks",
       "2",
     ])
     expect(result.code).toBe(2)
-    expect(result.stderr).toContain("--refresh cannot be combined")
+    expect(result.stderr).toContain("--catch-up cannot be combined")
     expect(result.stdout).toBe("")
   })
   it("requires a chat for provider analysis before reading credentials", async () => {
