@@ -301,7 +301,10 @@ export const maxAdapter = (
     privacy: () => client.account.privacy(),
     mute: (chatId, until) => client.account.mute(chatId, until),
     updatePrivacy: (change) => client.account.updatePrivacy(change),
-    media: (chatId, { kinds, limit, before }) => client.messages.media(chatId, kinds, limit, before),
+    media: async (chatId, { kinds, limit, before }) => {
+      const page = await client.messages.media(chatId, kinds, limit, before)
+      return { ...page, items: page.items.map(toMessage) }
+    },
     stickerSets: () => client.stickers.sets(),
     stickers: (setId) => client.stickers.list(setId),
 
