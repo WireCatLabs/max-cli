@@ -4,6 +4,20 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
+## Не выпущено
+
+### Изменено — может сломать скрипты
+
+- **Флаги называются так, как их называет общий словарь** (cli-core 0.287.0, cli-base 0.32.0), старые имена
+  больше не принимаются: `--budget` → `--max-pages`, `--estimate` → `--dry-run`, `--refresh` и
+  `--refresh-metadata` → `--sync-first` (в `search conversations` — `--catch-up`), `--if-sha256` →
+  `--expected-fingerprint`, `replies edit --chats/--not-chats/--people/--not-people` →
+  `--allow-chats/--deny-chats/--allow-people/--deny-people`, `schedule --once` → `--at-time`, `--no-ban` →
+  `--no-block`, `chats mark-read --until` → `--until-id`, `tasks --check` → `--remind-time`,
+  `store export --to/--kind` → `--output-dir/--include`.
+- **Каждый ответ `--json` — конверт `item` или `items` + `page`**: предпросмотр `--dry-run` отвечает под `item`
+  с ключами `action_invoked` и `write_reserved`, ресурс MCP `max://chat/<id>` — тоже под `item`.
+
 ## 0.54.0 — 15.10.2026
 
 ### Что нового
