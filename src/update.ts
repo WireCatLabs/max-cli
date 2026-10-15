@@ -62,9 +62,7 @@ export const updateNotice = (
     )
       return Promise.resolve(undefined)
 
-    if (argv.includes("upgrade")) return Promise.resolve(undefined)
     const pretty = !argv.includes("--json") && !argv.includes("--jsonl") && (tty ?? process.stdout.isTTY === true)
-    // cli-base names the command `update`; it is `upgrade` here (CONVENTIONS, "Command names").
     return sharedNotice({
       argv,
       packageName: PACKAGE,
@@ -80,7 +78,7 @@ export const updateNotice = (
       installer: installer(environment),
       env,
       offVariables: ["MAX_NO_UPDATE_CHECK"],
-    }).then((line) => line?.replace("`max update`", "`max upgrade`"))
+    })
   } catch {
     return Promise.resolve(undefined)
   }
