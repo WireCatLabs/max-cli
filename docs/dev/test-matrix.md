@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**923 ✅ · 145 ⛔ · 0 ❌** — 336 commands, 732 options.
+**924 ✅ · 144 ⛔ · 0 ❌** — 336 commands, 732 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -825,7 +825,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mcp config` | `--permission` | ✅ |  |
 | `mcp setup` |  | ✅ |  |
 | `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--permission` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--permission` | ✅ |  |
 | `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `mcp doctor` | `--permission` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `bot auth set` |  | ✅ |  |
