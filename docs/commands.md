@@ -930,7 +930,7 @@ max chats start <bot> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--payload <text>` | the start parameter the bot reads; a link's own ?start= when not given. |
+| `--start <param>` | the start parameter the bot reads; a link's own ?start= when not given. |
 
 ### `max chats app`
 
@@ -1104,7 +1104,7 @@ max contacts notes edit <person> <id> [options]
 | Опция | Что делает |
 |---|---|
 | `--file <path>` | read note text from a file; omitted or - reads stdin. |
-| `--revision <number>` | the revision you read before editing. |
+| `--revision <n>` | the revision you read before editing. |
 
 #### `max contacts notes remove`
 
@@ -1258,7 +1258,7 @@ max contacts timeline <person> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--scope <personal\|work>` | only what belongs to personal or to work accounts. |
+| `--scope <scope>` | only what belongs to personal or to work accounts: personal or work. |
 | `--since-time <time>` | nothing older than this ISO 8601 time, or 2h / 1d ago. |
 | `--until-time <time>` | through this ISO 8601 time, or 2h / 1d ago. |
 | `--limit <n>` | at most this many; 50 if not given. |
@@ -2284,7 +2284,7 @@ max stats tasks show [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
-| `--type <name>` | only this type: question, request, mention or promise. |
+| `--type <type>` | only this type: question, request, mention or promise. |
 
 ### `max stats charts`
 
@@ -2344,13 +2344,13 @@ max tasks add <message> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--type <name>` | the task's type: question, request, mention or promise. |
+| `--type <type>` | the task's type: question, request, mention or promise. |
 | `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …. |
-| `--attach <task>` | when tasks add listed tasks that may be the same job: link the message to this one instead of opening a task. |
+| `--into <id>` | when tasks add listed tasks that may be the same job: link the message to this one instead of opening a task. |
 | `--new` | when tasks add listed tasks that may be the same job: open the task anyway. |
-| `--title <text>` | one line: the action and its object — send Alex the API token. |
+| `--title <title>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
-| `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
+| `--due <time>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
 | `--remind-time <time>` | when to look at it again: an ISO 8601 time or 2h, 3d from now; none clears it. |
 
 ### `max tasks plan`
@@ -2370,9 +2370,9 @@ max tasks plan <task> [options]
 | Опция | Что делает |
 |---|---|
 | `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …; a change is kept in the task's history. |
-| `--title <text>` | one line: the action and its object — send Alex the API token. |
+| `--title <title>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
-| `--due <when>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
+| `--due <time>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
 | `--remind-time <time>` | when to look at it again: an ISO 8601 time or 2h, 3d from now; none clears it. |
 
 ### `max tasks link`
@@ -2407,12 +2407,12 @@ max tasks show <task>
 |---|---|---|
 | `task` | обязательный | the task's id or key, as tasks list shows it. |
 
-### `max tasks similar`
+### `max tasks related`
 
 tasks that may be the same job as this one, best first, each with a band — likely, maybe, different — and the reasons; merges nothing
 
 ```sh
-max tasks similar <task> [options]
+max tasks related <task> [options]
 ```
 
 | Аргумент | | Что это |
@@ -2425,15 +2425,18 @@ max tasks similar <task> [options]
 
 ### `max tasks duplicates`
 
-pairs of tasks a rule opened that may be one job, newest first, with score and reasons: merge, reject or mark each unsure; --unsure lists the ones left for the owner
+pairs of tasks a rule opened that may be one job, newest first, with score and reasons: merge, reject or defer each; decision:unsure lists the ones deferred to the owner
 
 ```sh
-max tasks duplicates [options]
+max tasks duplicates [query] [options]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
-| `--unsure` | only the pairs the reviewing agent marked unsure. |
 | `--limit <n>` | how many. |
 
 #### `max tasks duplicates reject`
@@ -2451,14 +2454,14 @@ max tasks duplicates reject <dup> <task>
 | `dup` | обязательный | the task listed as the duplicate, by its id or key. |
 | `task` | обязательный | the task it was paired with. |
 
-#### `max tasks duplicates unsure`
+#### `max tasks duplicates defer`
 
-the fields and the text cannot tell: leave the pair to the owner, who lists it with --unsure
+the fields and the text cannot tell: leave the pair to the owner, who lists it with decision:unsure
 
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max tasks duplicates unsure <dup> <task>
+max tasks duplicates defer <dup> <task>
 ```
 
 | Аргумент | | Что это |
@@ -2482,7 +2485,7 @@ max tasks merge <dup> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--into <task>` | the task that stays. |
+| `--into <id>` | the task that stays, by its id or key. |
 
 ### `max tasks unmerge`
 
@@ -2512,13 +2515,10 @@ max tasks agenda [query] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--due <span>` | list tasks due within this: 30m, 2h, 1d (default 1d). |
-| `--unanswered <span>` | list chats where someone else wrote last this long ago (default 1d). |
-| `--waiting <span>` | list chats where you wrote last this long ago (default 7d). |
+| `--due-within <duration>` | list tasks due within this: 30m, 2h, 1d (default 1d). |
+| `--unanswered <duration>` | list chats where someone else wrote last this long ago (default 1d). |
+| `--waiting <duration>` | list chats where you wrote last this long ago (default 7d). |
 | `--within <duration>` | leave out chats silent longer than this: they ended (default 30d). |
-| `--claimed` | also list tasks someone else holds (tasks claim); hidden by default. |
-| `--category <name>` | only tasks of this category, from the list tasks categories prints. |
-| `--tag <name>` | only tasks with this tag (tags add --task). |
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
 ### `max tasks categories`
@@ -2545,7 +2545,7 @@ max tasks claim <task> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--for <span>` | how long the claim lasts: 30m, 2h (default 30m); claiming again extends it. |
+| `--lease <duration>` | how long the claim lasts: 30m, 2h (default 30m); claiming again extends it. |
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
 ### `max tasks release`
@@ -2952,7 +2952,7 @@ max tags add <tag> [options]
 | `--chat <chat>` | the chat to tag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to tag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to tag: its id in --chat, or a msg: locator alone. |
-| `--task <task>` | the task to tag: its id or key, as tasks list shows it. |
+| `--task <id>` | the task to tag: its id or key, as tasks list shows it. |
 
 ### `max tags remove`
 
@@ -2973,7 +2973,7 @@ max tags remove <tag> [options]
 | `--chat <chat>` | the chat to untag, or the chat of --message; a chat: its id, or part of its title. |
 | `--contact <person>` | the person to untag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to untag: its id in --chat, or a msg: locator alone. |
-| `--task <task>` | the task to untag: its id or key, as tasks list shows it. |
+| `--task <id>` | the task to untag: its id or key, as tasks list shows it. |
 | `--source <manual\|auto>` | remove only this ownership claim. |
 
 ### `max tags list`
@@ -3193,7 +3193,7 @@ max search all <query> [options]
 |---|---|
 | `--only <resources>` | only these resources, separated by commas: messages, notes; meetings when --source names a meeting account. |
 | `--source <accounts>` | only these accounts, separated by commas: provider:account as a hit shows it, a provider, a kind or group:<name>; each resource reads the ones of its kind, and meetings only when it names one. |
-| `--max-meetings <n\|all>` | how many of the meeting account's meetings to look through, newest first; all looks through every one (default 100). |
+| `--max-meetings <n>` | how many of the meeting account's meetings to look through, newest first, or all for every one (default 100). |
 | `--limit <n>` | how many. |
 | `--page <n>` | which page, starting at 1. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does. |
@@ -4009,7 +4009,7 @@ max server logs [options]
 
 | Опция | Что делает |
 |---|---|
-| `-n, --lines <n>` | how many lines. По умолчанию: `50`. |
+| `-n, --limit <n>` | how many lines. По умолчанию: `50`. |
 
 ### `max server install`
 

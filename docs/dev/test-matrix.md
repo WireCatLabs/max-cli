@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**917 ✅ · 163 ⛔ · 0 ❌** — 342 commands, 738 options.
+**917 ✅ · 159 ⛔ · 0 ❌** — 342 commands, 734 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -123,7 +123,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats clear` |  | ✅ |  |
 | `chats clear` | `--allow-dangerous` | ✅ |  |
 | `chats start` |  | ✅ |  |
-| `chats start` | `--payload` | ✅ |  |
+| `chats start` | `--start` | ✅ |  |
 | `chats app` |  | ✅ |  |
 | `chats app` | `--start` | ✅ |  |
 | `contacts list` |  | ✅ |  |
@@ -421,7 +421,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks add` |  | ✅ |  |
 | `tasks add` | `--type` | ✅ |  |
 | `tasks add` | `--category` | ✅ |  |
-| `tasks add` | `--attach` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks add` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks add` | `--new` | ✅ |  |
 | `tasks add` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks add` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
@@ -437,28 +437,24 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks link` | `--chat` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks link` | `--kind` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks show` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks similar` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists the tasks that may be the same job") drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks similar` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
-| `tasks duplicates` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks duplicates` | `--unsure` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks related` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists the tasks that may be the same job") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks related` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
+| `tasks duplicates` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks duplicates` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
 | `tasks duplicates reject` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks duplicates unsure` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks merge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
-| `tasks merge` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks duplicates defer` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks merge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks merge` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks unmerge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks agenda` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks agenda` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--due-within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--unanswered` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks agenda` | `--waiting` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks agenda` | `--claimed` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
-| `tasks agenda` | `--category` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("keys, categorizes, tags and claims a task") filters the agenda by category and tag through the shared handler MAX mounts (0.285.0) |
-| `tasks agenda` | `--tag` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("keys, categorizes, tags and claims a task") filters the agenda by category and tag through the shared handler MAX mounts (0.285.0) |
 | `tasks agenda` | `--holder` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks categories` |  | ✅ |  |
 | `tasks claim` |  | ✅ |  |
-| `tasks claim` | `--for` | ✅ |  |
+| `tasks claim` | `--lease` | ✅ |  |
 | `tasks claim` | `--holder` | ✅ |  |
 | `tasks release` |  | ✅ |  |
 | `tasks release` | `--holder` | ✅ |  |
@@ -771,7 +767,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `server restart` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server status` |  | ✅ |  |
 | `server logs` |  | ✅ |  |
-| `server logs` | `--lines` | ✅ |  |
+| `server logs` | `--limit` | ✅ |  |
 | `server install` |  | ✅ |  |
 | `server uninstall` |  | ✅ |  |
 | `schedule command` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |

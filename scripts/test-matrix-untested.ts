@@ -796,7 +796,7 @@ export const UNTESTED: Untested[] = [
     ["tasks link", "--kind"],
     ["tasks show"],
     ["tasks agenda"],
-    ["tasks agenda", "--due"],
+    ["tasks agenda", "--due-within"],
     ["tasks agenda", "--waiting"],
     ["tasks agenda", "--within"],
   ].map(([command, option]) => ({
@@ -913,27 +913,16 @@ export const UNTESTED: Untested[] = [
   ),
 
   ...[
-    ["tasks add", "--attach"],
+    ["tasks add", "--into"],
     ["tasks add", "--new"],
     ["tasks duplicates"],
-    ["tasks duplicates", "--unsure"],
     ["tasks merge"],
     ["tasks merge", "--into"],
   ].map(([command, option]) => ({
     command: command as string,
     ...(option ? { option } : {}),
     reason:
-      'cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --attach, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0)',
-  })),
-
-  ...[
-    ["tasks agenda", "--category"],
-    ["tasks agenda", "--tag"],
-  ].map(([command, option]) => ({
-    command: command as string,
-    option,
-    reason:
-      'cli-core src/cli/messenger/tasks.test.ts ("keys, categorizes, tags and claims a task") filters the agenda by category and tag through the shared handler MAX mounts (0.285.0)',
+      'cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0)',
   })),
 
   {
@@ -953,7 +942,7 @@ export const UNTESTED: Untested[] = [
   ...[
     ["mentions domains", "--limit"],
     ["mentions domains", "--page"],
-    ["tasks similar", "--limit"],
+    ["tasks related", "--limit"],
     ["tasks duplicates", "--limit"],
   ].map(([command, option]) => ({
     command: command as string,
@@ -962,13 +951,13 @@ export const UNTESTED: Untested[] = [
       "paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0)",
   })),
 
-  ...["tasks duplicates reject", "tasks duplicates unsure", "tasks unmerge"].map((command) => ({
+  ...["tasks duplicates reject", "tasks duplicates defer", "tasks unmerge"].map((command) => ({
     command,
     reason:
       'cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0)',
   })),
   {
-    command: "tasks similar",
+    command: "tasks related",
     reason:
       'cli-core src/cli/messenger/tasks.test.ts ("lists the tasks that may be the same job") drives this through the shared handler MAX mounts (0.285.0)',
   },

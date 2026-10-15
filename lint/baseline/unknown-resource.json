@@ -19,7 +19,6 @@
   "conversations embed",
   "conversations links",
   "doctor report",
-  "images",
   "metadata",
   "models audio",
   "models text",
@@ -28,6 +27,5 @@
   "schedule",
   "stats messages counters",
   "stickers",
-  "store gaps",
-  "tasks duplicates"
+  "store gaps"
 ]

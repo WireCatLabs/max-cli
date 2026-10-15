@@ -1127,7 +1127,7 @@ max personal chats start <бот>                                 # запуст
 ```
 
 ```sh
-max personal chats start <бот> --payload ref1                  # с параметром, как ссылка max.ru/<бот>?start=ref1
+max personal chats start <бот> --start ref1                    # с параметром, как ссылка max.ru/<бот>?start=ref1
 ```
 
 ```sh

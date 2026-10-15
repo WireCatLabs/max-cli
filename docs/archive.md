@@ -315,7 +315,7 @@ max personal server start            # то же, но в фоне; ответ �
 max personal server status           # работает ли, с какого времени, какой версии, подключён ли к MAX
 max personal server restart          # остановить и запустить снова — например, после обновления max
 max personal server stop             # остановить сервер профиля, как бы он ни был запущен
-max personal server logs             # последние строки его журнала; --lines 200 — больше
+max personal server logs             # последние строки его журнала; --limit 200 — больше
 max personal server install          # служба systemd (Linux) или launchd (macOS) для профиля; ничего не запускает
 max personal server uninstall        # убрать службу; сначала max personal server stop
 max personal watch                   # в другом: новые сообщения по мере прихода

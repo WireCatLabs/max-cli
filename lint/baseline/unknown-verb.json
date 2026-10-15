@@ -21,10 +21,8 @@
   "conversations batches next",
   "conversations build",
   "conversations consents revoke",
-  "images embed",
   "mcp doctor",
   "mcp setup",
-  "mentions domains",
   "messages links",
   "messages press",
   "metadata get",
@@ -53,13 +51,5 @@
   "store jobs retry",
   "store reindex",
   "tags auto",
-  "tasks agenda",
-  "tasks categories",
-  "tasks claim",
-  "tasks duplicates unsure",
-  "tasks merge",
-  "tasks plan",
-  "tasks release",
-  "tasks similar",
-  "tasks unmerge"
+  "tasks plan"
 ]
