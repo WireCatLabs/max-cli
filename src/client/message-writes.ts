@@ -1,5 +1,4 @@
 import { CliError } from "@wirecat/cli-base"
-import type { GuardRequest, SendGuard } from "@wirecat/cli-core/sends"
 import { namesFrom, toChat, toMessage } from "../domain/map.js"
 import type { Deletion, Id, Message, Pin, Reactions } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
@@ -8,19 +7,16 @@ import { asId, type Payload } from "../protocol/frame.js"
 import type { SessionStore } from "../session/store.js"
 import type { Upload } from "./types.js"
 import { prepareUploads } from "./uploads.js"
-import { asArray, asCliError, DELETE_AT_ONCE, keyboardOf, record, timeOfMessageId, viewer } from "./values.js"
+import { asArray, DELETE_AT_ONCE, keyboardOf, record, timeOfMessageId, viewer } from "./values.js"
 
 interface Dependencies {
   readonly offline: boolean
-  guard: (request: GuardRequest & { chatId: Id }, messageId?: Id) => Promise<void>
   connectOnce: () => Promise<void>
   rawMessage: (chatId: Id, messageId: Id) => Promise<Payload>
   botWrite: (action: () => Promise<unknown>, uncertain: string, details: Record<string, unknown>) => Promise<void>
   readonly wire: Pick<ReturnType<typeof wireClient>, "messages" | "chats">
   readonly now: () => number
-  readonly sends: SendGuard | undefined
   nextCid: () => number
-  checked: (request: GuardRequest) => Promise<void>
   deliver: (
     chatId: Id,
     text: string,
@@ -39,7 +35,7 @@ interface Dependencies {
       at?: number
     },
   ) => Promise<Message>
-  reaction: (chatId: Id, messageId: Id, call: () => Promise<Payload>, key?: string) => Promise<Reactions>
+  reaction: (call: () => Promise<Payload>) => Promise<Reactions>
   session: () => Payload
   readonly store: SessionStore
 }
@@ -48,39 +44,25 @@ export const createMessageWrites = (deps: Dependencies) => {
   const resource = {
     press: async (chatId: Id, messageId: Id, row: number, column: number): Promise<void> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot press")
-      await deps.guard({ chatId, kind: "reaction", key: "messages.press" }, messageId)
-      try {
-        await deps.connectOnce()
-        const keyboard = keyboardOf(await deps.rawMessage(chatId, messageId))
-        const rows = record(keyboard?.keyboard)?.buttons
-        const button = record(Array.isArray(rows) && Array.isArray(rows[row]) ? rows[row][column] : undefined)
-        if (!keyboard || typeof keyboard.callbackId !== "string" || !button)
-          throw new CliError("not_found", `message ${messageId} has no such button`)
-        if (button.type !== "CALLBACK") throw new CliError("validation_error", "only a callback button can be pressed")
-        const callbackId = keyboard.callbackId
-        await deps.botWrite(
-          () =>
-            deps.wire.messages.press({
-              callbackId,
-              type: "CALLBACK",
-              ...(typeof button.payload === "string" && button.payload !== "" ? { payload: button.payload } : {}),
-              timestamp: deps.now(),
-            }),
-          "the bot may already have received this button press",
-          { messageId },
-        )
-        deps.sends?.record({ chatId, kind: "reaction", outcome: "sent", messageId })
-      } catch (error) {
-        const failure = asCliError(error)
-        deps.sends?.record({
-          chatId,
-          kind: "reaction",
-          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          messageId,
-          errorCode: failure.code,
-        })
-        throw error
-      }
+      await deps.connectOnce()
+      const keyboard = keyboardOf(await deps.rawMessage(chatId, messageId))
+      const rows = record(keyboard?.keyboard)?.buttons
+      const button = record(Array.isArray(rows) && Array.isArray(rows[row]) ? rows[row][column] : undefined)
+      if (!keyboard || typeof keyboard.callbackId !== "string" || !button)
+        throw new CliError("not_found", `message ${messageId} has no such button`)
+      if (button.type !== "CALLBACK") throw new CliError("validation_error", "only a callback button can be pressed")
+      const callbackId = keyboard.callbackId
+      await deps.botWrite(
+        () =>
+          deps.wire.messages.press({
+            callbackId,
+            type: "CALLBACK",
+            ...(typeof button.payload === "string" && button.payload !== "" ? { payload: button.payload } : {}),
+            timestamp: deps.now(),
+          }),
+        "the bot may already have received this button press",
+        { messageId },
+      )
     },
     send: async (
       chatId: Id,
@@ -120,7 +102,6 @@ export const createMessageWrites = (deps: Dependencies) => {
         )
       }
 
-      // Read before the guard holds a place under the limit: a file that is refused sends nothing.
       const files = await prepareUploads(options)
 
       // Measured 2026-09-24: photos share a message, but a file with anything beside it is refused `proto.payload`.
@@ -132,50 +113,15 @@ export const createMessageWrites = (deps: Dependencies) => {
         )
       }
 
-      const cid = options.cid ?? deps.nextCid()
-      const sendId = String(cid)
-      // Before connecting: a refused send never opens a socket when the chat was given as an id.
-      try {
-        await deps.checked({
-          chatId,
-          kind: "message",
-          sendId,
-          ...(options.at === undefined ? {} : { scheduledFor: new Date(options.at).toISOString() }),
-        })
-      } catch (error) {
-        deps.sends?.record({ chatId, outcome: "refused", sendId, errorCode: asCliError(error).code })
-        throw error
-      }
-
-      const attachments = files.map(({ body, kind }) => ({ kind, bytes: body.size }))
-      const summary = {
-        ...(attachments.length > 0 ? { attachments } : {}),
-        ...(options.at === undefined ? {} : { scheduledFor: new Date(options.at).toISOString() }),
-      }
-      try {
-        const sticker = options.sticker === undefined ? [] : [{ _type: "STICKER", stickerId: Number(options.sticker) }]
-        const sent = await deps.deliver(chatId, text, cid, { ...options, files, attaches: sticker })
-        deps.sends?.record({ chatId, outcome: "sent", messageId: sent.id, sendId, length: text.length, ...summary })
-        return sent
-      } catch (error) {
-        const failure = asCliError(error)
-        deps.sends?.record({
-          chatId,
-          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          sendId,
-          length: text.length,
-          ...summary,
-          errorCode: failure.code,
-        })
-        throw error
-      }
+      const sticker = options.sticker === undefined ? [] : [{ _type: "STICKER", stickerId: Number(options.sticker) }]
+      return deps.deliver(chatId, text, options.cid ?? deps.nextCid(), { ...options, files, attaches: sticker })
     },
     react: (chatId: Id, messageId: Id, emoji: string): Promise<Reactions> =>
-      deps.reaction(chatId, messageId, () =>
+      deps.reaction(() =>
         deps.wire.messages.react({ chatId, messageId, reaction: { reactionType: "EMOJI", id: emoji } }),
       ),
     unreact: (chatId: Id, messageId: Id): Promise<Reactions> =>
-      deps.reaction(chatId, messageId, () => deps.wire.messages.unreact({ chatId, messageId }), "reactions.remove"),
+      deps.reaction(() => deps.wire.messages.unreact({ chatId, messageId })),
     edit: async (
       chatId: Id,
       messageId: Id,
@@ -183,43 +129,34 @@ export const createMessageWrites = (deps: Dependencies) => {
       { markdown = false, markup }: { markdown?: boolean; markup?: Markup[] } = {},
     ): Promise<Message> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot edit")
-      await deps.guard({ chatId, kind: "edit" }, messageId)
-
-      try {
-        await deps.connectOnce()
-        const lookup = { names: namesFrom(deps.session().contacts), ...viewer(deps.store) }
-        const raw = await deps.rawMessage(chatId, messageId)
-        const current = toMessage(raw, chatId, lookup)
-        if (current.outgoing !== true) {
-          throw new CliError("validation_error", `message ${messageId} is not yours — only your own can be edited`)
-        }
-        if (record(raw.link)?.type === "FORWARD") {
-          throw new CliError("validation_error", `message ${messageId} is a forward — a forward cannot be edited`)
-        }
-        // Only a photo was measured to survive the round trip; the web client refuses files, stickers and the rest too.
-        const other = current.attachments.find((attachment) => attachment.kind !== "photo")
-        if (other) {
-          throw new CliError(
-            "validation_error",
-            `message ${messageId} carries a ${other.kind} — only text and photos can be edited`,
-          )
-        }
-
-        const parsed = markup ? { text, markup } : markdown ? parseMarkdown(text) : { text, markup: [] }
-        const answer = await deps.wire.messages.edit({
-          chatId,
-          messageId,
-          text: parsed.text,
-          elements: parsed.markup,
-          attachments: asArray(raw.attaches),
-        })
-        deps.sends?.record({ chatId, kind: "edit", outcome: "sent", messageId, length: text.length })
-        return toMessage(record(answer.message) ?? raw, chatId, lookup)
-      } catch (error) {
-        const failure = asCliError(error)
-        deps.sends?.record({ chatId, kind: "edit", outcome: "failed", messageId, errorCode: failure.code })
-        throw error
+      await deps.connectOnce()
+      const lookup = { names: namesFrom(deps.session().contacts), ...viewer(deps.store) }
+      const raw = await deps.rawMessage(chatId, messageId)
+      const current = toMessage(raw, chatId, lookup)
+      if (current.outgoing !== true) {
+        throw new CliError("validation_error", `message ${messageId} is not yours — only your own can be edited`)
       }
+      if (record(raw.link)?.type === "FORWARD") {
+        throw new CliError("validation_error", `message ${messageId} is a forward — a forward cannot be edited`)
+      }
+      // Only a photo was measured to survive the round trip; the web client refuses files, stickers and the rest too.
+      const other = current.attachments.find((attachment) => attachment.kind !== "photo")
+      if (other) {
+        throw new CliError(
+          "validation_error",
+          `message ${messageId} carries a ${other.kind} — only text and photos can be edited`,
+        )
+      }
+
+      const parsed = markup ? { text, markup } : markdown ? parseMarkdown(text) : { text, markup: [] }
+      const answer = await deps.wire.messages.edit({
+        chatId,
+        messageId,
+        text: parsed.text,
+        elements: parsed.markup,
+        attachments: asArray(raw.attaches),
+      })
+      return toMessage(record(answer.message) ?? raw, chatId, lookup)
     },
     forward: async (
       fromChatId: Id,
@@ -228,29 +165,11 @@ export const createMessageWrites = (deps: Dependencies) => {
       options: { cid?: number; notify?: boolean } = {},
     ): Promise<Message> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot forward")
-      const cid = options.cid ?? deps.nextCid()
-      const sendId = String(cid)
-      await deps.guard({ chatId: toChatId, kind: "forward", sendId })
-
-      try {
-        const sent = await deps.deliver(toChatId, "", cid, {
-          ...options,
-          forward: { chatId: fromChatId, messageId },
-          repeat: `max messages forward ${fromChatId} ${messageId} --to ${toChatId}`,
-        })
-        deps.sends?.record({ chatId: toChatId, kind: "forward", outcome: "sent", messageId: sent.id, sendId })
-        return sent
-      } catch (error) {
-        const failure = asCliError(error)
-        deps.sends?.record({
-          chatId: toChatId,
-          kind: "forward",
-          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          sendId,
-          errorCode: failure.code,
-        })
-        throw error
-      }
+      return deps.deliver(toChatId, "", options.cid ?? deps.nextCid(), {
+        ...options,
+        forward: { chatId: fromChatId, messageId },
+        repeat: `max messages forward ${fromChatId} ${messageId} --to ${toChatId}`,
+      })
     },
     delete: async (chatId: Id, messageIds: Id[], { forEveryone = false } = {}): Promise<Deletion> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot delete")
@@ -266,76 +185,49 @@ export const createMessageWrites = (deps: Dependencies) => {
         if (time === undefined) throw new CliError("validation_error", `"${id}" is not a message id`)
         return time
       })
-      const count = messageIds.length
-      await deps.guard({ chatId, kind: "delete", count, forEveryone })
-
+      await deps.connectOnce()
+      await deps.wire.messages.delete({ chatId, messageIds, forMe: !forEveryone })
+      const retained: Id[] = []
       try {
-        await deps.connectOnce()
-        await deps.wire.messages.delete({ chatId, messageIds, forMe: !forEveryone })
-        const retained: Id[] = []
-        try {
-          for (const [index, id] of messageIds.entries()) {
-            const answer = await deps.wire.chats.history({
-              chatId,
-              from: times[index] as number,
-              backward: 1,
-              forward: 0,
-              getMessages: true,
-            })
-            if (!Array.isArray(answer.messages)) throw new Error("missing history")
-            if (answer.messages.some((raw) => asId(record(raw)?.id) === id && record(raw)?.status !== "REMOVED"))
-              retained.push(id)
-          }
-        } catch {
-          throw new CliError(
-            "outcome_unknown",
-            "MAX accepted the deletion but its result could not be verified — read the messages before any retry",
-            { reason: "deletion_unconfirmed" },
-          )
+        for (const [index, id] of messageIds.entries()) {
+          const answer = await deps.wire.chats.history({
+            chatId,
+            from: times[index] as number,
+            backward: 1,
+            forward: 0,
+            getMessages: true,
+          })
+          if (!Array.isArray(answer.messages)) throw new Error("missing history")
+          if (answer.messages.some((raw) => asId(record(raw)?.id) === id && record(raw)?.status !== "REMOVED"))
+            retained.push(id)
         }
-        if (retained.length)
-          throw new CliError(
-            "outcome_unknown",
-            `MAX still returns messages ${retained.join(", ")} after the deletion — read them before any retry`,
-            { reason: "deletion_unconfirmed", retained },
-          )
-        deps.sends?.record({ chatId, kind: "delete", outcome: "sent", count, forEveryone })
-        return { chatId, deleted: messageIds, forEveryone }
-      } catch (error) {
-        deps.sends?.record({
-          chatId,
-          kind: "delete",
-          outcome: "failed",
-          count,
-          forEveryone,
-          errorCode: asCliError(error).code,
-        })
-        throw error
+      } catch {
+        throw new CliError(
+          "outcome_unknown",
+          "MAX accepted the deletion but its result could not be verified — read the messages before any retry",
+          { reason: "deletion_unconfirmed" },
+        )
       }
+      if (retained.length)
+        throw new CliError(
+          "outcome_unknown",
+          `MAX still returns messages ${retained.join(", ")} after the deletion — read them before any retry`,
+          { reason: "deletion_unconfirmed", retained },
+        )
+      return { chatId, deleted: messageIds, forEveryone }
     },
     pin: async (chatId: Id, messageId: Id | null, { notify = false } = {}): Promise<Pin> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot pin")
-      await deps.guard(
-        { chatId, kind: "pin", notify, key: messageId === null ? "messages.unpin" : "messages.pin" },
-        messageId ?? undefined,
-      )
-
-      try {
-        await deps.connectOnce()
-        const known = asArray(deps.session().chats).find((raw) => asId(raw.id) === chatId)
-        if (known && toChat(known).kind === "dialog") {
-          throw new CliError(
-            "validation_error",
-            `chat ${chatId} is a personal chat — MAX pins only in groups and channels`,
-          )
-        }
-        await deps.wire.chats.update({ chatId, pinMessageId: messageId ?? "0", notifyPin: notify })
-        deps.sends?.record({ chatId, kind: "pin", notify, outcome: "sent", ...(messageId ? { messageId } : {}) })
-        return { chatId, pinned: messageId }
-      } catch (error) {
-        deps.sends?.record({ chatId, kind: "pin", notify, outcome: "failed", errorCode: asCliError(error).code })
-        throw error
+      await deps.connectOnce()
+      const known = asArray(deps.session().chats).find((raw) => asId(raw.id) === chatId)
+      if (known && toChat(known).kind === "dialog") {
+        throw new CliError(
+          "validation_error",
+          `chat ${chatId} is a personal chat — MAX pins only in groups and channels`,
+        )
       }
+      await deps.wire.chats.update({ chatId, pinMessageId: messageId ?? "0", notifyPin: notify })
+      return { chatId, pinned: messageId }
     },
   }
   return {

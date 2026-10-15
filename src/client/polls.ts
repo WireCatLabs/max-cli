@@ -1,5 +1,4 @@
 import { CliError } from "@wirecat/cli-base"
-import type { GuardRequest, SendGuard } from "@wirecat/cli-core/sends"
 import { POLL_CLOSED, pollSettings, toPoll } from "../domain/map.js"
 import type { Id, Message, Poll, PollMessage } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
@@ -12,11 +11,8 @@ interface Dependencies {
   connectOnce: () => Promise<void>
   poll: (chatId: Id, messageId: Id) => Promise<{ attach: Payload; poll: Poll; outgoing: boolean }>
   readonly offline: boolean
-  guard: (request: GuardRequest & { chatId: Id }, messageId?: Id) => Promise<void>
   readonly wire: Pick<ReturnType<typeof wireClient>, "messages">
-  readonly sends: SendGuard | undefined
   nextCid: () => number
-  checked: (request: GuardRequest) => Promise<void>
   deliver: (
     chatId: Id,
     text: string,
@@ -46,7 +42,6 @@ export const createPolls = (deps: Dependencies) => {
     },
     vote: async (chatId: Id, messageId: Id, answerIds: Id[]): Promise<PollMessage> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot vote")
-      await deps.guard({ chatId, kind: "reaction", key: "polls.vote" }, messageId)
 
       try {
         await deps.connectOnce()
@@ -84,18 +79,10 @@ export const createPolls = (deps: Dependencies) => {
           pollId: poll.id,
           answersIds: answerIds.map(Number),
         })
-        deps.sends?.record({ chatId, kind: "reaction", outcome: "sent", messageId })
         const state = record(answer.state)
         return { chatId, messageId, poll: (state && toPoll({ ...attach, state })) ?? poll }
       } catch (error) {
         const failure = asCliError(error)
-        deps.sends?.record({
-          chatId,
-          kind: "reaction",
-          outcome: "failed",
-          messageId,
-          errorCode: failure.code,
-        })
         if (answerIds.length > 0 && failure.details.provider_error === "poll.already.voted") {
           throw new CliError(
             failure.code,
@@ -109,29 +96,21 @@ export const createPolls = (deps: Dependencies) => {
     close: async (chatId: Id, messageId: Id): Promise<PollMessage> => {
       if (deps.offline)
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot close a poll")
-      await deps.guard({ chatId, kind: "edit", key: "polls.close" }, messageId)
+      await deps.connectOnce()
+      const { attach, poll, outgoing } = await deps.poll(chatId, messageId)
+      if (!outgoing) throw new CliError("validation_error", `the poll of message ${messageId} is not yours to close`)
 
-      try {
-        await deps.connectOnce()
-        const { attach, poll, outgoing } = await deps.poll(chatId, messageId)
-        if (!outgoing) throw new CliError("validation_error", `the poll of message ${messageId} is not yours to close`)
-
-        // What the web client sends back: the answers' text only, no ids and no votes.
-        const closed = {
-          _type: "POLL",
-          pollId: attach.pollId,
-          title: attach.title,
-          answers: asArray(attach.answers).map((each) => ({ text: each.text })),
-          settings: (typeof attach.settings === "number" ? attach.settings : 0) | POLL_CLOSED,
-        }
-        const answer = await deps.wire.messages.edit({ chatId, messageId, attachments: [closed] })
-        deps.sends?.record({ chatId, kind: "edit", outcome: "sent", messageId })
-        const after = asArray(record(answer.message)?.attaches).find((each) => each._type === "POLL")
-        return { chatId, messageId, poll: (after && toPoll(after)) ?? { ...poll, closed: true } }
-      } catch (error) {
-        deps.sends?.record({ chatId, kind: "edit", outcome: "failed", messageId, errorCode: asCliError(error).code })
-        throw error
+      // What the web client sends back: the answers' text only, no ids and no votes.
+      const closed = {
+        _type: "POLL",
+        pollId: attach.pollId,
+        title: attach.title,
+        answers: asArray(attach.answers).map((each) => ({ text: each.text })),
+        settings: (typeof attach.settings === "number" ? attach.settings : 0) | POLL_CLOSED,
       }
+      const answer = await deps.wire.messages.edit({ chatId, messageId, attachments: [closed] })
+      const after = asArray(record(answer.message)?.attaches).find((each) => each._type === "POLL")
+      return { chatId, messageId, poll: (after && toPoll(after)) ?? { ...poll, closed: true } }
     },
     create: async (
       chatId: Id,
@@ -146,48 +125,19 @@ export const createPolls = (deps: Dependencies) => {
         throw new CliError("validation_error", "a poll needs at least two answers, none of them empty")
       }
 
-      const cid = options.cid ?? deps.nextCid()
-      const sendId = String(cid)
-      try {
-        await deps.checked({ chatId, kind: "message", sendId, key: "polls.create" })
-      } catch (error) {
-        deps.sends?.record({ chatId, kind: "message", outcome: "refused", sendId, errorCode: asCliError(error).code })
-        throw error
-      }
-
       const attach = {
         _type: "POLL",
         title: question,
         answers: answers.map((text) => ({ text })),
         settings: pollSettings(options),
       }
-      try {
-        const sent = await deps.deliver(chatId, "", cid, {
-          ...options,
-          attaches: [attach],
-          repeat: `max polls create ${chatId} …`,
-        })
-        deps.sends?.record({
-          chatId,
-          kind: "message",
-          outcome: "sent",
-          messageId: sent.id,
-          sendId,
-          length: question.length,
-        })
-        deps.warn("web.max.ru does not show polls: anyone reading this chat in a browser sees «Обновите MAX…»")
-        return sent
-      } catch (error) {
-        const failure = asCliError(error)
-        deps.sends?.record({
-          chatId,
-          kind: "message",
-          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          sendId,
-          errorCode: failure.code,
-        })
-        throw error
-      }
+      const sent = await deps.deliver(chatId, "", options.cid ?? deps.nextCid(), {
+        ...options,
+        attaches: [attach],
+        repeat: `max polls create ${chatId} …`,
+      })
+      deps.warn("web.max.ru does not show polls: anyone reading this chat in a browser sees «Обновите MAX…»")
+      return sent
     },
   }
   return { show: resource.show, vote: resource.vote, close: resource.close, create: resource.create }

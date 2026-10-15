@@ -6,7 +6,6 @@ import { levelFor } from "@wirecat/cli-core/sends"
 import { openStore } from "@wirecat/cli-core/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
-import { contextFor } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { commandPermission } from "./permissions.js"
@@ -109,15 +108,12 @@ describe("P7 permissions", () => {
     expect((await cli(["work", "messages", "send", "111", "synthetic", "--json", "--yes"], environment)).code).toBe(0)
   })
 
-  it("gates native client reads as well as command handlers", async () => {
+  it("refuses a denied native read before it reaches MAX", async () => {
     save({ profiles: { work: { permissions: { messages: "deny" } } } })
     const { max, environment } = scripted()
-    const client = contextFor({ profile: "work" }, environment).createClient()
-    try {
-      expect(() => client.messages.list("111")).toThrow("denies messages")
-    } finally {
-      await client.close()
-    }
+    const result = await cli(["work", "messages", "list", "111", "--json"], environment)
+    expect(result.code).toBe(5)
+    expect(result.stdout + result.stderr).toContain("denies messages")
     expect(max.sent).toEqual([])
   })
 
@@ -142,14 +138,13 @@ it("refuses a permission key that names no command, and takes max's own bot keys
 it("keeps a native read child override and checks nested native read groups", async () => {
   save({ profiles: { work: { permissions: { account: "deny", "account.show": "allow", chats: "deny" } } } })
   const { max, environment } = scripted()
-  const client = contextFor({ profile: "work" }, environment).createClient()
-  try {
-    expect(() => client.chats.members.list("111")).toThrow("denies chats.members.list")
-    expect(max.sent).toEqual([])
-    expect(await client.account.me()).toMatchObject({ id: "10000001" })
-  } finally {
-    await client.close()
-  }
+  const members = await cli(["work", "chats", "members", "list", "111", "--json"], environment)
+  expect(members.code).toBe(5)
+  expect(members.stdout + members.stderr).toContain("denies chats.members.list")
+  expect(max.sent).toEqual([])
+  const me = await cli(["work", "account", "show", "--json"], environment)
+  expect(me.code, me.stderr).toBe(0)
+  expect(me.stdout).toContain("10000001")
 })
 
 it("honors a shared read child override even when its adapter uses a context read internally", async () => {

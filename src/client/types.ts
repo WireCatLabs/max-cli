@@ -1,6 +1,5 @@
 import type { SleepLike } from "@wirecat/cli-base"
 import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
-import type { SendGuard } from "@wirecat/cli-core/sends"
 import type { Wire } from "../protocol/connection.js"
 import type { MaxRecord } from "../record.js"
 import type { SessionStore } from "../session/store.js"
@@ -40,13 +39,6 @@ export interface MaxClientOptions {
    * client reports what it did and never decides where that goes. Absent means nothing is kept.
    */
   events?: (event: DiagnosticEvent) => void
-  /**
-   * Asked before every send and told its outcome. `"caller"` when whoever holds the client guards
-   * its writes instead: the shared services, or `max serve` for each write it forwards.
-   * Required, so a client without a guard is a choice somebody wrote and never one they forgot.
-   */
-  sends: SendGuard | "caller"
-  reads?: (key: string) => void
   /** The wait between retries; a test passes one that returns at once. */
   sleep?: SleepLike
 }

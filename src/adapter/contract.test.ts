@@ -31,7 +31,6 @@ const connect = async (seed: Seed) => {
   })
   records.push(record)
   const client = new MaxClient({
-    sends: "caller",
     store,
     record,
     connection: new Connection({ createSocket: seededMax(seed).createSocket, timeoutMs: 50 }),

@@ -1,5 +1,4 @@
 import { CliError } from "@wirecat/cli-base"
-import type { AccountAction } from "@wirecat/cli-core/sends"
 import { toContact, toProfileFacts, toSeen } from "../domain/map.js"
 import type { Contact, ContactImport, Id, PersonCard, ProfileFacts } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
@@ -13,8 +12,8 @@ interface Dependencies {
   connectOnce: () => Promise<void>
   readonly wire: Pick<ReturnType<typeof wireClient>, "contacts">
   remember: (contact: Contact) => Promise<Contact>
-  contactAction: (action: AccountAction, wire: ContactWire, reference: string) => Promise<Contact>
-  change: <T>(action: AccountAction, body: (done: () => void) => Promise<T>) => Promise<T>
+  contactAction: (wire: ContactWire, reference: string) => Promise<Contact>
+  change: <T>(body: (done: () => void) => Promise<T>) => Promise<T>
   readonly record: MaxRecord | undefined
   peopleFor: (chats: Payload[]) => Promise<Map<Id, Contact>>
   session: () => Payload
@@ -36,16 +35,14 @@ export const createContacts = (deps: Dependencies) => {
       if (!contact) throw new CliError("not_found", "MAX has nobody under that number")
       return deps.remember(toContact(contact))
     },
-    add: (reference: string): Promise<Contact> => deps.contactAction("contact-add", { action: "ADD" }, reference),
-    remove: (reference: string): Promise<Contact> =>
-      deps.contactAction("contact-remove", { action: "REMOVE" }, reference),
-    block: (reference: string): Promise<Contact> => deps.contactAction("contact-block", { action: "BLOCK" }, reference),
-    unblock: (reference: string): Promise<Contact> =>
-      deps.contactAction("contact-unblock", { action: "UNBLOCK" }, reference),
+    add: (reference: string): Promise<Contact> => deps.contactAction({ action: "ADD" }, reference),
+    remove: (reference: string): Promise<Contact> => deps.contactAction({ action: "REMOVE" }, reference),
+    block: (reference: string): Promise<Contact> => deps.contactAction({ action: "BLOCK" }, reference),
+    unblock: (reference: string): Promise<Contact> => deps.contactAction({ action: "UNBLOCK" }, reference),
     rename: (reference: string, firstName: string, lastName?: string): Promise<Contact> =>
-      deps.contactAction("contact-rename", { action: "UPDATE", firstName, lastName: lastName ?? null }, reference),
+      deps.contactAction({ action: "UPDATE", firstName, lastName: lastName ?? null }, reference),
     import: (entries: PhoneBookEntry[]): Promise<ContactImport> =>
-      deps.change("contact-import", async () => {
+      deps.change(async () => {
         if (entries.length === 0) throw new CliError("validation_error", "no numbers to import")
         const contactList: Record<string, { firstName: string }> = {}
         for (const entry of entries) contactList[wirePhone(entry.phone)] = { firstName: entry.name }

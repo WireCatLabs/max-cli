@@ -43,7 +43,6 @@ describe("native daily member fetching", () => {
     })
     const client = new MaxClient({
       store,
-      sends: "caller",
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 100 }),
     })
     const db = await openStore({ env, now: () => Date.now() })

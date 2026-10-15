@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import type { AccountAction, Upload as SharedUpload } from "@wirecat/cli-core/sends"
+import type { Upload as SharedUpload } from "@wirecat/cli-core/sends"
 import { fromPrivacy, toCallRecord, toPrivacy, toProfile, toSession } from "../domain/map.js"
 import type { AccountSession, CallRecord, Id, Page, PrivacySettings, Profile } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
@@ -12,7 +12,7 @@ import { asArray, asCliError, ownNames, type ProfileChange, reasonOf, record } f
 interface Dependencies {
   connectOnce: () => Promise<void>
   session: () => Payload
-  change: <T>(action: AccountAction, body: (done: () => void) => Promise<T>) => Promise<T>
+  change: <T>(body: (done: () => void) => Promise<T>) => Promise<T>
   keepSettings: (sent: { user?: Payload; chats?: Payload }, answer: Payload) => void
   readonly wire: Pick<ReturnType<typeof wireClient>, "account" | "calls">
   photoToken: (photo: string | SharedUpload, options: { profile: boolean }) => Promise<string>
@@ -33,13 +33,13 @@ export const createAccount = (deps: Dependencies) => {
       return toPrivacy(record(record(deps.session().config)?.user) ?? {})
     },
     mute: (chatId: Id, until: string | null): Promise<void> =>
-      deps.change("chat-mute", async () => {
+      deps.change(async () => {
         const dontDisturbUntil = until === null ? 0 : until === "forever" ? -1 : Date.parse(until)
         const chats = { [chatId]: { dontDisturbUntil } }
         deps.keepSettings({ chats }, await deps.wire.account.settings({ settings: { chats } }))
       }),
     updatePrivacy: (change: PrivacySettings): Promise<PrivacySettings> =>
-      deps.change("privacy", async () => {
+      deps.change(async () => {
         const user = fromPrivacy(change)
         deps.keepSettings({ user }, await deps.wire.account.settings({ settings: { user } }))
         return toPrivacy(record(record(deps.session().config)?.user) ?? {})
@@ -54,7 +54,7 @@ export const createAccount = (deps: Dependencies) => {
       return { items: calls.slice(0, limit), hasMore: calls.length > limit }
     },
     update: (change: ProfileChange): Promise<Profile> =>
-      deps.change("profile", async () => {
+      deps.change(async () => {
         const current = ownNames(record(deps.session().profile) ?? {})
         const firstName = change.firstName ?? current.firstName
         if (!firstName)
@@ -78,7 +78,7 @@ export const createAccount = (deps: Dependencies) => {
       return asArray((await deps.wire.account.sessions({})).sessions).map(toSession)
     },
     endOtherSessions: (): Promise<AccountSession[]> =>
-      deps.change("sessions-end", async (done) => {
+      deps.change(async (done) => {
         const answer = await deps.wire.account.closeSessions({})
         // The other devices are out from here on, whatever follows fails: the journal says so.
         done()

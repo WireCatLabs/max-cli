@@ -13,7 +13,6 @@ import { createMessageReads } from "./client/message-reads.js"
 import { createMessageWrites } from "./client/message-writes.js"
 import { createPeople } from "./client/people.js"
 import { createPolls } from "./client/polls.js"
-import { withReadPolicy } from "./client/read-policy.js"
 import { createRequest } from "./client/request.js"
 import { createSession } from "./client/session.js"
 import { createStickers } from "./client/stickers.js"
@@ -98,7 +97,6 @@ export class MaxClient {
     })
     const writes = createWrites({
       offline: options.offline ?? false,
-      sends: options.sends === "caller" ? undefined : options.sends,
       connectOnce: session.connectOnce,
       wire,
       chatsResolve: (...args) => this.chats.resolve(...args),
@@ -157,11 +155,9 @@ export class MaxClient {
       changeChat: writes.changeChat,
       wire,
       offline: options.offline ?? false,
-      guard: writes.guard,
       connectOnce: session.connectOnce,
       history: history.history,
       now: options.now ?? Date.now,
-      sends: options.sends === "caller" ? undefined : options.sends,
       chatsResolve: (...args) => this.chats.resolve(...args),
       lastEventOf: session.lastEventOf,
       store: options.store,
@@ -209,15 +205,12 @@ export class MaxClient {
     })
     const message_writes = createMessageWrites({
       offline: options.offline ?? false,
-      guard: writes.guard,
       connectOnce: session.connectOnce,
       rawMessage: history.rawMessage,
       botWrite: writes.botWrite,
       wire,
       now: options.now ?? Date.now,
-      sends: options.sends === "caller" ? undefined : options.sends,
       nextCid: writes.nextCid,
-      checked: writes.checked,
       deliver: delivery.deliver,
       reaction: writes.reaction,
       session: session.session,
@@ -227,11 +220,8 @@ export class MaxClient {
       connectOnce: session.connectOnce,
       poll: history.poll,
       offline: options.offline ?? false,
-      guard: writes.guard,
       wire,
-      sends: options.sends === "caller" ? undefined : options.sends,
       nextCid: writes.nextCid,
-      checked: writes.checked,
       deliver: delivery.deliver,
       warn: options.warn ?? ((message) => process.stderr.write(`${message}\n`)),
     })
@@ -261,15 +251,15 @@ export class MaxClient {
       messageHit: history.messageHit,
       chatTitle: history.chatTitle,
     })
-    this.account = withReadPolicy("account", account, options.reads)
-    this.login = withReadPolicy("login", login, options.reads)
-    this.chats = withReadPolicy("chats", { ...chat_reads, ...chat_writes }, options.reads)
-    this.contacts = withReadPolicy("contacts", contacts, options.reads)
-    this.messages = withReadPolicy("messages", { ...message_reads, ...message_writes }, options.reads)
-    this.polls = withReadPolicy("polls", polls, options.reads)
-    this.stickers = withReadPolicy("stickers", stickers, options.reads)
-    this.folders = withReadPolicy("chats.folders", folders, options.reads)
-    this.live = withReadPolicy("live", live, options.reads)
+    this.account = account
+    this.login = login
+    this.chats = { ...chat_reads, ...chat_writes }
+    this.contacts = contacts
+    this.messages = { ...message_reads, ...message_writes }
+    this.polls = polls
+    this.stickers = stickers
+    this.folders = folders
+    this.live = live
     this.#session = session
     this.#writes = writes
     this.#people = people

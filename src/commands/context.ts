@@ -3,7 +3,7 @@ import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@w
 import type { FetchLike } from "@wirecat/cli-base/http"
 import type { ServerSystem } from "@wirecat/cli-core/background"
 import { type BaseEnvironment, inputPolicy, recorded, withAbort } from "@wirecat/cli-core/cli"
-import { levelFor, sharedJournal } from "@wirecat/cli-core/sends"
+import { levelFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import type { BotTokenStore } from "../bot/auth.js"
@@ -13,9 +13,8 @@ import { type GlobalFlags, type ResolveOptions, resolveSettings, type Settings }
 import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
-import { askerFor, assertReadable, currentReadPermission, permissionScope } from "../permissions.js"
+import { permissionScope } from "../permissions.js"
 import { rootOf } from "../profile.js"
-import { guardFor } from "../sends.js"
 import { ServerConnection, stopServer } from "../server/server-connection.js"
 import { ensureServer } from "../server/start.js"
 import { type BrowserDoors, realBrowser } from "../session/browser.js"
@@ -200,9 +199,6 @@ export const contextFor = (
         ...(environment.sleep ? { sleep: environment.sleep } : {}),
         ...(environment.connection ? { connection: environment.connection() } : wire ? { connection: wire } : {}),
         ...extra,
-        // After `extra`, so an `undefined` handed in falls back to the guard rather than to none.
-        reads: extra.reads ?? ((key) => assertReadable(settings, currentReadPermission() ?? key)),
-        sends: extra.sends ?? sharedJournal(guardFor(settings, renderer.warn, askerFor(flags, environment)), wire),
       })
       track(client)
       return client
