@@ -222,10 +222,11 @@ message id** and **one** copy, also across two connections and logins — the ca
 - `--silent` sends `notify: false` (normally `true`). ⚠ **Only `true` is measured**; what MAX does
   with `false` has never been observed (that means messaging somebody), so it may be ignored. The
   first use against a real chat settles it.
-- **Every send passes a guard first** (cli-core's `sendGuard` since T6 item 3b, 2026-09-30 —
-  **correction:** it was `src/sends/guard.ts`; `src/sends.ts` now builds it for a profile and stamps
-  each journal line with the write's `operationId`; handed to `MaxClient` by
-  `createClient`): a read-only profile (code 5), an optional recipient list (7), an hourly limit
+- **Every send passes a guard first** (cli-core's `sendGuard`; `src/sends.ts` builds it for a profile
+  and stamps each journal line with the write's `operationId`). The caller holds it, never `MaxClient`:
+  cli-core's shared services through `maxMessenger.guard`, and `max serve` for each write it forwards.
+  The client checks nothing and journals nothing; it only marks an account change MAX applied, so the
+  guard can journal it as sent when a later step fails (`takeApplied`). It checks for a read-only profile (code 5), an optional recipient list (7), an hourly limit
   (8) — all before the socket when the chat is an id. Every outcome, refusals included, goes to
   `<state>/sends/<profile>.jsonl` without the text; the limit counts that file. a write that counts first holds a `reserved` line, written under a lock
   file (`wx`, so Windows too), and its outcome settles it; reading folds settled ones away, so two
@@ -234,8 +235,8 @@ message id** and **one** copy, also across two connections and logins — the ca
   the operation-id wrapper retains one prepared request object
   across `ask` and `check`, because the shared guard binds confirmation to that object.
   The client-side server wrapper forwards `ask` too; a matching operation id on a different
-  request grants no confirmation. MAX uses canonical permission levels; only the old `allow` list is still translated at read time. CLI, native reads, MCP tools and resources,
-  and raw server requests enforce the same resource policy. Confirmed writes carry explicit
+  request grants no confirmation. MAX uses canonical permission levels; only the old `allow` list is still translated at read time. CLI commands (the `preAction` hook in `src/program.ts`), MCP tools and
+  resources (cli-core) and raw server requests enforce the same resource policy; the client has no read gate of its own. Confirmed writes carry explicit
   permission keys to the server, which rechecks the current configuration; neither confirmation
   nor moderation consent bypasses a denied or read-only action.
 - **`max serve` runs the same guard on every write it forwards, and journals it** (`NEED-269`):

@@ -91,7 +91,6 @@ describe("our requests beside web.max.ru's", async () => {
   for (let run = 0; run < 2; run++) {
     max = scripted()
     const client = new MaxClient({
-      sends: "caller",
       store,
       record,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),

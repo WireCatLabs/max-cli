@@ -117,7 +117,6 @@ describe("the owner's own settings", () => {
     const store = new SessionStore({ profile: "settings-held", keyring: memoryKeyring() })
     store.writeToken("a-token")
     const client = new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: () => {},

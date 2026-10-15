@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import type { ChatAction, GuardRequest, SendGuard, Upload as SharedUpload } from "@wirecat/cli-core/sends"
+import type { ChatAction, Upload as SharedUpload } from "@wirecat/cli-core/sends"
 import { SETTING_FLAGS, toGroupCard } from "../domain/map.js"
 import type { ChatCard, GroupCard, GroupMembers, GroupSettings, Id, Message, ReadMark } from "../domain/models.js"
 import type { wireClient } from "../generated/client.generated.js"
@@ -11,7 +11,6 @@ import {
   ADMIN_RIGHTS,
   type AdminRight,
   asArray,
-  asCliError,
   type ChatChange,
   deadLink,
   isJoinRequest,
@@ -21,15 +20,9 @@ import {
 } from "./values.js"
 
 interface Dependencies {
-  changeChat: <T>(
-    chatId: Id | null,
-    action: ChatAction,
-    act: () => Promise<{ chatId: Id; result: T; people?: number }>,
-    personIds?: Id[],
-  ) => Promise<T>
+  changeChat: <T>(act: () => Promise<T>) => Promise<T>
   readonly wire: Pick<ReturnType<typeof wireClient>, "chats" | "messages">
   readonly offline: boolean
-  guard: (request: GuardRequest & { chatId: Id }, messageId?: Id) => Promise<void>
   connectOnce: () => Promise<void>
   history: (
     chatId: Id,
@@ -37,7 +30,6 @@ interface Dependencies {
     options?: { reactions?: boolean },
   ) => Promise<Message[]>
   readonly now: () => number
-  readonly sends: SendGuard | undefined
   chatsResolve: (reference: string) => Promise<Id>
   lastEventOf: (chatId: Id) => number
   readonly store: SessionStore
@@ -63,61 +55,47 @@ interface Dependencies {
 export const createChatWrites = (deps: Dependencies) => {
   const resource = {
     answerJoinRequest: (chatId: Id, personId: Id, accept: boolean): Promise<{ already: boolean }> =>
-      deps.changeChat(
-        chatId,
-        accept ? "requests.accept" : "requests.decline",
-        async () => {
-          await deps.wire.chats.updateMembers({
-            chatId,
-            userIds: [personId],
-            type: "JOIN_REQUEST",
-            operation: accept ? "add" : "remove",
-          })
-          return { chatId, result: { already: false }, people: 1 }
-        },
-        accept ? [personId] : undefined,
-      ),
+      deps.changeChat(async () => {
+        await deps.wire.chats.updateMembers({
+          chatId,
+          userIds: [personId],
+          type: "JOIN_REQUEST",
+          operation: accept ? "add" : "remove",
+        })
+        return { already: false }
+      }),
     join: (link: string): Promise<GroupCard | { requested: true }> => {
       const wire = wireLink(link)
-      return deps.changeChat(null, "join", async () => {
+      return deps.changeChat(async () => {
         const raw = record((await deps.wire.chats.join({ link: wire }).catch(deadLink(link))).chat) ?? {}
-        const chat = toGroupCard(raw)
-        return { chatId: chat.id, result: isJoinRequest(raw) ? { requested: true as const } : chat }
+        return isJoinRequest(raw) ? { requested: true as const } : toGroupCard(raw)
       })
     },
     markRead: async (chatId: Id, messageId?: Id): Promise<ReadMark> => {
       if (deps.offline)
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot mark a chat read")
-      await deps.guard({ chatId, kind: "read" }, messageId)
-
-      try {
-        await deps.connectOnce()
-        const upTo = messageId ?? (await deps.history(chatId, { from: deps.now(), backward: 1, forward: 0 })).at(-1)?.id
-        if (!upTo) throw new CliError("not_found", `chat ${chatId} has no messages to mark read`)
-        // The web client's mark is the read message's own time, not the moment of reading: a later
-        // one would mark newer messages read too (captured 2026-09-25, `RES-10`).
-        const mark = timeOfMessageId(upTo)
-        if (mark === undefined) throw new CliError("validation_error", `"${upTo}" is not a message id`)
-        const answer = await deps.wire.chats.mark({ type: "READ_MESSAGE", chatId, messageId: upTo, mark })
-        deps.sends?.record({ chatId, kind: "read", outcome: "sent", messageId: upTo })
-        return { chatId, messageId: upTo, unread: typeof answer.unread === "number" ? answer.unread : null }
-      } catch (error) {
-        deps.sends?.record({ chatId, kind: "read", outcome: "failed", errorCode: asCliError(error).code })
-        throw error
-      }
+      await deps.connectOnce()
+      const upTo = messageId ?? (await deps.history(chatId, { from: deps.now(), backward: 1, forward: 0 })).at(-1)?.id
+      if (!upTo) throw new CliError("not_found", `chat ${chatId} has no messages to mark read`)
+      // The web client's mark is the read message's own time, not the moment of reading: a later
+      // one would mark newer messages read too (captured 2026-09-25, `RES-10`).
+      const mark = timeOfMessageId(upTo)
+      if (mark === undefined) throw new CliError("validation_error", `"${upTo}" is not a message id`)
+      const answer = await deps.wire.chats.mark({ type: "READ_MESSAGE", chatId, messageId: upTo, mark })
+      return { chatId, messageId: upTo, unread: typeof answer.unread === "number" ? answer.unread : null }
     },
     leave: async (reference: string): Promise<ChatChange> => {
       const chatId = await deps.chatsResolve(reference)
-      return deps.changeChat(chatId, "leave", async () => {
+      return deps.changeChat(async () => {
         await deps.wire.chats.leave({ chatId })
-        return { chatId, result: { chatId, action: "leave", people: [], chat: null } }
+        return { chatId, action: "leave", people: [], chat: null }
       })
     },
     delete: async (reference: string): Promise<ChatChange> => {
       const chatId = await deps.chatsResolve(reference)
-      return deps.changeChat(chatId, "delete", async () => {
+      return deps.changeChat(async () => {
         await deps.wire.chats.delete({ chatId, lastEventTime: deps.lastEventOf(chatId), forAll: false })
-        return { chatId, result: { chatId, action: "delete", people: [], chat: null } }
+        return { chatId, action: "delete", people: [], chat: null }
       })
     },
     botLink: async (reference: string): Promise<{ chatId: Id; payload?: string } | undefined> => {
@@ -142,69 +120,47 @@ export const createChatWrites = (deps: Dependencies) => {
     startBot: async (chatId: Id, cid: number, payload?: string): Promise<void> => {
       if (deps.offline)
         throw new CliError("validation_error", "`--offline` reads what was recorded; it cannot start a bot")
-      await deps.guard({ chatId, kind: "message", key: "chats.start" })
-      try {
-        await deps.connectOnce()
-        deps.botOf(chatId)
-        const control = {
-          _type: "CONTROL",
-          event: "botStarted",
-          ...(payload === undefined ? {} : { startPayload: payload }),
-        }
-        await deps.botWrite(
-          () => deps.wire.messages.send({ chatId, message: { cid, attaches: [control] } }),
-          "the bot may already have started",
-          { operation_id: String(cid) },
-        )
-        deps.sends?.record({ chatId, kind: "message", sendId: String(cid), outcome: "sent" })
-      } catch (error) {
-        const failure = asCliError(error)
-        deps.sends?.record({
-          chatId,
-          kind: "message",
-          sendId: String(cid),
-          outcome: failure.code === "outcome_unknown" ? "outcome_unknown" : "failed",
-          errorCode: failure.code,
-        })
-        throw error
+      await deps.connectOnce()
+      deps.botOf(chatId)
+      const control = {
+        _type: "CONTROL",
+        event: "botStarted",
+        ...(payload === undefined ? {} : { startPayload: payload }),
       }
+      await deps.botWrite(
+        () => deps.wire.messages.send({ chatId, message: { cid, attaches: [control] } }),
+        "the bot may already have started",
+        { operation_id: String(cid) },
+      )
     },
     app: async (chatId: Id, startParam?: string): Promise<{ url: string }> => {
       if (deps.offline) throw new CliError("validation_error", "`--offline` reads what was recorded; ask MAX instead")
-      await deps.guard({ chatId, kind: "reaction", key: "chats.app" })
       await deps.connectOnce()
       const botId = deps.botOf(chatId)
       const answer = await deps.wire.chats.app({ botId, chatId, ...(startParam ? { startParam } : {}) })
       if (typeof answer.url !== "string" || answer.url === "")
         throw new CliError("not_found", `the bot in chat ${chatId} has no mini app`)
-      deps.sends?.record({ chatId, kind: "reaction", outcome: "sent" })
       return { url: answer.url }
     },
     clear: async (reference: string): Promise<ChatChange> => {
       const chatId = await deps.chatsResolve(reference)
-      return deps.changeChat(chatId, "clear", async () => {
+      return deps.changeChat(async () => {
         await deps.wire.chats.clear({ chatId, lastEventTime: deps.lastEventOf(chatId), forAll: false })
-        return { chatId, result: { chatId, action: "clear", people: [], chat: null } }
+        return { chatId, action: "clear", people: [], chat: null }
       })
     },
     create: async (title: string, people: string[] = [], { channel = false } = {}): Promise<GroupCard> => {
       const userIds = await deps.personIds(people)
-      return deps.changeChat(
-        null,
-        "create",
-        async () => {
-          const answer = await deps.wire.messages.send({
-            message: {
-              cid: deps.nextCid(),
-              attaches: [{ _type: "CONTROL", event: "new", chatType: channel ? "CHANNEL" : "CHAT", title, userIds }],
-            },
-            notify: true,
-          })
-          const chat = toGroupCard(record(answer.chat) ?? {})
-          return { chatId: chat.id, result: chat, people: userIds.length }
-        },
-        userIds,
-      )
+      return deps.changeChat(async () => {
+        const answer = await deps.wire.messages.send({
+          message: {
+            cid: deps.nextCid(),
+            attaches: [{ _type: "CONTROL", event: "new", chatType: channel ? "CHANNEL" : "CHAT", title, userIds }],
+          },
+          notify: true,
+        })
+        return toGroupCard(record(answer.chat) ?? {})
+      })
     },
     members: {
       /**
@@ -256,7 +212,7 @@ export const createChatWrites = (deps: Dependencies) => {
         throw new CliError("validation_error", "nothing to change — give --title, --description or --photo")
       }
       const chatId = await deps.chatsResolve(reference)
-      return deps.changeChat(chatId, "update", async () => {
+      return deps.changeChat(async () => {
         const photoToken = photo === undefined ? undefined : await deps.photoToken(photo, { profile: false })
         const answer = await deps.wire.chats.update({
           chatId,
@@ -264,7 +220,7 @@ export const createChatWrites = (deps: Dependencies) => {
           ...(description === undefined ? {} : { description }),
           ...(photoToken === undefined ? {} : { photoToken }),
         })
-        return { chatId, result: toGroupCard(record(answer.chat) ?? {}) }
+        return toGroupCard(record(answer.chat) ?? {})
       })
     },
     settings: async (reference: string, changes: Partial<GroupSettings> = {}): Promise<GroupCard> => {
@@ -295,16 +251,16 @@ export const createChatWrites = (deps: Dependencies) => {
       const options = Object.fromEntries(
         entries.map(([ours, value]) => [SETTING_FLAGS[ours as keyof GroupSettings], value as boolean]),
       )
-      return deps.changeChat(chatId, "settings", async () => {
+      return deps.changeChat(async () => {
         const answer = await deps.wire.chats.update({ chatId, options })
-        return { chatId, result: toGroupCard(record(answer.chat) ?? {}) }
+        return toGroupCard(record(answer.chat) ?? {})
       })
     },
     resetLink: async (reference: string): Promise<GroupCard> => {
       const chatId = await deps.chatsResolve(reference)
-      return deps.changeChat(chatId, "link.reset", async () => {
+      return deps.changeChat(async () => {
         const answer = await deps.wire.chats.update({ chatId, revokePrivateLink: true })
-        return { chatId, result: toGroupCard(record(answer.chat) ?? {}) }
+        return toGroupCard(record(answer.chat) ?? {})
       })
     },
   }

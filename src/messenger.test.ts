@@ -128,7 +128,7 @@ const commandFor = (profile: string, answers: Record<number, Payload> = {}, refu
 }
 
 describe("the MAX messenger's connection", () => {
-  it("answers through MaxClient with no guard of its own, and reports MAX's frames to the run", async () => {
+  it("answers through MaxClient and reports MAX's frames to the run", async () => {
     const { program, max } = commandFor("m-connect")
     const events: DiagnosticEvent[] = []
     const adapter = await maxMessenger.connect(program, {} as never, { events: (event) => events.push(event) })

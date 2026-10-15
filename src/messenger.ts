@@ -8,7 +8,7 @@ import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
 import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
-import { askerFor, assertReadable, commandPermission, permissionKeyOf } from "./permissions.js"
+import { askerFor, commandPermission, permissionKeyOf } from "./permissions.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
@@ -148,13 +148,11 @@ export const maxMessenger: Messenger = {
   }),
 
   connect: async (command, context, { events } = {}) => {
-    const { createClient, store, reach, settings } = forCommand(command)
+    const { createClient, store, reach } = forCommand(command)
     const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
     let opened: MaxAdapter | undefined
     try {
       const client = createClient({
-        sends: "caller",
-        reads: (key) => assertReadable(settings, commandPermission(command) ?? key),
         record,
         ...(events ? { events } : {}),
       })

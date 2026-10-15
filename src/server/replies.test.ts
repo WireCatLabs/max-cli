@@ -56,7 +56,6 @@ it("the native MAX server opens a task for a matching rule without sending, whil
   const session = new SessionStore({ profile: "default", keyring: memoryKeyring() })
   session.writeToken("synthetic-token")
   const client = new MaxClient({
-    sends: "caller",
     store: session,
     connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
   })

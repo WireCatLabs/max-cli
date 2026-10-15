@@ -15,20 +15,15 @@ import type { Environment } from "./commands/context.js"
 import type { Settings } from "./config.js"
 import { readSecret } from "./session/prompt.js"
 
-const approvals = new AsyncLocalStorage<{ forced: Set<string>; approved: Set<string>; readKey?: string }>()
+const approvals = new AsyncLocalStorage<{ forced: Set<string>; approved: Set<string> }>()
 
 export const permissionScope = <T>(work: () => T): T =>
   approvals.getStore() ? work() : approvals.run({ forced: new Set(), approved: new Set() }, work)
 
 export const withPermissionApproval = <T>(key: string, work: () => T): T => {
   const previous = approvals.getStore()
-  return approvals.run(
-    { forced: new Set([...(previous?.forced ?? []), key]), approved: new Set([key]), readKey: key },
-    work,
-  )
+  return approvals.run({ forced: new Set([...(previous?.forced ?? []), key]), approved: new Set([key]) }, work)
 }
-
-export const currentReadPermission = (): string | undefined => approvals.getStore()?.readKey
 
 export const approvePermission = (key: string): void => {
   approvals.getStore()?.approved.add(key)

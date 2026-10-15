@@ -276,8 +276,6 @@ export class MaxServer {
       store,
       connection,
       now: this.#now,
-      // `#forward` guards every write a command hands this server, before this client sends it.
-      sends: "caller",
       fullLogin: true,
       ...(resume ? { resume } : {}),
       warn: this.#options.note,

@@ -54,7 +54,7 @@ describe("client session initialization", () => {
       await pagination.released
       return { chats: [{ id: 999, type: "CHAT", lastEventTime: 1 }] }
     })
-    const client = new MaxClient({ store, connection, sends: "caller", now: () => Date.parse("2026-10-01T12:00:00Z") })
+    const client = new MaxClient({ store, connection, now: () => Date.parse("2026-10-01T12:00:00Z") })
     try {
       const connecting = client.connect()
       await pagination.entered
@@ -88,7 +88,7 @@ describe("client session initialization", () => {
         return undefined
       },
     }
-    const client = new MaxClient({ store, connection, record, sends: "caller" })
+    const client = new MaxClient({ store, connection, record })
     try {
       const connecting = client.connect()
       await ingestion.entered
@@ -121,7 +121,7 @@ describe("client session initialization", () => {
         return undefined
       },
     }
-    const client = new MaxClient({ store, connection, record, sends: "caller" })
+    const client = new MaxClient({ store, connection, record })
     try {
       const connecting = client.connect().catch((error: unknown) => error)
       await ingestion.entered
@@ -140,7 +140,7 @@ describe("client session initialization", () => {
   it("a rejected account leaves no initialized session for the next resource call", async () => {
     const { store, connection, invoke } = fixture(login(10000002))
     store.writeState({ ...store.readState(), viewerId: "10000001" })
-    const client = new MaxClient({ store, connection, sends: "caller" })
+    const client = new MaxClient({ store, connection })
     try {
       await expect(client.connect()).rejects.toThrow("different account")
       await expect(client.account.me()).rejects.toThrow("different account")
@@ -164,7 +164,7 @@ describe("client session initialization", () => {
       }
       return { chats: [] }
     })
-    const client = new MaxClient({ store, connection, sends: "caller" })
+    const client = new MaxClient({ store, connection })
     const connecting = client.connect()
     await answering.entered
     const closing = client.close()

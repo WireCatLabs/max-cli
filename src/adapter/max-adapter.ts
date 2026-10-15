@@ -90,8 +90,7 @@ const MARKUP: Record<string, string> = {
 }
 
 /**
- * cli-core's port over a connected `MaxClient` that was built **without** its send guard: the
- * shared services guard every write, and a second guard would count each one twice. The resend
+ * cli-core's port over a connected `MaxClient`; the shared services guard every write. The resend
  * rule and the name filling stay in `MaxClient` (`NEED-34`).
  */
 export const maxAdapter = (
