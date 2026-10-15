@@ -197,6 +197,22 @@ describe("the MAX adapter", () => {
     expect(page.items[0]?.attachments[0]).not.toHaveProperty("providerRef")
   })
 
+  it("answers a chat's media as cli-core messages, MAX's own attachment ids kept as the provider's", async () => {
+    const { adapter } = connected({
+      [Opcode.CHAT_MEDIA]: {
+        messages: [{ id: BigInt(MESSAGE), time: 1789776000000, sender: OWNER, text: "", attaches: [PHOTO, FILE] }],
+      },
+    })
+
+    const page = await adapter.media?.("111", { kinds: ["file"], limit: 5, before: "999999999999999999" })
+
+    expect(page?.items[0]?.attachments).toMatchObject([
+      { kind: "photo" },
+      { kind: "file", name: "notes.pdf", providerRef: { fileId: "77" } },
+    ])
+    expect(page?.items[0]?.attachments[1]).not.toHaveProperty("fileId")
+  })
+
   it("searches one named chat on MAX's server with opcode 73", async () => {
     const { adapter, sent } = connected({
       [Opcode.MSG_SEARCH]: {
