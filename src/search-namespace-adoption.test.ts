@@ -112,13 +112,11 @@ describe("search <resource> adoption", () => {
     expect(messages.answer.items.some(({ ref }: { ref: string }) => ref.startsWith("msg:email/"))).toBe(false)
   })
 
-  it("search notes narrows by type and filter, rejects an unknown source, and pages with --page", async () => {
+  it("search notes narrows by source: in the query and filter, rejects an unknown source, and pages with --page", async () => {
     const internal = await invoke([
       "search",
       "notes",
-      "invoice",
-      "--type",
-      "internal",
+      "invoice source:internal",
       "--filter",
       "paid",
       "--limit",
