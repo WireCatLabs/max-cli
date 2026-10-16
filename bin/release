@@ -194,6 +194,10 @@ if published; then
   exit 1
 fi
 
+# The fold fast-forwards main even when it has nothing to fold, so HEAD can be a commit nobody signed.
+grep -qx "Commit: $(git rev-parse HEAD)" "$report" ||
+  { echo "main moved past the commit $report was signed for — sign the new HEAD and run again" >&2; exit 1; }
+
 echo "== checks for $version =="
 pnpm install --frozen-lockfile
 pnpm release:check
