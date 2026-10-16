@@ -32,10 +32,10 @@ describe("personal message locator fallback", () => {
     state.writeState({ ...state.readState(), viewerId: key.account })
     const store = await openStore()
     try {
-      await store.saveChats(key, [
+      await store.chats.saveChats(key, [
         { id: "7", title: "Synthetic", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
       ])
-      await store.saveMessages(key, "7", [target], { via: "history" })
+      await store.messages.saveMessages(key, "7", [target], { via: "history" })
     } finally {
       await store.close()
     }

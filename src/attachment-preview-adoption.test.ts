@@ -45,10 +45,10 @@ beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
   writeFileSync(path, bytes)
   writeFileSync(textFile, "pdfpreviewneedle")
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "PDF fixture", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
-  await db.saveMessages(
+  await db.messages.saveMessages(
     account,
     "7",
     [
@@ -69,7 +69,7 @@ beforeAll(async () => {
     ],
     { via: "test" },
   )
-  await db.keepDownloads(account, "7", "1", [{ kind: "file", position: 0, path }])
+  await db.attachments.keepDownloads(account, "7", "1", [{ kind: "file", position: 0, path }])
 })
 afterAll(async () => {
   await db.close()

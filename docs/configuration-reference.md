@@ -269,11 +269,12 @@ max config set default_profile work      # какой профиль без пе
 Неизвестное поле отвергается с именем поля и кодом `configuration_error` (возврат `3`):
 
 ```json
-{"error":{"code":"configuration_error","reason":"config.invalid","message":"/home/you/.config/max-cli/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve"}}
+{"error":{"code":"configuration_error","reason":"config.invalid","message":"/home/you/.config/max-cli/config.json: profiles.default.limitt is an unknown setting","retry":{"safe":false}}}
 ```
 
-Значение не того вида называет поле и то, что допустимо: `profiles.default.limit: has to be a
-whole number, 1 or more, not "20"`.
+Значение не того вида называет поле, но не само значение — вдруг туда по ошибке вставлен токен:
+`profiles.default.limit has the wrong type`. Если ошибок несколько, названа первая, а остальные
+посчитаны: `(and 2 more problems)`.
 
 Так сделано намеренно. Схема, которая молча выбрасывает непонятное поле, превращает опечатку в
 полдня недоумения: настройка «не работает», и никто не говорит почему.

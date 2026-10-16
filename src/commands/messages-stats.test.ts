@@ -54,8 +54,8 @@ beforeAll(async () => {
       lastMessageAt: null,
       participantsCount: null,
     }
-    await store.saveChats(account, [chat, { ...chat, id: "8", title: "Synthetic Notes" }])
-    await store.saveMessages(
+    await store.chats.saveChats(account, [chat, { ...chat, id: "8", title: "Synthetic Notes" }])
+    await store.messages.saveMessages(
       account,
       "7",
       [
@@ -64,15 +64,15 @@ beforeAll(async () => {
       ],
       { via: "fixture" },
     )
-    await store.saveMessages(
+    await store.messages.saveMessages(
       account,
       "8",
       [message("9007199254740993103", "8", "42", "note", "2026-10-04T00:30:00.000Z")],
       { via: "fixture" },
     )
     const foreign = { provider: "max", account: "502" }
-    await store.saveChats(foreign, [{ ...chat, title: "Foreign Work" }])
-    await store.saveMessages(
+    await store.chats.saveChats(foreign, [{ ...chat, title: "Foreign Work" }])
+    await store.messages.saveMessages(
       foreign,
       "7",
       [message("9007199254740993104", "7", "43", "invoice foreign", "2026-10-04T00:30:00.000Z")],

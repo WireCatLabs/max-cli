@@ -241,22 +241,17 @@ describe("the configuration file", () => {
     expect(() => settings()).toThrowError(/profiles\.default\.limit/)
   })
 
-  it("**says in plain words what is wrong and what is allowed**, not the validation library's", () => {
+  it("**names the first bad key in plain words and never its value**, not the validation library's", () => {
     withConfig(JSON.stringify({ profiles: { default: { limitt: 5 } } }))
-    expect(() => settings()).toThrowError(
-      "profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days",
-    )
+    expect(() => settings()).toThrowError("profiles.default.limitt is an unknown setting")
 
     withConfig(JSON.stringify({ profiles: { default: { limit: 0, color: "yes" } } }))
-    expect(() => settings()).toThrowError("profiles.default.limit: has to be a whole number, 1 or more, not 0")
-    expect(() => settings()).toThrowError('profiles.default.color: has to be true or false, not "yes"')
+    expect(() => settings()).toThrowError("profiles.default.limit has an invalid value (and 1 more problem)")
+    expect(() => settings()).not.toThrowError(/yes/)
 
     withConfig(JSON.stringify({ profiles: { default: { limit: 2.5 } }, defaultProfil: "x" }))
-    expect(() => settings()).toThrowError("limit: has to be a whole number, 1 or more, not 2.5")
-    expect(() => settings()).toThrowError(
-      "defaultProfil: unknown setting — the known ones are default_profile, defaults, profiles, personal, bot",
-    )
-    expect(() => settings()).not.toThrowError(/Expected|Invalid/)
+    expect(() => settings()).toThrowError(/\(and 1 more problem\)$/)
+    expect(() => settings()).not.toThrowError(/Expected|Invalid|2\.5/)
   })
 
   it("says the file is not JSON rather than reporting a missing setting", () => {
@@ -369,7 +364,7 @@ describe("personal and bot sections", () => {
 
   it("refuse a personal-only setting in the bot section", () => {
     withConfig(JSON.stringify({ bot: { defaults: { serve: true } } }))
-    expect(() => settings()).toThrowError(/bot\.defaults\.serve: unknown setting/)
+    expect(() => settings()).toThrowError(/bot\.defaults\.serve is an unknown setting/)
   })
 
   it("list the profiles named in any section", () => {

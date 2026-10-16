@@ -224,10 +224,10 @@ describe("reply editors and model templates", () => {
     const store = await openStore({ env })
     const account = { provider, account: "500" }
     const at = new Date(Date.now() - 1000).toISOString()
-    await store.saveChats(account, [
+    await store.chats.saveChats(account, [
       { id: "11", title: "Test chat", kind: "dialog", unreadCount: 0, lastMessageAt: at, participantsCount: null },
     ])
-    await store.saveMessages(
+    await store.messages.saveMessages(
       account,
       "11",
       [

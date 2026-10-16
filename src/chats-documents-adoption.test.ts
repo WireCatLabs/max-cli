@@ -12,7 +12,7 @@ it("reads imported document titles from stored chat links offline without contac
   rememberAccount(MAX_APP, profile, account.account, process.env)
   const store = await openStore()
   try {
-    await store.saveChats(account, [
+    await store.chats.saveChats(account, [
       {
         id: "7",
         title: "Synthetic planning",
@@ -22,7 +22,7 @@ it("reads imported document titles from stored chat links offline without contac
         participantsCount: null,
       },
     ])
-    await store.saveMessages(
+    await store.messages.saveMessages(
       account,
       "7",
       [

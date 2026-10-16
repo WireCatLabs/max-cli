@@ -26,10 +26,10 @@ const db = await openStore()
 beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
   writeFileSync(path, Buffer.from(image.data, "base64"))
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "Synthetic group", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
-  await db.saveMessages(
+  await db.messages.saveMessages(
     account,
     "7",
     [
@@ -50,7 +50,7 @@ beforeAll(async () => {
     ],
     { via: "test" },
   )
-  await db.keepDownloads(account, "7", "1", [{ kind: "photo", position: 0, path }])
+  await db.attachments.keepDownloads(account, "7", "1", [{ kind: "photo", position: 0, path }])
 })
 afterAll(async () => {
   await db.close()

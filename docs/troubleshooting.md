@@ -22,7 +22,7 @@
 |---|---|---|---|
 | `1` | `internal_error` | опечатка в названии команды или сбой в самом `max` | [не тот профиль](#команда-отвечает-но-профиль-не-тот), [сообщить](#как-сообщить-о-проблеме) |
 | `2` | `validation_error` | значение или сочетание опций, которых `max` не принимает; имя подходит нескольким чатам | [значения](#--limit-takes-a-whole-number-from-1-upwards-not-abc), [несколько чатов](#matches-n-chats) |
-| `3` | `configuration_error` | ошибка в `config.json`, или локальную копию записала более новая версия | [настройки](#is-not-a-valid-config), [локальная копия](#the-message-store-was-written-by-a-newer-version-) |
+| `3` | `configuration_error` | ошибка в `config.json`, или локальную копию записала более новая версия | [настройки](#is-an-unknown-setting), [локальная копия](#the-message-store-was-written-by-a-newer-version-) |
 | `4` | `authentication_error` | нет входа, сессию завершили, или ключница недоступна | [нет сессии](#no-session-for-profile-default), [токен не читается](#no-token-found-for-profile-default-although-it-has-logged-in-on-this-machine) |
 | `5` | `permission_error` | `permissions` профиля запретили действие | [не разрешено](#profile--does-not-let--write-или-profile--denies-) |
 | `6` | `not_found` | нет такого чата, сообщения или человека; в локальной копии ещё пусто | [нет чата](#no-chat-matches), [ничего не сохранено](#nothing-recorded-for-profile--yet--run-the-command-once-without---offline) |
@@ -180,10 +180,10 @@ max shop bot messages list -100
 
 ## Настройки и значения опций
 
-### «is not a valid config»
+### «is an unknown setting»
 
 ```json
-{"error":{"code":"configuration_error","reason":"config.invalid","message":"…/config.json is not a valid config:\n  profiles.default.limitt: unknown setting — the known ones are limit, timeout_ms, color, record, keep_runs_for_days, allow, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve"}}
+{"error":{"code":"configuration_error","reason":"config.invalid","message":"…/config.json: profiles.default.limitt is an unknown setting","retry":{"safe":false}}}
 ```
 
 Код `3`. В файле настроек поле, которого нет в схеме — почти всегда опечатка, и сообщение

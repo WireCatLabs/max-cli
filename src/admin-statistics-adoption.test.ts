@@ -15,10 +15,10 @@ const refuse = vi.fn(() => {
 const db = await openStore()
 beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "Synthetic group", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
-  await db.saveMessages(
+  await db.messages.saveMessages(
     account,
     "7",
     [1, 2, 3].map((id) => ({

@@ -20,7 +20,7 @@ const refuse = vi.fn(() => {
 const db = await openStore()
 beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "Reader fixture", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
   for (const [id, name, bytes] of [
@@ -29,7 +29,7 @@ beforeAll(async () => {
   ] as const) {
     const path = join(root, name)
     writeFileSync(path, bytes)
-    await db.saveMessages(
+    await db.messages.saveMessages(
       account,
       "7",
       [
@@ -50,7 +50,7 @@ beforeAll(async () => {
       ],
       { via: "test" },
     )
-    await db.keepDownloads(account, "7", id, [{ kind: "file", position: 0, path }])
+    await db.attachments.keepDownloads(account, "7", id, [{ kind: "file", position: 0, path }])
   }
 })
 afterAll(async () => {

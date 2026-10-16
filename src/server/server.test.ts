@@ -190,8 +190,8 @@ describe("max serve", () => {
     const db = await openStore()
     try {
       const key = { provider: "max", account: String(ME) }
-      expect((await db.chats(key, {})).items.find((chat) => chat.id === "111")).toMatchObject({ title: "First" })
-      expect((await db.people("max", { account: key.account })).get("10000002")?.name).toBe("Someone Else")
+      expect((await db.chats.chats(key, {})).items.find((chat) => chat.id === "111")).toMatchObject({ title: "First" })
+      expect((await db.people.people("max", { account: key.account })).get("10000002")?.name).toBe("Someone Else")
       expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, `${store.profile}.db`))).toBe(
         false,
       )

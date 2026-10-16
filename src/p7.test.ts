@@ -170,10 +170,12 @@ describe("contacts context in named chats", () => {
     rememberAccount(MAX_APP, profile, "10000001", process.env)
     const store = await openStore()
     try {
-      await store.saveChats({ provider: "max", account: "10000001" }, [
+      await store.chats.saveChats({ provider: "max", account: "10000001" }, [
         { id: "111", title: "Synthetic", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
       ])
-      await store.savePeople({ provider: "max", account: "10000001" }, [{ id: "20000002", name: "Synthetic Person" }])
+      await store.people.savePeople({ provider: "max", account: "10000001" }, [
+        { id: "20000002", name: "Synthetic Person" },
+      ])
     } finally {
       await store.close()
     }

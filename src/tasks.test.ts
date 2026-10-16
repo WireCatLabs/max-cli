@@ -34,8 +34,8 @@ beforeAll(async () => {
   const store = await openStore()
   try {
     const chat = { id: "7", title: "Synthetic Group", kind: "group" as const }
-    await store.saveChats(account, [{ ...chat, unreadCount: 0, lastMessageAt: null, participantsCount: null }])
-    await store.saveMessages(
+    await store.chats.saveChats(account, [{ ...chat, unreadCount: 0, lastMessageAt: null, participantsCount: null }])
+    await store.messages.saveMessages(
       account,
       "7",
       [
