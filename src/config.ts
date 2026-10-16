@@ -17,14 +17,6 @@ const zeroOrMore = plain("has to be a whole number, 0 or more")
 const countOrZero = v.pipe(v.number(zeroOrMore), v.integer(zeroOrMore), v.minValue(0, zeroOrMore))
 const flag = v.boolean(plain("has to be true or false"))
 
-/** valibot's own words ("Expected never but received …") mean nothing to someone editing a file. */
-const objectMessage =
-  (known: string[]): v.ErrorMessage<v.StrictObjectIssue> =>
-  (issue) =>
-    issue.expected === "never"
-      ? `unknown setting — the known ones are ${known.join(", ")}`
-      : "has to be an object, in braces"
-
 /**
  * ⚠ `strictObject`, not `object`: an unknown key is an error here.
  *
@@ -65,16 +57,10 @@ const personalEntries = {
  */
 const botEntries = {
   ...sharedEntries,
-  read_other_bots: v.optional(
-    v.union(
-      [flag, v.array(v.string(plain("has to be a profile name")))],
-      "has to be true, false, or a list of bot profiles",
-    ),
-  ),
+  read_other_bots: v.optional(v.union([flag, v.array(v.string())], "has to be true, false, or a list of bot profiles")),
 }
-const strict = <T extends v.ObjectEntries>(entries: T) => v.strictObject(entries, objectMessage(Object.keys(entries)))
-const profileSettings = strict(personalEntries)
-const botSettings = strict(sharedEntries)
+const profileSettings = v.strictObject(personalEntries)
+const botSettings = v.strictObject(sharedEntries)
 
 /**
  * One program, one version: whether to look for a newer one is not a per-profile matter. Nor is the
@@ -91,26 +77,25 @@ const defaultsEntries = {
     ),
   ),
 }
-const defaultsSettings = strict(defaultsEntries)
+const defaultsSettings = v.strictObject(defaultsEntries)
 
-const profilesOf = <T extends v.GenericSchema>(settings: T) =>
-  v.record(v.string(), settings, "has to be an object of profiles, by name")
+const profilesOf = <T extends v.GenericSchema>(settings: T) => v.record(v.string(), settings)
 
 /** Every personal account, or every bot, and then one of them by name (`NEED-355`). */
 const kindSection = <T extends v.ObjectEntries>(entries: T) => {
-  const settings = strict(entries)
-  return strict({ defaults: v.optional(settings), profiles: v.optional(profilesOf(settings)) })
+  const settings = v.strictObject(entries)
+  return v.strictObject({ defaults: v.optional(settings), profiles: v.optional(profilesOf(settings)) })
 }
 
 const configEntries = {
-  default_profile: v.optional(v.string(plain("has to be a profile name, in quotes"))),
+  default_profile: v.optional(v.string()),
   /** What every profile gets unless it says otherwise. */
   defaults: v.optional(defaultsSettings),
   profiles: v.optional(profilesOf(profileSettings), {}),
   personal: v.optional(kindSection(personalEntries)),
   bot: v.optional(kindSection(botEntries)),
 }
-export const configSchema = v.strictObject(configEntries, objectMessage(Object.keys(configEntries)))
+export const configSchema = v.strictObject(configEntries)
 
 export type Config = v.InferOutput<typeof configSchema>
 

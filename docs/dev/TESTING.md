@@ -163,7 +163,7 @@ What holds for every command, how to produce it, and the test that pins it.
 | `--offline` | a read with it | no connection at all; refused for writes | `src/client.test.ts`, `src/export.test.ts` |
 | `--timeout` | `--timeout 1s` against no answer | exit on time; a write in flight is `outcome_unknown` | `src/deadline.test.ts`, `src/commands/bot.test.ts` |
 | Outcome unknown | a send with no answer | `outcome_unknown` with the `cid` to repeat, never "failed" | `src/client.test.ts`, `src/edit-pin-forward.test.ts`, `src/mcp.test.ts` |
-| A config typo | an unknown key in `config.json` | exit 3, names the key and the known ones | `src/config.test.ts` |
+| A config typo | an unknown key in `config.json` | exit 3, names the key | `src/config.test.ts` |
 | Content never logged | a run with titles, names and texts in play | none of them in the events; the ids are | `src/client.test.ts` |
 
 ### Guided setup
