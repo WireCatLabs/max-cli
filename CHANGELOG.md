@@ -8,7 +8,7 @@
 
 ### Изменено — может сломать скрипты
 
-- **Команды, которых в MAX нет, больше не показываются.** У `messages send`, `chats mark-read` и `polls create` нет
+- **Команды, которых в MAX нет, больше не показываются** (cli-core 0.299.0). У `messages send`, `chats mark-read` и `polls create` нет
   `--topic` (в MAX нет тем форума), `messages list` не принимает `topic:`, а у `chats requests accept` и `decline`
   нет `--all` и `--link`: человек указывается всегда. Раньше эти флаги были видны и только отказывали.
 
