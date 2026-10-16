@@ -139,15 +139,14 @@ describe("max doctor", () => {
     expect(existsSync(join(home, "cache"))).toBe(false)
   })
 
-  it("**answers with the config problem when the config file is invalid**, naming the key", async () => {
+  it("**answers with the config problem when the config file is invalid**, naming the key and not its value", async () => {
     const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"], {
-      config: JSON.stringify({ defaultProfile: "work", profiles: { work: {} } }),
+      config: JSON.stringify({ defaultProfile: "invented-value-7", profiles: { work: {} } }),
     })
 
     expect(code).toBe(0)
-    const { item } = JSON.parse(stdout)
-    expect(Object.keys(item)).toEqual(["config"])
-    expect(item.config.error).toContain("defaultProfile")
+    expect(JSON.parse(stdout).item.config.error).toContain("defaultProfile")
+    expect(stdout).not.toContain("invented-value-7")
   })
 
   it("carries the profile from the first word like every other command", async () => {
