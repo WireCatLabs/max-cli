@@ -261,6 +261,27 @@ max chats show <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+### `max chats documents`
+
+the Google Docs and Drive documents linked in a chat's stored messages
+
+#### `max chats documents list`
+
+every document link in the chat, newest first, and whether the store has it
+
+```sh
+max chats documents list <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many to show. |
+| `--page <n>` | which page, starting at 1. |
+
 ### `max chats events`
 
 who joined, left, was added or removed, and by whom — from the chat's service messages; the last 7 days unless the query names time
