@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**916 ✅ · 154 ⛔ · 0 ❌** — 343 commands, 727 options.
+**909 ✅ · 154 ⛔ · 0 ❌** — 343 commands, 720 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -48,7 +48,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
 | `chats mark-read` | `--until-id` | ✅ |  |
-| `chats mark-read` | `--topic` | ✅ |  |
 | `chats leave` |  | ✅ |  |
 | `chats create` |  | ✅ |  |
 | `chats create` | `--channel` | ✅ |  |
@@ -88,11 +87,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats requests list` | `--limit` | ✅ |  |
 | `chats requests list` | `--page` | ✅ |  |
 | `chats requests accept` |  | ✅ |  |
-| `chats requests accept` | `--all` | ✅ |  |
-| `chats requests accept` | `--link` | ✅ |  |
 | `chats requests decline` |  | ✅ |  |
-| `chats requests decline` | `--all` | ✅ |  |
-| `chats requests decline` | `--link` | ✅ |  |
 | `chats folders list` |  | ✅ |  |
 | `chats folders show` |  | ⛔ | cli-core src/cli/messenger/admin-commands.test.ts tests folder show with cached and remote chat names plus pinned/excluded entries; MAX mounts the same shared handler (SDK0.189.0) |
 | `chats folders create` |  | ✅ |  |
@@ -210,7 +205,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages transcribe` |  | ✅ |  |
 | `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
-| `messages send` | `--topic` | ✅ |  |
 | `messages send` | `--reply-to` | ✅ |  |
 | `messages send` | `--send-as` | ✅ |  |
 | `messages send` | `--operation-id` | ✅ |  |
@@ -680,7 +674,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `polls vote` | `--retract` | ✅ |  |
 | `polls close` |  | ✅ |  |
 | `polls create` |  | ✅ |  |
-| `polls create` | `--topic` | ✅ |  |
 | `polls create` | `--multiple` | ✅ |  |
 | `polls create` | `--anonymous` | ✅ |  |
 | `polls create` | `--revote` | ✅ |  |

@@ -131,31 +131,19 @@ describe("the program", () => {
     expect(max.sent.some(({ opcode }) => opcode === Opcode.MSG_SEND)).toBe(false)
   })
 
-  it("refuses a topic read without marking the whole chat read", async () => {
+  it("offers no --topic, since MAX has no forum topics, and sends nothing when given one", async () => {
     const { max, ...environment } = scriptedMax()
-    const result = await runWith(["chats", "mark-read", "111", "--topic", "12", "--json"], environment)
-    expect(result.code).toBe(2)
-    expect(result.stdout).toBe("")
-    expect(result.stderr).toContain("mark a forum topic read")
-    expect(max.sent.some(({ opcode }) => opcode === Opcode.CHAT_MARK)).toBe(false)
-  })
-
-  it("refuses --topic for shared message and poll commands without sending", async () => {
-    const { max, ...environment } = scriptedMax()
-    const sent = await runWith(["messages", "send", "111", "hi", "--topic", "12", "--json"], environment)
-    const poll = await runWith(
-      ["polls", "create", "111", "Friday?", "yes", "no", "--topic", "12", "--json"],
-      environment,
-    )
-    for (const result of [sent, poll]) {
+    const results = [
+      await runWith(["chats", "mark-read", "111", "--topic", "12", "--json"], environment),
+      await runWith(["messages", "send", "111", "hi", "--topic", "12", "--json"], environment),
+      await runWith(["polls", "create", "111", "Friday?", "yes", "no", "--topic", "12", "--json"], environment),
+    ]
+    for (const result of results) {
       expect(result.code).toBe(2)
       expect(result.stdout).toBe("")
-      expect(JSON.parse(result.stderr).error).toMatchObject({
-        code: "validation_error",
-        message: "this messenger cannot send to a forum topic",
-      })
+      expect(JSON.parse(result.stderr).error.message).toBe("unknown option '--topic'")
     }
-    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)).toEqual([])
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND || opcode === Opcode.CHAT_MARK)).toEqual([])
   })
 
   it("shows a control character from the command line in an error, instead of passing it to the terminal", async () => {

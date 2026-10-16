@@ -43,8 +43,11 @@ export const sharedSubcommand = (group: Command, name: string): Command => {
 
 /** What cli-core's shared commands and services need from max, for the personal account. */
 export const maxMessenger: Messenger = {
+  inviteLinkCreate: false,
   inviteLinkList: false,
   inviteLinkRevoke: false,
+  joinRequestsAll: false,
+  channelComments: false,
   folderJoin: false,
   groupPhoto: true,
   chatMedia: true,

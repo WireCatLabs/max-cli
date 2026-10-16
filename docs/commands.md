@@ -317,7 +317,6 @@ max chats mark-read <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--until-id <id>` | only up to this message id; the newest by default. |
-| `--topic <id>` | mark only this forum topic read; unsupported by messengers without topics. |
 
 ### `max chats leave`
 
@@ -633,18 +632,13 @@ let them in; the group sees them join
 **Меняет что-то в MAX.**
 
 ```sh
-max chats requests accept <chat> [person] [options]
+max chats requests accept <chat> <person>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
-| `person` | необязательный | who asked: an id from `chats requests list`. |
-
-| Опция | Что делает |
-|---|---|
-| `--all` | not supported by MAX; select one person from chats requests list. |
-| `--link <link>` | not supported by MAX; select one person from chats requests list. |
+| `person` | обязательный | who asked: an id from `chats requests list`. |
 
 #### `max chats requests decline`
 
@@ -653,18 +647,13 @@ turn the request away
 **Меняет что-то в MAX.**
 
 ```sh
-max chats requests decline <chat> [person] [options]
+max chats requests decline <chat> <person>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
-| `person` | необязательный | who asked: an id from `chats requests list`. |
-
-| Опция | Что делает |
-|---|---|
-| `--all` | not supported by MAX; select one person from chats requests list. |
-| `--link <link>` | not supported by MAX; select one person from chats requests list. |
+| `person` | обязательный | who asked: an id from `chats requests list`. |
 
 ### `max chats folders`
 
@@ -1324,7 +1313,7 @@ max messages list <chat> [query] [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
-| `query` | необязательный | where to start and which topic: id<42, date>2026-10-01, topic:12. |
+| `query` | необязательный | where to start: id<42, date>2026-10-01. |
 
 | Опция | Что делает |
 |---|---|
@@ -1499,7 +1488,6 @@ max messages send <chat> [text] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--topic <id>` | send to this forum topic; unsupported by messengers without topics. |
 | `--reply-to <message>` | answer this message, by its id in the same chat. |
 | `--send-as <id>` | post as one of the identities `chats send-as` lists; required where the chat posts as someone else by default. |
 | `--operation-id <id>` | repeat a send whose outcome was unknown, without risking a second copy. |
@@ -1559,7 +1547,7 @@ max messages delete <chat> <messages> [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
-| `messages` | обязательный | the message ids, at most 10. |
+| `messages` | обязательный | the message ids, by spaces or commas, at most 10. |
 
 | Опция | Что делает |
 |---|---|
@@ -3587,7 +3575,6 @@ max polls create <chat> <question> <answers> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--topic <id>` | send to this forum topic; unsupported by messengers without topics. |
 | `--multiple` | people may pick several answers. |
 | `--anonymous` | nobody sees who voted for what. |
 | `--revote` | people may change their vote. |
