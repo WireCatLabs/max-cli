@@ -5,6 +5,7 @@ import {
   type AnswerOutput,
   itemOf,
   LOCAL_WRITE,
+  outputFor,
   REMOTE_READ,
   renderAnswer,
   runsDirFor,
@@ -46,7 +47,15 @@ export const doctorCommand = (): Command => {
 
   command.action(async function (this: Command) {
     const { online } = this.opts<{ online?: boolean }>()
-    const { renderer, settings, format, streams, run, store, createClient } = forCommand(this)
+    let context: ReturnType<typeof forCommand>
+    try {
+      context = forCommand(this)
+    } catch (error) {
+      if (!(error instanceof CliError) || error.code !== "configuration_error") throw error
+      renderAnswer(this, outputFor(this), itemOf({ config: { error: error.message } }))
+      return
+    }
+    const { renderer, settings, format, streams, run, store, createClient } = context
     const botStore = botStoreFor(this)
 
     await run("doctor", async (events) => {

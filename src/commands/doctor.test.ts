@@ -19,9 +19,19 @@ const homes: string[] = []
 
 const inAnEmptyHome = async (
   argv: string[],
-  { token = false, loggedIn = false, tty = false, bots = [] as string[] } = {},
+  {
+    token = false,
+    loggedIn = false,
+    tty = false,
+    bots = [] as string[],
+    config = undefined as string | undefined,
+  } = {},
 ) => {
   const home = mkdtempSync(join(tmpdir(), "max-doctor-cmd-"))
+  if (config !== undefined) {
+    mkdirSync(join(home, "config"), { recursive: true })
+    writeFileSync(join(home, "config", "config.json"), config)
+  }
   for (const bot of bots) {
     mkdirSync(join(home, "state", "bots"), { recursive: true })
     writeFileSync(join(home, "state", "bots", `${bot}.json`), JSON.stringify({ chats: [] }))
@@ -127,6 +137,17 @@ describe("max doctor", () => {
 
     expect(existsSync(join(home, "state", "profiles"))).toBe(false)
     expect(existsSync(join(home, "cache"))).toBe(false)
+  })
+
+  it("**answers with the config problem when the config file is invalid**, naming the key", async () => {
+    const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"], {
+      config: JSON.stringify({ defaultProfile: "work", profiles: { work: {} } }),
+    })
+
+    expect(code).toBe(0)
+    const { item } = JSON.parse(stdout)
+    expect(Object.keys(item)).toEqual(["config"])
+    expect(item.config.error).toContain("defaultProfile")
   })
 
   it("carries the profile from the first word like every other command", async () => {
