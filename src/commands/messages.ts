@@ -24,9 +24,6 @@ export const messagesCommand = (): Command => {
 
   const shared = sharedMessagesCommand(maxMessenger)
   for (const name of ["list", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
-  const list = command.commands.find((one) => one.name() === "list")
-  // MAX has no forum topics.
-  if (list) Object.assign(list, { options: list.options.filter((option) => option.attributeName() !== "topic") })
 
   const localLinks = sharedMessagesCommand({ ...maxMessenger, history: "store" })
   command.addCommand(sharedSubcommand(localLinks, "link"))
@@ -95,23 +92,12 @@ export const messagesCommand = (): Command => {
       })
     })
 
-  const send = sendCommand(maxMessenger)
-  Object.assign(send, {
-    options: send.options.filter(
-      (option) => !["spoiler", "captionAbove", "commentTo"].includes(option.attributeName()),
-    ),
-  })
-  command.addCommand(send)
+  command.addCommand(sendCommand(maxMessenger))
 
   command.addCommand(sharedSubcommand(shared, "scheduled"))
 
   command.addCommand(editCommand(maxMessenger))
-  const remove = deleteCommand(maxMessenger)
-  remove.registeredArguments[1]?.argParser((value: string, previous: string[] = []) => [
-    ...previous,
-    ...value.split(",").map((id) => id.trim()),
-  ])
-  command.addCommand(remove)
+  command.addCommand(deleteCommand(maxMessenger))
   command.addCommand(forwardCommand(maxMessenger))
   command.addCommand(pinCommand(maxMessenger))
   command.addCommand(unpinCommand(maxMessenger))
