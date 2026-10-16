@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**912 ✅ · 154 ⛔ · 0 ❌** — 342 commands, 724 options.
+**916 ✅ · 154 ⛔ · 0 ❌** — 343 commands, 727 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -461,6 +461,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks close` |  | ✅ |  |
 | `tasks close` | `--as` | ✅ |  |
 | `tasks close` | `--reason` | ✅ |  |
+| `tasks close` | `--certainty` | ✅ |  |
+| `tasks close` | `--as-owner` | ✅ |  |
+| `tasks reject` |  | ✅ |  |
+| `tasks reject` | `--as-owner` | ✅ |  |
 | `conversations build` |  | ✅ |  |
 | `conversations build` | `--chat` | ✅ |  |
 | `conversations build` | `--analyze` | ✅ |  |

@@ -79,7 +79,7 @@ const CHATS_LIST: StepDefinition = {
 }
 
 export const setupCommand = (): Command =>
-  annotate(new Command("setup"), { effects: REMOTE_WRITE })
+  annotate(new Command("setup"), { effects: REMOTE_WRITE, lifetime: "interactive" })
     .description("set up your personal MAX account and connect your agent")
     .configureHelp({ showGlobalOptions: true })
     .addHelpText(

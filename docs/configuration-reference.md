@@ -63,7 +63,7 @@ max config show --json     # то же одним объектом
 `MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: default_profile` или `none named` — профиль не назван,
 и `profile` тогда `null`.
 
-С `--json` в ответе есть и `store_settings` — настройки общего архива (`search_stemmers.*`) и
+С `--json` в ответе есть и `store_settings` — настройки общего архива (`search_stemmers.*`, `task_agent_close*`) и
 откуда они взяты: `store` или `default`.
 
 `--bot` показывает настройки так, как их получит `max <имя> bot …`: у бота свой раздел и свой лимит
@@ -144,6 +144,7 @@ max config show --json     # то же одним объектом
 | `analysis_base_url` | адрес API анализа | `build --base-url` | по сервису |
 | `models` | внешние модели по назначению ([ниже](#модели-по-назначению)) | переменные `MAX_MODELS_*` | нет |
 | `search_stemmers.cyrillic`, `search_stemmers.latin` | языки основ слов для поиска во всём общем архиве ([ниже](#языки-поиска)) | — | `russian`, `english,spanish` |
+| `task_agent_close`, `task_agent_close_min` | закрывает ли задачу агент, и с какой уверенностью из `--certainty`; ниже порога задача остаётся открытой с предложением закрыть ([задачи](groups.md#что-ждёт-вашего-ответа)). Общие для всего архива | — | `on`, `0.8` |
 
 ⚠ **`timeout_ms` и `--timeout` — разные вещи, и перепутать их дорого.** `timeout_ms` — это сколько
 ждать **один ответ** от MAX. `--timeout` — сколько отведено **команде целиком**. Одно чтение — это
@@ -349,6 +350,8 @@ max personal chats list
 | `models` | объект назначений моделей; поля описаны ниже | профиль |
 | `search_stemmers.cyrillic` | `russian`, `none` | общий архив, через `config set` |
 | `search_stemmers.latin` | `english`, `spanish`, оба через запятую, `none` | общий архив, через `config set` |
+| `task_agent_close` | `on`, `off` | общий архив, через `config set` |
+| `task_agent_close_min` | число от 0 до 1 | общий архив, через `config set` |
 
 ### Модели по назначению
 

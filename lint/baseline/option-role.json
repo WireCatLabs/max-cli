@@ -34,5 +34,6 @@
   "stats messages discussion --min-views",
   "stats messages top --message-kind",
   "stats messages unanswered --older-than",
-  "stickers list --set"
+  "stickers list --set",
+  "tasks close --certainty"
 ]

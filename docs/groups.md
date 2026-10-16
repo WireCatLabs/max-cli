@@ -244,10 +244,12 @@ max personal tasks list chat:<id чата> "(kind:question OR kind:mention)"
 max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promise --category other
 ```
 
-Если задача может оказаться той же работой, что открытая или закрытая за последние 14 дней, `tasks add`
-отказывает с кодом выхода 2 и называет кандидатов. Повторите с `--into <задача>`, чтобы привязать сообщение к
-ней, или с `--new`, чтобы всё же открыть новую. `tasks duplicates` показывает пары, которые нашли правила, а
-`tasks merge <задача> --into <другая>` объединяет их:
+Если задача может оказаться той же работой, что открытая, `tasks add` отказывает с кодом выхода 2 и называет
+кандидатов. Повторите с `--into <задача>`, чтобы привязать сообщение к ней, или с `--new`, чтобы всё же открыть
+новую. Если она похожа только на задачу, закрытую за последние 14 дней, `tasks add` открывает новую и связывает
+её с закрытой связью `follow-up-of`; закрытая так и остаётся закрытой, а `tasks show` показывает связь.
+`tasks duplicates` показывает пары, которые нашли правила, а `tasks merge <задача> --into <другая>` объединяет
+их:
 
 ```sh
 max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promise --category other --into <задача>
@@ -255,6 +257,20 @@ max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promi
 
 ```sh
 max personal tasks close <задача> --as dismissed --reason no-reply-needed
+```
+
+Агент — программа с переменной `AI_AGENT` или `CLAUDECODE` — закрывает задачу только с `--certainty`: насколько
+он уверен, от 0 до 1. Если уверенность ниже порога, задача остаётся открытой с предложением закрыть.
+`tasks list close:suggested` показывает такие задачи, а `tasks agenda` — с причиной `close-suggested`. Вы
+подтверждаете предложение тем же `tasks close <задача>`, а `tasks reject <задача>` его отклоняет. Порог по
+умолчанию — 0.8, его меняет `config set task_agent_close_min`; `config set task_agent_close off` оставляет
+открытой каждую задачу, которую закрывает агент:
+
+```sh
+max personal tasks list close:suggested
+max personal tasks close <задача>
+max personal tasks reject <задача>
+max config set task_agent_close_min 0.9
 ```
 
 Пару, которая не одна задача, `tasks duplicates reject` убирает насовсем; `tasks duplicates defer` оставляет
@@ -286,12 +302,17 @@ max personal tasks release <задача>
 ```
 
 `tasks categories` показывает список категорий. Он один на всё хранилище и общий для `tg`, `max` и
-`memo`; `config set task_categories.<имя>` добавляет или меняет категорию — смысл, затем слова, по которым её
-выбирает правило:
+`memo`. По умолчанию в нём 59 категорий, всего можно до 80. `config set task_categories.<имя>` добавляет или
+меняет категорию — смысл, затем слова, по которым её выбирает правило, на английском, русском и испанском
+(`es:`):
 
 ```sh
 max config set task_categories.travel "поездки и билеты | рейс, отель, es:vuelo"
 ```
+
+Задача сохраняет категорию, даже когда её убрали из списка. `tasks categories` называет такие категории и
+сколько у них задач, `tasks list category:<имя>` их находит, а `tasks plan <задача> --category <имя>` переносит
+задачу в другую.
 
 Подробнее — на странице [Задачи](https://wirecat.dev/ru/docs/tasks).
 
