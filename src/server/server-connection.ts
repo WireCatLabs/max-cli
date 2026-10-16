@@ -96,7 +96,7 @@ export class ServerConnection implements Wire {
     const answer = await this.#ask({
       opcode,
       payload,
-      approvals: permissionApprovals(),
+      approvals: permissionApprovals(operationId),
       ...(operationId === undefined ? {} : { operationId }),
     })
     watch?.({ phase: "received", seq: this.#id, opcode, bytes: 0 })

@@ -80,7 +80,12 @@ export const operating = (guard: SendGuard, key?: string): SendGuard => {
  * The guard a profile's configuration asks for — the command's, and `max serve`'s for every write
  * it forwards. Built per request in the server, so a changed permission needs no restart.
  */
-export const guardFor = (settings: Settings, warn: (message: string) => void, ask?: Asker, key?: string): SendGuard => {
+export const guardFor = (
+  settings: Pick<Settings, "profile" | "readOnlyLock" | "permissions" | "permissionSources" | "sendsPerHour">,
+  warn: (message: string) => void,
+  ask?: Asker,
+  key?: string,
+): SendGuard => {
   const guard = operating(
     sendGuard({
       profile: settings.profile,
@@ -108,7 +113,8 @@ export const guardFor = (settings: Settings, warn: (message: string) => void, as
           })
       }
       guard.check(request, options)
-      if (request.key === "chats.moderate") approvePermission(keyForWrite(request.kind ?? "message", request.action))
+      if (request.key === "chats.moderate")
+        approvePermission(keyForWrite(request.kind ?? "message", request.action), request.operationId)
     },
   }
 }
