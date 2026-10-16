@@ -92,10 +92,10 @@ max work mcp config
 ```json
 {
   "mcpServers": {
-    "max": {
+    "max-personal": {
       "type": "stdio",
       "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["C:\\Users\\you\\AppData\\Roaming\\npm\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js", "mcp"]
+      "args": ["C:\\Users\\you\\AppData\\Roaming\\npm\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js", "personal", "mcp"]
     }
   }
 }
@@ -108,9 +108,10 @@ max work mcp config
 
 Пути в записи полные, потому что приложение, запущенное не из терминала, не видит `PATH` терминала.
 На Windows `max` — это файл `max.cmd`, который приложение без оболочки запустить не может. Флаги
-`--permission` и `--yes` переносятся в запись. Переменные `MAX_CONFIG_DIR`, `MAX_STATE_DIR`,
-`MAX_CACHE_DIR`, `MESSAGING_STORE` и `XDG_RUNTIME_DIR` попадают в неё, только если заданы; токен —
-никогда. `MAX_CACHE_DIR` относится только к прежнему кэшу, а общую локальную копию сообщений задаёт
+`--permission` переносятся в запись, профиль стоит в ней перед `mcp`. Переменные `MAX_CONFIG_DIR`,
+`MAX_STATE_DIR`, `MAX_CACHE_DIR`, `MESSAGING_STORE`, `XDG_RUNTIME_DIR` и ограничения для файлов
+`MESSAGING_ATTACHMENT_MAX_MIB`, `MESSAGING_PDF_PREVIEW_MAX_PIXELS`, `MESSAGING_PDF_PREVIEW_MAX_MIB`,
+`MESSAGING_BATCH_MAX_ERROR_PERCENT` попадают в неё, только если заданы; токен — никогда. `MAX_CACHE_DIR` относится только к прежнему кэшу, а общую локальную копию сообщений задаёт
 `MESSAGING_STORE`. Команда переносит путь к этой копии и каталог связи с ключницей, чтобы приложение,
 запущенное с рабочего стола, использовало тот же вход и сохранённые сообщения, что и терминал.
 
@@ -206,11 +207,12 @@ MAX и не пишет файлы; нужен доступ `messages`. Всту�
 
 `max_read` (`command: "attachments list"`) показывает пути сохранённых файлов и состояние их текста;
 `max_write` (`command: "attachments text set"`) сохраняет текст, который агент прочитал из файла, для
-поиска по `content:`. Извлечение текста — только в терминале. `max_read` с
+поиска по `content:`. `max_write` (`command: "attachments extract"`) извлекает текст из сохранённых файлов сам,
+частями через `cursor`, и не возвращает текст в ответе. `max_read` с
 `command: "messages context"` и `arguments: { offline: true }` читает только локальную копию.
 
-Топиков Telegram в MAX нет, поэтому нет и инструментов `max_topics_*`. Голосовое распознаётся моделью на
-этом компьютере. Фото выбирается через `index`. Модели никогда не скачиваются сами. Перед локальным распознаванием сервер
+Топиков Telegram в MAX нет, поэтому нет и команд `topics …`. Голосовое распознаётся моделью на
+этом компьютере. Фото выбирается через `index` и отдаётся, только если оно не больше 512 КБ. Модели никогда не скачиваются сами. Перед локальным распознаванием сервер
 отпускает соединение; модель поиска закрывается при завершении сервера.
 
 ## Как он держит соединение
