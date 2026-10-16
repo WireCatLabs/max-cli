@@ -1,10 +1,12 @@
-import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { run } from "./program.js"
-import { issueUrlFor, type Report } from "./report.js"
+import { buildReport, issueUrlFor, type Report } from "./report.js"
 import { SessionStore } from "./session/store.js"
 
 const environment: Environment = { store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }) }
@@ -151,7 +153,76 @@ describe("the new issue", () => {
     expect(ids.message).toMatch(/^id:[0-9a-f]{12}$/)
     expect(report.sends[0]?.chatId).toBe(ids.chat)
     expect(report.sends[0]?.messageId).toBe(ids.message)
-    expect(ids.cid).toBe("7")
+    expect(ids.cid).toMatch(/^id:[0-9a-f]{12}$/)
     expect(build().sends[0]?.chatId).not.toBe(ids.chat)
+  })
+})
+
+const ids = {
+  chatId: "7000000000000000001",
+  messageId: "7000000000000000002",
+  replyTo: "7000000000000000003",
+  sendId: "synthetic-send-id",
+  operationId: "synthetic-send-id",
+}
+
+const fixture = () => {
+  const dir = mkdtempSync(join(tmpdir(), "report-privacy-"))
+  const journal = new SendJournal(join(dir, "sends.jsonl"))
+  journal.append({ ...ids, at: "2026-10-16T00:00:00.000Z", profile: "synthetic", outcome: "refused" })
+  const runsDir = join(dir, "runs")
+  const runDir = join(runsDir, "2026-10-16", "run-1")
+  mkdirSync(runDir, { recursive: true })
+  writeFileSync(
+    join(runDir, "run.json"),
+    JSON.stringify({
+      runId: "run-1",
+      command: "messages send",
+      profile: "synthetic",
+      startedAt: "",
+      status: "failed",
+      cliVersion: "",
+    }),
+  )
+  writeFileSync(
+    join(runDir, "events.jsonl"),
+    `${JSON.stringify({ event: "request", ids: { chat: ids.chatId, message: ids.replyTo, send: ids.sendId } })}\n`,
+  )
+  const report = () =>
+    buildReport({
+      profile: "synthetic",
+      doctor: { session: {} } as never,
+      runsDir,
+      runId: "run-1",
+      sends: journal.entries(),
+      home: "/synthetic-home",
+    })
+  return { journal, report }
+}
+
+describe("native diagnostic report privacy", () => {
+  it("labels an ordinary reply target preserved by the real send journal", () => {
+    const { journal, report } = fixture()
+    expect(journal.entries()[0]?.replyTo).toBe(ids.replyTo)
+    expect(report().sends[0]?.replyTo).toMatch(/^id:[0-9a-f]{12}$/)
+  })
+  it("preserves useful links within a report while keeping correlation values private", () => {
+    const { report } = fixture()
+    const output = report()
+    const eventIds = output.run?.events[0]?.ids as Record<string, string>
+    expect(output.sends[0]?.chatId).toBe(eventIds.chat)
+    expect(output.sends[0]?.replyTo).toBe(eventIds.message)
+    expect(output.sends[0]?.sendId).toBe(eventIds.send)
+    expect(output.sends[0]?.operationId).toBe(eventIds.send)
+    for (const value of Object.values(ids)) expect(JSON.stringify(output)).not.toContain(value)
+  })
+  it("uses fresh labels across reports for reply targets as well as chat and message IDs", () => {
+    const { report } = fixture()
+    const first = report(),
+      second = report()
+    expect(first.sends[0]?.chatId).not.toBe(second.sends[0]?.chatId)
+    expect(first.sends[0]?.messageId).not.toBe(second.sends[0]?.messageId)
+    expect(first.sends[0]?.replyTo).not.toBe(second.sends[0]?.replyTo)
+    expect(first.sends[0]?.sendId).not.toBe(second.sends[0]?.sendId)
   })
 })

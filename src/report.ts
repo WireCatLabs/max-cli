@@ -28,8 +28,8 @@ export interface Report {
 
 /**
  * **Everything a report holds is already free of content** — the run log and the send journal are
- * built that way. Two things are added: chat and message ids become labels, and the home directory
- * is hidden, since the doctor's paths name the person's account on this machine.
+ * built that way. Chat, message and write ids become labels, and the home directory is hidden,
+ * since the doctor's paths name the person's account on this machine.
  */
 export const buildReport = ({
   profile,
@@ -63,11 +63,7 @@ export const buildReport = ({
     // The shell commands in `fix` quote the path in ways no spelling above matches; `binDir` says it.
     doctor: { ...doctor, install: { ...doctor.install, fix: [] } },
     run: chosen ? { metadata: chosen.metadata, events: readEvents(chosen.dir).map(labelled) } : null,
-    sends: sends.slice(-RECENT_SENDS).map((entry) => ({
-      ...entry,
-      chatId: entry.chatId === null ? null : label(entry.chatId),
-      ...(entry.messageId === undefined ? {} : { messageId: label(entry.messageId) }),
-    })),
+    sends: sends.slice(-RECENT_SENDS).map((entry) => labelledSend(entry, label)),
   }
   return JSON.parse(hideHome(JSON.stringify(report), home)) as Report
 }
@@ -95,19 +91,36 @@ const labeller = () => {
   return (id: string): string => `id:${createHash("sha256").update(salt).update(id).digest("hex").slice(0, 12)}`
 }
 
+const SEND_ID_FIELDS = [
+  "chatId",
+  "messageId",
+  "replyTo",
+  "threadId",
+  "sendAs",
+  "resultChatId",
+  "sendId",
+  "operationId",
+  "parentOperationId",
+  "reservation",
+] as const satisfies readonly (keyof SendEntry)[]
+
+const labelledSend = (entry: SendEntry, label: (id: string) => string): SendEntry => {
+  const copy = { ...entry }
+  for (const field of SEND_ID_FIELDS) {
+    const value = copy[field]
+    if (value !== undefined && value !== null) copy[field] = label(String(value))
+  }
+  return copy
+}
+
 const labelledEvent =
   (label: (id: string) => string) =>
   (event: Record<string, unknown>): Record<string, unknown> => {
     const ids = event.ids
     if (typeof ids !== "object" || ids === null) return event
-    const { chat, message, ...rest } = ids as Record<string, unknown>
     return {
       ...event,
-      ids: {
-        ...rest,
-        ...(typeof chat === "string" ? { chat: label(chat) } : {}),
-        ...(typeof message === "string" ? { message: label(message) } : {}),
-      },
+      ids: Object.fromEntries(Object.entries(ids).map(([name, id]) => [name, label(String(id))])),
     }
   }
 
