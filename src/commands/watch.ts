@@ -24,7 +24,7 @@ type MessageChange = Extract<ServerEvent, { event: "change" }>["change"]
  * are bare messages, never meets a line of another shape.
  */
 export const watchCommand = (): Command =>
-  annotate(new Command("watch"), { effects: REMOTE_READ })
+  annotate(new Command("watch"), { effects: REMOTE_READ, lifetime: "persistent" })
     .description("print new messages as they arrive, from a running `max serve`")
     .option(
       "--events",

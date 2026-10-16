@@ -34,7 +34,7 @@ export const sessionCommand = (): Command => {
    *
    * **A token is never an argument.** argv is read by `ps` and kept by shell history.
    */
-  annotate(command.command("start"), { effects: REMOTE_WRITE })
+  annotate(command.command("start"), { effects: REMOTE_WRITE, lifetime: "interactive" })
     .description("log this profile in to MAX")
     .addHelpText(
       "after",

@@ -22,7 +22,7 @@ import { serveStems } from "./serve-stems.js"
  * one is given `--idle`, so it does not outlive the work that started it.
  */
 export const serveCommand = (): Command =>
-  annotate(new Command("serve"), { effects: REMOTE_WRITE })
+  annotate(new Command("serve"), { effects: REMOTE_WRITE, lifetime: "persistent" })
     .description("stay connected to MAX and stream new messages to `max watch`, until Ctrl-C")
     .option("--idle <duration>", "stop after this long with nobody using it — 15m, 1h is 60m")
     .option("--max-subscriber-buffer-bytes <bytes>", "buffer per watcher before disconnecting it; 0 is unlimited")

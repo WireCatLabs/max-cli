@@ -201,6 +201,7 @@ describe("max commands", () => {
       "tasks claim",
       "tasks release",
       "tasks close",
+      "tasks reject",
       "conversations build",
       "conversations links add",
       "conversations links clear",

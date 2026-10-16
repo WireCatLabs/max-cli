@@ -2568,7 +2568,7 @@ max tasks release <task> [options]
 
 ### `max tasks close`
 
-close a task: done, or dismissed when it needs no answer; a closed task stays closed, unless tasks unmerge reopens a merged one
+close a task: done, or dismissed when it needs no answer. An agent (AI_AGENT or CLAUDECODE set) states its --certainty; below config task_agent_close_min, or with task_agent_close off, the task stays open and the close waits on the owner, who confirms it with tasks close or refuses it with tasks reject. A closed task stays closed, unless tasks unmerge reopens a merged one
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2578,12 +2578,32 @@ max tasks close <task> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `task` | обязательный | the task's id, as tasks list shows it. |
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
 
 | Опция | Что делает |
 |---|---|
-| `--as <state>` | how it is closed: done, or dismissed — it needs no answer. |
+| `--as <state>` | how it is closed: done, or dismissed — it needs no answer; the owner may leave it out to confirm an agent's close. |
 | `--reason <text>` | why, kept with the task — no-reply-needed, for example. |
+| `--certainty <n>` | an agent's: how sure it is, 0 to 1, that the task needs nothing more. |
+| `--as-owner` | close it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
+
+### `max tasks reject`
+
+refuse the close an agent suggested: the task stays open and leaves close:suggested; the agent may close it again
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks reject <task> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--as-owner` | refuse it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
 ## `max conversations`
 
@@ -4169,7 +4189,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min. |
 | `value` | обязательный | a number, true or false, or a list like contacts,polls. |
 
 | Опция | Что делает |
@@ -4190,7 +4210,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min. |
 
 | Опция | Что делает |
 |---|---|

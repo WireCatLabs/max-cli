@@ -108,6 +108,36 @@ describe("tasks through max", () => {
     expect(categories.out).toContain("money")
   })
 
+  it("keeps an unsure agent's close open as a suggestion the owner refuses, and closes on --as-owner", async () => {
+    const added = await cli(["tasks", "add", PROMISE, "--type", "request", "--category", "bills", "--new", "--json"])
+    expect(added.code, added.err).toBe(0)
+    const { id } = JSON.parse(added.out).item
+
+    process.env.AI_AGENT = "test-agent"
+    try {
+      const blind = await cli(["tasks", "close", id, "--as", "done", "--json"])
+      expect(blind.code).toBe(2)
+      expect(blind.err).toContain("task.certainty-required")
+
+      const unsure = await cli(["tasks", "close", id, "--as", "done", "--certainty", "0.5", "--json"])
+      expect(unsure.code, unsure.err).toBe(0)
+      expect(JSON.parse(unsure.out).item).toMatchObject({ state: "open" })
+
+      const suggested = await cli(["tasks", "list", "close:suggested", "--json"])
+      expect(JSON.parse(suggested.out).items).toMatchObject([{ id }])
+
+      const refused = await cli(["tasks", "reject", id, "--as-owner", "--json"])
+      expect(refused.code, refused.err).toBe(0)
+      expect(JSON.parse((await cli(["tasks", "list", "close:suggested", "--json"])).out).items).toEqual([])
+
+      const owner = await cli(["tasks", "close", id, "--as", "done", "--as-owner", "--json"])
+      expect(owner.code, owner.err).toBe(0)
+      expect(JSON.parse(owner.out).item).toMatchObject({ state: "done" })
+    } finally {
+      delete process.env.AI_AGENT
+    }
+  })
+
   it("refuses task writes on a profile where tasks are read-only", async () => {
     expect(
       (await cli(["tasks", "add", PROMISE, "--type", "promise", "--category", "other", "--json"], "tasks-readonly"))
