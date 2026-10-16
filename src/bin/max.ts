@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { enableCompileCache } from "node:module"
 import { catchCrashes } from "@wirecat/cli-base"
 import { ensureSqlite } from "@wirecat/cli-core/sqlite-runtime"
 import { MAX_APP } from "../app.js"
@@ -16,6 +17,8 @@ for (const stream of [process.stdout, process.stderr]) {
   })
 }
 
+// Compiling about 1,100 module files is most of a start; later runs reuse what this one compiled.
+enableCompileCache()
 const stopCatching = catchCrashes({ cli: MAX_APP.command, interactive: process.stdout.isTTY === true })
 await ensureSqlite()
 stopCatching()
