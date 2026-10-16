@@ -37,6 +37,16 @@ set --
 [ -z "$custom" ] || set -- "$@" --report "$custom"
 
 cd "$(dirname "$0")/.."
+self=$(git hash-object bin/release)
+# The fold and land() fast-forward main, and sh reads this file as it goes: a newer bin/release would run half old,
+# half new. Run the new one from the start instead: it stops at the report, which names the commit before the fold.
+rerun_if_changed() {
+  [ "$(git hash-object bin/release)" != "$self" ] || return 0
+  [ -z "${WIRECAT_RELEASE_RERUN:-}" ] || { echo "bin/release changed again while releasing — run it again" >&2; exit 1; }
+  echo "bin/release changed on main — running the new one"
+  export WIRECAT_RELEASE_RERUN=1
+  exec ./bin/release "$@"
+}
 
 git fetch -q origin
 [ "$(git branch --show-current)" = "main" ] || { echo "not on main" >&2; exit 1; }
@@ -152,6 +162,7 @@ if [ -n "$folded" ]; then
   carry "$version" "bin/release folded «Не выпущено» into $version." \
     "docs(releases): $version carried to the folded changelog by bin/release"
 fi
+rerun_if_changed "$@"
 
 # Two sessions preparing the same number is normal; the second takes the next free one (2026-09-29).
 latest=$(npm view @wirecat/max-cli version --prefer-online 2>/dev/null || true)
@@ -175,6 +186,7 @@ if [ "$next" != "$version" ]; then
   land "release/$next" "chore(release): $next" "$body"
   carry "$next" "Renumbered by bin/release: $version → $next ($why)." \
     "docs(releases): $version → $next, renumbered by bin/release"
+  rerun_if_changed "$@"
   version=$next
 fi
 if published; then
