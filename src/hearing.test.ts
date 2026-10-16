@@ -6,9 +6,8 @@ import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { openStore } from "@wirecat/cli-core/store"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
-import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
-import { run } from "./program.js"
+import { type RunOptions, run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
@@ -82,7 +81,7 @@ const setup = (messages: ReturnType<typeof wire>[]) => {
   })
   const keyring = memoryKeyring()
   const events: string[] = []
-  const environment: Environment = {
+  const environment: RunOptions = {
     store: (profile) => {
       const store = new SessionStore({ profile, keyring })
       // As `session start` leaves a profile: the token, and the account it logged in as.
@@ -111,7 +110,7 @@ const setup = (messages: ReturnType<typeof wire>[]) => {
   return { max, environment, events }
 }
 
-const max = async (argv: string[], environment: Environment, tty = false) => {
+const max = async (argv: string[], environment: RunOptions, tty = false) => {
   const streams = captureStreams()
   const code = await run(argv, { ...environment, streams, tty })
   return { code, stdout: streams.stdout, stderr: streams.stderr.join("\n") }

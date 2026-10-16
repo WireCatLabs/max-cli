@@ -14,7 +14,7 @@ import {
   type ProgramDefinition,
   type ProgramOptions,
   pollsCommand,
-  provide as provideShared,
+  provide,
   reactionsCommand,
   repliesCommand,
   reviewCommand,
@@ -39,7 +39,7 @@ import { commandsCommand } from "./commands/commands.js"
 import { completeCommand } from "./commands/complete.js"
 import { configCommand } from "./commands/config.js"
 import { contactsCommand } from "./commands/contacts.js"
-import { type Environment, provide } from "./commands/context.js"
+import type { Environment } from "./commands/context.js"
 import { doctorCommand } from "./commands/doctor.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
@@ -58,14 +58,16 @@ import { resolveSettings } from "./config.js"
 import { maxMessenger } from "./messenger.js"
 import { assertReadable, commandPermission, permissionScope } from "./permissions.js"
 import { rootOf } from "./profile.js"
+import type { HearAllOptions } from "./transcribe/index.js"
 import { modelsDirectory } from "./transcribe/install.js"
 import type { SpeechModel } from "./transcribe/models.js"
 import { updateNotice } from "./update.js"
 
 export type { ProgramOptions }
 
-export interface RunOptions extends Environment {
-  answer?: (question: string) => string | null | Promise<string | null>
+export interface RunOptions extends Omit<Environment, "recognizer" | "hear"> {
+  /** A stand-in speech model, so a test hears without one. */
+  recognizer?: HearAllOptions["open"]
 }
 
 const definition = (options: RunOptions = {}): ProgramDefinition => ({
@@ -163,16 +165,13 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
   },
   prepare: (program, environment) => {
+    const { recognizer, ...own } = options
     provide(program, {
-      ...options,
+      ...own,
+      ...environment,
       streams: environment.streams ?? processStreams,
-      signal: environment.signal,
-      commandSignal: environment.commandSignal,
-      trackCloseable: environment.trackCloseable,
-      answer: environment.answer,
-      env: environment.env,
+      ...(recognizer ? { hear: recognizer } : {}),
     })
-    provideShared(program, environment)
   },
   onFailure: (error, program) => botRecordingOf(program)?.fail(error),
 })
