@@ -25,11 +25,28 @@ export const withPermissionApproval = <T>(key: string, work: () => T): T => {
   return approvals.run({ forced: new Set([...(previous?.forced ?? []), key]), approved: new Set([key]) }, work)
 }
 
-export const approvePermission = (key: string): void => {
+/**
+ * Approvals of one write, by its operation id: cli-core's MCP server answers the guard's question with no
+ * permission scope around the call, yet `max serve` refuses a write at `ask` that arrives without its approval.
+ */
+const approvedOperations = new Map<string, Set<string>>()
+
+export const approvePermission = (key: string, operationId?: string): void => {
   approvals.getStore()?.approved.add(key)
+  if (operationId === undefined) return
+  approvedOperations.set(operationId, new Set([...(approvedOperations.get(operationId) ?? []), key]))
 }
 
-export const permissionApprovals = (): string[] => [...(approvals.getStore()?.approved ?? [])]
+export const forgetApprovals = (operationId: string | undefined): void => {
+  if (operationId !== undefined) approvedOperations.delete(operationId)
+}
+
+export const permissionApprovals = (operationId?: string): string[] => [
+  ...new Set([
+    ...(approvals.getStore()?.approved ?? []),
+    ...(operationId === undefined ? [] : (approvedOperations.get(operationId) ?? [])),
+  ]),
+]
 
 export const assertReadable = (
   settings: Pick<Settings, "profile" | "permissions" | "permissionSources">,

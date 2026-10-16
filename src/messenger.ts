@@ -1,6 +1,6 @@
 import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@wirecat/cli-core/cli"
 import { AI_SETTING_KEYS } from "@wirecat/cli-core/cli"
-import type { Asker, GuardRequest, SendGuard } from "@wirecat/cli-core/sends"
+import { type Asker, type GuardRequest, keyForWrite, type SendGuard } from "@wirecat/cli-core/sends"
 import { moderationService } from "@wirecat/cli-core/services"
 import type { Command } from "commander"
 import { type MaxAdapter, maxAdapter } from "./adapter/max-adapter.js"
@@ -8,7 +8,7 @@ import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
 import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
-import { askerFor, commandPermission, permissionKeyOf } from "./permissions.js"
+import { approvePermission, askerFor, commandPermission, forgetApprovals, permissionKeyOf } from "./permissions.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
@@ -86,20 +86,40 @@ export const maxMessenger: Messenger = {
   // A named chat goes to opcode 73, no chat to 68 — the best message of each chat (measured 2026-10-11).
   serverSearch: true,
 
-  guard: (command, { profile }, warn, ask?: Asker) => {
+  guard: (command, settings, warn, ask?: Asker) => {
     const client = () => clients.get(rootOf(command))
+    // The server's own asker approves; `max serve` checks again and needs the approval sent with the write.
+    const approving: Asker | undefined = ask
+      ? async (key, request) => {
+          await ask(key, request)
+          approvePermission(key, request.operationId)
+        }
+      : undefined
     const guard = overServer(
       guardFor(
-        resolveSettings({ profile }),
+        settings,
         warn,
-        ask ?? askerFor(command.optsWithGlobals(), environmentOf(command)),
+        approving ?? askerFor(command.optsWithGlobals(), environmentOf(command)),
         commandPermission(command) ?? undefined,
       ),
       () => client()?.server,
     )
     return {
       ...guard,
+      ...(ask
+        ? {
+            // Over MCP the client is where the profile's levels and this server's `--permission` apply.
+            check: (request, options) => {
+              guard.check(request, options)
+              approvePermission(
+                request.key ?? keyForWrite(request.kind ?? "message", request.action),
+                request.operationId,
+              )
+            },
+          }
+        : {}),
       record: (entry) => {
+        forgetApprovals(entry.operationId)
         const applied = client()?.takeApplied(entry.operationId) === true
         // MAX can acknowledge the closure before the token save or follow-up session read fails.
         if (applied && (entry.outcome === "failed" || entry.outcome === "outcome_unknown")) {

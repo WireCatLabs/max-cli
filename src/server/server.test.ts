@@ -7,6 +7,7 @@ import { thisMachine, unitScope } from "@wirecat/cli-core/background"
 import { rememberAccount, repliesPathFor } from "@wirecat/cli-core/cli"
 import { guardedWrite, RecipientList, SendJournal } from "@wirecat/cli-core/sends"
 import { openStore } from "@wirecat/cli-core/store"
+import { Command } from "commander"
 import { afterEach, describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
 import { MaxClient } from "../client.js"
@@ -14,8 +15,8 @@ import { contextFor } from "../commands/context.js"
 import { maxServerOptions, NO_RESTART_ON } from "../commands/server.js"
 import { resolveSettings } from "../config.js"
 import { Opcode } from "../generated/opcodes.generated.js"
-import { overServer } from "../messenger.js"
-import { permissionScope, withPermissionApproval } from "../permissions.js"
+import { maxMessenger, overServer } from "../messenger.js"
+import { permissionApprovals, permissionScope, withPermissionApproval } from "../permissions.js"
 import { run } from "../program.js"
 import { Connection } from "../protocol/connection.js"
 import { decodeHeader, HEADER_BYTES } from "../protocol/frame.js"
@@ -1502,6 +1503,53 @@ it("does not ask again on the server after the moderation layer approved the act
   } finally {
     await client.close()
   }
+})
+
+describe("max's guard over MCP, through max serve", () => {
+  const goAhead = async () => {}
+
+  it("sends the approval of a write at level ask, which the MCP server's asker gave", async () => {
+    const { store, max } = await serve("mcp-ask-serve", scripted())
+    const client = contextFor(
+      { profile: store.profile },
+      { store: () => store, streams: captureStreams() },
+    ).createClient({})
+    const settings = maxMessenger.resolveSettings({ profile: store.profile })
+    const guard = maxMessenger.guard?.(new Command("mcp"), settings, () => {}, goAhead)
+    if (!guard) throw new Error("max has a guard hook")
+    try {
+      await guardedWrite(guard, { operationId: "mcp-delete-1", chatId: "111", kind: "delete", count: 1 }, () =>
+        client.messages.delete("111", ["116762160362694583"]),
+      )
+      expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
+      expect(permissionApprovals("mcp-delete-1")).toEqual([])
+    } finally {
+      await client.close()
+    }
+  })
+
+  it("keeps this server's --permission deny when moderation deletes", async () => {
+    const { store, max } = await serve("mcp-deny-serve", scripted())
+    const client = contextFor(
+      { profile: store.profile },
+      { store: () => store, streams: captureStreams() },
+    ).createClient({})
+    const settings = maxMessenger.resolveSettings({ profile: store.profile, permission: ["messages.delete=deny"] })
+    const guard = maxMessenger.guard?.(new Command("mcp"), settings, () => {}, goAhead)
+    if (!guard) throw new Error("max has a guard hook")
+    try {
+      await expect(
+        guardedWrite(
+          guard,
+          { operationId: "moderated-2", key: "chats.moderate", chatId: "111", kind: "delete", count: 1 },
+          () => client.messages.delete("111", ["116762160362694583"]),
+        ),
+      ).rejects.toMatchObject({ code: "permission_error" })
+      expect(max.sent.some(({ opcode }) => opcode === Opcode.MSG_DELETE)).toBe(false)
+    } finally {
+      await client.close()
+    }
+  })
 })
 
 describe("auto-replies in max serve", () => {
