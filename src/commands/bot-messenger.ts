@@ -14,14 +14,14 @@ import type { run } from "../program.js"
 import { readSecret } from "../session/prompt.js"
 import { SKILL } from "../skill.js"
 import { botContext } from "./bot-context.js"
-import { type Environment, environmentOf } from "./context.js"
+import { environmentOf } from "./context.js"
 
 /**
  * max's `run` as the shared bot MCP server calls it. A test adds its keyring and Bot API stand-in as
  * `extra`.
  */
 export const botMcpRun =
-  (program: typeof run, extra: Environment = {}): RunBotCommand =>
+  (program: typeof run, extra: Parameters<typeof run>[1] = {}): RunBotCommand =>
   (argv, { streams, tty, answer }) =>
     program(argv, { ...extra, streams, tty, ...(answer ? { answer } : {}) })
 

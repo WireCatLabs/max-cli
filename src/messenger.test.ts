@@ -2,12 +2,12 @@ import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@wirecat/cli-base"
-import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
+import { type DiagnosticEvent, provide } from "@wirecat/cli-core/cli"
 import type { SendEntry, SendGuard } from "@wirecat/cli-core/sends"
 import { guardedWrite, SendJournal } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
 import { describe, expect, it } from "vitest"
-import { provide } from "./commands/context.js"
+import type { Environment } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { maxMessenger, overServer } from "./messenger.js"
@@ -116,14 +116,15 @@ const commandFor = (profile: string, answers: Record<number, Payload> = {}, refu
   program.setOptionValue("profile", profile)
   program.setOptionValue("serve", false)
   const keyring = memoryKeyring()
-  provide(program, {
+  const environment: Environment = {
     store: (name) => {
       const store = new SessionStore({ profile: name, keyring })
       store.writeToken("a-token")
       return store
     },
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
-  })
+  }
+  provide(program, environment)
   return { program, max }
 }
 
