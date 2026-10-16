@@ -138,7 +138,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    никакой автоматической повторной записи только по коду ошибки.
 
 5. **Искать начинайте с `max personal search all`**: сообщения и заметки на этой машине одним ответом, у каждой
-   находки её вид (`message`, `note`). Почта — не здесь: `memo search mail`. Уже: `max personal search messages`, `search notes`,
+   находки её вид (`message`, `note`, `document`). Импортированные Drive документы находятся в общей базе; `--source drive:<профиль>` выбирает профиль Drive. `max personal chats documents list CHAT_ID` показывает документы из сохранённых ссылок чата. Почта — не здесь: `memo search mail`. Уже: `max personal search messages`, `search notes`,
    `search conversations` (по смыслу); весь поиск — под `max personal search`.
    Для вопроса обычными словами или неточной формулировки используй
    `max personal search messages '<вопрос>' --discover` или MCP `discover: true`. Это локальный поиск без

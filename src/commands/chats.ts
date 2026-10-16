@@ -8,6 +8,7 @@ export const chatsCommand = (): Command => {
   const shared = sharedChatsCommand(maxMessenger)
   command.addCommand(sharedSubcommand(shared, "list"))
   command.addCommand(sharedSubcommand(shared, "show"))
+  command.addCommand(sharedSubcommand(shared, "documents"))
 
   command.addCommand(sharedSubcommand(shared, "events"))
   command.addCommand(sharedSubcommand(shared, "inspect"))
