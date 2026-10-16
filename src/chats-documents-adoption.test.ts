@@ -56,14 +56,17 @@ it("reads imported document titles from stored chat links offline without contac
     await store.close()
   }
   const streams = captureStreams()
-  const code = await run([profile, "--offline", "chats", "documents", "list", "7", "--json"], {
-    streams,
-    tty: false,
-    store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
-    connection: () => {
-      throw new Error("offline documents must not connect")
+  const code = await run(
+    [profile, "--offline", "chats", "documents", "list", "7", "--limit", "1", "--page", "1", "--json"],
+    {
+      streams,
+      tty: false,
+      store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
+      connection: () => {
+        throw new Error("offline documents must not connect")
+      },
     },
-  })
+  )
   expect(code).toBe(0)
   expect(streams.stderr.join("")).toBe("")
   expect(JSON.parse(streams.stdout.join(""))).toMatchObject({
