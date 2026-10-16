@@ -233,7 +233,7 @@ describe("voice questions in unanswered review", () => {
     const { environment, events } = setup([voice])
     const store = await openStore()
     try {
-      await store.keepTranscript(
+      await store.messages.keepTranscript(
         { provider: "max", account: String(ME) },
         "111",
         String(voice.id),
@@ -323,7 +323,7 @@ describe("--model and max messages transcribe", () => {
     expect(JSON.parse(stdout[0] as string).item).toMatchObject({ text: "перезвоню вечером", model: "gigaam-v3" })
     expect(events).toContain("recognized")
     const store = await openStore()
-    expect(await store.transcript({ provider: "max", account: String(ME) }, "111", String(voice.id))).toEqual({
+    expect(await store.messages.transcript({ provider: "max", account: String(ME) }, "111", String(voice.id))).toEqual({
       text: "перезвоню вечером",
       source: "gigaam-v3",
     })
@@ -341,7 +341,7 @@ describe("--model and max messages transcribe", () => {
     const { environment, events } = setup([voice])
     const store = await openStore()
     try {
-      await store.keepTranscript(
+      await store.messages.keepTranscript(
         { provider: "max", account: String(ME) },
         "111",
         String(voice.id),
@@ -372,7 +372,7 @@ describe("--model and max messages transcribe", () => {
     const voice = wire(10, THEM, "", true)
     const { environment, events, max: mock } = setup([voice])
     const store = await openStore()
-    await store.keepTranscript(
+    await store.messages.keepTranscript(
       { provider: "max", account: String(ME) },
       "111",
       String(voice.id),

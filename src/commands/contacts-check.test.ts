@@ -55,11 +55,11 @@ beforeAll(async () => {
       lastMessageAt: null,
       participantsCount: null,
     })
-    await store.saveChats(account, [group("7", "Synthetic One"), group("8", "Synthetic Two")])
-    await store.savePeople(account, [{ id: "77", name: "Synthetic Seller", username: null }])
+    await store.chats.saveChats(account, [group("7", "Synthetic One"), group("8", "Synthetic Two")])
+    await store.people.savePeople(account, [{ id: "77", name: "Synthetic Seller", username: null }])
     for (const chatId of ["7", "8"]) {
-      await store.saveMembers(account, chatId, ["77", account.account])
-      await store.saveMessages(account, chatId, [said(`1${chatId}`, chatId)], { via: "test" })
+      await store.roster.saveMembers(account, chatId, ["77", account.account])
+      await store.messages.saveMessages(account, chatId, [said(`1${chatId}`, chatId)], { via: "test" })
     }
   } finally {
     await store.close()

@@ -29,14 +29,14 @@ describe("keeping a bot's messages", () => {
     )
     expect(saved).toBe(true)
     expect(warnings).toEqual([])
-    expect((await fromStore((store) => store.chats(accountOf("7"), {}))).items).toEqual([])
+    expect((await fromStore((store) => store.chats.chats(accountOf("7"), {}))).items).toEqual([])
   })
 
   it("saves each chat's messages under that chat", async () => {
     await keep("8", [message({ chatId: "-100" }), message({ id: "mid.2", chatId: "300" })], "update", () => {})
     const inChat = (chatId: string) =>
       fromStore(async (store) =>
-        (await store.messages(accountOf("8"), chatId, { limit: 10 })).items.map((one) => one.id),
+        (await store.messages.messages(accountOf("8"), chatId, { limit: 10 })).items.map((one) => one.id),
       )
     expect([await inChat("-100"), await inChat("300")]).toEqual([["mid.1"], ["mid.2"]])
   })
@@ -45,7 +45,7 @@ describe("keeping a bot's messages", () => {
     await keep("9", [message({ chatId: "-100" })], "update", () => {})
     const ids = await fromStore(async (store) => {
       await Promise.resolve()
-      return (await store.messages(accountOf("9"), "-100", { limit: 10 })).items.map((one) => one.id)
+      return (await store.messages.messages(accountOf("9"), "-100", { limit: 10 })).items.map((one) => one.id)
     })
     expect(ids).toEqual(["mid.1"])
   })

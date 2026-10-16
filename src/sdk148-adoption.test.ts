@@ -39,9 +39,9 @@ beforeAll(async () => {
       lastMessageAt: null,
       participantsCount: null,
     }
-    await store.saveChats(account, [chat])
-    await store.saveChats({ ...account, account: "502" }, [chat])
-    await store.saveMessages(
+    await store.chats.saveChats(account, [chat])
+    await store.chats.saveChats({ ...account, account: "502" }, [chat])
+    await store.messages.saveMessages(
       account,
       "7",
       [
@@ -102,7 +102,7 @@ describe("SDK148 local commands through the consumer", () => {
     expect(JSON.parse(found.out).items.map((m: { ref: string }) => m.ref)).toEqual(["msg:max/501/7/101"])
     const store = await openStore()
     try {
-      expect(await store.tags({ provider: account.provider, account: "502" }, {})).toEqual([])
+      expect(await store.tags.tags({ provider: account.provider, account: "502" }, {})).toEqual([])
     } finally {
       await store.close()
     }

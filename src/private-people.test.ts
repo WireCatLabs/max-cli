@@ -21,11 +21,11 @@ it("authors local contact metadata and classifies cached channels without a mess
   const key = { provider: "max", account: "10000001" }
   const store = await openStore({ path: env.MESSAGING_STORE })
   try {
-    await store.savePeople(key, [{ id: "101", name: "Synthetic contact" }])
-    await store.saveChats(key, [
+    await store.people.savePeople(key, [{ id: "101", name: "Synthetic contact" }])
+    await store.chats.saveChats(key, [
       { id: "99", title: "AI news", kind: "channel", unreadCount: 0, lastMessageAt: null, participantsCount: null },
     ])
-    await store.saveChatMetadata(key, {
+    await store.chats.saveChatMetadata(key, {
       chatId: "99",
       title: "AI news",
       username: null,

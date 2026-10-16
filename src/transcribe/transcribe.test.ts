@@ -100,7 +100,7 @@ describe("transcribing a voice message", () => {
     const env = { MESSAGING_STORE: join(directory, "messages.db") }
     const account = { provider: "max", account: "10000001" }
     const store = await openStore({ env })
-    await store.saveMessages(account, "1", [voice], { via: "history" })
+    await store.messages.saveMessages(account, "1", [voice], { via: "history" })
     const record = maxRecord({ account: () => account.account, env })
     const calls: string[] = []
     const client = {
@@ -169,16 +169,16 @@ describe("transcribing a voice message", () => {
     const { store, account, client, options } = await setup()
     await transcribe(client, "1", "2", options)
 
-    await store.saveMessages(account, "1", [voice], { via: "history" })
+    await store.messages.saveMessages(account, "1", [voice], { via: "history" })
 
-    expect(await store.transcript(account, "1", "2")).toEqual({ text: "привет", source: "tiny" })
+    expect(await store.messages.transcript(account, "1", "2")).toEqual({ text: "привет", source: "tiny" })
     await options.record.close()
     await store.close()
   })
 
   it("shares a saved transcript with batch hearing without opening a model", async () => {
     const { store, account, client, calls, options } = await setup()
-    await store.keepTranscript(account, "1", "2", "kept words", "other-model")
+    await store.messages.keepTranscript(account, "1", "2", "kept words", "other-model")
 
     const heard = await hearAll(client, [{ chatId: "1", messageId: "2" }], { ...options, model: undefined })
 
@@ -196,20 +196,20 @@ describe("transcribing a voice message", () => {
 
     expect(heard.transcripts.get("1/2")).toBe("привет")
     expect(calls).toEqual(["links", "release", "recognize", "free"])
-    expect(await store.transcript(account, "1", "2")).toEqual({ text: "привет", source: "tiny" })
+    expect(await store.messages.transcript(account, "1", "2")).toEqual({ text: "привет", source: "tiny" })
     await options.record.close()
     await store.close()
   })
 
   it("does not reuse another account's transcript for the same chat and message ids", async () => {
     const { store, account, client, calls, options } = await setup()
-    await store.keepTranscript({ ...account, account: "10000002" }, "1", "2", "other account", "tiny")
+    await store.messages.keepTranscript({ ...account, account: "10000002" }, "1", "2", "other account", "tiny")
 
     const answer = await transcribe(client, "1", "2", options)
 
     expect(answer).toMatchObject({ text: "привет", cached: false })
     expect(calls).toContain("recognize")
-    expect(await store.transcript({ ...account, account: "10000002" }, "1", "2")).toEqual({
+    expect(await store.messages.transcript({ ...account, account: "10000002" }, "1", "2")).toEqual({
       text: "other account",
       source: "tiny",
     })
@@ -219,7 +219,7 @@ describe("transcribing a voice message", () => {
 
   it("retranscribes with another model instead of reusing its predecessor", async () => {
     const { store, account, client, calls, options } = await setup()
-    await store.keepTranscript(account, "1", "2", "old words", "other-model")
+    await store.messages.keepTranscript(account, "1", "2", "old words", "other-model")
 
     expect(await transcribe(client, "1", "2", options)).toMatchObject({ text: "привет", cached: false })
     expect(calls).toContain("recognize")

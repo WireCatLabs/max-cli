@@ -20,7 +20,7 @@ beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
   const store = await openStore()
   try {
-    await store.saveChats(account, [
+    await store.chats.saveChats(account, [
       {
         id: "7",
         title: "Synthetic club",
@@ -30,7 +30,7 @@ beforeAll(async () => {
         lastMessageAt: "2026-10-03T12:00:00Z",
       },
     ])
-    await store.saveMessages(
+    await store.messages.saveMessages(
       account,
       "7",
       ["01", "03"].map((day, index) => ({

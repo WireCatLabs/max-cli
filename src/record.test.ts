@@ -83,10 +83,10 @@ describe("the record", () => {
 
     const store = await openStore({ env })
     const key = { provider: "max", account: ME }
-    expect((await store.chats(key, {})).items.map((chat) => chat.id).sort()).toEqual(["111", "222"])
-    expect((await store.members(key, "111")).map((member) => member.name)).toEqual(["Someone Else"])
-    expect((await store.syncState(key, "login.marker"))?.value).toBe("1789776000000")
-    expect((await store.chats({ provider: "max", account: "99" }, {})).items).toEqual([])
+    expect((await store.chats.chats(key, {})).items.map((chat) => chat.id).sort()).toEqual(["111", "222"])
+    expect((await store.roster.members(key, "111")).map((member) => member.name)).toEqual(["Someone Else"])
+    expect((await store.sync.syncState(key, "login.marker"))?.value).toBe("1789776000000")
+    expect((await store.chats.chats({ provider: "max", account: "99" }, {})).items).toEqual([])
     await store.close()
   })
 
@@ -140,7 +140,7 @@ describe("the record", () => {
       login.chats.slice(0, 1),
     )
     const store = await openStore({ env })
-    expect(await store.leftChats({ provider: "max", account: ME })).toEqual({ chats: 1, messages: 0 })
+    expect(await store.chats.leftChats({ provider: "max", account: ME })).toEqual({ chats: 1, messages: 0 })
     await store.close()
   })
 
@@ -158,8 +158,8 @@ describe("the record", () => {
 
     const store = await openStore({ env })
     const key = { provider: "max", account: ME }
-    expect((await store.chats(key, {})).items).toHaveLength(2)
-    expect(await store.syncState(key, "login.marker")).toBeUndefined()
+    expect((await store.chats.chats(key, {})).items).toHaveLength(2)
+    expect(await store.sync.syncState(key, "login.marker")).toBeUndefined()
     await store.close()
   })
 })

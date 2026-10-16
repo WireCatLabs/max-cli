@@ -63,7 +63,7 @@ describe("native daily member fetching", () => {
     try {
       await client.connect()
       for (const key of [account, other]) {
-        await db.saveChats(key, [
+        await db.chats.saveChats(key, [
           {
             id: "711",
             title: null,
@@ -73,7 +73,7 @@ describe("native daily member fetching", () => {
             participantsCount: mode === "partial" ? 2 : 1,
           },
         ])
-        await db.trackMembers(key, "711", true)
+        await db.roster.trackMembers(key, "711", true)
       }
       if (mode === "denied") {
         // Config command machinery belongs to another suite; this worker reads the live profile file.
@@ -96,7 +96,7 @@ describe("native daily member fetching", () => {
       if (mode === "complete" || mode === "partial") {
         const today = Date.now()
         vi.setSystemTime(today - 86_400_000)
-        await db.saveRoster(account, "711", {
+        await db.roster.saveRoster(account, "711", {
           members: [{ id: "702", name: "Synthetic member", username: null, role: "member" }],
           complete: true,
           participants: 1,
@@ -108,13 +108,13 @@ describe("native daily member fetching", () => {
       await vi.advanceTimersByTimeAsync(10)
       if (mode === "complete" || mode === "partial") await vi.advanceTimersByTimeAsync(50)
       await worker.stop()
-      const own = await db.trackedChats(account)
-      expect((await db.trackedChats(other))[0]?.lastCount).toBeNull()
+      const own = await db.roster.trackedChats(account)
+      expect((await db.roster.trackedChats(other))[0]?.lastCount).toBeNull()
       const calls = max.sent.filter(({ opcode }) => opcode === Opcode.CHAT_MEMBERS)
       if (mode === "complete" || mode === "partial") {
         expect(calls).toHaveLength(1)
         expect(own[0]?.lastCount).toMatchObject({ listed: 1, complete: mode === "complete" })
-        const previous = (await db.memberStays(account, "711")).find(({ id }) => id === "702")
+        const previous = (await db.roster.memberStays(account, "711")).find(({ id }) => id === "702")
         expect(previous?.goneAt === null).toBe(mode === "partial")
         expect(notes).toEqual([])
       } else {

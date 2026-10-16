@@ -43,7 +43,7 @@ beforeAll(async () => {
   rememberAccount(app, profile, account.account, process.env)
   const store = await openStore()
   try {
-    await store.saveMessages(
+    await store.messages.saveMessages(
       account,
       "7",
       [

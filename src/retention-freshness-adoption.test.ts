@@ -15,10 +15,10 @@ const refuse = vi.fn(() => {
 const db = await openStore()
 beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "Synthetic group", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
-  await db.saveMessages(
+  await db.messages.saveMessages(
     account,
     "7",
     [1, 2, 3].map((id) => ({
@@ -58,7 +58,7 @@ const invoke = async (...args: string[]) => {
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
 beforeAll(async () => {
-  await db.saveRoster(account, "7", {
+  await db.roster.saveRoster(account, "7", {
     members: [{ id: "11", name: "Synthetic", username: null, role: "member", joinedAt: "2026-10-01T00:00:00Z" }],
     complete: true,
     participants: 1,
