@@ -1,3 +1,4 @@
+import { annotate } from "@wirecat/cli-base/commands"
 import { markReadCommand, chatsCommand as sharedChatsCommand } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
@@ -8,7 +9,11 @@ export const chatsCommand = (): Command => {
   const shared = sharedChatsCommand(maxMessenger)
   command.addCommand(sharedSubcommand(shared, "list"))
   command.addCommand(sharedSubcommand(shared, "show"))
-  command.addCommand(sharedSubcommand(shared, "documents"))
+  const documents = sharedSubcommand(shared, "documents")
+  annotate(sharedSubcommand(documents, "list"), {
+    examples: ["max personal chats documents list CHAT_ID --limit 20"],
+  }).addHelpText("after", "Example:\n  max personal chats documents list CHAT_ID --limit 20\n")
+  command.addCommand(documents)
 
   command.addCommand(sharedSubcommand(shared, "events"))
   command.addCommand(sharedSubcommand(shared, "inspect"))
