@@ -1,4 +1,4 @@
-See [`CLAUDE.md`](CLAUDE.md) — the working rules for this repository apply to every agent, not only to Claude. Start from [`docs_ai/HANDOFF.md`](docs_ai/HANDOFF.md), and from [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md) when that file is absent — `docs_ai/` is local-only and not in git.
+See [`CLAUDE.md`](CLAUDE.md) — the working rules for this repository apply to every agent, not only to Claude. Start from [`docs_ai/HANDOFF.md`](docs_ai/HANDOFF.md). `docs_ai/` is not in this repository: it is the private repository `WireCatLabs/cli-private`, cloned into `docs_ai/`. Without it, start from [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md).
 
 
 ## Documentation authoring

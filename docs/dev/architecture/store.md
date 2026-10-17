@@ -2,7 +2,8 @@
 
 Detail for [`ARCHITECTURE.md`](../ARCHITECTURE.md) §15 and §16.
 the per-profile cache and its schema are removed. The shared
-cli-core store owns `messages.db`; max never opens the legacy profile database.
+cli-core store owns `wirecat.db` (`~/.local/share/WireCat/wirecat.db` on Linux; `WIRECAT_STATE_DIR` moves the
+folder, `MESSAGING_STORE` names another file). max never opens the legacy profile database.
 
 ## A group member is a person, not a contact
 
