@@ -1,3 +1,6 @@
+import { mkdirSync } from "node:fs"
+import { createServer } from "node:net"
+import { dirname } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
@@ -5,6 +8,7 @@ import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import type { Payload } from "./protocol/frame.js"
+import { fromLine, lineReader, toLine } from "./server/lines.js"
 import type { BrowserDoors } from "./session/browser.js"
 import { SessionStore } from "./session/store.js"
 import { type MockMax, mockMax } from "./testing/mock-max.js"
@@ -368,6 +372,45 @@ describe("max session end", () => {
     expect((await end()).json).toEqual({ profile: "s-end", forgotten: true, revoked_on_server: true })
     expect(logouts()).toEqual([])
     expect(store("s-end").readToken()).toBeUndefined()
+  })
+
+  it("**refuses while a hand-started serve holds the session**: no logout through it or here, the token kept", async () => {
+    const { store, logouts } = ending()
+    store("s-end").writeToken("a-token")
+    const socket = store("s-end").socketPath()
+    if (process.platform !== "win32") mkdirSync(dirname(socket), { recursive: true })
+    const asked: Record<string, unknown>[] = []
+    const serve = createServer((connection) =>
+      connection.on(
+        "data",
+        lineReader((line) => {
+          const request = fromLine(line)
+          asked.push(request)
+          if (request.stop === true) connection.end(toLine({ id: request.id, stopped: false }))
+        }),
+      ),
+    )
+    await new Promise<void>((resolve) => serve.listen(socket, resolve))
+
+    try {
+      const streams = captureStreams()
+      const code = await run(["s-end", "session", "end", "--json"], {
+        tty: false,
+        store,
+        connection: () => {
+          throw new Error("session end connected while serve held the session")
+        },
+        streams,
+      })
+
+      expect(code).toBe(2)
+      expect(JSON.parse(streams.stderr.join("")).error.message).toContain("`max s-end server stop` first")
+      expect(asked).toEqual([{ id: 1, stop: true }])
+      expect(logouts()).toEqual([])
+      expect(store("s-end").readToken()).toBe("a-token")
+    } finally {
+      await new Promise((resolve) => serve.close(resolve))
+    }
   })
 
   it("says there was nothing to end, and contacts nobody", async () => {

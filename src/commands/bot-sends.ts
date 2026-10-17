@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs"
 import { join } from "node:path"
 import { CliError } from "@wirecat/cli-base"
 import type { ManifestOperation } from "@wirecat/cli-base/codegen"
+import { readOnlyRefusal } from "@wirecat/cli-core/cli"
 import {
   guardedWrite,
   newOperationId,
@@ -19,7 +20,6 @@ import type { CallInput } from "../bot/transport.js"
 import { endpointOf, type UploadType, uploadFile, uploadTypeOf } from "../bot/uploads.js"
 import { asFirstWord } from "../profile.js"
 import { assertAllowed, type botContext } from "./bot-context.js"
-import { refuseUnderReadOnly } from "./read-only.js"
 
 type Context = ReturnType<typeof botContext>
 
@@ -122,8 +122,8 @@ const chatOfCall = async (context: Context, input: CallInput): Promise<string | 
 
 /** Every bot write, from any command: readOnly and allow, then the recipient list and the journal. */
 export const guardedCall = async (context: Context, target: ManifestOperation, input: CallInput): Promise<unknown> => {
-  if (target.effect !== "read")
-    refuseUnderReadOnly(context.settings.readOnlyLock, "send, react, change chats or change the account")
+  const lock = context.settings.readOnlyLock
+  if (target.effect !== "read" && lock) throw readOnlyRefusal(lock, "send, react, change chats or change the account")
   const client = context.authenticated()
   assertAllowed(target, context.settings)
   if (target.effect === "read") return client.call(target, input)

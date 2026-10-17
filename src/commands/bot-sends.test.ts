@@ -153,6 +153,13 @@ describe("max bot messages send", () => {
     })
   })
 
+  it("refuses a --reply-to that is not a MAX message id before sending anything", async () => {
+    const { code, stderr } = await max(["bot", "messages", "send", "-100", "hi", "--reply-to", "123", "--json"])
+    expect(code).toBe(2)
+    expect(JSON.parse(stderr).error.message).toContain("a message id is mid.")
+    expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
+  })
+
   it("refuses --md with --html before sending anything", async () => {
     const { code, stderr } = await max(["bot", "messages", "send", "-100", "hi", "--md", "--html", "--json"])
     expect(code).not.toBe(0)

@@ -3,14 +3,13 @@ import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installSkill, type SkillTarget } from "@wirecat/cli-base/skill"
 import { type StepDefinition, stepOf } from "@wirecat/cli-base/standards"
-import { itemOf, REMOTE_WRITE, renderAnswer, runtime, snakeKeys } from "@wirecat/cli-core/cli"
+import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, runtime, snakeKeys } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { SKILL, SKILL_APP } from "../skill.js"
 import { installer } from "../update.js"
 import { type CommandContext, environmentOf, forCommand } from "./context.js"
-import { readOnlyLock, refuseUnderReadOnly } from "./read-only.js"
 import { type Method, startSession, TERMS_NOTICE } from "./session.js"
 
 const AGENTS = ["none", "codex", "cursor", "claude", "gemini", "all"] as const
@@ -80,7 +79,7 @@ const CHATS_LIST: StepDefinition = {
 }
 
 export const setupCommand = (): Command =>
-  annotate(new Command("setup"), { effects: REMOTE_WRITE, lifetime: "interactive", mcp: false })
+  logsInOrOut(annotate(new Command("setup"), { effects: REMOTE_WRITE, lifetime: "interactive", mcp: false }))
     .description("set up your personal MAX account and connect your agent")
     .configureHelp({ showGlobalOptions: true })
     .addHelpText(
@@ -115,7 +114,6 @@ export const setupCommand = (): Command =>
         .default("qr"),
     )
     .action(async function (this: Command) {
-      refuseUnderReadOnly(readOnlyLock(this), "log in or install a skill")
       const context = forCommand(this)
       const { settings, store } = context
       const options = this.opts<{ agent?: Agent; method: Method }>()

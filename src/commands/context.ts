@@ -132,7 +132,9 @@ export const contextFor = (
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
-  const store = environment.store?.(settings.profile) ?? new SessionStore({ profile: settings.profile })
+  const store =
+    environment.store?.(settings.profile) ??
+    new SessionStore({ profile: settings.profile, ...(environment.keyring ? { keyring: environment.keyring } : {}) })
 
   // Every client this command builds, so the deadline can shut them. There is always one; relying
   // on that is what makes the second one, some day, the leak that keeps the process alive.
