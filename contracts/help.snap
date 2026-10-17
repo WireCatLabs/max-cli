@@ -73,8 +73,8 @@ Commands:
   tags                         your own labels on chats, people, messages and
                                tasks, kept in the local store and never sent;
                                tag: in a search finds them
-  mentions                     phones, e-mail, links, documents and people's
-                               names found in stored messages
+  mentions                     phones, e-mail, links, documents, names and
+                               addresses in stored messages
   images                       search pictures by what they show, with a model
                                on this machine
   metadata                     cached group/channel descriptions for local
