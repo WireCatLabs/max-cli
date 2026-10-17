@@ -20,7 +20,13 @@ afterEach(async () => {
 
 const connect = async (seed: Seed) => {
   const dir = mkdtempSync(join(tmpdir(), "max-contract-"))
-  const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const store = new SessionStore({
+    profile: "default",
+    keyring: memoryKeyring(),
+    configDir: dir,
+    stateDir: join(dir, "state"),
+    env: {},
+  })
   if (seed.account) {
     store.writeToken("a-token")
     store.writeState({ ...store.readState(), viewerId: seed.account.id })

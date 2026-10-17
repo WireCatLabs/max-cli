@@ -60,7 +60,7 @@ max config show --json     # то же одним объектом
 
 Против каждой настройки — откуда она: `flag`, `default` или `config file:` с ключом, из которого
 она прочитана, например `config file: bot.profiles.test`. Против профиля — `first word`,
-`MAX_PROFILE`, `MAX_PROFILE_LOCK`, `config file: default_profile` или `none named` — профиль не назван,
+`MAX_PROFILE`, `MAX_PROFILE_LOCK` или `none named` — профиль не назван,
 и `profile` тогда `null`.
 
 С `--json` в ответе есть и `store_settings` — настройки общего архива (`search_stemmers.*`, `task_agent_close*`) и
@@ -94,7 +94,6 @@ max config show --json     # то же одним объектом
 
 ```json
 {
-  "default_profile": "personal",
   "defaults": { "keep_runs_for_days": 14 },
   "profiles": {
     "personal": { "limit": 50, "timeout_ms": 20000, "color": true },
@@ -117,7 +116,6 @@ max config show --json     # то же одним объектом
 
 | Поле | Что делает | Что перекрывает на один запуск | По умолчанию |
 |---|---|---|---|
-| `default_profile` | какой профиль, если первым словом ничего не названо и `MAX_PROFILE` не задан | первое слово (`max work …`), `MAX_PROFILE` | нет: без имени команда перечисляет профили |
 | `limit` | сколько записей показывать, когда `--limit` не передан | `--limit` | `20` |
 | `timeout_ms` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
@@ -248,7 +246,7 @@ max work config unset limit             # убрать; снова решает 
 max agent config set permissions.messages readonly  # чтение сообщений без записи
 max shop config set --bot sends_per_hour 200    # только боту shop
 max config set --personal --defaults limit 30 # всем личным аккаунтам
-max config set default_profile work      # какой профиль без первого слова
+max config unset default_profile         # убрать старую настройку: профиль больше не подразумевается
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max personal config set limit 0`
@@ -333,7 +331,7 @@ max personal chats list
 
 | Ключ | Допустимый тип или значение | Область |
 |---|---|---|
-| `default_profile` | строка с именем профиля | корень файла |
+| `default_profile` | не читается: команда без имени профиля останавливается — `max config unset default_profile` | корень файла |
 | `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
 | `requests_per_minute` | целое число ≥ 0 | профиль |
 | `color`, `record` | boolean | профиль |

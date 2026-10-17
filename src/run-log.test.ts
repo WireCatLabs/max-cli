@@ -64,7 +64,13 @@ describe("MAX's refusal, as a key", () => {
     const run = async (refusal: string) => {
       const max = mockMax({ answers, refuse: { [Opcode.CHAT_HISTORY]: refusal } })
       const dir = mkdtempSync(join(tmpdir(), "max-run-log-"))
-      const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "s"), env: {} })
+      const store = new SessionStore({
+        profile: "default",
+        keyring: memoryKeyring(),
+        configDir: dir,
+        stateDir: join(dir, "s"),
+        env: {},
+      })
       store.writeToken("a-token")
       const events: DiagnosticEvent[] = []
       const client = new MaxClient({
@@ -156,7 +162,13 @@ describe("a warning", () => {
       refuse: { [Opcode.MSG_GET_REACTIONS]: "proto.payload" },
     })
     const dir = mkdtempSync(join(tmpdir(), "max-run-log-"))
-    const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "s"), env: {} })
+    const store = new SessionStore({
+      profile: "default",
+      keyring: memoryKeyring(),
+      configDir: dir,
+      stateDir: join(dir, "s"),
+      env: {},
+    })
     store.writeToken("a-token")
     const events: DiagnosticEvent[] = []
     const client = new MaxClient({

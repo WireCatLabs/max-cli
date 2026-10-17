@@ -15,6 +15,7 @@ const loginAnswer = { profile: { contact: { id: 10000001, names: [{ name: "Test 
 const setup = (max: ReturnType<typeof mockMax>, existing?: string) => {
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
   const store = new SessionStore({
+    profile: "default",
     keyring: memoryKeyring(),
     configDir: dir,
     stateDir: join(dir, "state"),

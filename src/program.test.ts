@@ -508,14 +508,15 @@ describe("the program", () => {
       }
     })
 
-    it("`config set default_profile` picks the profile a bare `max` uses", async () => {
+    it("refuses `config set default_profile`, so a bare `max` still names no profile", async () => {
       const { MAX_PROFILE } = process.env
       delete process.env.MAX_PROFILE
       try {
-        await runWith(["config", "set", "default_profile", "mila"])
+        const set = await runWith(["config", "set", "default_profile", "mila", "--json"])
+        expect(JSON.parse(set.stderr).error.message).toMatch(/default_profile is gone/)
         const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout).item
-        expect(shown).toMatchObject({ profile: "mila", profile_from: "config file: default_profile" })
-        await runWith(["config", "unset", "default_profile"])
+        expect(shown).toMatchObject({ profile: null, profile_from: "none named" })
+        expect((await runWith(["config", "unset", "default_profile"])).code).toBe(0)
       } finally {
         process.env.MAX_PROFILE = MAX_PROFILE
       }

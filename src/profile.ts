@@ -1,8 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
 import type { Command } from "commander"
 
-export const DEFAULT_PROFILE = "default"
-
 /** How the command line names this profile: always the first word, since none is assumed. */
 export const asFirstWord = (profile: string): string => `${profile} `
 
@@ -38,7 +36,7 @@ export const commandWords = (program: Command): Set<string> =>
 
 /**
  * **The first word is the profile unless it names a command.** `max personal chats list`, with no
- * flag; without it, `MAX_PROFILE` or `defaultProfile` must name one.
+ * flag; without it, `MAX_PROFILE` must name one.
  *
  * An option is never a profile, so `max --json chats list` still works.
  */

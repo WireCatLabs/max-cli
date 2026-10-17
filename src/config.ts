@@ -4,7 +4,6 @@ import type { Level } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
 import { knownProfiles } from "./diagnose.js"
-import { usableProfileName } from "./profile.js"
 import { DEFAULT_MODEL, MODELS } from "./transcribe/models.js"
 
 const plain =
@@ -347,7 +346,7 @@ export const scopePath = ({ profile, kind }: SettingScope): string =>
 
 /**
  * Sets or removes one setting of one profile, or of `defaults`, and writes the file back.
- * `defaultProfile` is the one top-level key, and takes no scope.
+ * `default_profile` can only be unset: it is the one top-level key, takes no scope, and is no longer read.
  *
  * **The value is checked by the same schema that reads the file**, on the whole result, before
  * anything is written — so `config set` cannot produce a file the next command refuses to load.
@@ -449,12 +448,16 @@ export const changeSetting = (
     : ((scope.permissions as Record<string, Level> | undefined)?.[permission] ?? null)
 }
 
-const changeDefaultProfile = (path: string, config: Config, value: string | undefined): string | null => {
-  const changed = { ...config }
-  if (value === undefined) delete changed.default_profile
-  else changed.default_profile = usableProfileName(value)
-  saveConfigFile(path, changed)
-  return changed.default_profile ?? null
+const changeDefaultProfile = (path: string, config: Config, value: string | undefined): null => {
+  if (value !== undefined) {
+    throw new CliError(
+      "validation_error",
+      "default_profile is gone: a command names its profile every time — `max <profile> …` or MAX_PROFILE",
+    )
+  }
+  const { default_profile: _, ...rest } = config
+  saveConfigFile(path, rest)
+  return null
 }
 
 /** `send,reaction` as the owner types it, or the JSON array the file holds; blank is the empty list. */

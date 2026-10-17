@@ -79,7 +79,13 @@ describe("our requests beside web.max.ru's", async () => {
       },
     })
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
-  const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const store = new SessionStore({
+    profile: "default",
+    keyring: memoryKeyring(),
+    configDir: dir,
+    stateDir: join(dir, "state"),
+    env: {},
+  })
   store.writeToken("a-token")
   const record = maxRecord({
     account: () => store.readState().viewerId,
