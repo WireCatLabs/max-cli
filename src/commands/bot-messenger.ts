@@ -106,8 +106,10 @@ export const maxBot: BotMessenger = {
     })
   },
   tokenStore: (command, profile) => {
-    const { botStore, env } = environmentOf(command)
-    return botStore?.(profile) ?? new BotTokenStore({ profile, ...(env ? { env } : {}) })
+    const { botStore, env, keyring } = environmentOf(command)
+    return (
+      botStore?.(profile) ?? new BotTokenStore({ profile, ...(env ? { env } : {}), ...(keyring ? { keyring } : {}) })
+    )
   },
   registry: (command, profile) => {
     const { botRegistry, env } = environmentOf(command)

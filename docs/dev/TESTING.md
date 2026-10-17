@@ -140,9 +140,9 @@ drove it through `run()`), ⛔ (not testable offline — the reason and where it
 ❌ (nothing). `pnpm test:matrix`, full validation and `pnpm release:check` fail on a ❌ and on a stale ⛔
 (`NEED-360`: no baseline, no exceptions).
 
-It is **measured, not searched for** (`NEED-359`): under vitest, `run()` appends each parsed command
-path and the option names given to `coverage/argv.jsonl` — words and names, never a value
-(`src/program.ts`, `logParsed`). So a flag a test only *mentions* does not count, and a flag declared
+It is **measured, not searched for** (`NEED-359`): under vitest, cli-core's `run()` appends each parsed
+command path and the option names given to the file in `MAX_TEST_ARGV_LOG`, `coverage/argv.jsonl` — words
+and names, never a value (`src/testing/sandbox.ts` sets it; `src/program.ts` adds only the `--version` line). So a flag a test only *mentions* does not count, and a flag declared
 but never passed anywhere shows up. A test that calls a function directly does not count either:
 the matrix is about what a person types.
 

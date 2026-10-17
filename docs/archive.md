@@ -303,7 +303,8 @@ max personal messages send 0 "текст" --offline   # отказ: из коп�
 останавливает сервер профиля, если его запустила команда.
 
 **Сервер, запущенный руками (`max personal serve`, `max personal server start`), останавливают только Ctrl-C и
-`max personal server stop`**: ни простой, ни `max personal session end`, ни другие запросы по сокету. Если в фоне
+`max personal server stop`**: ни простой, ни другие запросы по сокету. `max personal session end` при таком сервере
+отказывает (код 2) и просит сначала `max personal server stop`. Если в фоне
 уже работает сервер, который запустила команда, `max personal serve` руками сменяет его. `--idle` руками —
 пожалуйста: это ваш собственный выбор. `max personal session start` останавливает любой сервер профиля,
 входит и запускает его снова уже на новой сессии: подключение к MAX в каждый момент одно.

@@ -76,7 +76,13 @@ export const botContext = (command: Command, { offline: answersOffline = false }
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
-  const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile, env })
+  const store =
+    environment.botStore?.(settings.profile) ??
+    new BotTokenStore({
+      profile: settings.profile,
+      env,
+      ...(environment.keyring ? { keyring: environment.keyring } : {}),
+    })
   const recording = botRecordingOf(command)
   const timeout = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
   const deadline =

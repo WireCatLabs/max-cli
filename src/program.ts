@@ -163,8 +163,6 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
           })
       }
     })
-    const argvLog = process.env.MAX_TEST_ARGV_LOG
-    if (argvLog) program.hook("preAction", (_root, action) => logParsed(argvLog, action))
   },
   prepare: (program, environment) => {
     const { recognizer, ...own } = options
@@ -196,22 +194,4 @@ export const run = async (argv: string[], options: RunOptions = {}): Promise<num
   const line = await notice
   if (line && code === 0) (options.streams ?? processStreams).diagnostic(line)
   return code
-}
-
-/**
- * Under vitest only (`src/testing/sandbox.ts`): which command ran and which options were typed, for
- * `pnpm test:matrix`. Words and option names — never an argument's value.
- */
-const logParsed = (file: string, action: Command): void => {
-  const words: string[] = []
-  const options: string[] = []
-  for (let at: Command | null = action; at; at = at.parent) {
-    if (at.parent) words.unshift(at.name())
-    for (const option of at.options) {
-      const key = option.attributeName()
-      if (at.getOptionValueSource(key) !== "cli" || !option.long) continue
-      if (option.negate === (at.getOptionValue(key) === false)) options.push(option.long)
-    }
-  }
-  appendFileSync(file, `${JSON.stringify({ command: words.join(" "), options })}\n`)
 }

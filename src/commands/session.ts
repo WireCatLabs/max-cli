@@ -1,16 +1,15 @@
 import { CliError, indent } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { itemOf, REMOTE_WRITE, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
+import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
 import { Argument, Command } from "commander"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { maskedProfile } from "../domain/map.js"
-import { commandWords, refuseCommandName, rootOf } from "../profile.js"
+import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { stopServer } from "../server/server-connection.js"
 import { adoptToken } from "../session/adopt.js"
 import { serveQrPage } from "../session/browser.js"
 import { terminalQr } from "../session/qr-terminal.js"
 import { type CommandContext, forCommand } from "./context.js"
-import { readOnlyLock, refuseUnderReadOnly } from "./read-only.js"
 
 // NEED-149: gentle on purpose — it asks for ordinary use alongside, and does not cite blocked accounts.
 export const TERMS_NOTICE = [
@@ -37,7 +36,7 @@ export const sessionCommand = (): Command => {
    *
    * **A token is never an argument.** argv is read by `ps` and kept by shell history.
    */
-  annotate(command.command("start"), { effects: REMOTE_WRITE, lifetime: "interactive" })
+  logsInOrOut(annotate(command.command("start"), { effects: REMOTE_WRITE, lifetime: "interactive" }))
     .description("log this profile in to MAX")
     .addHelpText(
       "after",
@@ -55,7 +54,6 @@ export const sessionCommand = (): Command => {
       new Argument("[method]", "token (pasted or piped), qr, qr-chrome or sms").choices(METHODS).default("token"),
     )
     .action(async function (this: Command, method: Method) {
-      refuseUnderReadOnly(readOnlyLock(this), "log in")
       const context = forCommand(this)
       const { renderer, run } = context
 
@@ -73,10 +71,9 @@ export const sessionCommand = (): Command => {
    * Ends the session on MAX's side (LOGOUT, opcode 20), then forgets it here, as `tg session end` does
    * (`NEED-821` A). A token copied from a browser tab is that tab's session, so the tab is logged out too.
    */
-  annotate(command.command("end"), { effects: REMOTE_WRITE })
+  logsInOrOut(annotate(command.command("end"), { effects: REMOTE_WRITE }))
     .description("log this profile out on MAX's side and forget the session here")
     .action(async function (this: Command) {
-      refuseUnderReadOnly(readOnlyLock(this), "log out")
       const context = forCommand(this)
       const { renderer, store, run, createClient } = context
 
@@ -86,13 +83,15 @@ export const sessionCommand = (): Command => {
           renderer.note(`there was no session for "${store.profile}"`)
           return
         }
-        // A server still logged in with the forgotten session would keep using it.
-        const server = await stopServer(store.socketPath())
-        if (server === "refused") {
-          renderer.note("a `max serve` you started by hand is still running with that session — Ctrl-C it")
-        }
+        // A server a command started stops; one started by hand or by a unit holds the same session, and
+        // logging out here would end its login and delete the token under it.
+        if ((await stopServer(store.socketPath())) === "refused")
+          throw new CliError(
+            "validation_error",
+            `max serve is running for ${store.profile} — \`max ${asFirstWord(store.profile)}server stop\` first`,
+          )
 
-        const revokedOnServer = await logOut(createClient({ events }))
+        const revokedOnServer = await logOut(createClient({ events }, { own: true }))
         const had = store.forget()
         renderAnswer(
           this,
