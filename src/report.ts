@@ -18,8 +18,9 @@ export interface Report {
   runtime: string
   platform: string
   arch: string
-  profile: string
-  doctor: Diagnosis
+  /** Null, with the doctor's place taken by the config error, when the config could not be read. */
+  profile: string | null
+  doctor: Diagnosis | { config: { error: string } }
   /** The run the report is about: the one asked for, or the newest that failed. */
   run: { metadata: RunMetadata; events: Record<string, unknown>[] } | null
   /** The newest write actions — outcomes and ids, never text (`src/sends/journal.ts`). */
@@ -40,8 +41,8 @@ export const buildReport = ({
   now = new Date(),
   home = homedir(),
 }: {
-  profile: string
-  doctor: Diagnosis
+  profile: string | null
+  doctor: Report["doctor"]
   runsDir: string
   runId?: string
   sends: SendEntry[]
@@ -61,7 +62,7 @@ export const buildReport = ({
     arch: process.arch,
     profile,
     // The shell commands in `fix` quote the path in ways no spelling above matches; `binDir` says it.
-    doctor: { ...doctor, install: { ...doctor.install, fix: [] } },
+    doctor: "install" in doctor ? { ...doctor, install: { ...doctor.install, fix: [] } } : doctor,
     run: chosen ? { metadata: chosen.metadata, events: readEvents(chosen.dir).map(labelled) } : null,
     sends: sends.slice(-RECENT_SENDS).map((entry) => labelledSend(entry, label)),
   }

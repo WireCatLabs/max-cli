@@ -1,6 +1,6 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { afterEach, describe, expect, it } from "vitest"
 import { run } from "../program.js"
@@ -147,6 +147,21 @@ describe("max doctor", () => {
     expect(code).toBe(0)
     expect(JSON.parse(stdout).item.config.error).toContain("defaultProfile")
     expect(stdout).not.toContain("invented-value-7")
+  })
+
+  it("writes a problem report with the config problem when the config file is invalid", async () => {
+    const output = join(mkdtempSync(join(tmpdir(), "max-report-")), "report.json")
+    homes.push(dirname(output))
+    const { code, stdout } = await inAnEmptyHome(["work", "doctor", "report", "create", "--output", output, "--json"], {
+      config: JSON.stringify({ defaultProfile: "invented-value-7", profiles: { work: {} } }),
+    })
+
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).item.path).toBe(output)
+    const report = JSON.parse(readFileSync(output, "utf8"))
+    expect(report).toMatchObject({ profile: null, sends: [] })
+    expect(report.doctor.config.error).toContain("defaultProfile")
+    expect(readFileSync(output, "utf8")).not.toContain("invented-value-7")
   })
 
   it("carries the profile from the first word like every other command", async () => {
