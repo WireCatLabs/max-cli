@@ -28,8 +28,8 @@ export const BOT_PERMISSIONS: Readonly<Record<string, Permission>> = {
 }
 
 /**
- * How a bot write is journaled. `getUpdates` is absent on purpose: it is a write only because it
- * commits the marker, it reaches nobody, and a recipient list has nothing to say about it.
+ * How a bot write is journaled. A write missing here and from `UNJOURNALED_WRITES` is refused, so
+ * one added by a future schema sync cannot skip the recipient list and the journal.
  */
 export const BOT_JOURNAL_KINDS: Readonly<Record<string, SendKind>> = {
   sendMessage: "message",
@@ -53,6 +53,13 @@ export const BOT_JOURNAL_KINDS: Readonly<Record<string, SendKind>> = {
   unsubscribe: "account",
   getUploadUrl: "account",
 }
+
+/**
+ * Writes that pass only the permission checks. `getUpdates` is a write only because it commits the
+ * marker: it reaches no chat, so a recipient list has nothing to say about it, and it sends nothing
+ * an hourly limit or the journal would count.
+ */
+export const UNJOURNALED_WRITES: ReadonlySet<string> = new Set(["getUpdates"])
 
 export const BOT_KEYS: Readonly<Record<string, string>> = {
   getMyInfo: "bot.me",

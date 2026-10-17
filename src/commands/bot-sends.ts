@@ -13,7 +13,7 @@ import {
 } from "@wirecat/cli-core/sends"
 import { MAX_APP } from "../app.js"
 import { botOperations } from "../bot/client.js"
-import { BOT_JOURNAL_KINDS, BOT_KEYS } from "../bot/permissions.js"
+import { BOT_JOURNAL_KINDS, BOT_KEYS, UNJOURNALED_WRITES } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
 import type { CallInput } from "../bot/transport.js"
 import { endpointOf, type UploadType, uploadFile, uploadTypeOf } from "../bot/uploads.js"
@@ -32,13 +32,13 @@ export const operation = (id: string) => {
 /** How the owner types this bot, so every refusal names the command that fixes it. */
 const botWords = (profile: string): string => `${asFirstWord(profile)}bot`
 
-const files = (profile: string) => ({
-  journal: join(botsDirectory(), "sends", `${profile}.jsonl`),
-  recipients: join(botsDirectory(), "recipients", `${profile}.json`),
+const files = ({ settings, env }: Context) => ({
+  journal: join(botsDirectory(env), "sends", `${settings.profile}.jsonl`),
+  recipients: join(botsDirectory(env), "recipients", `${settings.profile}.json`),
 })
 
 const recipientsOf = (context: Context) =>
-  new RecipientList(files(context.settings.profile).recipients, `max ${botWords(context.settings.profile)}`)
+  new RecipientList(files(context).recipients, `max ${botWords(context.settings.profile)}`)
 
 /** cli-core's guard with the bot's own recipient list and journal; no hourly limit unless `bot.*` sets one (`NEED-305`, `NEED-356`). */
 const guardOf = (context: Context) =>
@@ -46,7 +46,7 @@ const guardOf = (context: Context) =>
     profile: botWords(context.settings.profile),
     command: "max",
     sendsPerHour: context.settings.sendsPerHour,
-    journal: new SendJournal(files(context.settings.profile).journal, {
+    journal: new SendJournal(files(context).journal, {
       service: MAX_APP.command,
       version: MAX_APP.version,
     }),
@@ -131,7 +131,10 @@ export const guardedCall = async (context: Context, target: ManifestOperation, i
   if (key && (await import("@wirecat/cli-core/sends")).levelFor(context.settings.permissions, key).level === "ask")
     await context.askPermission(key, { chatId: null })
   const kind = BOT_JOURNAL_KINDS[target.id]
-  if (!kind) return client.call(target, input)
+  if (!kind) {
+    if (UNJOURNALED_WRITES.has(target.id)) return client.call(target, input)
+    throw new CliError("configuration_error", `no journal kind for the Bot API write ${target.id}`, { sent: false })
+  }
   const chatId = await chatOfCall(context, input)
   // The guard names every account change; the bot's own `allow` check has already run in assertAllowed.
   const action = kind === "account" ? { action: "profile" as const } : {}

@@ -1,11 +1,14 @@
-import { readdirSync, readFileSync } from "node:fs"
+import { mkdtempSync, readdirSync, readFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import type { FetchLike } from "@wirecat/cli-base/http"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
+import { botOperations } from "../bot/client.js"
+import { BOT_JOURNAL_KINDS, UNJOURNALED_WRITES } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
 import { run } from "../program.js"
 
@@ -62,11 +65,12 @@ beforeEach(() => {
   for (const name of ["default", "team", "quiet"]) new BotTokenStore({ profile: name, keyring }).write(TOKEN)
 })
 
-const max = async (argv: string[], timeoutMs?: number, botFetch?: FetchLike) => {
+const max = async (argv: string[], timeoutMs?: number, botFetch?: FetchLike, env?: NodeJS.ProcessEnv) => {
   const streams = captureStreams()
   const code = await run(timeoutMs ? ["--timeout", `${timeoutMs}ms`, ...argv] : argv, {
     streams,
     tty: false,
+    ...(env ? { env } : {}),
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
     ...(botFetch ? { botFetch } : {}),
@@ -270,6 +274,23 @@ describe("every bot write, whichever command sends it", () => {
       (await max(["team", "bot", "api", "edit-message", "--message-id", "mid.9", "--body", `{"text": "y"}`, "--json"]))
         .code,
     ).toBe(7)
+  })
+
+  it("**journals every write the Bot API has**, or names it as one that reaches no chat", () => {
+    const unjournaled = botOperations
+      .filter((operation) => operation.effect !== "read" && !BOT_JOURNAL_KINDS[operation.id])
+      .map((operation) => operation.id)
+    expect(unjournaled).toEqual([...UNJOURNALED_WRITES])
+  })
+
+  it("**reads the profile's settings from the environment the run is given**, not the process's", async () => {
+    const env = { ...process.env, MAX_CONFIG_DIR: mkdtempSync(join(tmpdir(), "bot-env-")) }
+    expect(
+      (await max(["config", "set", "--bot", "permissions.bot.messages", "deny"], undefined, undefined, env)).code,
+    ).toBe(0)
+    const refused = await max(["bot", "comments", "send", "mid.9", "hi", "--json"], undefined, undefined, env)
+    expect(JSON.parse(refused.stderr).error.code).toBe("permission_error")
+    expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
   })
 
   it("does not list a bot's recipients file as a bot", async () => {
