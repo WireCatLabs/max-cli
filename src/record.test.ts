@@ -32,7 +32,13 @@ class Served extends Connection {
 const setUp = () => {
   const dir = mkdtempSync(join(tmpdir(), "max-record-"))
   const env = { MESSAGING_STORE: join(dir, "messages.db") }
-  const session = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const session = new SessionStore({
+    profile: "default",
+    keyring: memoryKeyring(),
+    configDir: dir,
+    stateDir: join(dir, "state"),
+    env: {},
+  })
   session.writeToken("a-token")
   const loginOnce = async (
     served = false,

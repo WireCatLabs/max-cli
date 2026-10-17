@@ -15,7 +15,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 
 **Первое слово — профиль**, если оно не совпадает с именем команды: `max personal chats list`
 читает чаты профиля `personal`. То же самое говорит переменная `MAX_PROFILE` на весь сеанс
-оболочки, а `defaultProfile` в файле настроек — насовсем (`max config set defaultProfile personal`).
+оболочки.
 **Профиль никогда не подразумевается**: если его не назвать, команда, которой нужен аккаунт,
 останавливается и перечисляет профили этого компьютера — даже если профиль один. Первый вход тоже
 с именем: `max personal setup`. Без профиля работают только команды, которым аккаунт не нужен:
@@ -2540,7 +2540,7 @@ max tasks categories
 
 ### `max tasks apply`
 
-the task rules over a chat's newest stored messages: a question nobody answered and a mention of you open a task, and your answer closes one — for a chat the first sync left alone (config task_first_pass_per_chat). Lists what would open and changes nothing unless --yes; with --yes the duplicate check runs as on a sync. Reads only the local store
+the task rules over a chat's newest stored messages: in a one-to-one chat a question you did not answer, in a group only a question in reply to you and a mention of you, open a task, and your answer closes one; a channel opens none — for a chat the first sync left alone (config task_first_pass_per_chat). Lists what would open and changes nothing unless --yes; with --yes the duplicate check runs as on a sync. Reads only the local store
 
 **Меняет что-то только на этом компьютере.**
 

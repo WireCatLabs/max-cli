@@ -488,8 +488,8 @@ common settings resolve through cli-core `settingsFor`. MAX retains its strict c
 (`src/config.ts`). Commands take what they are given; one that re-derived the order would disagree.
 Every field, variable and the file format: [`../configuration.md`](../configuration.md); profiles and
 paging for users: [`../usage.md`](../usage.md). The profile follows the same order: the first word
-(`max personal chats list`), then `MAX_PROFILE=personal`, then `"defaultProfile"` in the file, then
-`default`.
+(`max personal chats list`), then `MAX_PROFILE=personal`; nothing else picks one. A leftover
+`default_profile` in the file stops a command that names none, with the profile to type.
 
 ### The profile is the first word, not a flag
 

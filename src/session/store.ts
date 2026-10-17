@@ -54,7 +54,7 @@ export const withLoginRefused = (state: SessionState, now = Date.now()): Session
 export const withoutLoginPause = ({ loginRefusals, loginPausedUntil, ...state }: SessionState): SessionState => state
 
 export interface SessionStoreOptions {
-  profile?: string
+  profile: string
   env?: NodeJS.ProcessEnv
   keyring?: KeyringStore
   /** Overrides the config and state directories; tests pass a temporary one. */
@@ -69,7 +69,7 @@ export class SessionStore {
   readonly #stateDir: string
   readonly #credentials: Credentials
 
-  constructor({ profile = "default", env = process.env, keyring, configDir, stateDir }: SessionStoreOptions = {}) {
+  constructor({ profile, env = process.env, keyring, configDir, stateDir }: SessionStoreOptions) {
     const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
     this.profile = profile
     this.#stateDir = stateDir ?? paths.state

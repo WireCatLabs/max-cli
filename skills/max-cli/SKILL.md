@@ -119,7 +119,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 1. **Id — всегда строки.** Id сообщений 18-значные, больше `Number.MAX_SAFE_INTEGER`. Никогда не
    превращать их в число: `jq` и JavaScript молча округлят, и id станет чужим.
 2. **Первое слово — профиль, если это не команда.** `max work chats list` — профиль `work`.
-   Флага `--profile` нет; то же делает переменная `MAX_PROFILE` или настройка `default_profile`.
+   Флага `--profile` нет; то же делает переменная `MAX_PROFILE`.
    **Профиль не подразумевается, даже единственный:** без имени команда завершается с кодом `2`
    и перечисляет профили (`error.profiles`) — спросите владельца, какой нужен, не берите первый.
    Без профиля работают `--help`, `commands`, `skill show`, `account list`, `config show`. Имя профиля — латиница, цифры,

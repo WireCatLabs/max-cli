@@ -278,8 +278,7 @@ max personal session start qr          # повторный вход, когда
 ```
 
 Профиль называется **первым словом** в каждой команде — `max personal chats list`, — или
-`export MAX_PROFILE=personal` на всю сессию оболочки, или `max config set default_profile personal`
-насовсем. `max` никогда не выбирает профиль сам, даже единственный: без имени команда останавливается
+`export MAX_PROFILE=personal` на всю сессию оболочки. `max` никогда не выбирает профиль сам, даже единственный: без имени команда останавливается
 и перечисляет профили этого компьютера. Имя `personal` — пример: любое подойдёт.
 
 Подробнее: [вход и сессии](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/sessions)), [профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/profiles.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/profiles)).

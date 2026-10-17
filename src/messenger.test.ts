@@ -43,16 +43,15 @@ const SHARED = [
 ] as const
 
 const CONFIG = {
-  default_profile: "work",
   defaults: { limit: 7, sends_per_hour: 3 },
   profiles: { work: { permissions: { messages: "readonly" }, record: true }, home: {} },
 }
 
 describe("the MAX messenger's settings", () => {
   it.each([
-    ["no flags", {}, {}],
+    ["only the profile", { profile: "work" }, {}],
     ["a profile flag", { profile: "home" }, {}],
-    ["flags over the file", { limit: 2, json: true, trace: true, record: false }, {}],
+    ["flags over the file", { profile: "work", limit: 2, json: true, trace: true, record: false }, {}],
     ["the environment", {}, { MAX_PROFILE: "home", MAX_TIMEOUT: "10s" }],
   ])("answer what max's own settings answer, with %s", (_, flags, env) => {
     const configDir = mkdtempSync(join(tmpdir(), "max-messenger-"))

@@ -47,10 +47,12 @@ describe("where a setting came from", () => {
     expect(settings({ profile: "work" }, { MAX_PROFILE: "other" }).sources.profile).toBe("first word")
   })
 
-  it("credits the file when the file is what decided it", () => {
+  it("**stops on a leftover default_profile** with the profile to type and how to remove it", () => {
     withConfig(JSON.stringify({ default_profile: "work" }))
-    expect(settings().profile).toBe("work")
-    expect(settings().sources.profile).toBe("config file: default_profile")
+    expect(() => resolveSettings({}, { env: {}, configDir })).toThrow(
+      "default_profile is no longer read — name the profile: `max work …`; `max config unset default_profile`",
+    )
+    expect(resolveSettings({ profile: "work" }, { env: {}, configDir }).profile).toBe("work")
   })
 
   it("**names where the command budget came from**, which has no file row to fall back on", () => {
@@ -152,11 +154,6 @@ describe("the order a setting is decided in", () => {
   it("prefers the environment to the file", () => {
     withConfig(JSON.stringify({ default_profile: "fromFile" }))
     expect(settings({}, { MAX_PROFILE: "fromEnv" }).profile).toBe("fromEnv")
-  })
-
-  it("prefers the file to the built-in default", () => {
-    withConfig(JSON.stringify({ default_profile: "fromFile" }))
-    expect(settings().profile).toBe("fromFile")
   })
 
   it("falls back to `default`, which is what an unconfigured machine has", () => {
@@ -297,12 +294,11 @@ describe("where each setting came from", () => {
     expect(settings().configFound).toBe(true)
   })
 
-  it("names what chose the profile: the first word, then MAX_PROFILE, then the file", () => {
-    withConfig(JSON.stringify({ default_profile: "home", profiles: { home: {}, work: {} } }))
+  it("names what chose the profile: the first word, then MAX_PROFILE", () => {
+    withConfig(JSON.stringify({ profiles: { home: {}, work: {} } }))
 
     expect(settings({ profile: "work" }, { MAX_PROFILE: "home" }).sources.profile).toBe("first word")
     expect(settings({}, { MAX_PROFILE: "work" }).sources.profile).toBe("MAX_PROFILE")
-    expect(settings().sources.profile).toBe("config file: default_profile")
     expect(settings().configuredProfiles).toEqual(["home", "work"])
   })
 })
@@ -426,12 +422,12 @@ describe("changing a setting", () => {
     expect(() => changeSetting(path(), { profile: "me", setting: "read_other_bots", value: "true" })).toThrow(/--bot/)
   })
 
-  it("sets and clears default_profile at the top of the file", () => {
-    expect(changeSetting(path(), { profile: "mila", setting: "default_profile", value: "mila" })).toBe("mila")
-    expect(file().default_profile).toBe("mila")
-    expect(() => changeSetting(path(), { profile: undefined, setting: "default_profile", value: "a/b" })).toThrow(
-      /profile name/,
+  it("refuses to set default_profile and still clears a leftover one", () => {
+    withConfig(JSON.stringify({ default_profile: "mila", profiles: {} }))
+    expect(() => changeSetting(path(), { profile: undefined, setting: "default_profile", value: "mila" })).toThrow(
+      /default_profile is gone/,
     )
+    expect(file().default_profile).toBe("mila")
     changeSetting(path(), { profile: undefined, setting: "default_profile", value: undefined })
     expect(file().default_profile).toBeUndefined()
   })

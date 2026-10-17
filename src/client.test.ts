@@ -29,7 +29,7 @@ const historyAnswer = {
 const clientWith = (max: ReturnType<typeof mockMax>, token = "a-token") => {
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
   const keyring = memoryKeyring()
-  const store = new SessionStore({ keyring, configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const store = new SessionStore({ profile: "default", keyring, configDir: dir, stateDir: join(dir, "state"), env: {} })
   if (token) store.writeToken(token)
 
   const notes: string[] = []
@@ -923,6 +923,7 @@ describe("the token MAX answers with", () => {
     const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
     const keyring = memoryKeyring()
     const store = new SessionStore({
+      profile: "default",
       keyring,
       configDir: dir,
       stateDir: join(dir, "state"),
@@ -941,7 +942,13 @@ describe("the token MAX answers with", () => {
 
     expect(handedOut.token).toBeUndefined()
 
-    const unset = new SessionStore({ keyring, configDir: dir, stateDir: join(dir, "state"), env: {} })
+    const unset = new SessionStore({
+      profile: "default",
+      keyring,
+      configDir: dir,
+      stateDir: join(dir, "state"),
+      env: {},
+    })
     expect(unset.readToken()).toBeUndefined()
     expect(readdirSync(dir).filter((file) => file !== "state")).toEqual([])
     expect(notes.join(" ")).toContain("MAX_TOKEN")
@@ -1034,7 +1041,13 @@ describe("with a shared record", () => {
   }
   const clientSharing = (record: MaxRecord, max: ReturnType<typeof mockMax>) => {
     const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
-    const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+    const store = new SessionStore({
+      profile: "default",
+      keyring: memoryKeyring(),
+      configDir: dir,
+      stateDir: join(dir, "state"),
+      env: {},
+    })
     store.writeToken("a-token")
     return new MaxClient({
       store,
@@ -1254,7 +1267,13 @@ describe("one event per request", () => {
   it("keeps working when whoever is listening throws", async () => {
     const max = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer } })
     const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
-    const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+    const store = new SessionStore({
+      profile: "default",
+      keyring: memoryKeyring(),
+      configDir: dir,
+      stateDir: join(dir, "state"),
+      env: {},
+    })
     store.writeToken("a-token")
 
     const client = new MaxClient({
