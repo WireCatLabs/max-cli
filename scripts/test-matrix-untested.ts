@@ -966,7 +966,7 @@ export const UNTESTED: Untested[] = [
   {
     command: "mentions places",
     reason:
-      'paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0)',
+      'cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0',
   },
   {
     command: "tasks apply",
@@ -976,13 +976,13 @@ export const UNTESTED: Untested[] = [
     command: "mentions places",
     option: "--limit",
     reason:
-      'paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0)',
+      'cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0',
   },
   {
     command: "mentions places",
     option: "--page",
     reason:
-      'paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0)',
+      'cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0',
   },
   {
     command: "tasks apply",
