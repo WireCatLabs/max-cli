@@ -1340,7 +1340,7 @@ max messages list <chat> [query] [options]
 |---|---|
 | `--limit <n>` | how many. |
 | `--cursor <cursor>` | go on from where the last page stopped; page.next gives it. |
-| `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
+| `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 | `--mark-read` | also mark the chat read up to the newest message shown; the other person sees it. |
 
@@ -3756,7 +3756,7 @@ max inbox [query] [options]
 | `--limit <n>` | at most this many per chat, the newest. |
 | `--all` | muted and archived chats too — left out unless they mention you or reply to you. |
 | `--kind <kinds>` | only chats of these kinds, comma-separated: dialog, group, channel, saved. |
-| `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
+| `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 | `--mark-read` | also mark each chat shown read, up to the newest message shown; the other side sees it. |
 | `--no-mark-read` | do not, whatever the catch_up_marks_read setting says. |
@@ -3778,7 +3778,7 @@ max review [query] [options]
 | `--kind <kinds>` | only chats of these kinds, comma-separated: dialog, group, channel, saved. |
 | `--unanswered [duration]` | only questions to you or a group's admins that nobody answered, asked at least this long ago — 4h, 1d; 24h if not given. |
 | `--all` | muted and archived chats too — left out unless they mention you or reply to you. |
-| `--transcribe` | turn voice messages not heard yet into text — by the messenger, or a model on this machine; can take minutes. |
+| `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 | `--new` | what changed since the last `review --new`, a point per chat — for scheduled runs. |
 | `--mark-read` | also mark each chat shown read, up to the newest message shown; the other side sees it. |
@@ -4440,7 +4440,7 @@ max mcp [options]
 
 | Опция | Что делает |
 |---|---|
-| `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
+| `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 | `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
@@ -4456,7 +4456,7 @@ max mcp config [options]
 
 | Опция | Что делает |
 |---|---|
-| `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
+| `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 
 ### `max mcp setup`
 
@@ -4475,7 +4475,7 @@ max mcp setup <client> [options]
 | Опция | Что делает |
 |---|---|
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
-| `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
+| `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 
 ### `max mcp doctor`
 
@@ -4487,7 +4487,7 @@ max mcp doctor [options]
 
 | Опция | Что делает |
 |---|---|
-| `--permission <key=level>` | override a permission for this server only; repeat for more keys. |
+| `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 
 ## `max bot`
 
