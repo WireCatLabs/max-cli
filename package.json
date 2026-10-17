@@ -122,7 +122,7 @@
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.2",
     "@vitest/coverage-v8": "^5.0.3",
-    "@wirecat/cli-testing": "0.4.0",
+    "@wirecat/cli-testing": "0.5.2",
     "cspell": "10.3.6",
     "lefthook": "2.1.16",
     "markdownlint-cli2": "0.23.3",
