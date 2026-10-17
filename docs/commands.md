@@ -1303,7 +1303,7 @@ max contacts link <person> <other>
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name. |
-| `other` | обязательный | the same in another messenger of the store, as <messenger>:<person> — max:Ana. |
+| `other` | обязательный | the same in another messenger of the store, as <messenger>:<person> — max:Ana; me: it is you, as zoom:<id> me. |
 
 ### `max contacts unlink`
 
