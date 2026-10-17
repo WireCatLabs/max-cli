@@ -1,3 +1,4 @@
+import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import {
   generatedApiCommand,
@@ -19,6 +20,13 @@ import { maxBot, maxBotMcp } from "./bot-messenger.js"
 import { guardedCall } from "./bot-sends.js"
 import { uploadsCommand } from "./bot-setup.js"
 
+const MESSAGE_ID = /^mid\.[\w.-]+$/
+
+const messageId = (value: string): string => {
+  if (!MESSAGE_ID.test(value.trim())) throw new CliError("validation_error", `a message id is mid.…, not "${value}"`)
+  return value
+}
+
 /** Every command under `node`, itself included. */
 const allOf = (node: Command): Command[] => [node, ...node.commands.flatMap(allOf)]
 
@@ -38,6 +46,13 @@ export const botCommand = (program: typeof run): Command => {
       const context = botContext(this)
       renderAnswer(this, context, itemOf(plainJson(await context.authenticated().me())))
     })
+
+  const replyTo = command.commands
+    .find((child) => child.name() === "messages")
+    ?.commands.find((child) => child.name() === "send")
+    ?.options.find((option) => option.long === "--reply-to")
+  if (!replyTo) throw new Error("the shared bot group has no messages send --reply-to")
+  replyTo.argParser(messageId)
 
   const chats = command.commands.find((child) => child.name() === "chats")
   if (!chats) throw new Error("the shared bot group has no chats")

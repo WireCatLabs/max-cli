@@ -254,8 +254,20 @@ describe("max bot mcp", () => {
     for (const refused of [stdin, seen]) expect(refused.isError).toBe(true)
     expect(calls).toHaveLength(0)
 
-    await call(client, "messages send", { chat: "-100", text: "x", reply_to: "--allow-dangerous" })
-    expect(JSON.parse(posts().at(-1)?.body ?? "{}")).toMatchObject({ link: { mid: "--allow-dangerous" } })
+    const flag = await call(client, "messages send", { chat: "-100", text: "x", reply_to: "--allow-dangerous" })
+    expect(flag).toMatchObject({ isError: true, error: { code: "validation_error" } })
+    expect(flag.error.message).toContain("mid.")
+    expect(posts()).toHaveLength(0)
+  })
+
+  it("**refuses a reply_to that is not a MAX message id** before sending, and sends one that is", async () => {
+    const { client } = await connect()
+    const refused = await call(client, "messages send", { chat: "-100", text: "x", reply_to: "116762160362694583" })
+    expect(refused).toMatchObject({ isError: true, error: { code: "validation_error" } })
+    expect(posts()).toHaveLength(0)
+
+    expect((await call(client, "messages send", { chat: "-100", text: "x", reply_to: "mid.1" })).isError).toBe(false)
+    expect(JSON.parse(posts().at(-1)?.body ?? "{}")).toMatchObject({ link: { type: "reply", mid: "mid.1" } })
   })
 
   it("deletes a requested comment at ask without a server form", async () => {
