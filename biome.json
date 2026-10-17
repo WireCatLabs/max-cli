@@ -9,7 +9,8 @@
       "!pnpm-lock.yaml",
       "!.worktrees",
       "!config/wirecat",
-      "!lint/baseline"
+      "!lint/baseline",
+      "!contracts/bot-catalogue.json"
     ]
   },
   "linter": {

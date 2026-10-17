@@ -34,6 +34,8 @@ const cli = async (words: string[]) => {
   const code = await run([profile, ...words], {
     streams,
     tty: false,
+    // contacts check reads the CAS key before it knows it is offline; from the environment, it never reaches a keyring.
+    env: { ...process.env, MAX_CAS_API_KEY: "test-cas-key" },
     store: state,
     connection: () => {
       throw new Error("an offline check must never open a wire")

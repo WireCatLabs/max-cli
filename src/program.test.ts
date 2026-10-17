@@ -954,7 +954,9 @@ describe("the program", () => {
   })
 
   it("**puts a failure on stderr as JSON, never on stdout**", async () => {
-    const { stdout, stderr, code } = await runWith(["a-profile-that-does-not-exist", "account", "show", "--json"])
+    const { stdout, stderr, code } = await runWith(["a-profile-that-does-not-exist", "account", "show", "--json"], {
+      store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
+    })
 
     expect(stdout).toBe("")
     expect(JSON.parse(stderr).error.code).toBe("authentication_error")
@@ -964,7 +966,11 @@ describe("the program", () => {
 
   it("tells a person what to do next, **naming the profile they actually typed**", async () => {
     const streams = captureStreams()
-    const code = await run(["a-profile-that-does-not-exist", "account", "show"], { streams, tty: true })
+    const code = await run(["a-profile-that-does-not-exist", "account", "show"], {
+      streams,
+      tty: true,
+      store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
+    })
 
     expect(streams.stdout).toEqual([])
     expect(streams.stderr.join("")).toContain("max a-profile-that-does-not-exist setup")

@@ -1,5 +1,6 @@
 {
   "paths": [
+    "contracts/bot-catalogue.json",
     "contracts/help.snap",
     "contracts/legacy-store.json",
     "contracts/mcp-tools.json",

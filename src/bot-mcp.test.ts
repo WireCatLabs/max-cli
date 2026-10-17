@@ -3,10 +3,11 @@ import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
+import { toJsonSchema } from "@valibot/to-json-schema"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
-import { botInstructions, commandLookup } from "@wirecat/cli-core/cli"
+import { describeProgram } from "@wirecat/cli-base/commands"
+import { botInstructions } from "@wirecat/cli-core/cli"
 import { createBotServer } from "@wirecat/cli-core/mcp"
-import type { Command } from "commander"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
 import { botMcpRun, maxBot, maxBotMcp } from "./commands/bot-messenger.js"
@@ -80,29 +81,26 @@ const owner = async (profile: string, argv: string[]) => {
   return run([profile, "bot", ...argv], { streams, tty: false, ...testEnvironment() })
 }
 
-type Options = Partial<Record<"confirmSend" | "allowDangerous" | "yes", boolean>> & {
+type Options = {
   permissions?: Record<string, "deny" | "readonly" | "ask" | "allow">
   readOtherBots?: boolean | string[]
   env?: NodeJS.ProcessEnv
 }
 
 const connect = async (
-  { permissions = {}, readOtherBots = false, env = process.env, ...options }: Options = {},
+  { permissions = {}, readOtherBots = false, env = process.env }: Options = {},
   { form }: { form?: (message: string) => ElicitResult } = {},
 ) => {
   const profile = `bm-${++profiles}`
   new BotTokenStore({ profile, keyring }).write("bot-token")
-  const group = createProgram().commands.find((one) => one.name() === "bot") as Command
   const mcp = maxBotMcp(run)
-  const { build } = createBotServer({
+  const { build, tools } = createBotServer({
     bot: { ...maxBot, mcp },
-    commandAt: commandLookup(group),
+    program: { run: botMcpRun(run, testEnvironment()), commands: describeProgram(createProgram()) },
     settings: { profile, permissions, readOtherBots },
     env,
-    run: botMcpRun(run, testEnvironment()),
-    tools: mcp.tools ?? [],
+    ...(mcp.keyOf ? { keyOf: mcp.keyOf } : {}),
     ...(mcp.skill ? { skill: mcp.skill } : {}),
-    ...options,
   })
   const [serverSide, clientSide] = InMemoryTransport.createLinkedPair()
   const server = build()
@@ -120,7 +118,7 @@ const connect = async (
     await client.close()
     await server.close()
   })
-  return { client: surfaceOf(client, "max_bot"), rawClient: client, profile, forms }
+  return { client: surfaceOf(client, "max_bot"), rawClient: client, profile, forms, tools }
 }
 
 const call = async (client: ReturnType<typeof surfaceOf>, command: string, args: Record<string, unknown> = {}) => {
@@ -142,6 +140,7 @@ const READS = [
   "contacts show",
   "chats members list",
   "chats admins list",
+  "chats rules show",
   "comments list",
   "comments get",
   "commands list",
@@ -157,7 +156,7 @@ describe("max bot mcp", () => {
     expect((await names(readonly.client)).sort()).toEqual([...READS].sort())
 
     const all = await names((await connect()).client)
-    expect(all).toHaveLength(29)
+    expect(all).toHaveLength(30)
     expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete"]))
     expect(all.some((name) => /recipients_(add|remove|clear)|webhooks|auth|api|uploads|_mcp/.test(name))).toBe(false)
   })
@@ -226,7 +225,7 @@ describe("max bot mcp", () => {
   it("**reaches the shared admins and members commands** under their tool names", async () => {
     const { client } = await connect()
     expect((await call(client, "chats admins list", { chat: "-100" })).body).toMatchObject({ items: [] })
-    const removed = await call(client, "chats members remove", { chat: "-100", user: "42", block: true })
+    const removed = await call(client, "chats members remove", { chat: "-100", person: "42", block: true })
     expect(removed.isError).toBe(false)
     expect(deletes().at(-1)?.url).toBe("/chats/-100/members?user_id=42&block=true")
   })
@@ -248,17 +247,15 @@ describe("max bot mcp", () => {
     expect(posts()).toHaveLength(0)
   })
 
-  it("refuses an argument that would become a flag or read stdin, before running anything", async () => {
+  it("**never turns a value into a flag**, and refuses one that would read stdin before running anything", async () => {
     const { client } = await connect()
-    const flagged = await call(client, "messages send", {
-      chat: "-100",
-      text: "x",
-      reply_to: "--allow-dangerous",
-    })
     const stdin = await call(client, "messages send", { chat: "-100", text: "-" })
     const seen = await call(client, "chats action", { chat: "-100", action: "mark_seen" })
-    for (const refused of [flagged, stdin, seen]) expect(refused.isError).toBe(true)
+    for (const refused of [stdin, seen]) expect(refused.isError).toBe(true)
     expect(calls).toHaveLength(0)
+
+    await call(client, "messages send", { chat: "-100", text: "x", reply_to: "--allow-dangerous" })
+    expect(JSON.parse(posts().at(-1)?.body ?? "{}")).toMatchObject({ link: { mid: "--allow-dangerous" } })
   })
 
   it("deletes a requested comment at ask without a server form", async () => {
@@ -313,5 +310,13 @@ describe("max bot mcp", () => {
       expect(body.item).toMatchObject({ rows: [expect.objectContaining({ action: "delete", outcome: "planned" })] })
       expect(deletes()).toEqual([])
     })
+  })
+
+  it("**pins the catalogue**: a command or an argument agents gain or lose shows up in contracts/", async () => {
+    const { tools } = await connect()
+    const catalogue = Object.fromEntries(
+      tools.map((tool) => [tool.command, { writes: tool.writes, input: toJsonSchema(tool.input) }]),
+    )
+    await expect(`${JSON.stringify(catalogue, null, 2)}\n`).toMatchFileSnapshot("../contracts/bot-catalogue.json")
   })
 })

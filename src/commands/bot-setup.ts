@@ -7,7 +7,10 @@ import { botContext } from "./bot-context.js"
 import { guardedCall, uploaded } from "./bot-sends.js"
 
 export const uploadsCommand = (): Command => {
-  const command = new Command("uploads").description("files uploaded to MAX, to attach to a message")
+  // It reads a file from this machine and hands it to MAX: agents get no file options (NEED-1411).
+  const command = annotate(new Command("uploads"), { mcp: false }).description(
+    "files uploaded to MAX, to attach to a message",
+  )
 
   annotate(command.command("put <file>"), { effects: REMOTE_WRITE })
     .description(

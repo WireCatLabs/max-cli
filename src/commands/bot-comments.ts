@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { itemOf, listOf, REMOTE_READ, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
+import { itemOf, listOf, ownerOnlyOption, REMOTE_READ, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
@@ -70,7 +70,7 @@ export const commentsCommand = (): Command => {
 
   annotate(command.command("delete <message> <comment>"), { effects: REMOTE_WRITE })
     .description("delete a comment under a post")
-    .option("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask")
+    .addOption(ownerOnlyOption("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask"))
     .action(async function (this: Command, message: string, comment: string) {
       const context = botContext(this)
       const answer = await guardedCall(context, operation("deleteComment"), {

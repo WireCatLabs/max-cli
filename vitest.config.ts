@@ -10,7 +10,7 @@ export default defineConfig({
     maxWorkers: 4,
     // Every test file runs with config, state and cache pointed at a temporary directory. See the
     // file for why this is not optional.
-    setupFiles: ["src/testing/sandbox.ts", "src/testing/unscripted.ts"],
+    setupFiles: ["@wirecat/cli-base/testing/setup", "src/testing/sandbox.ts", "src/testing/unscripted.ts"],
     globalSetup: ["src/testing/argv-log.ts"],
     coverage: {
       provider: "v8",

@@ -128,6 +128,7 @@ export const contextFor = (
   const { renderer, format, color, streams } = resolveOutput({
     ...settings,
     env: environment.env ?? process.env,
+    ...(environment.agent ? { capture: environment.agent.result } : {}),
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })

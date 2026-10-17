@@ -4,13 +4,18 @@ import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
+import { BotTokenStore } from "./bot/auth.js"
 import type { Environment } from "./commands/context.js"
 import type { Diagnosis } from "./diagnose.js"
 import { run } from "./program.js"
 import { buildReport, issueUrlFor, type Report } from "./report.js"
 import { SessionStore } from "./session/store.js"
 
-const environment: Environment = { store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }) }
+const keyring = memoryKeyring()
+const environment: Environment = {
+  store: (profile) => new SessionStore({ profile, keyring }),
+  botStore: (profile) => new BotTokenStore({ profile, keyring }),
+}
 
 const runWith = async (argv: string[]) => {
   const streams = captureStreams()

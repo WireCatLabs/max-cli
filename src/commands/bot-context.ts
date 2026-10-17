@@ -25,7 +25,10 @@ const recordings = new WeakMap<Command, Recording>()
 export const startBotRecording = (command: Command): void => {
   const environment = environmentOf(command)
   // The program's own flags only: `bot api get-updates --limit` is the API's limit, not ours.
-  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>(), { kind: "bot" })
+  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>(), {
+    kind: "bot",
+    env: environment.env ?? process.env,
+  })
   const { streams, format } = resolveOutput({
     ...settings,
     ...(environment.streams ? { streams: environment.streams } : {}),
@@ -59,19 +62,21 @@ export const botRecordingOf = (command: Command): Recording | undefined => recor
 /** `offline` is for the reads the local copy can answer; every other command still refuses the flag. */
 export const botContext = (command: Command, { offline: answersOffline = false }: { offline?: boolean } = {}) => {
   const environment = environmentOf(command)
+  const env = environment.env ?? process.env
   const flags = command.optsWithGlobals<GlobalFlags & { offline?: boolean }>()
   const offline = flags.offline === true
   if (offline && !answersOffline) {
     throw new CliError("validation_error", `--offline reads the local copy; \`${command.name()}\` has to ask MAX`)
   }
   const nativeApi = command.name() === "api" || command.parent?.name() === "api"
-  const settings = resolveSettings(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, { kind: "bot" })
+  const settings = resolveSettings(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, { kind: "bot", env })
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
+    ...(environment.agent ? { capture: environment.agent.result } : {}),
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
-  const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile })
+  const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile, env })
   const recording = botRecordingOf(command)
   const timeout = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
   const deadline =
@@ -102,10 +107,11 @@ export const botContext = (command: Command, { offline: answersOffline = false }
     }
     return client(stored.token, stop)
   }
-  const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
+  const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile, env)
   const uploadFetch = () => environment.botFetch ?? botFetch()
   return {
     askPermission: askerFor(command.optsWithGlobals(), environment),
+    env,
     sleep: environment.sleep,
     /** The run's sink, for the requests that do not go through the transport — the upload. */
     events: recording?.events,

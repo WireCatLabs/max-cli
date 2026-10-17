@@ -13,6 +13,16 @@
 - **`max <profile> contacts link <person> me`** (cli-core 0.323.0): отметить, что контакт — это вы, для вашего аккаунта,
   который хранилище не узнаёт само, например `zoom:<id>`.
 
+### Изменено — может сломать скрипты
+
+- **Инструменты `max bot mcp` теперь строятся из самих команд `max bot`** (cli-core 0.325.0) и выполняются через
+  них. Аргументы называются как у команды: `messages send` и `messages edit` принимают `md` / `html` вместо
+  `format`, `messages delete` — список `messages`, `search messages` — `query`, `chats members remove` — `person`.
+  Появились `chats rules show`, `offline` у команд, которые читают MAX, и аргументы `page`, `newest`, `notify`,
+  `no_block`, `sync_first`. Запись на уровне `ask` агенту разрешена: отвечать на вопрос некому.
+- **Агенту не предлагаются**: `session`, `setup`, `config`, `doctor report`, `bot uploads`, а также
+  `--allow-dangerous` у `bot comments delete` и у `bot api`. Их по-прежнему запускает только владелец.
+
 ### Исправлено
 
 - **Упоминания находят меньше ложных имён** (cli-core 0.323.0). Слово из имени контакта считается само по себе только
