@@ -10,6 +10,7 @@ import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile
 import { SKILL, SKILL_APP } from "../skill.js"
 import { installer } from "../update.js"
 import { type CommandContext, environmentOf, forCommand } from "./context.js"
+import { readOnlyLock, refuseUnderReadOnly } from "./read-only.js"
 import { type Method, startSession, TERMS_NOTICE } from "./session.js"
 
 const AGENTS = ["none", "codex", "cursor", "claude", "gemini", "all"] as const
@@ -114,6 +115,7 @@ export const setupCommand = (): Command =>
         .default("qr"),
     )
     .action(async function (this: Command) {
+      refuseUnderReadOnly(readOnlyLock(this), "log in or install a skill")
       const context = forCommand(this)
       const { settings, store } = context
       const options = this.opts<{ agent?: Agent; method: Method }>()

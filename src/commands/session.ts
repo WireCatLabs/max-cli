@@ -10,6 +10,7 @@ import { adoptToken } from "../session/adopt.js"
 import { serveQrPage } from "../session/browser.js"
 import { terminalQr } from "../session/qr-terminal.js"
 import { type CommandContext, forCommand } from "./context.js"
+import { readOnlyLock, refuseUnderReadOnly } from "./read-only.js"
 
 // NEED-149: gentle on purpose — it asks for ordinary use alongside, and does not cite blocked accounts.
 export const TERMS_NOTICE = [
@@ -52,6 +53,7 @@ export const sessionCommand = (): Command => {
       new Argument("[method]", "token (pasted or piped), qr, qr-chrome or sms").choices(METHODS).default("token"),
     )
     .action(async function (this: Command, method: Method) {
+      refuseUnderReadOnly(readOnlyLock(this), "log in")
       const context = forCommand(this)
       const { renderer, run } = context
 
@@ -72,6 +74,7 @@ export const sessionCommand = (): Command => {
   annotate(command.command("end"), { effects: REMOTE_WRITE })
     .description("log this profile out on MAX's side and forget the session here")
     .action(async function (this: Command) {
+      refuseUnderReadOnly(readOnlyLock(this), "log out")
       const context = forCommand(this)
       const { renderer, store, run, createClient } = context
 

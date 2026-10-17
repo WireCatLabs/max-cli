@@ -361,12 +361,6 @@ export const UNTESTED: Untested[] = [
       "cli-core src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters",
   },
   {
-    command: "store repair",
-    option: "--dry-run",
-    reason:
-      "cli-core src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover preview rollback and retained data",
-  },
-  {
     command: "search all",
     option: "--max-meetings",
     reason: "cli-core src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through",
@@ -474,19 +468,9 @@ export const UNTESTED: Untested[] = [
     reason: "cli-core src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command",
   },
   {
-    command: "store repair",
-    reason:
-      "cli-core src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover structural repair and retained data",
-  },
-  {
     command: "store reset",
     reason:
       "cli-core src/cli/messenger/store-maintenance.test.ts covers the backup, the refusals and the empty store; consumer mounts the shared command",
-  },
-  {
-    command: "store copies delete",
-    reason:
-      "cli-core src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion",
   },
   {
     command: "searches show",
@@ -813,11 +797,6 @@ export const UNTESTED: Untested[] = [
     reason:
       "cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0)",
   })),
-  {
-    command: "schedule command",
-    reason:
-      "cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1)",
-  },
   {
     command: "schedule command",
     option: "--every",

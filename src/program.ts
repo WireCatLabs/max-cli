@@ -43,6 +43,7 @@ import type { Environment } from "./commands/context.js"
 import { doctorCommand } from "./commands/doctor.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
+import { lockedStore } from "./commands/read-only.js"
 import { recipientsCommand } from "./commands/recipients.js"
 import { runsCommand } from "./commands/runs.js"
 import { sendsCommand } from "./commands/sends.js"
@@ -86,7 +87,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     chatsCommand(),
     contactsCommand(),
     messagesCommand(),
-    sharedStoreCommand(maxMessenger),
+    lockedStore(sharedStoreCommand(maxMessenger)),
     statsCommand(maxMessenger),
     tasksCommand(maxMessenger),
     conversationsCommand(maxMessenger),
