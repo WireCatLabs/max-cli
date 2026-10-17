@@ -81,8 +81,8 @@ MagicDNS, сертификаты HTTPS и разрешение Funnel. Перв�
 ## 2. Запустить туннель и сервер
 
 Сервер слушает `127.0.0.1:8765` и печатает одноразовый код входа. Прав администратора ему не
-нужно; они могут понадобиться только туннелю. Команды ниже разрешают отправку только на время
-работы этого процесса: `--permission messages.send=allow`; см.
+нужно; они могут понадобиться только туннелю. Что можно агенту, решают права профиля; как сузить их
+только на время работы этого процесса, см.
 [права только на время работы сервера](#права-только-на-время-работы-сервера).
 
 ### Windows (PowerShell)
@@ -103,7 +103,7 @@ Tailscale откройте новое окно PowerShell, чтобы обнов
 
 ```powershell
 $mcpPublicUrl = Read-Host 'Вставьте HTTPS origin из Funnel (без /mcp)'
-max.cmd mcp --http --port 8765 --public-url $mcpPublicUrl --permission messages.send=allow
+max.cmd mcp --http --port 8765 --public-url $mcpPublicUrl
 ```
 
 Оба процесса запускайте в самой Windows. WSL — отдельная среда: туннель Windows, направленный на
@@ -124,7 +124,7 @@ TAILSCALE_BE_CLI=1 /Applications/Tailscale.app/Contents/MacOS/Tailscale funnel 8
 ```sh
 printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
 IFS= read -r mcpPublicUrl
-max personal mcp --http --port 8765 --public-url "$mcpPublicUrl" --permission messages.send=allow
+max personal mcp --http --port 8765 --public-url "$mcpPublicUrl"
 ```
 
 ### Linux (Terminal)
@@ -141,7 +141,7 @@ sudo tailscale funnel 8765
 ```sh
 printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
 IFS= read -r mcpPublicUrl
-max personal mcp --http --port 8765 --public-url "$mcpPublicUrl" --permission messages.send=allow
+max personal mcp --http --port 8765 --public-url "$mcpPublicUrl"
 ```
 
 ## MAX и Telegram одновременно
@@ -221,13 +221,12 @@ max personal mcp --http --port 8765 --public-url https://mcp.example.com
 Сервер не видит, спросило ли вас приложение перед вызовом. Если приложению постоянно разрешён
 инструмент, следующий вызов может пройти без нового вопроса.
 
-Повторяемый `--permission ключ=уровень` меняет права только для этого процесса сервера. Уровни:
-`deny`, `readonly`, `ask`, `allow`. Например, `--permission messages.send=allow` разрешит отправку
-из профиля с `readonly`. `--permission messages=allow` заменит сохранённые права для всего ресурса
-сообщений; удаление разрешается отдельно через `--permission messages.delete=allow`. Файл настроек,
-список получателей и лимит отправок в час не меняются. Чтобы снять запрет чтения, назовите его
-ресурс или команду с уровнем `allow`. Ключи прав перечислены в
-[руководстве по настройке](configuration.md).
+Повторяемый `--permission ключ=уровень` ужесточает права только для этого процесса сервера. Уровни:
+`deny`, `readonly`, `ask`, `allow`. Например, `--permission messages.send=deny` запретит отправку, а
+`--permission messages=readonly` оставит агенту только чтение сообщений. Ослабить права флаг не может:
+сервер с `messages.send=allow` для профиля с `readonly` не запустится и назовёт ключ. Чтобы разрешить
+больше, измените права профиля. Файл настроек, список получателей и лимит отправок в час не меняются.
+Ключи прав перечислены в [руководстве по настройке](configuration.md).
 
 При временном переопределении прав MCP подключается к MAX напрямую: уже работающая служба
 `max personal serve` продолжает использовать сохранённые права своего профиля.

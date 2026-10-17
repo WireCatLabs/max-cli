@@ -246,7 +246,7 @@ max skill install --for all     # или --for claude, --for agents
 ```sh
 max personal mcp doctor                                       # проверить локальный MCP
 max personal mcp --http --public-url https://<имя>.ts.net     # для ChatGPT и Claude в браузере
-max personal mcp --permission messages.send=ask               # временно изменить право
+max personal mcp --permission messages.send=deny              # запретить отправку этому серверу
 ```
 
 Подробнее: [MCP-сервер](https://github.com/WireCatLabs/max-cli/blob/main/docs/mcp.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/mcp)), [браузер](https://github.com/WireCatLabs/max-cli/blob/main/docs/remote.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/remote)), [внешние модели](https://github.com/WireCatLabs/max-cli/blob/main/docs/external-models.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/external-models)).
