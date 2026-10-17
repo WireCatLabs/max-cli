@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**911 ✅ · 161 ⛔ · 0 ❌** — 346 commands, 726 options.
+**915 ✅ · 157 ⛔ · 0 ❌** — 346 commands, 726 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -280,11 +280,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store restore` |  | ✅ |  |
 | `store decrypt` |  | ✅ |  |
 | `store decrypt` | `--output` | ✅ |  |
-| `store repair` |  | ⛔ | cli-core src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover structural repair and retained data |
-| `store repair` | `--dry-run` | ⛔ | cli-core src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover preview rollback and retained data |
+| `store repair` |  | ✅ |  |
+| `store repair` | `--dry-run` | ✅ |  |
 | `store reset` |  | ✅ |  |
 | `store reset` | `--no-backup` | ✅ |  |
-| `store copies delete` |  | ⛔ | cli-core src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion |
+| `store copies delete` |  | ✅ |  |
 | `stats messages show` |  | ✅ |  |
 | `stats messages show` | `--sync-first` | ✅ |  |
 | `stats messages show` | `--max-chats` | ✅ |  |
@@ -776,7 +776,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `server logs` | `--limit` | ✅ |  |
 | `server install` |  | ✅ |  |
 | `server uninstall` |  | ✅ |  |
-| `schedule command` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule command` |  | ✅ |  |
 | `schedule command` | `--every` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule command` | `--at` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule command` | `--at-time` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --at-time is parsed by the same code (0.250.1) |

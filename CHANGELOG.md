@@ -26,6 +26,14 @@
 
 После обновления один раз перечитайте старые сообщения: `max <profile> mentions rebuild person-name place`.
 
+### Безопасность
+
+- **`MAX_READ_ONLY` теперь запрещает вход и выход, запись от имени бота и изменения хранилища**: `session start`,
+  `session end` и `setup` отказывают с `permission_error` ещё до подключения. Так же отказывают `bot api` (каждая
+  операция, которая что-то меняет, и `get-updates`), `bot comments send|edit|delete`, `bot chats members add`,
+  `bot uploads put`, а также `store reset`, `restore`, `clear`, `migrate`, `repair`, `copies delete` и `decrypt`.
+  Раньше `session end` под этим запретом выходил из MAX и забывал сессию, а эти команды бота отправляли запрос в MAX.
+
 ## 0.59.0 — 17.10.2026
 
 ### Что нового
