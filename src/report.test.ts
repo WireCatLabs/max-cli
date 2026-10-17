@@ -5,6 +5,7 @@ import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
+import type { Diagnosis } from "./diagnose.js"
 import { run } from "./program.js"
 import { buildReport, issueUrlFor, type Report } from "./report.js"
 import { SessionStore } from "./session/store.js"
@@ -119,7 +120,7 @@ describe("the new issue", () => {
       home: "C:\\Users\\O'Neil Smith",
     })
     expect(JSON.stringify(report).toLowerCase()).not.toContain("neil")
-    expect(report.doctor.session.stateFile).toBe("~\\AppData\\Roaming\\max-cli\\profiles\\p.json")
+    expect((report.doctor as Diagnosis).session.stateFile).toBe("~\\AppData\\Roaming\\max-cli\\profiles\\p.json")
   })
 
   it("replaces chat and message ids with labels that match inside one report and nowhere else", async () => {

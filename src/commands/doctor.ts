@@ -225,16 +225,29 @@ const reportCommand = (): Command => {
     .option("--output <file>", "where to write it; a new file in this directory if not given")
     .action(async function (this: Command) {
       const options = this.opts<{ run?: string; output?: string }>()
-      const { renderer, settings, format, streams, run, store } = forCommand(this)
+      let context: ReturnType<typeof forCommand> | undefined
+      let configError = ""
+      try {
+        context = forCommand(this)
+      } catch (error) {
+        if (!(error instanceof CliError) || error.code !== "configuration_error") throw error
+        configError = error.message
+      }
+      const { renderer, format, streams } = context ?? outputFor(this)
 
-      await run("doctor report create", async () => {
+      const create = async () => {
         const now = new Date()
+        const profile = context
+          ? {
+              profile: context.settings.profile,
+              doctor: await diagnoseProfile(context.settings, context.store, botStoreFor(this), sessionStoreFor(this)),
+              sends: new SendJournal(sendsPathFor(context.settings.profile)).entries(),
+            }
+          : { profile: null, doctor: { config: { error: configError } }, sends: [] }
         const built = buildReport({
-          profile: settings.profile,
-          doctor: await diagnoseProfile(settings, store, botStoreFor(this), sessionStoreFor(this)),
+          ...profile,
           runsDir: runsDirFor(MAX_APP),
           ...(options.run === undefined ? {} : { runId: options.run }),
-          sends: new SendJournal(sendsPathFor(settings.profile)).entries(),
           now,
         })
         const path = resolve(options.output ?? reportFileName(now))
@@ -274,7 +287,8 @@ const reportCommand = (): Command => {
             "сообщений — метки.",
           ].join("\n"),
         )
-      })
+      }
+      await (context ? context.run("doctor report create", create) : create())
     })
 
   return report
