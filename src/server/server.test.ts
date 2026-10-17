@@ -95,17 +95,20 @@ const serve = async (
     startedByCommand?: boolean
     maxSubscriberBufferBytes?: number
     maxSubscriberTotalBufferBytes?: number
+    requestTimeoutMs?: number
   } = {},
 ) => {
   const store = new SessionStore({ profile, keyring: memoryKeyring() })
   store.writeToken("a-token")
   const notes: string[] = []
+  const { requestTimeoutMs = 200, ...serverOptions } = extra
   const server = new MaxServer({
     store,
     note: (line) => notes.push(line),
-    connection: (hooks) => new Connection({ ...hooks, live: true, createSocket: max.createSocket, timeoutMs: 200 }),
+    connection: (hooks) =>
+      new Connection({ ...hooks, live: true, createSocket: max.createSocket, timeoutMs: requestTimeoutMs }),
     retryAfterMs: () => 0,
-    ...extra,
+    ...serverOptions,
   })
   running.push(server)
   await server.start()
@@ -609,9 +612,8 @@ describe("a command through max serve", () => {
   })
 
   it("sends through the server too: one connection to MAX for everything", async () => {
-    const { store, max } = await serve("c-send")
-    // The reads after login first: sharing the 200 ms budget with them, the send timed out on CI and
-    // was retried with its cid — two MSG_SEND for one message.
+    // Coverage instrumentation can use the short retry fixtures' entire request budget.
+    const { store, max } = await serve("c-send", scripted(), { requestTimeoutMs: 2000 })
     await tabReads(max)
     const { client, opened } = commandClient(store)
 
