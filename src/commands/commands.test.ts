@@ -198,6 +198,7 @@ describe("max commands", () => {
       "tasks duplicates defer",
       "tasks merge",
       "tasks unmerge",
+      "tasks apply",
       "tasks claim",
       "tasks release",
       "tasks close",

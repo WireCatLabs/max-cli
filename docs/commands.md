@@ -2538,6 +2538,24 @@ the categories a task takes, with what each means and the words a rule picks it 
 max tasks categories
 ```
 
+### `max tasks apply`
+
+the task rules over a chat's newest stored messages: a question nobody answered and a mention of you open a task, and your answer closes one — for a chat the first sync left alone (config task_first_pass_per_chat). Lists what would open and changes nothing unless --yes; with --yes the duplicate check runs as on a sync. Reads only the local store
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks apply <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--last <n>` | read the newest n stored messages of each chat (default 50, at most 1000). |
+
 ### `max tasks claim`
 
 take an open task so no other agent works it at once; the claim lapses by itself
@@ -3019,7 +3037,7 @@ max tags list [query]
 
 ## `max mentions`
 
-phones, e-mail, links, documents and people's names found in stored messages
+phones, e-mail, links, documents, people's names and addresses found in stored messages
 
 ### `max mentions list`
 
@@ -3056,6 +3074,19 @@ max mentions domains [query] [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 
+### `max mentions places`
+
+confirmed addresses, in every account, most mentioned first; `mentions confirm <id>` adds one
+
+```sh
+max mentions places [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many to show. |
+| `--page <n>` | which page, starting at 1. |
+
 ### `max mentions show`
 
 one mention, the text around it, and how many other places hold its value
@@ -3070,7 +3101,7 @@ max mentions show <id>
 
 ### `max mentions confirm`
 
-say what a mention is: a phone's owner everywhere it is written, the stored document, who a name means
+say what a mention is: a phone's owner everywhere it is written, the stored document, who a name means, an address as a place
 
 **Меняет что-то только на этом компьютере.**
 
@@ -3081,7 +3112,7 @@ max mentions confirm <id> [person] [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `id` | обязательный | the mention's id, from mentions list. |
-| `person` | необязательный | person:<uid> or organization:<id> that owns the phone or the address; person:<uid> a name means; a document needs none. |
+| `person` | необязательный | person:<uid> or organization:<id> that owns the phone or the e-mail address; person:<uid> a name means; a document or a street address needs none. |
 
 | Опция | Что делает |
 |---|---|
@@ -3119,7 +3150,7 @@ max mentions rebuild [kind]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `kind` | необязательный | only this kind: person-name after people were added or renamed. Одно из: `phone`, `email`, `url`, `document`, `person-name`. |
+| `kind` | необязательный | only this kind: person-name after people were added or renamed. Одно из: `phone`, `email`, `url`, `document`, `person-name`, `place`. |
 
 ## `max images`
 
@@ -4196,7 +4227,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 | `value` | обязательный | a number, true or false, or a list like contacts,polls. |
 
 | Опция | Что делает |
@@ -4217,7 +4248,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 
 | Опция | Что делает |
 |---|---|
