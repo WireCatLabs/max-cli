@@ -963,4 +963,30 @@ export const UNTESTED: Untested[] = [
     reason:
       'cli-core src/cli/messenger/mentions.test.ts ("counts the links per site, most linked first") drives this through the shared handler MAX mounts (0.285.0)',
   },
+  {
+    command: "mentions places",
+    reason:
+      'paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0)',
+  },
+  {
+    command: "tasks apply",
+    reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks apply lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.309.0)`,
+  },
+  {
+    command: "mentions places",
+    option: "--limit",
+    reason:
+      'paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0)',
+  },
+  {
+    command: "mentions places",
+    option: "--page",
+    reason:
+      'paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0)',
+  },
+  {
+    command: "tasks apply",
+    option: "--last",
+    reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks apply lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.309.0)`,
+  },
 ]

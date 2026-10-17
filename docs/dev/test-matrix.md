@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**911 ✅ · 154 ⛔ · 0 ❌** — 344 commands, 721 options.
+**911 ✅ · 159 ⛔ · 0 ❌** — 346 commands, 724 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -450,6 +450,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks agenda` | `--within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks agenda` | `--holder` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks categories` |  | ✅ |  |
+| `tasks apply` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks apply lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.309.0) |
+| `tasks apply` | `--last` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks apply lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.309.0) |
 | `tasks claim` |  | ✅ |  |
 | `tasks claim` | `--lease` | ✅ |  |
 | `tasks claim` | `--holder` | ✅ |  |
@@ -570,6 +572,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `mentions domains` |  | ⛔ | cli-core src/cli/messenger/mentions.test.ts ("counts the links per site, most linked first") drives this through the shared handler MAX mounts (0.285.0) |
 | `mentions domains` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
 | `mentions domains` | `--page` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
+| `mentions places` |  | ⛔ | paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0) |
+| `mentions places` | `--limit` | ⛔ | paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0) |
+| `mentions places` | `--page` | ⛔ | paging is the shared list envelope of cli-core, covered by its own tests; the store read is driven in cli-core src/store/mentions.test.ts ("makes a confirmed address a place, links it everywhere, and links a later mention of it by rule") through the shared handler MAX mounts (0.308.0) |
 | `mentions show` |  | ✅ |  |
 | `mentions confirm` |  | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
 | `mentions confirm` | `--all-in-chat` | ⛔ | cli-core src/store/mentions.test.ts ("decides a name in every undecided place of its chat with --all-in-chat") covers the store write the shared command calls; the flag is parsed by the shared handler MAX mounts (0.285.0) |
