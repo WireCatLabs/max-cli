@@ -3,6 +3,7 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { afterEach, describe, expect, it } from "vitest"
+import { BotTokenStore } from "../bot/auth.js"
 import { run } from "../program.js"
 import { SessionStore } from "../session/store.js"
 import { installNotes } from "./doctor.js"
@@ -50,6 +51,7 @@ const inAnEmptyHome = async (
     const code = await run(argv, {
       streams,
       tty,
+      botStore: (profile) => new BotTokenStore({ profile, keyring }),
       store: (profile) => {
         const store = new SessionStore({ profile, keyring })
         if (token) store.writeToken("a-token")
