@@ -22,8 +22,8 @@ import { environmentOf } from "./context.js"
  */
 export const botMcpRun =
   (program: typeof run, extra: Parameters<typeof run>[1] = {}): RunBotCommand =>
-  (argv, { streams, tty, answer }) =>
-    program(argv, { ...extra, streams, tty, ...(answer ? { answer } : {}) })
+  (argv, environment) =>
+    program(argv, { ...extra, ...environment })
 
 /** `bot mcp`. The program hands in its own `run`: importing it here would close a loop through the program. */
 export const maxBotMcp = (program: typeof run): BotMcp => ({

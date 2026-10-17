@@ -83,10 +83,11 @@ const owner = async (profile: string, argv: string[]) => {
 type Options = Partial<Record<"confirmSend" | "allowDangerous" | "yes", boolean>> & {
   permissions?: Record<string, "deny" | "readonly" | "ask" | "allow">
   readOtherBots?: boolean | string[]
+  env?: NodeJS.ProcessEnv
 }
 
 const connect = async (
-  { permissions = {}, readOtherBots = false, ...options }: Options = {},
+  { permissions = {}, readOtherBots = false, env = process.env, ...options }: Options = {},
   { form }: { form?: (message: string) => ElicitResult } = {},
 ) => {
   const profile = `bm-${++profiles}`
@@ -97,7 +98,7 @@ const connect = async (
     bot: { ...maxBot, mcp },
     commandAt: commandLookup(group),
     settings: { profile, permissions, readOtherBots },
-    env: process.env,
+    env,
     run: botMcpRun(run, testEnvironment()),
     tools: mcp.tools ?? [],
     ...(mcp.skill ? { skill: mcp.skill } : {}),
@@ -228,6 +229,14 @@ describe("max bot mcp", () => {
     const removed = await call(client, "chats members remove", { chat: "-100", user: "42", block: true })
     expect(removed.isError).toBe(false)
     expect(deletes().at(-1)?.url).toBe("/chats/-100/members?user_id=42&block=true")
+  })
+
+  it("**runs each call under the server's environment**: MAX_READ_ONLY refuses a send there too", async () => {
+    const { client } = await connect({ env: { ...process.env, MAX_READ_ONLY: "1" } })
+    const { isError, error } = await call(client, "messages send", { chat: "-100", text: "hi" })
+    expect(isError).toBe(true)
+    expect(error.message).toContain("MAX_READ_ONLY")
+    expect(posts()).toHaveLength(0)
   })
 
   it("meets the bot's recipient list, and the refusal is the command's", async () => {
