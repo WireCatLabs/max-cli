@@ -210,7 +210,7 @@ const EXCLUDES = ["текстов сообщений", "названий чат�
  * steps (`NEED-267`).
  */
 const reportCommand = (): Command => {
-  const report = annotate(new Command("report"), { effects: REMOTE_READ }).description(
+  const report = annotate(new Command("report"), { effects: REMOTE_READ, mcp: false }).description(
     "what a problem report holds and where it goes; writes nothing",
   )
 

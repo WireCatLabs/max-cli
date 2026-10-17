@@ -67,13 +67,18 @@ export const assertReadable = (
     )
 }
 
+/** The key one of max's own bot commands is guarded by, where it is not the command's path: a comment is a message. */
+export const botCommandKey = (path: readonly string[]): string | undefined =>
+  path[0] === "bot" && path[1] === "comments" ? `bot.messages.${path.slice(2).join(".")}` : undefined
+
 export const commandPermission = (command: Command): string | null => {
   const words: string[] = []
   for (let at: Command | null = command; at?.parent; at = at.parent) words.unshift(at.name())
   const operation = metaOf(command).api_operation
   if (words[0] === "bot" && words[1] === "api" && operation)
     return BOT_KEYS[operation] ?? `bot.api.${words.slice(2).join(".")}`
-  if (words[0] === "bot" && words[1] === "comments") return `bot.messages.${words.slice(2).join(".")}`
+  const own = botCommandKey(words)
+  if (own) return own
   const shared = keyForCommand(words)
   if (shared !== undefined) return shared
   // cli-core 0.270.0 moved the picture models under `images` but keeps only `models` as housekeeping.
@@ -104,6 +109,11 @@ export const askerFor =
   ): Asker =>
   async (key, request) => {
     const flag = skipFlagFor(key)
+    // Nobody is at a terminal to answer, and the profile's levels already decided (NEED-773).
+    if (environment.agent) {
+      approvals.getStore()?.approved.add(key)
+      return
+    }
     if (!approvals.getStore()?.forced.has(key) && !(flag === "--yes" ? flags.yes : flags.allowDangerous)) {
       const question = `${key}${request.chatId === null ? "" : ` in chat ${request.chatId}`}${request.count === undefined ? "" : ` (${request.count} items)`}${request.forEveryone ? " for everyone" : ""} — go ahead? [y/N] `
       const answer =

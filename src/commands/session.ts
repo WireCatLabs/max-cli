@@ -19,7 +19,9 @@ export const TERMS_NOTICE = [
 ].join("\n")
 
 export const sessionCommand = (): Command => {
-  const command = new Command("session").description("the stored MAX session for this profile")
+  const command = annotate(new Command("session"), { mcp: false }).description(
+    "the stored MAX session for this profile",
+  )
 
   /**
    * Four ways to a token, and one way to keep it: whatever produced the token, it reaches the

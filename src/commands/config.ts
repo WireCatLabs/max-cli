@@ -55,7 +55,9 @@ const SHOWN: SourcedSetting[] = [
 const snakeName = (setting: string) => setting.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
 
 export const configCommand = (): Command => {
-  const command = new Command("config").description("the settings in force, and where each one came from")
+  const command = annotate(new Command("config"), { mcp: false }).description(
+    "the settings in force, and where each one came from",
+  )
 
   /**
    * Printed whole: no field the configuration accepts can hold a secret (`src/config.ts`). Whether

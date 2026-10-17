@@ -2,6 +2,7 @@ import { annotate } from "@wirecat/cli-base/commands"
 import {
   generatedApiCommand,
   itemOf,
+  ownerOnlyOption,
   REMOTE_READ,
   renderAnswer,
   botCommand as sharedBotCommand,
@@ -62,7 +63,7 @@ export const botCommand = (program: typeof run): Command => {
   })
   for (const child of api.commands)
     if (["delete-message", "delete-comment"].includes(child.name()))
-      child.option("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask")
+      child.addOption(ownerOnlyOption("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask"))
   command.addCommand(api)
 
   return command

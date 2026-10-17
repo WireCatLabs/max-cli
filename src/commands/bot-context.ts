@@ -72,6 +72,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   const settings = resolveSettings(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, { kind: "bot", env })
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
+    ...(environment.agent ? { capture: environment.agent.result } : {}),
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
