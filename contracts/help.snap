@@ -5,8 +5,7 @@ MAX Messenger from the terminal: bots through the official Bot API (`max bot
 
 The first word is the profile whenever it is not a command — `max personal chats
 list`.
-`MAX_PROFILE` says the same thing for a whole shell session, and
-`default_profile` in the config file for good.
+`MAX_PROFILE` says the same thing for a whole shell session.
 No profile is assumed: without one, a command that uses an account stops and
 lists the profiles here.
 

@@ -14,10 +14,10 @@ const cli = async (argv: string[]) => {
 
 describe("max mcp, cli-core's command over max's messenger", () => {
   it("`mcp config` names the profile's server and keeps startup permissions", async () => {
-    const { code, stdout } = await cli(["work", "mcp", "config", "--permission", "messages.send=allow", "--json"])
+    const { code, stdout } = await cli(["work", "mcp", "config", "--permission", "messages.send=deny", "--json"])
     expect(code).toBe(0)
     const server = JSON.parse(stdout).item.config.mcpServers["max-work"]
-    expect(server.args).toEqual(expect.arrayContaining(["work", "mcp", "--permission", "messages.send=allow"]))
+    expect(server.args).toEqual(expect.arrayContaining(["work", "mcp", "--permission", "messages.send=deny"]))
   })
 
   it("`bot mcp config` names the bot's server", async () => {
