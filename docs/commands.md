@@ -3037,7 +3037,7 @@ max tags list [query]
 
 ## `max mentions`
 
-phones, e-mail, links, documents, people's names and addresses found in stored messages
+phones, e-mail, links, documents, names and addresses in stored messages
 
 ### `max mentions list`
 
