@@ -31,7 +31,7 @@ describe("max upgrade", () => {
       latest: "99.0.0",
       newer: true,
       installer: "pnpm",
-      command: "pnpm add -g @wirecat/max-cli@latest",
+      command: "pnpm add -g @wirecat/max-cli@latest --config.minimumReleaseAgeExclude=@wirecat/*",
       updated: false,
       restarted: [],
     })
@@ -40,7 +40,9 @@ describe("max upgrade", () => {
   it("runs the package manager that installed max, and says it did", async () => {
     const { code, ran, result } = await upgrade([])
     expect(code).toBe(0)
-    expect(ran).toEqual([["pnpm", "add", "-g", "@wirecat/max-cli@latest"]])
+    expect(ran).toEqual([
+      ["pnpm", "add", "-g", "@wirecat/max-cli@latest", "--config.minimumReleaseAgeExclude=@wirecat/*"],
+    ])
     expect(result).toMatchObject({ updated: true, restarted: [] })
   })
 
