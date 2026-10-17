@@ -969,8 +969,8 @@ export const UNTESTED: Untested[] = [
       'cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0',
   },
   {
-    command: "tasks apply",
-    reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks apply lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.309.0)`,
+    command: "tasks scan",
+    reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0)`,
   },
   {
     command: "mentions places",
@@ -985,8 +985,13 @@ export const UNTESTED: Untested[] = [
       'cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0',
   },
   {
-    command: "tasks apply",
+    command: "tasks add",
+    option: "--assignee",
+    reason: `cli-core src/cli/messenger/tasks.test.ts ("lists what someone owes the owner with assignee:, after tasks add --assignee sender") drives this through the shared handler MAX mounts (0.320.0)`,
+  },
+  {
+    command: "tasks scan",
     option: "--last",
-    reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks apply lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.309.0)`,
+    reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0)`,
   },
 ]
