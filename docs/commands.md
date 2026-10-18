@@ -2319,7 +2319,7 @@ max stats charts <chat> [options]
 
 ## `max tasks`
 
-what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; review and serve add them
+what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; review, inbox and messages sync add them, serve only the requests of auto-reply rules
 
 ### `max tasks list`
 
