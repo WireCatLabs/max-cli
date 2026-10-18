@@ -230,11 +230,11 @@ describe("max bot mcp", () => {
     expect(deletes().at(-1)?.url).toBe("/chats/-100/members?user_id=42&block=true")
   })
 
-  it("**runs each call under the server's environment**: MAX_READ_ONLY refuses a send there too", async () => {
+  it("**runs each call under the server's environment**: under MAX_READ_ONLY it offers no send", async () => {
     const { client } = await connect({ env: { ...process.env, MAX_READ_ONLY: "1" } })
     const { isError, error } = await call(client, "messages send", { chat: "-100", text: "hi" })
     expect(isError).toBe(true)
-    expect(error.message).toContain("MAX_READ_ONLY")
+    expect(error.message).toContain('no command "messages send" here')
     expect(posts()).toHaveLength(0)
   })
 
