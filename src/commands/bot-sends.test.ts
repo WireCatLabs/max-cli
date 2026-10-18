@@ -219,6 +219,26 @@ describe("max bot messages edit and delete", () => {
       (await max(["team", "bot", "messages", "delete", "-100", "mid.9", "--allow-dangerous", "--json"])).code,
     ).toBe(7)
   })
+
+  it("refuses an edit whose message is not a MAX message id before any request", async () => {
+    const { code, stderr } = await max(["bot", "messages", "edit", "-100", "123", "new text", "--json"])
+    expect(code).toBe(2)
+    expect(JSON.parse(stderr).error.message).toContain("a message id is mid.")
+    expect(requests).toHaveLength(0)
+  })
+
+  it("refuses a delete when any of its messages is not a MAX message id, deleting none", async () => {
+    const argv = ["bot", "messages", "delete", "-100", "mid.9", "123", "--allow-dangerous", "--json"]
+    const { code, stderr } = await max(argv)
+    expect(code).toBe(2)
+    expect(JSON.parse(stderr).error.message).toContain("a message id is mid.")
+    expect(requests).toHaveLength(0)
+
+    expect(
+      (await max(["bot", "messages", "delete", "-100", "mid.9", "mid.9", "--allow-dangerous", "--json"])).code,
+    ).toBe(0)
+    expect(requests.filter((request) => request.method === "DELETE")).toHaveLength(2)
+  })
 })
 
 describe("the bot's files", () => {
