@@ -23,9 +23,12 @@ import { uploadsCommand } from "./bot-setup.js"
 const MESSAGE_ID = /^mid\.[\w.-]+$/
 
 const messageId = (value: string): string => {
-  if (!MESSAGE_ID.test(value.trim())) throw new CliError("validation_error", `a message id is mid.…, not "${value}"`)
-  return value
+  const id = value.trim()
+  if (!MESSAGE_ID.test(id)) throw new CliError("validation_error", `a message id is mid.…, not "${value}"`)
+  return id
 }
+
+const messageIds = (value: string, previous: string[] = []): string[] => [...previous, messageId(value)]
 
 /** Every command under `node`, itself included. */
 const allOf = (node: Command): Command[] => [node, ...node.commands.flatMap(allOf)]
@@ -47,12 +50,22 @@ export const botCommand = (program: typeof run): Command => {
       renderAnswer(this, context, itemOf(plainJson(await context.authenticated().me())))
     })
 
-  const replyTo = command.commands
-    .find((child) => child.name() === "messages")
-    ?.commands.find((child) => child.name() === "send")
-    ?.options.find((option) => option.long === "--reply-to")
+  const messages = (name: string) => {
+    const found = command.commands
+      .find((child) => child.name() === "messages")
+      ?.commands.find((child) => child.name() === name)
+    if (!found) throw new Error(`the shared bot group has no messages ${name}`)
+    return found
+  }
+  const replyTo = messages("send").options.find((option) => option.long === "--reply-to")
   if (!replyTo) throw new Error("the shared bot group has no messages send --reply-to")
   replyTo.argParser(messageId)
+  const edited = messages("edit").registeredArguments.find((argument) => argument.name() === "message")
+  if (!edited) throw new Error("the shared bot group has no messages edit <message>")
+  edited.argParser(messageId)
+  const deleted = messages("delete").registeredArguments.find((argument) => argument.name() === "messages")
+  if (!deleted) throw new Error("the shared bot group has no messages delete <messages...>")
+  deleted.argParser(messageIds)
 
   const chats = command.commands.find((child) => child.name() === "chats")
   if (!chats) throw new Error("the shared bot group has no chats")

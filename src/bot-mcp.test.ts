@@ -270,6 +270,15 @@ describe("max bot mcp", () => {
     expect(JSON.parse(posts().at(-1)?.body ?? "{}")).toMatchObject({ link: { type: "reply", mid: "mid.1" } })
   })
 
+  it("**refuses messages edit and delete for a message that is not a MAX message id** before any request", async () => {
+    const { client } = await connect({ permissions: { bot: "allow" } })
+    const edit = await call(client, "messages edit", { chat: "-100", message: "116762160362694583", text: "x" })
+    const remove = await call(client, "messages delete", { chat: "-100", messages: ["mid.2", "--allow-dangerous"] })
+    for (const refused of [edit, remove])
+      expect(refused).toMatchObject({ isError: true, error: { code: "validation_error" } })
+    expect(calls).toHaveLength(0)
+  })
+
   it("deletes a requested comment at ask without a server form", async () => {
     const declined = await connect({}, { form: () => ({ action: "decline" }) })
     expect((await call(declined.client, "comments delete", { message: "mid.2", comment: "c1" })).isError).toBe(false)
