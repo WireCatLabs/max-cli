@@ -129,7 +129,7 @@ export const doctorCommand = (): Command => {
         renderer.note(`this profile was a bot, and its token is gone — \`max ${words}bot auth set\` stores one`)
       } else if (!report.token.present) {
         renderer.note(
-          `no token for this profile — \`max ${words}session start\` for a personal account, ` +
+          `no token for this profile — \`max ${words}setup\` for a personal account, ` +
             `\`max ${words}bot auth set\` for a bot`,
         )
       }

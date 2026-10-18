@@ -68,7 +68,7 @@ export const watchCommand = (): Command =>
                   )
                   seen ||= event.connected
                 } else {
-                  reader ??= readerOf(store.readState().viewerId)
+                  reader ??= readerOf(store.viewerId())
                   const line = watchLine(event, {
                     events: options.events === true,
                     pretty: format === "pretty",

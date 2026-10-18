@@ -43,7 +43,7 @@ export const contactsCommand = (): Command => {
     .action(async function (this: Command) {
       const context = forCommand(this)
       const { renderer, createClient, run, store } = context
-      const record = maxRecord({ account: () => store.readState().viewerId })
+      const record = maxRecord({ account: () => store.viewerId() })
 
       await run("contacts sync", async (events) => {
         const client = createClient({ events, record })
@@ -76,7 +76,7 @@ export const contactsCommand = (): Command => {
       const context = forCommand(this)
       const { createClient, run, ask, store } = context
       const phone = await ask("phone number: ")
-      const record = maxRecord({ account: () => store.readState().viewerId })
+      const record = maxRecord({ account: () => store.viewerId() })
 
       await run("contacts lookup", async (events) => {
         const client = createClient({ events, record })

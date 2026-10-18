@@ -113,7 +113,7 @@ export const createChatWrites = (deps: Dependencies) => {
       const options = Array.isArray(contact?.options) ? contact.options : []
       if (botId === undefined || !options.includes("BOT"))
         throw new CliError("validation_error", `${reference.trim()} is not a bot's link`)
-      const viewerId = deps.store.readState().viewerId
+      const viewerId = deps.store.viewerId()
       if (viewerId === undefined) throw new CliError("not_found", "this login does not say whose account it is")
       const payload = url.searchParams.get("start")
       return { chatId: String(BigInt(viewerId) ^ BigInt(botId)), ...(payload ? { payload } : {}) }

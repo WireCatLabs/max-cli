@@ -180,7 +180,7 @@ export const reasonOf = (error: unknown): string => {
 }
 
 export const viewer = (store: SessionStore) => {
-  const viewerId = store.readState().viewerId
+  const viewerId = store.viewerId()
   return viewerId === undefined ? {} : { viewerId }
 }
 

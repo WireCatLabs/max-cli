@@ -128,11 +128,24 @@ export class SessionStore {
 
   /** Whether this profile has logged in on this machine. Reads only: unlike `readState`, never creates the file. */
   hasLoggedIn(): boolean {
+    const parsed = this.#peek()
+    return (parsed.logins ?? 0) > 0 || typeof parsed.viewerId === "string"
+  }
+
+  /**
+   * The logged-in account's id, if any. Reads only: a mistyped profile name must not leave a state
+   * file behind, or it is listed as a profile from then on.
+   */
+  viewerId(): string | undefined {
+    const { viewerId } = this.#peek()
+    return typeof viewerId === "string" ? viewerId : undefined
+  }
+
+  #peek(): Partial<SessionState> {
     try {
-      const parsed = JSON.parse(readFileSync(this.#statePath(), "utf8")) as Partial<SessionState>
-      return (parsed.logins ?? 0) > 0 || typeof parsed.viewerId === "string"
+      return JSON.parse(readFileSync(this.#statePath(), "utf8")) as Partial<SessionState>
     } catch {
-      return false
+      return {}
     }
   }
 
@@ -144,6 +157,7 @@ export class SessionStore {
   forget(): boolean {
     const had = this.readToken() !== undefined
     this.#credentials.remove(this.profile)
+    if (!existsSync(this.#statePath())) return had
     try {
       writeSecurely(this.#statePath(), `${JSON.stringify({ deviceId: randomUUID(), logins: 0 }, null, 2)}\n`, 0o600)
     } catch {

@@ -145,7 +145,7 @@ export const startSession = async (context: CommandContext, method: Method, even
   const token = method === "token" ? String(pasted) : await obtain(method, context, events)
   context.signal.throwIfAborted()
   const client = createClient({ events }, { own: true })
-  const firstLogin = store.readState().viewerId === undefined
+  const firstLogin = store.viewerId() === undefined
   try {
     await adoptToken(client, store, token)
     const profile = await client.account.me()

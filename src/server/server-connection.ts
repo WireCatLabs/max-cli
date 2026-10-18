@@ -132,7 +132,7 @@ export class ServerConnection implements Wire {
 
   #sameAccount(login: Payload): boolean {
     const profile = login.profile as { contact?: { id?: unknown } } | undefined
-    const viewerId = this.#store.readState().viewerId
+    const viewerId = this.#store.viewerId()
     return viewerId === undefined || asId(profile?.contact?.id) === viewerId
   }
 

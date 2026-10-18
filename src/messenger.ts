@@ -172,7 +172,7 @@ export const maxMessenger: Messenger = {
 
   connect: async (command, context, { events } = {}) => {
     const { createClient, store, reach } = forCommand(command)
-    const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
+    const record = maxRecord({ account: () => store.viewerId(), env: context.env })
     let opened: MaxAdapter | undefined
     try {
       const client = createClient({
