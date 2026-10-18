@@ -270,11 +270,14 @@ describe("max bot mcp", () => {
     expect(JSON.parse(posts().at(-1)?.body ?? "{}")).toMatchObject({ link: { type: "reply", mid: "mid.1" } })
   })
 
-  it("**refuses messages edit and delete for a message that is not a MAX message id** before any request", async () => {
+  it("**refuses a message that is not a MAX message id** in edit, delete, show, pin and unpin before any request", async () => {
     const { client } = await connect({ permissions: { bot: "allow" } })
     const edit = await call(client, "messages edit", { chat: "-100", message: "116762160362694583", text: "x" })
     const remove = await call(client, "messages delete", { chat: "-100", messages: ["mid.2", "--allow-dangerous"] })
-    for (const refused of [edit, remove])
+    const shown = await call(client, "messages show", { chat: "-100", message: "116762160362694583" })
+    const pinned = await call(client, "messages pin", { chat: "-100", message: "--notify" })
+    const unpinned = await call(client, "messages unpin", { chat: "-100", message: "2" })
+    for (const refused of [edit, remove, shown, pinned, unpinned])
       expect(refused).toMatchObject({ isError: true, error: { code: "validation_error" } })
     expect(calls).toHaveLength(0)
   })
