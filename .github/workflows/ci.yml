@@ -19,27 +19,25 @@ permissions:
 
 jobs:
   ci:
-    uses: WireCatLabs/cli-base/.github/workflows/node-ci.yml@03341651a008f77abb8172f86d6df652321b4ce5 # v0.31.0
+    uses: WireCatLabs/cli-base/.github/workflows/node-ci.yml@bd634ed738d6ae34dcf63e9dc4374063222bea83 # feat/node-ci-cli-profile
     with:
       pack: ${{ inputs.pack || false }}
       pack-checks: node --experimental-strip-types scripts/release-check.ts --artifact-only
       # Bun is a supported runtime, not an aspiration (NEED-11): the built command, executed under it.
       bun-run: pnpm build && pnpm smoke:bun
-      # `max --version` reads src/version.ts, not package.json (OPS-4). Generated files are committed,
-      # so a specification change that was not regenerated is a stale tree (OPS-3). The test matrix
-      # is rebuilt from this run's argv log, so the diff also catches a stale test-matrix.md (NEED-360).
+      # `max --version` reads src/version.ts, not package.json (OPS-4). Generated files are committed, so a
+      # specification change that was not regenerated is a stale tree (OPS-3); so is a stale test-matrix.md (NEED-360).
+      cli: true
+      parity: true
+      bin: max
+      platforms: ${{ !inputs.skip-platforms }}
+      # Commands that need no login and reach no network.
+      platform-run: |
+        node dist/bin/max.js upgrade --check --json
+        node dist/bin/max.js default doctor --json
+        node dist/bin/max.js default mcp config --json
       checks: |
-        pnpm contracts:check
-        pnpm contracts:upgrade
-        pnpm security:no-leak
-        pnpm version:check
-        pnpm generate
-        pnpm exec cli-dev test-matrix --program dist/program.js --untested scripts/test-matrix-untested.ts --name max --check
-        git diff --exit-code
         pnpm check:agent-docs
-        pnpm docs:check
-        pnpm parity:check
-        pnpm lint:commands
 
   version:
     if: github.event_name == 'pull_request'
@@ -88,10 +86,6 @@ jobs:
           # Warnings only until the rules are tuned: each finding is an annotation on the pull
           # request, and the job never fails.
           ./vale --output line README.md docs/*.md | sed 's/^/::warning::/' || true
-
-  windows:
-    if: ${{ !inputs.skip-platforms }}
-    uses: ./.github/workflows/windows.yml
 
   install_windows:
     if: ${{ !inputs.skip-platforms }}

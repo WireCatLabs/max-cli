@@ -35,7 +35,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:matrix": "vitest run >/dev/null && pnpm build >/dev/null && cli-dev test-matrix --program dist/program.js --untested scripts/test-matrix-untested.ts --name max --check",
+    "test:matrix": "vitest run >/dev/null && pnpm build >/dev/null && pnpm test:matrix:check",
     "test:slow": "vitest run --reporter=json --outputFile=coverage/tests.json >/dev/null; cli-dev slow-tests",
     "smoke:bun": "bun run scripts/smoke.ts",
     "mcp:tools": "node --experimental-strip-types scripts/mcp-tools.ts",
@@ -94,7 +94,10 @@
     "contracts:check": "cli-contract contracts/plan.json",
     "contracts:upgrade": "pnpm --dir contracts/previous install --frozen-lockfile --ignore-scripts && cli-contract contracts/upgrade.json && cli-contract contracts/legacy-store.json",
     "security:no-leak": "cli-testing security no-leak . contracts/no-leak.json",
-    "lint:commands": "cli-dev lint --cli dist/bin/max.js"
+    "lint:commands": "cli-dev lint --cli dist/bin/max.js",
+    "test:matrix:check": "cli-dev test-matrix --program dist/program.js --untested scripts/test-matrix-untested.ts --name max --check && git diff --exit-code -- docs/dev/test-matrix.md",
+    "generate:check": "pnpm generate && git diff --exit-code",
+    "package:check": "node --experimental-strip-types scripts/release-check.ts --package-only"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.1.0",
