@@ -53,7 +53,7 @@ max personal inbox                  # непрочитанное во всех �
 Попробовать без установки — `npx @wirecat/max-cli --help`. Если `max` не находится,
 `npx @wirecat/max-cli personal doctor` скажет почему (`personal` — имя профиля, которое вы выбрали; у вас оно может быть другим).
 
-Глобальная установка (`npm install -g`) кладёт навык агента в `~/.claude/skills` и `~/.agents/skills`; `MAX_INSTALL_AGENT=none` при установке это отключает. npm 12 пишет «install scripts blocked» — это безвредно: `max skill install --for all` делает то, что сделал бы сценарий установки. В Windows, если `max` не находится, откройте новый терминал или выполните восстановление из [установки](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md#windows-одна-команда-установки).
+Глобальная установка (`npm install -g`) навык агента не ставит: его ставит `max personal setup` или `max skill install --for all`. `MAX_INSTALL_AGENT=all` при установке ставит его сразу, в `~/.claude/skills` и `~/.agents/skills`. npm 12 пишет «install scripts blocked» — это безвредно. В Windows, если `max` не находится, откройте новый терминал или выполните восстановление из [установки](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md#windows-одна-команда-установки).
 
 Подробнее: [установка](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/installation)), [вход и профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/sessions)).
 
