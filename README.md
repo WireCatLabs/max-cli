@@ -40,19 +40,20 @@
 
 ```sh
 npm install -g @wirecat/max-cli
-max personal setup --agent claude   # вход по QR-коду и навык для Claude Code
+max skill install --for all         # навык для Claude Code, Codex и Gemini CLI
+max personal setup                  # вход по QR-коду
 max personal inbox                  # непрочитанное во всех чатах, ничего не отмечая
 ```
 
 `max personal setup` за пять минут проводит через вход: вы сканируете QR-код в приложении MAX, и `max`
-становится ещё одним вашим устройством. Вместо `claude` можно указать `codex`, `cursor`, `gemini`,
-`all` или `none`; войти можно и по SMS через web.max.ru — `max personal setup --help`.
+становится ещё одним вашим устройством. Навык можно поставить и самим `setup`: `--agent claude`, `codex`,
+`cursor`, `gemini`, `all` или `none`. Войти можно и по SMS через web.max.ru — `max personal setup --help`.
 
 Нужен Node 22.16+ (ветка 22.x) или 24+, либо Bun 1.3+; работает в Windows, macOS и Linux.
 Попробовать без установки — `npx @wirecat/max-cli --help`. Если `max` не находится,
 `npx @wirecat/max-cli personal doctor` скажет почему (`personal` — имя профиля, которое вы выбрали; у вас оно может быть другим).
 
-С npm 12 сценарии установки по умолчанию заблокированы: навык агента не поставится, а в Windows не исправится PATH. После установки выполните `max skill install --for all`, либо ставьте так: `npm install -g --allow-scripts=@wirecat/max-cli @wirecat/max-cli`. Если в Windows `max` всё равно не находится, откройте новый терминал или выполните восстановление из [установки](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md#windows-одна-команда-установки).
+npm 12 пишет «install scripts blocked» — это безвредно: `max skill install --for all` делает то, что сделал бы сценарий установки. В Windows, если `max` не находится, откройте новый терминал или выполните восстановление из [установки](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md#windows-одна-команда-установки).
 
 Подробнее: [установка](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/installation)), [вход и профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/sessions)).
 

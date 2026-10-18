@@ -113,7 +113,7 @@ max personal session end              # выйти из MAX и забыть то
 `max personal server stop`. Ответ говорит, что получилось:
 
 ```json
-{ "item": { "profile": "default", "forgotten": true, "revoked_on_server": true }, "meta": { … } }
+{ "item": { "profile": "personal", "forgotten": true, "revoked_on_server": true }, "meta": { … } }
 ```
 
 **Если вход был токеном из вкладки web.max.ru, это одна и та же сессия:** `session end` выведет из MAX

@@ -20,10 +20,10 @@
 
 | Код | Имя | Что обычно значит | Где |
 |---|---|---|---|
-| `1` | `internal_error` | опечатка в названии команды или сбой в самом `max` | [не тот профиль](#команда-отвечает-но-профиль-не-тот), [сообщить](#как-сообщить-о-проблеме) |
-| `2` | `validation_error` | значение или сочетание опций, которых `max` не принимает; имя подходит нескольким чатам | [значения](#--limit-takes-a-whole-number-from-1-upwards-not-abc), [несколько чатов](#matches-n-chats) |
+| `1` | `internal_error` | сбой в самом `max` | [сообщить](#как-сообщить-о-проблеме) |
+| `2` | `validation_error` | значение или сочетание опций, которых `max` не принимает; опечатка в команде или опции; имя подходит нескольким чатам | [опечатка](#команда-отвечает-но-профиль-не-тот), [значения](#--limit-takes-a-whole-number-from-1-upwards-not-abc), [несколько чатов](#matches-n-chats) |
 | `3` | `configuration_error` | ошибка в `config.json`, или локальную копию записала более новая версия | [настройки](#is-an-unknown-setting), [локальная копия](#the-message-store-was-written-by-a-newer-version-) |
-| `4` | `authentication_error` | нет входа, сессию завершили, или ключница недоступна | [нет сессии](#no-session-for-profile-default), [токен не читается](#no-token-found-for-profile-default-although-it-has-logged-in-on-this-machine) |
+| `4` | `authentication_error` | нет входа, сессию завершили, или ключница недоступна | [нет сессии](#no-session-for-profile-personal), [токен не читается](#no-token-found-for-profile-personal-although-it-has-logged-in-on-this-machine) |
 | `5` | `permission_error` | `permissions` профиля запретили действие | [не разрешено](#profile--does-not-let--write-или-profile--denies-) |
 | `6` | `not_found` | нет такого чата, сообщения или человека; в локальной копии ещё пусто | [нет чата](#no-chat-matches), [ничего не сохранено](#nothing-recorded-for-profile--yet--run-the-command-once-without---offline) |
 | `7` | `confirmation_required` | чата нет в списке получателей, или действие ждёт подтверждения, а ответить некому | [список получателей](#chat--is-not-on-the-recipient-list-of-profile-), [спрашивает](#-asks-before-it-acts) |
@@ -36,7 +36,7 @@
 | `14` | `outcome_unknown` | связь оборвалась после отправки, или у `max sales bot` шлюз ответил 502, 503 или 504 на изменение: сообщение могло уйти | [исход неизвестен](#outcome_unknown-после-отправки) |
 | `130` | `cancelled` | нажали Ctrl-C или ответили «нет» на вопрос | [Ctrl-C](#ctrl-c) |
 
-## Сначала — `max doctor`
+## Сначала — `max personal doctor`
 
 ```sh
 max personal doctor
@@ -54,7 +54,7 @@ max personal doctor --online
 
 `--online` ещё и входит в MAX один раз, читает один чат и запускает сервер MCP. Ничего не
 отправляет и ничего не отмечает прочитанным. Вход засчитывается в лимит MAX на входы, поэтому при
-ошибке он не повторяется ([что показывает `max personal doctor`](diagnostics.md#проверить-установку-max-doctor)).
+ошибке он не повторяется ([что показывает `max personal doctor`](diagnostics.md#проверить-установку-max-personal-doctor)).
 
 ## Установка
 
@@ -106,10 +106,10 @@ npx @wirecat/max-cli@latest --version
 
 ## Вход и профили
 
-### «no session for profile "default"»
+### «no session for profile "personal"»
 
 ```json
-{"error":{"code":"authentication_error","message":"no session for profile \"default\" — run `max personal setup` in a local terminal; agents: read `max skill show`"}}
+{"error":{"code":"authentication_error","message":"no session for profile \"personal\" — run `max personal setup` in a local terminal; agents: read `max skill show`"}}
 ```
 
 Код возврата `4`. Токена для этого профиля нет — либо не входили, либо вошли **в другой профиль**,
@@ -143,7 +143,7 @@ max shop bot messages list -100
 `max shop session start` не нужен, если вы не хотите держать под этим именем ещё и личный аккаунт.
 `max shop doctor` покажет, что у профиля есть.
 
-### «no token found for profile "default", although it has logged in on this machine»
+### «no token found for profile "personal", although it has logged in on this machine»
 
 Код возврата `4`. Профиль на этом компьютере уже входил, но токен не читается. Почти всегда это
 хранилище паролей, до которого `max` не достучался: команда запущена из cron, по ssh или из
@@ -183,7 +183,7 @@ max shop bot messages list -100
 ### «is an unknown setting»
 
 ```json
-{"error":{"code":"configuration_error","reason":"config.invalid","message":"…/config.json: profiles.default.limitt is an unknown setting","retry":{"safe":false}}}
+{"error":{"code":"configuration_error","reason":"config.invalid","message":"…/config.json: profiles.personal.limitt is an unknown setting","retry":{"safe":false}}}
 ```
 
 Код `3`. В файле настроек поле, которого нет в схеме — почти всегда опечатка, и сообщение

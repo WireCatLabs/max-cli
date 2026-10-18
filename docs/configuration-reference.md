@@ -142,6 +142,7 @@ max config show --json     # то же одним объектом
 | `analysis_base_url` | адрес API анализа | `build --base-url` | по сервису |
 | `models` | внешние модели по назначению ([ниже](#модели-по-назначению)) | переменные `MAX_MODELS_*` | нет |
 | `search_stemmers.cyrillic`, `search_stemmers.latin` | языки основ слов для поиска во всём общем архиве ([ниже](#языки-поиска)) | — | `russian`, `english,spanish` |
+| `task_first_pass_per_chat` | сколько задач правила могут открыть в каждом чате при первой синхронизации аккаунта, по истории; целое число от 0 до 1000. Позже читаются только новые сообщения, а `tasks scan <чат>` строит задачи по истории по вашей просьбе. Общая для всего архива | — | `0` |
 | `task_agent_close`, `task_agent_close_min` | закрывает ли задачу агент, и с какой уверенностью из `--certainty`; ниже порога задача остаётся открытой с предложением закрыть ([задачи](groups.md#что-ждёт-вашего-ответа)). Общие для всего архива | — | `on`, `0.8` |
 
 ⚠ **`timeout_ms` и `--timeout` — разные вещи, и перепутать их дорого.** `timeout_ms` — это сколько
@@ -181,7 +182,8 @@ max config show --json     # то же одним объектом
 **Ключ — это путь команды**: `messages`, `messages.delete`, `messages.send`, `reactions`,
 `chats.members`, `contacts`, `account.sessions.end`. Он начинается с ресурса — `messages`,
 `reactions`, `polls`, `topics`, `chats`, `contacts`, `account`, `bot`, `conversations`, `tags`,
-`search`, `searches`, `tasks`, `replies`, `attachments`, `stats`, `store` или `metadata`. У бота ключи
+`mentions`, `search`, `searches`, `tasks`, `replies`, `attachments`, `stats`, `store` или `metadata`. У `calls` и `stickers` есть только чтение, и ключа права у них нет: `config set`
+отвечает кодом 2. У бота ключи
 начинаются с `bot`, например `bot.messages.send`. `config set` отклоняет неизвестный ключ команды, в
 том числе внутри целого объекта `permissions`, с кодом 2. `config unset` позволяет удалить старый
 неизвестный ключ. Чтение уже существующего файла с таким ключом предупреждает в stderr и продолжает
@@ -351,6 +353,7 @@ max personal chats list
 | `search_stemmers.latin` | `english`, `spanish`, оба через запятую, `none` | общий архив, через `config set` |
 | `task_agent_close` | `on`, `off` | общий архив, через `config set` |
 | `task_agent_close_min` | число от 0 до 1 | общий архив, через `config set` |
+| `task_first_pass_per_chat` | целое число от 0 до 1000 | общий архив, через `config set` |
 
 ### Модели по назначению
 
