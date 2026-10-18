@@ -209,6 +209,15 @@ describe("max bot chats", () => {
     await max(["config", "unset", "permissions.bot"])
   })
 
+  it("refuses show, pin and unpin for a message that is not a MAX message id before any request", async () => {
+    for (const verb of ["show", "pin", "unpin"]) {
+      const { code, stderr } = await max(["bot", "messages", verb, "-100", "123", "--json"])
+      expect(code).toBe(2)
+      expect(JSON.parse(stderr).error.message).toContain("a message id is mid.")
+    }
+    expect(requests).toHaveLength(0)
+  })
+
   it("unpins, leaves and shows an action with the request each one names", async () => {
     expect((await max(["bot", "messages", "unpin", "-100", "mid.1", "--json"])).code).toBe(0)
     expect(requests.at(-1)).toMatchObject({ method: "DELETE", url: "/chats/-100/pin", body: "" })

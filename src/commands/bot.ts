@@ -60,9 +60,11 @@ export const botCommand = (program: typeof run): Command => {
   const replyTo = messages("send").options.find((option) => option.long === "--reply-to")
   if (!replyTo) throw new Error("the shared bot group has no messages send --reply-to")
   replyTo.argParser(messageId)
-  const edited = messages("edit").registeredArguments.find((argument) => argument.name() === "message")
-  if (!edited) throw new Error("the shared bot group has no messages edit <message>")
-  edited.argParser(messageId)
+  for (const name of ["show", "edit", "pin", "unpin"]) {
+    const message = messages(name).registeredArguments.find((argument) => argument.name() === "message")
+    if (!message) throw new Error(`the shared bot group has no messages ${name} <message>`)
+    message.argParser(messageId)
+  }
   const deleted = messages("delete").registeredArguments.find((argument) => argument.name() === "messages")
   if (!deleted) throw new Error("the shared bot group has no messages delete <messages...>")
   deleted.argParser(messageIds)
