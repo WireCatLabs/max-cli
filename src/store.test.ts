@@ -291,6 +291,20 @@ describe("max conversations", () => {
     expect(logins()).toBe(before)
   })
 
+  it("**rebuilds a chat's conversations** without asking MAX, the agents' refresh", async () => {
+    const { environment, logins } = await fetched("c-rebuild")
+    const before = logins()
+
+    const rebuilt = await max(
+      ["c-rebuild", "conversations", "rebuild", "--chat", "111", "--max-chats", "1", "--max-chunks", "10", "--json"],
+      environment,
+    )
+
+    expect(rebuilt.code).toBe(0)
+    expect(JSON.stringify(JSON.parse(rebuilt.stdout).item)).toContain("111")
+    expect(logins()).toBe(before)
+  })
+
   it("**catches up on built chats** a bounded number at a time, says how fresh each is, and finds related ones", async () => {
     const { environment } = await fetched("c-fresh")
 

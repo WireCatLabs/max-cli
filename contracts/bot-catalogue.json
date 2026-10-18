@@ -129,7 +129,7 @@
         },
         "limit": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
           "description": "how many, up to 100"
         },
         "cursor": {
@@ -157,14 +157,24 @@
           "description": "chat"
         },
         "users": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^(?!-$)[\\s\\S]+$",
-            "description": "users"
-          },
-          "minItems": 1
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "users"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "users"
+            }
+          ]
         }
       },
       "required": [
@@ -279,7 +289,7 @@
         },
         "limit": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
           "description": "how many, the newest"
         },
         "offline": {
@@ -374,14 +384,24 @@
           "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
         },
         "messages": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^(?!-$)[\\s\\S]+$",
-            "description": "message ids"
-          },
-          "minItems": 1
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "message ids"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "message ids"
+            }
+          ]
         }
       },
       "required": [
@@ -451,18 +471,28 @@
       "type": "object",
       "properties": {
         "people": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^(?!-$)[\\s\\S]+$",
-            "description": "two or more people — an id, @username or part of a name each"
-          },
-          "minItems": 1
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "two or more people — an id, @username or part of a name each"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "two or more people — an id, @username or part of a name each"
+            }
+          ]
         },
         "limit": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
           "description": "how many of the latest messages from each chat"
         },
         "offline": {
@@ -482,23 +512,33 @@
       "type": "object",
       "properties": {
         "query": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "pattern": "^(?!-$)[\\s\\S]+$",
-            "description": "the words to find"
-          },
-          "minItems": 0
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "the words to find"
+              },
+              "minItems": 0
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "the words to find"
+            }
+          ]
         },
         "limit": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
           "description": "how many"
         },
         "page": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
           "description": "which page, starting at 1"
         },
         "newest": {
@@ -595,7 +635,7 @@
         },
         "limit": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
           "description": "how many messages from the private chat"
         },
         "sync_first": {
@@ -635,7 +675,7 @@
         },
         "limit": {
           "type": "integer",
-          "minimum": 1,
+          "minimum": 0,
           "description": "how many, up to 100"
         }
       },

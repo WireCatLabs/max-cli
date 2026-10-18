@@ -2642,7 +2642,7 @@ the conversations inside a chat, found in the stored messages by replies, mentio
 
 find a chat's conversations in what the store holds, replacing the last build; without --chat, every chat that changed since its build and every group never built; never asks the messenger
 
-**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
+**Отправляет текст во внешний сервис.**
 
 ```sh
 max conversations build [options]
@@ -2789,6 +2789,22 @@ max conversations links clear [options]
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--model <model>` | only the answers this model gave. |
 
+### `max conversations rebuild`
+
+build, then embed with the model on this machine, the chats that changed since their build and the group chats never built — or only --chat; bounded per run, so run it again for the rest; never asks the messenger, downloads no model and sends no text anywhere
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max conversations rebuild [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
+| `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given. |
+
 ### `max conversations consents`
 
 remembered analysis permissions for this account's chats and provider endpoints
@@ -2820,7 +2836,7 @@ max conversations consents revoke [options]
 
 compute a vector for each chunk of a chat's conversations for search by meaning — on this machine, or with --provider through a service and your key; resumes where it stopped; without --chat, every built chat with chunks left, on this machine only
 
-**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
+**Отправляет текст во внешний сервис.**
 
 ```sh
 max conversations embed [options]
@@ -3193,7 +3209,7 @@ max images models list [query]
 
 download a picture model once, checked against the sha256 this version expects
 
-**Меняет что-то только на этом компьютере.**
+**Читает из внешнего сервиса.**
 
 ```sh
 max images models download <model>
@@ -3322,6 +3338,8 @@ max search notes <query> [options]
 ### `max search conversations`
 
 the conversations nearest to a query in meaning and in words, best first, in one chat or every one — meaning after `conversations embed`; runs on this machine
+
+**Читает из внешнего сервиса.**
 
 ```sh
 max search conversations <query> [options]
@@ -3482,7 +3500,7 @@ max models audio list [query]
 
 download a speech model once, checked against the sha256 this version expects
 
-**Меняет что-то только на этом компьютере.**
+**Читает из внешнего сервиса.**
 
 ```sh
 max models audio download <model>
@@ -3512,7 +3530,7 @@ max models text list [query]
 
 download an embedding model once, checked against the sha256 this version expects
 
-**Меняет что-то только на этом компьютере.**
+**Читает из внешнего сервиса.**
 
 ```sh
 max models text download <model> [options]
@@ -4430,7 +4448,7 @@ max complete [words]
 
 ## `max mcp`
 
-serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max mcp`
+serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max <profile> mcp`
 
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
