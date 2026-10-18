@@ -63,7 +63,8 @@ Commands:
                                authors
   tasks                        what waits on you — unanswered questions,
                                mentions, requests, promises — kept in the local
-                               store; review and serve add them
+                               store; review, inbox and messages sync add them,
+                               serve only the requests of auto-reply rules
   conversations                the conversations inside a chat, found in the
                                stored messages by replies, mentions and who
                                wrote next

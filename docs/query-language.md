@@ -106,7 +106,7 @@
 ## Упоминания
 
 `max` находит в сохранённых сообщениях телефоны, адреса почты, ссылки, документы и имена людей. Эти поля
-находят сообщения, в которых они есть. Сами находки показывает `max mentions list`.
+находят сообщения, в которых они есть. Сами находки показывает `max personal mentions list`.
 
 ```sh
 max personal search messages 'phone:"+34 600 000 000"'
@@ -120,7 +120,7 @@ max personal search messages 'mentions:"person:12"'
 человека, организацию или документ; поле находит сообщения, чьи упоминания вы привязали к нему через
 `max mentions confirm`.
 
-`max mentions list --new` показывает нерешённое с прошлого `--new`, `max mentions domains` — сайты, на которые
+`max personal mentions list --new` показывает нерешённое с прошлого `--new`, `max personal mentions domains` — сайты, на которые
 ведут ссылки, самые частые сверху. `confirm` и `reject` с `--all-in-chat` решают имя сразу во всём чате.
 
 ## Preset

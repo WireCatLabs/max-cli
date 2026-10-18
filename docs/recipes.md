@@ -174,7 +174,7 @@ max personal recipients add "Иван Петров"       # и писать то
 
 Пишет в MAX: **нет**. Разрешить: `Bash(max personal messages list:*)`.
 
-> Прочитай сообщения в чате «Проект Альфа» за последние 7 дней: `max messages list "Проект Альфа"
+> Прочитай сообщения в чате «Проект Альфа» за последние 7 дней: `max personal messages list "Проект Альфа"
 > 'date>7d' --limit 200 --json`. Если в ответе
 > есть шаг `page.next`, читай дальше с его `--cursor`. Составь отчёт: что решили, кто что взял на себя и к какому
 > сроку, какие вопросы остались без ответа. У каждого пункта — дата и автор.
@@ -238,8 +238,8 @@ max personal recipients add "Иван Петров"       # и писать то
 Пишет в MAX: **только если разрешено правилами группы**. Разрешить: `Bash(max personal review:*)`,
 `Bash(max personal chats events:*)`, `Bash(max personal chats members list:*)`, `Bash(max personal chats moderate:*)`.
 
-> Выполни `max personal review 'chat:"Поход"' --unanswered 4h --json`, `max chats events "Поход"
-> 'time>=7d' --json` и `max chats moderate "Поход" --dry-run --json`. Коротко: какие вопросы ждут ответа, от
+> Выполни `max personal review 'chat:"Поход"' --unanswered 4h --json`, `max personal chats events "Поход"
+> 'time>=7d' --json` и `max personal chats moderate "Поход" --dry-run --json`. Коротко: какие вопросы ждут ответа, от
 > кого и с какого времени; кто вступил или был добавлен за неделю и кем; что проверка нашла по
 > правилам группы и что предлагает сделать. Никому не отвечай и никого не удаляй сам — перечисли
 > команды, которые сделают это, если я соглашусь.

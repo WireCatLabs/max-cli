@@ -89,7 +89,11 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     messagesCommand(),
     lockedStore(sharedStoreCommand(maxMessenger)),
     statsCommand(maxMessenger),
-    tasksCommand(maxMessenger),
+    // MAX's own serve does not run the question and mention rules, so the shared "review and serve add them" is untrue here.
+    tasksCommand(maxMessenger).description(
+      "what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; " +
+        "review, inbox and messages sync add them, serve only the requests of auto-reply rules",
+    ),
     conversationsCommand(maxMessenger),
     attachmentsCommand(maxMessenger),
     tagsCommand(maxMessenger),
