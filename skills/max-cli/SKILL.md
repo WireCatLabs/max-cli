@@ -374,7 +374,7 @@ MCP `inbox`/`review` принимают `kinds` и `new`; отметки нов�
 времени; устаревшие связи помечаются и не обходятся.
 
 В MCP `max_read` с `command` `"conversations list"`, `"conversations show"`, `"search conversations"`,
-`"conversations related"` и `"conversations status"` читает построенное, а `max_write` (`command: "conversations refresh"`)
+`"conversations related"` и `"conversations status"` читает построенное, а `max_write` (`command: "conversations rebuild"`)
 догоняет на этом компьютере. Через MCP агент получает инструкцию `link-conversations`, оценивает объём инструментом
 `max_read` (`command: "conversations batches status"`) и ждёт согласия владельца для этого чата. Затем читает
 `max_read` (`command: "conversations batches next"`), сохраняет ответы через `max_write` (`command: "conversations links add"`) и перестраивает граф через

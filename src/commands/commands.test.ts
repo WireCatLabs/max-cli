@@ -207,6 +207,7 @@ describe("max commands", () => {
       "tasks reject",
       "conversations links add",
       "conversations links clear",
+      "conversations rebuild",
       "conversations consents revoke",
       "conversations embed clear",
       "attachments extract (reads remotely)",

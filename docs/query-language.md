@@ -187,8 +187,8 @@ Preset сообщает кандидата по виду. Он не провер
 
 ## Через MCP
 
-Когда агент ищет через MCP-сервер `max`, `max_read` (`command: "search messages"`) принимает запрос как
-`text` или как синтаксическое дерево с версией в `ast` (не оба сразу), а `timezone` — календарный пояс.
+Когда агент ищет через MCP-сервер `max`, `max_read` (`command: "search messages"`) принимает запрос текстом в
+`query`, а `timezone` — календарный пояс.
 `chat:` пишется в самом запросе; `source`, `newest`, `context` и `limit` работают как
 опции команды; `saved` запускает сохранённый поиск. `thread`, `thread_hops`, `thread_messages`,
 `thread_bytes`, `thread_within` и `sync_first` соответствуют опциям `--thread…` и `--sync-first`;

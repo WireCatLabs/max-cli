@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**915 ✅ · 157 ⛔ · 0 ❌** — 346 commands, 726 options.
+**919 ✅ · 157 ⛔ · 0 ❌** — 347 commands, 729 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -501,6 +501,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations links clear` |  | ✅ |  |
 | `conversations links clear` | `--chat` | ✅ |  |
 | `conversations links clear` | `--model` | ✅ |  |
+| `conversations rebuild` |  | ✅ |  |
+| `conversations rebuild` | `--chat` | ✅ |  |
+| `conversations rebuild` | `--max-chats` | ✅ |  |
+| `conversations rebuild` | `--max-chunks` | ✅ |  |
 | `conversations consents list` |  | ✅ |  |
 | `conversations consents revoke` |  | ✅ |  |
 | `conversations consents revoke` | `--chat` | ✅ |  |

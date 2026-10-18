@@ -124,7 +124,8 @@ Commands:
   complete [words...]          shell completion: `max complete zsh` prints the
                                script to source
   mcp [options]                serve this profile to an agent over MCP, on stdin
-                               and stdout — `claude mcp add max -- max mcp`
+                               and stdout — `claude mcp add max -- max <profile>
+                               mcp`
   bot                          a MAX bot, through the official Bot API and a bot
                                token — not your personal account
   help [command]               display help for command
