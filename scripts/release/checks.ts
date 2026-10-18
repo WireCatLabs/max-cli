@@ -14,17 +14,20 @@ export const CHANGELOG: ChangelogRules = {
   ids: IDS,
 }
 
-// The agent skill ships because `max skill show` reads it from the package (`src/commands/skill.ts`).
+// The agent skill ships because `max skill show` reads it from the package (`src/commands/skill.ts`); the scenarios
+// because `max guide` reads them from it.
 export const PACKED = [
   "dist/",
   "package.json",
   "README.md",
   "LICENSE",
   "skills/max-cli/SKILL.md",
+  "scenarios/",
   "install/postinstall.mjs",
   "install/windows.ps1",
 ]
-export const PACKED_SAID = "dist/, package.json, README.md, LICENSE, the agent skill and installation entrypoints"
+export const PACKED_SAID =
+  "dist/, package.json, README.md, LICENSE, the agent skill, the scenarios and installation entrypoints"
 
 const GENERATED = new Set(["docs/commands.md", "docs/dev/protocol.md"])
 

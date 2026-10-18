@@ -176,7 +176,7 @@ max shop bot messages list -100
 "chat" is not a command, so it was read as a profile name — and no command followed it.
 ```
 
-Команда называется `chats`, во множественном числе. `max --help` перечисляет все.
+Команда называется `chats`, во множественном числе. `max commands` перечисляет все.
 
 ## Настройки и значения опций
 

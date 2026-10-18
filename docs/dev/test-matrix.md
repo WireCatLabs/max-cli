@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**919 ✅ · 157 ⛔ · 0 ❌** — 347 commands, 729 options.
+**921 ✅ · 158 ⛔ · 0 ❌** — 349 commands, 730 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -1067,6 +1067,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot api get-updates` | `--poll-timeout` | ✅ |  |
 | `bot api get-updates` | `--marker` | ✅ |  |
 | `bot api get-updates` | `--types` | ✅ |  |
+| `guide` |  | ✅ |  |
+| `help` |  | ✅ |  |
 | *global* | `--version` | ✅ |  |
 | *global* | `--verbose` | ✅ |  |
 | *global* | `--json` | ✅ |  |
@@ -1087,3 +1089,4 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | *global* | `--no-record` | ✅ |  |
 | *global* | `--serve` | ✅ |  |
 | *global* | `--no-serve` | ✅ |  |
+| *global* | `--help-all` | ⛔ | commander prints the full help and exits before any action runs, so no argv is logged; src/program.test.ts reads `--help-all` for the commands and global options |
