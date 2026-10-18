@@ -43,7 +43,7 @@ export const botCommand = (program: typeof run): Command => {
     })
     .hook("postAction", async (_group, action) => botRecordingOf(action)?.succeed())
 
-  annotate(command.command("me"), { effects: REMOTE_READ })
+  annotate(command.command("me"), { effects: REMOTE_READ, offline: false })
     .description("the bot this profile's token belongs to: name, id, description, commands")
     .action(async function (this: Command) {
       const context = botContext(this)

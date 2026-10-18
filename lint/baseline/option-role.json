@@ -28,7 +28,6 @@
   "runs search --error-code",
   "runs search --operation",
   "runs search --status",
-  "setup --agent",
   "stats contacts top --message-kind",
   "stats contacts top --min-messages",
   "stats messages discussion --min-views",

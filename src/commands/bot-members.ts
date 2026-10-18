@@ -56,7 +56,7 @@ const showMembers = (command: Command, context: ReturnType<typeof botContext>, c
  * `remove` comes from cli-core with the admins.
  */
 export const addMembersCommands = (members: Command): void => {
-  annotate(members.command("list <chat>"), { effects: REMOTE_READ })
+  annotate(members.command("list <chat>"), { effects: REMOTE_READ, offline: false })
     .description("members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page gave")
     .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .option("--cursor <cursor>", "continue from here")

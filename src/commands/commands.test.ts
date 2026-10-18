@@ -50,7 +50,7 @@ describe("max commands", () => {
     expect(end?.effects).toEqual({ remote: "write", local: "write" })
   })
 
-  it("marks the commands that change something in MAX, and only those", async () => {
+  it("marks the commands that change something outside this computer, and only those", async () => {
     const { stdout } = await commands()
     const writing = flat(JSON.parse(stdout[0] as string).commands)
       .filter((command) => command.effects?.remote === "write")
@@ -98,6 +98,8 @@ describe("max commands", () => {
       "messages pin",
       "messages unpin",
       "messages press",
+      "conversations build",
+      "conversations embed",
       "polls vote",
       "polls close",
       "polls create",
@@ -203,11 +205,9 @@ describe("max commands", () => {
       "tasks release",
       "tasks close",
       "tasks reject",
-      "conversations build",
       "conversations links add",
       "conversations links clear",
       "conversations consents revoke",
-      "conversations embed",
       "conversations embed clear",
       "attachments extract (reads remotely)",
       "attachments text set",
@@ -217,7 +217,7 @@ describe("max commands", () => {
       "mentions confirm",
       "mentions reject",
       "mentions rebuild",
-      "images embed",
+      "images embed (reads remotely)",
       "images models download (reads remotely)",
       "metadata refresh (reads remotely)",
       "searches create",

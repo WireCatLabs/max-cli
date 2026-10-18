@@ -137,10 +137,6 @@
           "minLength": 1,
           "pattern": "^(?!-$)[\\s\\S]+$",
           "description": "continue from here"
-        },
-        "offline": {
-          "type": "boolean",
-          "description": "answer from the copy on this machine only"
         }
       },
       "required": [
@@ -621,12 +617,7 @@
     "writes": false,
     "input": {
       "type": "object",
-      "properties": {
-        "offline": {
-          "type": "boolean",
-          "description": "answer from the copy on this machine only"
-        }
-      },
+      "properties": {},
       "required": [],
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
@@ -646,10 +637,6 @@
           "type": "integer",
           "minimum": 1,
           "description": "how many, up to 100"
-        },
-        "offline": {
-          "type": "boolean",
-          "description": "answer from the copy on this machine only"
         }
       },
       "required": [
@@ -674,10 +661,6 @@
           "minLength": 1,
           "pattern": "^(?!-$)[\\s\\S]+$",
           "description": "comment"
-        },
-        "offline": {
-          "type": "boolean",
-          "description": "answer from the copy on this machine only"
         }
       },
       "required": [
