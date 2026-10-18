@@ -62,12 +62,16 @@ log this profile in to MAX
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max session start [method]
+max session start [method] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `method` | необязательный | token (pasted or piped), qr, qr-chrome or sms. Одно из: `token`, `qr`, `qr-chrome`, `sms`. По умолчанию: `token`. |
+
+| Опция | Что делает |
+|---|---|
+| `--qr-file <png>` | write the QR code to this PNG instead of drawing it, for an agent to pass on. |
 
 **Returns:** log this profile in to MAX
 
@@ -101,6 +105,7 @@ max setup [options]
 |---|---|
 | `--agent <agent>` | install the skill for this agent; asks at a terminal, otherwise none. Одно из: `none`, `codex`, `cursor`, `claude`, `gemini`, `all`. |
 | `--method <method>` | how to log in when there is no session. Одно из: `token`, `qr`, `qr-chrome`, `sms`. По умолчанию: `qr`. |
+| `--qr-file <png>` | write a temporary QR image for an agent to pass on; works without a terminal. |
 
 **Returns:** set up your personal MAX account and connect your agent
 

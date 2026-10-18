@@ -95,7 +95,7 @@ describe("MAX guided setup", () => {
     const h = harness({ token: false })
     h.environment.interactive = true
     const browser = vi.fn(async () => "browser-setup-token")
-    h.environment.browser = { chromiumToken: browser, open: async () => {} }
+    h.environment.browser = { chromiumToken: browser }
     expect(await h.setup("--method", method, "--agent", "none")).toBe(0)
     expect(browser).toHaveBeenCalledOnce()
     expect(h.store.readToken()).toBe("browser-setup-token")
@@ -207,12 +207,7 @@ describe("MAX guided setup", () => {
     h.environment.tty = true
     const browser = vi.fn(async () => "must-not-be-used")
     const ask = vi.fn(async () => "must-not-be-used")
-    h.environment.browser = {
-      chromiumToken: browser,
-      open: async () => {
-        await browser()
-      },
-    }
+    h.environment.browser = { chromiumToken: browser }
     h.environment.ask = ask
     expect(await h.setup("--method", "qr-chrome", flag)).toBe(2)
     expect(browser).not.toHaveBeenCalled()

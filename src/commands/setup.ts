@@ -91,10 +91,12 @@ export const setupCommand = (): Command =>
         "  max personal setup --method qr-chrome  Log in through web.max.ru in Chromium\n" +
         "  max personal setup --method sms        Enter your phone number in that browser\n" +
         "  max personal setup --method token      Import a token at a hidden prompt or from stdin\n" +
+        "  max personal setup --qr-file login.png --json  Write the QR as a PNG for an agent to pass on\n" +
         "\nThe first word names the profile; any name works, and every later command repeats it.\n" +
         "\nAllow about 5 minutes. Scan the QR with MAX on your phone.\n" +
         "Keep tokens and passwords in the local terminal, never in command arguments.\n" +
-        "Agents: read `max skill show` before login. QR/browser login needs a local terminal.\n" +
+        "Agents: read `max skill show` before login. --qr-file works without a terminal; qr-chrome and sms\n" +
+        "need a local terminal.\n" +
         "Existing sessions are checked without another login. Machine mode skips agent installation\n" +
         "unless --agent is given. Bot accounts use `max <profile> bot auth set` separately.\n" +
         "\nSetup checks five chats. Choose a chat and how much history to fetch before:\n" +
@@ -113,10 +115,11 @@ export const setupCommand = (): Command =>
         .choices(["token", "qr", "qr-chrome", "sms"])
         .default("qr"),
     )
+    .option("--qr-file <png>", "write a temporary QR image for an agent to pass on; works without a terminal")
     .action(async function (this: Command) {
       const context = forCommand(this)
       const { settings, store } = context
-      const options = this.opts<{ agent?: Agent; method: Method }>()
+      const options = this.opts<{ agent?: Agent; method: Method; qrFile?: string }>()
       refuseCommandName(settings.profile, commandWords(rootOf(this)))
       if (this.optsWithGlobals().offline)
         throw new CliError("validation_error", "max setup verifies MAX — remove --offline")
@@ -126,10 +129,19 @@ export const setupCommand = (): Command =>
           `this is a bot profile — use max ${asFirstWord(settings.profile)}bot auth set; setup is for your personal account`,
         )
       const reused = store.readToken() !== undefined
-      if (!reused && !store.hasLoggedIn() && options.method !== "token" && !context.interactive)
+      if (options.qrFile && options.method !== "qr")
+        throw new CliError("validation_error", "--qr-file is for a QR login", { param: "--qr-file" })
+      if (
+        !reused &&
+        !store.hasLoggedIn() &&
+        options.method !== "token" &&
+        !(options.method === "qr" && options.qrFile) &&
+        !context.interactive
+      )
         throw new CliError(
           "validation_error",
-          "max setup needs a local terminal for QR/browser login — run it locally; token import uses --method token",
+          "max setup needs a local terminal for QR/browser login — run it locally, pass --qr-file for an agent, " +
+            "or import a token with --method token",
         )
       const prefix = `max ${asFirstWord(settings.profile)}`
       const runner =
@@ -157,7 +169,7 @@ export const setupCommand = (): Command =>
           screen.detail("✓ existing session, no new login")
         } else {
           screen.step(2, "Log in: scan the QR code with MAX on your phone")
-          const login = await startSession(underStep(context, screen), options.method, events)
+          const login = await startSession(underStep(context, screen), options.method, events, options.qrFile)
           if (login.firstLogin) screen.detail(TERMS_NOTICE)
         }
         screen.step(3, "Account")
