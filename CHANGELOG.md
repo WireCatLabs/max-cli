@@ -22,6 +22,11 @@
   `session start` у агента. `--timeout` и `MAX_TIMEOUT` по-прежнему решают, если заданы.
 - **Путь команды одним аргументом — ошибка** (cli-core 0.328.0): `max 'chats list' --help` раньше печатал общую
   справку с кодом 0, теперь отвечает `validation_error` и показывает, как написать правильно.
+- **Агент больше не видит `offline` у `bot me`, `bot comments list`, `bot comments get` и `bot chats members list`.**
+  Эти команды всегда спрашивают MAX и отклоняли `offline`; теперь аргумента нет в описании инструмента (cli-core 0.335.0).
+- **`conversations build` и `conversations embed` помечены как меняющие что-то вне этого компьютера** (cli-core 0.334.0):
+  с `--analyze` и `--provider` они отправляют текст переписки внешнему сервису. В `docs/commands.md` такая пометка теперь
+  звучит «вне этого компьютера: в MAX или во внешнем сервисе», а не «в MAX».
 - **Под `MAX_READ_ONLY` `session start`, `session end` и `setup` отказывают ещё до начала работы** (код 5, «it cannot
   log in or out»), а не изнутри команды.
 

@@ -18,7 +18,7 @@ export const commentsCommand = (): Command => {
     "comments under a channel post — each command takes the post's message id (mid.…) first",
   )
 
-  annotate(command.command("list <message>"), { effects: REMOTE_READ })
+  annotate(command.command("list <message>"), { effects: REMOTE_READ, offline: false })
     .description("the comments under a post, newest last")
     .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .action(async function (this: Command, message: string) {
@@ -33,7 +33,7 @@ export const commentsCommand = (): Command => {
       renderAnswer(this, context, listOf("bot comments list", { items, limit, has_more: false }))
     })
 
-  annotate(command.command("get <message> <comment>"), { effects: REMOTE_READ })
+  annotate(command.command("get <message> <comment>"), { effects: REMOTE_READ, offline: false })
     .description("one comment under a post")
     .action(async function (this: Command, message: string, comment: string) {
       const context = botContext(this)
