@@ -90,7 +90,7 @@ MagicDNS, сертификаты HTTPS и разрешение Funnel. Перв�
 Установите приложение Tailscale и войдите через меню в трее. После установки Node.js, CLI и
 Tailscale откройте новое окно PowerShell, чтобы обновился PATH. Суффикс `.cmd` обходит ошибку
 политики выполнения PowerShell для команд npm. Если вы ещё не настроили MAX, выполните
-`max.cmd setup --agent none` в обычном PowerShell.
+`max.cmd personal setup --agent none` в обычном PowerShell (`personal` — имя профиля, у вас оно может быть другим).
 
 Первое окно: PowerShell от администратора для Funnel. Оператор `&` нужен из-за пробела в
 стандартном пути установки; если вы выбрали другой каталог, замените путь.
@@ -103,7 +103,7 @@ Tailscale откройте новое окно PowerShell, чтобы обнов
 
 ```powershell
 $mcpPublicUrl = Read-Host 'Вставьте HTTPS origin из Funnel (без /mcp)'
-max.cmd mcp --http --port 8765 --public-url $mcpPublicUrl
+max.cmd personal mcp --http --port 8765 --public-url $mcpPublicUrl
 ```
 
 Оба процесса запускайте в самой Windows. WSL — отдельная среда: туннель Windows, направленный на
@@ -283,7 +283,7 @@ max personal mcp --revoke
 Флаги регионов остаются целыми; аргументы записи MCP и обычный JSON вывода CLI сохраняют исходные строки.
 
 Сначала скачайте файлы сообщения обычным способом ([что можно скачать](attachments.md#что-можно-скачать)).
-Locator сообщения и номер вложения найдёт `attachments list --needs-text`. Затем запросите файл:
+Locator сообщения и номер вложения найдёт `attachments list is:needs_text`. Затем запросите файл:
 
 ```sh
 max personal attachments show msg:max/511/7/204 --attachment 1 --json

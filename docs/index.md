@@ -53,7 +53,7 @@ max personal chats list --limit 5  # пять последних чатов
 
 Настройка занимает около пяти минут. Старая история чатов скачивается отдельным шагом. Чтобы
 выбрать агента, которому поставить навык, добавьте `--agent` со значением `codex`, `cursor`,
-`claude`, `gemini` или `all` (например, `max personal setup --agent codex`). `max personal setup --help` показывает
+`claude`, `gemini`, `all` или `none` (например, `max personal setup --agent codex`). `max personal setup --help` показывает
 способы входа.
 
 С ботом (`sales` здесь — пример имени профиля бота):

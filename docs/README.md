@@ -1,55 +1,75 @@
-# Documentation
+# Документация
 
-`max` is a command line interface for MAX Messenger bots, through the official Bot API, and for a
-personal MAX account, through an unofficial, reverse-engineered protocol. Every command and option
-is listed in [commands.md](commands.md).
-
-## Building it
-
-- [dev/ARCHITECTURE.md](dev/ARCHITECTURE.md) — how it is built **now**, and which seams you may not cross
-- [dev/architecture/](dev/architecture/) — its detail: session and login sync, reading messages, the store and search
-- The owner's brief, cited by section number (private notes, not in this repository)
-- The rulings in force (private notes); read before "fixing" something odd
-- [dev/CONVENTIONS.md](dev/CONVENTIONS.md) — how code and documents are written here
-- [dev/TESTING.md](dev/TESTING.md) — how to check it yourself, and what each check is for
-- [dev/BACKLOG.md](dev/BACKLOG.md) — what is left
-
-## Reference — generated, never hand-written
-
-- [commands.md](commands.md) — every command, option and exit code — **generated**, `pnpm generate`
-- [dev/protocol.md](dev/protocol.md) — every opcode and where its shape came from — **generated**
-
-Neither is edited by hand. `pnpm generate` rewrites both and CI asserts the tree did not change,
-so a reference that quotes a command the program no longer has cannot reach `main`.
-
-## Using it — in Russian
+`max` — командная строка для ботов MAX Messenger, через официальный Bot API, и для личного аккаунта
+MAX, через неофициальный, восстановленный по трафику протокол. Каждая команда и опция перечислена в
+[commands.md](commands.md).
 
 Каждая страница отвечает на один вопрос и открывается под задачу, а не читается подряд.
 
-- [installation.md](installation.md) — установка, требования, куда ложатся файлы, обновление
-- [bot.md](bot.md) — бот через официальный Bot API: токен, несколько ботов, сообщения, чаты, список получателей, `bot api`
+## Начало
+
+- [index.md](index.md) — обзор и сравнение: что такое `max` и чем он отличается от других способов
+- [installation.md](installation.md) — установка, требования, куда ложатся файлы, обновление, удаление
 - [usage.md](usage.md) — личный аккаунт: вход, профили, чтение, страницы, отправка, машинный режим — по порядку
 - [sessions.md](sessions.md) — откуда берётся токен, ключница, профили, `MAX_TOKEN`
+- [profiles.md](profiles.md) — профили и боты: что это и как их завести
+
+## Настройка и безопасность
+
 - [configuration.md](configuration.md) — настройка по шагам
 - [configuration-reference.md](configuration-reference.md) — все ключи, переменные и порядок разрешения
-- [cli-contract.md](cli-contract.md) — команды, JSON, ошибки, пределы и запуск агентом
+- [permissions.md](permissions.md) — права профиля: что можно только читать, перед чем спрашивать, что разрешено
+- [security.md](security.md) — что попадает на диск, а что не попадает никогда
+- [limits.md](limits.md) — темп, ожидания, лимиты в час и фоновые задания
+
+## Чтение и поиск
+
 - [search.md](search.md) — поиск сообщений: слова, люди, даты, файлы, ссылки, метки, сохранённые поиски, подсчёт
 - [topic-search.md](topic-search.md) — поиск по темам: разговоры, векторы, свежесть, что уходит внешней модели
 - [query-language.md](query-language.md) — язык запросов: поля, операторы, preset, пределы, ответ JSON
-- [mcp.md](mcp.md) — MCP-сервер для клиентов без терминала: подключение, отправка, соединение с MAX
-- [remote.md](remote.md) — ChatGPT или Claude в браузере: вход по паролю и публичный адрес без своего домена
+- [archive.md](archive.md) — локальная копия: что хранится, как держать её свежей, как чинить
+- [attachments.md](attachments.md) — файловые вложения: отправить, скачать, найти текст внутри файла
+- [audio-recognition.md](audio-recognition.md) — распознавание речи в голосовых сообщениях
+- [external-models.md](external-models.md) — внешние модели: когда `max` вызывает ИИ-модель сам и что ей отправляется
+
+## Группы, люди, автоматизация
+
 - [groups.md](groups.md) — группы, которые вы ведёте: сценарии с агентом, правила, проверка по ним
 - [people.md](people.md) — один человек: профиль, его сообщения по чатам, похож ли на бота
+- [rankings.md](rankings.md) — статистика группы или канала: кто и сколько пишет
+- [replies.md](replies.md) — автоответы: когда вы не можете ответить сами
+- [bot.md](bot.md) — бот через официальный Bot API: токен, несколько ботов, сообщения, чаты, список получателей, `bot api`
 - [recipes.md](recipes.md) — рецепты для агентов: сводка, отчёт, долги, неотвеченное, запуск по расписанию
+
+## Агенты и подключения
+
+- [cli-contract.md](cli-contract.md) — команды, JSON, ошибки, пределы и запуск агентом
+- [mcp.md](mcp.md) — MCP-сервер для клиентов без терминала: подключение, отправка, соединение с MAX
+- [remote.md](remote.md) — ChatGPT или Claude в браузере: вход по паролю и публичный адрес без своего домена
+
+## Когда что-то не так
+
 - [diagnostics.md](diagnostics.md) — `--trace`, `--record`, `max personal runs` — и чего в записи нет
-- [security.md](security.md) — что попадает на диск, а что не попадает никогда
 - [troubleshooting.md](troubleshooting.md) — по симптому: что видно на экране и что делать
 - [roadmap.md](roadmap.md) — что планируется
-- Как выпускается версия, и кем (private notes)
 - [../CHANGELOG.md](../CHANGELOG.md) — что изменилось между версиями
 
-`ARCHITECTURE.md` describes the code as it behaves today. **When a document disagrees with the
-code, the code is right and the document gets corrected in place.**
+## Справочник — создаётся командой, руками не правится
 
-The working trail — the handoff, plans, the session journal and the cleanup list — lives in
-private notes, a separate private repository cloned into a folder this one ignores.
+- [commands.md](commands.md) — каждая команда, опция и код возврата; обновляется командой `pnpm generate`
+- [dev/protocol.md](dev/protocol.md) — каждый опкод протокола и откуда взята его форма; тоже создаётся командой
+
+Ни один из них не правится вручную: `pnpm generate` переписывает оба, а CI проверяет, что дерево не
+изменилось, поэтому справочник с командой, которой в программе уже нет, не попадёт в `main`.
+
+## Для тех, кто правит код
+
+Эти страницы на английском: они описывают код таким, какой он сейчас.
+
+- [dev/ARCHITECTURE.md](dev/ARCHITECTURE.md) — как всё устроено сейчас и какие границы нельзя пересекать
+- [dev/architecture/](dev/architecture/) — подробности: вход и синхронизация сессии, чтение сообщений, хранилище и поиск
+- [dev/CONVENTIONS.md](dev/CONVENTIONS.md) — как пишутся код и документы
+- [dev/TESTING.md](dev/TESTING.md) — как проверить самому и зачем нужна каждая проверка
+- [dev/BACKLOG.md](dev/BACKLOG.md) — что осталось сделать
+
+**Если документ расходится с кодом, прав код, а документ исправляют на месте.**

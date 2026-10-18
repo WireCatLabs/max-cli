@@ -103,7 +103,7 @@ max personal runs path <id>            # каталог, для jq и grep
 Итог записывается **на любом пути** — в том числе когда команда упала, не успев подключиться:
 
 ```json
-{ "run_id": "…", "command": "chats list", "profile": "default", "status": "failed",
+{ "run_id": "…", "command": "chats list", "profile": "personal", "status": "failed",
   "requests": 0, "error_code": "authentication_error", "duration_ms": 12 }
 ```
 
@@ -132,7 +132,7 @@ max personal chats list --no-record          # но не этот запуск
 То же в файле настроек:
 
 ```json
-{ "profiles": { "default": { "record": true } } }
+{ "profiles": { "personal": { "record": true } } }
 ```
 
 Тогда пишется каждый запуск. По умолчанию полностью удачный запуск не записывается, пока не попросили:
@@ -173,7 +173,7 @@ max personal chats list --no-record          # но не этот запуск
 
 То же верно и для отчёта, собранного из запуска.
 
-## Проверить установку: `max doctor`
+## Проверить установку: `max personal doctor`
 
 ```sh
 max personal doctor              # никуда не подключается
