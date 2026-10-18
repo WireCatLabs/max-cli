@@ -184,7 +184,7 @@ create another device. A manual first-login check needs a separately approved de
 ## Profiles for the live checks
 
 The live scenarios below run on four profiles, named here by role; the real names and chat ids stay
-private (`docs_ai/plans/2026-09-28-live-scenarios.md`):
+private (private notes):
 
 - **personal A** — the owner; **personal B** — a second account that agreed to be acted on;
 - **bot T** — admin of the test group; **bot T2** — a second bot, for the cases a bot sees another.
@@ -206,7 +206,7 @@ and a measurement that has quietly stopped being true is worse.
 The probes measure one operation each. The scenarios check what a person actually does, across two
 personal accounts and two bots, so that a message one account sends is proven to arrive at the
 other. The full list, with the test chats' ids and each run's results, is private
-(`docs_ai/plans/2026-09-28-live-scenarios.md`); this is its shape.
+(private notes); this is its shape.
 
 **Cast.** Two personal profiles — the owner's and a second account that agreed to be acted on — and
 two bots. **A bot with a live webhook is read-only**: its updates go to real operators. Test chats

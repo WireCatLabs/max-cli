@@ -23,7 +23,7 @@ So a raw protocol field keeps its wire spelling inside the protocol and adapter 
 has to match captured traffic — and above the adapter only our own domain model exists
 (`lastMessageAt`, not whatever the frame happens to call it). A raw MAX object never reaches CLI
 output except behind an explicit debug/raw option —
-`docs_ai/REQUIREMENTS.md` §16, §25.
+the owner's brief §16 and §25 (private notes).
 
 **Reusable core code stays Node-light, and this is a weaker rule than it looks.** ⚠ *`braze-cli`
 requires its core to run unchanged in a Cloudflare Worker and enforces that with three gates.
@@ -104,9 +104,9 @@ deleted, not marked done; a done backlog or cleanup line is deleted. User pages 
 Russian pages under `docs/`) also carry no decision or backlog ids. A *why* is allowed when a reader
 would otherwise undo the behaviour.
 
-**One fact, one home** ([WC-DOC-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)). A decision lives in `docs_ai/DECISIONS.md`; a task lives in
-[`BACKLOG.md`](BACKLOG.md); something to delete lives in `docs_ai/CLEANUP.md`; a plan for open work
-lives in `docs_ai/plans/`. Everywhere else links to it. Two copies of a fact drift, and the reader cannot
+**One fact, one home** ([WC-DOC-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)). A decision lives in the private decision log; a task lives in
+[`BACKLOG.md`](BACKLOG.md); something to delete lives in the private cleanup list; a plan for open work
+lives in the private plans. Everywhere else links to it. Two copies of a fact drift, and the reader cannot
 tell which is current.
 
 **Write the trap, not the rule.** "Close the connection" is weaker than "a MAX WebSocket left open

@@ -11,8 +11,8 @@ only the event lines.
 
 The rules every WireCat CLI follows — layers, lifecycle, output, permissions, the store — are in the
 [CLI standards handbook](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/README.md); this page links them and keeps what is MAX's own.
-"Brief §N" is `docs_ai/REQUIREMENTS.md`; rulings (`NEED-nn`) are in
-`docs_ai/DECISIONS.md`. Long detail lives in companions under `architecture/`:
+"Brief §N" is the owner's brief, and rulings (`NEED-nn`) are in the owner's decision log
+(both private notes). Long detail lives in companions under `architecture/`:
 [`session.md`](architecture/session.md) (§7), [`messages.md`](architecture/messages.md) (§10),
 [`store.md`](architecture/store.md) (§15, §16).
 
@@ -592,7 +592,7 @@ write at level `ask` goes ahead without a form.
 - **stdout is the protocol.** Notes go to stderr; the process exits on stdin EOF.
 
 User side: [`../mcp.md`](../mcp.md). The research behind the choices is local-only
-(`docs_ai/plans/2026-09-23-mcp-research.md`).
+(private notes).
 
 ## 18. The bot API is a separate slice, generated from the official schema
 

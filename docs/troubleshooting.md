@@ -63,10 +63,10 @@ max personal doctor --online
 Установка прошла, а терминал отвечает, что команды `max` нет. Узнать причину можно без неё:
 
 ```sh
-npx @wirecat/max-cli doctor
+npx @wirecat/max-cli personal doctor
 ```
 
-Строка `max on PATH` покажет, найдена ли команда, а заметка ниже — что сделать.
+Здесь `personal` — имя профиля, которое вы выбрали при входе; у вас оно может быть другим. Строка `max on PATH` покажет, найдена ли команда, а заметка ниже — что сделать.
 
 **Windows.** npm кладёт команду в `%APPDATA%\npm`. Если этого каталога нет в `PATH`, `max personal doctor`,
 запущенный после установки, напечатает две строки PowerShell: первая чинит текущее окно, вторая —
@@ -83,7 +83,7 @@ $env:Path -split ';'
 
 **PowerShell отвечает «running scripts is disabled on this system».** npm кладёт рядом `max.ps1`
 (и `npx.ps1`), а PowerShell по умолчанию запрещает скрипты. Либо запускайте `max.cmd` и
-`npx.cmd` — они работают всегда (`npx.cmd @wirecat/max-cli doctor`), — либо разрешите скрипты для
+`npx.cmd` — они работают всегда (`npx.cmd @wirecat/max-cli personal doctor`), — либо разрешите скрипты для
 своей учётной записи:
 
 ```powershell

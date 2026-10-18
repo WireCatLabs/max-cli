@@ -50,7 +50,9 @@ max personal inbox                  # непрочитанное во всех �
 
 Нужен Node 22.16+ (ветка 22.x) или 24+, либо Bun 1.3+; работает в Windows, macOS и Linux.
 Попробовать без установки — `npx @wirecat/max-cli --help`. Если `max` не находится,
-`npx @wirecat/max-cli doctor` скажет почему.
+`npx @wirecat/max-cli personal doctor` скажет почему (`personal` — имя профиля, которое вы выбрали; у вас оно может быть другим).
+
+С npm 12 сценарии установки по умолчанию заблокированы: навык агента не поставится, а в Windows не исправится PATH. После установки выполните `max skill install --for all`, либо ставьте так: `npm install -g --allow-scripts=@wirecat/max-cli @wirecat/max-cli`. Если в Windows `max` всё равно не находится, откройте новый терминал или выполните восстановление из [установки](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md#windows-одна-команда-установки).
 
 Подробнее: [установка](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/installation)), [вход и профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/sessions)).
 
@@ -219,7 +221,7 @@ max personal chats moderate "Поход" --dry-run              # что нар�
 историю чата можно скачать глубже и выгрузить.
 
 ```sh
-max personal search all "договор"                             # сообщения и заметки сразу; почта — memo search mail
+max personal search all "договор"                             # сообщения и заметки сразу (для почты есть отдельный CLI memo)
 max personal search messages 'договор chat:"Проект Альфа"'  # только один чат
 max personal messages sync "Проект Альфа" --last 500            # последние 500 сообщений — в копию
 max personal store export "Проект Альфа" --format markdown --output alfa.md

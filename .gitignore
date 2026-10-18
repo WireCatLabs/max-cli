@@ -29,3 +29,6 @@ coverage/
 
 # Problem reports from `max doctor report create`; attached to an issue, never committed.
 max-report-*.json
+
+# Internal cleanup list; stays on the machine doing the work.
+CLEANUP.md
