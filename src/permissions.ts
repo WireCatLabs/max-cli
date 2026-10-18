@@ -83,7 +83,8 @@ export const commandPermission = (command: Command): string | null => {
   if (shared !== undefined) return shared
   // cli-core 0.270.0 moved the picture models under `images` but keeps only `models` as housekeeping.
   if (words[0] === "images" && words[1] === "models") return null
-  if (["setup"].includes(words[0] ?? "")) return null
+  // cli-core 0.345.0 gives `help` and `guide` no key; neither reads an account.
+  if (["setup", "help", "guide"].includes(words[0] ?? "")) return null
   if (
     ["messages", "chats", "contacts", "account", "calls", "stickers", "polls", "reactions", "bot"].includes(
       words[0] ?? "",
