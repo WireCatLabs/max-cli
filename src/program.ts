@@ -1,4 +1,5 @@
 import { appendFileSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 import { CliError, processStreams } from "@wirecat/cli-base"
 import { metaOf } from "@wirecat/cli-base/commands"
 import {
@@ -6,8 +7,10 @@ import {
   conversationsCommand,
   createProgram as createSharedProgram,
   floodCommand,
+  guideCommand,
   imagesCommand,
   inboxCommand,
+  inSection,
   mcpCommand,
   mentionsCommand,
   metadataCommand,
@@ -78,12 +81,25 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
       "MAX Messenger from the terminal: bots through the official Bot API (`max bot …`), and your personal account",
   },
   configuration: { resolveSettings },
+  firstScreen: {
+    pitch:
+      "your personal MAX for agents and scripts. Reads go to a local store; search, review and tasks work offline.",
+    can: [
+      { command: "review date>1d --unanswered 4h", does: "questions to you nobody answered, across every chat" },
+      { command: "tasks list", does: "questions and promises waiting on you" },
+      { command: 'search all "invoice"', does: "messages, notes, file text and voice transcripts at once" },
+      { command: "contacts context <person>", does: "shared chats and the last messages each way" },
+      { command: "schedule agent …", does: "an agent on a timer that reads and drafts, never sends" },
+      { command: "bot messages send <chat>", does: "your bot, through MAX's official Bot API" },
+      { command: "MAX_READ_ONLY=1 max …", does: "an agent that can never send" },
+    ],
+  },
   commands: () => [
-    sessionCommand(),
-    setupCommand(),
+    inSection(sessionCommand(), "setup"),
+    inSection(setupCommand(), "setup"),
     accountCommand(),
-    callsCommand(),
-    stickersCommand(),
+    inSection(callsCommand(), "read"),
+    inSection(stickersCommand(), "read"),
     chatsCommand(),
     contactsCommand(),
     messagesCommand(),
@@ -124,19 +140,12 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     completeCommand(),
     mcpCommand(maxMessenger),
     botCommand(run),
+    guideCommand(MAX_APP, {
+      directory: fileURLToPath(new URL("../scenarios", import.meta.url)),
+      worksWith: [{ tool: "memo", name: "person-brief", title: "one person across every tool" }],
+    }),
   ],
   configure: (program) => {
-    program.addHelpText(
-      "after",
-      "\nGetting started after installation:\n" +
-        "  max personal setup               Guided personal-account login; allow about 5 minutes\n" +
-        "  max personal setup --agent codex Connect the skill for your agent\n" +
-        "  max setup --help                 Login methods, Windows advice and examples\n" +
-        "\nEvery command names its profile first (`max personal chats list`), or MAX_PROFILE does.\n" +
-        "\nAgents: read `max skill show` before login; `max commands --json` lists commands.\n" +
-        "Choose a chat and how much history to fetch after setup.\n" +
-        "Bots: `max <profile> bot auth set` connects a bot separately.\n",
-    )
     program
       .option("--serve", "start `max serve` in the background if it is not running (the default)")
       .option("--no-serve", "do not start it; log in on this command's own connection unless one is running")

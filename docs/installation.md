@@ -53,7 +53,7 @@ bunx @wirecat/max-cli --help
 
 ```sh
 max --version
-max --help              # список команд
+max --help                       # что умеет max и где полный список команд
 max personal doctor              # где лежат файлы и есть ли вход; к MAX не подключается
 ```
 

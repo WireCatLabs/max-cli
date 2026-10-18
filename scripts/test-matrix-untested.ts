@@ -11,6 +11,12 @@ export interface Untested {
 
 export const UNTESTED: Untested[] = [
   {
+    command: "",
+    option: "--help-all",
+    reason:
+      "commander prints the full help and exits before any action runs, so no argv is logged; src/program.test.ts reads `--help-all` for the commands and global options",
+  },
+  {
     command: "attachments show",
     option: "--page",
     reason:
