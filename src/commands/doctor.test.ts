@@ -166,6 +166,18 @@ describe("max doctor", () => {
     expect(readFileSync(output, "utf8")).not.toContain("invented-value-7")
   })
 
+  it("writes a problem report under MAX_READ_ONLY, since it only adds a file", async () => {
+    const output = join(mkdtempSync(join(tmpdir(), "max-report-")), "report.json")
+    homes.push(dirname(output))
+    process.env.MAX_READ_ONLY = "1"
+    try {
+      const { code } = await inAnEmptyHome(["work", "doctor", "report", "create", "--output", output, "--json"])
+      expect(code).toBe(0)
+    } finally {
+      delete process.env.MAX_READ_ONLY
+    }
+  })
+
   it("carries the profile from the first word like every other command", async () => {
     const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"])
 
