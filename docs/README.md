@@ -8,8 +8,8 @@ is listed in [commands.md](commands.md).
 
 - [dev/ARCHITECTURE.md](dev/ARCHITECTURE.md) — how it is built **now**, and which seams you may not cross
 - [dev/architecture/](dev/architecture/) — its detail: session and login sync, reading messages, the store and search
-- `docs_ai/REQUIREMENTS.md` — the owner's brief, cited by section number
-- `docs_ai/DECISIONS.md` and `docs_ai/decisions/` — the rulings in force; read before "fixing" something odd
+- The owner's brief, cited by section number (private notes, not in this repository)
+- The rulings in force (private notes); read before "fixing" something odd
 - [dev/CONVENTIONS.md](dev/CONVENTIONS.md) — how code and documents are written here
 - [dev/TESTING.md](dev/TESTING.md) — how to check it yourself, and what each check is for
 - [dev/BACKLOG.md](dev/BACKLOG.md) — what is left
@@ -45,11 +45,11 @@ so a reference that quotes a command the program no longer has cannot reach `mai
 - [security.md](security.md) — что попадает на диск, а что не попадает никогда
 - [troubleshooting.md](troubleshooting.md) — по симптому: что видно на экране и что делать
 - [roadmap.md](roadmap.md) — что планируется
-- `docs_ai/releasing.md` — как выпускается версия, и кем
+- Как выпускается версия, и кем (private notes)
 - [../CHANGELOG.md](../CHANGELOG.md) — что изменилось между версиями
 
 `ARCHITECTURE.md` describes the code as it behaves today. **When a document disagrees with the
 code, the code is right and the document gets corrected in place.**
 
 The working trail — the handoff, plans, the session journal and the cleanup list — lives in
-`docs_ai/`, a separate private repository cloned into that folder; this one ignores it.
+private notes, a separate private repository cloned into a folder this one ignores.

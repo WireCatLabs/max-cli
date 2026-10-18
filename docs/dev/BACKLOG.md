@@ -2,7 +2,7 @@
 
 Open work only, one item per line. A finished item's line is deleted.
 What the tool does today: [`../commands.md`](../commands.md) (generated). How it is built:
-[`ARCHITECTURE.md`](ARCHITECTURE.md). What the owner ruled: `docs_ai/DECISIONS.md`.
+[`ARCHITECTURE.md`](ARCHITECTURE.md). What the owner ruled: in private notes.
 
 ## Rules
 
@@ -12,7 +12,7 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   `cli-base` · `SPEC` protocol spec and generator · `MAX` domain, client, transport, session ·
   `CLI` commands and output · `DOC` handwritten docs · `PROTO` protocol unknowns · `RISK` risks.
 - **One item:** the task as a title, then where the work starts (`path:line` or a REQUIREMENTS §).
-  Analysis goes to a plan in `docs_ai/plans/`, a ruling to `DECISIONS.md`.
+  Analysis goes to a plan in the private notes, a ruling to `DECISIONS.md`.
 - **Priority:** **P1** blocks work or breaks something real · **P2** this cycle · **P3** someday.
 - **Mark:** none — not started · 🚧 `<branch>` — taken · 🟡 — half done, the rest named ·
   ⏸️ — deferred by the owner · 🚩 — waits on an owner decision.
@@ -49,7 +49,9 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **MAX-49** · P3 · Two-step password: log in when MAX asks for it (`passwordChallenge` in the login
   answer, then `AUTH_LOGIN_CHECK_PASSWORD` 115 `{trackId, password}`), and set or remove one
   (112 → 107 → 111). PyMax 2.4.1, code; a user logged in with it on the mobile client (PyMax #106).
-  The password is typed at a prompt, never an argument.ts:51`). Left: setting and removing one (112 → 107 → 111).
+  The password is typed at a prompt, never an argument.
+  Logging in with a password shipped with `session start` (PR #66,
+  `src/session/login.ts:51`). Left: setting and removing one (112 → 107 → 111).
 - **MAX-34** · 🟡 P3 · Live events: a long-running `max listen` that prints new messages, edits,
   reactions and typing as they arrive (PyMax's `on_message`, `on_message_edit`,
   `on_reaction_update`…). Conflicts with one-shot commands (`CLAUDE.md` constraint 4), so it needs
@@ -64,7 +66,8 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   Done 2026-10-08 (`MAX-67`): reads (130) and chat changes (135, or a 128 carrying the chat).
 - **MAX-4** · 🟡 P3 · Chat addressing. Done: an id, or a title matched exactly then as a fragment,
   an ambiguous one refused (`resolve`, `src/client.ts:325`; `pickChat`, `src/resolve.ts:13`). Left: `@username`, a phone number, a chat the
-  account is not in.max.ru computes it.
+  account is not in. A bot the account is not in yet is reached by its link in `chats start` (`MAX-72`); a chat with
+  a person is `myId ^ theirId`, as web.max.ru computes it.
 - **CLI-36** · P3 · The local copy made optional: a setting under which `max` writes no chats or
   messages to disk and answers everything from MAX (`--offline` and `search messages` then refuse).
   The option controls shared adapter recording and the login record (`src/record.ts`).
@@ -82,7 +85,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   asks for and which sync value each re-login sends back are unknown. The recorder now keeps both;
   the code waits on the next recording (with `MAX-51`).
 
-  Done 2026-09-25 from the second recording (`docs_ai/captures/2026-09-25-web-tab-2.jsonl`):
+  Done 2026-09-25 from the second recording (private capture 2026-09-25-web-tab-2.jsonl):
   `max serve` sends 272, 302, 163 and 27 ×4 (`STICKER`, `FAVORITE_STICKER`, `REACTION`,
   `ANIMOJI_SET`) after every login, each re-login with the sync its previous answer returned
   (`src/client.ts`, `live.readLikeTab`). Left: 48 `{chatIds}`, 32 and 35 `{contactIds}`, 28, and
@@ -109,7 +112,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
   has and we lack means maintaining MAX's whole surface (§10).
 
 **Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
-`docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46` (now cli-core's `chats rules show` and `chats moderate`, which MCP serves as `chats_moderate`).
+(private notes)). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46` (now cli-core's `chats rules show` and `chats moderate`, which MCP serves as `chats_moderate`).
 
 - **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
   lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
@@ -133,7 +136,7 @@ read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
 - **MAX-74** · P3 · Split `src/client/values.ts` by owner, and read the client's options once: it holds 59
   exports (opcodes, page sizes, error mapping, folder rules, phone formatting) imported by 20 modules, and
   `options.offline ?? false` / `options.now ?? Date.now` repeat 10 and 7 times across `src/client/`. Left from the
-  client split (#609); the review's finding is DEBT-76 in cli-private `docs_ai/reports/2026-10-14-refactor-pr-review.md`.
+  client split (#609); the review's finding is DEBT-76 in cli-private (private notes).
 
 ## Later — each reopens a ruling
 

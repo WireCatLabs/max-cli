@@ -184,7 +184,7 @@ max personal search conversations "кто берёт еду на пикник"
 **Обсуждали на другом языке.**
 
 ```sh
-max personal search conversations "аренда квартиры" --chat "Valencia expats"
+max personal search conversations "аренда квартиры" --chat "Клуб Пример"
 ```
 
 С моделью по умолчанию так находится и обсуждение на испанском — про «piso».
@@ -204,8 +204,8 @@ max personal search conversations "условия договора" --filter 'ha
 **Начать с одного сообщения.** Вы нашли сообщение поиском по словам и хотите всё остальное на эту тему:
 
 ```sh
-max personal search messages '"вернули залог" chat:"Valencia expats"'
-max personal conversations related "Valencia expats" 5120
+max personal search messages '"вернули залог" chat:"Клуб Пример"'
+max personal conversations related "Клуб Пример" 5120
 ```
 
 **Искать и в чатах ботов.** По умолчанию поиск по темам идёт в текущей учётной записи. `--source personal`,

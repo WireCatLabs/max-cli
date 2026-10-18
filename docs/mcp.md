@@ -75,6 +75,10 @@ max personal mcp setup claude-code     # или в Claude Code
 claude mcp add max -- max personal mcp
 ```
 
+Осторожно: по умолчанию агент через этот сервер может отправлять сообщения от вашего имени. Сначала
+ограничьте права: уровни `readonly` и `deny` ([права](permissions.md)) или флаг `--permission`, например
+`claude mcp add max -- max personal mcp --permission messages.send=deny`.
+
 С профилем — он идёт первым словом, как в любой команде:
 
 ```sh
