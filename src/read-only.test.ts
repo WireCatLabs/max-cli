@@ -151,14 +151,16 @@ describe("MAX_READ_ONLY", () => {
     ["skill install", ["skill", "install"]],
     ["upgrade", ["upgrade"]],
     ["messages send", ["messages", "send", "111", "hello"]],
+    ["messages edit", ["messages", "edit", "111", MESSAGE, "x"]],
+    ["messages delete --for-everyone", ["messages", "delete", "111", MESSAGE, "--for-everyone", "--allow-dangerous"]],
+    ["reactions add", ["reactions", "add", "111", MESSAGE, "👍"]],
     ["account update", ["account", "update", "--first-name", "X"]],
     ["contacts add", ["contacts", "add", "777"]],
     ["chats update", ["chats", "update", "111", "--title", "X"]],
     ["bot messages send", ["bot", "messages", "send", "123", "hi"]],
   ])("already refused %s, and writes nothing", async (_name, argv) => {
-    const { code, error, writes } = await locked(["ro-shared", ...argv])
+    const { code, error, frames } = await locked(["ro-shared", ...argv])
 
-    expect([code, error.code]).toEqual([5, "permission_error"])
-    expect(writes).toEqual([])
+    expect([code, error.code, frames]).toEqual([5, "permission_error", []])
   })
 })
