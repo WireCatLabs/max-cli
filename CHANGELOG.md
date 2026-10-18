@@ -4,12 +4,17 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
-## Не выпущено
+## 0.61.0 — 18.10.2026
 
 ### Что нового
 
 - **`tasks agenda` показывает, что должны вам другие** (cli-core 0.328.0): открытые задачи, которые делает кто-то
   другой, — отдельный раздел и `assigned` в `--json`, старые сверху.
+- **Агент может выключить и включить звук чата** (cli-core 0.338.0): `chats mute` и `chats unmute` теперь есть среди
+  инструментов `max mcp`. Каждый проверяется по своему ключу (`chats.mute`, `chats.unmute`); в чате никто об этом
+  не узнаёт.
+- **Примеры в справке** у `account privacy show`, `account privacy set`, `chats mute`, `chats unmute`,
+  `messages pin`, `messages unpin`, `metadata get` и `metadata refresh` (cli-core 0.336.0, 0.339.0).
 
 ### Изменено — может сломать скрипты
 
@@ -24,17 +29,52 @@
   справку с кодом 0, теперь отвечает `validation_error` и показывает, как написать правильно.
 - **Агент больше не видит `offline` у `bot me`, `bot comments list`, `bot comments get` и `bot chats members list`.**
   Эти команды всегда спрашивают MAX и отклоняли `offline`; теперь аргумента нет в описании инструмента (cli-core 0.335.0).
-- **`conversations build` и `conversations embed` помечены как меняющие что-то вне этого компьютера** (cli-core 0.334.0):
-  с `--analyze` и `--provider` они отправляют текст переписки внешнему сервису. В `docs/commands.md` такая пометка теперь
+- **`conversations build` и `conversations embed` помечены как меняющие что-то вне этого компьютера** (cli-core
+  0.334.0, 0.336.0): с `--analyze` и `--provider` они отправляют текст переписки внешнему сервису, а `search
+  conversations` с удалённой моделью отправляет туда запрос. Под `MAX_READ_ONLY` все три отказывают до отправки;
+  модель на этом компьютере или на локальном сервере работает как раньше. Через `max serve` они не выполняются. В `docs/commands.md` такая пометка теперь
   звучит «вне этого компьютера: в MAX или во внешнем сервисе», а не «в MAX».
 - **Под `MAX_READ_ONLY` `session start`, `session end` и `setup` отказывают ещё до начала работы** (код 5, «it cannot
   log in or out»), а не изнутри команды.
+- **Под `MAX_READ_ONLY` отказывают локальные записи, которые удаляют или переписывают то, что вы сохранили**
+  (cli-core 0.336.0, 0.337.0): `searches create`, `searches delete`, `searches clear`, `contacts alias set`,
+  `contacts alias rm`, `contacts notes add`, `contacts notes edit`, `contacts notes remove`, `contacts link`,
+  `contacts unlink`, `tags add`, `tags auto`, `tags remove`, `mentions confirm`, `mentions reject`,
+  `attachments text set`, `chats tracking add`, `chats tracking remove`, `conversations links add`,
+  `conversations links clear`, `conversations consents revoke`, `tasks reject` и их инструменты у агента — код 5,
+  `permission_error`. Работает по-прежнему то, что хранилище восстановит само (`images embed`, `mentions rebuild`,
+  `conversations embed clear`, `store jobs …`), синхронизация, `serve` и учёт задач (`tasks add`, `scan`, `close`
+  и другие). `tasks close` под замком только предлагает закрыть задачу, а `--as-owner` отклоняется.
+- **Пока MAX ограничил аккаунт, не уходит никакая запись** (cli-core 0.334.0): реакция, прочтение чата, тихое
+  закрепление, смена названия и профиля тоже отклоняются (`permission_error`); чтение работает. Блокировка без
+  срока держит записи, пока вы не выполните `flood clear` или `doctor --online` не увидит, что аккаунт в порядке;
+  в `--json` у такой блокировки `until: null`.
+- **Отправка, которая не дождалась блокировки файла другим процессом, выходит с кодом 9 (`timeout`), а не 1**
+  (cli-core 0.338.0): ничего не отправлено, повторять безопасно. То же у `flood clear`.
+- **`upgrade --offline` выходит с кодом 2** (cli-core 0.338.0): `upgrade` спрашивает npm, поэтому с `--offline`
+  (и с `--check`) теперь отказывает, а не идёт в сеть вопреки флагу.
+- **Инструмент агента `messages list` больше не предлагает `topic:`** (cli-core 0.340.0): в MAX нет тем, и такое
+  условие отклоняется, как уже отклонялось в командной строке.
 
 ### Исправлено
 
 - **Хранилище, которое не открылось, закрывается** (cli-core 0.332.0): на Windows папку с таким файлом можно удалить.
 - **`doctor report create` снова работает под `MAX_READ_ONLY`.** cli-core 0.337.0 запрещает под этим замком любую
   локальную запись, которую не отметили как безопасную; отчёт только добавляет новый файл, и теперь он отмечен.
+- **Чужая блокировка файла больше не останавливает `max serve`** (cli-core 0.340.0): раньше serve ждал её до 5 секунд,
+  и на это время вставали все команды через него и поддержка соединения с MAX.
+- **Два изменения списка получателей одновременно больше не отменяют друг друга** (cli-core 0.338.0):
+  `recipients add`, `remove` и `clear` читают и пишут список под одной блокировкой.
+- **`store gaps repair --background` выполняет задание**, а не падает сразу (cli-core 0.339.0).
+- **Подсказки `server status`, `server …` и обслуживания хранилища называют профиль**: `max <profile> session
+  start`, а не `max session start` (cli-core 0.339.0).
+- **`upgrade --check` работает под `MAX_READ_ONLY`** (cli-core 0.338.0): он только спрашивает npm о новой версии.
+- **Загрузка моделей не идёт через `max serve`** (cli-core 0.336.0): `models … download` и `images models download`
+  качают с сервера моделей, а не из MAX.
+- **`images embed` при запущенном serve читает картинки через его соединение**, как другие чтения (cli-core
+  0.337.0).
+- **Ограничение или блокировка, которые остановили `watch` или `serve`, запоминаются** (cli-core 0.334.0):
+  следующая команда ждёт, как после такой же ошибки у обычной команды.
 
 ### Безопасность
 
@@ -43,6 +83,9 @@
   команда отказывает (код 2) и просит сначала `max <profile> server stop`. Serve, который запустила другая команда,
   она по-прежнему останавливает сама. `session start`, `session end` и `setup` никогда не выполняются через serve
   (cli-core 0.333.0, `logsInOrOut`).
+- **`chats.unmute: readonly` теперь останавливает `chats unmute`** (cli-core 0.336.0). Раньше включение звука
+  проверялось по ключу `chats.mute`, и свой ключ не действовал. Настройка, в которой есть только `chats.mute`,
+  работает как раньше, пока не задан `chats.unmute`.
 
 ## 0.60.0 — 17.10.2026
 
