@@ -12,12 +12,12 @@ pnpm smoke:bun   # the built command, executed under Bun
 pnpm generate    # then `git diff --exit-code` — generated output must not be stale
 ```
 
-A pull request runs only the fast checks ([`standards.yml`](../../.github/workflows/standards.yml)): the managed
-configs, lint, Markdown lint, `pnpm ci:quick` (typecheck, build, command lint) and a secret scan of the new commits.
-Everything above, with coverage, the contracts, the parity check and a secret scan of the whole history, runs as
-full validation ([`ci.yml`](../../.github/workflows/ci.yml)) on each merge to `main`, on the first day of each month
-and before a release ([WC-CI-3, WC-CI-4, WC-CI-5, WC-CI-7](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/ci.md)). Run what your change touches before you
-push.
+A pull request runs the fast checks ([`standards.yml`](../../.github/workflows/standards.yml)): the managed configs,
+lint, Markdown lint, `pnpm ci:quick` (typecheck, build, command lint) and a secret scan of the new commits. It also
+runs full validation ([`pr.yml`](../../.github/workflows/pr.yml) calls [`ci.yml`](../../.github/workflows/ci.yml)):
+everything above, with the coverage floor, the contracts, the parity check and a secret scan of the whole history,
+on Linux. The same runs on each merge to `main`, on the first day of each month and before a release
+([WC-CI-3, WC-CI-4, WC-CI-5, WC-CI-7](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/ci.md)). Run what your change touches before you push.
 
 ---
 
@@ -122,7 +122,7 @@ pnpm test:coverage              # full validation runs this; the report is in co
 
 `vitest.config.ts` holds the floor: lines 92 %, statements 90 %, functions 88 %, branches 79 % over
 the whole of `src/`, and **every file at least 50 % of its lines**. A change that drops below fails
-`pnpm test:coverage` and full validation. The numbers sit just under what the suite reaches; raise them when
+`pnpm test:coverage` and full validation, so the pull request fails. The numbers sit just under what the suite reaches; raise them when
 coverage rises, never lower them to let a change through — write the test instead ([WC-TEST-11](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/testing.md)).
 
 Left out, each for a reason written beside it in the config: generated code, types-only files, the
@@ -345,8 +345,8 @@ check in an agent's statistics answer stays in
 `pnpm contracts:check` drives the built binary and MCP stdio server with isolated synthetic
 profiles. It checks help, clean JSON discovery, structured error exit codes, and reviewed
 tool schemas. Plans and snapshots live in `contracts/`; changes require explicit review with
-`pnpm exec cli-contract contracts/plan.json --update`. It runs in full validation: on each merge
-to `main`, monthly, before a release and by hand; a pull request does not run it. See the
+`pnpm exec cli-contract contracts/plan.json --update`. It runs in full validation: on every
+pull request, on each merge to `main`, monthly, before a release and by hand. See the
 [shared guide](https://github.com/WireCatLabs/cli-testing/blob/main/docs/ci/CONTRACTS.md).
 
 The development dependency pins `@wirecat/cli-testing` 0.5.2 from npm, with its
@@ -360,5 +360,6 @@ same fresh synthetic state. Baseline packages have a separate frozen lockfile un
 normal developer executable path. Plans assert retained data, migration/import repeatability and
 file preservation. `pnpm security:no-leak` scans the reviewed contract fixtures and testing guide;
 process diagnostics and recorded run logs are checked within the contract runner as well.
-These commands run only in full validation: on each merge to `main`, monthly, before a release and by hand. See the
+These commands run in full validation: on every pull request, on each merge to `main`, monthly, before a release
+and by hand. See the
 [upgrade guide](https://github.com/WireCatLabs/cli-testing/blob/main/docs/ci/UPGRADES.md).
