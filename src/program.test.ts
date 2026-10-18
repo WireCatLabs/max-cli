@@ -508,6 +508,19 @@ describe("the program", () => {
       }
     })
 
+    it("a mistyped profile is refused and not listed as a profile afterwards", async () => {
+      const { MAX_PROFILE } = process.env
+      delete process.env.MAX_PROFILE
+      try {
+        const typo = await runWith(["t-typo", "chats", "list", "--json"], { keyring: memoryKeyring() })
+        expect(JSON.parse(typo.stderr).error.message).toMatch(/no session for profile "t-typo"/)
+        const listed = JSON.parse((await runWith(["chats", "list", "--json"])).stderr).error.details.profiles
+        expect(listed).not.toContain("t-typo")
+      } finally {
+        process.env.MAX_PROFILE = MAX_PROFILE
+      }
+    })
+
     it("refuses `config set default_profile`, so a bare `max` still names no profile", async () => {
       const { MAX_PROFILE } = process.env
       delete process.env.MAX_PROFILE

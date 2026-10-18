@@ -29,7 +29,7 @@ export const serveMembers = ({
     ...(firstMs === undefined ? {} : { firstMs }),
     ...(everyMs === undefined ? {} : { everyMs }),
     withStore: async (work) => {
-      const account = store.readState().viewerId
+      const account = store.viewerId()
       if (!account) throw new CliError("authentication_error", "the server has no account")
       opened ??= openStore({ env })
       return work(await opened, { provider: "max", account })
@@ -38,8 +38,7 @@ export const serveMembers = ({
       assertReadable(resolveSettings({ profile: store.profile }, { env }), "chats.members.fetch")
       const held = client()
       if (!held) throw new CliError("network_error", "the server is disconnected")
-      if (store.readState().viewerId !== account.account)
-        throw new CliError("authentication_error", "the server account changed")
+      if (store.viewerId() !== account.account) throw new CliError("authentication_error", "the server account changed")
       // Reads use the held connection; the worker must never open its own login.
       const guard = {
         check: () => {

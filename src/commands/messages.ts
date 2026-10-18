@@ -50,7 +50,7 @@ export const messagesCommand = (): Command => {
       const directory = modelsDirectory()
       await run("messages transcribe", async (events) => {
         const client = createClient({ events })
-        const record = maxRecord({ account: () => context.store.readState().viewerId })
+        const record = maxRecord({ account: () => context.store.viewerId() })
         try {
           const chatId = await client.chats.resolve(chat)
           if (!isInstalled(model, directory)) {

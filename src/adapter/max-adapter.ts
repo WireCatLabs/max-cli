@@ -108,7 +108,7 @@ export const maxAdapter = (
       formatted.spans.forEach(toNativeMarkup)
       return formatted
     },
-    self: () => store.readState().viewerId ?? null,
+    self: () => store.viewerId() ?? null,
     newSendId: () => client.newSendId(),
 
     me: async (): Promise<Account> => {
