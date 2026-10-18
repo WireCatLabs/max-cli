@@ -247,8 +247,7 @@ describe("a read-only profile", () => {
     ]) {
       expect((await runWith(["e-read", ...argv], environment)).code).toBe(5)
     }
-    // A profile with no saved account logs in at connect, before the guard refuses.
-    expect(max.sent.filter(({ opcode }) => opcode !== Opcode.SESSION_INIT && opcode !== Opcode.LOGIN)).toEqual([])
+    expect(max.sent).toEqual([])
     expect(journalOf("e-read").map(({ kind, outcome }) => `${kind} ${outcome}`)).toEqual([
       "edit refused",
       "forward refused",
