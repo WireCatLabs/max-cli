@@ -53,6 +53,7 @@ describe("MAX guided setup", () => {
   it("reuses credentials, checks five chats and returns one result without fetching history", async () => {
     const h = harness()
     expect(await h.setup("--json")).toBe(0)
+    expect(h.streams.stderr.join("\n")).toContain("2/4 — Link this device")
     const output = h.streams.stdout.join("\n")
     const answer = JSON.parse(output)
     expect(answer.item).toMatchObject({
