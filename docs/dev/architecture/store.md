@@ -34,6 +34,7 @@ with `max messages sync` to make older messages available.
 ## Departed chats
 
 Only a complete nonempty chat snapshot marks missing chats as left. Cut and empty snapshots keep
-previous chats. `max store clear --left` previews the data; `--allow-dangerous` removes it.
+previous chats. Every snapshot, cut or complete, and every login takes the left mark off the chats it
+names; other states such as archived stay. `max store clear --left` previews the data; `--allow-dangerous` removes it.
 There is no whole-store wipe command. `max doctor` names any remaining legacy profile file;
 its data is not migrated into the shared store.
