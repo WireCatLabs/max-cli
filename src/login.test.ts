@@ -74,7 +74,7 @@ const setUp = (login: MockMax | undefined, adopt: MockMax, extra: Partial<Enviro
 const adopting = () => mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: LOGIN } })
 
 describe("max session start qr", () => {
-  it("draws the code here, waits for the phone, and stores the token MAX then accepts", async () => {
+  it("draws the code here, says where to scan it, waits for the phone, and stores the token MAX then accepts", async () => {
     const login = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
@@ -86,15 +86,17 @@ describe("max session start qr", () => {
     const adopt = adopting()
     const { start, stored, streams } = setUp(login, adopt)
 
-    expect(await start("qr", "--quiet")).toBe(0)
+    expect(await start("qr")).toBe(0)
 
-    expect(streams.stderr.join("\n")).toMatch(/[█▀▄]/)
+    const stderr = streams.stderr.join("\n")
+    expect(stderr).toMatch(/[█▀▄]/)
+    expect(stderr.indexOf("scan in the MAX app on your phone")).toBeGreaterThan(stderr.lastIndexOf("▀"))
     expect(streams.stdout.join("")).not.toMatch(/[█▀▄]/)
     expect(login.sent.map(({ opcode }) => opcode)).toEqual([6, 288, 289, 289, 291])
     expect(stored()).toBe("qr-token")
   })
 
-  it("draws nothing on a terminal too narrow for the code, opens nothing, and points at --qr-file", async () => {
+  it("draws nothing on a terminal too narrow for the code, opens nothing, and points at --qr-file, not at a code to scan", async () => {
     const login = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
@@ -105,11 +107,12 @@ describe("max session start qr", () => {
     })
     const { start, stored, streams } = setUp(login, adopting(), { columns: 20 })
 
-    expect(await start("qr", "--quiet")).toBe(0)
+    expect(await start("qr")).toBe(0)
 
     const stderr = streams.stderr.join("\n")
     expect(stderr).not.toMatch(/[█▀▄]/)
     expect(stderr).toMatch(/20 columns wide .* --qr-file <png>/)
+    expect(stderr).not.toMatch(/\bscan\b/i)
     expect(stored()).toBe("qr-token")
   })
 

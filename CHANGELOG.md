@@ -26,6 +26,10 @@
 
 ### Исправлено
 
+- **Узкий терминал больше не просит отсканировать QR-код, которого нет** (cli-core 0.350.0). `session start qr` и
+  `setup` писали «scan this code with the MAX app on your phone» до кода; если код не помещался, дальше шла только
+  подсказка расширить окно или передать `--qr-file`. Теперь строка «scan in the MAX app on your phone» идёт после
+  нарисованного кода или заметки о `--qr-file`, а на узком терминале выводится только подсказка.
 - **Подсказки в ошибках и заметках называют профиль**: «the store is behind this build — `max personal store
   migrate`» вместо `max store migrate`, которая при копировании падала с «name a profile». Так же подсказка о
   скачивании модели речи: `max personal models audio download gigaam-v3`.
