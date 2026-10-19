@@ -3,6 +3,7 @@ import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import { installSkill, type SkillTarget } from "@wirecat/cli-base/skill"
 import { type StepDefinition, stepOf } from "@wirecat/cli-base/standards"
+import { qrNeedsTerminal } from "@wirecat/cli-core"
 import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, runtime, snakeKeys } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { maskedProfile } from "../domain/map.js"
@@ -129,20 +130,17 @@ export const setupCommand = (): Command =>
           `this is a bot profile — use max ${asFirstWord(settings.profile)}bot auth set; setup is for your personal account`,
         )
       const reused = store.readToken() !== undefined
-      if (options.qrFile && options.method !== "qr")
+      if (options.qrFile !== undefined && options.method !== "qr")
         throw new CliError("validation_error", "--qr-file is for a QR login", { param: "--qr-file" })
-      if (
-        !reused &&
-        !store.hasLoggedIn() &&
-        options.method !== "token" &&
-        !(options.method === "qr" && options.qrFile) &&
-        !context.interactive
-      )
-        throw new CliError(
-          "validation_error",
-          "max setup needs a local terminal for QR/browser login — run it locally, pass --qr-file for an agent, " +
-            "or import a token with --method token",
-        )
+      if (!reused && !store.hasLoggedIn() && !context.interactive) {
+        if (options.method === "qr" && options.qrFile === undefined)
+          throw qrNeedsTerminal(`max ${asFirstWord(settings.profile)}setup`)
+        if (options.method === "qr-chrome" || options.method === "sms")
+          throw new CliError(
+            "validation_error",
+            "max setup needs a local terminal for a browser login — run it locally, or import a token with --method token",
+          )
+      }
       const prefix = `max ${asFirstWord(settings.profile)}`
       const runner =
         installer(environmentOf(this).update) === "npx"

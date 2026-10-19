@@ -139,6 +139,30 @@ describe("max session start qr", () => {
       expect([...streams.stdout, ...streams.stderr].join("\n")).not.toContain(secret)
   })
 
+  it("removes the --qr-file image when the login is cut off before the phone answers", async () => {
+    const path = join(mkdtempSync(join(tmpdir(), "max-qr-")), "login.png")
+    const cut = new AbortController()
+    let written = false
+    const login = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.GET_QR]: qrCode(),
+        [Opcode.GET_QR_STATUS]: () => {
+          written ||= existsSync(path)
+          cut.abort()
+          return { status: {} }
+        },
+      },
+    })
+    const { start, stored } = setUp(login, adopting(), { interactive: false, tty: false, signal: cut.signal })
+
+    expect(await start("qr", "--qr-file", path, "--json")).not.toBe(0)
+
+    expect(written).toBe(true)
+    expect(existsSync(path)).toBe(false)
+    expect(stored()).toBeUndefined()
+  })
+
   it("asks for the cloud password when MAX wants one, and sends it", async () => {
     const login = mockMax({
       answers: {

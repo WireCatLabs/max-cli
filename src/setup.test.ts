@@ -220,10 +220,12 @@ describe("MAX guided setup", () => {
     expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.code).toBe("timeout")
   })
 
-  it("refuses a first QR login without a terminal and does not contact MAX", async () => {
+  it("refuses a first QR login without a terminal with the refusal tg and wa give, and does not contact MAX", async () => {
     const h = harness({ token: false })
     expect(await h.setup("--json")).toBe(2)
-    expect(h.streams.stderr.join("\n")).toContain("local terminal")
+    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.message).toBe(
+      "max setup-test setup shows a QR code to scan — run it in a terminal, or pass --qr-file <png>",
+    )
     expect(h.max.sent).toEqual([])
   })
 
