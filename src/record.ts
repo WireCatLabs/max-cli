@@ -79,6 +79,11 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
         members,
         ...(marker === undefined ? {} : { state: { [MARKER]: String(marker) } }),
       })
+      if (chats.length > 0)
+        await db.chats.rejoinChats(
+          key,
+          chats.map((chat) => chat.id),
+        )
       return {
         known: (await db.people.people("max", { account: key.account })).all().length,
         added,
@@ -103,11 +108,9 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
       if (!key) return chats
       const db = await store()
       await db.chats.saveChats(key, chats)
-      if (complete && chats.length > 0)
-        await db.chats.markChatsLeft(
-          key,
-          chats.map((chat) => chat.id),
-        )
+      const ids = chats.map((chat) => chat.id)
+      if (complete && ids.length > 0) await db.chats.markChatsLeft(key, ids)
+      else if (ids.length > 0) await db.chats.rejoinChats(key, ids)
       return (await db.chats.chats(key, {})).items
     },
 
