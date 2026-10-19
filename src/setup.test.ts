@@ -53,6 +53,7 @@ describe("MAX guided setup", () => {
   it("reuses credentials, checks five chats and returns one result without fetching history", async () => {
     const h = harness()
     expect(await h.setup("--json")).toBe(0)
+    expect(h.streams.stderr.join("\n")).toContain("2/4 — Link this device")
     const output = h.streams.stdout.join("\n")
     const answer = JSON.parse(output)
     expect(answer.item).toMatchObject({
@@ -123,6 +124,9 @@ describe("MAX guided setup", () => {
     h.environment.columns = 200
     expect(await h.setup("--agent", "none")).toBe(0)
     expect(h.store.readToken()).toBe("qr-setup-token")
+    const screen = h.streams.stderr.join("\n")
+    expect(screen).toContain("[2/4] Link this device")
+    expect(screen.slice(0, screen.indexOf("▀"))).not.toMatch(/scan/i)
     expect(qr.unexpected).toEqual([])
     expect(h.max.unexpected).toEqual([])
   })
