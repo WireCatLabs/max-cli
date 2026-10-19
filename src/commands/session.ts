@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { loginQr, qrNeedsTerminal } from "@wirecat/cli-core"
+import { loginQr } from "@wirecat/cli-core"
 import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
 import { Argument, Command } from "commander"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
@@ -27,8 +27,8 @@ export const sessionCommand = (): Command => {
    *
    * - `token` — pasted, or piped: `pass show max | max session start`. The default, and the escape
    *   hatch when a login meets a captcha or an unusual second factor.
-   * - `qr` — our own connection asks MAX for the code; cli-core's `loginQr` draws it here, or writes
-   *   it to `--qr-file` for an agent to pass on.
+   * - `qr` — our own connection asks MAX for the code; cli-core's `loginQr` draws it here, or prints it
+   *   as plain text for an agent to paste into the chat when there is no terminal.
    * - `qr-chrome`, `sms` — web.max.ru itself does the login, in a Chromium-family browser with a
    *   throwaway profile, and we read the token it stores. MAX sees its own web client. SMS has no
    *   other door: asked over our socket, MAX demands a captcha only the page can solve (2026-09-24).
@@ -46,22 +46,20 @@ export const sessionCommand = (): Command => {
         "  max work session start                 Import a token at a hidden prompt\n" +
         "\nAn interrupted first setup can be resumed with `max <profile> setup`.\n" +
         "For an expired session, explicitly log in again with `max <profile> session start qr`.\n" +
-        "Agents: read `max skill show` before login. --qr-file writes the QR as a PNG (mode 600) and removes it\n" +
-        "after the login; qr-chrome and sms need a local terminal.\n" +
+        AGENT_QR_HELP +
+        "qr-chrome and sms need a local terminal.\n" +
         "Never put tokens or passwords in command arguments.\n",
     )
     .addArgument(
       new Argument("[method]", "token (pasted or piped), qr, qr-chrome or sms").choices(METHODS).default("token"),
     )
-    .option("--qr-file <png>", "write the QR code to this PNG instead of drawing it, for an agent to pass on")
     .action(async function (this: Command, method: Method) {
       const context = forCommand(this)
       const { renderer, run } = context
 
       refuseCommandName(context.settings.profile, commandWords(rootOf(this)))
-      const { qrFile } = this.opts<{ qrFile?: string }>()
       await run("session start", async (events) => {
-        const { firstLogin, ...answer } = await startSession(context, method, events, qrFile)
+        const { firstLogin, ...answer } = await startSession(context, method, events)
         renderAnswer(this, context, itemOf(snakeKeys(answer)))
         renderer.success(`logged in as ${answer.profile.name ?? answer.profile.id}`)
         if (firstLogin) renderer.note(TERMS_NOTICE)
@@ -123,21 +121,18 @@ const logOut = async (client: MaxClient): Promise<boolean> => {
   }
 }
 
+/** Said the same way in `session start --help`, `setup --help` and the skill. */
+export const AGENT_QR_HELP =
+  "Agents: read `max skill show` before login. Without a terminal, `session start qr` prints the QR as text:\n" +
+  "run it in the background (it waits up to 2 minutes for the scan, and a shell tool shows nothing until it\n" +
+  "exits), read its output and paste the QR block into the chat as a code block, exactly as printed.\n"
+
 const METHODS = ["token", "qr", "qr-chrome", "sms"] as const
 export type Method = (typeof METHODS)[number]
 
-export const startSession = async (
-  context: CommandContext,
-  method: Method,
-  events: MaxClientOptions["events"],
-  qrFile?: string,
-) => {
+export const startSession = async (context: CommandContext, method: Method, events: MaxClientOptions["events"]) => {
   const { renderer, store, createClient, interactive } = context
-  if (qrFile !== undefined && method !== "qr")
-    throw new CliError("validation_error", "--qr-file is for a QR login", { param: "--qr-file" })
   if (store.hasLoggedIn()) refuseWhilePaused(store.readState())
-  if (method === "qr" && !interactive && qrFile === undefined)
-    throw qrNeedsTerminal(`max ${asFirstWord(store.profile)}session start qr`)
   if (method !== "token" && method !== "qr" && !interactive)
     throw new CliError(
       "validation_error",
@@ -153,7 +148,7 @@ export const startSession = async (
   context.signal.throwIfAborted()
   if ((await context.stopServer()) === "stopped")
     renderer.note("stopped `max serve`; it starts again on the new session")
-  const token = method === "token" ? String(pasted) : await obtain(method, context, events, qrFile)
+  const token = method === "token" ? String(pasted) : await obtain(method, context, events)
   context.signal.throwIfAborted()
   const client = createClient({ events }, { own: true })
   const firstLogin = store.viewerId() === undefined
@@ -171,9 +166,8 @@ const BROWSER_WAIT_MS = 5 * 60_000
 
 const obtain = async (
   method: Exclude<Method, "token">,
-  { createClient, renderer, browser, track, ask, streams, columns, interactive, store }: CommandContext,
+  { createClient, renderer, browser, track, ask, streams, columns, interactive, store, format }: CommandContext,
   events: MaxClientOptions["events"],
-  qrFile?: string,
 ): Promise<string> => {
   if (method !== "qr") {
     renderer.note(
@@ -185,18 +179,17 @@ const obtain = async (
   }
 
   const qr = loginQr({
-    ...(qrFile === undefined ? {} : { qrFile }),
     diagnostic: streams.diagnostic,
     note: renderer.note,
     columns: () => columns,
+    terminal: interactive,
+    json: format !== "pretty",
   })
-  // A cut command never reaches its own finally in time; the image logs the account in while it is valid.
-  if (qr.path) track({ close: async () => qr.close() })
   const client = createClient({ events }, { own: true })
   try {
     return await client.login.byQr({
-      show: async (link) => {
-        qr.show(link, "scan in the MAX app on your phone")
+      show: async (link, expiresAt) => {
+        qr.show(link, "scan in the MAX app on your phone", new Date(expiresAt))
       },
       askPassword: (hint, again) => {
         if (!interactive)
@@ -210,7 +203,6 @@ const obtain = async (
       },
     })
   } finally {
-    qr.close()
     await client.close()
   }
 }

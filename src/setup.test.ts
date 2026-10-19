@@ -1,9 +1,10 @@
-import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs"
+import { existsSync, mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { PassThrough } from "node:stream"
 import { stripVTControlCharacters } from "node:util"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { plainQr } from "@wirecat/cli-core"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -131,40 +132,25 @@ describe("MAX guided setup", () => {
     expect(h.max.unexpected).toEqual([])
   })
 
-  it("**--qr-file logs in without a terminal**: the code goes to a mode-600 PNG that is removed after", async () => {
+  it("**logs in by QR without a terminal**: the code is printed as text to paste", async () => {
     const h = harness({ token: false })
-    const path = join(mkdtempSync(join(tmpdir(), "max-setup-qr-")), "login.png")
-    let mode: number | undefined
+    const link = "https://qr.example/?token=synthetic"
     const qr = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
-        [Opcode.GET_QR]: {
-          qrLink: "https://qr.example/?token=synthetic",
-          trackId: "synthetic",
-          pollingInterval: 1,
-          expiresAt: Date.now() + 60_000,
-        },
-        [Opcode.GET_QR_STATUS]: () => {
-          mode = statSync(path).mode & 0o777
-          return { status: { loginAvailable: true } }
-        },
+        [Opcode.GET_QR]: { qrLink: link, trackId: "synthetic", pollingInterval: 1, expiresAt: Date.now() + 60_000 },
+        [Opcode.GET_QR_STATUS]: { status: { loginAvailable: true } },
         [Opcode.LOGIN_BY_QR]: { tokenAttrs: { LOGIN: { token: "qr-setup-token" } } },
       },
     })
     let count = 0
     h.environment.connection = () =>
       new Connection({ createSocket: (count++ === 0 ? qr : h.max).createSocket, timeoutMs: 50 })
-    expect(await h.setup("--qr-file", path, "--json")).toBe(0)
-    if (process.platform !== "win32") expect(mode).toBe(0o600)
-    expect(existsSync(path)).toBe(false)
+    expect(await h.setup("--json")).toBe(0)
+    const lines = plainQr(link).split("\n")
+    const stderr = h.streams.stderr.join("\n")
+    for (const line of lines) expect(stderr).toContain(line)
     expect(h.store.readToken()).toBe("qr-setup-token")
-  })
-
-  it("refuses --qr-file for anything but a QR login, before contacting MAX", async () => {
-    const h = harness({ token: false })
-    expect(await h.setup("--method", "qr-chrome", "--qr-file", "x.png", "--json")).toBe(2)
-    expect(h.streams.stderr.join("\n")).toContain("--qr-file is for a QR login")
-    expect(h.max.sent).toEqual([])
   })
 
   it("does not try a fresh login when a previously used keyring is unreachable", async () => {
@@ -222,15 +208,6 @@ describe("MAX guided setup", () => {
     expect(silent.closed).toBe(true)
     expect(h.streams.stdout).toEqual([])
     expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.code).toBe("timeout")
-  })
-
-  it("refuses a first QR login without a terminal with the refusal tg and wa give, and does not contact MAX", async () => {
-    const h = harness({ token: false })
-    expect(await h.setup("--json")).toBe(2)
-    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.message).toBe(
-      "max setup-test setup shows a QR code to scan — run it in a terminal, or pass --qr-file <png>",
-    )
-    expect(h.max.sent).toEqual([])
   })
 
   it("skips the optional agent question under CI even on a terminal", async () => {
