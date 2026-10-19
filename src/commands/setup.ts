@@ -162,11 +162,10 @@ export const setupCommand = (): Command =>
           screen.detail(
             "Windows: use max.cmd or npm.cmd if PowerShell blocks scripts. Open a new terminal after installing Node.js.",
           )
+        screen.step(2, "Link this device")
         if (reused || store.hasLoggedIn()) {
-          screen.step(2, "Log in")
           screen.detail("✓ existing session, no new login")
         } else {
-          screen.step(2, "Log in: scan the QR code with MAX on your phone")
           const login = await startSession(underStep(context, screen), options.method, events, options.qrFile)
           if (login.firstLogin) screen.detail(TERMS_NOTICE)
         }

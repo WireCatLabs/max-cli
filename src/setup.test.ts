@@ -123,6 +123,9 @@ describe("MAX guided setup", () => {
     h.environment.columns = 200
     expect(await h.setup("--agent", "none")).toBe(0)
     expect(h.store.readToken()).toBe("qr-setup-token")
+    const screen = h.streams.stderr.join("\n")
+    expect(screen).toContain("[2/4] Link this device")
+    expect(screen.slice(0, screen.indexOf("▀"))).not.toMatch(/scan/i)
     expect(qr.unexpected).toEqual([])
     expect(h.max.unexpected).toEqual([])
   })
