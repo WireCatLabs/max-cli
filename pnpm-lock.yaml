@@ -36,9 +36,6 @@ importers:
       ogg-opus-decoder:
         specifier: 1.7.5
         version: 1.7.5
-      qrcode-generator:
-        specifier: 2.0.4
-        version: 2.0.4
       sherpa-onnx:
         specifier: 1.13.8
         version: 1.13.8

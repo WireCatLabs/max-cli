@@ -1,14 +1,10 @@
 import { type ChildProcess, spawn } from "node:child_process"
-import { randomBytes } from "node:crypto"
 import { existsSync, mkdtempSync, realpathSync, rmSync } from "node:fs"
-import { createServer } from "node:http"
-import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import { delimiter, join } from "node:path"
 import type { Readable, Writable } from "node:stream"
 import { setTimeout as delay } from "node:timers/promises"
 import { CliError } from "@wirecat/cli-base"
-import qrcode from "qrcode-generator"
 import type { Closeable } from "../deadline.js"
 
 /**
@@ -16,88 +12,16 @@ import type { Closeable } from "../deadline.js"
  * the owner's desktop — the real ones refuse inside the test sandbox.
  */
 export interface BrowserDoors {
-  /** Shows a page in whatever browser the system opens links with. */
-  open: (url: string) => Promise<void>
   /** Opens web.max.ru in a Chromium-family browser and waits for the page to be logged in. */
   chromiumToken: (options: { track: (closeable: Closeable) => void; waitMs: number }) => Promise<string>
 }
 
 export const realBrowser: BrowserDoors = {
-  open: (url) => openUrl(url),
   chromiumToken: (options) => tokenFromChromium(options),
 }
 
 const WEB_MAX = "https://web.max.ru/"
 const AUTH_KEY = "__oneme_auth"
-
-/**
- * The QR page, served from `127.0.0.1` rather than written to a file: a browser installed as a
- * snap cannot read our temporary directory, and a file would leave the link on disk. The path is
- * random, so another local user guessing the port finds nothing.
- */
-export const serveQrPage = async (link: string): Promise<{ url: string } & Closeable> => {
-  const path = `/${randomBytes(16).toString("hex")}`
-  const code = qrcode(0, "M")
-  code.addData(link)
-  code.make()
-  const page = qrHtml(code.createSvgTag({ cellSize: 8, margin: 4, scalable: true }))
-
-  const server = createServer((request, response) => {
-    if (request.url !== path) {
-      response.writeHead(404).end()
-      return
-    }
-    response
-      .writeHead(200, {
-        "content-type": "text/html; charset=utf-8",
-        "cache-control": "no-store",
-        "referrer-policy": "no-referrer",
-      })
-      .end(page)
-  })
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject)
-    server.listen(0, "127.0.0.1", resolve)
-  })
-  const { port } = server.address() as AddressInfo
-
-  return {
-    url: `http://127.0.0.1:${port}${path}`,
-    close: () =>
-      new Promise<void>((resolve) => {
-        server.closeAllConnections()
-        server.close(() => resolve())
-      }),
-  }
-}
-
-const qrHtml = (svg: string): string => `<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><title>MAX — вход</title>
-<style>body{font-family:system-ui,sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#fff;color:#111}
-main{text-align:center;max-width:22rem}svg{width:18rem;height:18rem}</style></head>
-<body><main>${svg}<p>Отсканируйте код приложением MAX на телефоне. Код действует около двух минут.</p>
-<p>После входа эту вкладку можно закрыть.</p></main></body></html>`
-
-export const openUrl = async (url: string): Promise<void> => {
-  refuseInTests()
-  const [command, args] =
-    process.platform === "darwin"
-      ? ["open", [url]]
-      : process.platform === "win32"
-        ? ["cmd", ["/c", "start", "", url]]
-        : ["xdg-open", [url]]
-
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, { stdio: "ignore", detached: true, windowsHide: true })
-    child.once("error", () =>
-      reject(new CliError("configuration_error", "no browser could be opened here — use `session start token`")),
-    )
-    child.once("spawn", () => {
-      child.unref()
-      resolve()
-    })
-  })
-}
 
 /**
  * Chrome, Chromium, Edge or Brave — any browser that speaks the DevTools protocol. `MAX_BROWSER`
