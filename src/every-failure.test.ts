@@ -57,7 +57,7 @@ describe("every failure is kept as a run", () => {
   })
 
   it("`session start` refused before anything happened", async () => {
-    expect(await runWith(["f-start", "session", "start", "qr"])).toBe(2)
+    expect(await runWith(["f-start", "session", "start", "qr-chrome"])).toBe(2)
     expect(runsOf("f-start")).toMatchObject([{ command: "session start", errorCode: "validation_error" }])
   })
 

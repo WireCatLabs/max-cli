@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync, mkdtempSync, statSync } from "node:fs"
+import { mkdirSync } from "node:fs"
 import { createServer } from "node:net"
-import { tmpdir } from "node:os"
-import { dirname, join } from "node:path"
+import { dirname } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { PASTE_QR, plainQr } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -96,7 +96,7 @@ describe("max session start qr", () => {
     expect(stored()).toBe("qr-token")
   })
 
-  it("draws nothing on a terminal too narrow for the code, opens nothing, and points at --qr-file, not at a code to scan", async () => {
+  it("draws nothing on a terminal too narrow for the code, opens nothing, and says to widen it, not where to scan", async () => {
     const login = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
@@ -111,59 +111,44 @@ describe("max session start qr", () => {
 
     const stderr = streams.stderr.join("\n")
     expect(stderr).not.toMatch(/[█▀▄]/)
-    expect(stderr).toMatch(/20 columns wide .* --qr-file <png>/)
+    expect(stderr).toMatch(/20 columns wide .* widen it/)
     expect(stderr).not.toMatch(/\bscan\b/i)
     expect(stored()).toBe("qr-token")
   })
 
-  it("**--qr-file writes the code as a PNG with mode 600, with no terminal, and removes it after**", async () => {
-    const path = join(mkdtempSync(join(tmpdir(), "max-qr-")), "login.png")
-    let mode: number | undefined
+  it("**without a terminal, prints the code as text to paste and as one JSON line, then stores the token**", async () => {
+    const code = qrCode()
     const login = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
-        [Opcode.GET_QR]: qrCode(),
-        [Opcode.GET_QR_STATUS]: () => {
-          mode = statSync(path).mode & 0o777
-          return { status: { loginAvailable: true } }
-        },
+        [Opcode.GET_QR]: code,
+        [Opcode.GET_QR_STATUS]: inTurn({ status: {} }, { status: { loginAvailable: true } }),
         [Opcode.LOGIN_BY_QR]: { tokenAttrs: { LOGIN: { token: "qr-token" } } },
       },
     })
     const { start, stored, streams } = setUp(login, adopting(), { interactive: false, tty: false })
 
-    expect(await start("qr", "--qr-file", path, "--json")).toBe(0)
+    expect(await start("qr", "--json")).toBe(0)
 
-    if (process.platform !== "win32") expect(mode).toBe(0o600)
-    expect(existsSync(path)).toBe(false)
-    expect(stored()).toBe("qr-token")
-    expect(streams.stderr.join("\n")).not.toMatch(/[█▀▄]/)
-    for (const secret of ["qr-token", "track-secret", "qr-link-secret"])
-      expect([...streams.stdout, ...streams.stderr].join("\n")).not.toContain(secret)
-  })
-
-  it("removes the --qr-file image when the login is cut off before the phone answers", async () => {
-    const path = join(mkdtempSync(join(tmpdir(), "max-qr-")), "login.png")
-    const cut = new AbortController()
-    let written = false
-    const login = mockMax({
-      answers: {
-        [Opcode.SESSION_INIT]: {},
-        [Opcode.GET_QR]: qrCode(),
-        [Opcode.GET_QR_STATUS]: () => {
-          written ||= existsSync(path)
-          cut.abort()
-          return { status: {} }
+    const stderr = streams.stderr.join("\n")
+    expect(stderr).toContain(plainQr(code.qrLink))
+    expect(stderr).toContain(PASTE_QR)
+    expect(stderr).not.toContain("\x1b")
+    const events = streams.stderr.filter((line) => line.startsWith('{"event"')).map((line) => JSON.parse(line))
+    expect(events).toEqual([
+      {
+        event: "qr",
+        qr: {
+          text: plainQr(code.qrLink),
+          expires_at: new Date(code.expiresAt).toISOString(),
+          scan: "scan in the MAX app on your phone",
         },
       },
-    })
-    const { start, stored } = setUp(login, adopting(), { interactive: false, tty: false, signal: cut.signal })
-
-    expect(await start("qr", "--qr-file", path, "--json")).not.toBe(0)
-
-    expect(written).toBe(true)
-    expect(existsSync(path)).toBe(false)
-    expect(stored()).toBeUndefined()
+    ])
+    expect(stored()).toBe("qr-token")
+    expect(JSON.parse(streams.stdout.join(""))).toMatchObject({ item: { stored: true, method: "qr" } })
+    for (const secret of ["qr-token", "track-secret", "qr-link-secret"])
+      expect([...streams.stdout, ...streams.stderr].join("\n")).not.toContain(secret)
   })
 
   it("asks for the cloud password when MAX wants one, and sends it", async () => {
@@ -328,26 +313,10 @@ describe("max session start token from MAX_TOKEN", () => {
 })
 
 describe("max session start without a person at the terminal", () => {
-  it.each(["qr", "qr-chrome", "sms"])("refuses %s before opening anything", async (method) => {
+  it.each(["qr-chrome", "sms"])("refuses %s before opening anything", async (method) => {
     const { start, connections } = setUp(undefined, adopting(), { interactive: false })
 
     expect(await start(method)).toBe(2)
-    expect(connections()).toBe(0)
-  })
-
-  it("refuses qr with the refusal tg and wa give, pointing at --qr-file", async () => {
-    const { start, streams } = setUp(undefined, adopting(), { interactive: false })
-
-    expect(await start("qr", "--json")).toBe(2)
-    expect(JSON.parse(streams.stderr.at(-1) ?? "").error.message).toBe(
-      "max default session start qr shows a QR code to scan — run it in a terminal, or pass --qr-file <png>",
-    )
-  })
-
-  it("refuses --qr-file for anything but a QR login", async () => {
-    const { start, connections } = setUp(undefined, adopting())
-
-    expect(await start("qr-chrome", "--qr-file", "x.png")).toBe(2)
     expect(connections()).toBe(0)
   })
 

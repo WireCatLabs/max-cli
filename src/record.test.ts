@@ -146,7 +146,11 @@ describe("the record", () => {
       login.chats.slice(0, 1),
     )
     const store = await openStore({ env })
-    expect(await store.chats.leftChats({ provider: "max", account: ME })).toEqual({ chats: 1, messages: 0 })
+    expect(await store.chats.leftChats({ provider: "max", account: ME })).toEqual({
+      chats: 1,
+      messages: 0,
+      left: [expect.objectContaining({ messages: 0 })],
+    })
     await store.close()
   })
 
