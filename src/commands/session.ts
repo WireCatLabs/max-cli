@@ -196,8 +196,7 @@ const obtain = async (
   try {
     return await client.login.byQr({
       show: async (link) => {
-        renderer.note("scan this code with the MAX app on your phone")
-        qr.show(link)
+        qr.show(link, "scan in the MAX app on your phone")
       },
       askPassword: (hint, again) => {
         if (!interactive)
