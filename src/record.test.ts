@@ -168,4 +168,75 @@ describe("the record", () => {
     expect(await store.sync.syncState(key, "login.marker")).toBeUndefined()
     await store.close()
   })
+
+  describe("rejoining chats the owner is back in", () => {
+    const key = { provider: "max", account: ME }
+    const other = { provider: "max", account: "10000009" }
+    const chat = (id: string) => ({
+      id,
+      title: `Chat ${id}`,
+      kind: "group" as const,
+      unreadCount: 0,
+      lastMessageAt: null,
+      participantsCount: null,
+    })
+    const seeded = async () => {
+      const { env } = setUp()
+      const store = await openStore({ env })
+      await store.chats.saveChats(key, [
+        { ...chat("111"), membershipState: "left" },
+        { ...chat("222"), membershipState: "archived" },
+        chat("333"),
+      ])
+      await store.chats.saveChats(other, [{ ...chat("111"), membershipState: "left" }])
+      await store.close()
+      return { env, record: maxRecord({ account: () => ME, env }) }
+    }
+    const states = async (env: { MESSAGING_STORE: string }) => {
+      const store = await openStore({ env })
+      const left = await store.chats.leftChats(key)
+      const all = (await store.chats.chats(key, {})).items
+      const otherLeft = await store.chats.leftChats(other)
+      await store.close()
+      return {
+        left: left.chats,
+        otherLeft: otherLeft.chats,
+        listed: all.map((stored) => [stored.id, stored.membershipState]),
+      }
+    }
+
+    it("a cut-short list takes the left mark off a chat it names and keeps the archived one", async () => {
+      const { env, record } = await seeded()
+      const known = await record.rememberChats([chat("111"), chat("222")], false)
+      await record.close()
+
+      expect(known.map((stored) => stored.id).sort()).toEqual(["111", "222", "333"])
+      expect(await states(env)).toMatchObject({
+        left: 0,
+        otherLeft: 1,
+        listed: expect.arrayContaining([["222", "archived"]]),
+      })
+    })
+
+    it("a complete list still marks the chats it leaves out as left", async () => {
+      const { env, record } = await seeded()
+      const known = await record.rememberChats([chat("111"), chat("222")], true)
+      await record.close()
+
+      expect(known.map((stored) => stored.id).sort()).toEqual(["111", "222"])
+      expect(await states(env)).toMatchObject({ left: 1, listed: expect.arrayContaining([["222", "archived"]]) })
+    })
+
+    it("a login takes the left mark off the chats it names and keeps the archived one", async () => {
+      const { env, record } = await seeded()
+      await record.applyLogin({ chats: [chat("111"), chat("222")], people: [], members: new Map() })
+      await record.close()
+
+      expect(await states(env)).toMatchObject({
+        left: 0,
+        otherLeft: 1,
+        listed: expect.arrayContaining([["222", "archived"]]),
+      })
+    })
+  })
 })
