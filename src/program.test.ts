@@ -166,6 +166,23 @@ describe("the program", () => {
     expect((await runWith(["--help"])).stdout).toContain("Usage: max")
   })
 
+  it("prints help and exits 0 for `--help` on every command", async () => {
+    type Node = { name(): string; commands: readonly Node[] }
+    const leaves = (command: Node, path: string[] = []): string[][] =>
+      command.commands.flatMap((child) => {
+        const here = [...path, child.name()]
+        return child.commands.length === 0 ? [here] : leaves(child, here)
+      })
+    const paths = leaves(createProgram()).filter(([top]) => top !== "help")
+    const failed: string[] = []
+    for (const path of paths) {
+      const { code, stderr } = await runWith(["h-sweep", ...path, "--help"], { keyring: memoryKeyring() })
+      if (code !== 0) failed.push(`${path.join(" ")}: ${code} ${stderr}`)
+    }
+    expect(paths.length).toBeGreaterThan(300)
+    expect(failed).toEqual([])
+  }, 120_000)
+
   it("**opens on the first screen**, which says what max does and where the full list is", async () => {
     const { stdout } = await runWith(["--help"])
     expect(stdout).toContain("What you can do:")

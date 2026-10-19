@@ -11,6 +11,9 @@
 - **`session start qr --qr-file <png>` и `setup --qr-file <png>`**, как в tg и wa: QR-код пишется в PNG для агента,
   без терминала. Файл создаётся сразу с режимом `0600` и удаляется после входа. Вход по QR теперь идёт через
   `loginQr` из cli-core 0.347.0, один для всех трёх CLI.
+- **Следующий шаг в выводе `--json` и в ошибке несёт `line` — всю команду с профилем** (cli-core 0.348.0):
+  `"line": "max personal mcp config"` рядом с `"command": "mcp config"`. Скопированная одна `command` падала с
+  «name a profile». `command` не меняется, в ответах MCP `line` нет.
 
 ### Изменено — может сломать скрипты
 
@@ -20,6 +23,12 @@
   дождаться нечего: прервите команду и запустите её шире или с `--qr-file`.
 - Без терминала `session start qr` и `setup` отвечают так же, как tg и wa: «shows a QR code to scan — run it in a
   terminal, or pass --qr-file <png>».
+
+### Исправлено
+
+- **Подсказки в ошибках и заметках называют профиль**: «the store is behind this build — `max personal store
+  migrate`» вместо `max store migrate`, которая при копировании падала с «name a profile». Так же подсказка о
+  скачивании модели речи: `max personal models audio download gigaam-v3`.
 
 ## 0.63.0 — 19.10.2026
 
