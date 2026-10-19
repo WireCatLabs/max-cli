@@ -2264,6 +2264,7 @@ max store clear [options]
 |---|---|
 | `--left` | the chats this account has left — the only thing this clears. |
 | `--allow-dangerous` | yes, delete — it cannot be undone, and a chat you left cannot be fetched again. |
+| `--dry-run` | list the chats it would delete, and delete nothing. |
 
 **Returns:** delete from the store the chats this account has left, with their messages
 
