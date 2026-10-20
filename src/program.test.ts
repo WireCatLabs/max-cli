@@ -198,7 +198,7 @@ describe("the program", () => {
   it("prints one scenario's steps as data, with no profile", async () => {
     const { stdout, code } = await runWith(["guide", "catch-up", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout).item.steps[0].run).toBe("max review date>1d --unanswered 4h")
+    expect(JSON.parse(stdout).item.steps[0].run).toBe("max review 'date>1d' --unanswered 4h")
   })
 
   it("prints the options for every command under `help options`, with no profile", async () => {

@@ -5,20 +5,20 @@ Usage: max <profile> <command> [options]
 Account commands start with your profile, a name you choose; none is ever assumed.
 
 What you can do:
-  review date>1d --unanswered 4h  questions to you nobody answered, across every chat
-  tasks list                      questions and promises waiting on you
-  search all "invoice"            messages, notes, file text and voice transcripts at once
-  contacts context <person>       shared chats and the last messages each way
-  schedule agent …                an agent on a timer that reads and drafts, never sends
-  bot messages send <chat>        your bot, through MAX's official Bot API
-  MAX_READ_ONLY=1 max …           an agent that can never send
+  review 'date>1d' --unanswered 4h  questions to you nobody answered, across every chat
+  tasks list                        questions and promises waiting on you
+  search all "invoice"              messages, notes, file text and voice transcripts at once
+  contacts context <person>         shared chats and the last messages each way
+  schedule agent …                  an agent on a timer that reads and drafts, never sends
+  bot messages send <chat>          your bot, through MAX's official Bot API
+  MAX_READ_ONLY=1 max …             an agent that can never send
 
 Works with:
-  tg                              Telegram in the same local store: search, review and tasks offline
-  wa                              WhatsApp in the same local store: search, review and tasks offline
-  zm                              Zoom meetings: transcripts and summaries, searchable with your messages
-  drive                           Google Drive and Docs as local text, searchable with your messages
-  memo context <person>           one person across messengers, mail, notes and meetings
+  tg                                Telegram in the same local store: search, review and tasks offline
+  wa                                WhatsApp in the same local store: search, review and tasks offline
+  zm                                Zoom meetings: transcripts and summaries, searchable with your messages
+  drive                             Google Drive and Docs as local text, searchable with your messages
+  memo context <person>             one person across messengers, mail, notes and meetings
 
 Start here:   max personal setup  (any profile name works)
 Next:         max commands        every command, by section

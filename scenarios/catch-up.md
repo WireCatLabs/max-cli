@@ -2,7 +2,7 @@
 title: Catch up after a day away
 goal: Know who waits on you and what you promised, without opening every chat.
 steps:
-  - run: max review date>1d --unanswered 4h
+  - run: max review 'date>1d' --unanswered 4h
     why: questions to you that nobody answered for four hours, across every chat
   - run: max inbox --new
     why: other people's messages that arrived since your last check, each one once
