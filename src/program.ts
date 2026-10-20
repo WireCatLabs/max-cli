@@ -11,6 +11,7 @@ import {
   imagesCommand,
   inboxCommand,
   inSection,
+  MEMO_SCENARIOS,
   mcpCommand,
   mentionsCommand,
   metadataCommand,
@@ -85,7 +86,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     pitch:
       "your personal MAX for agents and scripts. Reads go to a local store; search, review and tasks work offline.",
     can: [
-      { command: "review date>1d --unanswered 4h", does: "questions to you nobody answered, across every chat" },
+      { command: "review 'date>1d' --unanswered 4h", does: "questions to you nobody answered, across every chat" },
       { command: "tasks list", does: "questions and promises waiting on you" },
       { command: 'search all "invoice"', does: "messages, notes, file text and voice transcripts at once" },
       { command: "contacts context <person>", does: "shared chats and the last messages each way" },
@@ -142,7 +143,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     botCommand(run),
     guideCommand(MAX_APP, {
       directory: fileURLToPath(new URL("../scenarios", import.meta.url)),
-      worksWith: [{ tool: "memo", name: "person-brief", title: "one person across every tool" }],
+      worksWith: [MEMO_SCENARIOS.personBrief],
     }),
   ],
   configure: (program) => {
