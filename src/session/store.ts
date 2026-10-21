@@ -45,7 +45,10 @@ export const LOGIN_PAUSES_MS = [1, 5, 30, 60, 6 * 60, 24 * 60].map((minutes) => 
 export const loginPausedUntil = (state: SessionState, now = Date.now()): string | undefined =>
   state.loginPausedUntil !== undefined && Date.parse(state.loginPausedUntil) > now ? state.loginPausedUntil : undefined
 
-export const withLoginRefused = (state: SessionState, now = Date.now()): SessionState => {
+export const withLoginRefused = (
+  state: SessionState,
+  now = Date.now(),
+): SessionState & { loginPausedUntil: string } => {
   const refusals = (state.loginRefusals ?? 0) + 1
   const wait = LOGIN_PAUSES_MS[Math.min(refusals, LOGIN_PAUSES_MS.length) - 1] ?? 0
   return { ...state, loginRefusals: refusals, loginPausedUntil: new Date(now + wait).toISOString() }

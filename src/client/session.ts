@@ -2,6 +2,7 @@ import { CliError } from "@wirecat/cli-base"
 import type { Id } from "@wirecat/cli-core"
 import { toChat, toContact, toProfile } from "../domain/map.js"
 import type { Invoke, wireClient } from "../generated/client.generated.js"
+import { shownTime } from "../output.js"
 import { asFirstWord } from "../profile.js"
 import type { Wire } from "../protocol/connection.js"
 import { asId, type Payload } from "../protocol/frame.js"
@@ -112,7 +113,7 @@ export const createSession = (deps: Dependencies) => {
       deps.store.writeState(paused)
       throw new CliError(
         "rate_limited",
-        `${failure.message} — this profile will not log in again before ${paused.loginPausedUntil}; ` +
+        `${failure.message} — this profile will not log in again before ${shownTime(paused.loginPausedUntil)}; ` +
           "logging in sooner is what keeps an account locked",
       )
     }
