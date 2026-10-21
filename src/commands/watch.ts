@@ -1,10 +1,12 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
+import { timezoneOf } from "@wirecat/cli-base/query"
 import { type MessageHit, renderMessages } from "@wirecat/cli-core"
 import { messageItem, REMOTE_READ, snakeKeys } from "@wirecat/cli-core/cli"
 import type { AccountKey } from "@wirecat/cli-core/store"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
+import { shownTime } from "../output.js"
 import type { ServerEvent } from "../server/server.js"
 import { ensureServer } from "../server/start.js"
 import { subscribe } from "../server/subscribe.js"
@@ -37,6 +39,8 @@ export const watchCommand = (): Command =>
       const end = () => stop.abort()
       process.once("SIGINT", end)
       process.once("SIGTERM", end)
+      const zone = timezoneOf()
+      if (format === "pretty") renderer.note(`times in ${zone}`)
 
       const render = (message: MessageHit) =>
         renderMessages([message], {
@@ -47,6 +51,7 @@ export const watchCommand = (): Command =>
           profile: settings.profile,
           provider: "max",
           locale: MAX_APP.locale,
+          timeZone: zone,
         })
       let seen = false
       let reader: AccountKey | undefined
@@ -74,6 +79,7 @@ export const watchCommand = (): Command =>
                     pretty: format === "pretty",
                     render,
                     reader,
+                    zone,
                   })
                   if (line !== undefined) streams.data(line)
                 }
@@ -108,12 +114,13 @@ export const watchLine = (
     pretty,
     render,
     reader,
-  }: { events: boolean; pretty: boolean; render: (message: MessageHit) => string; reader: AccountKey },
+    zone,
+  }: { events: boolean; pretty: boolean; render: (message: MessageHit) => string; reader: AccountKey; zone: string },
 ): string | undefined => {
   const item = (message: MessageHit) => messageItem(message, reader)
   if (event.event === "change") {
     if (!events) return undefined
-    if (pretty) return describeChange(event.change, render)
+    if (pretty) return describeChange(event.change, render, zone)
     const { change } = event
     return JSON.stringify(
       change.event === "edit" ? { event: "edit", message: item(change.message) } : snakeKeys(change),
@@ -130,12 +137,12 @@ const readerOf = (viewerId: string | undefined): AccountKey => {
   return { provider: "max", account: viewerId }
 }
 
-const describeChange = (change: MessageChange, render: (message: MessageHit) => string): string => {
+const describeChange = (change: MessageChange, render: (message: MessageHit) => string, zone: string): string => {
   if (change.event === "edit") return `edited:\n${render(change.message)}`
   if (change.event === "chat") return `chat changed: ${change.chat.title ?? change.chat.id}\n`
   const where = change.chatTitle ?? change.chatId
   if (change.event === "read") {
-    return `read in ${where} by ${change.userId}${change.upToTime ? ` up to ${change.upToTime}` : ""}\n`
+    return `read in ${where} by ${change.userId}${change.upToTime ? ` up to ${shownTime(change.upToTime, zone)}` : ""}\n`
   }
   if (change.event === "delete") return `deleted in ${where}: message ${change.messageId}\n`
   const counts = change.reactions.counts.map(({ reaction, count }) => `${reaction} ${count}`).join(", ")

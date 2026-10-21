@@ -2,6 +2,7 @@ import { CliError } from "@wirecat/cli-base"
 import type { Chat, ChatKind, Id, Message, Page } from "@wirecat/cli-core"
 import { providerErrorKey } from "@wirecat/cli-core/cli"
 import type { ChatAction, Upload as SharedUpload } from "@wirecat/cli-core/sends"
+import { shownTime } from "../output.js"
 import { ProtocolError } from "../protocol/connection.js"
 import type { Payload } from "../protocol/frame.js"
 import type { Resume } from "../session/handshake.js"
@@ -237,7 +238,7 @@ export const refuseWhilePaused = (state: SessionState): void => {
   if (until === undefined) return
   throw new CliError(
     "rate_limited",
-    `MAX refused this profile's last login for too many attempts; it will not try again before ${until} — ` +
+    `MAX refused this profile's last login for too many attempts; it will not try again before ${shownTime(until)} — ` +
       "logging in sooner is what keeps an account locked",
   )
 }

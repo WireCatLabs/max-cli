@@ -1,4 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
+import { timezoneOf, zonedMoment } from "@wirecat/cli-base/query"
 import type { AttachmentLink, Button, Id, MediaKind, Message, Page, WindowedMessage } from "@wirecat/cli-core"
 import { delayMs } from "../config.js"
 import { namesFrom, toButtons, toMessage } from "../domain/map.js"
@@ -29,6 +30,16 @@ interface Dependencies {
     messageId: Id,
     options?: { before?: number; after?: number; reactions?: boolean },
   ) => Promise<WindowedMessage[]>
+}
+
+/** A time without a zone is the computer's wall clock, and a date alone is its local midnight, as a person means it. */
+const typedTime = (wanted: string): number | undefined => {
+  try {
+    return zonedMoment(wanted, timezoneOf(), { start: 0, end: wanted.length })
+  } catch (error) {
+    if (error instanceof CliError) return undefined
+    throw error
+  }
 }
 
 export const createMessageReads = (deps: Dependencies) => {
@@ -178,7 +189,7 @@ export const createMessageReads = (deps: Dependencies) => {
       const time = /^\d+$/.test(wanted)
         ? timeOfMessageId(wanted)
         : ago === undefined
-          ? Date.parse(wanted)
+          ? typedTime(wanted)
           : deps.now() - ago
       if (time === undefined || Number.isNaN(time)) {
         throw new CliError(
