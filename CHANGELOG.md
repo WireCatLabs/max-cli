@@ -17,8 +17,9 @@
   часов раньше или позже.
   Что учесть: скрипт, который передавал дату без пояса и ждал UTC, теперь получит другое окно. Чтобы оно не
   менялось, пишите время с `Z`: `2026-09-01T00:00:00Z`. JSON-ответы по-прежнему дают время в UTC с `Z`.
-  `stats chats retention` пока читает `--since-time` и `--until-time` в поясе компьютера даже с `--timezone`, а
-  дата в `--until-time` там — начало дня, а не конец; передавайте этой команде время с `Z`.
+- **`stats chats retention` и `chats stats show` читают `--since-time` и `--until-time` в поясе `--timezone`**, а
+  дата в `--until-time` у retention охватывает весь местный день (cli-core 0.380.0). Ответы `stats charts`,
+  `contacts timeline` и MCP `stats` называют пояс в `meta.timezone` и окно в UTC в `meta.window`.
 
 ### Исправлено
 
