@@ -9,7 +9,7 @@
 ### Что нового
 
 - **JSON-ответы команд с фильтром по дате называют пояс, в котором прочитана дата, и дают окно в UTC**
-  (cli-core 0.384.0): `meta.timezone` — пояс, если в значении его не было, `meta.window` — границы `since` и `until`
+  (cli-core 0.385.0): `meta.timezone` — пояс, если в значении его не было, `meta.window` — границы `since` и `until`
   в UTC. Так отвечают `stats chats show`, `stats chats retention`, `stats messages unanswered`,
   `stats messages discussion`, `stats contacts responses`, `stats chats newcomers`, `contacts context`,
   `search conversations`, `runs search`, `messages sync`, `store export`, `replies test`, а также `inbox`, `review`,
