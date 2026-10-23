@@ -6,6 +6,9 @@ P3 work: nice to have, research, someday. Same ids, marks and one-entry format a
 
 ## Features
 
+- **CLI-83** · P3 · Read receipts and presence in `watch --events`, as PyMax and tsmax show them (MAX-34 covers
+  typing only).
+- **CLI-84** · P3 · `polls voters`, as tg and wa have it.
 - **CLI-36** · P3 · The local copy made optional: a setting under which `max` writes no chats or messages to disk
   (`--offline` and `search messages` then refuse). `src/record.ts`, shared adapter recording.
 - **MAX-49** · 🟡 P3 · Two-step password: set and remove one (112 → 107 → 111); logging in with it shipped.

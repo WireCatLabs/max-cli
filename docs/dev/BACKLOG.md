@@ -30,12 +30,19 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   ("`review` asks the messenger what changed"). Owner (2026-10-23): make `review --offline` work over the local
   store, saying it shows only what was already synced. Refusal in cli-core `src/services/inbox` (`review`), so tg
   and wa get it too; `src/program.ts:87` stays as is once it works.
-- **CLI-78** · 🚩 P1 · Every `--help` "Example:" line drops the profile (`max setup`, `max review`), so the pasted
+- **CLI-78** · P1 · Every `--help` "Example:" line drops the profile (`max setup`, `max review`), so the pasted
   example fails with "name a profile". Generated in cli-core `src/cli/help/command-help` (`generatedExample`);
-  `Returns:` also repeats the description when a command has no schema.
+  `Returns:` also repeats the description when a command has no schema. Owner (2026-10-23): examples use a real profile
+  name.
+- **DOC-21** · P1 · Two claims about max-mcp are untrue: `docs/index.md:121` says it cannot send video (its `send_file`
+  sends video files) and `:113` says it has no export (it dumps channel posts, 1,000 per call). Also tone down
+  `README.md:113` "as in the app". Evidence: cli-private `research/comparisons/max.md`.
 
 ## Next (P2)
 
+- **CLI-82** · P2 · MCP exposes every command except login, `upgrade` and `complete`, with the exceptions listed in
+  the docs (owner, 2026-10-23); today 79 personal and 53 bot commands are missing (export, backup, auto-replies,
+  schedules, raw Bot API calls).
 - **MAX-52** · 🟡 P2 · Send the rest of the requests a real tab sends after LOGIN: 48 `{chatIds}`, 32 and 35
   `{contactIds}`, 28, stories 208/209 — from `max serve` only; never 22. `src/client/live.ts:44` (`readLikeTab`);
   [notes](BACKLOG-NOTES.md#max-52).
