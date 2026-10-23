@@ -217,6 +217,7 @@ describe("max commands", () => {
       "attachments jobs start",
       "attachments jobs stop",
       "attachments jobs uninstall",
+      "attachments move",
       "tags auto (reads remotely)",
       "tags add",
       "tags remove",

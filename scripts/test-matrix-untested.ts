@@ -1,3 +1,5 @@
+import { MEDIA_ARCHIVE_UNTESTED } from "./test-matrix-media-archive.ts"
+
 /**
  * What `max` cannot test offline, each with the reason and where it is checked instead. An entry
  * that names a command or option the program no longer has fails `pnpm test:matrix`.
@@ -10,19 +12,20 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
-  ...[
-    ["attachments download"],
-    ["attachments download", "--chat"],
-    ["attachments download", "--since-time"],
-    ["attachments download", "--pause"],
-    ["attachments check"],
-    ["attachments jobs *"],
-  ].map(([command, option]) => ({
-    command: command as string,
+  ...["--public-url", "--port"].map((option) => ({
+    command: "bot watch",
+    option,
+    reason:
+      "shared cli-core webhook receiver; exercised with injected HTTP and bot ports in src/cli/bot/webhook-receiver.test.ts",
+  })),
+  ...[undefined, "--limit", "--since-time"].map((option) => ({
+    command: "contacts prepare",
     ...(option ? { option } : {}),
     reason:
-      "shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts and src/background/daily-archive-timer.test.ts",
+      "shared cli-core bounded person briefing; tested in src/services/person-preparation.test.ts and src/cli/messenger/messenger.test.ts",
   })),
+
+  ...MEDIA_ARCHIVE_UNTESTED,
 
   {
     command: "",
