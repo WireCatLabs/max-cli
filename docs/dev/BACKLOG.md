@@ -47,5 +47,3 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   [notes](BACKLOG-NOTES.md#res-5).
 - **CLI-79** · P2 · `chats requests accept|decline --all` and `--link <link>`, as tg has them (`cli-dev audit`
   same-path-contract). cli-core `chats requests`; max's join requests: `src/client/chat-writes.ts`.
-- **OPS-22** · P2 · CI calls cli-base's reusable `release-checks.yml` pinned at 0.31.0 (cli-base is 0.50); update
-  it and check the release job still passes. `.github/workflows/`; dependabot PR #759.
