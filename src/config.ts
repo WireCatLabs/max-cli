@@ -144,8 +144,6 @@ export interface Settings extends AISettings {
   color: boolean | undefined
   /** A colour per sender in `messages` — a matter of taste, so off until the profile asks. */
   senderColors: boolean
-  /** `inbox` and `review` mark each chat they show read; the other side sees it. Off unless the profile asks. */
-  catchUpMarksRead: boolean
   searchCatchUp?: boolean
   limit: number
   /** Which page, 1-based. Per invocation only — a page number in a configuration file is a setting nobody wants twice. */
@@ -221,7 +219,6 @@ export type SourcedSetting =
   | "commandTimeoutMs"
   | "color"
   | "senderColors"
-  | "catchUpMarksRead"
   | "searchCatchUp"
   | "record"
   | "serve"
