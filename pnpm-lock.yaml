@@ -26,7 +26,7 @@ importers:
         version: 0.50.1(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3)
       '@wirecat/cli-core':
         specifier: 0.398.0
-        version: 0.398.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.50.1(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)
+        version: 0.398.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.50.1(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
       commander:
         specifier: 15.0.0
         version: 15.0.0
@@ -65,8 +65,8 @@ importers:
         specifier: 2.3.3
         version: 2.3.3
       '@modelcontextprotocol/client':
-        specifier: ~2.2.0
-        version: 2.2.0
+        specifier: ~2.3.0
+        version: 2.3.0
       '@napi-rs/canvas':
         specifier: 1.0.11
         version: 1.0.11
@@ -81,7 +81,7 @@ importers:
         version: 5.0.3(vitest@5.0.3)
       '@wirecat/cli-testing':
         specifier: 0.5.2
-        version: 0.5.2(zod@4.6.5)
+        version: 0.5.2(zod@4.6.7)
       cspell:
         specifier: 10.3.6
         version: 10.3.6
@@ -643,12 +643,8 @@ packages:
   '@mixmark-io/domino@2.2.0':
     resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
 
-  '@modelcontextprotocol/client@2.2.0':
-    resolution: {integrity: sha512-LxCou/CSYQ6dwEnjhLZY0KnEuc8V4UJ3IEQCl/uR2yHobSQIEdJKUlKLRYRF5i5FqRGHy1eK7une3aAWDHLtig==}
-    engines: {node: '>=20'}
-
-  '@modelcontextprotocol/core@2.2.0':
-    resolution: {integrity: sha512-iLhmprRmWI8EcosOA3wVvww22z02NkgqhV4fBH6f/odQBsi7xnJc0HGmi21yWO+/iKw2yzqVE127Zhna5/+JXw==}
+  '@modelcontextprotocol/client@2.3.0':
+    resolution: {integrity: sha512-pbHtGj6EeFCHngFE8gtNPaKrsj8Mb1IMw45BLcaPML/m2WTxI7pyYmeNQvaux88Lw8BSO5r7nyRbUyIkICmGrg==}
     engines: {node: '>=20'}
 
   '@modelcontextprotocol/core@2.3.0':
@@ -1943,6 +1939,9 @@ packages:
   jose@6.2.12:
     resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
 
+  jose@6.2.13:
+    resolution: {integrity: sha512-7TIg10ZE1x82YediN+lcrPNvGMKge9yFHQD+Qho/b8y2adfugU3AsvvHfxV0fzyFllT6l9xCjf4RWY9g/Z9PJQ==}
+
   js-tokens@10.0.0:
     resolution: {integrity: sha512-lM/UBzQmfJRo9ABXbPWemivdCW8V2G8FHaHdypQaIy523snUjog0W71ayWXTjiR+ixeMyVHN2XcpnTd/liPg/Q==}
 
@@ -2756,9 +2755,6 @@ packages:
     peerDependencies:
       zod: ^3.25.28 || ^4
 
-  zod@4.6.5:
-    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
-
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
@@ -2770,12 +2766,12 @@ packages:
 
 snapshots:
 
-  '@anthropic-ai/sdk@0.131.0(zod@4.6.5)':
+  '@anthropic-ai/sdk@0.131.0(zod@4.6.7)':
     dependencies:
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
     optionalDependencies:
-      zod: 4.6.5
+      zod: 4.6.7
 
   '@babel/helper-string-parser@7.29.7': {}
 
@@ -3163,25 +3159,21 @@ snapshots:
   '@mixmark-io/domino@2.2.0':
     optional: true
 
-  '@modelcontextprotocol/client@2.2.0':
+  '@modelcontextprotocol/client@2.3.0':
     dependencies:
-      '@modelcontextprotocol/core': 2.2.0
+      '@modelcontextprotocol/core': 2.3.0
       cross-spawn: 7.0.6
       eventsource: 3.0.7
       eventsource-parser: 3.1.1
-      jose: 6.2.12
+      jose: 6.2.13
       pkce-challenge: 5.0.1
-      zod: 4.6.5
-
-  '@modelcontextprotocol/core@2.2.0':
-    dependencies:
-      zod: 4.6.5
+      zod: 4.6.7
 
   '@modelcontextprotocol/core@2.3.0':
     dependencies:
       zod: 4.6.7
 
-  '@modelcontextprotocol/sdk@1.32.1(zod@4.6.5)':
+  '@modelcontextprotocol/sdk@1.32.1(zod@4.6.7)':
     dependencies:
       '@hono/node-server': 2.1.4(hono@4.13.13)
       ajv: 8.20.0
@@ -3198,8 +3190,8 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 4.6.5
-      zod-to-json-schema: 3.25.2(zod@4.6.5)
+      zod: 4.6.7
+      zod-to-json-schema: 3.25.2(zod@4.6.7)
     transitivePeerDependencies:
       - supports-color
 
@@ -3634,9 +3626,9 @@ snapshots:
 
   '@wirecat/cli-core-sqlite@1.0.1': {}
 
-  '@wirecat/cli-core@0.398.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.50.1(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.5)':
+  '@wirecat/cli-core@0.398.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.50.1(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
     dependencies:
-      '@anthropic-ai/sdk': 0.131.0(zod@4.6.5)
+      '@anthropic-ai/sdk': 0.131.0(zod@4.6.7)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
       '@huggingface/tokenizers': 0.2.0
       '@modelcontextprotocol/server': 2.3.0
@@ -3681,9 +3673,9 @@ snapshots:
       - typescript
       - zod
 
-  '@wirecat/cli-testing@0.5.2(zod@4.6.5)':
+  '@wirecat/cli-testing@0.5.2(zod@4.6.7)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.32.1(zod@4.6.5)
+      '@modelcontextprotocol/sdk': 1.32.1(zod@4.6.7)
     transitivePeerDependencies:
       - '@cfworker/json-schema'
       - supports-color
@@ -4312,6 +4304,8 @@ snapshots:
   isexe@2.0.0: {}
 
   jose@6.2.12: {}
+
+  jose@6.2.13: {}
 
   js-tokens@10.0.0: {}
 
@@ -5297,11 +5291,9 @@ snapshots:
       buffer-crc32: 0.2.13
       fd-slicer: 1.1.0
 
-  zod-to-json-schema@3.25.2(zod@4.6.5):
+  zod-to-json-schema@3.25.2(zod@4.6.7):
     dependencies:
-      zod: 4.6.5
-
-  zod@4.6.5: {}
+      zod: 4.6.7
 
   zod@4.6.7: {}
 
