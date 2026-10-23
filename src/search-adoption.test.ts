@@ -197,7 +197,7 @@ describe("shared search adoption", () => {
       "conversations",
       "build",
       "--analyze",
-      "--provider",
+      "--analysis-provider",
       "openai",
       "--model",
       "synthetic",
@@ -216,7 +216,15 @@ describe("shared search adoption", () => {
     const listed = await invoke(["conversations", "consents", "list"])
     expect(listed.code).toBe(0)
     expect(JSON.parse(listed.stdout).items).toEqual([])
-    const revoked = await invoke(["conversations", "consents", "revoke", "--chat", "7", "--provider", "synthetic"])
+    const revoked = await invoke([
+      "conversations",
+      "consents",
+      "revoke",
+      "--chat",
+      "7",
+      "--consent-provider",
+      "synthetic",
+    ])
     expect(revoked.code).toBe(0)
     expect(JSON.parse(revoked.stdout).item).toEqual({ revoked: true })
   })
