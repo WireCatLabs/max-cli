@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**922 ✅ · 158 ⛔ · 0 ❌** — 349 commands, 731 options.
+**922 ✅ · 158 ⛔ · 0 ❌** — 350 commands, 730 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -156,6 +156,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts context` | `--since-time` | ⛔ | cli-core src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing |
 | `contacts context` | `--chat` | ✅ |  |
 | `contacts context` | `--sync-first` | ✅ |  |
+| `contacts prepare` |  | ✅ |  |
+| `contacts prepare` | `--limit` | ✅ |  |
+| `contacts prepare` | `--since-time` | ✅ |  |
 | `contacts timeline` |  | ✅ |  |
 | `contacts timeline` | `--scope` | ✅ |  |
 | `contacts timeline` | `--since-time` | ✅ |  |
@@ -171,7 +174,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages list` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |
 | `messages list` | `--transcribe` | ✅ |  |
 | `messages list` | `--model` | ✅ |  |
-| `messages list` | `--mark-read` | ✅ |  |
 | `messages show` |  | ✅ |  |
 | `messages context` |  | ✅ |  |
 | `messages context` | `--thread` | ✅ |  |
@@ -711,8 +713,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `inbox` | `--kind` | ✅ |  |
 | `inbox` | `--transcribe` | ✅ |  |
 | `inbox` | `--model` | ✅ |  |
-| `inbox` | `--mark-read` | ✅ |  |
-| `inbox` | `--no-mark-read` | ✅ |  |
 | `review` |  | ✅ |  |
 | `review` | `--kind` | ✅ |  |
 | `review` | `--unanswered` | ✅ |  |
@@ -720,8 +720,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `review` | `--transcribe` | ✅ |  |
 | `review` | `--model` | ✅ |  |
 | `review` | `--new` | ✅ |  |
-| `review` | `--mark-read` | ✅ |  |
-| `review` | `--no-mark-read` | ✅ |  |
 | `replies add` |  | ✅ |  |
 | `replies on` |  | ✅ |  |
 | `replies off` |  | ✅ |  |
@@ -916,6 +914,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot watch` |  | ✅ |  |
 | `bot watch` | `--events` | ✅ |  |
 | `bot watch` | `--types` | ✅ |  |
+| `bot watch` | `--public-url` | ✅ |  |
+| `bot watch` | `--port` | ✅ |  |
 | `bot callbacks answer` |  | ✅ |  |
 | `bot callbacks answer` | `--text` | ✅ |  |
 | `bot callbacks answer` | `--notification` | ✅ |  |

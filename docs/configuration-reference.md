@@ -120,7 +120,6 @@ max config show --json     # то же одним объектом
 | `timeout_ms` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
 | `sender_colors` | в `max personal messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
-| `catch_up_marks_read` | `max personal inbox` и `max personal review` отмечают прочитанным каждый показанный чат — до последнего показанного сообщения. Собеседник видит отметку. Только для личного аккаунта | `--mark-read`, `--no-mark-read` | `false` |
 | `search_catch_up` | после `messages sync` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
 | `record` | записывать ли каждый запуск, как будто передан `--record` ([диагностика](diagnostics.md)) | `--record`, `--no-record` | `false` |
 | `keep_runs_for_days` | сколько дней хранятся записи запусков | — | `30` |
@@ -252,7 +251,7 @@ max config unset default_profile         # убрать старую настр�
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max personal config set limit 0`
-откажет, и файл останется прежним. `serve`, `sender_colors`, `catch_up_marks_read` и `search_catch_up`
+откажет, и файл останется прежним. `serve`, `sender_colors` и `search_catch_up`
 с `--bot` не принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного.
 
 ### Языки поиска
@@ -337,7 +336,7 @@ max personal chats list
 | `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
 | `requests_per_minute` | целое число ≥ 0 | профиль |
 | `color`, `record` | boolean | профиль |
-| `sender_colors`, `catch_up_marks_read`, `search_catch_up`, `serve` | boolean | личный аккаунт |
+| `sender_colors`, `search_catch_up`, `serve` | boolean | личный аккаунт |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |
 | `allow` | массив разрешённых действий; старый формат | профиль |
 | `read_other_bots` | boolean или массив имён профилей | только `bot` |

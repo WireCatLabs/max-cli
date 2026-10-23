@@ -32,7 +32,6 @@
 | `color` | цвет в таблицах | по терминалу |
 | `sender_colors` | свой цвет у каждого автора в списке сообщений | `false` |
 | `timeout_ms` | сколько ждать ответа на **один** запрос к MAX, в миллисекундах. Чтобы ограничить команду целиком, используйте `--timeout` | по транспорту |
-| `catch_up_marks_read` | `inbox` и `review` отмечают показанные чаты прочитанными. Собеседник это видит | `false` |
 | `serve` | запускать фоновый сервер `max personal serve`, когда команде нужен MAX ([один вход на всё](limits.md#один-вход-на-всё)) | `true` |
 | `transcribe_model` | какой моделью распознавать голосовые сообщения | `gigaam-v3` |
 | `update_check` | раз в сутки сообщать, что вышла новая версия `max` | `true` |
@@ -89,7 +88,7 @@
     }
   },
   "personal": {
-    "defaults": { "catch_up_marks_read": false, "search_catch_up": true }
+    "defaults": { "search_catch_up": true }
   },
   "bot": {
     "defaults": { "permissions": { "bot": "readonly", "bot.messages.send": "allow" } },
@@ -114,7 +113,7 @@
   больше ничего.
 - `bot.profiles.shop`: бот `shop` может отправить 200 сообщений в час и не читает то, что сохранили
   другие боты на этом компьютере. `read_other_bots` допустим только в разделе `bot`; `serve`,
-  `sender_colors` и `catch_up_marks_read` там, наоборот, не принимаются.
+  `sender_colors` там, наоборот, не принимаются.
 
 </details>
 

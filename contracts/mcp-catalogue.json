@@ -66,6 +66,7 @@
   "contacts rename": "write",
   "contacts import": "write",
   "contacts context": "read",
+  "contacts prepare": "read",
   "contacts timeline": "read",
   "contacts check": "read",
   "contacts link": "write",

@@ -212,7 +212,7 @@ describe("max commands", () => {
       "conversations embed clear",
       "attachments extract (reads remotely)",
       "attachments text set",
-      "tags auto",
+      "tags auto (reads remotely)",
       "tags add",
       "tags remove",
       "mentions confirm",

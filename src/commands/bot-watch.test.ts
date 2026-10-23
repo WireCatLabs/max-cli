@@ -184,6 +184,14 @@ describe("max bot watch", () => {
     ])
   })
 
+  it("refuses an insecure webhook URL and a port without a URL before polling", async () => {
+    const insecure = await max(["bot", "watch", "--jsonl", "--public-url", "http://synthetic.example.invalid"])
+    const portOnly = await max(["bot", "watch", "--jsonl", "--port", "8766"])
+    expect([insecure.code, portOnly.code]).toEqual([2, 2])
+    expect(insecure.stderr).toContain("--public-url must be https")
+    expect(polls).toEqual([])
+  })
+
   it("refuses while a webhook is set, before asking for any update", async () => {
     webhook = true
     const { code, stderr } = await max(["bot", "watch", "--jsonl"])

@@ -98,6 +98,7 @@ export const contactsCommand = (): Command => {
     "rename",
     "import",
     "context",
+    "prepare",
     "timeline",
     "check",
     "link",
