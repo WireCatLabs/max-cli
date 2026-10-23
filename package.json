@@ -120,7 +120,7 @@
     "@cspell/dict-en-gb": "5.0.34",
     "@cspell/dict-es-es": "3.0.9",
     "@cspell/dict-ru_ru": "2.3.3",
-    "@modelcontextprotocol/client": "~2.2.0",
+    "@modelcontextprotocol/client": "~2.3.0",
     "@napi-rs/canvas": "1.0.11",
     "@types/node": "^22.20.4",
     "@types/ws": "^8.18.2",
