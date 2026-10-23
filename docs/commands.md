@@ -1128,7 +1128,7 @@ max chats delete <chat> [options]
 
 **Returns:** delete a chat from this account; the others in it keep it and its messages
 
-**Example:** `max chats delete Team`
+**Example:** `max personal chats delete "Book club"`
 
 ### `max chats clear`
 
@@ -1150,7 +1150,7 @@ max chats clear <chat> [options]
 
 **Returns:** delete every message in a chat for this account; the others in it keep theirs
 
-**Example:** `max chats clear Team`
+**Example:** `max personal chats clear "Book club"`
 
 ### `max chats start`
 
@@ -1696,7 +1696,7 @@ max messages list <chat> [query] [options]
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 27 more; every field: max commands schema messages list
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands schema messages list
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -1931,7 +1931,7 @@ max messages scheduled <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 27 more; every field: max commands schema messages scheduled
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands schema messages scheduled
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -4221,7 +4221,7 @@ max search all <query> [options]
 
 **Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 4 more; every field: max commands schema search all
 
-**Example:** `max search all "invoice"`
+**Example:** `max personal search all draft`
 
 ### `max search messages`
 
@@ -4258,11 +4258,11 @@ max search messages [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
-**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, found_in, and 3 more; every field: max commands schema search messages
+**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, match, and 5 more; every field: max commands schema search messages
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
-**Example:** `max search messages "invoice"`
+**Example:** `max personal search messages draft --limit 10`
 
 ### `max search notes`
 
@@ -4287,7 +4287,7 @@ max search notes <query> [options]
 
 **Returns:** note hit — ref, source, folder_id, path, title, updated_at, kind, provider, and 5 more; every field: max commands schema search notes
 
-**Example:** `max search notes "invoice"`
+**Example:** `max personal search notes draft --limit 10`
 
 ### `max search conversations`
 
@@ -4324,7 +4324,7 @@ max search conversations <query> [options]
 
 **Returns:** the conversations nearest to a query in meaning and in words, best first, in one chat or…
 
-**Example:** `max search conversations "invoice"`
+**Example:** `max personal search conversations "Reviewing the project draft"`
 
 ## `max searches`
 
@@ -4613,7 +4613,7 @@ max polls show <chat> <message>
 
 **Returns:** a poll and its answer ids, as the message carries it now
 
-**Example:** `max polls show Team 1234`
+**Example:** `max personal polls show "Book club" 101`
 
 ### `max polls vote`
 
@@ -4637,7 +4637,7 @@ max polls vote <chat> <message> [answers] [options]
 
 **Returns:** vote in a poll, or take your vote back; the others see it unless the poll is anonymous
 
-**Example:** `max polls vote Team 1234`
+**Example:** `max personal polls vote "Book club" 101 0`
 
 ### `max polls close`
 
@@ -4656,7 +4656,7 @@ max polls close <chat> <message>
 
 **Returns:** close your own poll; nobody can vote after that, and it cannot be reopened
 
-**Example:** `max polls close Team 1234`
+**Example:** `max personal polls close "Book club" 101`
 
 ### `max polls create`
 
@@ -4685,7 +4685,7 @@ max polls create <chat> <question> <answers> [options]
 
 **Returns:** send a poll to a chat, as a message of its own; public unless --anonymous
 
-**Example:** `max polls create Team <question> <answers>`
+**Example:** `max personal polls create "Book club" "Which day?" Monday Tuesday`
 
 ## `max reactions`
 
@@ -5177,7 +5177,7 @@ max server start [options]
 
 **Returns:** start serve in the background — through the unit if one is installed — and answer once it…
 
-**Example:** `max server start`
+**Example:** `max personal server start`
 
 ### `max server stop`
 
@@ -5191,7 +5191,7 @@ max server stop
 
 **Returns:** stop this profile's serve — through the unit if it runs under one
 
-**Example:** `max server stop`
+**Example:** `max personal server stop`
 
 ### `max server restart`
 
@@ -5209,7 +5209,7 @@ max server restart [options]
 
 **Returns:** stop it and start it again
 
-**Example:** `max server restart`
+**Example:** `max personal server restart`
 
 ### `max server status`
 
@@ -5221,7 +5221,7 @@ max server status
 
 **Returns:** whether serve runs for this profile, since when, who started it, and the unit if there is…
 
-**Example:** `max server status`
+**Example:** `max personal server status`
 
 ### `max server logs`
 
@@ -5237,7 +5237,7 @@ max server logs [options]
 
 **Returns:** serve's latest log lines — from the journal under systemd, else its log file
 
-**Example:** `max server logs`
+**Example:** `max personal server logs --limit 20`
 
 ### `max server install`
 
@@ -5251,7 +5251,7 @@ max server install
 
 **Returns:** write a systemd user unit or a launchd agent for this profile; starts nothing
 
-**Example:** `max server install`
+**Example:** `max personal server install`
 
 ### `max server uninstall`
 
@@ -5265,7 +5265,7 @@ max server uninstall
 
 **Returns:** remove this profile's unit; stop it first
 
-**Example:** `max server uninstall`
+**Example:** `max personal server uninstall`
 
 ## `max schedule`
 
@@ -5528,7 +5528,7 @@ max runs list [options]
 
 **Returns:** recorded runs, newest first
 
-**Example:** `max runs list`
+**Example:** `max runs list --limit 10`
 
 ### `max runs show`
 
@@ -5548,7 +5548,7 @@ max runs show <run-id> [options]
 
 **Returns:** one run: what it was, how it ended, and every event it logged
 
-**Example:** `max runs show <run-id>`
+**Example:** `max runs show run-101`
 
 ### `max runs search`
 
@@ -5574,7 +5574,7 @@ max runs search [query] [options]
 
 **Returns:** search recorded diagnostic metadata and events; no message contents
 
-**Example:** `max runs search "invoice"`
+**Example:** `max runs search timeout --limit 10`
 
 ### `max runs path`
 
@@ -5590,7 +5590,7 @@ max runs path <run-id>
 
 **Returns:** the directory holding one run
 
-**Example:** `max runs path <run-id>`
+**Example:** `max runs path run-101`
 
 ## `max skill`
 
@@ -5610,7 +5610,7 @@ max skill show [name]
 
 **Returns:** print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look…
 
-**Example:** `max skill show daily`
+**Example:** `max skill show`, `max skill show follow-ups`
 
 ### `max skill install`
 
@@ -5628,7 +5628,7 @@ max skill install [options]
 
 **Returns:** write SKILL.md to ~/.claude/skills/max-cli/ (Claude Code) and ~/.agents/skills/max-cli/…
 
-**Example:** `max skill install`
+**Example:** `max skill install --for agents`
 
 ## `max commands`
 
@@ -5716,7 +5716,7 @@ max mcp config [options]
 
 **Returns:** print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes…
 
-**Example:** `max mcp config`
+**Example:** `max personal mcp config`
 
 ### `max mcp setup`
 
@@ -5739,7 +5739,7 @@ max mcp setup <client> [options]
 
 **Returns:** add this profile's local MCP server to Codex or Claude Code
 
-**Example:** `max mcp setup <client>`
+**Example:** `max personal mcp setup codex --allow-writes`
 
 ### `max mcp doctor`
 
@@ -5755,7 +5755,7 @@ max mcp doctor [options]
 
 **Returns:** check this profile's local MCP handshake and tool list
 
-**Example:** `max mcp doctor`
+**Example:** `max personal mcp doctor`
 
 ## `max bot`
 
