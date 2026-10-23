@@ -7,6 +7,7 @@ import {
   itemOf,
   LOCAL_WRITE,
   outputFor,
+  ownerOnlyOption,
   REMOTE_READ,
   renderAnswer,
   runsDirFor,
@@ -212,7 +213,7 @@ const EXCLUDES = ["текстов сообщений", "названий чат�
  * steps (`NEED-267`).
  */
 const reportCommand = (): Command => {
-  const report = annotate(new Command("report"), { effects: REMOTE_READ, mcp: false }).description(
+  const report = annotate(new Command("report"), { effects: REMOTE_READ }).description(
     "what a problem report holds and where it goes; writes nothing",
   )
 
@@ -224,7 +225,7 @@ const reportCommand = (): Command => {
   destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE }))
     .description("write a problem report to a file, and print how to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
-    .option("--output <file>", "where to write it; a new file in this directory if not given")
+    .addOption(ownerOnlyOption("--output <file>", "where to write it; a new file in this directory if not given"))
     .action(async function (this: Command) {
       const options = this.opts<{ run?: string; output?: string }>()
       let context: ReturnType<typeof forCommand> | undefined

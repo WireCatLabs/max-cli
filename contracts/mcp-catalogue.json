@@ -181,6 +181,8 @@
   "inbox": "read",
   "review": "read",
   "doctor": "read",
+  "doctor report": "read",
+  "doctor report create": "write",
   "runs search": "read",
   "commands": "read"
 }
