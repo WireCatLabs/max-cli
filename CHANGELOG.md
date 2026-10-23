@@ -8,6 +8,11 @@
 
 ### Что нового
 
+- **Расшифровка голосового находится в любой форме слова и в искажениях распознавания речи** (cli-core 0.396.0).
+  `max <profile> search messages риелтор` находит в расшифровке и «риелтору», и «реелтора». Сообщение, найденное
+  только через искажение, помечено `match: "corrected"` и `corrections`. Числительные, фразы, `exact:` и
+  написанный текст сообщений не расширяются. Текст, который агент записал к голосовому, — тоже расшифровка.
+  Хранилище переходит на версию 29 при первом запуске.
 - **Через MCP агенту доступно больше команд,** каждая в пределах прав профиля (cli-core 0.398.0): `config show`,
   `doctor report`, `runs list|show|path`, `store status|info|check|export|reindex`, `store jobs cancel|retry|clear`,
   `attachments move`, `attachments jobs status`, `commands schema`, `guide`, `skill show`, списки моделей,
