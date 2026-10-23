@@ -37,7 +37,7 @@ max skill install --for all
 ```
 
 Первая строка ставит команду, вторая — навык для ИИ-агентов. Вместо npm подойдут `pnpm add -g
-@wirecat/max-cli` и `bun add -g @wirecat/max-cli`. npm 12 пишет «install scripts blocked» — это
+@wirecat/max-cli` и `bun add -g @wirecat/max-cli`. npm 11.17 и новее пишет, что сценарий установки не запущен (`allow-scripts`), — это
 безвредно: вторая строка делает то, что сделал бы сценарий установки. В Windows, если `max` не
 находится, откройте новый терминал.
 
@@ -81,7 +81,7 @@ max personal setup --help                   # примеры и способы �
 
 **Глобальная установка через npm** навык агента не ставит, пока его не попросили:
 `MAX_INSTALL_AGENT=codex|cursor|claude|gemini|all` выбирает агента, без неё навык ставит `max personal setup` или
-`max skill install --for all`. С npm 12 сценарии установки по умолчанию заблокированы (в Windows не
+`max skill install --for all`. С npm 11.17 и новее сценарии установки по умолчанию заблокированы (в Windows не
 исправляется и PATH). Их можно разрешить так:
 `npm install -g --allow-scripts=@wirecat/max-cli @wirecat/max-cli`.
 Если `max` не находится, откройте новый терминал; не помогло — восстановление PATH описано ниже. В Windows

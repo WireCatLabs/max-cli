@@ -201,7 +201,7 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
 
 `CHAT_HISTORY` (49) and `CHAT_MARK` (50) are separate. Nothing that reads sends 50;
 `src/client.test.ts` asserts opcode 50 is absent from everything a read sends. It goes out from `client.chats.markRead` only —
-`max chats mark-read`, `messages list --mark-read`, and the MCP mark-read tool — through
+`max chats mark-read` and the MCP mark-read tool — through
 the send guard as kind `read`. Its request is PyMax's shape, not measured (`src/spec/operations/chats.ts`).
 
 ⚠ Until the spec landed (2026-09-19) that assertion compared against a missing `Opcode.CHAT_MARK`,
