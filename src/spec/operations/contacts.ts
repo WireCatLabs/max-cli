@@ -31,7 +31,7 @@ export const contactsPresence = defineOperation({
   provenance: {
     confidence: "measured",
     sources: [
-      "web.max.ru tab, recorded 2026-09-25 (`docs_ai/captures/2026-09-25-web-tab-3.jsonl`): sent on opening a profile",
+      "web.max.ru tab, recorded 2026-09-25 (private capture 2026-09-25-web-tab-3.jsonl): sent on opening a profile",
       "answer measured 2026-10-08 on test account B (FIND-971): `{presence: {<id>: {seen}}, time}`",
     ],
     notes:

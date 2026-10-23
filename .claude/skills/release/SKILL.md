@@ -18,13 +18,13 @@ checks, and on a renumber the file is rewritten in place for the caller to commi
 
 Nothing in this skill sends, publishes, tags or merges without the owner's word in this session.
 
-The steps max and tg share are written once, in cli-messaging's
-[RELEASING.md](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
+The steps max and tg share are written once, in cli-core's
+[RELEASING.md](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
 changelog, the private scenarios and the signed report.
 
 ## 0. Scope: what changed
 
-The commands in [RELEASING.md, "What changed"](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md#what-changed); the
+The commands in [RELEASING.md, "What changed"](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/RELEASING.md#what-changed); the
 `docs/commands.md` diff drives steps 3–5. Work on a release branch off `main`, in a worktree; the version bump
 and the changelog go in one pull request, as in `docs_ai/releasing.md` steps 1–2.
 
@@ -53,7 +53,7 @@ Show the draft to the owner. **They accept or edit it** before it goes in.
 
 ## 3. The docs against the diff
 
-[RELEASING.md, "The docs against the diff"](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
+[RELEASING.md, "The docs against the diff"](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/RELEASING.md#the-docs-against-the-diff), over `README.md`,
 `docs/*.md` and `skills/max-cli/SKILL.md` (agents read it through `max skill show`). User pages get
 plain rewrites with no «Поправка» (`docs/dev/CONVENTIONS.md`, "User pages"); `docs/commands.md` and
 `docs/dev/protocol.md` are generated — `pnpm generate`.
@@ -90,8 +90,7 @@ How to run one — `bin/max`, the shape-only helper, snapshot and restore — is
    plan's "Not run, and why" table rules out, whatever the diff says.
 3. Run with `bin/max` from the release worktree, after `pnpm build`. It copies the owner's sessions
    from the installed `max` on first use, so no profile needs `session start`.
-4. MCP scenarios (X2): `pnpm mcp:tools -- mcp`, `-- mcp --allow-send`, `-- mcp --allow-send
-   --confirm-send`, `-- <bot> bot mcp` — the count and names per flag set. Compare with the previous
+4. MCP scenarios (X2): `pnpm mcp:tools -- mcp`, `-- <bot> bot mcp` — the count and names per server. Compare with the previous
    X2 row in the Latest results table; a count that moved needs a PR that explains it.
 5. `pnpm smoke:live` — every write once in Saved messages, cleaned up after. Any `FAIL`: no release.
 6. Follow the plan's rules: `--json`, a timeout on everything, the shape recorded and never the

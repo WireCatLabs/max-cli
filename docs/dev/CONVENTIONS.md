@@ -1,7 +1,8 @@
 # Conventions
 
-How code and documents are written here. Short on purpose — the linter is the authority on
-formatting, and this file only covers what a linter cannot say.
+How code and documents are written here. The rules every WireCat CLI follows are in the
+[CLI standards handbook](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/README.md), which ships in `@wirecat/cli-base`; where this file and the handbook
+disagree, the handbook wins. This file links those rules and keeps what is max's own or stricter.
 
 Adapted from the sibling project `braze-cli`, which is where most of these were learned. Two of
 its rules are **deliberately inverted or weakened** here and are marked below; copying them
@@ -9,20 +10,11 @@ unchanged would import a constraint this project does not have.
 
 ## Code
 
-**The linter decides formatting.** Biome settles indentation, quotes, semicolons, line width and
-import order. Do not argue with it and do not hand-format around it. For the record: 2-space
-indent, double quotes, no semicolons, 120 columns.
-
-**TypeScript, strict, and no `any`.** `noUncheckedIndexedAccess` on, so an index access is
-`T | undefined` and you have to handle it. `noExplicitAny` is an error, not a warning.
-
-**Functional in the small, classes where identity matters.** A client that holds a connection and
-a session is a class; everything else is a function taking its inputs.
-
-**Comments are sparse and say *why*.** A comment earns its place by recording a decision, warning
-about a trap, or naming a constraint that is invisible locally. Never narrate a change, never
-leave commented-out alternatives. If it would be obvious to a competent reader of TypeScript,
-delete it.
+**Formatting, TypeScript settings, functions and classes, comments:** [Toolchain](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/toolchain.md) and
+[Style](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/style.md) — Biome formats ([WC-TOOL-7](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/toolchain.md)), the shared strict TypeScript config is not
+loosened ([WC-TOOL-4](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/toolchain.md)), a class only where identity matters ([WC-STYLE-4](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/style.md)), and a
+comment says *why* ([WC-STYLE-1, WC-STYLE-2](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/style.md)). Here, a client that holds a connection and a session is
+the class; everything else is a function taking its inputs.
 
 **Wire names live below the adapter; our names live above it.** ⚠ *This is the opposite of
 `braze-cli`, where Braze's own field names survive into the public types unchanged.* Braze
@@ -31,25 +23,26 @@ So a raw protocol field keeps its wire spelling inside the protocol and adapter 
 has to match captured traffic — and above the adapter only our own domain model exists
 (`lastMessageAt`, not whatever the frame happens to call it). A raw MAX object never reaches CLI
 output except behind an explicit debug/raw option —
-`docs_ai/REQUIREMENTS.md` §16, §25.
+the owner's brief §16 and §25 (private notes).
 
 **Reusable core code stays Node-light, and this is a weaker rule than it looks.** ⚠ *`braze-cli`
 requires its core to run unchanged in a Cloudflare Worker and enforces that with three gates.
 That is not a requirement here.* The brief asks only for "minimal coupling to Node-specific APIs
-in reusable core code **where practical**" (§2). The reason to keep `cli-core` free of Node
+in reusable core code **where practical**" (§2). The reason to keep `cli-base` free of Node
 specifics is that it has to serve more than one CLI and be testable without a filesystem, a
 terminal or a clock — not that it has to run in a Worker. Do not import the three-gate apparatus
 until something actually needs it.
 
-**Core takes its environment as arguments.** If reusable code needs to know anything about the
+**Core takes its environment as arguments** ([WC-ARCH-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/architecture.md)). If reusable code needs to know anything about the
 machine it runs on — the time, the filesystem, the keyring, the terminal, randomness — it takes
 it as a parameter. That is what makes timeout, retry and session expiry testable without waiting.
 
-**One-shot means one-shot.** Anything that opens a connection, a timer or a listener owns closing
-it, in a `finally` or an equivalent lifecycle wrapper. A command that prints its result and then
+**One-shot means one-shot** ([WC-LIFE-1](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/lifecycle.md)). Anything that opens a connection, a timer or a
+listener owns closing it, in a `finally` or an equivalent lifecycle wrapper. A command that prints its result and then
 hangs is a defect, not a rough edge — §18.
 
-**Never log a credential, and never pass one to a logger "because it's redacted".** Redaction is
+**Never log a credential, and never pass one to a logger "because it's redacted"**
+([WC-SECR-1](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/security.md)). Redaction is
 the second line of defence, not the first. Message bodies are not credentials, but they are not
 diagnostics either: they belong in command output, never in a log — §14.
 
@@ -57,18 +50,16 @@ diagnostics either: they belong in command output, never in a log — §14.
 opened a database in it, so all of them passed while the feature was off on every real machine —
 SQLite will not create a file under a directory that does not exist, and no machine has one the
 first time. When a test sets up a path, an environment variable or a file, ask whether a first run
-would have it. Audited 2026-09-20: the session state file and the credential file both create
-their directories; the cache was the only one that did not.
+would have it. The session state file and the credential file both create their directories.
 
-**Failing quietly is not failing invisibly.** A component nobody asked for may decline to work
+**Failing quietly is not failing invisibly** ([WC-OUT-3](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/output.md)). A component nobody asked for may decline to work
 rather than break the command — and must still say why, on the diagnostic stream. A swallowed
 reason cost a day: the cache looked identical whether it was working or had never opened once
 (`NEED-97`).
 
-**A file nothing checks will rot, and quietly.** `scripts/` sat outside every `tsconfig` until
-2026-09-22, so three of the four probes had been broken for two days by a signature change in
-`src/` and CI stayed green throughout — the compiler had never been shown them. `tsconfig.scripts.json`
-now covers them. The rule generalises: when a directory is added, it is either in a project the
+**A file nothing checks will rot, and quietly** ([WC-TOOL-5](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/toolchain.md)). When `scripts/` sat outside
+every `tsconfig`, three of the four probes broke on a signature change in `src/` and the checks stayed green — the
+compiler had never been shown them. `tsconfig.scripts.json` covers them. The rule generalises: when a directory is added, it is either in a project the
 build checks or it is a directory that will be wrong within a month.
 
 **Report honestly.** If a test failed, show the output. If something could not be verified, say
@@ -82,11 +73,11 @@ will be impossible to re-derive when MAX changes.
 
 ## Command names
 
-One standard for `max` and `tg`: how a command, an option, an answer and an MCP tool are named
-and shaped — [cli-messaging `docs/dev/STANDARD.md`](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/STANDARD.md).
-It moved there on 2026-09-30, so both CLIs read one copy. Every command and option of both is in the
-[parity manifest](https://github.com/WireCatLabs/cli-messaging/blob/main/parity.json); `pnpm parity:check`
-fails on one that is not.
+How a command, an option, an answer and an MCP tool are named and shaped is the handbook's
+[Commands](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/commands.md), [Output](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/output.md) and [MCP](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/mcp.md) pages, one copy for every CLI. Every
+command and option of `max` and `tg` is in the
+[parity manifest](https://github.com/WireCatLabs/cli-core/blob/main/parity.json); `pnpm parity:check`
+fails on one that is not ([WC-TEST-16](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/testing.md)).
 
 ## Documents
 
@@ -98,7 +89,7 @@ merely incomplete costs some time; a doc that is confidently stale costs a wrong
 built, what is measured and what rests on assumption. This costs one paragraph and is the
 difference between a doc you can act on and one you have to audit.
 
-**Separate what you saw from what you inferred.** Something you ran gets a command and its
+**Separate what you saw from what you inferred** ([WC-DOC-11](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)). Something you ran gets a command and its
 output. Something you read in documentation is "the docs describe X" — reading docs is not
 verification. For MAX this applies twice over: a claim in another project's README is not even
 documentation, it is a claim, until its current source says the same thing.
@@ -106,16 +97,16 @@ documentation, it is a claim, until its current source says the same thing.
 **Anchor every claim.** `path/file.ts:123` for our code, a URL for anything external, a commit for
 anything historical. A claim without an anchor is an opinion.
 
-**Every document states current facts only.** Rewrite the wrong sentence in place and say nothing
+**Every document states current facts only** ([WC-DOC-2, WC-DOC-3](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)). Rewrite the wrong sentence in place and say nothing
 about the old one: no «Поправка», no struck-out text, no dated "measured on" trail. Git keeps what it
 said before; `CHANGELOG.md` is the one place with version history. A finished plan or handoff is
 deleted, not marked done; a done backlog or cleanup line is deleted. User pages (`README.md` and the
 Russian pages under `docs/`) also carry no decision or backlog ids. A *why* is allowed when a reader
 would otherwise undo the behaviour.
 
-**One fact, one home.** A decision lives in `docs_ai/DECISIONS.md`; a task lives in
-[`BACKLOG.md`](BACKLOG.md); something to delete lives in `docs_ai/CLEANUP.md`; a plan for open work
-lives in `docs_ai/plans/`. Everywhere else links to it. Two copies of a fact drift, and the reader cannot
+**One fact, one home** ([WC-DOC-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)). A decision lives in the private decision log; a task lives in
+[`BACKLOG.md`](BACKLOG.md); something to delete lives in the private cleanup list; a plan for open work
+lives in the private plans. Everywhere else links to it. Two copies of a fact drift, and the reader cannot
 tell which is current.
 
 **Write the trap, not the rule.** "Close the connection" is weaker than "a MAX WebSocket left open
@@ -130,18 +121,22 @@ real value from a real run.
 invented content is not. For the same reason `ARCHITECTURE.md` was written only after the code
 existed: a description of something not yet built is fiction.
 
-**A command you hand someone is a snapshot, not a template.** Never put a placeholder inside a
+**A command you hand someone is a snapshot, not a template** ([WC-DOC-12](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)). Never put a placeholder inside a
 runnable command — in `braze-cli` a placeholder endpoint was pasted verbatim into a real config.
 Either the real value goes in, or the value is asked for as a plain question first.
 
-**Never paste a real chat id, phone number, token or message into a committed document.** The same
+**Never paste a real chat id, phone number, token or message into a committed document**
+([WC-SECR-1](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/security.md)). The same
 rule as the fixtures — §24. Redact, or use an obviously synthetic value and say that it is one.
 
-**Russian in every new document.** The documents that already exist in English stay English and are not translated: `ARCHITECTURE.md`, this file,
+**Russian in every new document** ([WC-DOC-13](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)). The documents that already exist in English stay English and are not translated: `ARCHITECTURE.md`, this file,
 `DECISIONS.md`, `REQUIREMENTS.md`, `TESTING.md`, `BACKLOG.md`. A new section added to one of them
 follows the language of the file it lands in. Do not mix languages inside one file.
 
 ## The changelog
+
+The rules are [WC-DOC-14 to WC-DOC-20](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md); max writes them in Russian. The pending section is
+`## Не выпущено`, on top while something is unreleased; each version is `## <version> — DD.MM.YYYY`, newest first.
 
 `CHANGELOG.md` is read by someone deciding whether to upgrade, and by the GitHub release built from
 it. **A line that only names the change is not an entry.** «`bot search messages --limit` говорил
@@ -165,8 +160,8 @@ Every entry answers, in plain Russian, in this order:
   добавьте `edit`. Без `allow` ничего не меняется.
 ```
 
-Headings, only these, each at most once: `Что нового`, `Изменено — может сломать скрипты`,
-`Исправлено`, `Безопасность`, `Удалено`. Anything that changes a command's output, an exit code, an
+Headings, only these, each at most once — max's fixed rendering of the shared set: `Что нового`,
+`Изменено — может сломать скрипты`, `Исправлено`, `Безопасность`, `Удалено`. Anything that changes a command's output, an exit code, an
 option, a permission or a config key goes under `Изменено — может сломать скрипты`. No backlog,
 journal or decision ids, no file paths, no internal names; a link to the doc page that describes it.
 `pnpm release:check` checks the shape; the content is the release skill's job and the owner's.

@@ -7,7 +7,7 @@ import {
   type SendGuardOptions,
   SendJournal,
   sendGuard,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import { describe, expect, it, vi } from "vitest"
 import { overServer } from "./messenger.js"
 import { operating } from "./sends.js"
@@ -19,8 +19,6 @@ const guarded = (options: Pick<SendGuardOptions, "permissions" | "ask"> = {}) =>
     sendGuard({
       profile: "p",
       command: "max",
-      readOnly: false,
-      readOnlyFrom: "default",
       sendsPerHour: 1,
       journal,
       recipients: new RecipientList(join(dir, "recipients.json"), "max"),

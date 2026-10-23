@@ -1,11 +1,14 @@
-import { readdirSync, readFileSync } from "node:fs"
+import { mkdtempSync, readdirSync, readFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
+import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-core"
-import type { FetchLike } from "@wirecat/cli-core/http"
+import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
+import type { FetchLike } from "@wirecat/cli-base/http"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
+import { botOperations } from "../bot/client.js"
+import { BOT_JOURNAL_KINDS, UNJOURNALED_WRITES } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
 import { run } from "../program.js"
 
@@ -31,7 +34,6 @@ beforeAll(async () => {
     request.on("end", () => {
       requests.push({ method: request.method, url: request.url, body })
       const url = request.url ?? ""
-      if (url.includes("chat_id=-555")) return
       if (url.includes("chat_id=42")) {
         response.writeHead(404, { "content-type": "application/json" })
         return response.end(`{"code": "chat.not.found", "message": "Chat 42 not found"}`)
@@ -63,11 +65,12 @@ beforeEach(() => {
   for (const name of ["default", "team", "quiet"]) new BotTokenStore({ profile: name, keyring }).write(TOKEN)
 })
 
-const max = async (argv: string[], timeoutMs?: number, botFetch?: FetchLike) => {
+const max = async (argv: string[], timeoutMs?: number, botFetch?: FetchLike, env?: NodeJS.ProcessEnv) => {
   const streams = captureStreams()
   const code = await run(timeoutMs ? ["--timeout", `${timeoutMs}ms`, ...argv] : argv, {
     streams,
     tty: false,
+    ...(env ? { env } : {}),
     botStore: (profile) => new BotTokenStore({ profile, keyring }),
     botUrl,
     ...(botFetch ? { botFetch } : {}),
@@ -81,23 +84,23 @@ describe("max bot messages send", () => {
   it("sends, answers with the sent message, and journals it without its text", async () => {
     const { code, stdout } = await max(["bot", "messages", "send", "-100", "hello there", "--silent", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({
-      operationId: expect.any(String),
-      message: { id: "mid.9", chatId: "-100", text: "hello there", outgoing: true },
+    expect(JSON.parse(stdout).item).toMatchObject({
+      operation_id: expect.any(String),
+      message: { id: "mid.9", chat_id: "-100", text: "hello there", outgoing: true },
     })
     expect(requests.at(-1)).toMatchObject({ method: "POST", url: "/messages?chat_id=-100" })
     expect(JSON.parse(requests.at(-1)?.body ?? "{}")).toEqual({ text: "hello there", notify: false })
     const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
     expect(journal.at(-1)).toMatchObject({
-      chatId: "-100",
+      chat_id: "-100",
       kind: "message",
       outcome: "sent",
-      messageId: "mid.9",
+      message_id: "mid.9",
       length: 11,
     })
     expect(JSON.stringify(journal)).not.toContain("hello there")
     const kept = JSON.parse((await max(["bot", "search", "messages", "hello there", "--json"])).stdout).items
-    expect(kept).toMatchObject([{ id: "mid.9", chatId: "-100", outgoing: true }])
+    expect(kept).toMatchObject([{ id: "mid.9", chat_id: "-100", outgoing: true }])
   })
 
   it("**suggests user:<id> when a positive chat id is not a chat**", async () => {
@@ -126,7 +129,7 @@ describe("max bot messages send", () => {
     expect((await max(["team", "bot", "messages", "send", "-100", "hi", "--json"])).code).toBe(0)
     expect((await max(["bot", "messages", "send", "-200", "hi", "--json"])).code).toBe(0)
     const refusedRow = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout).items[0]
-    expect(refusedRow).toMatchObject({ chatId: "-200", outcome: "refused" })
+    expect(refusedRow).toMatchObject({ chat_id: "-200", outcome: "refused" })
   })
 
   it("uses MAX-native bold, underline and highlight through the common bot command", async () => {
@@ -150,6 +153,13 @@ describe("max bot messages send", () => {
     })
   })
 
+  it("refuses a --reply-to that is not a MAX message id before sending anything", async () => {
+    const { code, stderr } = await max(["bot", "messages", "send", "-100", "hi", "--reply-to", "123", "--json"])
+    expect(code).toBe(2)
+    expect(JSON.parse(stderr).error.message).toContain("a message id is mid.")
+    expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
+  })
+
   it("refuses --md with --html before sending anything", async () => {
     const { code, stderr } = await max(["bot", "messages", "send", "-100", "hi", "--md", "--html", "--json"])
     expect(code).not.toBe(0)
@@ -171,11 +181,20 @@ describe("max bot messages send", () => {
   })
 
   it("records a send that got no answer as an unknown outcome, and does not repeat it", async () => {
-    const { out } = await max(["bot", "messages", "send", "-555", "hi", "--json"], 300)
+    // Counted at the fetch, not at a server: a send the deadline aborts may never reach one.
+    let sends = 0
+    const silent: FetchLike = (input, init) => {
+      if (!String(input).includes("chat_id=-555")) return fetch(input, init)
+      sends += 1
+      const signal = init?.signal
+      if (signal?.aborted) return Promise.reject(signal.reason)
+      return new Promise((_, reject) => signal?.addEventListener("abort", () => reject(signal.reason), { once: true }))
+    }
+    const { out } = await max(["bot", "messages", "send", "-555", "hi", "--json"], 300, silent)
     expect(out).toContain("outcome_unknown")
-    expect(requests.filter((request) => request.url?.includes("-555"))).toHaveLength(1)
+    expect(sends).toBe(1)
     const journal = JSON.parse((await max(["bot", "sends", "list", "--json"])).stdout).items
-    expect(journal.at(-1)).toMatchObject({ chatId: "-555", outcome: "outcome_unknown" })
+    expect(journal.at(-1)).toMatchObject({ chat_id: "-555", outcome: "outcome_unknown" })
   })
 })
 
@@ -199,6 +218,26 @@ describe("max bot messages edit and delete", () => {
     expect(
       (await max(["team", "bot", "messages", "delete", "-100", "mid.9", "--allow-dangerous", "--json"])).code,
     ).toBe(7)
+  })
+
+  it("refuses an edit whose message is not a MAX message id before any request", async () => {
+    const { code, stderr } = await max(["bot", "messages", "edit", "-100", "123", "new text", "--json"])
+    expect(code).toBe(2)
+    expect(JSON.parse(stderr).error.message).toContain("a message id is mid.")
+    expect(requests).toHaveLength(0)
+  })
+
+  it("refuses a delete when any of its messages is not a MAX message id, deleting none", async () => {
+    const argv = ["bot", "messages", "delete", "-100", "mid.9", "123", "--allow-dangerous", "--json"]
+    const { code, stderr } = await max(argv)
+    expect(code).toBe(2)
+    expect(JSON.parse(stderr).error.message).toContain("a message id is mid.")
+    expect(requests).toHaveLength(0)
+
+    expect(
+      (await max(["bot", "messages", "delete", "-100", "mid.9", "mid.9", "--allow-dangerous", "--json"])).code,
+    ).toBe(0)
+    expect(requests.filter((request) => request.method === "DELETE")).toHaveLength(2)
   })
 })
 
@@ -238,8 +277,8 @@ describe("every bot write, whichever command sends it", () => {
     expect(requests.filter((request) => request.method !== "GET")).toHaveLength(0)
     const journal = JSON.parse((await max(["team", "bot", "sends", "list", "--json"])).stdout).items
     expect(journal.slice(-2)).toMatchObject([
-      { chatId: "-200", kind: "message", outcome: "refused" },
-      { chatId: "-200", kind: "pin", outcome: "refused" },
+      { chat_id: "-200", kind: "message", outcome: "refused" },
+      { chat_id: "-200", kind: "pin", outcome: "refused" },
     ])
   })
 
@@ -262,6 +301,23 @@ describe("every bot write, whichever command sends it", () => {
       (await max(["team", "bot", "api", "edit-message", "--message-id", "mid.9", "--body", `{"text": "y"}`, "--json"]))
         .code,
     ).toBe(7)
+  })
+
+  it("**journals every write the Bot API has**, or names it as one that reaches no chat", () => {
+    const unjournaled = botOperations
+      .filter((operation) => operation.effect !== "read" && !BOT_JOURNAL_KINDS[operation.id])
+      .map((operation) => operation.id)
+    expect(unjournaled).toEqual([...UNJOURNALED_WRITES])
+  })
+
+  it("**reads the profile's settings from the environment the run is given**, not the process's", async () => {
+    const env = { ...process.env, MAX_CONFIG_DIR: mkdtempSync(join(tmpdir(), "bot-env-")) }
+    expect(
+      (await max(["config", "set", "--bot", "permissions.bot.messages", "deny"], undefined, undefined, env)).code,
+    ).toBe(0)
+    const refused = await max(["bot", "comments", "send", "mid.9", "hi", "--json"], undefined, undefined, env)
+    expect(JSON.parse(refused.stderr).error.code).toBe("permission_error")
+    expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
   })
 
   it("does not list a bot's recipients file as a bot", async () => {

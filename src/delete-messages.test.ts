@@ -1,5 +1,5 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -41,7 +41,9 @@ const messenger = (history: Record<string, unknown> = { messages: [] }) => {
         messageIds: (payload.messageIds as unknown[]).map(String),
         forMe: payload.forMe,
       }))
-  return { max, environment, deletes }
+  const beyondLogin = () =>
+    max.sent.map(({ opcode }) => opcode).filter((opcode) => opcode !== Opcode.SESSION_INIT && opcode !== Opcode.LOGIN)
+  return { max, environment, deletes, beyondLogin }
 }
 
 const runWith = async (argv: string[], environment: Environment = {}) => {
@@ -60,7 +62,7 @@ describe("deleting messages", () => {
       environment,
     )
     expect(result.code).toBe(0)
-    expect(JSON.parse(result.stdout).deleted).toEqual([FIRST, SECOND])
+    expect(JSON.parse(result.stdout).item.deleted).toEqual([FIRST, SECOND])
     expect(deletes()).toEqual([{ chatId: "111", messageIds: [FIRST, SECOND], forMe: true }])
   })
   it("does not report a kept service notice as deleted after MAX acknowledges the request", async () => {
@@ -71,7 +73,7 @@ describe("deleting messages", () => {
     expect(result.code).not.toBe(0)
     expect(result.stdout).not.toContain('"deleted"')
     expect(JSON.parse(result.stderr)).toMatchObject({
-      error: { code: "outcome_unknown", reason: "deletion_unconfirmed", retained: [FIRST] },
+      error: { code: "outcome_unknown", message: expect.stringContaining(FIRST) },
     })
     expect(deletes()).toHaveLength(1)
   })
@@ -82,17 +84,17 @@ describe("deleting messages", () => {
     expect(result.code).not.toBe(0)
     expect(result.stdout).toBe("")
     expect(JSON.parse(result.stderr)).toMatchObject({
-      error: { code: "outcome_unknown", reason: "deletion_unconfirmed" },
+      error: { code: "outcome_unknown", message: expect.stringContaining("could not be verified") },
     })
     expect(deletes()).toHaveLength(1)
   })
-  it("**refuses without --allow-dangerous**, before connecting", async () => {
-    const { max, environment } = messenger()
+  it("**refuses without --allow-dangerous**, sending nothing past the login", async () => {
+    const { environment, beyondLogin } = messenger()
     const { code, stderr } = await runWith(["d-word", "messages", "delete", "111", FIRST], environment)
 
     expect(code).toBe(7)
     expect(stderr).toContain("--allow-dangerous")
-    expect(max.sent).toEqual([])
+    expect(beyondLogin()).toEqual([])
   })
 
   it("deletes for the owner only unless told otherwise, and journals it without text", async () => {
@@ -105,14 +107,21 @@ describe("deleting messages", () => {
     expect(code).toBe(0)
     expect(deletes()).toEqual([{ chatId: "111", messageIds: [FIRST, SECOND], forMe: true }])
     const answer = JSON.parse(stdout)
-    expect(answer).toEqual({
-      operationId: expect.any(String),
-      chatId: "111",
+    expect(answer.item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: "111",
       deleted: [FIRST, SECOND],
-      forEveryone: false,
+      for_everyone: false,
     })
     expect(journalOf("d-me")).toMatchObject([
-      { chatId: "111", kind: "delete", outcome: "sent", count: 2, forEveryone: false, operationId: answer.operationId },
+      {
+        chatId: "111",
+        kind: "delete",
+        outcome: "sent",
+        count: 2,
+        forEveryone: false,
+        operationId: answer.item.operation_id,
+      },
     ])
   })
 
@@ -125,7 +134,7 @@ describe("deleting messages", () => {
 
   it("**counts each deleted message toward the hourly limit**", async () => {
     const { environment, deletes } = messenger()
-    await runWith(["d-limit", "config", "set", "sendsPerHour", "3"])
+    await runWith(["d-limit", "config", "set", "sends_per_hour", "3"])
 
     expect(
       (await runWith(["d-limit", "messages", "delete", "111", FIRST, SECOND, "--allow-dangerous"], environment)).code,
@@ -145,11 +154,11 @@ describe("deleting messages", () => {
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_DELETE)
   })
 
-  it("a read-only profile refuses before connecting", async () => {
-    const { max, environment } = messenger()
-    await runWith(["d-ro", "config", "set", "readOnly", "true"])
+  it("a read-only profile refuses, sending nothing past the login", async () => {
+    const { environment, beyondLogin } = messenger()
+    await runWith(["d-ro", "config", "set", "permissions.messages", "readonly"])
 
     expect((await runWith(["d-ro", "messages", "delete", "111", FIRST, "--allow-dangerous"], environment)).code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(beyondLogin()).toEqual([])
   })
 })

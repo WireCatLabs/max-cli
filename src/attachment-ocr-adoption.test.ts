@@ -1,10 +1,10 @@
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import type { ModelImage } from "@wirecat/cli-messaging/models"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import type { ModelImage } from "@wirecat/cli-core/models"
+import { openStore } from "@wirecat/cli-core/store"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import { run } from "./program.js"
@@ -26,10 +26,10 @@ const db = await openStore()
 beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
   writeFileSync(path, Buffer.from(image.data, "base64"))
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "Synthetic group", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
-  await db.saveMessages(
+  await db.messages.saveMessages(
     account,
     "7",
     [
@@ -50,7 +50,7 @@ beforeAll(async () => {
     ],
     { via: "test" },
   )
-  await db.keepDownloads(account, "7", "1", [{ kind: "photo", position: 0, path }])
+  await db.attachments.keepDownloads(account, "7", "1", [{ kind: "photo", position: 0, path }])
 })
 afterAll(async () => {
   await db.close()
@@ -91,18 +91,21 @@ describe("shared attachment OCR adoption", () => {
     try {
       const ordinary = await invoke("attachments", "extract", "--chat", "7")
       expect(ordinary.code).toBe(0)
-      expect(JSON.parse(ordinary.stdout)).toMatchObject({ needsAgent: 1, items: [{ localPath: path, attachment: 1 }] })
+      expect(JSON.parse(ordinary.stdout).item).toMatchObject({
+        needs_agent: 1,
+        files: [{ local_path: path, attachment: 1 }],
+      })
       expect(fetcher).not.toHaveBeenCalled()
       const api = await invoke("attachments", "extract", "--chat", "7", "--ocr", "--concurrency", "2", "--limit", "1")
       expect(api.code).toBe(0)
-      expect(JSON.parse(api.stdout)).toMatchObject({ extracted: 1 })
+      expect(JSON.parse(api.stdout).item).toMatchObject({ extracted: 1 })
       expect(api.stdout + api.stderr).not.toContain("consumerocrneedle")
-      const found = await invoke("search", "messages", "content:consumerocrneedle", "--chat", "7", "--offline")
+      const found = await invoke("search", "messages", "content:consumerocrneedle chat:7", "--offline")
       expect(found.code).toBe(0)
-      expect(JSON.parse(found.stdout).items.map((one: { id: string }) => one.id)).toEqual(["1"])
+      expect(JSON.parse(found.stdout).items.map((one: { ref: string }) => one.ref)).toEqual(["msg:max/500/7/1"])
       const repeated = await invoke("attachments", "extract", "--chat", "7", "--ocr")
       expect(repeated.code).toBe(0)
-      expect(JSON.parse(repeated.stdout)).toMatchObject({ unchanged: 1, extracted: 0 })
+      expect(JSON.parse(repeated.stdout).item).toMatchObject({ unchanged: 1, extracted: 0 })
       expect(fetcher).toHaveBeenCalledTimes(1)
     } finally {
       fetcher.mockRestore()

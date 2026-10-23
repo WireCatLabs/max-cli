@@ -1,9 +1,9 @@
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
+import { readdirSync, readFileSync, statSync } from "node:fs"
 import { createRequire } from "node:module"
 import { join } from "node:path"
-import { pathsAreOverridden, resolvePaths } from "@wirecat/cli-core"
-import { runtime, storeSummary } from "@wirecat/cli-messaging/cli"
-import { openCache, storePath } from "@wirecat/cli-messaging/store"
+import { pathsAreOverridden, resolvePaths } from "@wirecat/cli-base"
+import { runtime, storeSummary } from "@wirecat/cli-core/cli"
+import { openCache, storePath } from "@wirecat/cli-core/store"
 import { checkInstall, type Install, ownScript } from "./install.js"
 import { CLIENT } from "./spec/identity.js"
 import { isInstalled, modelsDirectory } from "./transcribe/install.js"
@@ -80,7 +80,6 @@ export interface Diagnosis {
   /** Where this profile's files live — one place to look instead of nine. */
   paths: { state: string; cache: string; runs: string; bots: string; sends: string; messages: string }
   store: Awaited<ReturnType<typeof storeSummary>>
-  legacyCache: { file: string; exists: boolean }
   runs: { directory: string; kept: number }
   /** The web client we present, and how old that reading is. Past `STALE_AFTER_DAYS` MAX may refuse it. */
   client: { appVersion: string; chrome: string; readOn: string; ageDays: number; stale: boolean }
@@ -132,9 +131,6 @@ export const diagnose = async ({
 
   const stateFile = join(state, "profiles", `${profile}.json`)
   const stored = readState(stateFile)
-
-  const cacheFile = join(cacheHome, `${profile}.db`)
-  const cacheExists = existsSync(cacheFile)
 
   const runsDirectory = join(state, "runs")
   const bots = join(state, "bots")
@@ -190,7 +186,6 @@ export const diagnose = async ({
       messages: storePath(env),
     },
     store: await readStore(env),
-    legacyCache: { file: cacheFile, exists: cacheExists },
     runs: { directory: runsDirectory, kept: countEntries(runsDirectory) },
     client: clientAge(now()),
     install: install(),
@@ -224,8 +219,8 @@ const loadNative = async (): Promise<Native> => {
     }
   }
   return {
-    // The keyring module belongs to cli-core, so it is resolved from there, as cli-core does.
-    keyring: await attempt(() => createRequire(import.meta.resolve("@wirecat/cli-core"))("@napi-rs/keyring")),
+    // The keyring module belongs to cli-base, so it is resolved from there, as cli-base does.
+    keyring: await attempt(() => createRequire(import.meta.resolve("@wirecat/cli-base"))("@napi-rs/keyring")),
     sqlite: await attempt(async () => (await openCache(":memory:")).close()),
   }
 }

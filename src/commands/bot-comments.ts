@@ -1,11 +1,12 @@
-import { CliError } from "@wirecat/cli-core"
-import { annotate } from "@wirecat/cli-core/commands"
+import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import { itemOf, listOf, ownerOnlyOption, REMOTE_READ, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, textOf } from "./bot-sends.js"
-import { renderList, wholeNumber } from "./paging.js"
+import { wholeNumber } from "./paging.js"
 
 const format = () => new Option("--format <format>", "how the text is marked up").choices(["markdown", "html"])
 
@@ -17,8 +18,7 @@ export const commentsCommand = (): Command => {
     "comments under a channel post — each command takes the post's message id (mid.…) first",
   )
 
-  command
-    .command("list <message>")
+  annotate(command.command("list <message>"), { effects: REMOTE_READ, offline: false })
     .description("the comments under a post, newest last")
     .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .action(async function (this: Command, message: string) {
@@ -29,25 +29,21 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         query: { count: String(limit) },
       })
-      renderList(
-        context.renderer,
-        context.format,
-        (plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? [],
-      )
+      const items = (plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? []
+      renderAnswer(this, context, listOf("bot comments list", { items, limit, has_more: false }))
     })
 
-  command
-    .command("get <message> <comment>")
+  annotate(command.command("get <message> <comment>"), { effects: REMOTE_READ, offline: false })
     .description("one comment under a post")
     .action(async function (this: Command, message: string, comment: string) {
       const context = botContext(this)
       const answer = await context.authenticated().call(operation("getCommentById"), {
         path: { messageId: message, commentId: comment },
       })
-      context.renderer.result(plainJson(answer))
+      renderAnswer(this, context, itemOf(plainJson(answer)))
     })
 
-  annotate(command.command("send <message> <text>"), { mutates: true })
+  annotate(command.command("send <message> <text>"), { effects: REMOTE_WRITE })
     .description("comment under a post as the bot; - reads stdin")
     .addOption(format())
     .action(async function (this: Command, message: string, text: string) {
@@ -56,10 +52,10 @@ export const commentsCommand = (): Command => {
         path: { messageId: message },
         body: commentBody("sendComment", text, this.opts<{ format?: string }>().format),
       })
-      context.renderer.result(plainJson(answer))
+      renderAnswer(this, context, itemOf(plainJson(answer)))
     })
 
-  annotate(command.command("edit <message> <comment> <text>"), { mutates: true })
+  annotate(command.command("edit <message> <comment> <text>"), { effects: REMOTE_WRITE })
     .description("replace the text of a comment the bot wrote; - reads stdin")
     .addOption(format())
     .action(async function (this: Command, message: string, comment: string, text: string) {
@@ -69,19 +65,19 @@ export const commentsCommand = (): Command => {
         query: { comment_id: comment },
         body: commentBody("editComment", text, this.opts<{ format?: string }>().format),
       })
-      context.renderer.result(plainJson(answer) ?? { success: true })
+      renderAnswer(this, context, itemOf(plainJson(answer) ?? { success: true }))
     })
 
-  annotate(command.command("delete <message> <comment>"), { mutates: true })
+  annotate(command.command("delete <message> <comment>"), { effects: REMOTE_WRITE })
     .description("delete a comment under a post")
-    .option("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask")
+    .addOption(ownerOnlyOption("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask"))
     .action(async function (this: Command, message: string, comment: string) {
       const context = botContext(this)
       const answer = await guardedCall(context, operation("deleteComment"), {
         path: { messageId: message },
         query: { comment_id: comment },
       })
-      context.renderer.result(plainJson(answer) ?? { success: true })
+      renderAnswer(this, context, itemOf(plainJson(answer) ?? { success: true }))
     })
 
   return command

@@ -1,6 +1,6 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http"
 import type { AddressInfo } from "node:net"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest"
 import { botOperations } from "./client.js"
 import { BotTransport, plainJson } from "./transport.js"
@@ -52,6 +52,14 @@ const answer =
     response.writeHead(status, { "content-type": "application/json", ...headers })
     response.end(body)
   }
+const timingOut = () => {
+  const calls: string[] = []
+  const fetchTimingOut = async (url: URL | string) => {
+    calls.push(String(url))
+    throw new DOMException("The operation was aborted due to timeout", "TimeoutError")
+  }
+  return { calls, fetch: fetchTimingOut as typeof fetch }
+}
 const failure = async (promise: Promise<unknown>): Promise<CliError> => {
   try {
     await promise
@@ -103,7 +111,7 @@ describe("BotTransport", () => {
     expect(seen).toHaveLength(1)
     expect(error).toMatchObject({
       code: "outcome_unknown",
-      details: { status: 503, maxCode: "service.unavailable", retryable: false },
+      details: { status: 503, max_code: "service.unavailable", retryable: false },
     })
   })
 
@@ -122,23 +130,23 @@ describe("BotTransport", () => {
   })
 
   it("calls a write that got no answer an unknown outcome, not a failure to repeat", async () => {
-    handler = () => {}
-    const error = await failure(transport({ timeoutMs: 50 }).call(operation("sendMessage"), { body: "{}" }))
+    const { calls, fetch: silent } = timingOut()
+    const error = await failure(transport({ fetch: silent }).call(operation("sendMessage"), { body: "{}" }))
     expect(error.code).toBe("outcome_unknown")
-    expect(seen).toHaveLength(1)
+    expect(calls).toHaveLength(1)
   })
 
   it("reports a read that timed out as a timeout, after the retries", async () => {
-    handler = () => {}
-    const error = await failure(transport({ timeoutMs: 30 }).call(operation("getMyInfo")))
+    const { calls, fetch: silent } = timingOut()
+    const error = await failure(transport({ fetch: silent }).call(operation("getMyInfo")))
     expect(error.code).toBe("timeout")
-    expect(seen).toHaveLength(3)
+    expect(calls).toHaveLength(3)
   })
 
   it("names MAX's own error code and keeps the token out of the message", async () => {
     handler = answer(401, `{"code": "verify.token", "message": "Invalid access_token ${TOKEN}"}`)
     const error = await failure(transport().call(operation("getMyInfo")))
-    expect(error).toMatchObject({ code: "authentication_error", details: { maxCode: "verify.token", status: 401 } })
+    expect(error).toMatchObject({ code: "authentication_error", details: { max_code: "verify.token", status: 401 } })
     expect(error.message).not.toContain(TOKEN)
     expect(JSON.stringify(error.details)).not.toContain(TOKEN)
   })

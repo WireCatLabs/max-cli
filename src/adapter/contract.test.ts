@@ -1,8 +1,8 @@
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
-import { type ContractCase, contractCases, type Seed } from "@wirecat/cli-messaging/testing"
+import { memoryKeyring } from "@wirecat/cli-base"
+import { type ContractCase, contractCases, type Seed } from "@wirecat/cli-core/testing"
 import { afterEach, describe, expect, it } from "vitest"
 import { MaxClient } from "../client.js"
 import { Connection } from "../protocol/connection.js"
@@ -20,7 +20,13 @@ afterEach(async () => {
 
 const connect = async (seed: Seed) => {
   const dir = mkdtempSync(join(tmpdir(), "max-contract-"))
-  const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const store = new SessionStore({
+    profile: "default",
+    keyring: memoryKeyring(),
+    configDir: dir,
+    stateDir: join(dir, "state"),
+    env: {},
+  })
   if (seed.account) {
     store.writeToken("a-token")
     store.writeState({ ...store.readState(), viewerId: seed.account.id })
@@ -31,7 +37,6 @@ const connect = async (seed: Seed) => {
   })
   records.push(record)
   const client = new MaxClient({
-    sends: "caller",
     store,
     record,
     connection: new Connection({ createSocket: seededMax(seed).createSocket, timeoutMs: 50 }),
@@ -43,7 +48,7 @@ const connect = async (seed: Seed) => {
 
 const cases: ContractCase[] = contractCases({ connect, ids: maxIds, orderBy: "time" })
 
-describe("the MAX adapter keeps cli-messaging's port promises", () => {
+describe("the MAX adapter keeps cli-core's port promises", () => {
   it("skips only cases that exist", () => {
     expect(Object.keys(SKIPPED).filter((name) => !cases.some((one) => one.name === name))).toEqual([])
   })

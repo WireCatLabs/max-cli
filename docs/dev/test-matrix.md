@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 112 ⛔ · 0 ❌** — 314 commands, 729 options.
+**922 ✅ · 175 ⛔ · 0 ❌** — 358 commands, 739 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -42,18 +42,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats list` | `--limit` | ✅ |  |
 | `chats list` | `--page` | ✅ |  |
 | `chats list` | `--all` | ✅ |  |
-| `chats list` | `--search` | ✅ |  |
-| `chats list` | `--kind` | ✅ |  |
-| `chats list` | `--unread` | ✅ |  |
 | `chats show` |  | ✅ |  |
+| `chats documents list` |  | ✅ |  |
+| `chats documents list` | `--limit` | ✅ |  |
+| `chats documents list` | `--page` | ✅ |  |
 | `chats events` |  | ✅ |  |
-| `chats events` | `--since-time` | ✅ |  |
-| `chats events` | `--type` | ✅ |  |
 | `chats inspect` |  | ✅ |  |
 | `chats join` |  | ✅ |  |
 | `chats mark-read` |  | ✅ |  |
-| `chats mark-read` | `--until` | ✅ |  |
-| `chats mark-read` | `--topic` | ✅ |  |
+| `chats mark-read` | `--until-id` | ✅ |  |
 | `chats leave` |  | ✅ |  |
 | `chats create` |  | ✅ |  |
 | `chats create` | `--channel` | ✅ |  |
@@ -61,15 +58,13 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats members list` | `--limit` | ✅ |  |
 | `chats members list` | `--page` | ✅ |  |
 | `chats members list` | `--all` | ✅ |  |
-| `chats members audit` |  | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
-| `chats members audit` | `--budget` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
-| `chats members audit` | `--min-score` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
-| `chats members audit` | `--deep` | ⛔ | shared member audit; cli-messaging src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members audit` |  | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members audit` | `--max-pages` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
+| `chats members audit` | `--deep` | ⛔ | shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members |
 | `chats members history` |  | ✅ |  |
-| `chats members history` | `--since-time` | ✅ |  |
 | `chats members fetch` |  | ✅ |  |
 | `chats members fetch` | `--track` | ✅ |  |
-| `chats members fetch` | `--budget` | ✅ |  |
+| `chats members fetch` | `--max-pages` | ✅ |  |
 | `chats members add` |  | ✅ |  |
 | `chats members add` | `--history` | ✅ |  |
 | `chats members remove` |  | ✅ |  |
@@ -93,16 +88,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats link reset` |  | ✅ |  |
 | `chats requests list` |  | ✅ |  |
 | `chats requests list` | `--limit` | ✅ |  |
-| `chats requests list` | `--search` | ✅ |  |
-| `chats requests list` | `--link` | ✅ |  |
+| `chats requests list` | `--page` | ✅ |  |
 | `chats requests accept` |  | ✅ |  |
-| `chats requests accept` | `--all` | ✅ |  |
-| `chats requests accept` | `--link` | ✅ |  |
 | `chats requests decline` |  | ✅ |  |
-| `chats requests decline` | `--all` | ✅ |  |
-| `chats requests decline` | `--link` | ✅ |  |
 | `chats folders list` |  | ✅ |  |
-| `chats folders show` |  | ⛔ | cli-messaging src/cli/messenger/admin-commands.test.ts tests folder show with cached and remote chat names plus pinned/excluded entries; MAX mounts the same shared handler (SDK0.189.0) |
+| `chats folders show` |  | ⛔ | cli-core src/cli/messenger/admin-commands.test.ts tests folder show with cached and remote chat names plus pinned/excluded entries; MAX mounts the same shared handler (SDK0.189.0) |
 | `chats folders create` |  | ✅ |  |
 | `chats folders create` | `--chat` | ✅ |  |
 | `chats folders update` |  | ✅ |  |
@@ -122,7 +112,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats media` |  | ✅ |  |
 | `chats media` | `--type` | ✅ |  |
 | `chats media` | `--limit` | ✅ |  |
-| `chats media` | `--before-id` | ✅ |  |
+| `chats media` | `--cursor` | ✅ |  |
 | `chats mute` |  | ✅ |  |
 | `chats mute` | `--until` | ✅ |  |
 | `chats unmute` |  | ✅ |  |
@@ -131,7 +121,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats clear` |  | ✅ |  |
 | `chats clear` | `--allow-dangerous` | ✅ |  |
 | `chats start` |  | ✅ |  |
-| `chats start` | `--payload` | ✅ |  |
+| `chats start` | `--start` | ✅ |  |
 | `chats app` |  | ✅ |  |
 | `chats app` | `--start` | ✅ |  |
 | `contacts list` |  | ✅ |  |
@@ -139,8 +129,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--page` | ✅ |  |
 | `contacts list` | `--all` | ✅ |  |
 | `contacts list` | `--order` | ✅ |  |
-| `contacts list` | `--search` | ✅ |  |
-| `contacts list` | `--search-notes` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `contacts show` |  | ✅ |  |
 | `contacts show` | `--with-notes` | ✅ |  |
 | `contacts profile` |  | ✅ |  |
@@ -164,28 +152,28 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts rename` |  | ✅ |  |
 | `contacts import` |  | ✅ |  |
 | `contacts context` |  | ✅ |  |
-| `contacts context` | `--limit` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and archive gaps; this consumer mounts the shared command |
-| `contacts context` | `--since-time` | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing |
+| `contacts context` | `--limit` | ⛔ | cli-core src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and archive gaps; this consumer mounts the shared command |
+| `contacts context` | `--since-time` | ⛔ | cli-core src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing |
 | `contacts context` | `--chat` | ✅ |  |
-| `contacts context` | `--refresh` | ✅ |  |
+| `contacts context` | `--sync-first` | ✅ |  |
+| `contacts prepare` |  | ✅ |  |
+| `contacts prepare` | `--limit` | ✅ |  |
+| `contacts prepare` | `--since-time` | ✅ |  |
 | `contacts timeline` |  | ✅ |  |
 | `contacts timeline` | `--scope` | ✅ |  |
 | `contacts timeline` | `--since-time` | ✅ |  |
 | `contacts timeline` | `--until-time` | ✅ |  |
 | `contacts timeline` | `--limit` | ✅ |  |
+| `contacts timeline` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |
 | `contacts check` |  | ✅ |  |
 | `contacts check` | `--no-registries` | ✅ |  |
-| `contacts link` |  | ⛔ | cli-messaging src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
-| `contacts unlink` |  | ⛔ | cli-messaging src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
+| `contacts link` |  | ⛔ | cli-core src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
+| `contacts unlink` |  | ⛔ | cli-core src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
 | `messages list` |  | ✅ |  |
 | `messages list` | `--limit` | ✅ |  |
-| `messages list` | `--before-id` | ✅ |  |
-| `messages list` | `--before-time` | ✅ |  |
-| `messages list` | `--after-id` | ✅ |  |
-| `messages list` | `--after-time` | ✅ |  |
+| `messages list` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |
 | `messages list` | `--transcribe` | ✅ |  |
 | `messages list` | `--model` | ✅ |  |
-| `messages list` | `--mark-read` | ✅ |  |
 | `messages show` |  | ✅ |  |
 | `messages context` |  | ✅ |  |
 | `messages context` | `--thread` | ✅ |  |
@@ -202,17 +190,29 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages download` | `--all` | ✅ |  |
 | `messages download` | `--pause` | ✅ |  |
 | `messages download` | `--extract` | ✅ |  |
-| `messages download` | `--output` | ✅ |  |
 | `messages evidence` |  | ✅ |  |
 | `messages evidence` | `--limit` | ✅ |  |
-| `messages evidence` | `--before-id` | ✅ |  |
+| `messages evidence` | `--cursor` | ✅ |  |
+| `messages sync` |  | ✅ |  |
+| `messages sync` | `--all` | ⛔ | cli-core src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-core 0.174.0) |
+| `messages sync` | `--limit` | ✅ |  |
+| `messages sync` | `--page-size` | ✅ |  |
+| `messages sync` | `--pause` | ✅ |  |
+| `messages sync` | `--since-time` | ✅ |  |
+| `messages sync` | `--last` | ✅ |  |
+| `messages sync` | `--catch-up` | ✅ |  |
+| `messages sync` | `--no-catch-up` | ✅ |  |
+| `messages sync` | `--catch-up-chunks` | ✅ |  |
+| `messages sync` | `--catch-up-messages` | ✅ |  |
+| `messages sync` | `--catch-up-time` | ✅ |  |
+| `messages sync` | `--background` | ⛔ | starts a detached `max` that outlives the test; cli-core src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6 |
+| `messages sync` | `--dry-run` | ✅ |  |
 | `messages transcribe` |  | ✅ |  |
 | `messages transcribe` | `--model` | ✅ |  |
 | `messages send` |  | ✅ |  |
-| `messages send` | `--topic` | ✅ |  |
 | `messages send` | `--reply-to` | ✅ |  |
 | `messages send` | `--send-as` | ✅ |  |
-| `messages send` | `--send-id` | ✅ |  |
+| `messages send` | `--operation-id` | ✅ |  |
 | `messages send` | `--silent` | ✅ |  |
 | `messages send` | `--no-preview` | ✅ |  |
 | `messages send` | `--md` | ✅ |  |
@@ -233,26 +233,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages forward` | `--to` | ✅ |  |
 | `messages forward` | `--silent` | ✅ |  |
 | `messages forward` | `--send-as` | ✅ |  |
-| `messages forward` | `--send-id` | ✅ |  |
+| `messages forward` | `--operation-id` | ✅ |  |
 | `messages pin` |  | ✅ |  |
 | `messages pin` | `--notify` | ✅ |  |
 | `messages unpin` |  | ✅ |  |
 | `messages press` |  | ✅ |  |
 | `store status` |  | ✅ |  |
-| `store fetch` |  | ✅ |  |
-| `store fetch` | `--all` | ⛔ | cli-messaging src/services/archive.test.ts («walks the chats most recently active first…») and src/cli/messenger/backfill.test.ts («--all fetches every chat in a job…») cover the shared command (cli-messaging 0.174.0) |
-| `store fetch` | `--limit` | ✅ |  |
-| `store fetch` | `--page-size` | ✅ |  |
-| `store fetch` | `--pause` | ✅ |  |
-| `store fetch` | `--since-time` | ✅ |  |
-| `store fetch` | `--last` | ✅ |  |
-| `store fetch` | `--catch-up` | ✅ |  |
-| `store fetch` | `--no-catch-up` | ✅ |  |
-| `store fetch` | `--catch-up-chunks` | ✅ |  |
-| `store fetch` | `--catch-up-messages` | ✅ |  |
-| `store fetch` | `--catch-up-time` | ✅ |  |
-| `store fetch` | `--background` | ⛔ | starts a detached `max` that outlives the test; cli-messaging src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6 |
-| `store fetch` | `--estimate` | ✅ |  |
 | `store gaps plan` |  | ✅ |  |
 | `store gaps repair` |  | ✅ |  |
 | `store gaps repair` | `--limit` | ✅ |  |
@@ -268,23 +254,26 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store gaps repair` | `--catch-up-time` | ✅ |  |
 | `store gaps repair` | `--background` | ✅ |  |
 | `store jobs list` |  | ✅ |  |
-| `store jobs list` | `--state` | ✅ |  |
+| `store jobs list` | `--limit` | ✅ |  |
+| `store jobs list` | `--page` | ✅ |  |
+| `store jobs list` | `--all` | ✅ |  |
 | `store jobs show` |  | ✅ |  |
 | `store jobs cancel` |  | ✅ |  |
-| `store jobs retry` |  | ⛔ | cli-messaging src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
-| `store jobs retry` | `--failed` | ⛔ | cli-messaging src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
-| `store jobs clear` |  | ⛔ | cli-messaging src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
+| `store jobs retry` |  | ⛔ | cli-core src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
+| `store jobs retry` | `--failed` | ⛔ | cli-core src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
+| `store jobs clear` |  | ⛔ | cli-core src/cli/messenger/backfill.test.ts tests retry command reconstruction, --failed latest-job-per-chat selection, and clear preserving running jobs; MAX mounts the shared handlers (SDK0.189.0) |
 | `store export` |  | ✅ |  |
 | `store export` | `--format` | ✅ |  |
 | `store export` | `--since-time` | ✅ |  |
 | `store export` | `--output` | ✅ |  |
-| `store export` | `--to` | ✅ |  |
-| `store export` | `--kind` | ✅ |  |
+| `store export` | `--output-dir` | ✅ |  |
+| `store export` | `--include` | ✅ |  |
 | `store export` | `--all` | ✅ |  |
 | `store export` | `--encrypt` | ✅ |  |
 | `store clear` |  | ✅ |  |
 | `store clear` | `--left` | ✅ |  |
 | `store clear` | `--allow-dangerous` | ✅ |  |
+| `store clear` | `--dry-run` | ✅ |  |
 | `store info` |  | ✅ |  |
 | `store check` |  | ✅ |  |
 | `store migrate` |  | ✅ |  |
@@ -294,9 +283,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store restore` |  | ✅ |  |
 | `store decrypt` |  | ✅ |  |
 | `store decrypt` | `--output` | ✅ |  |
-| `store repair` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover structural repair and retained data |
-| `store repair` | `--dry-run` | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover preview rollback and retained data |
-| `store copies delete` |  | ⛔ | cli-messaging src/cli/messenger/store-maintenance.test.ts and src/store/repair.test.ts cover exact-name retained-copy deletion |
+| `store repair` |  | ✅ |  |
+| `store repair` | `--dry-run` | ✅ |  |
+| `store reset` |  | ✅ |  |
+| `store reset` | `--no-backup` | ✅ |  |
+| `store copies delete` |  | ✅ |  |
 | `stats messages show` |  | ✅ |  |
 | `stats messages show` | `--sync-first` | ✅ |  |
 | `stats messages show` | `--max-chats` | ✅ |  |
@@ -308,7 +299,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats messages show` | `--limit` | ✅ |  |
 | `stats messages show` | `--timezone` | ✅ |  |
 | `stats messages show` | `--exact` | ✅ |  |
-| `stats messages show` | `--saved` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters |
+| `stats messages show` | `--saved` | ⛔ | cli-core src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters |
 | `stats messages counters show` |  | ✅ |  |
 | `stats messages counters show` | `--chat` | ✅ |  |
 | `stats messages counters show` | `--source` | ✅ |  |
@@ -342,7 +333,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats messages discussion` | `--chat` | ✅ |  |
 | `stats messages discussion` | `--source` | ✅ |  |
 | `stats messages discussion` | `--exact` | ✅ |  |
-| `stats messages discussion` | `--saved` | ⛔ | cli-messaging src/services/admin-statistics.test.ts covers shared report saved-run scope and typed overrides; native admin-statistics-adoption.test.ts checks mounted report paths and both evidence targets without connecting |
+| `stats messages discussion` | `--saved` | ⛔ | cli-core src/services/admin-statistics.test.ts covers shared report saved-run scope and typed overrides; native admin-statistics-adoption.test.ts checks mounted report paths and both evidence targets without connecting |
 | `stats messages discussion` | `--timezone` | ✅ |  |
 | `stats messages discussion` | `--limit` | ✅ |  |
 | `stats messages discussion` | `--min-views` | ✅ |  |
@@ -396,15 +387,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats contacts evidence` | `--component` | ✅ |  |
 | `stats contacts evidence` | `--limit` | ✅ |  |
 | `stats contacts evidence` | `--cursor` | ✅ |  |
-| `stats chats show` |  | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
-| `stats chats show` | `--since-time` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
-| `stats chats show` | `--by` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
-| `stats chats show` | `--timezone` | ⛔ | shared chat statistics; cli-messaging src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats chats show` |  | ⛔ | shared chat statistics; cli-core src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats chats show` | `--since-time` | ⛔ | shared chat statistics; cli-core src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats chats show` | `--by` | ⛔ | shared chat statistics; cli-core src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
+| `stats chats show` | `--timezone` | ⛔ | shared chat statistics; cli-core src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts |
 | `stats chats newcomers` |  | ✅ |  |
 | `stats chats newcomers` | `--since-time` | ✅ |  |
 | `stats chats newcomers` | `--until-time` | ✅ |  |
 | `stats chats newcomers` | `--within` | ✅ |  |
-| `stats chats newcomers` | `--saved` | ⛔ | cli-messaging src/services/admin-statistics.test.ts covers shared report saved-run scope and typed overrides; native admin-statistics-adoption.test.ts checks mounted report paths and both evidence targets without connecting |
+| `stats chats newcomers` | `--saved` | ⛔ | cli-core src/services/admin-statistics.test.ts covers shared report saved-run scope and typed overrides; native admin-statistics-adoption.test.ts checks mounted report paths and both evidence targets without connecting |
 | `stats chats newcomers` | `--timezone` | ✅ |  |
 | `stats chats newcomers` | `--limit` | ✅ |  |
 | `stats chats newcomers` | `--answerer` | ✅ |  |
@@ -426,16 +417,58 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats charts` | `--timezone` | ✅ |  |
 | `stats charts` | `--output` | ✅ |  |
 | `tasks list` |  | ✅ |  |
-| `tasks list` | `--state` | ✅ |  |
-| `tasks list` | `--chat` | ✅ |  |
-| `tasks list` | `--type` | ✅ |  |
-| `tasks list` | `--before-time` | ✅ |  |
 | `tasks list` | `--limit` | ✅ |  |
 | `tasks add` |  | ✅ |  |
 | `tasks add` | `--type` | ✅ |  |
+| `tasks add` | `--category` | ✅ |  |
+| `tasks add` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks add` | `--new` | ✅ |  |
+| `tasks add` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks add` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks add` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks add` | `--remind-time` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks add` | `--assignee` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists what someone owes the owner with assignee:, after tasks add --assignee sender") drives this through the shared handler MAX mounts (0.320.0) |
+| `tasks plan` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--category` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks plan` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks plan` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--remind-time` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks plan` | `--assignee` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks link` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks link` | `--chat` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks link` | `--kind` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks show` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks related` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists the tasks that may be the same job") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks related` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
+| `tasks duplicates` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks duplicates` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
+| `tasks duplicates reject` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks duplicates defer` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks merge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks merge` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks unmerge` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists pairs for review, marks one unsure for the owner, merges and unmerges, rejects") drives this through the shared handler MAX mounts (0.285.0) |
+| `tasks agenda` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--due-within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--unanswered` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
+| `tasks agenda` | `--waiting` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--within` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks agenda` | `--holder` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks categories` |  | ✅ |  |
+| `tasks scan` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0) |
+| `tasks scan` | `--last` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0) |
+| `tasks claim` |  | ✅ |  |
+| `tasks claim` | `--lease` | ✅ |  |
+| `tasks claim` | `--holder` | ✅ |  |
+| `tasks release` |  | ✅ |  |
+| `tasks release` | `--holder` | ✅ |  |
 | `tasks close` |  | ✅ |  |
 | `tasks close` | `--as` | ✅ |  |
 | `tasks close` | `--reason` | ✅ |  |
+| `tasks close` | `--certainty` | ✅ |  |
+| `tasks close` | `--as-owner` | ✅ |  |
+| `tasks reject` |  | ✅ |  |
+| `tasks reject` | `--as-owner` | ✅ |  |
 | `conversations build` |  | ✅ |  |
 | `conversations build` | `--chat` | ✅ |  |
 | `conversations build` | `--analyze` | ✅ |  |
@@ -446,22 +479,20 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations build` | `--max-tokens` | ✅ |  |
 | `conversations build` | `--max-chats` | ✅ |  |
 | `conversations list` |  | ✅ |  |
-| `conversations list` | `--chat` | ✅ |  |
-| `conversations list` | `--since-time` | ✅ |  |
 | `conversations list` | `--limit` | ✅ |  |
 | `conversations show` |  | ✅ |  |
 | `conversations related` |  | ✅ |  |
 | `conversations related` | `--limit` | ✅ |  |
 | `conversations related` | `--model` | ✅ |  |
-| `conversations related` | `--provider` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
-| `conversations related` | `--base-url` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
-| `conversations related` | `--dims` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations related` | `--provider` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-core's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations related` | `--base-url` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-core's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations related` | `--dims` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-core's src/services/embeddings.test.ts drives a remote one with a stand-in |
 | `conversations status` |  | ✅ |  |
 | `conversations status` | `--chat` | ✅ |  |
 | `conversations status` | `--model` | ✅ |  |
-| `conversations status` | `--provider` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
-| `conversations status` | `--base-url` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
-| `conversations status` | `--dims` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-messaging's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations status` | `--provider` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-core's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations status` | `--base-url` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-core's src/services/embeddings.test.ts drives a remote one with a stand-in |
+| `conversations status` | `--dims` | ⛔ | names a remote embedding service, which needs its own key and the network; max's tests drive the command with the local model, cli-core's src/services/embeddings.test.ts drives a remote one with a stand-in |
 | `conversations batches status` |  | ✅ |  |
 | `conversations batches status` | `--chat` | ✅ |  |
 | `conversations batches status` | `--size` | ✅ |  |
@@ -473,34 +504,37 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations links clear` |  | ✅ |  |
 | `conversations links clear` | `--chat` | ✅ |  |
 | `conversations links clear` | `--model` | ✅ |  |
+| `conversations rebuild` |  | ✅ |  |
+| `conversations rebuild` | `--chat` | ✅ |  |
+| `conversations rebuild` | `--max-chats` | ✅ |  |
+| `conversations rebuild` | `--max-chunks` | ✅ |  |
 | `conversations consents list` |  | ✅ |  |
 | `conversations consents revoke` |  | ✅ |  |
 | `conversations consents revoke` | `--chat` | ✅ |  |
 | `conversations consents revoke` | `--provider` | ✅ |  |
-| `conversations embed` |  | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--model` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--provider` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--base-url` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--dims` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--workers` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--threads` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--concurrency` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--max-tokens` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--max-chats` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `conversations embed` | `--max-chunks` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` |  | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--model` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--provider` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--base-url` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--dims` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--threads` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--concurrency` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--max-tokens` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--max-chats` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--max-chunks` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed status` |  | ✅ |  |
 | `conversations embed status` | `--chat` | ✅ |  |
 | `conversations embed status` | `--model` | ✅ |  |
-| `conversations embed status` | `--provider` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
-| `conversations embed status` | `--base-url` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
-| `conversations embed status` | `--dims` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
+| `conversations embed status` | `--provider` | ⛔ | names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in |
+| `conversations embed status` | `--base-url` | ⛔ | names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in |
+| `conversations embed status` | `--dims` | ⛔ | names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in |
 | `conversations embed clear` |  | ✅ |  |
 | `conversations embed clear` | `--chat` | ✅ |  |
 | `conversations embed clear` | `--model` | ✅ |  |
-| `conversations embed clear` | `--provider` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
-| `conversations embed clear` | `--base-url` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
-| `conversations embed clear` | `--dims` | ⛔ | names an external model provider, reached over the network; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in |
+| `conversations embed clear` | `--provider` | ⛔ | names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in |
+| `conversations embed clear` | `--base-url` | ⛔ | names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in |
+| `conversations embed clear` | `--dims` | ⛔ | names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in |
 | `attachments extract` |  | ✅ |  |
 | `attachments extract` | `--chat` | ✅ |  |
 | `attachments extract` | `--from-dir` | ✅ |  |
@@ -511,8 +545,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments extract` | `--ocr` | ✅ |  |
 | `attachments extract` | `--concurrency` | ✅ |  |
 | `attachments list` |  | ✅ |  |
-| `attachments list` | `--chat` | ✅ |  |
-| `attachments list` | `--needs-text` | ✅ |  |
 | `attachments list` | `--limit` | ✅ |  |
 | `attachments list` | `--page` | ✅ |  |
 | `attachments list` | `--all` | ✅ |  |
@@ -521,39 +553,83 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments show` | `--page` | ✅ |  |
 | `attachments show` | `--offset-bytes` | ✅ |  |
 | `attachments show` | `--chunk-bytes` | ✅ |  |
-| `attachments show` | `--if-sha256` | ✅ |  |
+| `attachments show` | `--expected-fingerprint` | ✅ |  |
 | `attachments text set` |  | ✅ |  |
 | `attachments text set` | `--attachment` | ✅ |  |
 | `attachments text set` | `--text-file` | ✅ |  |
+| `attachments download` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments download` | `--chat` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments download` | `--since-time` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments download` | `--pause` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments check` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--at` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--timezone` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--chat` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--since-time` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs start` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs stop` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs status` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs uninstall` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments move` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments move` | `--before-time` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments move` | `--dry-run` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
 | `tags auto` |  | ✅ |  |
 | `tags auto` | `--chat` | ✅ |  |
 | `tags auto` | `--limit` | ✅ |  |
-| `tags auto` | `--refresh-metadata` | ⛔ | cli-messaging src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
+| `tags auto` | `--sync-first` | ⛔ | cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers |
 | `tags auto` | `--dry-run` | ✅ |  |
 | `tags add` |  | ✅ |  |
 | `tags add` | `--chat` | ✅ |  |
-| `tags add` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
-| `tags add` | `--message` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags add` | `--contact` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags add` | `--message` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags add` | `--task` | ✅ |  |
 | `tags remove` |  | ✅ |  |
 | `tags remove` | `--chat` | ✅ |  |
-| `tags remove` | `--contact` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
-| `tags remove` | `--message` | ⛔ | cli-messaging src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags remove` | `--contact` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags remove` | `--message` | ⛔ | cli-core src/cli/messenger/tags.test.ts covers chat, contact and message targets through the shared command; consumer integration tests cover mounting, account isolation and permissions |
+| `tags remove` | `--task` | ✅ |  |
 | `tags remove` | `--source` | ✅ |  |
 | `tags list` |  | ✅ |  |
-| `tags list` | `--tag` | ✅ |  |
-| `tags list` | `--source` | ✅ |  |
-| `tags list` | `--type` | ✅ |  |
+| `mentions list` |  | ✅ |  |
+| `mentions list` | `--limit` | ✅ |  |
+| `mentions list` | `--page` | ✅ |  |
+| `mentions list` | `--new` | ⛔ | cli-core src/cli/messenger/mentions.test.ts ("lists only undecided mentions found since the last --new run") drives this through the shared handler MAX mounts (0.285.0) |
+| `mentions domains` |  | ⛔ | cli-core src/cli/messenger/mentions.test.ts ("counts the links per site, most linked first") drives this through the shared handler MAX mounts (0.285.0) |
+| `mentions domains` | `--limit` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
+| `mentions domains` | `--page` | ⛔ | paging is cli-core's shared list envelope, covered by its own tests; the command itself is driven in cli-core src/cli/messenger/mentions.test.ts and tasks.test.ts through the shared handler this consumer mounts (0.285.0) |
+| `mentions places` |  | ⛔ | cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0 |
+| `mentions places` | `--limit` | ⛔ | cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0 |
+| `mentions places` | `--page` | ⛔ | cli-core src/cli/messenger/mentions.test.ts ("pages confirmed places through the shared CLI and stops at the end") drives --limit/--page, distinct confirmed addresses, exhaustion and has_more; this consumer mounts the unchanged handler from Core 0.311.0 |
+| `mentions show` |  | ✅ |  |
+| `mentions confirm` |  | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
+| `mentions confirm` | `--all-in-chat` | ⛔ | cli-core src/store/mentions.test.ts ("decides a name in every undecided place of its chat with --all-in-chat") covers the store write the shared command calls; the flag is parsed by the shared handler MAX mounts (0.285.0) |
+| `mentions confirm` | `--as-owner` | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
+| `mentions reject` |  | ✅ |  |
+| `mentions reject` | `--all-in-chat` | ⛔ | cli-core src/store/mentions.test.ts ("decides a name in every undecided place of its chat with --all-in-chat") covers the store write the shared command calls; the flag is parsed by the shared handler MAX mounts (0.285.0) |
+| `mentions reject` | `--as-owner` | ⛔ | cli-core src/cli/messenger/mentions.test.ts confirms a mention and records who decided, with and without --as-owner; MAX mounts the shared command (0.269.0) |
+| `mentions rebuild` |  | ✅ |  |
+| `images embed` |  | ⛔ | downloads pictures through the messenger and embeds them with cli-core's picture model; cli-core's src/services/pictures.test.ts and src/cli/messenger/images-command.test.ts drive it with stand-ins |
+| `images embed` | `--chat` | ⛔ | narrows cli-core's picture pass to one chat; covered by cli-core's src/services/pictures.test.ts |
+| `images embed` | `--limit` | ⛔ | bounds cli-core's picture pass; covered by cli-core's src/services/pictures.test.ts (limit and resume) |
+| `images models list` |  | ⛔ | lists picture models from cli-core's images command; its image tests (WireCatLabs/cli-core#1102) cover it |
+| `images models download` |  | ⛔ | downloads the picture model over the network; cli-core's images command and its image tests (WireCatLabs/cli-core#1102) drive it offline |
 | `metadata get` |  | ✅ |  |
 | `metadata get` | `--chat` | ✅ |  |
-| `metadata refresh` |  | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
-| `metadata refresh` | `--chat` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
-| `metadata refresh` | `--only-missing` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
-| `metadata refresh` | `--limit` | ⛔ | cli-messaging src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-messaging 0.174.0) |
+| `metadata refresh` |  | ⛔ | cli-core src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-core 0.174.0) |
+| `metadata refresh` | `--chat` | ⛔ | cli-core src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-core 0.174.0) |
+| `metadata refresh` | `--only-missing` | ⛔ | cli-core src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-core 0.174.0) |
+| `metadata refresh` | `--limit` | ⛔ | cli-core src/services/private-people.test.ts («refreshes supported metadata through a read capability…», «bounds work…») covers the shared metadata command this consumer mounts; refresh reads MAX through the adapter's group capability (cli-core 0.174.0) |
 | `search all` |  | ✅ |  |
 | `search all` | `--only` | ✅ |  |
+| `search all` | `--source` | ✅ |  |
+| `search all` | `--max-meetings` | ⛔ | cli-core src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through |
 | `search all` | `--limit` | ✅ |  |
+| `search all` | `--page` | ✅ |  |
 | `search all` | `--exact` | ✅ |  |
 | `search all` | `--timezone` | ✅ |  |
+| `search all` | `--backend` | ⛔ | cli-core src/cli/messenger/messenger.test.ts covers archive (never connects), server and both for search all |
+| `search all` | `--server-time` | ⛔ | cli-core src/cli/messenger/messenger.test.ts bounds the server step; search all passes it unchanged |
 | `search messages` |  | ✅ |  |
 | `search messages` | `--sync-first` | ✅ |  |
 | `search messages` | `--max-chats` | ✅ |  |
@@ -565,69 +641,57 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search messages` | `--thread-bytes` | ✅ |  |
 | `search messages` | `--thread-within` | ✅ |  |
 | `search messages` | `--backend` | ✅ |  |
-| `search messages` | `--server-time` | ⛔ | cli-messaging src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcode 73 |
-| `search messages` | `--chat` | ✅ |  |
+| `search messages` | `--server-time` | ⛔ | cli-core src/services/server-search.test.ts and src/cli/messenger/messenger.test.ts cover the server step and the flags; this consumer mounts the shared command, and src/adapter/max-adapter.test.ts covers opcodes 73 (one chat) and 68 (every chat) |
 | `search messages` | `--source` | ✅ |  |
-| `search messages` | `--type` | ✅ |  |
 | `search messages` | `--limit` | ✅ |  |
+| `search messages` | `--page` | ✅ |  |
 | `search messages` | `--newest` | ✅ |  |
 | `search messages` | `--exact` | ✅ |  |
 | `search messages` | `--context` | ✅ |  |
 | `search messages` | `--discover` | ✅ |  |
-| `search messages` | `--language` | ✅ |  |
 | `search messages` | `--timezone` | ✅ |  |
-| `search messages` | `--regex` | ✅ |  |
 | `search messages` | `--saved` | ✅ |  |
-| `search mail` |  | ✅ |  |
-| `search mail` | `--chat` | ✅ |  |
-| `search mail` | `--limit` | ✅ |  |
-| `search mail` | `--newest` | ✅ |  |
-| `search mail` | `--exact` | ✅ |  |
-| `search mail` | `--context` | ✅ |  |
-| `search mail` | `--timezone` | ✅ |  |
 | `search notes` |  | ✅ |  |
-| `search notes` | `--type` | ✅ |  |
-| `search notes` | `--folder` | ✅ |  |
-| `search notes` | `--tag` | ✅ |  |
+| `search notes` | `--source` | ✅ |  |
 | `search notes` | `--filter` | ✅ |  |
 | `search notes` | `--limit` | ✅ |  |
-| `search notes` | `--offset` | ✅ |  |
+| `search notes` | `--page` | ✅ |  |
 | `search notes` | `--exact` | ✅ |  |
 | `search notes` | `--timezone` | ✅ |  |
 | `search conversations` |  | ✅ |  |
-| `search conversations` | `--model` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `search conversations` | `--provider` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `search conversations` | `--base-url` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `search conversations` | `--dims` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `search conversations` | `--model` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `search conversations` | `--provider` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `search conversations` | `--base-url` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `search conversations` | `--dims` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `search conversations` | `--max-chats` | ✅ |  |
 | `search conversations` | `--max-chunks` | ✅ |  |
 | `search conversations` | `--sync-first` | ✅ |  |
 | `search conversations` | `--sync-time` | ✅ |  |
 | `search conversations` | `--max-messages` | ✅ |  |
-| `search conversations` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `search conversations` | `--since-time` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
+| `search conversations` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `search conversations` | `--since-time` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `search conversations` | `--filter` | ✅ |  |
 | `search conversations` | `--source` | ✅ |  |
 | `search conversations` | `--timezone` | ✅ |  |
-| `search conversations` | `--limit` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-messaging's src/services/embeddings.test.ts drives it with a stand-in model |
-| `search conversations` | `--refresh` | ✅ |  |
+| `search conversations` | `--limit` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `search conversations` | `--catch-up` | ✅ |  |
 | `searches create` |  | ✅ |  |
 | `searches create` | `--chat` | ✅ |  |
-| `searches create` | `--source` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--limit` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--newest` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches create` | `--source` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches create` | `--limit` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches create` | `--newest` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--exact` | ✅ |  |
-| `searches create` | `--context` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--language` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--timezone` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--regex` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches create` | `--by` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches create` | `--context` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches create` | `--timezone` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches create` | `--by` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
 | `searches create` | `--selection` | ✅ |  |
-| `searches create` | `--replace` | ⛔ | cli-messaging src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
-| `searches show` |  | ⛔ | cli-messaging src/cli/messenger/searches.test.ts drives saved-query lookup and deletion; consumer mounts the shared command |
+| `searches create` | `--replace` | ⛔ | cli-core src/cli/messenger/searches.test.ts and src/services/searches.test.ts cover named queries, parameter validation and replacement; consumer integration tests cover saved execution and no-record |
+| `searches show` |  | ⛔ | cli-core src/cli/messenger/searches.test.ts drives saved-query lookup and deletion; consumer mounts the shared command |
 | `searches list` |  | ✅ |  |
 | `searches history` |  | ✅ |  |
-| `searches history` | `--limit` | ⛔ | cli-messaging src/services/searches.test.ts covers bounded newest history and pruning; consumer integration tests cover no-record and named-query preservation |
+| `searches history` | `--limit` | ⛔ | cli-core src/services/searches.test.ts covers bounded newest history and pruning; consumer integration tests cover no-record and named-query preservation |
+| `searches history` | `--page` | ✅ |  |
+| `searches history` | `--all` | ✅ |  |
 | `searches delete` |  | ✅ |  |
 | `searches clear` |  | ✅ |  |
 | `flood clear` |  | ✅ |  |
@@ -635,21 +699,20 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `models audio download` |  | ✅ |  |
 | `models text list` |  | ✅ |  |
 | `models text download` |  | ✅ |  |
-| `models text download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-messaging's src/cli/messenger/models-command.test.ts drives it offline |
-| `models text key set` |  | ⛔ | writes a provider key into the real keyring; cli-messaging's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
-| `models text key remove` |  | ⛔ | removes a provider key from the real keyring; cli-messaging's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
+| `models text download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-core's src/cli/messenger/models-command.test.ts drives it offline |
+| `models text key set` |  | ⛔ | writes a provider key into the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
+| `models text key remove` |  | ⛔ | removes a provider key from the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
 | `polls show` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
 | `polls vote` | `--retract` | ✅ |  |
 | `polls close` |  | ✅ |  |
 | `polls create` |  | ✅ |  |
-| `polls create` | `--topic` | ✅ |  |
 | `polls create` | `--multiple` | ✅ |  |
 | `polls create` | `--anonymous` | ✅ |  |
 | `polls create` | `--revote` | ✅ |  |
 | `polls create` | `--silent` | ✅ |  |
 | `polls create` | `--send-as` | ✅ |  |
-| `polls create` | `--send-id` | ✅ |  |
+| `polls create` | `--operation-id` | ✅ |  |
 | `reactions add` |  | ✅ |  |
 | `reactions remove` |  | ✅ |  |
 | `recipients list` |  | ✅ |  |
@@ -658,42 +721,37 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `recipients clear` |  | ✅ |  |
 | `sends list` |  | ✅ |  |
 | `sends list` | `--limit` | ✅ |  |
+| `sends list` | `--page` | ✅ |  |
+| `sends list` | `--all` | ✅ |  |
 | `inbox` |  | ✅ |  |
 | `inbox` | `--new` | ✅ |  |
-| `inbox` | `--since-time` | ✅ |  |
 | `inbox` | `--limit` | ✅ |  |
 | `inbox` | `--all` | ✅ |  |
 | `inbox` | `--kind` | ✅ |  |
 | `inbox` | `--transcribe` | ✅ |  |
 | `inbox` | `--model` | ✅ |  |
-| `inbox` | `--mark-read` | ✅ |  |
-| `inbox` | `--no-mark-read` | ✅ |  |
 | `review` |  | ✅ |  |
-| `review` | `--since-time` | ✅ |  |
-| `review` | `--chat` | ✅ |  |
 | `review` | `--kind` | ✅ |  |
 | `review` | `--unanswered` | ✅ |  |
 | `review` | `--all` | ✅ |  |
 | `review` | `--transcribe` | ✅ |  |
 | `review` | `--model` | ✅ |  |
 | `review` | `--new` | ✅ |  |
-| `review` | `--mark-read` | ✅ |  |
-| `review` | `--no-mark-read` | ✅ |  |
 | `replies add` |  | ✅ |  |
 | `replies on` |  | ✅ |  |
 | `replies off` |  | ✅ |  |
 | `replies edit` |  | ✅ |  |
 | `replies edit` | `--do` | ✅ |  |
 | `replies edit` | `--kinds` | ✅ |  |
-| `replies edit` | `--chats` | ✅ |  |
-| `replies edit` | `--not-chats` | ✅ |  |
+| `replies edit` | `--allow-chats` | ✅ |  |
+| `replies edit` | `--deny-chats` | ✅ |  |
 | `replies edit` | `--words` | ✅ |  |
 | `replies edit` | `--question` | ✅ |  |
 | `replies edit` | `--no-question` | ✅ |  |
 | `replies edit` | `--mentions-me` | ✅ |  |
 | `replies edit` | `--no-mentions-me` | ✅ |  |
-| `replies edit` | `--people` | ✅ |  |
-| `replies edit` | `--not-people` | ✅ |  |
+| `replies edit` | `--allow-people` | ✅ |  |
+| `replies edit` | `--deny-people` | ✅ |  |
 | `replies edit` | `--contacts-only` | ✅ |  |
 | `replies edit` | `--no-contacts-only` | ✅ |  |
 | `replies edit` | `--template` | ✅ |  |
@@ -724,8 +782,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `replies resume` |  | ✅ |  |
 | `replies status` |  | ✅ |  |
 | `serve` |  | ✅ |  |
-| `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
-| `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts drives the server itself, live P6 |
+| `serve` | `--idle` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--max-subscriber-buffer-bytes` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--max-subscriber-total-buffer-bytes` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
+| `serve` | `--started-by-command` | ⛔ | runs until stopped, holding a socket to MAX; src/server/server.test.ts and src/server/subscribers.test.ts drive the server and its buffer limits, live P6 |
 | `server start` |  | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server start` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server stop` |  | ✅ |  |
@@ -733,15 +793,26 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `server restart` | `--idle` | ⛔ | starts a detached background process; src/server/server.test.ts drives the server, live P6 |
 | `server status` |  | ✅ |  |
 | `server logs` |  | ✅ |  |
-| `server logs` | `--lines` | ✅ |  |
+| `server logs` | `--limit` | ✅ |  |
 | `server install` |  | ✅ |  |
 | `server uninstall` |  | ✅ |  |
+| `schedule command` |  | ✅ |  |
+| `schedule command` | `--every` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule command` | `--at` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule command` | `--at-time` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --at-time is parsed by the same code (0.250.1) |
+| `schedule agent` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--max-cost` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--every` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--at` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--at-time` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives --every and --at through the shared handler MAX mounts and a one-off run that removes itself; --at-time is parsed by the same code (0.250.1) |
+| `schedule list` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule run` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
+| `schedule remove` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule exec` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
 | `watch` |  | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `config show` |  | ✅ |  |
 | `config show` | `--bot` | ✅ |  |
-| `config migrate` |  | ✅ |  |
-| `config migrate` | `--dry-run` | ✅ |  |
 | `config set` |  | ✅ |  |
 | `config set` | `--defaults` | ✅ |  |
 | `config set` | `--personal` | ✅ |  |
@@ -758,7 +829,17 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `doctor report create` | `--output` | ✅ |  |
 | `runs list` |  | ✅ |  |
 | `runs list` | `--limit` | ✅ |  |
+| `runs list` | `--page` | ✅ |  |
 | `runs show` |  | ✅ |  |
+| `runs show` | `--problems` | ✅ |  |
+| `runs search` |  | ✅ |  |
+| `runs search` | `--status` | ✅ |  |
+| `runs search` | `--error-code` | ✅ |  |
+| `runs search` | `--operation` | ✅ |  |
+| `runs search` | `--profile` | ✅ |  |
+| `runs search` | `--since-time` | ✅ |  |
+| `runs search` | `--limit` | ✅ |  |
+| `runs search` | `--page` | ✅ |  |
 | `runs path` |  | ✅ |  |
 | `skill show` |  | ✅ |  |
 | `skill install` |  | ✅ |  |
@@ -770,42 +851,17 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `complete` |  | ✅ |  |
 | `mcp` |  | ✅ |  |
 | `mcp` | `--permission` | ✅ |  |
-| `mcp` | `--allow-dangerous` | ✅ |  |
-| `mcp` | `--allow-send` | ✅ |  |
-| `mcp` | `--confirm-send` | ✅ |  |
-| `mcp` | `--allow-mark-read` | ✅ |  |
-| `mcp` | `--allow-delete` | ✅ |  |
-| `mcp` | `--allow-moderate` | ✅ |  |
 | `mcp` | `--http` | ✅ |  |
-| `mcp` | `--http-confirmation` | ✅ |  |
 | `mcp` | `--port` | ✅ |  |
 | `mcp` | `--public-url` | ✅ |  |
 | `mcp` | `--revoke` | ✅ |  |
 | `mcp config` |  | ✅ |  |
 | `mcp config` | `--permission` | ✅ |  |
-| `mcp config` | `--allow-dangerous` | ✅ |  |
-| `mcp config` | `--allow-send` | ✅ |  |
-| `mcp config` | `--confirm-send` | ✅ |  |
-| `mcp config` | `--allow-mark-read` | ✅ |  |
-| `mcp config` | `--allow-delete` | ✅ |  |
-| `mcp config` | `--allow-moderate` | ✅ |  |
-| `mcp setup` |  | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--permission` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-dangerous` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--confirm-send` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-mark-read` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-delete` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp setup` | `--allow-moderate` | ⛔ | changes the installed Codex or Claude Code configuration; cli-core's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
-| `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--permission` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-dangerous` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--confirm-send` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-mark-read` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-delete` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
-| `mcp doctor` | `--allow-moderate` | ⛔ | starts a separate MCP process; cli-core's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp setup` |  | ✅ |  |
+| `mcp setup` | `--allow-writes` | ⛔ | changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex |
+| `mcp setup` | `--permission` | ✅ |  |
+| `mcp doctor` |  | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
+| `mcp doctor` | `--permission` | ⛔ | starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account |
 | `bot auth set` |  | ✅ |  |
 | `bot auth show` |  | ✅ |  |
 | `bot auth remove` |  | ✅ |  |
@@ -824,7 +880,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot chats members remove` | `--block` | ✅ |  |
 | `bot chats members list` |  | ✅ |  |
 | `bot chats members list` | `--limit` | ✅ |  |
-| `bot chats members list` | `--marker` | ✅ |  |
+| `bot chats members list` | `--cursor` | ✅ |  |
 | `bot chats members add` |  | ✅ |  |
 | `bot chats rules show` |  | ✅ |  |
 | `bot chats rules set` |  | ✅ |  |
@@ -833,7 +889,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot chats moderate` | `--since-time` | ✅ |  |
 | `bot chats moderate` | `--dry-run` | ✅ |  |
 | `bot chats moderate` | `--allow-dangerous` | ✅ |  |
-| `bot chats moderate` | `--no-ban` | ✅ |  |
+| `bot chats moderate` | `--no-block` | ✅ |  |
 | `bot chats moderate` | `--max-actions` | ✅ |  |
 | `bot messages send` |  | ✅ |  |
 | `bot messages send` | `--reply-to` | ✅ |  |
@@ -864,6 +920,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot search messages` | `--all-bots` | ✅ |  |
 | `bot search messages` | `--bots` | ✅ |  |
 | `bot search messages` | `--limit` | ✅ |  |
+| `bot search messages` | `--page` | ✅ |  |
 | `bot search messages` | `--newest` | ✅ |  |
 | `bot search messages` | `--from` | ✅ |  |
 | `bot recipients list` |  | ✅ |  |
@@ -874,6 +931,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot watch` |  | ✅ |  |
 | `bot watch` | `--events` | ✅ |  |
 | `bot watch` | `--types` | ✅ |  |
+| `bot watch` | `--public-url` | ✅ |  |
+| `bot watch` | `--port` | ✅ |  |
 | `bot callbacks answer` |  | ✅ |  |
 | `bot callbacks answer` | `--text` | ✅ |  |
 | `bot callbacks answer` | `--notification` | ✅ |  |
@@ -890,25 +949,15 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot contacts show` | `--all-bots` | ✅ |  |
 | `bot contacts show` | `--bots` | ✅ |  |
 | `bot contacts show` | `--limit` | ✅ |  |
-| `bot contacts show` | `--refresh` | ✅ |  |
+| `bot contacts show` | `--sync-first` | ✅ |  |
 | `bot store fetch` |  | ✅ |  |
 | `bot store fetch` | `--limit` | ✅ |  |
 | `bot store fetch` | `--page-size` | ✅ |  |
 | `bot store fetch` | `--pause` | ✅ |  |
 | `bot store fetch` | `--since-time` | ✅ |  |
 | `bot store fetch` | `--last` | ✅ |  |
-| `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
-| `bot mcp` | `--confirm-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-dangerous` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-send` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-delete` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
-| `bot mcp` | `--allow-moderate` | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-messaging's createBotServer with max's run and tools |
+| `bot mcp` |  | ⛔ | serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools |
 | `bot mcp config` |  | ✅ |  |
-| `bot mcp config` | `--confirm-send` | ✅ |  |
-| `bot mcp config` | `--allow-dangerous` | ✅ |  |
-| `bot mcp config` | `--allow-send` | ✅ |  |
-| `bot mcp config` | `--allow-delete` | ✅ |  |
-| `bot mcp config` | `--allow-moderate` | ✅ |  |
 | `bot me` |  | ✅ |  |
 | `bot comments list` |  | ✅ |  |
 | `bot comments list` | `--limit` | ✅ |  |
@@ -921,6 +970,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot comments delete` | `--allow-dangerous` | ✅ |  |
 | `bot uploads put` |  | ✅ |  |
 | `bot uploads put` | `--type` | ✅ |  |
+| `bot uploads put` | `--allow-any-file` | ✅ |  |
 | `bot api get-my-info` |  | ✅ |  |
 | `bot api edit-my-commands` |  | ✅ |  |
 | `bot api edit-my-commands` | `--body` | ✅ |  |
@@ -1035,22 +1085,26 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot api get-updates` | `--poll-timeout` | ✅ |  |
 | `bot api get-updates` | `--marker` | ✅ |  |
 | `bot api get-updates` | `--types` | ✅ |  |
+| `guide` |  | ✅ |  |
+| `help` |  | ✅ |  |
 | *global* | `--version` | ✅ |  |
 | *global* | `--verbose` | ✅ |  |
 | *global* | `--json` | ✅ |  |
-| *global* | `--agent-json` | ✅ |  |
 | *global* | `--jsonl` | ✅ |  |
 | *global* | `--quiet` | ✅ |  |
 | *global* | `--trace` | ✅ |  |
+| *global* | `--debug` | ✅ |  |
 | *global* | `--timeout` | ✅ |  |
 | *global* | `--offline` | ✅ |  |
 | *global* | `--no-input` | ✅ |  |
 | *global* | `--max-input-bytes` | ✅ |  |
 | *global* | `--max-output-bytes` | ✅ |  |
-| *global* | `--fields` | ✅ |  |
+| *global* | `--brief` | ⛔ | cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0) |
+| *global* | `--full` | ⛔ | cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0) |
 | *global* | `--dry-run` | ✅ |  |
 | *global* | `--yes` | ✅ |  |
 | *global* | `--record` | ✅ |  |
 | *global* | `--no-record` | ✅ |  |
 | *global* | `--serve` | ✅ |  |
 | *global* | `--no-serve` | ✅ |  |
+| *global* | `--help-all` | ⛔ | commander prints the full help and exits before any action runs, so no argv is logged; src/program.test.ts reads `--help-all` for the commands and global options |

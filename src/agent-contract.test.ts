@@ -1,4 +1,4 @@
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { describe, expect, it, vi } from "vitest"
 import { run } from "./program.js"
 
@@ -27,9 +27,7 @@ describe("the adopted agent CLI contract", () => {
       "stats",
       "messages",
       "show",
-      "--json",
-      "--fields",
-      "schemaVersion",
+      "--json=schemaVersion",
     ])
     expect(code).toBe(0)
     expect(JSON.parse(streams.stdout.join(""))).toMatchObject({ schemaVersion: 1 })
@@ -46,8 +44,7 @@ describe("the adopted agent CLI contract", () => {
     ])
     expect(code).toBe(0)
     expect(JSON.parse(streams.stdout.join(""))).toMatchObject({
-      preview: true,
-      effects: { actionInvoked: false, writeReserved: false },
+      item: { preview: true, effects: { action_invoked: false, write_reserved: false } },
     })
     expect(streams.stdout.join("")).not.toContain("synthetic-payload")
     expect(opened).not.toHaveBeenCalled()
@@ -64,7 +61,7 @@ describe("the adopted agent CLI contract", () => {
     ])
     expect(code).not.toBe(0)
     expect(streams.stdout).toEqual([])
-    expect(JSON.parse(streams.stderr[0] ?? "").error.reason).toBe("output_limit")
+    expect(JSON.parse(streams.stderr[0] ?? "").error.reason).toBe("output.too-large")
     expect(opened).not.toHaveBeenCalled()
   })
 })

@@ -9,8 +9,9 @@
 # written and the owner signed docs_ai/releases/<version>.md for this commit. docs_ai/ is a clone of
 # the private repository WireCatLabs/cli-private; a fork without it passes its own report. When npm already has
 # that version, or a higher one, it merges the next free version into `main` through a pull request,
-# carries the report to it and publishes that. The npm token is never printed — not on success, not
-# in an error.
+# carries the report to it and publishes that. A «Не выпущено» section left above the dated, unpublished version
+# is folded into it the same way, and the report carried with it. The npm token is never printed — not on success,
+# not in an error.
 set -eu
 
 usage() { echo "usage: bin/release [--local] [--report <path>]" >&2; exit 2; }
@@ -36,6 +37,16 @@ set --
 [ -z "$custom" ] || set -- "$@" --report "$custom"
 
 cd "$(dirname "$0")/.."
+self=$(git hash-object bin/release)
+# The fold and land() fast-forward main, and sh reads this file as it goes: a newer bin/release would run half old,
+# half new. Run the new one from the start instead: it stops at the report, which names the commit before the fold.
+rerun_if_changed() {
+  [ "$(git hash-object bin/release)" != "$self" ] || return 0
+  [ -z "${WIRECAT_RELEASE_RERUN:-}" ] || { echo "bin/release changed again while releasing — run it again" >&2; exit 1; }
+  echo "bin/release changed on main — running the new one"
+  export WIRECAT_RELEASE_RERUN=1
+  exec ./bin/release "$@"
+}
 
 git fetch -q origin
 [ "$(git branch --show-current)" = "main" ] || { echo "not on main" >&2; exit 1; }
@@ -48,7 +59,8 @@ git merge -q --ff-only origin/main
 # The workflow publishes origin/main, so a local commit not pushed yet would silently not ship.
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main is ahead of origin/main — push first" >&2; exit 1; }
 # One release at a time on this machine, across every package: two sessions published at once on 2026-10-08.
-lock="${XDG_RUNTIME_DIR:-/tmp}/leemour-release.lock"; exec 9>"$lock"; flock -n 9 || { echo "another release is running: $(cat "$lock.who" 2>/dev/null)" >&2; exit 1; }; echo "$(basename "$PWD") pid $$ since $(date -u +%H:%M)" > "$lock.who"
+. ./config/wirecat/release-lock.sh
+wirecat_release_lock
 # Two hours between releases, so a broken one is noticed before the next lands on top of it.
 times=$(npm view "@wirecat/max-cli" time --json --prefer-online 2>/dev/null || echo '{}')
 opens=$(node -e 'const t = JSON.parse(process.argv[1]); delete t.created; delete t.modified
@@ -85,31 +97,14 @@ if [ -n "$(git tag -l "v$version")" ] && [ "$(git rev-list -n 1 "v$version")" = 
   exit 1
 fi
 
-# Two sessions preparing the same number is normal; the second takes the next free one (2026-09-29).
-# The report stays the owner's: it is checked above for the commit they signed, and carried to the
-# new number only when the bump commit changes nothing else.
-latest=$(npm view @wirecat/max-cli version --prefer-online 2>/dev/null || true)
-versions=$(npm view @wirecat/max-cli versions --json --prefer-online 2>/dev/null || true)
-next=$(node scripts/next-version.mjs "$version" "$latest" "$versions")
-if [ "$next" != "$version" ]; then
-  if published; then why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
-  echo "$why — publishing $next instead"
-  [ -n "$custom" ] || git -C docs_ai ls-files --error-unmatch "releases/$version.md" >/dev/null 2>&1 ||
-    { echo "$report is not committed in docs_ai — commit it first" >&2; exit 1; }
-  signed=$(git rev-parse HEAD)
-  branch="release/$next"
+# main takes changes only through a pull request (the repository's ruleset).
+land() {
+  branch=$1 title=$2 body=$3
   git switch -q -c "$branch"
-  node -e 'const fs = require("fs"); const [o, n] = process.argv.slice(1)
-    const swap = (file, from, to) => fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(from, to))
-    swap("package.json", `"version": "${o}"`, `"version": "${n}"`)
-    swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next"
-  pnpm exec cli-dev version --sync >/dev/null
-  git commit -q -am "chore(release): $next" -m "bin/release: $why."
+  git commit -q -am "$title" -m "$body"
   git push -q -u origin "$branch"
   git switch -q main
-  # main takes changes only through a pull request (the repository's ruleset).
-  pr=$(gh pr create --base main --head "$branch" --title "chore(release): $next" \
-    --body "bin/release: $why. Only the number changes: package.json, src/version.ts, the CHANGELOG heading.")
+  pr=$(gh pr create --base main --head "$branch" --title "$title" --body "$body")
   # Checks register a few seconds after the pull request; --watch with none exits at once.
   for _ in $(seq 30); do
     [ "$(gh pr checks "$pr" --json name --jq length 2>/dev/null || echo 0)" -gt 0 ] && break
@@ -117,36 +112,91 @@ if [ "$next" != "$version" ]; then
   done
   gh pr checks "$pr" --watch --fail-fast >/dev/null ||
     { echo "checks failed on $pr — nothing is published" >&2; exit 1; }
-  gh pr merge "$pr" --squash --delete-branch --subject "chore(release): $next (#${pr##*/})"
+  gh pr merge "$pr" --squash --delete-branch --subject "$title (#${pr##*/})"
   git fetch -q origin
   git merge -q --ff-only origin/main
   [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] ||
     { echo "main is not origin/main after $pr" >&2; exit 1; }
+}
+
+# The report stays the owner's: it is checked above for the commit they signed, and carried to the
+# new HEAD only when the commits since change nothing but the number and the changelog.
+committed() {
+  [ -n "$custom" ] || git -C docs_ai ls-files --error-unmatch "releases/$version.md" >/dev/null 2>&1 ||
+    { echo "$report is not committed in docs_ai — commit it first" >&2; exit 1; }
+  signed=$(git rev-parse HEAD)
+}
+carry() {
+  to=$1 note=$2 subject=$3
   extra=$(git diff --name-only "$signed" HEAD | grep -vx -e package.json -e src/version.ts -e CHANGELOG.md || true)
   [ -z "$extra" ] || { echo "main changed more than the number since $report was signed: $extra" >&2; exit 1; }
-
-  if [ -z "$custom" ]; then
-    git -C docs_ai mv "releases/$version.md" "releases/$next.md"
-    report="docs_ai/releases/$next.md"
+  if [ -z "$custom" ] && [ "$to" != "$version" ]; then
+    git -C docs_ai mv "releases/$version.md" "releases/$to.md"
+    report="docs_ai/releases/$to.md"
   fi
-  node -e 'const fs = require("fs"); const [file, o, n, signed, head, why] = process.argv.slice(1)
+  node -e 'const fs = require("fs"); const [file, o, n, signed, head, note] = process.argv.slice(1)
     const text = fs.readFileSync(file, "utf8").replace(`# ${o}\n`, `# ${n}\n`)
-    const note = `Renumbered by bin/release: ${o} → ${n} (${why}). Signed for ${signed}; ${head} changes only the number.`
     const carried = text.replace(`Commit: ${signed}`, `Commit: ${head}`).trimEnd()
-    fs.writeFileSync(file, `${carried}\n\n${note}\n`)' "$report" "$version" "$next" "$signed" "$(git rev-parse HEAD)" "$why"
+    fs.writeFileSync(file, `${carried}\n\n${note} Signed for ${signed}; ${head} changes only the number and the changelog.\n`)' \
+    "$report" "$version" "$to" "$signed" "$(git rev-parse HEAD)" "$note"
   if [ -z "$custom" ]; then
-    git -C docs_ai commit -q -m "docs(releases): $version → $next, renumbered by bin/release" \
-      -- "releases/$version.md" "releases/$next.md"
-    git -C docs_ai push -q || echo "docs_ai: the renumbered report is committed but not pushed — push docs_ai" >&2
+    git -C docs_ai commit -q -m "$subject" -- "releases/$version.md" "releases/$to.md"
+    git -C docs_ai push -q || echo "docs_ai: the carried report is committed but not pushed — push docs_ai" >&2
   else
-    echo "$report now reports $next — commit it yourself" >&2
+    echo "$report now reports $to at $(git rev-parse HEAD) — commit it yourself" >&2
   fi
+}
+
+# A session that merges after the version was dated, but before it was published, adds «Не выпущено» above it.
+# cli-dev is pinned rather than taken from the dependencies: cli-core accepts only an older cli-base.
+# --land folds on a fresh main through its own pull request, and folds again once if main moves under it.
+folded=""
+if ! published; then
+  signed_at=$(git rev-parse HEAD)
+  folded=$(npx -y -p @wirecat/cli-base@0.36.0 cli-dev changelog fold --land --version "$version" --unreleased "Не выпущено")
+fi
+if [ -n "$folded" ]; then
+  echo "$folded"
+  committed
+  signed=$signed_at
+  carry "$version" "bin/release folded «Не выпущено» into $version." \
+    "docs(releases): $version carried to the folded changelog by bin/release"
+fi
+rerun_if_changed "$@"
+
+# Two sessions preparing the same number is normal; the second takes the next free one (2026-09-29).
+latest=$(npm view @wirecat/max-cli version --prefer-online 2>/dev/null || true)
+versions=$(npm view @wirecat/max-cli versions --json --prefer-online 2>/dev/null || true)
+next=$(node scripts/next-version.mjs "$version" "$latest" "$versions")
+if [ "$next" != "$version" ]; then
+  if published; then why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
+  echo "$why — publishing $next instead"
+  committed
+  # A version npm already has keeps its section; «Не выпущено» becomes the new version. Otherwise the
+  # prepared section that another session's release took moves to the next number.
+  taken=$(published && echo 1 || true)
+  node -e 'const fs = require("fs"); const [o, n, taken] = process.argv.slice(1)
+    const swap = (file, from, to) => fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(from, to))
+    const today = new Date().toLocaleDateString("ru-RU", { timeZone: "Europe/Madrid" })
+    swap("package.json", `"version": "${o}"`, `"version": "${n}"`)
+    if (taken) swap("CHANGELOG.md", "\n## Не выпущено\n", `\n## ${n} — ${today}\n`)
+    else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next" "$taken"
+  pnpm exec cli-dev version --sync >/dev/null
+  body="bin/release: $why. Only the number changes: package.json, src/version.ts, the CHANGELOG heading."
+  land "release/$next" "chore(release): $next" "$body"
+  carry "$next" "Renumbered by bin/release: $version → $next ($why)." \
+    "docs(releases): $version → $next, renumbered by bin/release"
+  rerun_if_changed "$@"
   version=$next
 fi
 if published; then
   echo "$version is already on npm — raise the version first" >&2
   exit 1
 fi
+
+# The fold fast-forwards main even when it has nothing to fold, so HEAD can be a commit nobody signed.
+grep -qx "Commit: $(git rev-parse HEAD)" "$report" ||
+  { echo "main moved past the commit $report was signed for — sign the new HEAD and run again" >&2; exit 1; }
 
 echo "== checks for $version =="
 pnpm install --frozen-lockfile
@@ -165,7 +215,7 @@ if [ "$mode" = ci ]; then
   }
   previous=$(last_run)
   echo "== starting the release workflow for $version =="
-  gh workflow run release.yml --ref main
+  gh workflow run release.yml --ref main -f commit="$(git rev-parse HEAD)"
   run=""
   for _ in $(seq 30); do
     run=$(last_run)

@@ -1,5 +1,5 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { sendTime } from "./config.js"
@@ -60,7 +60,7 @@ const fireOf = (payload: unknown) =>
   (payload as { message: { delayedAttributes?: { timeToFire: number } } }).message.delayedAttributes?.timeToFire
 
 describe("sending later with --at-time", () => {
-  it("queues it on MAX with timeToFire rounded down to the minute, and answers scheduledFor", async () => {
+  it("queues it on MAX with timeToFire rounded down to the minute, and answers scheduled_for with a step to the queue", async () => {
     const { environment, sentWith } = messenger()
     const before = Date.now()
     const sent = await runWith(
@@ -75,8 +75,10 @@ describe("sending later with --at-time", () => {
     expect(fire).toBeGreaterThan(before + 29 * MINUTE)
     expect(fire).toBeLessThanOrEqual(Date.now() + 30 * MINUTE)
     expect(request?.payload).toMatchObject({ notify: true })
-    expect(JSON.parse(sent.stdout).scheduledFor).toBe(new Date(fire).toISOString())
-    expect(sent.stderr).toContain("scheduled for")
+    const answer = JSON.parse(sent.stdout)
+    expect(answer.item.scheduled_for).toBe(new Date(fire).toISOString())
+    expect(answer.item.message.scheduled_for).toBe(new Date(fire).toISOString())
+    expect(answer.next).toMatchObject([{ step: "messages.scheduled", args: { chat: "111" } }])
     expect(new SendJournal(sendsPathFor("s-later")).entries()).toMatchObject([
       { outcome: "sent", scheduledFor: new Date(fire).toISOString() },
     ])
@@ -133,10 +135,10 @@ describe("sending later with --at-time", () => {
 
   it("is refused by a read-only profile like any other send", async () => {
     const { max, environment } = messenger()
-    await runWith(["s-read", "config", "set", "readOnly", "true"])
+    await runWith(["s-read", "config", "set", "permissions.messages", "readonly"])
 
     expect((await runWith(["s-read", "messages", "send", "111", "x", "--at-time", "1h"], environment)).code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(max.sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)).toBe(true)
   })
 })
 
@@ -148,7 +150,7 @@ describe("messages scheduled", () => {
     expect(listed.code).toBe(0)
     expect(sentWith(Opcode.CHAT_HISTORY)[0]?.payload).toMatchObject({ itemType: "DELAYED", from: 1, backward: 0 })
     expect(
-      JSON.parse(listed.stdout).items.map((m: { text: string; scheduledFor: string }) => [m.text, m.scheduledFor]),
+      JSON.parse(listed.stdout).items.map((m: { text: string; scheduled_for: string }) => [m.text, m.scheduled_for]),
     ).toEqual([
       ["first", new Date(FIRE).toISOString()],
       ["second", new Date(FIRE + MINUTE).toISOString()],

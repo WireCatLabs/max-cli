@@ -9,14 +9,16 @@ verified against the real service unless it says otherwise. Round trip re-verifi
 `max chats list --limit 3 --verbose --record` made three requests, stdout was one JSON value, stderr
 only the event lines.
 
-"Brief §N" is `docs_ai/REQUIREMENTS.md`; rulings (`NEED-nn`) are in
-`docs_ai/DECISIONS.md`. Long detail lives in companions under `architecture/`:
+The rules every WireCat CLI follows — layers, lifecycle, output, permissions, the store — are in the
+[CLI standards handbook](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/README.md); this page links them and keeps what is MAX's own.
+"Brief §N" is the owner's brief, and rulings (`NEED-nn`) are in the owner's decision log
+(both private notes). Long detail lives in companions under `architecture/`:
 [`session.md`](architecture/session.md) (§7), [`messages.md`](architecture/messages.md) (§10),
 [`store.md`](architecture/store.md) (§15, §16).
 
 ### CLI design references
 
-MAX and Telegram share one [CLI standard and adoption profile](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/STANDARD.md#external-references-and-our-adoption-profile).
+MAX and Telegram share one [CLI standard and adoption profile](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/STANDARD.md#external-references-and-our-adoption-profile).
 Its external references are [POSIX utility conventions](https://pubs.opengroup.org/onlinepubs/9799919799/basedefs/V1_chap12.html),
 [GNU command-line conventions](https://www.gnu.org/prep/standards/html_node/Command_002dLine-Interfaces)
 and [Command Line Interface Guidelines](https://clig.dev/). They inform option syntax, help,
@@ -28,19 +30,19 @@ the [Agent Skills format](https://agentskills.io/specification) and additional t
 The shell and renderer own the machine contract, services own operations, and guards enforce
 permissions for CLI and MCP alike. Retrieved messages are data, never authority to act.
 
-The public [compliance audit and work queue](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/CLI-COMPLIANCE.md)
+The public [compliance audit and work queue](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/CLI-COMPLIANCE.md)
 distinguishes source checks, isolated observations, deliberate differences and remaining gaps.
 Shared fixes reach this CLI through an exact dependency adoption; documenting a convention does
 not change the installed binary or assert that every command already follows it.
 
 ### Agent evaluation evidence
 
-the [public admin/statistics evaluation](https://github.com/WireCatLabs/cli-messaging/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
+the [public admin/statistics evaluation](https://github.com/WireCatLabs/cli-core/blob/73a57e1d229441d27f8325677808c3ae09175803/docs/dev/evaluations/2026-10-08-independent-stats-agent-evaluation.md) separates independent
 model contexts, synthetic CLI/MCP traces, deterministic fixture checks and live-provider claims.
 Its six contexts and 38 assessed outcomes are a bounded observation, not broad agent conformance;
 original model identity was not captured and MCP used a shell proxy. Read the report's subject
 versions and first-failure record before comparing results with another release.
-[Reproduction tooling](https://github.com/WireCatLabs/cli-messaging/tree/main/scripts/evals) belongs to cli-messaging; the
+[Reproduction tooling](https://github.com/WireCatLabs/cli-core/tree/main/scripts/evals) belongs to cli-core; the
 [user CLI contract](../cli-contract.md) explains what that evidence means for a statistics answer.
 
 
@@ -52,8 +54,9 @@ versions and first-failure record before comparing results with another release.
      src/commands/     session · account · chats · contacts · messages · store · runs
             │          speaks the domain model, owns no protocol knowledge
             ▼
-     src/client.ts     MaxClient — the only thing above here that knows MAX exists
+     src/client.ts     MaxClient — composes the resource APIs and their dependencies
             │          client.chats.list() · client.messages.send() · client.account.me()
+     src/client/       resource modules · session · requests · history · writes · uploads
     ┌───────┼────────────────┬──────────────────┐
     ▼       ▼                ▼                  ▼
  src/domain/  src/spec/          src/generated/    src/protocol/
@@ -65,24 +68,24 @@ versions and first-failure record before comparing results with another release.
                         src/session/   handshake (INIT → LOGIN) · keyring · state
                         src/record.ts  account-scoped login data in the shared store
                         src/wire-events.ts  which ids and counts a MAX event carries
-                        (the run directory and the event format: cli-messaging's, T6 item 3c)
+                        (the run directory and the event format: cli-core's, T6 item 3c)
 ```
 
 the diagram above is the personal account's own half. Since #260 and T6 (#330–#382)
-max also plugs into `@wirecat/cli-messaging`: `src/messenger.ts` describes MAX once as a `Messenger`
+max also plugs into `@wirecat/cli-core`: `src/messenger.ts` describes MAX once as a `Messenger`
 (`maxMessenger` — provider, paging, the guard, permissions), and `src/adapter/max-adapter.ts`
-(`maxAdapter`) wraps `MaxClient` behind cli-messaging's `MessengerAdapter` port, translating MAX's
-models into the shared domain types. `src/program.ts` registers cli-messaging's shared commands —
+(`maxAdapter`) wraps `MaxClient` behind cli-core's `MessengerAdapter` port, translating MAX's
+models into the shared domain types. `src/program.ts` registers cli-core's shared commands —
 `store`, `conversations`, `polls`, `reactions`, `inbox`, `review`, and `chats mark-read` among `chats`
 — beside max's own; they reach MAX only through that adapter, and read and write the shared store
-(`~/.local/share/cli-messaging/messages.db`), not a cache of max's own. So the path is now
-commands → cli-messaging services → `maxAdapter` → `MaxClient` → protocol; `MaxClient` stays the
-only code that knows the wire. `src/adapter/contract.test.ts` runs cli-messaging's contract cases over
+(`wirecat.db` in the WireCat folder, `~/.local/share/WireCat/wirecat.db` on Linux), not a cache of max's own. So the path is now
+commands → cli-core services → `maxAdapter` → `MaxClient` → protocol; `MaxClient` stays the
+only code that knows the wire. `src/adapter/contract.test.ts` runs cli-core's contract cases over
 the adapter.
 
 - Commands are resource + action (`NEED-48`); the diagram matches `max --help`. Adding an operation:
   §12.
-- [`@wirecat/cli-core`](https://github.com/WireCatLabs/cli-core) supplies output streams, renderer,
+- [`@wirecat/cli-base`](https://github.com/WireCatLabs/cli-base) supplies output streams, renderer,
   error model and exit codes, keyring, config and clocks — the non-MAX half, shared with
   `braze-cli`.
 - **One npm package** (`@wirecat/max-cli`, command `max`), split by directory, not workspace
@@ -90,11 +93,13 @@ the adapter.
   `src/generated/`**: a Biome rule fails the build with that sentence. Verified by writing the
   forbidden import, both directions.
 - **A second rule marks what any messenger CLI could share** (`CLI-30`, `NEED-147`; was `CLI-26`, a number taken three times):
-  `src/domain/models.ts`, `src/rendering/` and `src/resolve.ts` may not import the
-  protocol, the specification, the generated wrappers, the session, the client or the commands.
-  The files stay where they are; a future `cli-messenger` package is a move of exactly these, not
-  an untangling. `src/domain/map.ts` is outside it on purpose — it is where MAX becomes the model.
-  Verified by a forbidden import in each of the four places.
+  `src/resolve.ts` may not import the protocol, the specification, the generated wrappers, the
+  session, the client or the commands. The domain model and the message feed are cli-core's own
+  (`Message`, `Attachment`, `Poll`…, `renderMessages`); `src/domain/map.ts` builds them straight from
+  the wire, and keeps what only MAX has — a file's or a video's id, a service message's event —
+  under `Attachment.providerRef`. The few shapes cli-core has no place for (`max watch --events`'s
+  reads and chat changes, a group's access and settings, a contact import) live in
+  `src/client/shapes.ts` and stay inside the client and the adapter.
 - **The newer directories have rules too** (2026-10-01): `src/adapter/` keeps off the wire, the
   commands, MCP, `max serve`, the shared store and the bot; `src/session/` off the commands, MCP, the shared store,
   the adapter and the bot; `src/server/` off the commands, MCP, the adapter, `program.ts` and the
@@ -108,16 +113,38 @@ the adapter.
 | Layer | Knows about | Must never |
 |---|---|---|
 | `commands/` | `Chat`, `Message`, `Contact`, the renderer, exit codes | opcodes, frames, `ws`, MAX field names |
-| `client.ts` | opcodes, the session, the domain model | rendering, `process.stdout`, argv |
+| `client.ts`, `client/` | resource composition, opcodes, the session, the domain model | rendering, `process.stdout`, argv |
 | `domain/` | MAX's wire shapes, and only to translate them out | the network, the session |
 | `spec/` | every operation, its shape and where it came from | the socket, the session, output |
 | `generated/` | what follows from `spec/` | being edited by hand |
 | `protocol/` | frames, seq, the socket | who is asking or why — **including the handshake** |
-| `session/` | the keyring, the state file, INIT → LOGIN | anything it can ask `cli-core` for |
+| `session/` | the keyring, the state file, INIT → LOGIN | anything it can ask `cli-base` for |
 | `runs/` | what a request cost, and where a record of it goes | what a request *said* — §13 |
 
-Why: if MAX's transport changes, only `protocol/` and `client.ts` change. That is why we own the
+Why: if MAX's transport changes, `protocol/` and the owning modules in `client/` change. That is why we own the
 adapter instead of depending on `@bruch/max-client` (`NEED-17`).
+
+### Resource ownership
+
+`client.ts` assembles independent factories. Account, contacts, polls, stickers, folders and live
+operations have their own modules; chat and message reads are separate from writes. A resource's
+local dependency interface names the wire methods, lookups and policies it needs. Resources do
+not import `MaxClient`; where one needs another (chat reads and history need each other), the root
+passes a function, which keeps that coupling visible in one place.
+
+`client/session.ts` owns login state and shares one in-progress initialization between concurrent
+callers. Closing during setup prevents login adoption. `client/people.ts` owns its lookup cache;
+`client/writes.ts` owns send-id sequencing and applied-operation tracking. `client/request.ts`
+owns request telemetry. Clocks can be supplied by the host. Read policies are applied when
+resource APIs are assembled, without a recursive Proxy.
+
+### Watch subscribers
+
+`server/subscribers.ts` gives each `max watch` its own drain-aware queue, 64 MiB per watcher and
+256 MiB in total by default (`max serve --max-subscriber-buffer-bytes`,
+`--max-subscriber-total-buffer-bytes`, `0` for unlimited). A watcher over its own budget is ended
+with `invalid_response` / `output.too-large`; when the total is full, the watcher holding the most
+is ended, not whichever one is written next. Nothing is dropped silently and no watcher blocks another.
 
 ## 3. The WebSocket is binary, as web.max.ru's is, and ids are the reason to be careful
 
@@ -154,7 +181,8 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
 
 ## 4. One command, one connection, and it closes
 
-- `connect → do the thing → print → close`, the close in a `finally`. `Connection` owns the socket,
+- `connect → do the thing → print → close`, the close in a `finally`
+  ([WC-LIFE-1](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/lifecycle.md)). `Connection` owns the socket,
   per-request timers and listeners; `close()` clears all three. ⚠ An open WebSocket or live timer
   keeps Node alive, so `max chats list --json | …` would never return: **print-then-hang is a
   defect.**
@@ -173,7 +201,7 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
 
 `CHAT_HISTORY` (49) and `CHAT_MARK` (50) are separate. Nothing that reads sends 50;
 `src/client.test.ts` asserts opcode 50 is absent from everything a read sends. It goes out from `client.chats.markRead` only —
-`max chats mark-read`, `messages list --mark-read`, and the MCP tool behind `--allow-mark-read` — through
+`max chats mark-read` and the MCP mark-read tool — through
 the send guard as kind `read`. Its request is PyMax's shape, not measured (`src/spec/operations/chats.ts`).
 
 ⚠ Until the spec landed (2026-09-19) that assertion compared against a missing `Opcode.CHAT_MARK`,
@@ -189,20 +217,21 @@ deduplicates by it.** Measured 2026-09-19 in Saved messages: the same `cid` twic
 message id** and **one** copy, also across two connections and logins — the case a retry faces.
 
 - A lost send is retried **once, with the same `cid`**. If that fails too, the result is
-  `outcome_unknown` (neither failed nor sent) and names the `cid` as `sendId`; `max messages send --send-id <n>`
+  `outcome_unknown` (neither failed nor sent) and names the `cid` as `sendId`; `max messages send --operation-id <n>`
   repeats it without risking a second copy.
 - Measured in Saved messages — the same `cid` resent 5 and 15 minutes after the first send got
   the first message's id back each time, and one copy stayed. Fifteen minutes is the longest gap measured; beyond
-  it is unproven, and `--send-id` reuse hours later should not be relied on.
+  it is unproven, and `--operation-id` reuse hours later should not be relied on.
 - `cid` is monotonic per process. `Date.now()` alone gave two sends in one millisecond the same
   `cid`, and deduplication would have silently dropped the second. A test caught it.
 - `--silent` sends `notify: false` (normally `true`). ⚠ **Only `true` is measured**; what MAX does
   with `false` has never been observed (that means messaging somebody), so it may be ignored. The
   first use against a real chat settles it.
-- **Every send passes a guard first** (cli-messaging's `sendGuard` since T6 item 3b, 2026-09-30 —
-  **correction:** it was `src/sends/guard.ts`; `src/sends.ts` now builds it for a profile and stamps
-  each journal line with the write's `operationId`; handed to `MaxClient` by
-  `createClient`): a read-only profile (code 5), an optional recipient list (7), an hourly limit
+- **Every send passes a guard first** (cli-core's `sendGuard`; `src/sends.ts` builds it for a profile
+  and stamps each journal line with the write's `operationId`). The caller holds it, never `MaxClient`:
+  cli-core's shared services through `maxMessenger.guard`, and `max serve` for each write it forwards.
+  The client checks nothing and journals nothing; it only marks an account change MAX applied, so the
+  guard can journal it as sent when a later step fails (`takeApplied`). It checks for a read-only profile (code 5), an optional recipient list (7), an hourly limit
   (8) — all before the socket when the chat is an id. Every outcome, refusals included, goes to
   `<state>/sends/<profile>.jsonl` without the text; the limit counts that file. a write that counts first holds a `reserved` line, written under a lock
   file (`wx`, so Windows too), and its outcome settles it; reading folds settled ones away, so two
@@ -211,16 +240,16 @@ message id** and **one** copy, also across two connections and logins — the ca
   the operation-id wrapper retains one prepared request object
   across `ask` and `check`, because the shared guard binds confirmation to that object.
   The client-side server wrapper forwards `ask` too; a matching operation id on a different
-  request grants no confirmation. MAX now uses canonical permission levels; legacy configuration is translated at read time
-  until `config migrate` writes the canonical file. CLI, native reads, MCP tools and resources,
-  and raw server requests enforce the same resource policy. Confirmed writes carry explicit
+  request grants no confirmation. MAX uses the four permission levels of [WC-PERM-2](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/permissions.md); an old `allow` list in the
+  configuration is refused as an unknown setting. CLI commands (the `preAction` hook in `src/program.ts`), MCP tools and
+  resources (cli-core) and raw server requests enforce the same resource policy; the client has no read gate of its own. Confirmed writes carry explicit
   permission keys to the server, which rechecks the current configuration; neither confirmation
   nor moderation consent bypasses a denied or read-only action.
 - **`max serve` runs the same guard on every write it forwards, and journals it** (`NEED-269`):
   anything of the owner's can write to its socket, not only a command that checked first. Every
   request is first checked against the operation's strict schema, as `buildRequest` checks it in a
   command, so a field the specification does not have is refused there too. It reads
-  the configuration again for each write, so `config set readOnly true` needs no restart. The
+  the configuration again for each write, so a changed permission needs no restart. The
   command still checks — a refusal before an upload — and journals only its own refusals; the
   server writes the rest, with the outcome it saw — one line per attempt. A retry after no answer
   repeats the `cid` in the same chat and leaves `outcome_unknown` then its outcome; the limit counts
@@ -295,28 +324,26 @@ identically; the built-in's support depends on the bundled undici version.
 ## 10. Output: stdout is data, stderr is everything else
 
 `--json`, or any non-terminal stdout: **one JSON value on stdout and nothing else** — no spinner,
-`✓`, warning or ANSI. Diagnostics go to stderr in every mode, so the contract holds by construction.
+`✓`, warning or ANSI ([WC-OUT-1](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/output.md)). Diagnostics go to stderr in every mode, so the contract holds by construction.
 Verified live: stdout one JSON value, stderr empty. Failures too: `run()` returns an exit code
 (never throws), the error goes to stderr (JSON when piped, a sentence in a terminal), codes from
-`cli-core` (`4` authentication, `130` interrupt). Scripts branch on the code, never on text.
+`cli-base` (`4` authentication, `130` interrupt). Scripts branch on the code, never on text.
 
-### A listing answers one object, always the same one
+### Every answer is one envelope
 
-```json
-{ "items": [ … ], "page": 1, "limit": 20, "hasMore": true }
-```
+A list answers `{ items, page, next?, missing?, meta }` and one thing answers `{ item, next?, missing?, meta }`,
+built by cli-core's `listOf` and `itemOf`; `renderAnswer` refuses any other shape
+([WC-OUT-4, WC-OUT-5](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/output.md)). `page` is `{ mode: "page", limit, has_more, next_page? }`, or
+`mode: "cursor"` with `next_cursor` for a source with its own position. What is MAX's own:
 
-- `chats list`, `contacts list`, `messages list`, every machine mode — also `--all` (`page: 1`,
-  `hasMore: false`) and `--offline`. **The shape never says where rows came from**; exit code and
-  diagnostics do.
-- `hasMore` is a boolean, not a total (counting rows MAX has not sent is another cost). Exact for
-  chats and contacts; a chat list MAX cut (`#chatsCut`) says `hasMore: true` on its last nonempty page.
+- **The shape never says where rows came from** — `--all`, `--offline` and a live read answer alike; exit code and
+  diagnostics tell them apart.
+- `has_more` is a boolean, not a total (counting rows MAX has not sent is another cost). Exact for
+  chats and contacts; a chat list MAX cut (`#chatsCut`) says `has_more: true` on its last nonempty page.
   ⚠ **For `messages list` it is a claim about our copy**: history comes in windows, and MAX's answer
   says nothing of what is older. A page can come back short mid-chat, so a short page back is checked with one
   request for a single older message (`#olderThan` in `src/client.ts`).
-- In a terminal, the "more pages" line goes to **stderr**, from `src/commands/paging.ts`, not
-  `renderer.result`: `account show` and `session start|end` are not listings and answer a bare
-  object.
+- In a terminal, the "more pages" line goes to **stderr**, from `src/commands/paging.ts`.
 
 User-facing version: [`../usage.md`](../usage.md). Messages print as a feed, not a table; a message id
 holds its send time (`id >> 16`, measured 2026-09-22); a photo link opens without a token
@@ -340,7 +367,7 @@ message deleted by a retry happened to a person.
 Every opcode and payload shape lives in `src/spec/`; its Valibot schemas **are** the definition
 (`NEED-7`). `src/generated/` follows from it and is never edited by hand.
 
-| Generated, committed, checked in CI | Handwritten, and staying that way |
+| Generated, committed, checked in full validation | Handwritten, and staying that way |
 |---|---|
 | `src/generated/opcodes.generated.ts` — the registry | the socket, `seq` correlation, timeouts |
 | `src/generated/operations.generated.ts` — the table | the INIT → LOGIN handshake |
@@ -381,7 +408,8 @@ past 2⁵³ (longest chat id 14 digits). Hardening, so nobody re-asks.
 
 ### Staleness
 
-`pnpm generate` writes and formats in one step; CI regenerates and asserts no diff (`OPS-3`). The
+`pnpm generate` writes and formats in one step; full validation regenerates and asserts no diff on each merge to
+`main` (`OPS-3`). The
 banner has no date or version — anything that moves on its own makes that check fail forever.
 
 ## 13. One event per request, and the two places it can go
@@ -399,9 +427,8 @@ file. Either, both, or (default) neither. What it looks like and how to use it:
 - **Never in an event: a chat title, a person's name, a message body, a phone number, a token** —
   not truncated, not hashed (brief §14, §24). Ids are in: opaque, only the session holder can
   correlate them, and every real complaint is about one conversation.
-- ⚠ This holds because `idsOf` in `src/wire-events.ts` (**correction 2026-09-30:** it was
-  `src/runs/events.ts`, and it names the send identity `send`, not `cid`) **builds the event from named fields instead
-  of filtering the payload** (a filter lets an unseen field through). No branch reaches
+- ⚠ This holds because `idsOf` in `src/wire-events.ts` (it names the send identity `send`, not `cid`) **builds the
+  event from named fields instead of filtering the payload** (a filter lets an unseen field through). No branch reaches
   `session.login`'s `token`. Pino's redaction is the second line of defence.
 - `MaxClient` takes an injected event sink, like `warn` — it reports, never decides where. The hook
   is in `#send` (builds, times, checks).
@@ -419,7 +446,7 @@ file. Either, both, or (default) neither. What it looks like and how to use it:
 ### The run directory
 
 local `commands` discovery and `runs` read commands mount the shared
-cli-messaging factories; the MAX modules contain only the app binding. Discovery includes the
+cli-core factories; the MAX modules contain only the app binding. Discovery includes the
 common `contract` field, and truncated run output points to `--limit`. Reading these records
 starts no session and creates no new run.
 
@@ -435,14 +462,14 @@ starts, whole days by directory name. Rules not stated there:
   keeps nothing (`keepFailedRuns` in `src/config.ts`).
   every failure, not only one inside `run()`. The last catch
   `src/program.ts` delegates parsing and fallback recording to
-  cli-messaging's shared runner. Its consumer hooks supply legacy command context, server options
+  cli-core's shared runner. Its consumer hooks supply legacy command context, server options
   and bot recording settlement; the shell uses MAX's resolver with the bot/personal scope.
   Anything no run settled (`wasSettled`) reaches the same `recorded()`: Commander's usage errors,
   checks before a command opens its run, and commands that never open one. The run is named by the command's words only (`commandPath`), never the arguments.
 - **Beyond requests**: `warning` events carry a code from a closed list (`WarningCode`), never
   the sentence; a crash adds a `crash` event with the class and up to ten `function file:line`
   frames, never the message; `providerError` is MAX's refusal key when it is shaped like one
-  (`providerErrorKey`, cli-messaging's — **correction 2026-09-30:** it was `maxError`, `src/runs/events.ts`). `run.json` carries `runtime`, `platform`, `arch`.
+  (`providerErrorKey`, cli-core's). `run.json` carries `runtime`, `platform`, `arch`.
 - `run.json` is written atomically. `finish` runs on every path and **awaits the logger**: Pino
   appends via a plain stream, and a process that exits first loses the tail — the part somebody
   wanted.
@@ -451,20 +478,20 @@ starts, whole days by directory name. Rules not stated there:
   Two appends never conflict; two DB writers take a lock, and a diagnostic must not fail its
   command.
 - `max runs list | show <id> | path <id>` read them back. An empty list explains itself on stderr
-  and names `--record`. **`runs path` answers `{"path": "…"}` too** (`NEED-88`, `max runs path <id>
-  --json | jq -r .path`; a terminal gets the path on a labelled line): a contract with no exception
+  and names `--record`. **`runs path` answers `{"item": {"path": "…"}}` too** (`NEED-88`, `max runs path <id>
+  --json | jq -r .item.path`; a terminal gets the path on a labelled line): a contract with no exception
   is one nobody has to remember, and was worth more than `cat "$(max runs path <id>)/events.jsonl"`.
 
 ## 14. Settings, and the order one is decided in
 
-common settings resolve through cli-messaging `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve`, `mcpTools` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
+common settings resolve through cli-core `settingsFor`. MAX retains its strict configuration schema and config-write diagnostics; an adapter hook resolves `serve` and the default-only speech model from the same layers. Detailed source paths, legacy permission provenance and the existing duration syntax remain unchanged.
 
 **Flag → environment → config file → built-in default**, decided once in `resolveSettings`
 (`src/config.ts`). Commands take what they are given; one that re-derived the order would disagree.
 Every field, variable and the file format: [`../configuration.md`](../configuration.md); profiles and
 paging for users: [`../usage.md`](../usage.md). The profile follows the same order: the first word
-(`max personal chats list`), then `MAX_PROFILE=personal`, then `"defaultProfile"` in the file, then
-`default`.
+(`max personal chats list`), then `MAX_PROFILE=personal`; nothing else picks one. A leftover
+`default_profile` in the file stops a command that names none, with the profile to type.
 
 ### The profile is the first word, not a flag
 
@@ -483,7 +510,7 @@ paging for users: [`../usage.md`](../usage.md). The profile follows the same ord
 What a user sets and how: [`../configuration.md`](../configuration.md), [`../usage.md`](../usage.md). The rules
 behind it:
 
-- `~/.config/max-cli/config.json`, mode `0644`, read by `cli-core`'s `loadConfigFile`. A missing
+- `~/.config/max-cli/config.json`, mode `0644`, read by `cli-base`'s `loadConfigFile`. A missing
   file is not an error; a malformed one is, in every output mode, naming the field.
 - The schema is `strictObject`: `"limitt"` is reported as `profiles.default.limitt`, where plain
   `object()` would drop it silently. The **opposite** of MAX answers, whose unknown fields are kept
@@ -505,7 +532,7 @@ behind it:
 
 ### Two things that jump the queue
 
-- **`MAX_TOKEN` outranks the keyring** (`cli-core`'s `Credentials.read`) — a token for a container
+- **`MAX_TOKEN` outranks the keyring** (`cli-base`'s `Credentials.read`) — a token for a container
   or probe without storing it.
 - ⚠ **`MAX_CONFIG_DIR`, `MAX_STATE_DIR` and `MAX_CACHE_DIR` change which keyring entry a profile
   means.** `pathsAreOverridden` makes the service `max-cli:<configDir>`, so a login made with them
@@ -524,8 +551,8 @@ construction site cannot.
 ## 15. The store: people, and the chats they are in
 
 max no longer opens its per-profile cache. `src/record.ts` keeps
-login chats, people, membership snapshots and the contact sync marker in cli-messaging's
-account-scoped `messages.db`. It opens lazily once the account is known. The shared `stored`
+login chats, people, membership snapshots and the contact sync marker in cli-core's
+account-scoped `wirecat.db`. It opens lazily once the account is known. The shared `stored`
 adapter wrapper saves history; shared services own search, offline reads, edits and deletions.
 A failed record write warns without losing an answer MAX already gave, and does not advance its
 marker. `max serve` owns its record across reconnects and closes it on stop.
@@ -545,39 +572,27 @@ Details: [`architecture/store.md`](architecture/store.md).
 
 ## 16. Searching
 
-shared services search the account's `messages.db`; `MaxClient`
+shared services search the account's history in `wirecat.db`; `MaxClient`
 no longer implements local search. Search finds recorded history, not unread history that has
-never been fetched. `store fetch` fills it; `--offline` reads it without connecting.
+never been fetched. `messages sync` fills it; `--offline` reads it without connecting.
 
-## 17. The MCP server is a second adapter, and it keeps the connection for minutes
+## 17. The MCP server is cli-core's, as in tg
 
-`max mcp` (`src/mcp/`) mounts `personalMcpTools(maxMessenger)` from the shared SDK through
-`registerPersonalMcpTools`. MAX retains `MaxSession`, native permission guards and account-scoped
-archive services. Unsupported forum tools are filtered out; photo previews and cached direct
-transcripts retain native callbacks under the shared input schemas. Legacy `chats_check` and
-`chats_rules` names remain available.
+`max mcp` is cli-core's `mcpCommand(maxMessenger)`, the same command tg mounts. What is MAX's comes from the
+descriptor: `topics: false` hides the forum tools, `skill` serves `max://skill`, `diagnose` adds the token source and
+the account kind to `status`, and the guard hook builds max's send guard — over MCP with the server's asker, so a
+write at level `ask` goes ahead without a form.
 
-- **One connection per agent session, never for long**: calls serialize; the connection closes
-  after 2 minutes idle, after 5 minutes since login, on a connection failure and on stdin EOF.
-  Local evidence and conversation callbacks use the profile's known account without connecting.
-- **Profile permissions govern discovery and execution.** The mounting scope rechecks the exact
-  key, including local reads. Native write guards retain recipient checks and the journal.
-  Retired access flags grant no permissions.
-- **MCP writes use effective profile permissions.** `ask` and `allow` execute without a server
-  confirmation form; `readonly` rejects writes and `deny` rejects access. Retired confirmation
-  flags emit a diagnostic and change nothing. Native recipient and send-journal guards still apply.
-- **Local inference releases the connection.** Warm embedding models are disposed on shutdown;
-  speech models are never downloaded by a tool. Native transcription retains same-model cache reuse.
-- **Discovery uses search, read and write tools.** `max_tools_search` finds command definitions;
-  `max_read` and `max_write` execute a command path with its argument object. Exact command
-  permissions are rechecked during execution; a client permitting `max_write` does not bypass them.
-- **stdout is the protocol.** Nothing in `src/mcp/` writes data through the renderer; notes go to
-  stderr. The process exits on stdin EOF — measured 110 ms under Node and Bun, 2026-09-24.
-- `serveStdio` may build a probe server before settling on the protocol era, so the server is a
-  factory over one `MaxSession`, never one instance.
+- **One connection per agent session, never for long**: calls serialize; the connection closes after 2 minutes idle,
+  after 5 minutes since login, on a connection failure and on stdin EOF (cli-core `MessengerSession`).
+- **Every write goes through the guard**: permissions, the read-only lock, the recipient list, the hourly limit and
+  the send journal, as in the CLI. `readonly` rejects writes and `deny` rejects access.
+- **Discovery uses search, read and write tools**: `max_tools_search`, then `max_read` or `max_write` with a command
+  path and its arguments; the exact command's permission is checked again when it runs.
+- **stdout is the protocol.** Notes go to stderr; the process exits on stdin EOF.
 
 User side: [`../mcp.md`](../mcp.md). The research behind the choices is local-only
-(`docs_ai/plans/2026-09-23-mcp-research.md`).
+(private notes).
 
 ## 18. The bot API is a separate slice, generated from the official schema
 
@@ -590,14 +605,14 @@ generated code. Nothing under `src/bot/` imports `src/protocol/`, `src/session/`
 spec/bot/schema.yaml        the official OpenAPI document, committed with provenance.json
    │  pnpm bot:spec:sync    — the only step that reads the network, and only when run by hand
    ▼
-scripts/bot/openapi-adapter.ts   OpenAPI → cli-core's format-neutral ApiModel; strict, names what it refuses
+cli-base's adaptOpenApi          OpenAPI → the format-neutral ApiModel; strict, names what it refuses
 scripts/bot/overrides.ts         read / write / destructive, where the HTTP method is wrong
-   │  pnpm bot:generate     — part of `pnpm generate`, so CI's freshness check covers it
+   │  pnpm bot:generate     — part of `pnpm generate`, so full validation's freshness check covers it
    ▼
 src/bot/generated/{types,schemas,manifest}.ts   docs/dev/bot-api-coverage.md
 ```
 
-The generator itself is `@wirecat/cli-core/codegen`, shared with other CLIs; only the adapter from
+The generator itself is `@wirecat/cli-base/codegen`, shared with other CLIs; only the adapter from
 OpenAPI is ours. The generated Valibot schemas keep the schema's constraints and turn a 64-bit id
 into an exact decimal string. They expect numbers from `lossless-json`, and they decode only — a
 request is validated with them and then sent as the original lossless value. Enums and
@@ -619,7 +634,7 @@ per request on Bun (`NEED-293`). The bot token is `bot:<profile>` in the keyring
 A Biome rule keeps `src/bot/` away from `src/protocol/`, `src/session/`, `src/spec/` and
 `src/client.ts`.
 
-Рейтинги архива и evidence реализованы в общих services/store cli-messaging; adapter
+Рейтинги архива и evidence реализованы в общих services/store cli-core; adapter
 сохраняет `providerMetadata.graph` v1 с доказанной reply-связью или известным отсутствием
 reply у полного сообщения. Неполный кадр оставляет связь неизвестной.
 [Пользовательский контракт](../rankings.md) описывает формулы, пределы и качество данных.
@@ -634,7 +649,7 @@ versioned selection inside the existing evidence commands. See the [user guide](
 
 ### Retention and counter freshness
 
-`cli-messaging` migration 24 stores explicit roster batches with member/stay references and independent
+`cli-core` migration 24 stores explicit roster batches with member/stay references and independent
 latest counter observations. Known joining dates define cohorts; firstSeenAt is not substituted.
 Retention uses the first roster within 24 hours after each checkpoint, disclosing observed/unknown/pending
 denominators and interval departures. The shared service and existing MCP frontend reuse bounded evidence.

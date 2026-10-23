@@ -1,5 +1,5 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -84,10 +84,10 @@ describe("editing", () => {
 
     expect(edited.code).toBe(0)
     expect(sentWith(Opcode.MSG_EDIT)[0]?.payload).toMatchObject({ text: "new", attachments: [PHOTO] })
-    const answer = JSON.parse(edited.stdout)
-    expect(answer).toMatchObject({ operationId: expect.any(String), message: { id: MESSAGE, text: "new" } })
+    const answer = JSON.parse(edited.stdout).item
+    expect(answer).toMatchObject({ operation_id: expect.any(String), message: { id: MESSAGE, text: "new" } })
     expect(journalOf("e-edit")).toMatchObject([
-      { chatId: "111", kind: "edit", outcome: "sent", length: 3, operationId: answer.operationId },
+      { chatId: "111", kind: "edit", outcome: "sent", length: 3, operationId: answer.operation_id },
     ])
     expect(JSON.stringify(journalOf("e-edit"))).not.toContain("new")
   })
@@ -139,14 +139,14 @@ describe("forwarding", () => {
     expect(journalOf("e-forward")).toMatchObject([{ chatId: "222", kind: "forward", outcome: "sent" }])
   })
 
-  it("`--send-id` repeats a forward under the cid given, so MAX keeps one copy", async () => {
+  it("`--operation-id` repeats a forward under the cid given, so MAX keeps one copy", async () => {
     const { environment, sentWith } = messenger()
-    const argv = ["e-fwd-id", "messages", "forward", "111", MESSAGE, "--to", "222", "--send-id", "1790000000000"]
+    const argv = ["e-fwd-id", "messages", "forward", "111", MESSAGE, "--to", "222", "--operation-id", "1790000000000"]
     const { code, stdout } = await runWith(argv, environment)
 
     expect(code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { cid: 1790000000000 } })
-    expect(JSON.parse(stdout)).toMatchObject({ sendId: "1790000000000" })
+    expect(JSON.parse(stdout).item).toMatchObject({ operation_id: "1790000000000" })
   })
 
   it("`--silent` delivers without a notification", async () => {
@@ -169,13 +169,13 @@ describe("forwarding", () => {
     expect(cids[0]).toBe(cids[1])
     const { error } = JSON.parse(lost.stderr)
     expect(error.code).toBe("outcome_unknown")
-    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --send-id ${cids[0]}`)
+    expect(error.message).toContain(`max messages forward 111 ${MESSAGE} --to 222 --operation-id ${cids[0]}`)
     expect(journalOf("e-lost")).toMatchObject([{ kind: "forward", outcome: "outcome_unknown" }])
   })
 
   it("counts against the hourly limit, and so does an edit; a quiet pin does not", async () => {
     const { environment, sentWith } = messenger()
-    await runWith(["e-limit", "config", "set", "sendsPerHour", "2"])
+    await runWith(["e-limit", "config", "set", "sends_per_hour", "2"])
 
     expect((await runWith(["e-limit", "messages", "forward", "111", MESSAGE, "--to", "222"], environment)).code).toBe(0)
     expect((await runWith(["e-limit", "messages", "pin", "111", MESSAGE], environment)).code).toBe(0)
@@ -186,7 +186,7 @@ describe("forwarding", () => {
 
   it("counts a pin that notifies the members", async () => {
     const { environment } = messenger()
-    await runWith(["e-pin-limit", "config", "set", "sendsPerHour", "1"])
+    await runWith(["e-pin-limit", "config", "set", "sends_per_hour", "1"])
 
     expect((await runWith(["e-pin-limit", "messages", "pin", "111", MESSAGE, "--notify"], environment)).code).toBe(0)
     expect((await runWith(["e-pin-limit", "messages", "pin", "111", MESSAGE, "--notify"], environment)).code).toBe(8)
@@ -201,16 +201,16 @@ describe("pinning", () => {
     await runWith(["e-pin", "messages", "pin", "111", MESSAGE, "--notify"], environment)
     const unpinned = await runWith(["e-pin", "messages", "unpin", "111", MESSAGE], environment)
 
-    expect(JSON.parse(pinned.stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: "111",
-      messageId: MESSAGE,
+    expect(JSON.parse(pinned.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: "111",
+      message_id: MESSAGE,
       pinned: true,
     })
-    expect(JSON.parse(unpinned.stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: "111",
-      messageId: MESSAGE,
+    expect(JSON.parse(unpinned.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: "111",
+      message_id: MESSAGE,
       pinned: false,
     })
     const requests = sentWith(Opcode.CHAT_UPDATE).map(({ payload }) => ({
@@ -235,9 +235,9 @@ describe("pinning", () => {
 })
 
 describe("a read-only profile", () => {
-  it("refuses an edit, a forward, a pin and an unpin without connecting", async () => {
+  it("refuses an edit, a forward, a pin and an unpin, and sends none of them", async () => {
     const { max, environment } = messenger()
-    await runWith(["e-read", "config", "set", "readOnly", "true"])
+    await runWith(["e-read", "config", "set", "permissions.messages", "readonly"])
 
     for (const argv of [
       ["messages", "edit", "111", MESSAGE, "new"],

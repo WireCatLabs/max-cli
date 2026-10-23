@@ -1,8 +1,9 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
-import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { dirname, join } from "node:path"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { afterEach, describe, expect, it } from "vitest"
+import { BotTokenStore } from "../bot/auth.js"
 import { run } from "../program.js"
 import { SessionStore } from "../session/store.js"
 import { installNotes } from "./doctor.js"
@@ -19,16 +20,22 @@ const homes: string[] = []
 
 const inAnEmptyHome = async (
   argv: string[],
-  { token = false, loggedIn = false, tty = false, bots = [] as string[], legacy = false } = {},
+  {
+    token = false,
+    loggedIn = false,
+    tty = false,
+    bots = [] as string[],
+    config = undefined as string | undefined,
+  } = {},
 ) => {
   const home = mkdtempSync(join(tmpdir(), "max-doctor-cmd-"))
+  if (config !== undefined) {
+    mkdirSync(join(home, "config"), { recursive: true })
+    writeFileSync(join(home, "config", "config.json"), config)
+  }
   for (const bot of bots) {
     mkdirSync(join(home, "state", "bots"), { recursive: true })
     writeFileSync(join(home, "state", "bots", `${bot}.json`), JSON.stringify({ chats: [] }))
-  }
-  if (legacy) {
-    mkdirSync(join(home, "cache"), { recursive: true })
-    writeFileSync(join(home, "cache", "default.db"), "unreadable legacy file")
   }
   const before = { ...process.env }
   homes.push(home)
@@ -44,6 +51,7 @@ const inAnEmptyHome = async (
     const code = await run(argv, {
       streams,
       tty,
+      botStore: (profile) => new BotTokenStore({ profile, keyring }),
       store: (profile) => {
         const store = new SessionStore({ profile, keyring })
         if (token) store.writeToken("a-token")
@@ -77,23 +85,19 @@ describe("max doctor", () => {
     const { code, stdout } = await inAnEmptyHome(["doctor", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({
+    expect(JSON.parse(stdout).item).toMatchObject({
       token: { present: false, from: "none" },
       session: { exists: false },
-      legacyCache: { exists: false },
       store: { path: expect.any(String) },
     })
   })
 
-  it("names an unreadable legacy file on stderr while JSON describes the shared store", async () => {
-    const { code, stdout, stderr, home } = await inAnEmptyHome(["doctor", "--json"], { legacy: true })
+  it("describes the shared store", async () => {
+    const { code, stdout } = await inAnEmptyHome(["doctor", "--json"])
     expect(code).toBe(0)
-    const answer = JSON.parse(stdout)
-    expect(answer).not.toHaveProperty("cache")
-    expect(answer.legacyCache).toEqual({ file: join(home, "cache", "default.db"), exists: true })
+    const answer = JSON.parse(stdout).item
+    expect(answer).not.toHaveProperty("legacy_cache")
     expect(answer.store.path).toBe(process.env.MESSAGING_STORE)
-    expect(stderr).toContain(join(home, "cache", "default.db"))
-    expect(stderr).toContain("max store fetch")
   })
 
   it("blames the keyring, not the session, when a profile that has logged in has no token", async () => {
@@ -107,14 +111,14 @@ describe("max doctor", () => {
   it("says the token is there and where from, and **never what it is**", async () => {
     const { stdout } = await inAnEmptyHome(["doctor", "--json"], { token: true })
 
-    expect(JSON.parse(stdout).token).toEqual({ present: true, from: "keyring" })
+    expect(JSON.parse(stdout).item.token).toEqual({ present: true, from: "keyring" })
     expect(stdout).not.toContain("a-token")
   })
 
   it("**names the keyring entry the environment moved** — the failure with no other symptom", async () => {
     const { stdout, stderr } = await inAnEmptyHome(["doctor", "--json"])
 
-    expect(JSON.parse(stdout).keyring.movedByEnvironment).toBe(true)
+    expect(JSON.parse(stdout).item.keyring.moved_by_environment).toBe(true)
     expect(stderr).toContain("MAX_CONFIG_DIR")
   })
 
@@ -122,10 +126,10 @@ describe("max doctor", () => {
     // A pipe is a script until proven otherwise, so only an actual terminal gets the table.
     const person = await inAnEmptyHome(["doctor"], { tty: true })
     expect(person.stdout).toContain("profile")
-    expect(person.stdout).not.toContain("movedByEnvironment")
+    expect(person.stdout).not.toContain("moved_by_environment")
 
     const machine = await inAnEmptyHome(["doctor"])
-    expect(JSON.parse(machine.stdout).keyring).toHaveProperty("movedByEnvironment")
+    expect(JSON.parse(machine.stdout).item.keyring).toHaveProperty("moved_by_environment")
   })
 
   it("**creates nothing** — not the state file it reports on, not the cache", async () => {
@@ -137,11 +141,48 @@ describe("max doctor", () => {
     expect(existsSync(join(home, "cache"))).toBe(false)
   })
 
+  it("**answers with the config problem when the config file is invalid**, naming the key and not its value", async () => {
+    const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"], {
+      config: JSON.stringify({ defaultProfile: "invented-value-7", profiles: { work: {} } }),
+    })
+
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).item.config.error).toContain("defaultProfile")
+    expect(stdout).not.toContain("invented-value-7")
+  })
+
+  it("writes a problem report with the config problem when the config file is invalid", async () => {
+    const output = join(mkdtempSync(join(tmpdir(), "max-report-")), "report.json")
+    homes.push(dirname(output))
+    const { code, stdout } = await inAnEmptyHome(["work", "doctor", "report", "create", "--output", output, "--json"], {
+      config: JSON.stringify({ defaultProfile: "invented-value-7", profiles: { work: {} } }),
+    })
+
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).item.path).toBe(output)
+    const report = JSON.parse(readFileSync(output, "utf8"))
+    expect(report).toMatchObject({ profile: null, sends: [] })
+    expect(report.doctor.config.error).toContain("defaultProfile")
+    expect(readFileSync(output, "utf8")).not.toContain("invented-value-7")
+  })
+
+  it("writes a problem report under MAX_READ_ONLY, since it only adds a file", async () => {
+    const output = join(mkdtempSync(join(tmpdir(), "max-report-")), "report.json")
+    homes.push(dirname(output))
+    process.env.MAX_READ_ONLY = "1"
+    try {
+      const { code } = await inAnEmptyHome(["work", "doctor", "report", "create", "--output", output, "--json"])
+      expect(code).toBe(0)
+    } finally {
+      delete process.env.MAX_READ_ONLY
+    }
+  })
+
   it("carries the profile from the first word like every other command", async () => {
     const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout).session.stateFile).toContain("work.json")
+    expect(JSON.parse(stdout).item.session.state_file).toContain("work.json")
   })
 })
 

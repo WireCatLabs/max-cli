@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { Readable } from "node:stream"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { beforeEach, describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -76,40 +76,42 @@ describe("max store", () => {
     const { environment, sent } = setup()
 
     const fetched = await max(
-      ["s-fetch", "store", "fetch", "111", "--pause", "1ms", "--limit", "150", "--json"],
+      ["s-fetch", "messages", "sync", "111", "--pause", "1ms", "--limit", "150", "--json"],
       environment,
     )
 
     expect(fetched.code).toBe(0)
-    expect(JSON.parse(fetched.stdout)).toMatchObject({ chat: "111", complete: true })
+    expect(JSON.parse(fetched.stdout).item).toMatchObject({ chat: "111", fetched: 70, complete: true })
     expect(sent(Opcode.CHAT_HISTORY).map((request) => request?.backward)).toEqual([30, 30, 30, 1])
     expect(sent(Opcode.MSG_GET_REACTIONS)).toEqual([])
     expect(sent(Opcode.CHAT_MARK)).toEqual([])
 
     const status = await max(["s-fetch", "store", "status", "111", "--json"], environment)
-    expect(JSON.parse(status.stdout)).toMatchObject({ items: [{ chatId: "111", messages: 70 }] })
+    expect(JSON.parse(status.stdout)).toMatchObject({ items: [{ chat_id: "111", messages: 70 }] })
   })
 
   it("builds evidence from the local archive without connecting or marking read", async () => {
     const { environment, sent } = setup()
     expect(
-      (await max(["s-evidence", "store", "fetch", "111", "--pause", "1ms", "--limit", "150", "--json"], environment))
+      (await max(["s-evidence", "messages", "sync", "111", "--pause", "1ms", "--limit", "150", "--json"], environment))
         .code,
     ).toBe(0)
     const before = sent(Opcode.LOGIN).length
     const packet = await max(["s-evidence", "messages", "evidence", "111", "--limit", "2", "--json"], environment)
     expect(packet.code).toBe(0)
-    const body = JSON.parse(packet.stdout)
+    const answer = JSON.parse(packet.stdout)
+    const body = answer.item
     expect(body.items).toHaveLength(2)
     expect(body.items[0].locator).toContain("msg:max/")
     expect(body.coverage.included).toBe(2)
-    expect(body.nextBeforeId).not.toBeNull()
+    const cursor = answer.next.find((step: { step: string }) => step.step === "page.next")?.args.cursor
+    expect(cursor).toEqual(expect.any(String))
     const older = await max(
-      ["s-evidence", "messages", "evidence", "111", "--limit", "2", "--before-id", body.nextBeforeId, "--json"],
+      ["s-evidence", "messages", "evidence", "111", "--limit", "2", "--cursor", cursor, "--json"],
       environment,
     )
     expect(older.code).toBe(0)
-    const next = JSON.parse(older.stdout)
+    const next = JSON.parse(older.stdout).item
     expect(next.items).toHaveLength(2)
     expect(next.items.map((one: { locator: string }) => one.locator)).not.toEqual(
       body.items.map((one: { locator: string }) => one.locator),
@@ -122,20 +124,20 @@ describe("max store", () => {
     const { environment, sent } = setup()
 
     const fetched = await max(
-      ["s-page", "store", "fetch", "111", "--pause", "1ms", "--page-size", "10", "--limit", "20", "--json"],
+      ["s-page", "messages", "sync", "111", "--pause", "1ms", "--page-size", "10", "--limit", "20", "--json"],
       environment,
     )
 
     expect(fetched.code).toBe(0)
-    expect(JSON.parse(fetched.stdout)).toMatchObject({ fetched: 20 })
+    expect(JSON.parse(fetched.stdout).item).toMatchObject({ fetched: 20 })
     const pages = sent(Opcode.CHAT_HISTORY).filter((request) => request?.backward !== 1)
     expect(pages.map((request) => request?.backward)).toEqual([10, 10])
   })
 
-  it("refuses --estimate: MAX's ids do not count the messages missing", async () => {
+  it("refuses --dry-run: MAX's ids do not count the messages missing", async () => {
     const { environment, sent } = setup()
 
-    const estimate = await max(["s-estimate", "store", "fetch", "111", "--estimate"], environment)
+    const estimate = await max(["s-estimate", "messages", "sync", "111", "--dry-run"], environment)
 
     expect(estimate.code).toBe(2)
     expect(sent(Opcode.CHAT_HISTORY)).toEqual([])
@@ -143,7 +145,7 @@ describe("max store", () => {
 
   it("exports what it holds as JSON lines or a transcript, from --since, into a file only the owner reads", async () => {
     const { environment } = setup()
-    await max(["s-export", "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max(["s-export", "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     const file = join(tmpdir(), "s-export.jsonl")
 
     const lines = await max(["s-export", "store", "export", "111", "--format", "jsonl"], environment)
@@ -157,15 +159,16 @@ describe("max store", () => {
     expect(lines.stdout.split("\n")).toHaveLength(70)
     expect(since.stdout.split("\n")).toHaveLength(10)
     expect(transcript.stdout).toMatch(/^# Друзья/)
-    expect(JSON.parse(written.stdout)).toMatchObject({ path: file, count: 70 })
+    expect(JSON.parse(written.stdout).item).toMatchObject({ path: file, count: 70 })
     if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600)
-    expect(readFileSync(file, "utf8").split("\n")[0]).toContain('"chatId":"111"')
+    expect(JSON.parse(readFileSync(file, "utf8").split("\n")[0] as string)).toMatchObject({ chat_id: "111" })
+    expect(JSON.parse(lines.stdout.split("\n")[0] as string)).toMatchObject({ chat_id: "111", text: "message 0" })
   })
 
   it("looks after the store file without connecting: info, check, migrate, backup, restore and reindex", async () => {
     const { environment, sent } = setup()
     const backup = join(tmpdir(), "s-backup.db")
-    await max(["s-care", "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max(["s-care", "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     const logins = sent(Opcode.LOGIN).length
 
     expect((await max(["s-care", "store", "info", "--json"], environment)).code).toBe(0)
@@ -180,12 +183,13 @@ describe("max store", () => {
 
   it("`store clear --left` deletes a chat the account left, only with --allow-dangerous, and connects to nothing", async () => {
     const { environment, sent } = setup({ leftAfter: 1 })
-    await max(["s-clear", "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max(["s-clear", "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     await max(["s-clear", "chats", "list", "--json"], environment)
     const logins = sent(Opcode.LOGIN).length
 
     const bare = await max(["s-clear", "store", "clear", "--json"], environment)
     const preview = await max(["s-clear", "store", "clear", "--left", "--json"], environment)
+    const dryRun = await max(["s-clear", "store", "clear", "--left", "--dry-run", "--json"], environment)
     const cleared = await max(["s-clear", "store", "clear", "--left", "--allow-dangerous", "--json"], environment)
 
     expect(bare.code).toBe(2)
@@ -193,7 +197,9 @@ describe("max store", () => {
     expect(JSON.parse(preview.stderr).error.message).toContain(
       "1 chat(s) this account has left and their 70 message(s)",
     )
-    expect(JSON.parse(cleared.stdout)).toEqual({ cleared: true, chats: 1, messages: 70 })
+    const left = [{ id: "111", title: "Друзья", messages: 70 }]
+    expect(JSON.parse(dryRun.stdout).item).toEqual({ cleared: false, dry_run: true, chats: 1, messages: 70, left })
+    expect(JSON.parse(cleared.stdout).item).toEqual({ cleared: true, chats: 1, messages: 70, left })
     expect(sent(Opcode.LOGIN)).toHaveLength(logins)
   })
 
@@ -203,9 +209,9 @@ describe("max store", () => {
     expect(JSON.parse((await max(["s-jobs", "store", "jobs", "list", "--json"], environment)).stdout)).toMatchObject({
       items: [],
     })
-    const running = await max(["s-jobs", "store", "jobs", "list", "--state", "running", "--json"], environment)
+    const running = await max(["s-jobs", "store", "jobs", "list", "state:running", "--json"], environment)
     expect(JSON.parse(running.stdout)).toMatchObject({ items: [] })
-    expect((await max(["s-jobs", "store", "jobs", "list", "--state", "stuck", "--json"], environment)).code).toBe(2)
+    expect((await max(["s-jobs", "store", "jobs", "list", "state:stuck", "--json"], environment)).code).toBe(2)
     expect((await max(["s-jobs", "store", "jobs", "show", "nope", "--json"], environment)).code).toBe(6)
     expect((await max(["s-jobs", "store", "jobs", "cancel", "nope", "--json"], environment)).code).toBe(6)
   })
@@ -214,7 +220,7 @@ describe("max store", () => {
 describe("max conversations", () => {
   const fetched = async (profile: string) => {
     const { environment, sent } = setup()
-    await max([profile, "store", "fetch", "111", "--pause", "1ms", "--json"], environment)
+    await max([profile, "messages", "sync", "111", "--pause", "1ms", "--json"], environment)
     return { environment, logins: () => sent(Opcode.LOGIN).length }
   }
   const [first, second] = HISTORY.map((message) => String(message.id))
@@ -225,16 +231,17 @@ describe("max conversations", () => {
 
     const built = await max(["c-build", "conversations", "build", "--chat", "111", "--json"], environment)
     const listed = await max(
-      ["c-build", "conversations", "list", "--chat", "111", "--since-time", "2026-08-01", "--limit", "5", "--json"],
+      ["c-build", "conversations", "list", "111", "started_at>=2026-08-01", "--limit", "5", "--json"],
       environment,
     )
     const [conversation] = JSON.parse(listed.stdout).items
     const shown = await max(["c-build", "conversations", "show", conversation.id, "--json"], environment)
     const links = await max(["c-build", "messages", "links", "111", String(second), "--json"], environment)
 
-    expect(JSON.parse(built.stdout)).toMatchObject({ chat: "111", messages: 70, conversations: 1 })
-    expect(conversation).toMatchObject({ messageCount: 70, firstMessageId: first })
-    expect(JSON.parse(shown.stdout).messages).toHaveLength(70)
+    expect(JSON.parse(built.stdout).item).toMatchObject({ chat: "111", messages: 70, conversations: 1 })
+    expect(conversation).toMatchObject({ messages_count: 70 })
+    expect(conversation.first_message).toMatch(new RegExp(`/${first}$`))
+    expect(JSON.parse(shown.stdout).item.messages).toHaveLength(70)
     expect(links.code).toBe(0)
     expect(links.stdout).toContain(String(first))
     expect(logins()).toBe(before)
@@ -247,11 +254,20 @@ describe("max conversations", () => {
     const password = { ...environment, stdin: Object.assign(Readable.from(["pw one\n"]), { isTTY: false }) }
     const again = () => ({ ...environment, stdin: Object.assign(Readable.from(["pw one\n"]), { isTTY: false }) })
 
-    const first = await max(["s-folder", "store", "export", "111", "--to", join(root, "one"), "--json"], environment)
-    const second = await max(["s-folder", "store", "export", "111", "--to", join(root, "one"), "--json"], environment)
-    const all = await max(["s-folder", "store", "export", "--all", "--to", join(root, "all"), "--json"], environment)
+    const first = await max(
+      ["s-folder", "store", "export", "111", "--output-dir", join(root, "one"), "--json"],
+      environment,
+    )
+    const second = await max(
+      ["s-folder", "store", "export", "111", "--output-dir", join(root, "one"), "--json"],
+      environment,
+    )
+    const all = await max(
+      ["s-folder", "store", "export", "--all", "--output-dir", join(root, "all"), "--json"],
+      environment,
+    )
     const kind = await max(
-      ["s-folder", "store", "export", "--kind", "dialog,group", "--to", join(root, "kind"), "--json"],
+      ["s-folder", "store", "export", "--include", "dialog,group", "--output-dir", join(root, "kind"), "--json"],
       environment,
     )
     const sealed = await max(
@@ -267,14 +283,28 @@ describe("max conversations", () => {
       again(),
     )
 
-    expect(JSON.parse(first.stdout).chats[0]).toMatchObject({ id: "111", messages: 70 })
-    expect(JSON.parse(second.stdout).chats[0]).toMatchObject({ file: null, messages: 0 })
-    expect(JSON.parse(all.stdout).chats.map((chat: { id: string }) => chat.id)).toContain("111")
+    expect(JSON.parse(first.stdout).item.chats[0]).toMatchObject({ id: "111", messages: 70 })
+    expect(JSON.parse(second.stdout).item.chats[0]).toMatchObject({ file: null, messages: 0 })
+    expect(JSON.parse(all.stdout).item.chats.map((chat: { id: string }) => chat.id)).toContain("111")
     expect(kind.code).toBe(0)
-    expect(JSON.parse(sealed.stdout)).toMatchObject({ count: 70, encrypted: true })
+    expect(JSON.parse(sealed.stdout).item).toMatchObject({ count: 70, encrypted: true })
     expect(readFileSync(join(root, "111.jsonl"), "utf8").trim().split("\n")).toHaveLength(70)
     expect(opened.code).toBe(0)
-    expect(JSON.parse(backup.stdout)).toMatchObject({ encrypted: true })
+    expect(JSON.parse(backup.stdout).item).toMatchObject({ encrypted: true })
+    expect(logins()).toBe(before)
+  })
+
+  it("**rebuilds a chat's conversations** without asking MAX, the agents' refresh", async () => {
+    const { environment, logins } = await fetched("c-rebuild")
+    const before = logins()
+
+    const rebuilt = await max(
+      ["c-rebuild", "conversations", "rebuild", "--chat", "111", "--max-chats", "1", "--max-chunks", "10", "--json"],
+      environment,
+    )
+
+    expect(rebuilt.code).toBe(0)
+    expect(JSON.stringify(JSON.parse(rebuilt.stdout).item)).toContain("111")
     expect(logins()).toBe(before)
   })
 
@@ -292,7 +322,7 @@ describe("max conversations", () => {
     )
 
     expect(built.code).toBe(0)
-    expect(JSON.parse(status.stdout)).toMatchObject({ model: expect.anything() })
+    expect(JSON.parse(status.stdout).items).toMatchObject([{ chat: "111", model: "e5-small" }])
     expect(related.code).toBe(6)
     expect(related.stderr).toMatch(/conversations (build|embed)/)
   })
@@ -312,7 +342,7 @@ describe("max conversations", () => {
       environment,
     )
     const stored = await max(
-      ["c-batch", "conversations", "links", "add", "--batch", JSON.parse(next.stdout).batch, "--json"],
+      ["c-batch", "conversations", "links", "add", "--batch", JSON.parse(next.stdout).item.batch, "--json"],
       {
         ...environment,
         stdin: Object.assign(Readable.from([answer]), { isTTY: false }),
@@ -323,9 +353,9 @@ describe("max conversations", () => {
       environment,
     )
 
-    expect(JSON.parse(status.stdout)).toMatchObject({ chat: "111", messages: 70, batches: 7 })
-    expect(JSON.parse(stored.stdout)).toEqual({ chat: "111", stored: 1 })
-    expect(JSON.parse(cleared.stdout)).toMatchObject({ chat: "111", cleared: 1 })
+    expect(JSON.parse(status.stdout).item).toMatchObject({ chat: "111", messages: 70, batches: 7 })
+    expect(JSON.parse(stored.stdout).item).toEqual({ chat: "111", stored: 1 })
+    expect(JSON.parse(cleared.stdout).item).toMatchObject({ chat: "111", cleared: 1 })
     const embedded = await max(
       ["c-batch", "conversations", "embed", "status", "--chat", "111", "--model", "e5-small", "--json"],
       environment,
@@ -334,8 +364,8 @@ describe("max conversations", () => {
       ["c-batch", "conversations", "embed", "clear", "--chat", "111", "--model", "e5-small", "--json"],
       environment,
     )
-    expect(JSON.parse(embedded.stdout)).toMatchObject({ embedded: 0 })
-    expect(JSON.parse(dropped.stdout)).toMatchObject({ cleared: 0 })
+    expect(JSON.parse(embedded.stdout).item).toMatchObject({ embedded: 0 })
+    expect(JSON.parse(dropped.stdout).item).toMatchObject({ cleared: 0 })
     expect(logins()).toBe(before)
   })
 })

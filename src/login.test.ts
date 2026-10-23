@@ -1,10 +1,15 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { mkdirSync } from "node:fs"
+import { createServer } from "node:net"
+import { dirname } from "node:path"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { PASTE_QR, plainQr } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import type { Payload } from "./protocol/frame.js"
+import { fromLine, lineReader, toLine } from "./server/lines.js"
 import type { BrowserDoors } from "./session/browser.js"
 import { SessionStore } from "./session/store.js"
 import { type MockMax, mockMax } from "./testing/mock-max.js"
@@ -26,9 +31,6 @@ const qrCode = (overrides: Payload = {}) => ({
 })
 
 const noBrowser: BrowserDoors = {
-  open: async () => {
-    throw new Error("no browser was expected")
-  },
   chromiumToken: async () => {
     throw new Error("no browser was expected")
   },
@@ -48,9 +50,7 @@ const setUp = (login: MockMax | undefined, adopt: MockMax, extra: Partial<Enviro
     env: { ...process.env, CI: "" },
     tty: true,
     interactive: true,
-    // Narrower than any QR code, so the browser path is the default here and nothing depends on
-    // the width of whatever terminal runs the suite.
-    columns: 20,
+    columns: 200,
     browser: noBrowser,
     ask: async () => {
       throw new Error("nothing was expected to be asked")
@@ -74,7 +74,7 @@ const setUp = (login: MockMax | undefined, adopt: MockMax, extra: Partial<Enviro
 const adopting = () => mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: LOGIN } })
 
 describe("max session start qr", () => {
-  it("draws the code here, waits for the phone, and stores the token MAX then accepts", async () => {
+  it("draws the code here, says where to scan it, waits for the phone, and stores the token MAX then accepts", async () => {
     const login = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
@@ -84,17 +84,19 @@ describe("max session start qr", () => {
       },
     })
     const adopt = adopting()
-    const { start, stored, streams } = setUp(login, adopt, { columns: 200 })
+    const { start, stored, streams } = setUp(login, adopt)
 
-    expect(await start("qr", "--quiet")).toBe(0)
+    expect(await start("qr")).toBe(0)
 
-    expect(streams.stderr.join("\n")).toMatch(/[█▀▄]/)
+    const stderr = streams.stderr.join("\n")
+    expect(stderr).toMatch(/[█▀▄]/)
+    expect(stderr.indexOf("scan in the MAX app on your phone")).toBeGreaterThan(stderr.lastIndexOf("▀"))
     expect(streams.stdout.join("")).not.toMatch(/[█▀▄]/)
     expect(login.sent.map(({ opcode }) => opcode)).toEqual([6, 288, 289, 289, 291])
     expect(stored()).toBe("qr-token")
   })
 
-  it("opens the code in the browser when the terminal is too narrow for it", async () => {
+  it("draws nothing on a terminal too narrow for the code, opens nothing, and says to widen it, not where to scan", async () => {
     const login = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
@@ -103,28 +105,50 @@ describe("max session start qr", () => {
         [Opcode.LOGIN_BY_QR]: { tokenAttrs: { LOGIN: { token: "qr-token" } } },
       },
     })
-    const adopt = adopting()
-    let page = ""
-    const { start, stored, streams } = setUp(login, adopt, {
-      browser: {
-        ...noBrowser,
-        open: async (url) => {
-          page = await (await fetch(url)).text()
-        },
+    const { start, stored, streams } = setUp(login, adopting(), { columns: 20 })
+
+    expect(await start("qr")).toBe(0)
+
+    const stderr = streams.stderr.join("\n")
+    expect(stderr).not.toMatch(/[█▀▄]/)
+    expect(stderr).toMatch(/20 columns wide .* widen it/)
+    expect(stderr).not.toMatch(/\bscan\b/i)
+    expect(stored()).toBe("qr-token")
+  })
+
+  it("**without a terminal, prints the code as text to paste and as one JSON line, then stores the token**", async () => {
+    const code = qrCode()
+    const login = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.GET_QR]: code,
+        [Opcode.GET_QR_STATUS]: inTurn({ status: {} }, { status: { loginAvailable: true } }),
+        [Opcode.LOGIN_BY_QR]: { tokenAttrs: { LOGIN: { token: "qr-token" } } },
       },
     })
+    const { start, stored, streams } = setUp(login, adopting(), { interactive: false, tty: false })
 
-    expect(await start("qr", "--trace")).toBe(0)
+    expect(await start("qr", "--json")).toBe(0)
 
-    expect(page).toContain("<svg")
-    expect(login.sent.map(({ opcode }) => opcode)).toEqual([6, 288, 289, 289, 291])
-    expect(adopt.sent.at(-1)?.payload.token).toBe("qr-token")
+    const stderr = streams.stderr.join("\n")
+    expect(stderr).toContain(plainQr(code.qrLink))
+    expect(stderr).toContain(PASTE_QR)
+    expect(stderr).not.toContain("\x1b")
+    const events = streams.stderr.filter((line) => line.startsWith('{"event"')).map((line) => JSON.parse(line))
+    expect(events).toEqual([
+      {
+        event: "qr",
+        qr: {
+          text: plainQr(code.qrLink),
+          expires_at: new Date(code.expiresAt).toISOString(),
+          scan: "scan in the MAX app on your phone",
+        },
+      },
+    ])
     expect(stored()).toBe("qr-token")
-    expect(login.closed && adopt.closed).toBe(true)
-    expect(streams.stdout.join(" ")).toContain("Test Person")
-
-    const everything = [...streams.stdout, ...streams.stderr].join("\n")
-    for (const secret of ["qr-token", "track-secret", "qr-link-secret"]) expect(everything).not.toContain(secret)
+    expect(JSON.parse(streams.stdout.join(""))).toMatchObject({ item: { stored: true, method: "qr" } })
+    for (const secret of ["qr-token", "track-secret", "qr-link-secret"])
+      expect([...streams.stdout, ...streams.stderr].join("\n")).not.toContain(secret)
   })
 
   it("asks for the cloud password when MAX wants one, and sends it", async () => {
@@ -139,7 +163,7 @@ describe("max session start qr", () => {
     })
     const asked: string[] = []
     const { start, stored } = setUp(login, adopting(), {
-      browser: { ...noBrowser, open: async () => {} },
+      browser: noBrowser,
       ask: async (prompt, options) => {
         asked.push(`${prompt}${options?.secret ? " (secret)" : ""}`)
         return "hunter2"
@@ -165,7 +189,7 @@ describe("max session start qr", () => {
     })
     const asked: string[] = []
     const { start, stored, streams } = setUp(login, adopting(), {
-      browser: { ...noBrowser, open: async () => {} },
+      browser: noBrowser,
       ask: async (prompt) => {
         asked.push(prompt)
         return "not-it"
@@ -193,7 +217,7 @@ describe("max session start qr", () => {
       },
     })
     const { start, stored, connections } = setUp(login, adopting(), {
-      browser: { ...noBrowser, open: async () => {} },
+      browser: noBrowser,
     })
 
     expect(await start("qr")).toBe(9)
@@ -212,7 +236,7 @@ describe("max session start qr", () => {
       },
     })
     const adopt = mockMax({ answers: { [Opcode.SESSION_INIT]: {} }, refuse: { [Opcode.LOGIN]: "login.token" } })
-    const { start, stored } = setUp(login, adopt, { browser: { ...noBrowser, open: async () => {} } })
+    const { start, stored } = setUp(login, adopt, { browser: noBrowser })
 
     expect(await start("qr")).not.toBe(0)
     expect(stored()).toBeUndefined()
@@ -266,7 +290,7 @@ describe("max session start token", () => {
       delete process.env.MAX_TOKEN
     }
 
-    expect(JSON.parse(streams.stdout.join("")).profile.phone).toBe("***7890")
+    expect(JSON.parse(streams.stdout.join("")).item.profile.phone).toBe("***7890")
     expect(streams.stdout.join("")).not.toContain("71234567890")
   })
 })
@@ -289,7 +313,7 @@ describe("max session start token from MAX_TOKEN", () => {
 })
 
 describe("max session start without a person at the terminal", () => {
-  it.each(["qr", "qr-chrome", "sms"])("refuses %s before opening anything", async (method) => {
+  it.each(["qr-chrome", "sms"])("refuses %s before opening anything", async (method) => {
     const { start, connections } = setUp(undefined, adopting(), { interactive: false })
 
     expect(await start(method)).toBe(2)
@@ -338,7 +362,7 @@ describe("max session end", () => {
       const streams = captureStreams()
       const code = await run(["s-end", "session", "end", ...flags, "--json"], { ...environment, streams })
       const out = streams.stdout.join("")
-      return { code, json: out === "" ? undefined : JSON.parse(out) }
+      return { code, json: out === "" ? undefined : JSON.parse(out).item }
     }
     const logouts = () => max.sent.filter(({ opcode }) => opcode === Opcode.LOGOUT)
     return { store, end, logouts, max }
@@ -348,7 +372,7 @@ describe("max session end", () => {
     const { store, end, logouts } = ending()
     store("s-end").writeToken("a-token")
 
-    expect(await end()).toEqual({ code: 0, json: { profile: "s-end", forgotten: true, revokedOnServer: true } })
+    expect(await end()).toEqual({ code: 0, json: { profile: "s-end", forgotten: true, revoked_on_server: true } })
     expect(logouts().map(({ payload }) => payload)).toEqual([{}])
     expect(store("s-end").readToken()).toBeUndefined()
   })
@@ -365,14 +389,53 @@ describe("max session end", () => {
     const { store, end, logouts } = ending({ loginRefused: "login.token" })
     store("s-end").writeToken("a-token")
 
-    expect((await end()).json).toEqual({ profile: "s-end", forgotten: true, revokedOnServer: true })
+    expect((await end()).json).toEqual({ profile: "s-end", forgotten: true, revoked_on_server: true })
     expect(logouts()).toEqual([])
     expect(store("s-end").readToken()).toBeUndefined()
   })
 
+  it("**refuses while a hand-started serve holds the session**: no logout through it or here, the token kept", async () => {
+    const { store, logouts } = ending()
+    store("s-end").writeToken("a-token")
+    const socket = store("s-end").socketPath()
+    if (process.platform !== "win32") mkdirSync(dirname(socket), { recursive: true })
+    const asked: Record<string, unknown>[] = []
+    const serve = createServer((connection) =>
+      connection.on(
+        "data",
+        lineReader((line) => {
+          const request = fromLine(line)
+          asked.push(request)
+          if (request.stop === true) connection.end(toLine({ id: request.id, stopped: false }))
+        }),
+      ),
+    )
+    await new Promise<void>((resolve) => serve.listen(socket, resolve))
+
+    try {
+      const streams = captureStreams()
+      const code = await run(["s-end", "session", "end", "--json"], {
+        tty: false,
+        store,
+        connection: () => {
+          throw new Error("session end connected while serve held the session")
+        },
+        streams,
+      })
+
+      expect(code).toBe(2)
+      expect(JSON.parse(streams.stderr.join("")).error.message).toContain("`max s-end server stop` first")
+      expect(asked).toEqual([{ id: 1, stop: true }])
+      expect(logouts()).toEqual([])
+      expect(store("s-end").readToken()).toBe("a-token")
+    } finally {
+      await new Promise((resolve) => serve.close(resolve))
+    }
+  })
+
   it("says there was nothing to end, and contacts nobody", async () => {
     const { end, max } = ending()
-    expect((await end()).json).toEqual({ profile: "s-end", forgotten: false, revokedOnServer: false })
+    expect((await end()).json).toEqual({ profile: "s-end", forgotten: false, revoked_on_server: false })
     expect(max.sent).toEqual([])
   })
 })

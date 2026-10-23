@@ -1,29 +1,37 @@
-import type { BotMessenger, GlobalFlags, ResolveOptions, RunBotCommand, Settings } from "@wirecat/cli-messaging/cli"
-import { asFirstWord } from "@wirecat/cli-messaging/cli"
-import { keyForWrite } from "@wirecat/cli-messaging/sends"
+import type { BotMcp, BotMessenger, GlobalFlags, ResolveOptions, RunBotCommand, Settings } from "@wirecat/cli-core/cli"
+import { asFirstWord } from "@wirecat/cli-core/cli"
+import { keyForWrite } from "@wirecat/cli-core/sends"
 import { MAX_APP } from "../app.js"
 import { BOT_ADMIN_RIGHTS, maxBotAdapter } from "../bot/adapter.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { JoinLog } from "../bot/joins.js"
 import { PROVIDER } from "../bot/keep.js"
 import { KINDS } from "../bot/map.js"
-import { MAX_BOT_TOOLS } from "../bot/mcp-tools.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { resolveSettings } from "../config.js"
+import { botCommandKey } from "../permissions.js"
+import type { run } from "../program.js"
 import { readSecret } from "../session/prompt.js"
 import { SKILL } from "../skill.js"
 import { botContext } from "./bot-context.js"
-import { type Environment, environmentOf } from "./context.js"
+import { environmentOf } from "./context.js"
 
 /**
- * max's `run` as the shared bot MCP server calls it. A test adds its keyring and Bot API stand-in as
- * `extra`.
+ * max's `run` as the shared bot MCP server calls it, with the whole environment it is handed. A test adds its
+ * keyring and Bot API stand-in as `extra`.
  */
-export const botMcpRun = async (extra: Environment = {}): Promise<RunBotCommand> => {
-  // Loaded when the server starts: the program imports this file.
-  const { run } = await import("../program.js")
-  return (argv, { streams, tty, answer }) => run(argv, { ...extra, streams, tty, ...(answer ? { answer } : {}) })
-}
+export const botMcpRun =
+  (program: typeof run, extra: Parameters<typeof run>[1] = {}): RunBotCommand =>
+  // An agent's run hears nothing: the recognizer is a test's stand-in, typed differently on each side.
+  (argv, { recognizer: _recognizer, ...environment }) =>
+    program(argv, { ...extra, ...environment })
+
+/** `bot mcp`. The program hands in its own `run`: importing it here would close a loop through the program. */
+export const maxBotMcp = (program: typeof run): BotMcp => ({
+  program: async () => botMcpRun(program),
+  keyOf: botCommandKey,
+  skill: SKILL,
+})
 
 /** What the shared `bot` commands need from max: its settings, its Bot API client and its test seams. */
 export const maxBot: BotMessenger = {
@@ -33,8 +41,8 @@ export const maxBot: BotMessenger = {
   adminRights: BOT_ADMIN_RIGHTS,
   manyWebhooks: true,
   // `bot chats check` reads joins from here: MAX hands each update to one reader only.
-  keepUpdates: (_command, profile, events) => {
-    JoinLog.for(profile).add(
+  keepUpdates: (command, profile, events) => {
+    JoinLog.for(profile, environmentOf(command).env).add(
       events.flatMap((event) =>
         (event.event === "joined" || event.event === "added" || event.event === "left" || event.event === "removed") &&
         event.person
@@ -59,8 +67,8 @@ export const maxBot: BotMessenger = {
     return `${config} permissions.${key} allow`
   },
   chatKindOf: (hit) => KINDS[String(hit.providerMetadata?.chatType)] ?? "unknown",
-  joinsSince: (_command, profile, chatId, since) => {
-    const log = JoinLog.for(profile)
+  joinsSince: (command, profile, chatId, since) => {
+    const log = JoinLog.for(profile, environmentOf(command).env)
     if (!log.kept()) return undefined
     return log
       .read()
@@ -97,14 +105,16 @@ export const maxBot: BotMessenger = {
       ...(context.settings.timeoutMs === undefined ? {} : { timeoutMs: context.settings.timeoutMs }),
     })
   },
-  tokenStore: (command, profile) => environmentOf(command).botStore?.(profile) ?? new BotTokenStore({ profile }),
-  registry: (command, profile) => environmentOf(command).botRegistry?.(profile) ?? new ChatRegistry(profile),
+  tokenStore: (command, profile) => {
+    const { botStore, env, keyring } = environmentOf(command)
+    return (
+      botStore?.(profile) ?? new BotTokenStore({ profile, ...(env ? { env } : {}), ...(keyring ? { keyring } : {}) })
+    )
+  },
+  registry: (command, profile) => {
+    const { botRegistry, env } = environmentOf(command)
+    return botRegistry?.(profile) ?? new ChatRegistry(profile, env)
+  },
   readSecret: (command, prompt) =>
     (environmentOf(command).ask ?? ((text: string) => readSecret(text, { echo: false })))(prompt, { secret: true }),
-  mcp: {
-    // Loaded when the server starts: the program imports this file.
-    program: () => botMcpRun(),
-    tools: MAX_BOT_TOOLS,
-    skill: SKILL,
-  },
 }

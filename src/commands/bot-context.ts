@@ -1,7 +1,7 @@
-import { CliError } from "@wirecat/cli-core"
-import type { ManifestOperation } from "@wirecat/cli-core/codegen"
-import { type EventSink, type Recording, startRecording } from "@wirecat/cli-messaging/cli"
-import { levelFor } from "@wirecat/cli-messaging/sends"
+import { CliError } from "@wirecat/cli-base"
+import type { ManifestOperation } from "@wirecat/cli-base/codegen"
+import { type EventSink, type Recording, startRecording, useAsProcessRun } from "@wirecat/cli-core/cli"
+import { levelFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
@@ -25,7 +25,10 @@ const recordings = new WeakMap<Command, Recording>()
 export const startBotRecording = (command: Command): void => {
   const environment = environmentOf(command)
   // The program's own flags only: `bot api get-updates --limit` is the API's limit, not ours.
-  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>(), { kind: "bot" })
+  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>(), {
+    kind: "bot",
+    env: environment.env ?? process.env,
+  })
   const { streams, format } = resolveOutput({
     ...settings,
     ...(environment.streams ? { streams: environment.streams } : {}),
@@ -33,20 +36,25 @@ export const startBotRecording = (command: Command): void => {
   })
   const words: string[] = []
   for (let at: Command | null = command; at?.parent; at = at.parent) words.unshift(at.name())
-  recordings.set(
-    rootOf(command),
-    startRecording({
-      app: MAX_APP,
-      command: words.join(" "),
-      profile: settings.profile,
-      record: settings.record,
-      keepFailed: settings.keepFailedRuns,
-      trace: settings.trace,
-      format,
-      streams,
-      keepDays: settings.keepRunsForDays,
-    }),
-  )
+  const recording = startRecording({
+    app: MAX_APP,
+    command: words.join(" "),
+    profile: settings.profile,
+    record: settings.record,
+    keepFailed: settings.keepFailedRuns,
+    trace: settings.trace,
+    format,
+    streams,
+    keepDays: settings.keepRunsForDays,
+  })
+  recordings.set(rootOf(command), recording)
+  // A hook cannot wrap the action in inRun, so the answer's meta.run_id would name no recorded run.
+  useAsProcessRun({
+    runId: recording.runId,
+    command: words.join(" "),
+    startedAt: Date.now(),
+    ...(recording.traceId ? { traceId: recording.traceId } : {}),
+  })
 }
 
 export const botRecordingOf = (command: Command): Recording | undefined => recordings.get(rootOf(command))
@@ -54,19 +62,27 @@ export const botRecordingOf = (command: Command): Recording | undefined => recor
 /** `offline` is for the reads the local copy can answer; every other command still refuses the flag. */
 export const botContext = (command: Command, { offline: answersOffline = false }: { offline?: boolean } = {}) => {
   const environment = environmentOf(command)
+  const env = environment.env ?? process.env
   const flags = command.optsWithGlobals<GlobalFlags & { offline?: boolean }>()
   const offline = flags.offline === true
   if (offline && !answersOffline) {
     throw new CliError("validation_error", `--offline reads the local copy; \`${command.name()}\` has to ask MAX`)
   }
   const nativeApi = command.name() === "api" || command.parent?.name() === "api"
-  const settings = resolveSettings(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, { kind: "bot" })
+  const settings = resolveSettings(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, { kind: "bot", env })
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
+    ...(environment.agent ? { capture: environment.agent.result } : {}),
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
-  const store = environment.botStore?.(settings.profile) ?? new BotTokenStore({ profile: settings.profile })
+  const store =
+    environment.botStore?.(settings.profile) ??
+    new BotTokenStore({
+      profile: settings.profile,
+      env,
+      ...(environment.keyring ? { keyring: environment.keyring } : {}),
+    })
   const recording = botRecordingOf(command)
   const timeout = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
   const deadline =
@@ -97,10 +113,11 @@ export const botContext = (command: Command, { offline: answersOffline = false }
     }
     return client(stored.token, stop)
   }
-  const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile)
+  const registry = environment.botRegistry?.(settings.profile) ?? new ChatRegistry(settings.profile, env)
   const uploadFetch = () => environment.botFetch ?? botFetch()
   return {
     askPermission: askerFor(command.optsWithGlobals(), environment),
+    env,
     sleep: environment.sleep,
     /** The run's sink, for the requests that do not go through the transport — the upload. */
     events: recording?.events,
@@ -120,7 +137,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
   }
 }
 
-/** The personal account's `readOnly` and `allow` hold for the bot too; a prompt was waived (`NEED-304`), a refusal was not. */
+/** The profile's levels hold for the bot too; a prompt was waived (`NEED-304`), a refusal was not. */
 export const assertAllowed = (operation: ManifestOperation, settings: Settings): void => {
   const key = BOT_KEYS[operation.id]
   if (!key) throw new CliError("configuration_error", `unmapped Bot API permission: ${operation.id}`)

@@ -1,5 +1,5 @@
 import { setTimeout as delay } from "node:timers/promises"
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { WireClient } from "../generated/client.generated.js"
 import type { Payload } from "../protocol/frame.js"
 
@@ -10,7 +10,7 @@ export interface SecondFactor {
 
 export interface QrLogin extends SecondFactor {
   /** Put the code where a phone can scan it. Resolves once it is shown, not once it is scanned. */
-  show: (link: string) => Promise<void>
+  show: (link: string, expiresAt: number) => Promise<void>
   now?: () => number
   sleep?: (ms: number) => Promise<void>
 }
@@ -31,7 +31,7 @@ export const tokenByQr = async (
   const expiresAt = typeof code.expiresAt === "number" ? code.expiresAt : now() + 120_000
   const interval = typeof code.pollingInterval === "number" ? code.pollingInterval : 5_000
 
-  await show(text(code.qrLink, "qrLink"))
+  await show(text(code.qrLink, "qrLink"), expiresAt)
 
   while (now() < expiresAt) {
     const answer = await wire.login.qrStatus({ trackId })

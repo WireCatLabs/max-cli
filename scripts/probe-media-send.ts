@@ -28,7 +28,6 @@ const client = new MaxClient({
   store,
   connection: new Connection({ timeoutMs: 20_000 }),
   timeoutMs: 20_000,
-  sends: "caller",
 })
 const pause = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 const reason = (error: unknown) =>

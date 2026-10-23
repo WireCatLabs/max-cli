@@ -1,10 +1,10 @@
 /**
  * max-cli's side of the release checks: its changelog headings, its pages, what its package may
  * ship, and the one check that belongs to MAX alone. The checks themselves are
- * `@wirecat/cli-core/release`; `scripts/release-check.ts` and `pnpm docs:check` (`cli-dev docs-check --rules`) run them.
+ * `@wirecat/cli-base/release`; `scripts/release-check.ts` and `pnpm docs:check` (`cli-dev docs-check --rules`) run them.
  */
 import { join } from "node:path"
-import { type ChangelogRules, type DocsRules, JOURNAL_IDS, markdownFiles } from "@wirecat/cli-core/release"
+import { type ChangelogRules, type DocsRules, JOURNAL_IDS, markdownFiles } from "@wirecat/cli-base/release"
 
 const IDS = [...JOURNAL_IDS, "CLI", "MAX", "OPS", "CORE", "SPEC", "DOC", "PROTO", "RES"]
 
@@ -14,17 +14,20 @@ export const CHANGELOG: ChangelogRules = {
   ids: IDS,
 }
 
-// The agent skill ships because `max skill show` reads it from the package (`src/commands/skill.ts`).
+// The agent skill ships because `max skill show` reads it from the package (`src/commands/skill.ts`); the scenarios
+// because `max guide` reads them from it.
 export const PACKED = [
   "dist/",
   "package.json",
   "README.md",
   "LICENSE",
   "skills/max-cli/SKILL.md",
+  "scenarios/",
   "install/postinstall.mjs",
   "install/windows.ps1",
 ]
-export const PACKED_SAID = "dist/, package.json, README.md, LICENSE, the agent skill and installation entrypoints"
+export const PACKED_SAID =
+  "dist/, package.json, README.md, LICENSE, the agent skill, the scenarios and installation entrypoints"
 
 const GENERATED = new Set(["docs/commands.md", "docs/dev/protocol.md"])
 

@@ -9,19 +9,17 @@ it("keeps MAX extension values and sources at their personal/profile/default sco
   writeFileSync(
     join(configDir, "config.json"),
     JSON.stringify({
-      defaults: { serve: false, mcpTools: ["contacts"], transcribeModel: "gigaam-v3" },
-      profiles: { work: { serve: true, mcpTools: ["groups"] } },
-      personal: { defaults: { serve: false }, profiles: { work: { serve: false, mcpTools: ["profile"] } } },
+      defaults: { serve: false, transcribe_model: "gigaam-v3" },
+      profiles: { work: { serve: true } },
+      personal: { defaults: { serve: false }, profiles: { work: { serve: false } } },
     }),
   )
   const personal = resolveSettings({ profile: "work" }, { env: {}, configDir })
   expect(personal).toMatchObject({
     serve: false,
-    mcpTools: ["profile"],
     transcribeModel: "gigaam-v3",
     sources: {
       serve: "config file: personal.profiles.work",
-      mcpTools: "config file: personal.profiles.work",
       transcribeModel: "config file: defaults",
     },
   })
@@ -31,8 +29,7 @@ it("keeps MAX extension values and sources at their personal/profile/default sco
   })
   expect(resolveSettings({ profile: "work" }, { env: {}, configDir, kind: "bot" })).toMatchObject({
     serve: true,
-    mcpTools: ["groups"],
-    sources: { serve: "config file: profiles.work", mcpTools: "config file: profiles.work" },
+    sources: { serve: "config file: profiles.work" },
   })
   expect(personal).not.toHaveProperty("configured")
   expect(personal).not.toHaveProperty("shared")

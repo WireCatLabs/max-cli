@@ -1,16 +1,23 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import { timezoneOf } from "@wirecat/cli-base/query"
+import { type MessageHit, renderMessages } from "@wirecat/cli-core"
+import { messageItem, REMOTE_READ, snakeKeys } from "@wirecat/cli-core/cli"
+import type { AccountKey } from "@wirecat/cli-core/store"
 import { Command } from "commander"
-import type { MessageChange, MessageHit } from "../domain/models.js"
-import { renderMessages } from "../rendering/messages.js"
+import { MAX_APP } from "../app.js"
+import { shownTime } from "../output.js"
 import type { ServerEvent } from "../server/server.js"
 import { ensureServer } from "../server/start.js"
 import { subscribe } from "../server/subscribe.js"
 import { forCommand } from "./context.js"
 
+type MessageChange = Extract<ServerEvent, { event: "change" }>["change"]
+
 /**
  * `max watch` — new messages as they arrive, from a running `max serve`, until Ctrl-C.
  *
- * `--jsonl` gives one message per line in the shape `messages list` uses, which is what a script,
+ * `--jsonl` gives one message per line in the shape `messages list` answers (`messageItem`), which is what a script,
  * an n8n node or an agent reads. It never marks anything read: the server only listens.
  *
  * `--events` adds edits, deletions and reactions (`MAX-34`), reads and chat changes (`MAX-67`), and then
@@ -19,7 +26,7 @@ import { forCommand } from "./context.js"
  * are bare messages, never meets a line of another shape.
  */
 export const watchCommand = (): Command =>
-  new Command("watch")
+  annotate(new Command("watch"), { effects: REMOTE_READ, lifetime: "persistent" })
     .description("print new messages as they arrive, from a running `max serve`")
     .option(
       "--events",
@@ -32,6 +39,8 @@ export const watchCommand = (): Command =>
       const end = () => stop.abort()
       process.once("SIGINT", end)
       process.once("SIGTERM", end)
+      const zone = timezoneOf()
+      if (format === "pretty") renderer.note(`times in ${zone}`)
 
       const render = (message: MessageHit) =>
         renderMessages([message], {
@@ -40,8 +49,12 @@ export const watchCommand = (): Command =>
           verbosity: settings.detail,
           width: process.stdout.columns ?? 80,
           profile: settings.profile,
+          provider: "max",
+          locale: MAX_APP.locale,
+          timeZone: zone,
         })
       let seen = false
+      let reader: AccountKey | undefined
       await run("watch", async () => {
         try {
           const listen = () =>
@@ -60,10 +73,13 @@ export const watchCommand = (): Command =>
                   )
                   seen ||= event.connected
                 } else {
+                  reader ??= readerOf(store.viewerId())
                   const line = watchLine(event, {
                     events: options.events === true,
                     pretty: format === "pretty",
                     render,
+                    reader,
+                    zone,
                   })
                   if (line !== undefined) streams.data(line)
                 }
@@ -93,22 +109,40 @@ export const watchCommand = (): Command =>
  */
 export const watchLine = (
   event: Exclude<ServerEvent, { event: "status" }>,
-  { events, pretty, render }: { events: boolean; pretty: boolean; render: (message: MessageHit) => string },
+  {
+    events,
+    pretty,
+    render,
+    reader,
+    zone,
+  }: { events: boolean; pretty: boolean; render: (message: MessageHit) => string; reader: AccountKey; zone: string },
 ): string | undefined => {
+  const item = (message: MessageHit) => messageItem(message, reader)
   if (event.event === "change") {
     if (!events) return undefined
-    return pretty ? describeChange(event.change, render) : JSON.stringify(event.change)
+    if (pretty) return describeChange(event.change, render, zone)
+    const { change } = event
+    return JSON.stringify(
+      change.event === "edit" ? { event: "edit", message: item(change.message) } : snakeKeys(change),
+    )
   }
   if (pretty) return render(event.message)
-  return JSON.stringify(events ? { event: "message", message: event.message } : event.message)
+  return JSON.stringify(events ? { event: "message", message: item(event.message) } : item(event.message))
 }
 
-const describeChange = (change: MessageChange, render: (message: MessageHit) => string): string => {
+/** A message's `ref` names the account that read it; `max serve` saved it when it logged in. */
+const readerOf = (viewerId: string | undefined): AccountKey => {
+  if (viewerId === undefined)
+    throw new CliError("authentication_error", "this profile has not logged in yet — `max session start`")
+  return { provider: "max", account: viewerId }
+}
+
+const describeChange = (change: MessageChange, render: (message: MessageHit) => string, zone: string): string => {
   if (change.event === "edit") return `edited:\n${render(change.message)}`
   if (change.event === "chat") return `chat changed: ${change.chat.title ?? change.chat.id}\n`
   const where = change.chatTitle ?? change.chatId
   if (change.event === "read") {
-    return `read in ${where} by ${change.userId}${change.upToTime ? ` up to ${change.upToTime}` : ""}\n`
+    return `read in ${where} by ${change.userId}${change.upToTime ? ` up to ${shownTime(change.upToTime, zone)}` : ""}\n`
   }
   if (change.event === "delete") return `deleted in ${where}: message ${change.messageId}\n`
   const counts = change.reactions.counts.map(({ reaction, count }) => `${reaction} ${count}`).join(", ")

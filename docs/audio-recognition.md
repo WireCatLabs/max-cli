@@ -17,18 +17,18 @@
 
 | Задача | Команда |
 | --- | --- |
-| Посмотреть модели, их размер и что уже скачано | `max models audio list` |
-| Скачать модель | `max models audio download <модель>` |
-| Расшифровать одно голосовое | `max messages transcribe <чат> <сообщение>` |
+| Посмотреть модели, их размер и что уже скачано | `max personal models audio list` |
+| Скачать модель | `max personal models audio download <модель>` |
+| Расшифровать одно голосовое | `max personal messages transcribe <чат> <сообщение>` |
 | Расшифровать голосовые в показанном списке | `--transcribe` у `messages list` и `inbox` |
-| Выбрать модель для всех следующих запусков | `max config set --defaults transcribeModel <модель>` |
+| Выбрать модель для всех следующих запусков | `max config set --defaults transcribe_model <модель>` |
 
 ## Быстрый запуск
 
 ```sh
-max models audio list --json
-max models audio download gigaam-v3
-max messages transcribe "Учебная группа" 204 --json
+max personal models audio list --json
+max personal models audio download gigaam-v3
+max personal messages transcribe "Учебная группа" 204 --json
 ```
 
 `max` получает запись из MAX, закрывает соединение и только потом запускает модель.
@@ -47,14 +47,14 @@ max messages transcribe "Учебная группа" 204 --json
 знает язык записи. Для одного запуска:
 
 ```sh
-max models audio download parakeet-v3
-max messages transcribe "Учебная группа" 204 --model parakeet-v3 --json
+max personal models audio download parakeet-v3
+max personal messages transcribe "Учебная группа" 204 --model parakeet-v3 --json
 ```
 
 Для всех следующих запусков:
 
 ```sh
-max config set --defaults transcribeModel parakeet-v3
+max config set --defaults transcribe_model parakeet-v3
 ```
 
 Не путайте группы команд. `models audio` — модели речи. `models text` — модели для поиска и
@@ -63,8 +63,8 @@ max config set --defaults transcribeModel parakeet-v3
 ## Несколько сообщений
 
 ```sh
-max messages list "Учебная группа" --limit 20 --transcribe --json
-max inbox --transcribe --json
+max personal messages list "Учебная группа" --limit 20 --transcribe --json
+max personal inbox --transcribe --json
 ```
 
 `--transcribe` обрабатывает только голосовые из показанного списка, у которых ещё нет текста.
@@ -74,7 +74,7 @@ max inbox --transcribe --json
 Текст сохраняется под вашим аккаунтом в общей локальной копии сообщений. Его видят просмотр
 сообщений, входящие, обзор и MCP-сервер. Если то же сообщение уже расшифровано той же моделью,
 `max` может вернуть сохранённый текст. В JSON текст лежит в поле `transcript`. Записи, которые
-не удалось распознать, перечислены в `unheard`, а причина печатается в stderr.
+не удалось распознать, и причина названы в `missing`.
 
 ## Форматы и ограничения
 
@@ -86,7 +86,7 @@ max inbox --transcribe --json
 Локальная расшифровка принимает полную запись Ogg Opus с одним или двумя каналами без
 10-минутного предела. Длинные записи требуют больше памяти и времени обработки.
 
-Модели лежат в одной папке для MAX и Telegram; `CLI_COMMON_CACHE_DIR` меняет эту папку.
+Модели лежат в одной папке для MAX и Telegram; `WIRECAT_STATE_DIR` меняет эту папку.
 Скачанной модели нужно место на диске, распознаванию — память и время процессора. Скорость
 зависит от длины записи, модели и компьютера.
 

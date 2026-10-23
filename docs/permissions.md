@@ -53,7 +53,7 @@ max work config set permissions.messages readonly
 
 ```sh
 max support config set permissions.bot.messages.send ask --bot
-max support config set sendsPerHour 30 --bot
+max support config set sends_per_hour 30 --bot
 ```
 
 ## Ограничить получателей и повторные отправки
@@ -64,8 +64,9 @@ max support config set sendsPerHour 30 --bot
 
 ## Временно изменить права MCP-сервера
 
-Добавьте `--permission messages.send=allow` к запуску сервера, чтобы разрешить отправку
-этому процессу. Сохранённые настройки не меняются. Через MCP уровень `ask` не требует формы сервера:
+Добавьте `--permission messages.send=deny` к запуску сервера, чтобы запретить отправку
+этому процессу. Сохранённые настройки не меняются. Флаг только ужесточает права: сервер с
+переопределением, которое ослабило бы уровень профиля, не запустится. Через MCP уровень `ask` не требует формы сервера:
 приложение управляет своими подтверждениями и может разрешить вызов без нового вопроса.
 Чтобы запретить изменения, используйте `deny` или `readonly`.
 [Настройка браузера](remote.md) объясняет подключение целиком.

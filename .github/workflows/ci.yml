@@ -6,6 +6,9 @@ on:
       pack:
         type: boolean
         default: false
+      skip-platforms:
+        type: boolean
+        default: false
     outputs:
       package-sha256:
         value: ${{ jobs.ci.outputs.package-sha256 }}
@@ -16,29 +19,33 @@ permissions:
 
 jobs:
   ci:
-    uses: WireCatLabs/cli-core/.github/workflows/node-ci.yml@4c78a803c460317fd40a38be6d1fb53278087741
+    uses: WireCatLabs/cli-base/.github/workflows/node-ci.yml@3c1ec927befbf4c19844ece6430cce7a0bd3790a # v0.48.0
     with:
       pack: ${{ inputs.pack || false }}
       pack-checks: node --experimental-strip-types scripts/release-check.ts --artifact-only
       # Bun is a supported runtime, not an aspiration (NEED-11): the built command, executed under it.
       bun-run: pnpm build && pnpm smoke:bun
-      # `max --version` reads src/version.ts, not package.json (OPS-4). Generated files are committed,
-      # so a specification change that was not regenerated is a stale tree (OPS-3). The test matrix
-      # is rebuilt from this run's argv log, so the diff also catches a stale test-matrix.md (NEED-360).
+      # `max --version` reads src/version.ts, not package.json (OPS-4). Generated files are committed, so a
+      # specification change that was not regenerated is a stale tree (OPS-3); so is a stale test-matrix.md (NEED-360).
+      cli: true
+      parity: true
+      bin: max
+      platforms: ${{ !inputs.skip-platforms }}
+      # Commands that need no login and reach no network.
+      platform-run: |
+        node dist/bin/max.js upgrade --check --json
+        node dist/bin/max.js default doctor --json
+        node dist/bin/max.js default mcp config --json
       checks: |
-        pnpm version:check
-        pnpm generate
-        pnpm exec cli-dev test-matrix --program dist/program.js --untested scripts/test-matrix-untested.ts --name max --check
-        git diff --exit-code
         pnpm check:agent-docs
-        pnpm docs:check
-        pnpm parity:check
 
   version:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       # A warning, never a failure: bin/release takes the next free version itself (2026-09-29).
       - name: version above main and npm
         continue-on-error: true
@@ -60,6 +67,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -78,8 +87,6 @@ jobs:
           # request, and the job never fails.
           ./vale --output line README.md docs/*.md | sed 's/^/::warning::/' || true
 
-  windows:
-    uses: ./.github/workflows/windows.yml
-
   install_windows:
+    if: ${{ !inputs.skip-platforms }}
     uses: ./.github/workflows/install-windows.yml

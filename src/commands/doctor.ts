@@ -1,7 +1,18 @@
 import { resolve } from "node:path"
-import { CliError, type Renderer, type RenderFormat, type Streams, writeSecurely } from "@wirecat/cli-core"
-import { runsDirFor } from "@wirecat/cli-messaging/cli"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { CliError, writeSecurely } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import {
+  type AnswerOutput,
+  destroysNothing,
+  itemOf,
+  LOCAL_WRITE,
+  outputFor,
+  REMOTE_READ,
+  renderAnswer,
+  runsDirFor,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
@@ -9,6 +20,7 @@ import { BotApiClient } from "../bot/client.js"
 import { type Diagnosis, diagnose } from "../diagnose.js"
 import { ownScript } from "../install.js"
 import { type Check, checkOnline, mcpHandshake } from "../online.js"
+import { shownTime } from "../output.js"
 import { asFirstWord } from "../profile.js"
 import { buildReport, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
 import { sendsPathFor } from "../sends.js"
@@ -31,13 +43,21 @@ import { environmentOf, forCommand } from "./context.js"
  * configured, this one reads what exists.
  */
 export const doctorCommand = (): Command => {
-  const command = new Command("doctor")
+  const command = annotate(new Command("doctor"), { effects: REMOTE_READ })
     .description("the state this installation is in, without contacting MAX unless --online")
     .option("--online", "also log in once, read one chat and start the MCP server; sends nothing")
 
   command.action(async function (this: Command) {
     const { online } = this.opts<{ online?: boolean }>()
-    const { renderer, settings, format, run, store, createClient } = forCommand(this)
+    let context: ReturnType<typeof forCommand>
+    try {
+      context = forCommand(this)
+    } catch (error) {
+      if (!(error instanceof CliError) || error.code !== "configuration_error") throw error
+      renderAnswer(this, outputFor(this), itemOf({ config: { error: error.message } }))
+      return
+    }
+    const { renderer, settings, format, streams, run, store, createClient } = context
     const botStore = botStoreFor(this)
 
     await run("doctor", async (events) => {
@@ -55,11 +75,14 @@ export const doctorCommand = (): Command => {
       const bot = online && report.bot.token.present ? [await checkBot(this, botStore(settings.profile))] : []
       const checks = online ? [...personal, ...bot] : undefined
 
-      renderer.result(
-        format === "pretty"
-          ? { ...forPerson(report, settings.profile), ...(checks ? checksForPerson(checks) : {}) }
-          : { ...report, ...(checks ? { online: checks } : {}) },
-      )
+      if (format === "pretty")
+        renderer.result({ ...forPerson(report, settings.profile), ...(checks ? checksForPerson(checks) : {}) })
+      else
+        renderAnswer(
+          this,
+          { renderer, format, streams },
+          itemOf(snakeKeys({ ...report, ...(checks ? { online: checks } : {}) })),
+        )
 
       installNotes(report, renderer.note.bind(renderer))
       // ⚠ Said whenever the environment moved the keyring, because this is the one failure with no
@@ -85,15 +108,10 @@ export const doctorCommand = (): Command => {
           `the message store needs a newer max (schema ${report.store.schema}, this one speaks ${report.store.speaks})`,
         )
       }
-      if (report.legacyCache.exists) {
-        renderer.note(
-          `the old local copy ${report.legacyCache.file} is no longer used by shared reads — you can remove it; use \`max store fetch\` to fetch history again`,
-        )
-      }
 
       if (report.session.loginPausedUntil) {
         renderer.note(
-          `MAX refused the last login for too many attempts — no login before ${report.session.loginPausedUntil}; wait`,
+          `MAX refused the last login for too many attempts — no login before ${shownTime(report.session.loginPausedUntil)}; wait`,
         )
       }
 
@@ -112,7 +130,7 @@ export const doctorCommand = (): Command => {
         renderer.note(`this profile was a bot, and its token is gone — \`max ${words}bot auth set\` stores one`)
       } else if (!report.token.present) {
         renderer.note(
-          `no token for this profile — \`max ${words}session start\` for a personal account, ` +
+          `no token for this profile — \`max ${words}setup\` for a personal account, ` +
             `\`max ${words}bot auth set\` for a bot`,
         )
       }
@@ -194,30 +212,44 @@ const EXCLUDES = ["текстов сообщений", "названий чат�
  * steps (`NEED-267`).
  */
 const reportCommand = (): Command => {
-  const report = new Command("report").description("what a problem report holds and where it goes; writes nothing")
+  const report = annotate(new Command("report"), { effects: REMOTE_READ }).description(
+    "what a problem report holds and where it goes; writes nothing",
+  )
 
   report.action(async function (this: Command) {
     const { renderer, format, streams, run } = forCommand(this)
-    await run("doctor report", async () => explain(renderer, format, streams))
+    await run("doctor report", async () => explain(this, { renderer, format, streams }))
   })
 
-  report
-    .command("create")
+  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE, mcp: false }))
     .description("write a problem report to a file, and print how to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
     .option("--output <file>", "where to write it; a new file in this directory if not given")
     .action(async function (this: Command) {
       const options = this.opts<{ run?: string; output?: string }>()
-      const { renderer, settings, format, streams, run, store } = forCommand(this)
+      let context: ReturnType<typeof forCommand> | undefined
+      let configError = ""
+      try {
+        context = forCommand(this)
+      } catch (error) {
+        if (!(error instanceof CliError) || error.code !== "configuration_error") throw error
+        configError = error.message
+      }
+      const { renderer, format, streams } = context ?? outputFor(this)
 
-      await run("doctor report create", async () => {
+      const create = async () => {
         const now = new Date()
+        const profile = context
+          ? {
+              profile: context.settings.profile,
+              doctor: await diagnoseProfile(context.settings, context.store, botStoreFor(this), sessionStoreFor(this)),
+              sends: new SendJournal(sendsPathFor(context.settings.profile)).entries(),
+            }
+          : { profile: null, doctor: { config: { error: configError } }, sends: [] }
         const built = buildReport({
-          profile: settings.profile,
-          doctor: await diagnoseProfile(settings, store, botStoreFor(this), sessionStoreFor(this)),
+          ...profile,
           runsDir: runsDirFor(MAX_APP),
           ...(options.run === undefined ? {} : { runId: options.run }),
-          sends: new SendJournal(sendsPathFor(settings.profile)).entries(),
           now,
         })
         const path = resolve(options.output ?? reportFileName(now))
@@ -235,7 +267,11 @@ const reportCommand = (): Command => {
           : "Неудачных запусков не записано. Если проблема повторяется, повторите команду, которая не работает, и создайте отчёт снова: неудачный запуск сохранится сам."
 
         if (format !== "pretty") {
-          renderer.result({ path, sendTo: REPORT_URL, issue, run: built.run?.metadata.runId ?? null, steps })
+          renderAnswer(
+            this,
+            { renderer, format, streams },
+            itemOf({ path, send_to: REPORT_URL, issue, run: built.run?.metadata.runId ?? null, steps }),
+          )
           if (noRun) renderer.note(noRun)
           return
         }
@@ -253,20 +289,21 @@ const reportCommand = (): Command => {
             "сообщений — метки.",
           ].join("\n"),
         )
-      })
+      }
+      await (context ? context.run("doctor report create", create) : create())
     })
 
   return report
 }
 
-const explain = (renderer: Renderer, format: RenderFormat, streams: Streams): void => {
+const explain = (command: Command, output: AnswerOutput): void => {
+  const { format, streams } = output
   if (format !== "pretty") {
-    renderer.result({
-      sendTo: REPORT_URL,
-      includes: INCLUDES,
-      excludes: EXCLUDES,
-      create: "max doctor report create",
-    })
+    renderAnswer(
+      command,
+      output,
+      itemOf({ send_to: REPORT_URL, includes: INCLUDES, excludes: EXCLUDES, create: "max doctor report create" }),
+    )
     return
   }
   streams.data(
@@ -340,10 +377,10 @@ const forPerson = (report: Diagnosis, profile: string) => ({
     ? `${report.keyring.service} (moved by the environment)`
     : report.keyring.service,
   "logged in": report.session.exists
-    ? `${report.session.logins ?? 0} time(s)${report.session.lastLoginAt ? `, last ${report.session.lastLoginAt}` : ""}`
+    ? `${report.session.logins ?? 0} time(s)${report.session.lastLoginAt ? `, last ${shownTime(report.session.lastLoginAt)}` : ""}`
     : "never on this machine",
   "account known": report.session.viewerId,
-  ...(report.session.loginPausedUntil ? { "login paused until": report.session.loginPausedUntil } : {}),
+  ...(report.session.loginPausedUntil ? { "login paused until": shownTime(report.session.loginPausedUntil) } : {}),
   "presents as": `web client ${report.client.appVersion}, ${report.client.chrome}, read ${report.client.readOn} (${report.client.ageDays} days ago)`,
   "bot token": report.bot.token.present ? `yes, from ${BOT_TOKEN_FROM[report.bot.token.from]}` : "none",
   ...(report.bot.registry.exists ? { "bot chats seen": `${report.bot.registry.chats}` } : {}),

@@ -1,12 +1,13 @@
-import { CliError } from "@wirecat/cli-core"
-import { annotate } from "@wirecat/cli-core/commands"
+import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import { itemOf, listOf, REMOTE_READ, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
 import type { Command } from "commander"
 import { checkBody } from "../bot/input.js"
 import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { chatIdOf } from "./bot-reads.js"
 import { guardedCall, operation } from "./bot-sends.js"
-import { renderList, wholeNumber } from "./paging.js"
+import { wholeNumber } from "./paging.js"
 
 const USER_ID = /^\d+$/
 
@@ -24,46 +25,66 @@ export const userIdsJson = (ids: readonly string[]): string => {
 /** A friendly command's body meets the same schema check as one given to `max bot api`. */
 export const checked = (id: string, text: string): string => checkBody(operation(id), text) ?? text
 
+/** The Bot API's `UserIdsList` takes `maxItems: 100` (spec/bot/schema.yaml). */
+const ADD_AT_ONCE = 100
+
 const limitOf = (limit: number): string => {
   if (limit > 100) throw new CliError("validation_error", "MAX gives at most 100 at a time — --limit 100")
   return String(limit)
 }
 
-/** The Bot API's page of members, in our envelope with string ids (`NEED-358`); `marker` asks for the next. */
-const showMembers = (context: ReturnType<typeof botContext>, answer: unknown): void => {
+/** The Bot API's page of members, in our envelope with string ids (`NEED-358`); its `marker` is the next `--cursor`. */
+const showMembers = (command: Command, context: ReturnType<typeof botContext>, chat: string, answer: unknown): void => {
   const { members, marker } = plainJson(answer) as { members?: Record<string, unknown>[]; marker?: unknown }
   const items = (members ?? []).map((member) => ({ ...member, user_id: String(member.user_id) }))
-  renderList(context.renderer, context.format, items, { marker: marker ?? null, hasMore: marker != null })
+  renderAnswer(
+    command,
+    context,
+    listOf("bot chats members list", {
+      items,
+      limit: context.settings.limit,
+      has_more: marker != null,
+      paging: "cursor",
+      ...(marker == null ? {} : { cursor: String(marker) }),
+      args: { chat },
+    }),
+  )
 }
 
 /**
  * `members list` and `add`, which only MAX's Bot API has, on the shared `bot chats members` group —
- * `remove` comes from cli-messaging with the admins.
+ * `remove` comes from cli-core with the admins.
  */
 export const addMembersCommands = (members: Command): void => {
-  members
-    .command("list <chat>")
-    .description("members of a chat, a page at a time — --marker takes the `marker` the last page gave")
+  annotate(members.command("list <chat>"), { effects: REMOTE_READ, offline: false })
+    .description("members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page gave")
     .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
-    .option("--marker <marker>", "continue from here")
+    .option("--cursor <cursor>", "continue from here")
     .action(async function (this: Command, chat: string) {
       const context = botContext(this)
-      const marker = this.opts<{ marker?: string }>().marker
+      const cursor = this.opts<{ cursor?: string }>().cursor
       const answer = await context.authenticated().call(operation("getMembers"), {
         path: { chatId: chatIdOf(chat, context.registry) },
-        query: { count: limitOf(context.settings.limit), ...(marker ? { marker } : {}) },
+        query: { count: limitOf(context.settings.limit), ...(cursor ? { marker: cursor } : {}) },
       })
-      showMembers(context, answer)
+      showMembers(this, context, chat, answer)
     })
 
-  annotate(members.command("add <chat> <users...>"), { mutates: true })
-    .description("add people to a chat by user id; the bot must be an admin that may add members")
+  annotate(members.command("add <chat> <users...>"), { effects: REMOTE_WRITE })
+    .description(
+      `add people to a chat by user id, at most ${ADD_AT_ONCE}; the bot must be an admin that may add members`,
+    )
     .action(async function (this: Command, chat: string, users: string[]) {
+      if (users.length > ADD_AT_ONCE)
+        throw new CliError(
+          "validation_error",
+          `MAX adds at most ${ADD_AT_ONCE} people at a time, got ${users.length} — split them into several runs`,
+        )
       const context = botContext(this)
       const answer = await guardedCall(context, operation("addMembers"), {
         path: { chatId: chatIdOf(chat, context.registry) },
         body: checked("addMembers", `{"user_ids": ${userIdsJson(users)}}`),
       })
-      context.renderer.result(plainJson(answer) ?? { success: true })
+      renderAnswer(this, context, itemOf(plainJson(answer) ?? { success: true }))
     })
 }

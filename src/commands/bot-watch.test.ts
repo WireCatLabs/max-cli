@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { JoinLog } from "../bot/joins.js"
@@ -184,6 +184,14 @@ describe("max bot watch", () => {
     ])
   })
 
+  it("refuses an insecure webhook URL and a port without a URL before polling", async () => {
+    const insecure = await max(["bot", "watch", "--jsonl", "--public-url", "http://synthetic.example.invalid"])
+    const portOnly = await max(["bot", "watch", "--jsonl", "--port", "8766"])
+    expect([insecure.code, portOnly.code]).toEqual([2, 2])
+    expect(insecure.stderr).toContain("--public-url must be https")
+    expect(polls).toEqual([])
+  })
+
   it("refuses while a webhook is set, before asking for any update", async () => {
     webhook = true
     const { code, stderr } = await max(["bot", "watch", "--jsonl"])
@@ -193,12 +201,12 @@ describe("max bot watch", () => {
   })
 
   it("**watches on a read-only profile**: taking updates is a read", async () => {
-    await max(["config", "set", "readOnly", "true"])
+    await max(["config", "set", "permissions.bot", "readonly"])
     try {
       expect((await max(["bot", "watch", "--jsonl"])).code).toBe(0)
       expect(polls).toHaveLength(1)
     } finally {
-      await max(["config", "set", "readOnly", "false"])
+      await max(["config", "unset", "permissions.bot"])
     }
   })
 })

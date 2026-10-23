@@ -1,27 +1,32 @@
 import { readFileSync } from "node:fs"
-import { mkdir, mkdtemp, symlink, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, symlink, truncate, writeFile } from "node:fs/promises"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { refusedPlace } from "@wirecat/cli-core/sends"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { MAX_APP } from "./app.js"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
+import { openUpload } from "./upload.js"
 
 let server: Server
 let origin: string
 let directory: string
 const ranges: Record<string, string | undefined> = {}
+const lengths: Record<string, string | undefined> = {}
 
 beforeAll(async () => {
   server = createServer((request, response) => {
     request.resume()
     request.on("end", () => {
       ranges[request.url ?? ""] = request.headers["content-range"]
+      lengths[request.url ?? ""] = request.headers["content-length"]
       if (request.url === "/broken") return response.writeHead(500).end()
       if (request.url === "/photo") return response.end(JSON.stringify({ photos: { a: { token: "photo-token" } } }))
       if (request.url === "/voice") return response.end("{}")
@@ -86,7 +91,6 @@ const sendDirect = async (text: string, options: Parameters<MaxClient["messages"
   const store = new SessionStore({ profile: "upload-direct", keyring: memoryKeyring() })
   store.writeToken("a-token")
   const client = new MaxClient({
-    sends: "caller",
     store,
     connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     warn: () => {},
@@ -212,7 +216,8 @@ describe("sending a video and a voice message", () => {
     const attach = (sends.at(-1) as Sent).message.attaches[0]
     expect(attach).toMatchObject({ _type: "VIDEO", token: "media-token", videoType: 0 })
     expect(String(attach?.videoId)).toBe("77")
-    expect(ranges["/video"]).toMatch(/^bytes 0-\d+\/\d+$/)
+    expect(ranges["/video"]).toBe("bytes 0-17/18")
+    expect(lengths["/video"]).toBe("18")
   })
 
   it("sends a video as a plain file with --as-file", async () => {
@@ -317,6 +322,14 @@ describe("sending files", () => {
     expect(code).toBe(0)
   })
 
+  it("**refuses a git credential file handed to the client by path**, before uploading anything", async () => {
+    await writeFile(join(directory, ".git-credentials"), "https://user:synthetic@example.invalid")
+
+    const { error, sends } = await sendDirect("", { files: [join(directory, ".git-credentials")] })
+    expect(sends).toEqual([])
+    expect(error?.message).toContain("--allow-any-file")
+  })
+
   // Windows needs a privilege to make a link.
   it.skipIf(process.platform === "win32")("refuses a link that points into a hidden folder", async () => {
     await mkdir(join(directory, ".ssh"), { recursive: true })
@@ -334,5 +347,64 @@ describe("sending files", () => {
     expect(code).not.toBe(0)
     expect(sends).toEqual([])
     expect(stderr).toContain("no such file")
+  })
+
+  // Windows would write the 2 GiB out; elsewhere the file is sparse.
+  it.skipIf(process.platform === "win32")("opens a file of 2 GiB without reading it into memory", async () => {
+    const path = join(directory, "huge.bin")
+    await writeFile(path, "")
+    await truncate(path, 2 ** 31)
+
+    expect((await openUpload(path)).size).toBe(2 ** 31)
+  })
+})
+
+describe("which places a file is refused from", () => {
+  const home = "/home/alice"
+  const env = { HOME: home, MESSAGING_STORE: "/home/alice/wirecat.db" }
+
+  it.each([
+    ".netrc",
+    "_netrc",
+    ".git-credentials",
+    ".config/git/credentials",
+    ".config/gh/hosts.yml",
+    ".docker/config.json",
+    ".kube/config",
+    ".config/gcloud/credentials.db",
+    ".aws/credentials",
+    ".azure/msal_token_cache.json",
+    ".claude/.credentials.json",
+    ".codex/auth.json",
+    ".npmrc",
+    ".pypirc",
+    ".env.local",
+    ".local/share/keyrings/login.keyring",
+    ".mozilla/firefox/default/cookies.sqlite",
+    ".config/google-chrome/Default/Cookies",
+    ".local/share/tg-cli/sessions/main.session",
+    ".config/drive-cli/credentials.json",
+    ".local/share/WireCat/backups/wirecat.db",
+    "wirecat.db-wal",
+  ])("~/%s", (place) => {
+    expect(refusedPlace(join(home, place), MAX_APP, env, "linux")).toBe(true)
+  })
+
+  it.each([
+    "Projects/app/.worktrees/fix/notes.txt",
+    ".cache/report.pdf",
+    ".config/other/settings.json",
+    ".docker/notes.txt",
+    "Downloads/config.json",
+    "Pictures/Chrome/screen.png",
+  ])("not ~/%s", (place) => {
+    expect(refusedPlace(join(home, place), MAX_APP, env, "linux")).toBe(false)
+  })
+
+  it("**ignores case where the file system does**: macOS and Windows, not Linux", () => {
+    for (const place of [".SSH/id_rsa", ".Config/GH/hosts.yml", "Library/keychains/login.keychain-db"]) {
+      expect(refusedPlace(join(home, place), MAX_APP, env, "darwin")).toBe(true)
+      expect(refusedPlace(join(home, place), MAX_APP, env, "linux")).toBe(false)
+    }
   })
 })

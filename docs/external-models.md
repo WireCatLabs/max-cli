@@ -12,7 +12,7 @@
   секрет от провайдера. Цена, лимиты и возможности модели зависят от провайдера.
 - **Назначение** — задача, для которой выбрана модель: `models.ocr`, `models.analysis`,
   `models.replies`. У каждой задачи могут быть свой провайдер и своя модель.
-- **Endpoint** (`baseUrl`) — адрес сервера, к которому идёт запрос.
+- **Endpoint** (`base_url`) — адрес сервера, к которому идёт запрос.
 
 Это не модель вашего AI-агента. Когда агент сам читает файл, он использует свои инструменты и
 свою модель, и настройки ниже на это не влияют.
@@ -26,8 +26,8 @@
 | AI-блок в шаблоне ответа | `models.replies` | Правило с блоком `{% ai %}` и отдельным согласием для ответов; см. [правила ответов](replies.md) |
 | Общие значения для этих задач | `models.default` | Используются для полей, которые не заданы у конкретного назначения |
 
-Поиск по смыслу настраивается отдельно: `embeddingProvider`, `embeddingModel` и
-`embeddingBaseUrl`. Ключи он хранит тем же способом. Подробно — в [руководстве по поиску](search.md).
+Поиск по смыслу настраивается отдельно: `embedding_provider`, `embedding_model` и
+`embedding_base_url`. Ключи он хранит тем же способом. Подробно — в [руководстве по поиску](search.md).
 Голосовые распознаёт отдельная модель речи на вашем компьютере, без API — см.
 [распознавание голосовых](audio-recognition.md).
 
@@ -38,9 +38,9 @@
 интерактивный ввод, затем настройте назначение:
 
 ```sh
-max models text key set openai
-max config set models.ocr.provider openai
-max config set models.ocr.model gpt-4o-mini
+max personal models text key set openai
+max personal config set models.ocr.provider openai
+max personal config set models.ocr.model gpt-4o-mini
 max config show
 ```
 
@@ -48,10 +48,10 @@ max config show
 Команда `key set` также принимает секрет через stdin; его должен передать ваш менеджер
 секретов. Не подставляйте сам ключ в командную строку.
 
-Если `baseUrl` не задан и не унаследован из `models.default`, используется стандартный OpenAI endpoint. Для проверки на небольшом объёме:
+Если `base_url` не задан и не унаследован из `models.default`, используется стандартный OpenAI endpoint. Для проверки на небольшом объёме:
 
 ```sh
-max attachments extract --chat "Учебная группа" --ocr --concurrency 1 --limit 1 --json
+max personal attachments extract --chat "Учебная группа" --ocr --concurrency 1 --limit 1 --json
 ```
 
 `--limit 1` ограничивает число файлов, а не API-вызовов. PDF из нескольких сканированных
@@ -64,10 +64,10 @@ max attachments extract --chat "Учебная группа" --ocr --concurrency
 вашего значения, а не готовое имя модели.
 
 ```sh
-max models text key set anthropic
-max config set models.ocr.provider anthropic
-max config set models.ocr.model your-vision-model
-max config unset models.ocr.baseUrl
+max personal models text key set anthropic
+max personal config set models.ocr.provider anthropic
+max personal config set models.ocr.model your-vision-model
+max personal config unset models.ocr.base_url
 ```
 
 Последняя команда удаляет прежнее переопределение endpoint, если оно было задано.
@@ -80,17 +80,17 @@ OpenAI-совместимый endpoint использует адаптер `open
 текстовые запросы. Настройте URL без ключа, параметров запроса и фрагмента:
 
 ```sh
-max config set models.ocr.provider openai
-max config set models.ocr.model your-vision-model
-max config set models.ocr.baseUrl https://gateway.example.org/v1
-max models text key set gateway.example.org
+max personal config set models.ocr.provider openai
+max personal config set models.ocr.model your-vision-model
+max personal config set models.ocr.base_url https://gateway.example.org/v1
+max personal models text key set gateway.example.org
 ```
 
 Для нестандартного endpoint имя ключа — его host, включая порт, если он указан в URL.
-Само поле `baseUrl` не является ключом. Если сервер принимает текст, это ещё не значит, что он
+Само поле `base_url` не является ключом. Если сервер принимает текст, это ещё не значит, что он
 читает картинки; проверьте это в документации вашего сервера.
 
-При переходе обратно к стандартному OpenAI endpoint удалите `models.ocr.baseUrl`.
+При переходе обратно к стандартному OpenAI endpoint удалите `models.ocr.base_url`.
 Текстовый и Anthropic-совместимый API нельзя смешивать только заменой URL: выберите
 адаптер, соответствующий протоколу сервера.
 
@@ -106,7 +106,7 @@ max models text key set gateway.example.org
 запуска в POSIX-терминале, используя уже сохранённый ключ:
 
 ```sh
-MAX_MODELS_OCR_PROVIDER=openai MAX_MODELS_OCR_MODEL=gpt-4o-mini max attachments extract --chat "Учебная группа" --ocr --limit 1 --json
+MAX_MODELS_OCR_PROVIDER=openai MAX_MODELS_OCR_MODEL=gpt-4o-mini max personal attachments extract --chat "Учебная группа" --ocr --limit 1 --json
 ```
 
 В PowerShell задайте соответствующие `$env:MAX_MODELS_OCR_PROVIDER` и

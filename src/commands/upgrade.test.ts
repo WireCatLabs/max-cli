@@ -1,4 +1,4 @@
-import { captureStreams } from "@wirecat/cli-core"
+import { captureStreams } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import { run } from "../program.js"
 import type { UpdateEnvironment } from "../update.js"
@@ -19,7 +19,7 @@ const upgrade = async (argv: string[], { latest = "99.0.0", scriptPath = PNPM, e
   const streams = captureStreams()
   const code = await run(["upgrade", ...argv, "--json"], { streams, update: environment })
   const [out] = streams.stdout
-  return { code, ran, result: out ? JSON.parse(out) : undefined, stderr: streams.stderr.join("\n") }
+  return { code, ran, result: out ? JSON.parse(out).item : undefined, stderr: streams.stderr.join("\n") }
 }
 
 describe("max upgrade", () => {
@@ -31,7 +31,7 @@ describe("max upgrade", () => {
       latest: "99.0.0",
       newer: true,
       installer: "pnpm",
-      command: "pnpm add -g @wirecat/max-cli@latest",
+      command: "pnpm add -g @wirecat/max-cli@latest --config.minimumReleaseAgeExclude=@wirecat/*",
       updated: false,
       restarted: [],
     })
@@ -40,7 +40,9 @@ describe("max upgrade", () => {
   it("runs the package manager that installed max, and says it did", async () => {
     const { code, ran, result } = await upgrade([])
     expect(code).toBe(0)
-    expect(ran).toEqual([["pnpm", "add", "-g", "@wirecat/max-cli@latest"]])
+    expect(ran).toEqual([
+      ["pnpm", "add", "-g", "@wirecat/max-cli@latest", "--config.minimumReleaseAgeExclude=@wirecat/*"],
+    ])
     expect(result).toMatchObject({ updated: true, restarted: [] })
   })
 

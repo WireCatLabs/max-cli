@@ -130,6 +130,26 @@ describe("toMessage", () => {
     ])
   })
 
+  it("names a voice message `voice` and keeps MAX's file and video ids as its own", () => {
+    const attaches = [
+      { _type: "AUDIO", url: "https://example.test/v.ogg" },
+      { _type: "FILE", fileId: 77 },
+      { _type: "VIDEO", videoId: 8 },
+    ]
+    expect(toMessage({ ...messageWire, attaches }, "7268926").attachments).toEqual([
+      { kind: "voice", url: "https://example.test/v.ogg" },
+      { kind: "file", providerRef: { fileId: "77" } },
+      { kind: "video", providerRef: { videoId: "8" } },
+    ])
+  })
+
+  it("gives a quoted poll the chat and message that carry it", () => {
+    const poll = { _type: "POLL", pollId: 900, title: "Lunch?", answers: [{ answerId: 1, text: "Yes" }] }
+    const quoted = { id: 9, sender: 3260455, time: 1789776000000, attaches: [poll] }
+    const reply = toMessage({ ...messageWire, link: { type: "REPLY", chatId: 5, message: quoted } }, "7268926")
+    expect(reply.replyTo?.attachments[0]?.poll).toMatchObject({ chatId: "5", messageId: "9", question: "Lunch?" })
+  })
+
   it("carries the message a reply answers and a forward carries, named when the login named its sender", () => {
     const quoted = { id: 9, sender: 3260455, text: "the question", time: 1789776000000, attaches: [{ _type: "PHOTO" }] }
     const names = new Map([["3260455", "Ivan Petrov"]])
@@ -163,13 +183,13 @@ describe("toMessage", () => {
   it("keeps a service message's event and the people in it, one or many", () => {
     const control = (attach: object) => toMessage({ ...messageWire, attaches: [attach] }, "7268926").attachments
     expect(control({ _type: "CONTROL", event: "add", userIds: [30000003, 30000004] })).toEqual([
-      { kind: "control", event: "add", userIds: ["30000003", "30000004"] },
+      { kind: "control", providerRef: { event: "add", userIds: ["30000003", "30000004"] } },
     ])
     expect(control({ _type: "CONTROL", event: "remove", userId: 30000003 })).toEqual([
-      { kind: "control", event: "remove", userIds: ["30000003"] },
+      { kind: "control", providerRef: { event: "remove", userIds: ["30000003"] } },
     ])
     expect(control({ _type: "CONTROL", event: "new", title: "Team", userIds: [] })).toEqual([
-      { kind: "control", event: "new", title: "Team", userIds: [] },
+      { kind: "control", title: "Team", providerRef: { event: "new", userIds: [] } },
     ])
   })
 

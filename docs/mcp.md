@@ -8,7 +8,7 @@
 Сначала несколько терминов:
 
 - **MCP** ([Model Context Protocol](https://modelcontextprotocol.io)) — стандартный способ, которым
-  AI-приложение пользуется внешними инструментами. Приложение — это **MCP-клиент**, `max mcp` —
+  AI-приложение пользуется внешними инструментами. Приложение — это **MCP-клиент**, `max personal mcp` —
   **MCP-сервер**.
 - **Инструмент** — одно действие, которое сервер предлагает агенту, например «прочитать» или
   «записать».
@@ -18,7 +18,7 @@
 - **Профиль** — один набор настроек и один вход в `max`; см. [профили](profiles.md).
 
 Сервер ставится вместе с `max`, отдельно ничего устанавливать не нужно. По умолчанию он общается с
-приложением через stdin и stdout. `max mcp --http --public-url` вместо этого отдаёт инструменты на
+приложением через stdin и stdout. `max personal mcp --http --public-url` вместо этого отдаёт инструменты на
 локальном порту за вашим HTTPS-туннелем.
 
 ## Нужен ли он вам
@@ -30,7 +30,7 @@ AI-агенту, который умеет запускать команды в 
 - приложениям без терминала — Claude Desktop, чату Cursor;
 - тем, кто хочет, чтобы приложение применяло права профиля к каждой операции.
 
-ChatGPT и Claude **в браузере** подключаются через `max mcp --http` — см.
+ChatGPT и Claude **в браузере** подключаются через `max personal mcp --http` — см.
 [подключение из браузера или телефона](remote.md).
 
 ## Что даёт сервер
@@ -46,34 +46,38 @@ ChatGPT и Claude **в браузере** подключаются через `m
 
 ## Подключение
 
-Сначала выполните `max setup --agent none` в локальном терминале. Это вход в ваш аккаунт MAX; через
-MCP вход не делается. `max mcp setup` затем отдельно подключает приложение. Агент может прочитать
+Сначала выполните `max personal setup --agent none` в локальном терминале. Это вход в ваш аккаунт MAX; через
+MCP вход не делается. `max personal mcp setup` затем отдельно подключает приложение. Агент может прочитать
 `max skill show` ещё до входа: там объяснены оба шага.
 
 **Codex или Claude Code на этом компьютере:**
 
 ```sh
-max mcp doctor                 # проверяет запуск MCP и список инструментов
-max mcp setup codex           # добавляет сервер в Codex
-max mcp setup claude-code     # или в Claude Code
+max personal mcp doctor                 # проверяет запуск MCP и список инструментов
+max personal mcp setup codex           # добавляет сервер в Codex
+max personal mcp setup claude-code     # или в Claude Code
 ```
 
 Для другого профиля сначала ставьте его имя: `max work mcp setup codex`. Команда установки
 использует само приложение и не трогает другие его серверы. Если запись с тем же именем уже есть,
 удалите её в приложении перед повторной установкой. Если профиль предлагает инструменты записи,
 сначала проверьте его права, затем повторите команду с `--allow-writes`. Этот флаг только
-подтверждает установку: права профиля и флаги `--allow-send` и прочие он не меняет.
+подтверждает установку: права профиля он не меняет.
 
 `mcp doctor` не читает сообщения и не входит в MAX. Успешная проверка значит, что MCP запускается и
-отдаёт список инструментов, но не значит, что сессия действительна. Число `potentialWrites`
+отдаёт список инструментов, но не значит, что сессия действительна. Число `potential_writes`
 показывает инструменты без пометки «только чтение». Для браузера и телефона нужно отдельное
 удалённое подключение ([подключение из браузера или телефона](remote.md)).
 
 **Claude Code вручную:**
 
 ```sh
-claude mcp add max -- max mcp
+claude mcp add max -- max personal mcp
 ```
+
+Осторожно: по умолчанию агент через этот сервер может отправлять сообщения от вашего имени. Сначала
+ограничьте права: уровни `readonly` и `deny` ([права](permissions.md)) или флаг `--permission`, например
+`claude mcp add max -- max personal mcp --permission messages.send=deny`.
 
 С профилем — он идёт первым словом, как в любой команде:
 
@@ -85,17 +89,17 @@ claude mcp add max-work -- max work mcp
 `max`:
 
 ```sh
-max mcp config                  # права текущего профиля
+max personal mcp config                  # права текущего профиля
 max work mcp config
 ```
 
 ```json
 {
   "mcpServers": {
-    "max": {
+    "max-personal": {
       "type": "stdio",
       "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["C:\\Users\\you\\AppData\\Roaming\\npm\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js", "mcp"]
+      "args": ["C:\\Users\\you\\AppData\\Roaming\\npm\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js", "personal", "mcp"]
     }
   }
 }
@@ -108,14 +112,15 @@ max work mcp config
 
 Пути в записи полные, потому что приложение, запущенное не из терминала, не видит `PATH` терминала.
 На Windows `max` — это файл `max.cmd`, который приложение без оболочки запустить не может. Флаги
-`--allow-send` и другие переносятся в запись. Переменные `MAX_CONFIG_DIR`, `MAX_STATE_DIR`,
-`MAX_CACHE_DIR`, `MESSAGING_STORE` и `XDG_RUNTIME_DIR` попадают в неё, только если заданы; токен —
-никогда. `MAX_CACHE_DIR` относится только к прежнему кэшу, а общую локальную копию сообщений задаёт
+`--permission` переносятся в запись, профиль стоит в ней перед `mcp`. Переменные `MAX_CONFIG_DIR`,
+`MAX_STATE_DIR`, `MAX_CACHE_DIR`, `MESSAGING_STORE`, `XDG_RUNTIME_DIR` и ограничения для файлов
+`MESSAGING_ATTACHMENT_MAX_MIB`, `MESSAGING_PDF_PREVIEW_MAX_PIXELS`, `MESSAGING_PDF_PREVIEW_MAX_MIB`,
+`MESSAGING_BATCH_MAX_ERROR_PERCENT` попадают в неё, только если заданы; токен — никогда. `MAX_CACHE_DIR` относится только к прежнему кэшу, а общую локальную копию сообщений задаёт
 `MESSAGING_STORE`. Команда переносит путь к этой копии и каталог связи с ключницей, чтобы приложение,
 запущенное с рабочего стола, использовало тот же вход и сохранённые сообщения, что и терминал.
 
 Если Node поставлен через nvm, fnm или Volta, путь к нему относится к одной версии Node. После смены
-версии запустите `max mcp config` снова. Из `npx` команда отказывается работать: `npx` очищает свой
+версии запустите `max personal mcp config` снова. Из `npx` команда отказывается работать: `npx` очищает свой
 кэш, и путь перестанет существовать.
 
 ⚠ **Переменные `MAX_CONFIG_DIR`, `MAX_STATE_DIR`, `MAX_CACHE_DIR` меняют, где искать вход.** Если в
@@ -123,8 +128,7 @@ max work mcp config
 `max` в терминале работает. Задайте им одно и то же — или не задавайте нигде.
 
 У бота свой сервер, `max <имя> bot mcp`; см. [бот для агента](bot.md#бот-для-агента-mcp). Доступ
-у него определяет `permissions` профиля бота. Его флаги `--allow-send`, `--allow-delete` и
-`--allow-moderate` принимаются с предупреждением и ничего не включают.
+у него определяет `permissions` профиля бота.
 
 ## Что может агент
 
@@ -132,12 +136,31 @@ max work mcp config
 ([права доступа в справочнике настроек](configuration-reference.md#права-доступа)). `deny` запрещает команду, `readonly`
 разрешает только чтение, а `ask` и `allow` разрешают запись, которую попросил агент. Форм
 подтверждения на сервере нет: одобрение настраивается в приложении агента. В терминале команда на
-уровне `ask` по-прежнему требует ответа или явного флага. `--permission ключ=уровень` меняет уровень
-только для процесса сервера. Профиль можно закрепить через `MAX_PROFILE_LOCK`.
+уровне `ask` по-прежнему требует ответа или явного флага. Агент удаляет сообщения только у себя, никогда
+у всех. `--permission ключ=уровень` ужесточает уровень только для процесса сервера и никогда его не
+ослабляет. Профиль можно закрепить через `MAX_PROFILE_LOCK`.
 
-Старые флаги `--confirm-send`, `--allow-send`, `--allow-delete` и `--http-confirmation` больше не
-определяют, что может агент. Они принимаются с предупреждением, чтобы сохранённые записи
-продолжали запускаться; уберите их из записей приложения.
+### Чего нет в MCP
+
+Агент видит все команды, кроме этих. Права профиля ограничивают остальные.
+
+| Команды | Почему |
+|---|---|
+| `setup`, `session` | вход и выход: их делает человек |
+| `upgrade`, `complete` | обновляют саму программу и автодополнение в терминале |
+| `serve`, `watch`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
+| `config set`, `config unset`, `skill install`, `flood clear`, `models text key set`, `models text key remove` | меняют, что смогут следующие запуски; иначе агент снял бы ограничение «только чтение» |
+| `recipients add`, `recipients remove`, `recipients clear`, `chats rules set`, `chats rules unset` | то же |
+| `replies add`, `replies on`, `replies off`, `replies edit`, `replies audience`, `replies pause`, `replies resume` | то же |
+| `replies consents grant`, `replies consents revoke`, `replies consents deny`, `replies consents allow` | то же |
+| `schedule command`, `schedule agent`, `schedule remove`, `server install`, `server uninstall` | то же |
+| `attachments jobs install`, `attachments jobs start`, `attachments jobs stop`, `attachments jobs uninstall` | то же |
+| `bot chats rules set`, `bot chats rules unset`, `bot recipients add`, `bot recipients remove`, `bot recipients clear` | то же, для бота |
+| `store backup`, `store restore`, `store migrate`, `store repair`, `store reset`, `store clear`, `store decrypt` | ни один ключ прав пока их не ограничивает |
+| `store copies delete`, `server start`, `server stop`, `server restart`, `schedule run`, `schedule exec` | то же |
+| `images models download`, `models audio download`, `models text download`, `doctor report create` | то же |
+| `account sessions end`, `chats delete`, `chats clear`, `bot auth`, `bot store fetch`, `bot api` | то же |
+| `bot uploads put` | читает файл с вашего компьютера |
 
 ## Инструменты
 
@@ -187,7 +210,7 @@ max work mcp config
 чтение одного чата.
 
 Ресурс `max://skill` — навык `max`, тот же текст, что печатает `max skill show`. Он есть и у
-`max mcp`, и у `max bot mcp`, и в MAX не ходит.
+`max personal mcp`, и у `max sales bot mcp`, и в MAX не ходит.
 
 ## Графики статистики
 
@@ -211,12 +234,12 @@ MAX и не пишет файлы; нужен доступ `messages`. Всту�
 
 `max_read` (`command: "attachments list"`) показывает пути сохранённых файлов и состояние их текста;
 `max_write` (`command: "attachments text set"`) сохраняет текст, который агент прочитал из файла, для
-поиска по `content:`. Извлечение текста — только в терминале. `max_read` с
+поиска по `content:`. `max_write` (`command: "attachments extract"`) извлекает текст из сохранённых файлов сам,
+частями через `cursor`, и не возвращает текст в ответе. `max_read` с
 `command: "messages context"` и `arguments: { offline: true }` читает только локальную копию.
 
-Топиков Telegram в MAX нет, поэтому нет и инструментов `max_topics_*`. Прямое распознавание может
-вернуть сохранённую расшифровку той же модели. Фото использует превью MAX, выбирается через `index`
-и ограничено 512 КБ. Модели никогда не скачиваются сами. Перед локальным распознаванием сервер
+Топиков Telegram в MAX нет, поэтому нет и команд `topics …`. Голосовое распознаётся моделью на
+этом компьютере. Фото выбирается через `index` и отдаётся, только если оно не больше 512 КБ. Модели никогда не скачиваются сами. Перед локальным распознаванием сервер
 отпускает соединение; модель поиска закрывается при завершении сервера.
 
 ## Как он держит соединение
@@ -228,7 +251,7 @@ MAX и не пишет файлы; нужен доступ `messages`. Всту�
 входит заново. Вызовы выполняются по одному, даже если приложение прислало их одновременно.
 
 Через stdin и stdout сервер завершается, когда приложение закрыло stdin, и закрывает соединение с
-MAX. По HTTP он работает до Ctrl-C. `max mcp --http --public-url https://<имя>.ts.net` доступен через
+MAX. По HTTP он работает до Ctrl-C. `max personal mcp --http --public-url https://<имя>.ts.net` доступен через
 HTTPS-туннель со входом по коду из терминала. Права действуют одинаково через HTTP и через stdin и
-stdout. `max mcp --revoke` завершает входы приложений и сохраняет сессию MAX. См.
+stdout. `max personal mcp --revoke` завершает входы приложений и сохраняет сессию MAX. См.
 [подключение из браузера или телефона](remote.md).

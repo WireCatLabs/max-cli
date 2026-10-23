@@ -1,5 +1,5 @@
-import { memoryKeyring } from "@wirecat/cli-core"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { memoryKeyring } from "@wirecat/cli-base"
+import { openStore } from "@wirecat/cli-core/store"
 import { afterEach, expect, it, vi } from "vitest"
 import { serveMembers } from "../commands/serve-members.js"
 import { Opcode } from "../generated/opcodes.generated.js"
@@ -156,10 +156,10 @@ it("fetches on the native held login, skips today's roster after reconnect and s
   })
   const db = await openStore()
   const account = { provider: "max", account: "900" }
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "911", title: null, kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 1 },
   ])
-  await db.trackMembers(account, "911", true)
+  await db.roster.trackMembers(account, "911", true)
   const notes: string[] = []
   vi.useFakeTimers()
   const server = new MaxServer({
@@ -174,7 +174,7 @@ it("fetches on the native held login, skips today's roster after reconnect and s
   try {
     await server.start()
     await vi.advanceTimersByTimeAsync(10)
-    expect((await db.trackedChats(account))[0]?.lastCount).toMatchObject({ listed: 1, complete: true })
+    expect((await db.roster.trackedChats(account))[0]?.lastCount).toMatchObject({ listed: 1, complete: true })
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.LOGIN)).toHaveLength(1)
     max.drop()
     await vi.advanceTimersByTimeAsync(40)

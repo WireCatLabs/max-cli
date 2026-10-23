@@ -1,6 +1,8 @@
 import { writeFileSync } from "node:fs"
-import { CliError } from "@wirecat/cli-core"
-import { holdLock, lockPath, releaseLock } from "@wirecat/cli-messaging/background"
+import { CliError } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import { holdLock, lockPath, releaseLock } from "@wirecat/cli-core/background"
+import { REMOTE_WRITE } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
 import { parseDuration } from "../config.js"
@@ -8,7 +10,7 @@ import { asFirstWord } from "../profile.js"
 import { MaxServer, refusedLogin } from "../server/server.js"
 import { refusedPath } from "../server/start.js"
 import { VERSION } from "../version.js"
-import { forCommand } from "./context.js"
+import { environmentOf, forCommand } from "./context.js"
 import { serveMembers } from "./serve-members.js"
 import { serveStems } from "./serve-stems.js"
 
@@ -20,12 +22,24 @@ import { serveStems } from "./serve-stems.js"
  * one is given `--idle`, so it does not outlive the work that started it.
  */
 export const serveCommand = (): Command =>
-  new Command("serve")
+  annotate(new Command("serve"), { effects: REMOTE_WRITE, lifetime: "persistent" })
     .description("stay connected to MAX and stream new messages to `max watch`, until Ctrl-C")
     .option("--idle <duration>", "stop after this long with nobody using it — 15m, 1h is 60m")
+    .option("--max-subscriber-buffer-bytes <bytes>", "buffer per watcher before disconnecting it; 0 is unlimited")
+    .option("--max-subscriber-total-buffer-bytes <bytes>", "combined watcher buffer budget; 0 is unlimited")
     .addOption(new Option("--started-by-command").hideHelp())
     .action(async function (this: Command) {
-      const { idle, startedByCommand = false } = this.opts<{ idle?: string; startedByCommand?: boolean }>()
+      const {
+        idle,
+        startedByCommand = false,
+        maxSubscriberBufferBytes,
+        maxSubscriberTotalBufferBytes,
+      } = this.opts<{
+        idle?: string
+        startedByCommand?: boolean
+        maxSubscriberBufferBytes?: string
+        maxSubscriberTotalBufferBytes?: string
+      }>()
       const { renderer, settings, store, run, format, streams, track } = forCommand(this)
       const idleMs = idle === undefined ? undefined : parseDuration(idle, "--idle")
 
@@ -36,6 +50,12 @@ export const serveCommand = (): Command =>
             : streams.diagnostic(JSON.stringify({ time: new Date().toISOString(), note: line }))
         const server = new MaxServer({
           store,
+          ...(maxSubscriberBufferBytes === undefined
+            ? {}
+            : { maxSubscriberBufferBytes: Number(maxSubscriberBufferBytes) }),
+          ...(maxSubscriberTotalBufferBytes === undefined
+            ? {}
+            : { maxSubscriberTotalBufferBytes: Number(maxSubscriberTotalBufferBytes) }),
           members: (client) => serveMembers({ client, store, note }),
           // Unwatched — a log file, systemd — each line says when, or "connecting again in 60s" means nothing.
           note,
@@ -56,7 +76,7 @@ export const serveCommand = (): Command =>
         process.once("SIGINT", stop)
         process.once("SIGTERM", stop)
         // Not how max finds its server — the socket is — but what the shared store commands look for.
-        const lock = lockPath(MAX_APP, store.profile, process.env)
+        const lock = lockPath(MAX_APP, store.profile, environmentOf(this).env ?? process.env)
         const startedAt = new Date().toISOString()
         const stems = serveStems({ note })
         try {

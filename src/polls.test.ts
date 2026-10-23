@@ -1,12 +1,12 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { pollLines } from "@wirecat/cli-core"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { toPoll } from "./domain/map.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
-import { pollLines } from "./rendering/messages.js"
 import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { buildRequest } from "./spec/define.js"
@@ -97,29 +97,30 @@ const journalOf = (profile: string) => new SendJournal(sendsPathFor(profile)).en
 
 describe("reading a poll", () => {
   it("unpacks the settings bits and marks the owner's own answer", () => {
-    expect(toPoll(pollAttach({ settings: MULTIPLE | CLOSED, mine: true }))).toEqual({
-      id: "900",
+    expect(toPoll(pollAttach({ settings: MULTIPLE | CLOSED, mine: true }), "111", MESSAGE)).toEqual({
+      chatId: "111",
+      messageId: MESSAGE,
       question: "Lunch?",
       answers: [
-        { id: "1", text: "Yes", votes: 2, mine: true },
-        { id: "2", text: "No", votes: 1, mine: false },
+        { id: "1", text: "Yes", voters: 2, chosen: true },
+        { id: "2", text: "No", voters: 1, chosen: false },
       ],
-      total: 3,
+      closed: true,
       multiple: true,
       anonymous: false,
-      revote: false,
-      closed: true,
+      voters: 3,
       quiz: false,
+      revote: false,
     })
   })
 
   it("reads version 2, which MAX gives every new poll, and nothing newer", () => {
-    expect(toPoll(pollAttach({ version: 2 }))?.id).toBe("900")
-    expect(toPoll(pollAttach({ version: 3 }))).toBeUndefined()
+    expect(toPoll(pollAttach({ version: 2 }), "111", MESSAGE)?.question).toBe("Lunch?")
+    expect(toPoll(pollAttach({ version: 3 }), "111", MESSAGE)).toBeUndefined()
   })
 
   it("prints the answer ids `polls vote` takes, the votes, and a tick on the owner's own", () => {
-    const poll = toPoll(pollAttach({ settings: CLOSED, mine: true }))
+    const poll = toPoll(pollAttach({ settings: CLOSED, mine: true }), "111", MESSAGE)
     expect(poll && pollLines(poll)).toEqual(["📊 Lunch?", "  [1] Yes — 2 ✓", "  [2] No — 1", "  3 voted · closed"])
   })
 })
@@ -135,7 +136,10 @@ describe("voting", () => {
 
     expect(failed.code).toBe(11)
     expect(failed.stdout).toBe("")
-    expect(JSON.parse(failed.stderr).error).toMatchObject({ code: "provider_error", providerError: refusal })
+    expect(JSON.parse(failed.stderr).error).toMatchObject({
+      code: "provider_error",
+      message: expect.stringContaining(refusal),
+    })
     expect(failed.stderr.includes("--retract")).toBe(hint)
     expect(sentWith(Opcode.SEND_VOTE).map(({ payload }) => payload.answersIds)).toEqual([[2]])
     expect(journalOf(profile)).toMatchObject([{ kind: "reaction", outcome: "failed", errorCode: "provider_error" }])
@@ -149,7 +153,7 @@ describe("voting", () => {
     expect(sentWith(Opcode.SEND_VOTE).map(({ payload }) => payload)).toEqual([
       { chatId: 111, messageId: BigInt(MESSAGE), pollId: 900, answersIds: [1] },
     ])
-    expect(JSON.parse(voted.stdout).poll.answers[0]).toMatchObject({ voters: 3, chosen: true })
+    expect(JSON.parse(voted.stdout).item.poll.answers[0]).toMatchObject({ voters: 3, chosen: true })
     expect(journalOf("p-vote")).toMatchObject([{ chatId: "111", kind: "reaction", outcome: "sent" }])
   })
 
@@ -212,7 +216,7 @@ describe("closing and creating", () => {
         { _type: "POLL", pollId: 900, title: "Lunch?", answers: [{ text: "Yes" }, { text: "No" }], settings: 10 },
       ],
     })
-    expect(JSON.parse(closed.stdout).poll.closed).toBe(true)
+    expect(JSON.parse(closed.stdout).item.poll.closed).toBe(true)
   })
 
   it("refuses to close somebody else's poll", async () => {
@@ -226,9 +230,9 @@ describe("closing and creating", () => {
     const { code, stdout } = await runWith(["p-show", "polls", "show", "111", MESSAGE], environment)
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({
-      chatId: "111",
-      messageId: MESSAGE,
+    expect(JSON.parse(stdout).item).toMatchObject({
+      chat_id: "111",
+      message_id: MESSAGE,
       question: "Lunch?",
       answers: [
         { id: "1", text: "Yes", voters: 2, chosen: true },
@@ -242,12 +246,12 @@ describe("closing and creating", () => {
 
   it("creates a poll with the send id given, so a lost one can be repeated", async () => {
     const { environment, sentWith } = messenger()
-    const argv = ["p-create-id", "polls", "create", "111", "Lunch?", "Yes", "No", "--send-id", "1790000000000"]
+    const argv = ["p-create-id", "polls", "create", "111", "Lunch?", "Yes", "No", "--operation-id", "1790000000000"]
     const { code, stdout } = await runWith(argv, environment)
 
     expect(code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND)[0]?.payload).toMatchObject({ message: { cid: 1790000000000 } })
-    expect(JSON.parse(stdout)).toMatchObject({ sendId: "1790000000000", operationId: "1790000000000" })
+    expect(JSON.parse(stdout).item).toMatchObject({ operation_id: "1790000000000" })
   })
 
   it("`--revote` lets people change their vote", async () => {

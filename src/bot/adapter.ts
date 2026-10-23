@@ -1,6 +1,6 @@
-import { CliError, type SleepLike } from "@wirecat/cli-core"
-import type { FetchLike } from "@wirecat/cli-core/http"
-import type { AdminRight, Markup, Message } from "@wirecat/cli-messaging"
+import { CliError, type SleepLike } from "@wirecat/cli-base"
+import type { FetchLike } from "@wirecat/cli-base/http"
+import type { AdminRight, Markup, Message } from "@wirecat/cli-core"
 import type {
   BotAction,
   BotAdapter,
@@ -9,7 +9,8 @@ import type {
   BotEvent,
   BotWebhook,
   EventSink,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
+import { uploadBlob } from "@wirecat/cli-core/sends"
 import { formatMarkdown, toHtml } from "../format-markdown.js"
 import { type BotApiClient, botOperations } from "./client.js"
 import { checkBody } from "./input.js"
@@ -137,7 +138,7 @@ export const toMarkdown = (text: string, markup: readonly Markup[]): string => {
  */
 const withPersonHint = (error: unknown, chat: BotChatRef): unknown => {
   const failure = error as { code?: CliError["code"]; message?: string; details?: CliError["details"] }
-  if (!/^\d+$/.test(chat) || failure.details?.maxCode !== "chat.not.found" || !failure.code) return error
+  if (!/^\d+$/.test(chat) || failure.details?.max_code !== "chat.not.found" || !failure.code) return error
   return new CliError(
     failure.code,
     `${failure.message} — a positive number is usually a person, not a chat: to write to them, use user:${chat}`,
@@ -256,7 +257,7 @@ export const maxBotAdapter = ({
                 : uploadTypeOf(file.name)
         const endpoint = endpointOf(await api.call(operation("getUploadUrl"), { query: { type } }))
         attachment = await uploadFile({
-          content: { name: file.name, bytes: file.bytes },
+          content: { name: file.name, blob: await uploadBlob(file.source) },
           type,
           endpoint,
           fetch: uploadFetch,

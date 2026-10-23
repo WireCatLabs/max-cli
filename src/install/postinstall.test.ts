@@ -21,7 +21,7 @@ describe("global installation", () => {
   it("repairs Windows PATH and installs the versioned skill before login", () => {
     const install = sandbox()
     const repair = vi.fn()
-    completeGlobalInstall({ ...install, platform: "win32", repair })
+    completeGlobalInstall({ ...install, env: { ...install.env, MAX_INSTALL_AGENT: "all" }, platform: "win32", repair })
     expect(repair).toHaveBeenCalledWith(install.env.npm_config_prefix)
     for (const directory of [".claude", ".agents"]) {
       const file = join(install.home, directory, "skills/max-cli/SKILL.md")
@@ -29,6 +29,14 @@ describe("global installation", () => {
       expect(readFileSync(file, "utf8")).toContain("metadata:")
     }
     expect(install.note.mock.calls.flat().join("\n")).toContain("Agent: read max skill show")
+  })
+
+  it("installs no skill unless asked, and says how to install it", () => {
+    const install = sandbox()
+    completeGlobalInstall({ ...install, platform: "linux" })
+    expect(existsSync(join(install.home, ".agents"))).toBe(false)
+    expect(existsSync(join(install.home, ".claude"))).toBe(false)
+    expect(install.note.mock.calls.flat().join("\n")).toContain("max skill install --for all")
   })
 
   it("does not change PATH or agent files for a project dependency or npx", () => {
@@ -97,7 +105,6 @@ describe("global installation", () => {
     expect(options?.env?.MAX_INSTALL_PREFIX).toBe(install.env.npm_config_prefix)
     expect(options?.env?.MAX_INSTALL_SCRIPT).toBe(resolve("install/windows.ps1"))
     expect(options?.env?.MAX_INSTALL_NODE).toBe(dirname(process.execPath))
-    expect(existsSync(join(install.home, ".agents/skills/max-cli/SKILL.md"))).toBe(true)
   })
 
   it("reports a failed Windows repair before creating any agent files", () => {
