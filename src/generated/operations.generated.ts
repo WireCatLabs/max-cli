@@ -10,6 +10,7 @@ import {
   chatsClear,
   chatsDelete,
   chatsHistory,
+  chatsInfo,
   chatsJoin,
   chatsLeave,
   chatsLinkInfo,
@@ -49,6 +50,7 @@ import {
   messagesUnreact,
 } from "../spec/operations/messages.js"
 import { sessionInit, sessionLog, sessionLogin, sessionLogout, sessionPing } from "../spec/operations/session.js"
+import { storiesList, storiesPreviews } from "../spec/operations/stories.js"
 import { uploadsFile, uploadsPhoto, uploadsVideo } from "../spec/operations/uploads.js"
 
 /** Every operation that may be sent, by the name the client calls it. */
@@ -82,6 +84,7 @@ export const OPERATIONS = {
   "assets.update": assetsUpdate,
   "assets.byIds": assetsByIds,
   "chats.history": chatsHistory,
+  "chats.info": chatsInfo,
   "chats.mark": chatsMark,
   "chats.list": chatsList,
   "chats.linkInfo": chatsLinkInfo,
@@ -93,6 +96,8 @@ export const OPERATIONS = {
   "chats.delete": chatsDelete,
   "chats.clear": chatsClear,
   "chats.app": chatsApp,
+  "stories.list": storiesList,
+  "stories.previews": storiesPreviews,
   "messages.send": messagesSend,
   "messages.edit": messagesEdit,
   "messages.react": messagesReact,

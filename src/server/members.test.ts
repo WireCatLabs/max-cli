@@ -22,6 +22,8 @@ it.each([false, true])(
       [Opcode.BANNERS_GET]: { banners: [] },
       [Opcode.CALL_HISTORY]: { callHistoryItems: [] },
       [Opcode.ASSETS_UPDATE]: { sections: [] },
+      [Opcode.STORIES_LIST]: { storiesPreviews: [] },
+      [Opcode.STORIES_PREVIEWS]: { storiesPreviews: [] },
     }
     const first = mockMax({ answers })
     const late = mockMax({ answers })
@@ -87,6 +89,8 @@ it("does not restart a stopped server when its pending reconnect times out", asy
       [Opcode.BANNERS_GET]: { banners: [] },
       [Opcode.CALL_HISTORY]: { callHistoryItems: [] },
       [Opcode.ASSETS_UPDATE]: { sections: [] },
+      [Opcode.STORIES_LIST]: { storiesPreviews: [] },
+      [Opcode.STORIES_PREVIEWS]: { storiesPreviews: [] },
     },
   })
   const pending = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: () => undefined } })
@@ -152,6 +156,8 @@ it("fetches on the native held login, skips today's roster after reconnect and s
       [Opcode.BANNERS_GET]: { banners: [] },
       [Opcode.CALL_HISTORY]: { callHistoryItems: [] },
       [Opcode.ASSETS_UPDATE]: { sections: [] },
+      [Opcode.STORIES_LIST]: { storiesPreviews: [] },
+      [Opcode.STORIES_PREVIEWS]: { storiesPreviews: [] },
     },
   })
   const db = await openStore()

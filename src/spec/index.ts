@@ -9,6 +9,7 @@ import {
   chatsClear,
   chatsDelete,
   chatsHistory,
+  chatsInfo,
   chatsJoin,
   chatsLeave,
   chatsLinkInfo,
@@ -50,6 +51,7 @@ import {
   messagesUnreact,
 } from "./operations/messages.js"
 import { sessionInit, sessionLog, sessionLogin, sessionLogout, sessionPing } from "./operations/session.js"
+import { storiesList, storiesPreviews } from "./operations/stories.js"
 import { uploadsFile, uploadsPhoto, uploadsVideo } from "./operations/uploads.js"
 
 export { checkResponse } from "./check.js"
@@ -95,6 +97,7 @@ export const spec: readonly Entry[] = [
   assetsUpdate,
   assetsByIds,
   chatsHistory,
+  chatsInfo,
   chatsMark,
   chatsList,
   chatsLinkInfo,
@@ -106,6 +109,8 @@ export const spec: readonly Entry[] = [
   chatsDelete,
   chatsClear,
   chatsApp,
+  storiesList,
+  storiesPreviews,
   messagesSend,
   messagesEdit,
   messagesReact,

@@ -250,6 +250,7 @@ export class MaxClient {
       connection,
       messageHit: history.messageHit,
       chatTitle: history.chatTitle,
+      partnerOf: people.partnerOf,
     })
     this.account = account
     this.login = login

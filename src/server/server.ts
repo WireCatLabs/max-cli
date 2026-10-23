@@ -313,7 +313,7 @@ export class MaxServer {
     else this.#broadcast({ event: "status", connected: true, at: new Date(this.#now()).toISOString() })
     for (const [opcode, payload] of early) this.#pushed(client, opcode, payload)
     client.live
-      .readLikeTab(this.#tabSync)
+      .readLikeTab(this.#tabSync, resume === undefined)
       .then((next) => {
         this.#tabSync = next
       })
