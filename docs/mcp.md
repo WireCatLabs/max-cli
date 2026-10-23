@@ -152,6 +152,7 @@ max work mcp config
 | `config`, `bot auth`, `bot list` | права, настройки и токены профиля: агент не меняет свои же права |
 | `bot uploads put` | читает файл с вашего компьютера |
 | `account sessions end` | завершает ваши сеансы на других устройствах |
+| `attachments jobs`, `attachments move` | ставят ежедневное копирование на этом компьютере и переносят файлы между папками |
 | `chats rules set`, `chats rules unset`, `chats delete`, `chats clear` | пока закрыты для агента |
 | `store status`, `store info`, `store check`, `store export`, `store backup`, `store restore`, `store decrypt` | пока закрыты для агента |
 | `store migrate`, `store reindex`, `store repair`, `store clear`, `store reset`, `store copies delete` | пока закрыты для агента |
