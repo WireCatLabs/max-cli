@@ -27,8 +27,9 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 ## Launch blockers (P1)
 
 - **CLI-77** · P1 · The first screen of `max --help` says review works offline; `review --offline` is refused
-  ("`review` asks the messenger what changed"). Fix the pitch. `src/program.ts:87`; refusal in cli-core
-  `src/services/inbox` (`review`).
+  ("`review` asks the messenger what changed"). Owner (2026-10-23): make `review --offline` work over the local
+  store, saying it shows only what was already synced. Refusal in cli-core `src/services/inbox` (`review`), so tg
+  and wa get it too; `src/program.ts:87` stays as is once it works.
 - **CLI-78** · 🚩 P1 · Every `--help` "Example:" line drops the profile (`max setup`, `max review`), so the pasted
   example fails with "name a profile". Generated in cli-core `src/cli/help/command-help` (`generatedExample`);
   `Returns:` also repeats the description when a command has no schema.
