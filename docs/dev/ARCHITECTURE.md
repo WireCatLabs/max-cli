@@ -605,7 +605,7 @@ generated code. Nothing under `src/bot/` imports `src/protocol/`, `src/session/`
 spec/bot/schema.yaml        the official OpenAPI document, committed with provenance.json
    │  pnpm bot:spec:sync    — the only step that reads the network, and only when run by hand
    ▼
-scripts/bot/openapi-adapter.ts   OpenAPI → cli-base's format-neutral ApiModel; strict, names what it refuses
+cli-base's adaptOpenApi          OpenAPI → the format-neutral ApiModel; strict, names what it refuses
 scripts/bot/overrides.ts         read / write / destructive, where the HTTP method is wrong
    │  pnpm bot:generate     — part of `pnpm generate`, so full validation's freshness check covers it
    ▼
