@@ -39,7 +39,6 @@ const SHOWN: SourcedSetting[] = [
   "commandTimeoutMs",
   "color",
   "senderColors",
-  "catchUpMarksRead",
   "searchCatchUp",
   "record",
   "serve",

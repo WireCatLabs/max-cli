@@ -363,7 +363,10 @@ describe("the program", () => {
   it("offers every search under `search`, and none under `messages`", async () => {
     const { stdout } = await runWith(["messages", "--help"])
     expect(stdout).not.toMatch(/^\s+search\b/m)
-    expect((await runWith(["search", "--help"])).stdout).toMatch(/all .*\n[\s\S]*messages[\s\S]*mail[\s\S]*notes/)
+    const index = (await runWith(["search", "--help"])).stdout
+    for (const resource of ["all", "messages", "notes", "conversations"])
+      expect(index).toMatch(new RegExp(`^\\s+${resource}\\b`, "m"))
+    expect(index).toContain("memo search mail")
 
     const search = await runWith(["search", "messages", "--help"])
     expect(search.stdout).toContain("chat: narrows it to one chat")
