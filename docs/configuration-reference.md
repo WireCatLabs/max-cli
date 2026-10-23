@@ -120,7 +120,6 @@ max config show --json     # то же одним объектом
 | `timeout_ms` | сколько ждать ответа на **один запрос** | — (`--timeout` — другое, см. ниже) | берётся из транспорта |
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
 | `sender_colors` | в `max personal messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
-| `catch_up_marks_read` | `max personal inbox` и `max personal review` отмечают прочитанным каждый показанный чат — до последнего показанного сообщения. Собеседник видит отметку. Только для личного аккаунта | `--mark-read`, `--no-mark-read` | `false` |
 | `search_catch_up` | после `messages sync` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
 | `record` | записывать ли каждый запуск, как будто передан `--record` ([диагностика](diagnostics.md)) | `--record`, `--no-record` | `false` |
 | `keep_runs_for_days` | сколько дней хранятся записи запусков | — | `30` |
@@ -142,6 +141,7 @@ max config show --json     # то же одним объектом
 | `analysis_base_url` | адрес API анализа | `build --base-url` | по сервису |
 | `models` | внешние модели по назначению ([ниже](#модели-по-назначению)) | переменные `MAX_MODELS_*` | нет |
 | `search_stemmers.cyrillic`, `search_stemmers.latin` | языки основ слов для поиска во всём общем архиве ([ниже](#языки-поиска)) | — | `russian`, `english,spanish` |
+| `task_first_pass_per_chat` | сколько задач правила могут открыть в каждом чате при первой синхронизации аккаунта, по истории; целое число от 0 до 1000. Позже читаются только новые сообщения, а `tasks scan <чат>` строит задачи по истории по вашей просьбе. Общая для всего архива | — | `0` |
 | `task_agent_close`, `task_agent_close_min` | закрывает ли задачу агент, и с какой уверенностью из `--certainty`; ниже порога задача остаётся открытой с предложением закрыть ([задачи](groups.md#что-ждёт-вашего-ответа)). Общие для всего архива | — | `on`, `0.8` |
 
 ⚠ **`timeout_ms` и `--timeout` — разные вещи, и перепутать их дорого.** `timeout_ms` — это сколько
@@ -181,7 +181,8 @@ max config show --json     # то же одним объектом
 **Ключ — это путь команды**: `messages`, `messages.delete`, `messages.send`, `reactions`,
 `chats.members`, `contacts`, `account.sessions.end`. Он начинается с ресурса — `messages`,
 `reactions`, `polls`, `topics`, `chats`, `contacts`, `account`, `bot`, `conversations`, `tags`,
-`search`, `searches`, `tasks`, `replies`, `attachments`, `stats`, `store` или `metadata`. У бота ключи
+`mentions`, `search`, `searches`, `tasks`, `replies`, `attachments`, `stats`, `store` или `metadata`. У `calls` и `stickers` есть только чтение, и ключа права у них нет: `config set`
+отвечает кодом 2. У бота ключи
 начинаются с `bot`, например `bot.messages.send`. `config set` отклоняет неизвестный ключ команды, в
 том числе внутри целого объекта `permissions`, с кодом 2. `config unset` позволяет удалить старый
 неизвестный ключ. Чтение уже существующего файла с таким ключом предупреждает в stderr и продолжает
@@ -250,7 +251,7 @@ max config unset default_profile         # убрать старую настр�
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max personal config set limit 0`
-откажет, и файл останется прежним. `serve`, `sender_colors`, `catch_up_marks_read` и `search_catch_up`
+откажет, и файл останется прежним. `serve`, `sender_colors` и `search_catch_up`
 с `--bot` не принимаются: у бота нет ни сервера, ни цветов авторов, ни непрочитанного.
 
 ### Языки поиска
@@ -335,7 +336,7 @@ max personal chats list
 | `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
 | `requests_per_minute` | целое число ≥ 0 | профиль |
 | `color`, `record` | boolean | профиль |
-| `sender_colors`, `catch_up_marks_read`, `search_catch_up`, `serve` | boolean | личный аккаунт |
+| `sender_colors`, `search_catch_up`, `serve` | boolean | личный аккаунт |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |
 | `allow` | массив разрешённых действий; старый формат | профиль |
 | `read_other_bots` | boolean или массив имён профилей | только `bot` |
@@ -351,6 +352,7 @@ max personal chats list
 | `search_stemmers.latin` | `english`, `spanish`, оба через запятую, `none` | общий архив, через `config set` |
 | `task_agent_close` | `on`, `off` | общий архив, через `config set` |
 | `task_agent_close_min` | число от 0 до 1 | общий архив, через `config set` |
+| `task_first_pass_per_chat` | целое число от 0 до 1000 | общий архив, через `config set` |
 
 ### Модели по назначению
 

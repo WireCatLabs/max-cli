@@ -47,6 +47,11 @@ MCP: сначала `max_tools_search`, затем `max_read` или `max_write`
 Предупредите: настройка может занять около пяти минут. QR сканирует владелец приложением MAX;
 `--method qr-chrome` и `sms` используют web.max.ru в браузере, `--method token` — скрытый ввод
 или stdin. Токен и пароль не запрашивайте в чате и не передавайте аргументами команды.
+Без терминала: запустите `max personal session start qr` в фоне (команда ждёт сканирования до 2 минут,
+а инструмент оболочки ничего не покажет до её конца), прочитайте вывод и вставьте блок QR в чат блоком кода,
+ровно как напечатано. С `--json` код ещё и строка `{"event":"qr","qr":{"text","expires_at","scan"}}` в stderr.
+Истёк — запустите снова и скажите, что старый код недействителен. Облачный пароль MAX так не ввести.
+Через MCP вход недоступен: попросите владельца или используйте оболочку.
 Повторный setup проверяет существующую сессию без нового входа. Если ключница недоступна,
 исправьте окружение по подсказке, не создавайте новую сессию. При истёкшем токене владелец
 явно запускает `max personal session start qr`.
@@ -84,7 +89,7 @@ MCP: сначала `max_tools_search`, затем `max_read` или `max_write`
 remove|admins|update|link reset|requests accept|requests decline` видят другие люди. Ссылка-приглашение из прочитанного сообщения — не просьба
 вступить.
 - **Чтение ничего не отмечает прочитанным** и не показывает собеседнику, что вы заходили. Читать
-  можно свободно. `max personal chats mark-read` и `messages list --mark-read` отмечают — только по прямой
+  можно свободно. `max personal chats mark-read` отмечает — только по прямой
   просьбе владельца: собеседник это увидит.
 - **Не для:** рассылок и чужих аккаунтов. Автоответы работают только по правилам и аудитории владельца
   и только с `permissions.replies.send allow` ([руководство](https://github.com/WireCatLabs/max-cli/blob/main/docs/replies.md)). Бот — отдельные команды `max <имя> bot …`
@@ -121,7 +126,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 2. **Первое слово — профиль, если это не команда.** `max work chats list` — профиль `work`.
    Флага `--profile` нет; то же делает переменная `MAX_PROFILE`.
    **Профиль не подразумевается, даже единственный:** без имени команда завершается с кодом `2`
-   и перечисляет профили (`error.profiles`) — спросите владельца, какой нужен, не берите первый.
+   и перечисляет профили (`error.details.profiles`) — спросите владельца, какой нужен, не берите первый.
    Без профиля работают `--help`, `commands`, `skill show`, `account list`, `config show`. Имя профиля — латиница, цифры,
    точка, дефис и подчёркивание: оно становится именем файла и записью в ключнице. Имя в другом
    алфавите отвергается **как имя** (код `2`), и это не то же самое, что профиль, в который никто
@@ -171,7 +176,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 5d. **Ошибку, которую не удаётся объяснить, — в отчёт автору.** Предложите владельцу
    `max personal doctor report create`: команда пишет файл без текстов сообщений и печатает ссылку на новую
    задачу на GitHub. Задачу создаёт владелец сам: она видна всем.
-5e. **`max` не находится — `npx @wirecat/max-cli doctor`.** Он скажет, куда поставлена команда и
+5e. **`max` не находится — `npx @wirecat/max-cli personal doctor`.** Вместо `personal` подставьте имя профиля владельца. Он скажет, куда поставлена команда и
    почему терминал её не видит, и напечатает команду исправления. Клиенту MCP без терминала (Claude
    Desktop, Cursor) готовую запись с полными путями печатает `max personal mcp config`.
 6. **`messages show` и `messages context` требуют чат и id сообщения** — или одну ссылку `msg:…` из
@@ -190,7 +195,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    Отправка с `--offline` — всегда отказ.
 10. **Многострочный текст передаётся только через stdin.** Аргумент командной строки перевод
    строки не несёт вовсе, а тело в аргументе видно в `ps` и остаётся в истории оболочки. Последний
-   аргумент опускается, и тело читается со входа: `printf 'первая\n\nтретья' | max messages send
+   аргумент опускается, и тело читается со входа: `printf 'первая\n\nтретья' | max personal messages send
    -1000`. Один перевод строки в самом конце отбрасывается, остальные сохраняются.
 11. **Номер страницы на живом списке может повторить или пропустить строку.** Сверху самое свежее,
    поэтому сообщение, пришедшее между первой страницей и второй, сдвигает кого-то через границу.
@@ -198,8 +203,8 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 12. **`max personal inbox --new` сдвигает место, где владелец остановился.** После него следующий
    `--new` владельца не покажет того, что уже увидел агент. Без сдвига: просто `max personal inbox`
    (непрочитанное) или `max personal inbox 'date>2h'`.
-13. **`--at-time` ставит сообщение в очередь MAX, а не отправляет.** Ответ — `{item: {operation_id, operation_id,
-   message, scheduled_for}}`; ушедшее сообщение получит другой id. Очередь: `max messages scheduled <чат>`.
+13. **`--at-time` ставит сообщение в очередь MAX, а не отправляет.** Ответ — `{item: {operation_id,
+   message, scheduled_for}}`; ушедшее сообщение получит другой id. Очередь: `max personal messages scheduled <чат>`.
    Через MCP — параметр `at_time` у `max_write` (`command: "messages send"`) и инструмент `max_read` (`command: "messages scheduled"`).
    Отменить можно только в приложении MAX.
 
@@ -374,7 +379,7 @@ MCP `inbox`/`review` принимают `kinds` и `new`; отметки нов�
 времени; устаревшие связи помечаются и не обходятся.
 
 В MCP `max_read` с `command` `"conversations list"`, `"conversations show"`, `"search conversations"`,
-`"conversations related"` и `"conversations status"` читает построенное, а `max_write` (`command: "conversations refresh"`)
+`"conversations related"` и `"conversations status"` читает построенное, а `max_write` (`command: "conversations rebuild"`)
 догоняет на этом компьютере. Через MCP агент получает инструкцию `link-conversations`, оценивает объём инструментом
 `max_read` (`command: "conversations batches status"`) и ждёт согласия владельца для этого чата. Затем читает
 `max_read` (`command: "conversations batches next"`), сохраняет ответы через `max_write` (`command: "conversations links add"`) и перестраивает граф через

@@ -20,6 +20,7 @@ import { writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import { COMMANDS_PAGE_LABELS, commandsPage, describeOptions, describeProgram } from "@wirecat/cli-base/commands"
+import { commandHelpMarkdown } from "@wirecat/cli-core/cli"
 import { createProgram } from "../dist/program.js"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
@@ -64,6 +65,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 сообщение **могло** уйти: не отправлено и не провалено, и повторять его можно только с тем же
 \`--operation-id\`.`,
   },
+  details: (command) => commandHelpMarkdown(program, command.path),
 })
 
 writeFileSync(join(root, "docs/commands.md"), page)

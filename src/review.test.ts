@@ -159,7 +159,11 @@ describe("max review", () => {
     ])
     expect(asked.code).toBe(0)
     expect(asked.json.missing).toEqual([
-      { field: "transcript", why: expect.stringMatching(/max models audio download/), step: "messages.transcribe" },
+      {
+        field: "transcript",
+        why: expect.stringMatching(/max r-voice models audio download/),
+        step: "messages.transcribe",
+      },
     ])
     expect(asked.stderr).toContain("not transcribed")
   })

@@ -20,6 +20,7 @@ import { BotApiClient } from "../bot/client.js"
 import { type Diagnosis, diagnose } from "../diagnose.js"
 import { ownScript } from "../install.js"
 import { type Check, checkOnline, mcpHandshake } from "../online.js"
+import { shownTime } from "../output.js"
 import { asFirstWord } from "../profile.js"
 import { buildReport, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
 import { sendsPathFor } from "../sends.js"
@@ -110,7 +111,7 @@ export const doctorCommand = (): Command => {
 
       if (report.session.loginPausedUntil) {
         renderer.note(
-          `MAX refused the last login for too many attempts — no login before ${report.session.loginPausedUntil}; wait`,
+          `MAX refused the last login for too many attempts — no login before ${shownTime(report.session.loginPausedUntil)}; wait`,
         )
       }
 
@@ -129,7 +130,7 @@ export const doctorCommand = (): Command => {
         renderer.note(`this profile was a bot, and its token is gone — \`max ${words}bot auth set\` stores one`)
       } else if (!report.token.present) {
         renderer.note(
-          `no token for this profile — \`max ${words}session start\` for a personal account, ` +
+          `no token for this profile — \`max ${words}setup\` for a personal account, ` +
             `\`max ${words}bot auth set\` for a bot`,
         )
       }
@@ -211,7 +212,7 @@ const EXCLUDES = ["текстов сообщений", "названий чат�
  * steps (`NEED-267`).
  */
 const reportCommand = (): Command => {
-  const report = annotate(new Command("report"), { effects: REMOTE_READ, mcp: false }).description(
+  const report = annotate(new Command("report"), { effects: REMOTE_READ }).description(
     "what a problem report holds and where it goes; writes nothing",
   )
 
@@ -220,7 +221,7 @@ const reportCommand = (): Command => {
     await run("doctor report", async () => explain(this, { renderer, format, streams }))
   })
 
-  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE }))
+  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE, mcp: false }))
     .description("write a problem report to a file, and print how to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
     .option("--output <file>", "where to write it; a new file in this directory if not given")
@@ -376,10 +377,10 @@ const forPerson = (report: Diagnosis, profile: string) => ({
     ? `${report.keyring.service} (moved by the environment)`
     : report.keyring.service,
   "logged in": report.session.exists
-    ? `${report.session.logins ?? 0} time(s)${report.session.lastLoginAt ? `, last ${report.session.lastLoginAt}` : ""}`
+    ? `${report.session.logins ?? 0} time(s)${report.session.lastLoginAt ? `, last ${shownTime(report.session.lastLoginAt)}` : ""}`
     : "never on this machine",
   "account known": report.session.viewerId,
-  ...(report.session.loginPausedUntil ? { "login paused until": report.session.loginPausedUntil } : {}),
+  ...(report.session.loginPausedUntil ? { "login paused until": shownTime(report.session.loginPausedUntil) } : {}),
   "presents as": `web client ${report.client.appVersion}, ${report.client.chrome}, read ${report.client.readOn} (${report.client.ageDays} days ago)`,
   "bot token": report.bot.token.present ? `yes, from ${BOT_TOKEN_FROM[report.bot.token.from]}` : "none",
   ...(report.bot.registry.exists ? { "bot chats seen": `${report.bot.registry.chats}` } : {}),

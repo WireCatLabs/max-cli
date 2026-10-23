@@ -300,35 +300,48 @@ describe("max inbox and review — by kind, and marking read", () => {
   const marks = (max: ReturnType<typeof inboxMax>["max"]) =>
     max.sent.filter((call) => call.opcode === Opcode.CHAT_MARK).map((call) => String(call.payload.chatId))
 
-  it("keeps the kinds asked for, and marks read only with --mark-read, never with --no-mark-read", async () => {
+  it("keeps the kinds asked for, never marks read, and refuses retired marking flags", async () => {
     const { max, environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
-
     const channels = await runWith(["k-inbox", "inbox", "date>2h", "--kind", "channel", "--json"], environment)
-    const unmarked = await runWith(["k-inbox", "inbox", "date>2h", "--no-mark-read", "--json"], environment)
-    expect(marks(max)).toEqual([])
-    const marked = await runWith(["k-inbox", "inbox", "date>2h", "--mark-read", "--json"], environment)
-
+    const unmarked = await runWith(["k-inbox", "inbox", "date>2h", "--json"], environment)
     expect(JSON.parse(channels.stdout).items).toEqual([])
     expect(JSON.parse(unmarked.stdout).items).toHaveLength(1)
     expect(unmarked.stderr).not.toContain("marked")
-    expect(texts(marked.stdout)).toEqual(["new"])
-    expect(marked.stderr).toContain("marked 1 chat(s) read")
-    expect(marks(max)).toEqual(["111"])
+    for (const flag of ["--mark-read", "--no-mark-read"]) {
+      const refused = await runWith(["k-inbox", "inbox", "date>2h", flag, "--json"], environment)
+      expect(refused.code).toBe(2)
+      expect(refused.stdout).toBe("")
+    }
+    expect(marks(max)).toEqual([])
   })
 
-  it("review --new reads each chat once, by kind, and marks read only when asked", async () => {
+  it("review --new reads each chat once, by kind, without marking read", async () => {
     const { max, environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
 
-    const none = await runWith(
-      ["k-review", "review", "--new", "--kind", "channel", "--no-mark-read", "--json"],
-      environment,
-    )
-    const first = await runWith(["k-review", "review", "--new", "--mark-read", "--json"], environment)
+    const none = await runWith(["k-review", "review", "--new", "--kind", "channel", "--json"], environment)
+    const first = await runWith(["k-review", "review", "--new", "--json"], environment)
     const second = await runWith(["k-review", "review", "--new", "--json"], environment)
 
     expect(JSON.parse(none.stdout).items).toEqual([])
     expect(JSON.parse(first.stdout).items.map((item: { chat_id: string }) => item.chat_id)).toEqual(["111"])
     expect(JSON.parse(second.stdout).items).toEqual([])
-    expect(marks(max)).toEqual(["111"])
+    expect(marks(max)).toEqual([])
+  })
+
+  it("review --offline answers from what an online run stored, without connecting", async () => {
+    const { environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
+    await runWith(["k-review-offline", "review", "date>2h", "--json"], environment)
+
+    const offline = await runWith(["k-review-offline", "review", "date>2h", "--offline", "--json"], {
+      ...environment,
+      connection: () => {
+        throw new Error("scripted: --offline must not connect")
+      },
+    })
+
+    expect(offline.code).toBe(0)
+    expect(new Set(JSON.parse(offline.stdout).items.map((item: { chat_id: string }) => item.chat_id))).toEqual(
+      new Set(["111"]),
+    )
   })
 })

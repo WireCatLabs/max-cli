@@ -57,7 +57,7 @@ export const createLive = (deps: Dependencies) => {
       }
     },
     chatListShown: async ({ at, sessionId }: { at: number; sessionId: number }): Promise<void> => {
-      const viewerId = deps.store.readState().viewerId
+      const viewerId = deps.store.viewerId()
       if (!viewerId) return
       await deps.connectOnce()
       await deps.wire.session.log({
@@ -86,7 +86,7 @@ export const createLive = (deps: Dependencies) => {
       const chats = asArray(deps.session().chats)
       const chatId = asId(payload.chatId)
       const chat = chats.find((candidate) => asId(candidate.id) === chatId)
-      const viewerId = deps.store.readState().viewerId
+      const viewerId = deps.store.viewerId()
 
       if (opcode === NEW_MESSAGE) {
         const raw = record(payload.message)

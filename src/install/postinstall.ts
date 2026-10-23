@@ -46,10 +46,11 @@ export const completeGlobalInstall = ({
     repair(prefix)
     note("max: Windows user PATH updated; refresh the current agent shell or open a new terminal to run max directly.")
   }
-  if ((env.MAX_INSTALL_AGENT ?? env.TG_INSTALL_AGENT) === "none") {
-    note("max: agent skill skipped by MAX_INSTALL_AGENT=none; install with max skill install --for all.")
+  // npm hides a lifecycle script's output, so writing into the owner's agent folders here must be asked for.
+  const agent = env.MAX_INSTALL_AGENT ?? env.TG_INSTALL_AGENT
+  if (agent === undefined || agent === "none") {
+    note("max: agent skill not installed; max personal setup offers it, or run max skill install --for all.")
   } else {
-    const agent = env.MAX_INSTALL_AGENT ?? env.TG_INSTALL_AGENT ?? "all"
     if (!["all", "codex", "cursor", "claude", "gemini"].includes(agent))
       throw new Error("MAX_INSTALL_AGENT must be all, codex, cursor, claude, gemini or none")
     const targets =

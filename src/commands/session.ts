@@ -1,5 +1,6 @@
-import { CliError, indent } from "@wirecat/cli-base"
+import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
+import { loginQr } from "@wirecat/cli-core"
 import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
 import { Argument, Command } from "commander"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
@@ -7,8 +8,6 @@ import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { stopServer } from "../server/server-connection.js"
 import { adoptToken } from "../session/adopt.js"
-import { serveQrPage } from "../session/browser.js"
-import { terminalQr } from "../session/qr-terminal.js"
 import { type CommandContext, forCommand } from "./context.js"
 
 // NEED-149: gentle on purpose — it asks for ordinary use alongside, and does not cite blocked accounts.
@@ -28,8 +27,8 @@ export const sessionCommand = (): Command => {
    *
    * - `token` — pasted, or piped: `pass show max | max session start`. The default, and the escape
    *   hatch when a login meets a captcha or an unusual second factor.
-   * - `qr` — our own connection asks MAX for the code; it is drawn here, or opened in the default
-   *   browser when the terminal is too narrow for it.
+   * - `qr` — our own connection asks MAX for the code; cli-core's `loginQr` draws it here, or prints it
+   *   as plain text for an agent to paste into the chat when there is no terminal.
    * - `qr-chrome`, `sms` — web.max.ru itself does the login, in a Chromium-family browser with a
    *   throwaway profile, and we read the token it stores. MAX sees its own web client. SMS has no
    *   other door: asked over our socket, MAX demands a captcha only the page can solve (2026-09-24).
@@ -47,7 +46,8 @@ export const sessionCommand = (): Command => {
         "  max work session start                 Import a token at a hidden prompt\n" +
         "\nAn interrupted first setup can be resumed with `max <profile> setup`.\n" +
         "For an expired session, explicitly log in again with `max <profile> session start qr`.\n" +
-        "Agents: read `max skill show` before login. QR/browser login needs a local terminal.\n" +
+        AGENT_QR_HELP +
+        "qr-chrome and sms need a local terminal.\n" +
         "Never put tokens or passwords in command arguments.\n",
     )
     .addArgument(
@@ -121,13 +121,19 @@ const logOut = async (client: MaxClient): Promise<boolean> => {
   }
 }
 
+/** Said the same way in `session start --help`, `setup --help` and the skill. */
+export const AGENT_QR_HELP =
+  "Agents: read `max skill show` before login. Without a terminal, `session start qr` prints the QR as text:\n" +
+  "run it in the background (it waits up to 2 minutes for the scan, and a shell tool shows nothing until it\n" +
+  "exits), read its output and paste the QR block into the chat as a code block, exactly as printed.\n"
+
 const METHODS = ["token", "qr", "qr-chrome", "sms"] as const
 export type Method = (typeof METHODS)[number]
 
 export const startSession = async (context: CommandContext, method: Method, events: MaxClientOptions["events"]) => {
   const { renderer, store, createClient, interactive } = context
   if (store.hasLoggedIn()) refuseWhilePaused(store.readState())
-  if (method !== "token" && !interactive)
+  if (method !== "token" && method !== "qr" && !interactive)
     throw new CliError(
       "validation_error",
       `\`session start ${method}\` needs a person at a terminal — use \`session start token\``,
@@ -145,7 +151,7 @@ export const startSession = async (context: CommandContext, method: Method, even
   const token = method === "token" ? String(pasted) : await obtain(method, context, events)
   context.signal.throwIfAborted()
   const client = createClient({ events }, { own: true })
-  const firstLogin = store.readState().viewerId === undefined
+  const firstLogin = store.viewerId() === undefined
   try {
     await adoptToken(client, store, token)
     const profile = await client.account.me()
@@ -158,11 +164,9 @@ export const startSession = async (context: CommandContext, method: Method, even
 /** Long enough to find the phone and type a number and a code; the profile dies with the wait. */
 const BROWSER_WAIT_MS = 5 * 60_000
 
-const QR_INDENT = 2
-
 const obtain = async (
   method: Exclude<Method, "token">,
-  { createClient, renderer, browser, track, ask, streams, columns }: CommandContext,
+  { createClient, renderer, browser, track, ask, streams, columns, interactive, store, format }: CommandContext,
   events: MaxClientOptions["events"],
 ): Promise<string> => {
   if (method !== "qr") {
@@ -174,30 +178,31 @@ const obtain = async (
     return await browser.chromiumToken({ track, waitMs: BROWSER_WAIT_MS })
   }
 
+  const qr = loginQr({
+    diagnostic: streams.diagnostic,
+    note: renderer.note,
+    columns: () => columns,
+    terminal: interactive,
+    json: format !== "pretty",
+  })
   const client = createClient({ events }, { own: true })
-  let page: Awaited<ReturnType<typeof serveQrPage>> | undefined
   try {
     return await client.login.byQr({
-      show: async (link) => {
-        const drawn = terminalQr(link)
-        // Straight to the diagnostic stream, not through the renderer: --quiet must not hide the code.
-        if (columns !== undefined && drawn.width + QR_INDENT <= columns) {
-          streams.diagnostic(`\n${indent(drawn.text, QR_INDENT)}`)
-          renderer.note("scan this code with the MAX app on your phone")
-          return
-        }
-        page = await serveQrPage(link)
-        track(page)
-        await browser.open(page.url)
-        renderer.note("the terminal is too narrow for the QR code, so it is open in your browser — scan it there")
+      show: async (link, expiresAt) => {
+        qr.show(link, "scan in the MAX app on your phone", new Date(expiresAt))
       },
-      askPassword: (hint, again) =>
-        ask(`${again ? "wrong password, try again" : "MAX password"}${hint ? ` (hint: ${hint})` : ""}: `, {
+      askPassword: (hint, again) => {
+        if (!interactive)
+          throw new CliError(
+            "validation_error",
+            `\`max ${asFirstWord(store.profile)}session start qr\` needs a terminal to ask for the MAX password`,
+          )
+        return ask(`${again ? "wrong password, try again" : "MAX password"}${hint ? ` (hint: ${hint})` : ""}: `, {
           secret: true,
-        }),
+        })
+      },
     })
   } finally {
-    await page?.close()
     await client.close()
   }
 }

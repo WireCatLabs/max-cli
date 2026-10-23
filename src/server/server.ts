@@ -148,11 +148,11 @@ export class MaxServer {
     this.#startedAt = new Date(this.#lastUse).toISOString()
     this.#subscribers = new Subscribers(options, options.note)
     this.#members = options.members?.(() => (this.#stopped ? undefined : this.#client))
-    this.#record = maxRecord({ account: () => options.store.readState().viewerId })
+    this.#record = maxRecord({ account: () => options.store.viewerId() })
     this.#replies = serverReplies({
       profile: options.store.profile,
       since: Date.parse(this.#startedAt),
-      owner: () => options.store.readState().viewerId,
+      owner: () => options.store.viewerId(),
       client: () => this.#client,
       guard: () =>
         options.guard?.() ??

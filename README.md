@@ -40,17 +40,20 @@
 
 ```sh
 npm install -g @wirecat/max-cli
-max personal setup --agent claude   # вход по QR-коду и навык для Claude Code
+max skill install --for all         # навык для Claude Code, Codex и Gemini CLI
+max personal setup                  # вход по QR-коду
 max personal inbox                  # непрочитанное во всех чатах, ничего не отмечая
 ```
 
 `max personal setup` за пять минут проводит через вход: вы сканируете QR-код в приложении MAX, и `max`
-становится ещё одним вашим устройством. Вместо `claude` можно указать `codex`, `cursor`, `gemini`,
-`all` или `none`; войти можно и по SMS через web.max.ru — `max personal setup --help`.
+становится ещё одним вашим устройством. Навык можно поставить и самим `setup`: `--agent claude`, `codex`,
+`cursor`, `gemini`, `all` или `none`. Войти можно и по SMS через web.max.ru — `max personal setup --help`.
 
 Нужен Node 22.16+ (ветка 22.x) или 24+, либо Bun 1.3+; работает в Windows, macOS и Linux.
 Попробовать без установки — `npx @wirecat/max-cli --help`. Если `max` не находится,
-`npx @wirecat/max-cli doctor` скажет почему.
+`npx @wirecat/max-cli personal doctor` скажет почему (`personal` — имя профиля, которое вы выбрали; у вас оно может быть другим).
+
+Глобальная установка (`npm install -g`) навык агента не ставит: его ставит `max personal setup` или `max skill install --for all`. `MAX_INSTALL_AGENT=all` при установке ставит его сразу, в `~/.claude/skills` и `~/.agents/skills`, если npm запускает сценарий установки. npm 11.17 и новее по умолчанию его не запускает и пишет об этом (`allow-scripts`) — это безвредно. В Windows, если `max` не находится, откройте новый терминал или выполните восстановление из [установки](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md#windows-одна-команда-установки).
 
 Подробнее: [установка](https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/installation)), [вход и профили](https://github.com/WireCatLabs/max-cli/blob/main/docs/sessions.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/sessions)).
 
@@ -107,8 +110,9 @@ max personal mcp config             # запись для Claude Desktop, Cursor
 
 ## Почему max
 
-- **Весь аккаунт, а не только бот.** Чаты, история, группы, контакты, файлы и голосовые — как в
-  приложении. И отдельно бот через официальный Bot API.
+- **Весь аккаунт, а не только бот.** Чаты, история, группы, контакты, файлы и голосовые — почти всё,
+  что умеет приложение; кружков и настройки пароля двухэтапной проверки пока нет. И отдельно бот
+  через официальный Bot API.
 - **Своя копия переписки.** Всё прочитанное хранится на вашем компьютере: быстрый поиск и чтение
   без интернета (`--offline`), выгрузка в JSONL или Markdown.
 - **Сделан для агентов.** Навык, MCP-сервер, одна форма JSON и коды ошибок, по которым скрипт
@@ -219,7 +223,7 @@ max personal chats moderate "Поход" --dry-run              # что нар�
 историю чата можно скачать глубже и выгрузить.
 
 ```sh
-max personal search all "договор"                             # сообщения и заметки сразу; почта — memo search mail
+max personal search all "договор"                             # сообщения и заметки сразу (для почты есть отдельный CLI memo)
 max personal search messages 'договор chat:"Проект Альфа"'  # только один чат
 max personal messages sync "Проект Альфа" --last 500            # последние 500 сообщений — в копию
 max personal store export "Проект Альфа" --format markdown --output alfa.md
@@ -295,7 +299,6 @@ max personal session start qr          # повторный вход, когда
 | `permissions` | что можно: `deny`, `readonly`, `ask`, `allow` — для команды или группы команд | всё, кроме удаления и других необратимых действий: они спрашивают |
 | `sends_per_hour` | сколько сообщений профиль отправит за час | `30` |
 | `requests_per_minute` | темп обращений к MAX | `20` |
-| `catch_up_marks_read` | `inbox` и `review` отмечают показанное прочитанным | `false` |
 | `limit` | сколько строк в списке | `20` |
 
 ```sh

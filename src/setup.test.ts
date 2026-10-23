@@ -4,6 +4,7 @@ import { join } from "node:path"
 import { PassThrough } from "node:stream"
 import { stripVTControlCharacters } from "node:util"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { plainQr } from "@wirecat/cli-core"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -53,6 +54,7 @@ describe("MAX guided setup", () => {
   it("reuses credentials, checks five chats and returns one result without fetching history", async () => {
     const h = harness()
     expect(await h.setup("--json")).toBe(0)
+    expect(h.streams.stderr.join("\n")).toContain("2/4 — Link this device")
     const output = h.streams.stdout.join("\n")
     const answer = JSON.parse(output)
     expect(answer.item).toMatchObject({
@@ -95,7 +97,7 @@ describe("MAX guided setup", () => {
     const h = harness({ token: false })
     h.environment.interactive = true
     const browser = vi.fn(async () => "browser-setup-token")
-    h.environment.browser = { chromiumToken: browser, open: async () => {} }
+    h.environment.browser = { chromiumToken: browser }
     expect(await h.setup("--method", method, "--agent", "none")).toBe(0)
     expect(browser).toHaveBeenCalledOnce()
     expect(h.store.readToken()).toBe("browser-setup-token")
@@ -123,8 +125,32 @@ describe("MAX guided setup", () => {
     h.environment.columns = 200
     expect(await h.setup("--agent", "none")).toBe(0)
     expect(h.store.readToken()).toBe("qr-setup-token")
+    const screen = h.streams.stderr.join("\n")
+    expect(screen).toContain("[2/4] Link this device")
+    expect(screen.slice(0, screen.indexOf("▀"))).not.toMatch(/scan/i)
     expect(qr.unexpected).toEqual([])
     expect(h.max.unexpected).toEqual([])
+  })
+
+  it("**logs in by QR without a terminal**: the code is printed as text to paste", async () => {
+    const h = harness({ token: false })
+    const link = "https://qr.example/?token=synthetic"
+    const qr = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.GET_QR]: { qrLink: link, trackId: "synthetic", pollingInterval: 1, expiresAt: Date.now() + 60_000 },
+        [Opcode.GET_QR_STATUS]: { status: { loginAvailable: true } },
+        [Opcode.LOGIN_BY_QR]: { tokenAttrs: { LOGIN: { token: "qr-setup-token" } } },
+      },
+    })
+    let count = 0
+    h.environment.connection = () =>
+      new Connection({ createSocket: (count++ === 0 ? qr : h.max).createSocket, timeoutMs: 50 })
+    expect(await h.setup("--json")).toBe(0)
+    const lines = plainQr(link).split("\n")
+    const stderr = h.streams.stderr.join("\n")
+    for (const line of lines) expect(stderr).toContain(line)
+    expect(h.store.readToken()).toBe("qr-setup-token")
   })
 
   it("does not try a fresh login when a previously used keyring is unreachable", async () => {
@@ -184,13 +210,6 @@ describe("MAX guided setup", () => {
     expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.code).toBe("timeout")
   })
 
-  it("refuses a first QR login without a terminal and does not contact MAX", async () => {
-    const h = harness({ token: false })
-    expect(await h.setup("--json")).toBe(2)
-    expect(h.streams.stderr.join("\n")).toContain("local terminal")
-    expect(h.max.sent).toEqual([])
-  })
-
   it("skips the optional agent question under CI even on a terminal", async () => {
     const h = harness()
     h.environment.env = { ...process.env, CI: "true" }
@@ -207,12 +226,7 @@ describe("MAX guided setup", () => {
     h.environment.tty = true
     const browser = vi.fn(async () => "must-not-be-used")
     const ask = vi.fn(async () => "must-not-be-used")
-    h.environment.browser = {
-      chromiumToken: browser,
-      open: async () => {
-        await browser()
-      },
-    }
+    h.environment.browser = { chromiumToken: browser }
     h.environment.ask = ask
     expect(await h.setup("--method", "qr-chrome", flag)).toBe(2)
     expect(browser).not.toHaveBeenCalled()

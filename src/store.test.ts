@@ -189,6 +189,7 @@ describe("max store", () => {
 
     const bare = await max(["s-clear", "store", "clear", "--json"], environment)
     const preview = await max(["s-clear", "store", "clear", "--left", "--json"], environment)
+    const dryRun = await max(["s-clear", "store", "clear", "--left", "--dry-run", "--json"], environment)
     const cleared = await max(["s-clear", "store", "clear", "--left", "--allow-dangerous", "--json"], environment)
 
     expect(bare.code).toBe(2)
@@ -196,7 +197,9 @@ describe("max store", () => {
     expect(JSON.parse(preview.stderr).error.message).toContain(
       "1 chat(s) this account has left and their 70 message(s)",
     )
-    expect(JSON.parse(cleared.stdout).item).toEqual({ cleared: true, chats: 1, messages: 70 })
+    const left = [{ id: "111", title: "Друзья", messages: 70 }]
+    expect(JSON.parse(dryRun.stdout).item).toEqual({ cleared: false, dry_run: true, chats: 1, messages: 70, left })
+    expect(JSON.parse(cleared.stdout).item).toEqual({ cleared: true, chats: 1, messages: 70, left })
     expect(sent(Opcode.LOGIN)).toHaveLength(logins)
   })
 
@@ -288,6 +291,20 @@ describe("max conversations", () => {
     expect(readFileSync(join(root, "111.jsonl"), "utf8").trim().split("\n")).toHaveLength(70)
     expect(opened.code).toBe(0)
     expect(JSON.parse(backup.stdout).item).toMatchObject({ encrypted: true })
+    expect(logins()).toBe(before)
+  })
+
+  it("**rebuilds a chat's conversations** without asking MAX, the agents' refresh", async () => {
+    const { environment, logins } = await fetched("c-rebuild")
+    const before = logins()
+
+    const rebuilt = await max(
+      ["c-rebuild", "conversations", "rebuild", "--chat", "111", "--max-chats", "1", "--max-chunks", "10", "--json"],
+      environment,
+    )
+
+    expect(rebuilt.code).toBe(0)
+    expect(JSON.stringify(JSON.parse(rebuilt.stdout).item)).toContain("111")
     expect(logins()).toBe(before)
   })
 

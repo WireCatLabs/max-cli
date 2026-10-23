@@ -33,9 +33,13 @@
 
 ```sh
 npm install -g @wirecat/max-cli
-pnpm add -g @wirecat/max-cli
-bun add -g @wirecat/max-cli
+max skill install --for all
 ```
+
+Первая строка ставит команду, вторая — навык для ИИ-агентов. Вместо npm подойдут `pnpm add -g
+@wirecat/max-cli` и `bun add -g @wirecat/max-cli`. npm 11.17 и новее пишет, что сценарий установки не запущен (`allow-scripts`), — это
+безвредно: вторая строка делает то, что сделал бы сценарий установки. В Windows, если `max` не
+находится, откройте новый терминал.
 
 Запустить, ничего не устанавливая:
 
@@ -49,12 +53,12 @@ bunx @wirecat/max-cli --help
 
 ```sh
 max --version
-max --help              # список команд
+max --help                       # что умеет max и где полный список команд
 max personal doctor              # где лежат файлы и есть ли вход; к MAX не подключается
 ```
 
-Если установка прошла, а `max` не находится, `npx @wirecat/max-cli doctor` скажет почему и какую
-команду выполнить ([`max` не находится после установки](troubleshooting.md#max-не-находится-после-установки)).
+Если установка прошла, а `max` не находится, `npx @wirecat/max-cli personal doctor` скажет почему и какую
+команду выполнить (`personal` — имя профиля, которое вы выбрали при входе) ([`max` не находится после установки](troubleshooting.md#max-не-находится-после-установки)).
 
 ## Первый запуск
 
@@ -75,9 +79,13 @@ max personal setup --help                   # примеры и способы �
 `max skill install --for all`. Способы входа и что делать, если вход прервался, — в
 [инструкции входа](sessions.md).
 
-**Глобальная установка через npm** тоже ставит навык агента. По умолчанию — для всех
-поддерживаемых агентов; `MAX_INSTALL_AGENT=codex|cursor|claude|gemini|all|none` выбирает агента
-или отключает установку навыка. В Windows она же сохраняет PATH для новых терминалов. Агенту в уже
+**Глобальная установка через npm** навык агента не ставит, пока его не попросили:
+`MAX_INSTALL_AGENT=codex|cursor|claude|gemini|all` выбирает агента, без неё навык ставит `max personal setup` или
+`max skill install --for all`. С npm 11.17 и новее сценарии установки по умолчанию заблокированы (в Windows не
+исправляется и PATH). Их можно разрешить так:
+`npm install -g --allow-scripts=@wirecat/max-cli @wirecat/max-cli`.
+Если `max` не находится, откройте новый терминал; не помогло — восстановление PATH описано ниже. В Windows
+сценарий установки сохраняет PATH для новых терминалов. Агенту в уже
 открытом терминале нужно обновить окружение и прочитать `max skill show` перед входом. Локальная
 установка пакета и `npx` не меняют PATH и не ставят навык.
 
@@ -227,7 +235,7 @@ max upgrade --check   # только сказать, есть ли новее; �
 
 Раз в сутки `max` сам спрашивает npm о новой версии и, если она есть, пишет после команды одну строку
 в stderr — только человеку в терминале: не в `--json`, не в трубу, не с `--quiet`, не в `CI`.
-Выключается `max config set update_check false --defaults`.
+Выключается `max config set update_check false --defaults` или переменной `MAX_NO_UPDATE_CHECK=1`.
 
 Из исходников — `git pull && pnpm install && pnpm build`.
 
@@ -242,7 +250,11 @@ max personal session end                        # выйти и забыть т�
 max sales bot auth remove              # забыть токен бота из профиля sales
 npm uninstall -g @wirecat/max-cli
 rm -rf ~/.config/max-cli ~/.local/share/max-cli ~/.cache/max-cli
+rm -rf ~/.claude/skills/max-cli ~/.agents/skills/max-cli
 ```
+
+Последняя строка убирает навык агента, если вы его ставили. В Windows пути данных — в таблице выше;
+навык лежит в `%USERPROFILE%\.claude\skills\max-cli` и `%USERPROFILE%\.agents\skills\max-cli`.
 
 `max personal session end` и `bot auth remove` стирают токены из ключницы. Если сначала удалить команду,
 запись в ключнице останется — безвредно, но лежать будет.

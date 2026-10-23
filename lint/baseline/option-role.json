@@ -1,12 +1,6 @@
 [
-  "account privacy set --calls",
-  "account privacy set --chat-invites",
-  "account privacy set --find-by-phone",
-  "account privacy set --hide-online",
-  "account privacy set --phone-number",
   "bot api --store-token",
   "bot search messages --from",
-  "chats mute --until",
   "replies audience --reply",
   "replies edit --as-reply",
   "replies edit --contacts-only",

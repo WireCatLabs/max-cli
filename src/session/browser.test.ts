@@ -3,7 +3,7 @@ import { existsSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import { ChromiumSession, serveQrPage, tokenIn } from "./browser.js"
+import { ChromiumSession, tokenIn } from "./browser.js"
 
 describe("tokenIn", () => {
   it("reads the token out of a stored object, or takes a bare string as it is", () => {
@@ -72,18 +72,5 @@ describe("ChromiumSession over the DevTools pipe", () => {
 
     expect(browser.exitCode).toBe(0)
     expect(existsSync(profile)).toBe(false)
-  })
-})
-
-describe("serveQrPage", () => {
-  it("serves the code at a random path only, and stops when closed", async () => {
-    const page = await serveQrPage("https://qr.example/?token=x")
-    const origin = new URL(page.url).origin
-
-    expect(await (await fetch(page.url)).text()).toContain("<svg")
-    expect((await fetch(`${origin}/`)).status).toBe(404)
-
-    await page.close()
-    await expect(fetch(page.url)).rejects.toThrow()
   })
 })

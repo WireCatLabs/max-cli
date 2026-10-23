@@ -11,8 +11,8 @@ only the event lines.
 
 The rules every WireCat CLI follows — layers, lifecycle, output, permissions, the store — are in the
 [CLI standards handbook](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/README.md); this page links them and keeps what is MAX's own.
-"Brief §N" is `docs_ai/REQUIREMENTS.md`; rulings (`NEED-nn`) are in
-`docs_ai/DECISIONS.md`. Long detail lives in companions under `architecture/`:
+"Brief §N" is the owner's brief, and rulings (`NEED-nn`) are in the owner's decision log
+(both private notes). Long detail lives in companions under `architecture/`:
 [`session.md`](architecture/session.md) (§7), [`messages.md`](architecture/messages.md) (§10),
 [`store.md`](architecture/store.md) (§15, §16).
 
@@ -201,7 +201,7 @@ socket, so "the next frame is my answer" eventually reads somebody's incoming me
 
 `CHAT_HISTORY` (49) and `CHAT_MARK` (50) are separate. Nothing that reads sends 50;
 `src/client.test.ts` asserts opcode 50 is absent from everything a read sends. It goes out from `client.chats.markRead` only —
-`max chats mark-read`, `messages list --mark-read`, and the MCP mark-read tool — through
+`max chats mark-read` and the MCP mark-read tool — through
 the send guard as kind `read`. Its request is PyMax's shape, not measured (`src/spec/operations/chats.ts`).
 
 ⚠ Until the spec landed (2026-09-19) that assertion compared against a missing `Opcode.CHAT_MARK`,
@@ -592,7 +592,7 @@ write at level `ask` goes ahead without a form.
 - **stdout is the protocol.** Notes go to stderr; the process exits on stdin EOF.
 
 User side: [`../mcp.md`](../mcp.md). The research behind the choices is local-only
-(`docs_ai/plans/2026-09-23-mcp-research.md`).
+(private notes).
 
 ## 18. The bot API is a separate slice, generated from the official schema
 
@@ -605,7 +605,7 @@ generated code. Nothing under `src/bot/` imports `src/protocol/`, `src/session/`
 spec/bot/schema.yaml        the official OpenAPI document, committed with provenance.json
    │  pnpm bot:spec:sync    — the only step that reads the network, and only when run by hand
    ▼
-scripts/bot/openapi-adapter.ts   OpenAPI → cli-base's format-neutral ApiModel; strict, names what it refuses
+cli-base's adaptOpenApi          OpenAPI → the format-neutral ApiModel; strict, names what it refuses
 scripts/bot/overrides.ts         read / write / destructive, where the HTTP method is wrong
    │  pnpm bot:generate     — part of `pnpm generate`, so full validation's freshness check covers it
    ▼

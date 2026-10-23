@@ -10,7 +10,7 @@ import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile
 import { SKILL, SKILL_APP } from "../skill.js"
 import { installer } from "../update.js"
 import { type CommandContext, environmentOf, forCommand } from "./context.js"
-import { type Method, startSession, TERMS_NOTICE } from "./session.js"
+import { AGENT_QR_HELP, type Method, startSession, TERMS_NOTICE } from "./session.js"
 
 const AGENTS = ["none", "codex", "cursor", "claude", "gemini", "all"] as const
 type Agent = (typeof AGENTS)[number]
@@ -91,10 +91,12 @@ export const setupCommand = (): Command =>
         "  max personal setup --method qr-chrome  Log in through web.max.ru in Chromium\n" +
         "  max personal setup --method sms        Enter your phone number in that browser\n" +
         "  max personal setup --method token      Import a token at a hidden prompt or from stdin\n" +
+        "  max personal setup --json              Without a terminal: the QR is printed as text to paste\n" +
         "\nThe first word names the profile; any name works, and every later command repeats it.\n" +
         "\nAllow about 5 minutes. Scan the QR with MAX on your phone.\n" +
         "Keep tokens and passwords in the local terminal, never in command arguments.\n" +
-        "Agents: read `max skill show` before login. QR/browser login needs a local terminal.\n" +
+        AGENT_QR_HELP +
+        "qr-chrome and sms need a local terminal.\n" +
         "Existing sessions are checked without another login. Machine mode skips agent installation\n" +
         "unless --agent is given. Bot accounts use `max <profile> bot auth set` separately.\n" +
         "\nSetup checks five chats. Choose a chat and how much history to fetch before:\n" +
@@ -126,10 +128,15 @@ export const setupCommand = (): Command =>
           `this is a bot profile — use max ${asFirstWord(settings.profile)}bot auth set; setup is for your personal account`,
         )
       const reused = store.readToken() !== undefined
-      if (!reused && !store.hasLoggedIn() && options.method !== "token" && !context.interactive)
+      if (
+        !reused &&
+        !store.hasLoggedIn() &&
+        !context.interactive &&
+        (options.method === "qr-chrome" || options.method === "sms")
+      )
         throw new CliError(
           "validation_error",
-          "max setup needs a local terminal for QR/browser login — run it locally; token import uses --method token",
+          "max setup needs a local terminal for a browser login — run it locally, or import a token with --method token",
         )
       const prefix = `max ${asFirstWord(settings.profile)}`
       const runner =
@@ -152,11 +159,10 @@ export const setupCommand = (): Command =>
           screen.detail(
             "Windows: use max.cmd or npm.cmd if PowerShell blocks scripts. Open a new terminal after installing Node.js.",
           )
+        screen.step(2, "Link this device")
         if (reused || store.hasLoggedIn()) {
-          screen.step(2, "Log in")
           screen.detail("✓ existing session, no new login")
         } else {
-          screen.step(2, "Log in: scan the QR code with MAX on your phone")
           const login = await startSession(underStep(context, screen), options.method, events)
           if (login.firstLogin) screen.detail(TERMS_NOTICE)
         }

@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**915 ✅ · 157 ⛔ · 0 ❌** — 346 commands, 726 options.
+**922 ✅ · 175 ⛔ · 0 ❌** — 358 commands, 739 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -156,6 +156,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts context` | `--since-time` | ⛔ | cli-core src/cli/messenger/messenger.test.ts and src/store/contacts.test.ts cover local identity context and stored-message filtering; shared option parsing |
 | `contacts context` | `--chat` | ✅ |  |
 | `contacts context` | `--sync-first` | ✅ |  |
+| `contacts prepare` |  | ✅ |  |
+| `contacts prepare` | `--limit` | ✅ |  |
+| `contacts prepare` | `--since-time` | ✅ |  |
 | `contacts timeline` |  | ✅ |  |
 | `contacts timeline` | `--scope` | ✅ |  |
 | `contacts timeline` | `--since-time` | ✅ |  |
@@ -171,7 +174,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages list` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |
 | `messages list` | `--transcribe` | ✅ |  |
 | `messages list` | `--model` | ✅ |  |
-| `messages list` | `--mark-read` | ✅ |  |
 | `messages show` |  | ✅ |  |
 | `messages context` |  | ✅ |  |
 | `messages context` | `--thread` | ✅ |  |
@@ -271,6 +273,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store clear` |  | ✅ |  |
 | `store clear` | `--left` | ✅ |  |
 | `store clear` | `--allow-dangerous` | ✅ |  |
+| `store clear` | `--dry-run` | ✅ |  |
 | `store info` |  | ✅ |  |
 | `store check` |  | ✅ |  |
 | `store migrate` |  | ✅ |  |
@@ -501,6 +504,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations links clear` |  | ✅ |  |
 | `conversations links clear` | `--chat` | ✅ |  |
 | `conversations links clear` | `--model` | ✅ |  |
+| `conversations rebuild` |  | ✅ |  |
+| `conversations rebuild` | `--chat` | ✅ |  |
+| `conversations rebuild` | `--max-chats` | ✅ |  |
+| `conversations rebuild` | `--max-chunks` | ✅ |  |
 | `conversations consents list` |  | ✅ |  |
 | `conversations consents revoke` |  | ✅ |  |
 | `conversations consents revoke` | `--chat` | ✅ |  |
@@ -550,6 +557,23 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `attachments text set` |  | ✅ |  |
 | `attachments text set` | `--attachment` | ✅ |  |
 | `attachments text set` | `--text-file` | ✅ |  |
+| `attachments download` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments download` | `--chat` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments download` | `--since-time` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments download` | `--pause` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments check` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--at` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--timezone` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--chat` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs install` | `--since-time` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs start` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs stop` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs status` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments jobs uninstall` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments move` |  | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments move` | `--before-time` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
+| `attachments move` | `--dry-run` | ⛔ | shared cli-core archive over injected message streams and systemd; tested in src/cli/messenger/media-archive.test.ts, media-archive-command.test.ts, media-archive-move.test.ts and src/background/daily-archive-timer.test.ts |
 | `tags auto` |  | ✅ |  |
 | `tags auto` | `--chat` | ✅ |  |
 | `tags auto` | `--limit` | ✅ |  |
@@ -706,8 +730,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `inbox` | `--kind` | ✅ |  |
 | `inbox` | `--transcribe` | ✅ |  |
 | `inbox` | `--model` | ✅ |  |
-| `inbox` | `--mark-read` | ✅ |  |
-| `inbox` | `--no-mark-read` | ✅ |  |
 | `review` |  | ✅ |  |
 | `review` | `--kind` | ✅ |  |
 | `review` | `--unanswered` | ✅ |  |
@@ -715,8 +737,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `review` | `--transcribe` | ✅ |  |
 | `review` | `--model` | ✅ |  |
 | `review` | `--new` | ✅ |  |
-| `review` | `--mark-read` | ✅ |  |
-| `review` | `--no-mark-read` | ✅ |  |
 | `replies add` |  | ✅ |  |
 | `replies on` |  | ✅ |  |
 | `replies off` |  | ✅ |  |
@@ -911,6 +931,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot watch` |  | ✅ |  |
 | `bot watch` | `--events` | ✅ |  |
 | `bot watch` | `--types` | ✅ |  |
+| `bot watch` | `--public-url` | ✅ |  |
+| `bot watch` | `--port` | ✅ |  |
 | `bot callbacks answer` |  | ✅ |  |
 | `bot callbacks answer` | `--text` | ✅ |  |
 | `bot callbacks answer` | `--notification` | ✅ |  |
@@ -1063,6 +1085,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot api get-updates` | `--poll-timeout` | ✅ |  |
 | `bot api get-updates` | `--marker` | ✅ |  |
 | `bot api get-updates` | `--types` | ✅ |  |
+| `guide` |  | ✅ |  |
+| `help` |  | ✅ |  |
 | *global* | `--version` | ✅ |  |
 | *global* | `--verbose` | ✅ |  |
 | *global* | `--json` | ✅ |  |
@@ -1083,3 +1107,4 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | *global* | `--no-record` | ✅ |  |
 | *global* | `--serve` | ✅ |  |
 | *global* | `--no-serve` | ✅ |  |
+| *global* | `--help-all` | ⛔ | commander prints the full help and exits before any action runs, so no argv is logged; src/program.test.ts reads `--help-all` for the commands and global options |

@@ -95,7 +95,7 @@ export const createPeople = (deps: Dependencies) => {
       if (contact.id) people.set(contact.id, contact)
     }
 
-    const viewerId = deps.store.readState().viewerId
+    const viewerId = deps.store.viewerId()
     const missing = new Set<Id>()
     for (const chat of chats) {
       if (toChat(chat).kind === "channel") continue
@@ -126,7 +126,7 @@ export const createPeople = (deps: Dependencies) => {
     const participants = record(chat.participants)
     if (!participants) return undefined
 
-    const viewerId = deps.store.readState().viewerId
+    const viewerId = deps.store.viewerId()
     const others = Object.keys(participants).filter((id) => id !== viewerId)
     return others.length === 1 ? others[0] : undefined
   }
@@ -147,7 +147,7 @@ export const createPeople = (deps: Dependencies) => {
   }
 
   function botOf(chatId: Id): Id {
-    const viewerId = deps.store.readState().viewerId
+    const viewerId = deps.store.viewerId()
     if (chatId.startsWith("-") || viewerId === undefined)
       throw new CliError("validation_error", `chat ${chatId} is not a one-to-one chat with a bot`)
     return String(BigInt(viewerId) ^ BigInt(chatId))

@@ -19,7 +19,13 @@ const message: MessageHit = {
   reactions: null,
 }
 const edit = { event: "change", change: { event: "edit", message: { ...message, text: "hi!" } } } as const
-const plain = { events: false, pretty: false, render: () => "", reader: { provider: "max", account: "500" } }
+const plain = {
+  events: false,
+  pretty: false,
+  render: () => "",
+  reader: { provider: "max", account: "500" },
+  zone: "UTC",
+}
 const read = {
   event: "read",
   chatId: "111",
@@ -74,8 +80,9 @@ describe("max watch lines", () => {
       participantsCount: 3,
     }
 
-    expect(watchLine({ event: "change", change: read }, pretty)).toBe(
-      "read in First by 7 up to 2026-10-08T09:00:00.000Z\n",
+    expect(watchLine({ event: "change", change: read }, pretty)).toBe("read in First by 7 up to 2026-10-08 09:00 UTC\n")
+    expect(watchLine({ event: "change", change: read }, { ...pretty, zone: "Asia/Vladivostok" })).toBe(
+      "read in First by 7 up to 2026-10-08 19:00 Asia/Vladivostok\n",
     )
     expect(watchLine({ event: "change", change: { event: "chat", chat } as const }, pretty)).toBe(
       "chat changed: Renamed\n",

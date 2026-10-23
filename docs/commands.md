@@ -42,8 +42,8 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--no-input` | never prompt or open interactive login; piped input remains available. |
 | `--max-input-bytes <bytes>` | maximum buffered input bytes (default: 16777216). |
 | `--max-output-bytes <bytes>` | maximum machine output bytes (default: 4194304; 0 disables). |
-| `--brief` | found messages and mail as reference, title, time, sender and excerpt only. |
-| `--full` | found messages and mail with their whole text and every provider field. |
+| `--brief` | found messages as reference, title, time, sender and excerpt only. |
+| `--full` | found messages with their whole text and every provider field. |
 | `--dry-run` | preview parsed arguments and permissions before running the action. |
 | `--yes` | go ahead without the question an ask level puts before a write. |
 | `--record` | keep this run under `max runs` — ids and timings, never message content. |
@@ -69,6 +69,10 @@ max session start [method]
 |---|---|---|
 | `method` | необязательный | token (pasted or piped), qr, qr-chrome or sms. Одно из: `token`, `qr`, `qr-chrome`, `sms`. По умолчанию: `token`. |
 
+**Returns:** log this profile in to MAX
+
+**Example:** `max personal session start`
+
 ### `max session end`
 
 log this profile out on MAX's side and forget the session here
@@ -78,6 +82,10 @@ log this profile out on MAX's side and forget the session here
 ```sh
 max session end
 ```
+
+**Returns:** log this profile out on MAX's side and forget the session here
+
+**Example:** `max personal session end`
 
 ## `max setup`
 
@@ -94,6 +102,10 @@ max setup [options]
 | `--agent <agent>` | install the skill for this agent; asks at a terminal, otherwise none. Одно из: `none`, `codex`, `cursor`, `claude`, `gemini`, `all`. |
 | `--method <method>` | how to log in when there is no session. Одно из: `token`, `qr`, `qr-chrome`, `sms`. По умолчанию: `qr`. |
 
+**Returns:** set up your personal MAX account and connect your agent
+
+**Example:** `max personal setup`
+
 ## `max account`
 
 the logged-in account
@@ -106,6 +118,10 @@ every profile on this computer, and the account each is logged in as; asks the m
 max account list
 ```
 
+**Returns:** profiles on this computer and their signed-in accounts
+
+**Example:** `max personal account list`
+
 ### `max account show`
 
 who this profile is logged in as; the phone number shows its last four digits
@@ -117,6 +133,10 @@ max account show [options]
 | Опция | Что делает |
 |---|---|
 | `--show-phone` | print the whole phone number. |
+
+**Returns:** account — provider, id, name, username, phone, scope; every field: max commands schema account show
+
+**Example:** `max personal account show`
 
 ### `max account update`
 
@@ -135,6 +155,10 @@ max account update [options]
 | `--description <text>` | about you. |
 | `--photo <file>` | a new profile photo — an image file. |
 
+**Returns:** change the name, the description or the photo everyone sees on your profile
+
+**Example:** `max personal account update --first-name Alex`
+
 ### `max account sessions`
 
 where else this account is logged in — not `max session`, which is this tool's own login
@@ -151,6 +175,10 @@ max account sessions list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
 
+**Returns:** account session — current, client, device, location, last_active_at, created_at; every field: max commands schema account sessions list
+
+**Example:** `max personal account sessions list`
+
 #### `max account sessions end`
 
 log out every other device, your phone included; this one stays
@@ -165,6 +193,10 @@ max account sessions end [options]
 |---|---|
 | `--others` | every session but this one. |
 
+**Returns:** log out every other device, your phone included; this one stays
+
+**Example:** `max personal account sessions end --others`
+
 ### `max account privacy`
 
 who may find, call or add the account
@@ -176,6 +208,10 @@ the account's privacy settings; reading changes nothing
 ```sh
 max account privacy show
 ```
+
+**Returns:** the account's privacy settings; reading changes nothing
+
+**Example:** `max personal account privacy show`, `max personal account privacy show --json`
 
 #### `max account privacy set`
 
@@ -195,6 +231,10 @@ max account privacy set [options]
 | `--chat-invites <who>` | who may add the account to groups and channels: everyone, contacts or nobody. |
 | `--hide-online <on\|off>` | hide online status and last seen. |
 
+**Returns:** change who may find, call or add the account; the settings not named stay
+
+**Example:** `max personal account privacy set --find-by-phone contacts`, `max personal account privacy set --hide-online on`
+
 ## `max calls`
 
 the account's calls
@@ -211,6 +251,10 @@ max calls list [options]
 |---|---|
 | `--limit <n>` | how many to show. |
 
+**Returns:** calls made and received, newest first; reading changes nothing
+
+**Example:** `max personal calls list`
+
 ## `max stickers`
 
 the stickers the account has added
@@ -226,6 +270,10 @@ max stickers list [options]
 | Опция | Что делает |
 |---|---|
 | `--set <id>` | the stickers in this set. |
+
+**Returns:** sticker sets, or with --set the stickers in one; reading changes nothing
+
+**Example:** `max personal stickers list`
 
 ## `max chats`
 
@@ -249,6 +297,12 @@ max chats list [query] [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 
+**Returns:** chat — ref, id, title, kind, unread_count, last_message_at, participants_count, provider, and 14 more; every field: max commands schema chats list
+
+**Next usually:** `max chats show <chat>`, `max chats events <chat> [query]`, `max chats media <chat>`
+
+**Example:** `max personal chats list --limit 10`
+
 ### `max chats show`
 
 one chat: its kind, unread count, last message time and who is in it
@@ -260,6 +314,12 @@ max chats show <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** chat — ref, id, title, kind, unread_count, last_message_at, participants_count, provider, and 14 more; every field: max commands schema chats show
+
+**Next usually:** `max chats events <chat> [query]`, `max chats media <chat>`, `max chats documents list <chat>`
+
+**Example:** `max personal chats show "Book club"`
 
 ### `max chats documents`
 
@@ -282,6 +342,10 @@ max chats documents list <chat> [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 
+**Returns:** every document link in the chat, newest first, and whether the store has it
+
+**Example:** `max personal chats documents list CHAT_ID --limit 20`
+
 ### `max chats events`
 
 who joined, left, was added or removed, and by whom — from the chat's service messages; the last 7 days unless the query names time
@@ -295,6 +359,10 @@ max chats events <chat> [query]
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
+**Returns:** chat event — chat_id, time, type, people, message_id, by, title, before; every field: max commands schema chats events
+
+**Example:** `max personal chats events "Book club"`
+
 ### `max chats inspect`
 
 what an invite or public link leads to, without joining it
@@ -306,6 +374,10 @@ max chats inspect <link>
 | Аргумент | | Что это |
 |---|---|---|
 | `link` | обязательный | an invite link or a public one. |
+
+**Returns:** what an invite or public link leads to, without joining it
+
+**Example:** `max personal chats inspect https://example.com/invite/book-club`
 
 ### `max chats join`
 
@@ -320,6 +392,10 @@ max chats join <link>
 | Аргумент | | Что это |
 |---|---|---|
 | `link` | обязательный | an invite link, or a public one. |
+
+**Returns:** join a group or channel by its link; the others in it see that you joined
+
+**Example:** `max personal chats join https://example.com/invite/book-club`
 
 ### `max chats mark-read`
 
@@ -339,6 +415,10 @@ max chats mark-read <chat> [options]
 |---|---|
 | `--until-id <id>` | only up to this message id; the newest by default. |
 
+**Returns:** mark a chat read; the other side sees that you read it
+
+**Example:** `max personal chats mark-read Team`
+
 ### `max chats leave`
 
 leave a group or channel; the others in it see that you left
@@ -352,6 +432,10 @@ max chats leave <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** leave a group or channel; the others in it see that you left
+
+**Example:** `max personal chats leave "Book club"`
 
 ### `max chats create`
 
@@ -371,6 +455,10 @@ max chats create <title> [person] [options]
 | Опция | Что делает |
 |---|---|
 | `--channel` | a private channel instead of a group; people join it by its link. |
+
+**Returns:** create a group or a channel; the people added are told
+
+**Example:** `max personal chats create "Book club" "Alex Example"`
 
 ### `max chats members`
 
@@ -395,6 +483,12 @@ max chats members list <chat> [query] [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 
+**Returns:** member — id, name, username, role, last_seen_at, registered_at, joined_at, invited_by, and 7 more; every field: max commands schema chats members list
+
+**Next usually:** `max contacts show <person>`, `max contacts profile <person>`, `max contacts notes list <person> [query]`
+
+**Example:** `max personal chats members list "Book club"`
+
 #### `max chats members audit`
 
 members that look like bots, each with its reasons — read from the member list and the local store; never one request per person, and it removes nobody
@@ -413,6 +507,12 @@ max chats members audit <chat> [query] [options]
 | `--max-pages <pages>` | at most this many pages of 200 members, a pause between them (default: 10). |
 | `--deep <n>` | also check the top n in full — profile, photos and everything they wrote — one person a second; the public ban lists cover Telegram only, so nothing is sent. |
 
+**Returns:** member — id, name, username, role, last_seen_at, registered_at, joined_at, invited_by, and 7 more; every field: max commands schema chats members audit
+
+**Next usually:** `max contacts show <person>`, `max contacts profile <person>`, `max contacts notes list <person> [query]`
+
+**Example:** `max personal chats members audit "Book club"`
+
 #### `max chats members history`
 
 who joined, who left and whose profile changed, oldest first — what chats members fetch recorded in the local store; never asks the messenger
@@ -425,6 +525,10 @@ max chats members history <chat> [query]
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** chat event — chat_id, time, type, people, message_id, by, title, before; every field: max commands schema chats members history
+
+**Example:** `max personal chats members history "Book club"`
 
 #### `max chats members fetch`
 
@@ -445,6 +549,10 @@ max chats members fetch <chat> [options]
 | `--track` | also fetch it daily while serve runs; chats tracking lists and edits those chats. |
 | `--max-pages <pages>` | at most this many pages of 200 members, a pause between them (default: 10). |
 
+**Returns:** save the group's current membership
+
+**Example:** `max personal chats members fetch "Book club"`
+
 #### `max chats members add`
 
 add people; they are told
@@ -464,6 +572,10 @@ max chats members add <chat> <person> [options]
 |---|---|
 | `--history` | the people added also see the messages from before they came. |
 
+**Returns:** add people; they are told
+
+**Example:** `max personal chats members add "Book club" "Alex Example"`
+
 #### `max chats members remove`
 
 remove people; their messages stay
@@ -479,6 +591,10 @@ max chats members remove <chat> <person>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
 
+**Returns:** remove people; their messages stay
+
+**Example:** `max personal chats members remove "Book club" "Alex Example"`
+
 ### `max chats tracking`
 
 the chats whose member lists serve fetches daily into the local store — chats members fetch --track adds one
@@ -491,6 +607,10 @@ every tracked chat: since when, and its last member count
 max chats tracking list
 ```
 
+**Returns:** every tracked chat: since when, and its last member count
+
+**Example:** `max personal chats tracking list`
+
 #### `max chats tracking show`
 
 one chat: whether it is tracked, and its member count per day for the last 30 days
@@ -502,6 +622,10 @@ max chats tracking show <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** one chat's member tracking and daily counts
+
+**Example:** `max personal chats tracking show "Book club"`
 
 #### `max chats tracking add`
 
@@ -517,6 +641,10 @@ max chats tracking add <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+**Returns:** fetch this chat's member list daily while serve runs, from its next run
+
+**Example:** `max personal chats tracking add "Book club"`
+
 #### `max chats tracking remove`
 
 stop fetching it daily; the history already kept stays
@@ -530,6 +658,10 @@ max chats tracking remove <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** stop fetching it daily; the history already kept stays
+
+**Example:** `max personal chats tracking remove "Book club"`
 
 ### `max chats admins`
 
@@ -554,6 +686,10 @@ max chats admins add <chat> <person> [options]
 |---|---|
 | `--can <rights>` | what they may do, comma-separated: read, members, admins, info, pin, link, post, edit, delete. |
 
+**Returns:** make a member an admin with these rights
+
+**Example:** `max personal chats admins add "Book club" "Alex Example" --can info`
+
 #### `max chats admins remove`
 
 take an admin's rights back; they stay a member
@@ -568,6 +704,10 @@ max chats admins remove <chat> <person>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
+
+**Returns:** take an admin's rights back; they stay a member
+
+**Example:** `max personal chats admins remove "Book club" "Alex Example"`
 
 ### `max chats update`
 
@@ -594,6 +734,10 @@ max chats update <chat> [options]
 | `--only-owner-edits-info <on\|off>` | only the owner may change the name and photo. |
 | `--members-see-link <on\|off>` | members may see the invite link. |
 
+**Returns:** change a group or channel's profile and settings
+
+**Example:** `max personal chats update "Book club" --title "Reading group"`
+
 ### `max chats link`
 
 a group's invite link
@@ -610,6 +754,10 @@ max chats link show <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+**Returns:** the invite link, if you may see it
+
+**Example:** `max personal chats link show "Book club"`
+
 #### `max chats link reset`
 
 replace the invite link; the old one stops working
@@ -623,6 +771,10 @@ max chats link reset <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** replace the invite link; the old one stops working
+
+**Example:** `max personal chats link reset "Book club"`
 
 ### `max chats requests`
 
@@ -646,6 +798,10 @@ max chats requests list <chat> [query] [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 
+**Returns:** join request — person_id, name, username, requested_at, about; every field: max commands schema chats requests list
+
+**Example:** `max personal chats requests list "Book club"`
+
 #### `max chats requests accept`
 
 let them in; the group sees them join
@@ -661,6 +817,10 @@ max chats requests accept <chat> <person>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | who asked: an id from `chats requests list`. |
 
+**Returns:** let them in; the group sees them join
+
+**Example:** `max personal chats requests accept "Book club" "Alex Example"`
+
 #### `max chats requests decline`
 
 turn the request away
@@ -675,6 +835,10 @@ max chats requests decline <chat> <person>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | who asked: an id from `chats requests list`. |
+
+**Returns:** turn the request away
+
+**Example:** `max personal chats requests decline "Book club" "Alex Example"`
 
 ### `max chats folders`
 
@@ -692,6 +856,12 @@ max chats folders list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
 
+**Returns:** folder — id, title, chat_ids, emoji, include, skip, excluded_chat_ids, pinned_chat_ids, and 3 more; every field: max commands schema chats folders list
+
+**Next usually:** `max chats folders show <folder>`, `max chats folders update <folder>`, `max chats folders delete <folder>`
+
+**Example:** `max personal chats folders list`
+
 #### `max chats folders show`
 
 one chat folder, with the names of the chats in it
@@ -703,6 +873,12 @@ max chats folders show <folder>
 | Аргумент | | Что это |
 |---|---|---|
 | `folder` | обязательный | the folder's id, or its title exactly. |
+
+**Returns:** folder — id, title, chat_ids, emoji, include, skip, excluded_chat_ids, pinned_chat_ids, and 3 more; every field: max commands schema chats folders show
+
+**Next usually:** `max chats folders update <folder>`, `max chats folders delete <folder>`, `max chats folders order <folders>`
+
+**Example:** `max personal chats folders show "Reading"`
 
 #### `max chats folders create`
 
@@ -721,6 +897,10 @@ max chats folders create <title> [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat to put in it, by id or name; repeat it for more. |
+
+**Returns:** create a chat folder
+
+**Example:** `max personal chats folders create "Reading" --chat "Book club"`
 
 #### `max chats folders update`
 
@@ -742,6 +922,10 @@ max chats folders update <folder> [options]
 | `--add <chat>` | put a chat in it; repeat it for more. |
 | `--remove <chat>` | take a chat out of it, and off its excluded and pinned lists; repeat it for more. |
 
+**Returns:** rename a folder, or change which chats are in it
+
+**Example:** `max personal chats folders update "Reading" --title "Books"`
+
 #### `max chats folders delete`
 
 delete a folder; the chats in it stay
@@ -756,6 +940,10 @@ max chats folders delete <folder>
 |---|---|---|
 | `folder` | обязательный | folder id, or its title exactly. |
 
+**Returns:** delete a folder; the chats in it stay
+
+**Example:** `max personal chats folders delete "Reading"`
+
 #### `max chats folders order`
 
 put folders in this order; the ones not named keep theirs after them
@@ -769,6 +957,10 @@ max chats folders order <folders>
 | Аргумент | | Что это |
 |---|---|---|
 | `folders` | обязательный | folder ids, or titles exactly, first one first. |
+
+**Returns:** put folders in this order; the ones not named keep theirs after them
+
+**Example:** `max personal chats folders order "Reading" "Work"`
 
 ### `max chats rules`
 
@@ -786,6 +978,10 @@ max chats rules show <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
+**Returns:** the group's rules; the defaults, marked not saved, if it has none yet
+
+**Example:** `max personal chats rules show "Book club"`
+
 #### `max chats rules set`
 
 change one rule; the group's first change writes every rule with its default
@@ -802,6 +998,10 @@ max chats rules set <chat> <key> <value>
 | `key` | обязательный | one of: trusted, blocked, blockedNames, links, invites, forwards, blockedPeople, flood.messages, flood.minutes, flood.action, newAccount.days, newAccount.action, consent.delete, consent.remove. |
 | `value` | обязательный | the new value; a list is comma-separated. |
 
+**Returns:** change one rule; the group's first change writes every rule with its default
+
+**Example:** `max personal chats rules set "Book club" links report`
+
 #### `max chats rules unset`
 
 put one rule back to its default
@@ -816,6 +1016,10 @@ max chats rules unset <chat> <key>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `key` | обязательный | one of: trusted, blocked, blockedNames, links, invites, forwards, blockedPeople, flood.messages, flood.minutes, flood.action, newAccount.days, newAccount.action, consent.delete, consent.remove. |
+
+**Returns:** put one rule back to its default
+
+**Example:** `max personal chats rules unset "Book club" links`
 
 ### `max chats moderate`
 
@@ -838,6 +1042,10 @@ max chats moderate <chat> [options]
 | `--allow-dangerous` | yes to every action whose level in the group's rules is ask. |
 | `--max-actions <n>` | at most this many actions in one run; 10 if not given. |
 
+**Returns:** judge a group's new messages and members by its rules, and act as they allow
+
+**Example:** `max personal chats moderate "Book club" --dry-run`
+
 ### `max chats media`
 
 a chat's photos, videos, files, audio and links, from the messenger's server; reading marks nothing
@@ -855,6 +1063,10 @@ max chats media <chat> [options]
 | `--type <names>` | only these kinds, comma-separated: photo, video, file, audio, link. |
 | `--limit <n>` | how many to show. |
 | `--cursor <cursor>` | go on from where page.next says the last page stopped. |
+
+**Returns:** a chat's photos, videos, files, audio and links, from the messenger's server; reading…
+
+**Example:** `max personal chats media Team`
 
 ### `max chats mute`
 
@@ -874,6 +1086,10 @@ max chats mute <chat> [options]
 |---|---|
 | `--until <time>` | only until then: 2026-09-25T09:00 (local time), or 30m, 2h, 7d from now. |
 
+**Returns:** stop notifications from a chat, for good or until a time; nobody in it is told
+
+**Example:** `max personal chats mute "Book club"`, `max personal chats mute "Book club" --until 2h`
+
 ### `max chats unmute`
 
 hear a muted chat again
@@ -887,6 +1103,10 @@ max chats unmute <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** hear a muted chat again
+
+**Example:** `max personal chats unmute "Book club"`
 
 ### `max chats delete`
 
@@ -906,6 +1126,10 @@ max chats delete <chat> [options]
 |---|---|
 | `--allow-dangerous` | go ahead without the question an ask level puts before a deletion. |
 
+**Returns:** delete a chat from this account; the others in it keep it and its messages
+
+**Example:** `max personal chats delete "Book club"`
+
 ### `max chats clear`
 
 delete every message in a chat for this account; the others in it keep theirs
@@ -923,6 +1147,10 @@ max chats clear <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--allow-dangerous` | go ahead without the question an ask level puts before a deletion. |
+
+**Returns:** delete every message in a chat for this account; the others in it keep theirs
+
+**Example:** `max personal chats clear "Book club"`
 
 ### `max chats start`
 
@@ -942,6 +1170,10 @@ max chats start <bot> [options]
 |---|---|
 | `--start <param>` | the start parameter the bot reads; a link's own ?start= when not given. |
 
+**Returns:** start a bot, as its Start button does; the bot sees that you started it
+
+**Example:** `max personal chats start <bot>`
+
 ### `max chats app`
 
 the address that opens a bot's mini app, signed in as you — keep it to yourself
@@ -959,6 +1191,10 @@ max chats app <bot> [options]
 | Опция | Что делает |
 |---|---|
 | `--start <param>` | the start parameter the app reads. |
+
+**Returns:** the address that opens a bot's mini app, signed in as you — keep it to yourself
+
+**Example:** `max personal chats app <bot>`
 
 ## `max contacts`
 
@@ -983,6 +1219,12 @@ max contacts list [query] [options]
 | `--all` | every row, no paging. |
 | `--order <recent\|name>` | newest conversation first, or alphabetical. По умолчанию: `recent`. |
 
+**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 2 more; every field: max commands schema contacts list
+
+**Next usually:** `max contacts show <person>`, `max contacts profile <person>`, `max contacts context <person>`
+
+**Example:** `max personal contacts list --limit 10`
+
 ### `max contacts show`
 
 one person and the chats you share with them
@@ -998,6 +1240,12 @@ max contacts show <person> [options]
 | Опция | Что делает |
 |---|---|
 | `--with-notes` | include your private notes, subject to contacts.notes.list permission. |
+
+**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 2 more; every field: max commands schema contacts show
+
+**Next usually:** `max contacts profile <person>`, `max contacts context <person>`, `max contacts prepare <person>`
+
+**Example:** `max personal contacts show "Alex Example"`
 
 ### `max contacts profile`
 
@@ -1015,13 +1263,17 @@ max contacts profile <person> [options]
 |---|---|
 | `--show-phone` | print the whole phone number. |
 
+**Returns:** contact profile — id, name, usernames, bio, flags, chats, aliases, birthday, and 7 more; every field: max commands schema contacts profile
+
+**Example:** `max personal contacts profile "Alex Example"`
+
 ### `max contacts alias`
 
 a private local display name in the selected account
 
 #### `max contacts alias set`
 
-
+your own name for a person in this account; kept on this machine, never sent
 
 **Меняет что-то только на этом компьютере.**
 
@@ -1031,12 +1283,16 @@ max contacts alias set <person> <alias>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный |  |
-| `alias` | обязательный |  |
+| `person` | обязательный | the person's id, reference or known name. |
+| `alias` | обязательный | the private name to use for this person. |
+
+**Returns:** your own name for a person in this account; kept on this machine, never sent
+
+**Example:** `max personal contacts alias set "Alex Example" "Reading partner"`
 
 #### `max contacts alias rm`
 
-
+drop your local name for a person; their own name shows again
 
 **Меняет что-то только на этом компьютере.**
 
@@ -1046,7 +1302,11 @@ max contacts alias rm <person>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный |  |
+| `person` | обязательный | the person's id, reference or known name. |
+
+**Returns:** drop your local name for a person; their own name shows again
+
+**Example:** `max personal contacts alias rm "Alex Example"`
 
 ### `max contacts notes`
 
@@ -1054,7 +1314,7 @@ your private notes on a stored contact, the same in every account that sees them
 
 #### `max contacts notes list`
 
-
+every private note you keep on a person, oldest first
 
 ```sh
 max contacts notes list <person> [query]
@@ -1062,12 +1322,16 @@ max contacts notes list <person> [query]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный |  |
+| `person` | обязательный | the person's id, reference or known name. |
 | `query` | необязательный | field:value terms; this list filters by none yet. |
+
+**Returns:** contact note — id, contact, text, revision, created_at, updated_at; every field: max commands schema contacts notes list
+
+**Example:** `max personal contacts notes list "Alex Example"`
 
 #### `max contacts notes show`
 
-
+one private note on a person, with its revision for edit
 
 ```sh
 max contacts notes show <person> <id>
@@ -1075,12 +1339,16 @@ max contacts notes show <person> <id>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный |  |
-| `id` | обязательный |  |
+| `person` | обязательный | the person's id, reference or known name. |
+| `id` | обязательный | the note id from contacts notes list. |
+
+**Returns:** contact note — id, contact, text, revision, created_at, updated_at; every field: max commands schema contacts notes show
+
+**Example:** `max personal contacts notes show "Alex Example" 1`
 
 #### `max contacts notes add`
 
-
+add a private note on a person from stdin or --file; never sent
 
 **Меняет что-то только на этом компьютере.**
 
@@ -1090,15 +1358,19 @@ max contacts notes add <person> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный |  |
+| `person` | обязательный | the person's id, reference or known name. |
 
 | Опция | Что делает |
 |---|---|
 | `--file <path>` | read note text from a file; omitted or - reads stdin. |
 
+**Returns:** contact note — id, contact, text, revision, created_at, updated_at; every field: max commands schema contacts notes add
+
+**Example:** `max personal contacts notes add "Alex Example" --file ./note.txt`
+
 #### `max contacts notes edit`
 
-
+replace a note's text; --revision must match the one you read
 
 **Меняет что-то только на этом компьютере.**
 
@@ -1108,17 +1380,21 @@ max contacts notes edit <person> <id> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный |  |
-| `id` | обязательный |  |
+| `person` | обязательный | the person's id, reference or known name. |
+| `id` | обязательный | the note id from contacts notes list. |
 
 | Опция | Что делает |
 |---|---|
 | `--file <path>` | read note text from a file; omitted or - reads stdin. |
 | `--revision <n>` | the revision you read before editing. |
 
+**Returns:** contact note — id, contact, text, revision, created_at, updated_at; every field: max commands schema contacts notes edit
+
+**Example:** `max personal contacts notes edit "Alex Example" 1 --revision 1 --file ./note.txt`
+
 #### `max contacts notes remove`
 
-
+delete one private note on a person
 
 **Меняет что-то только на этом компьютере.**
 
@@ -1128,8 +1404,12 @@ max contacts notes remove <person> <id>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `person` | обязательный |  |
-| `id` | обязательный |  |
+| `person` | обязательный | the person's id, reference or known name. |
+| `id` | обязательный | the note id from contacts notes list. |
+
+**Returns:** delete one private note on a person
+
+**Example:** `max personal contacts notes remove "Alex Example" 1`
 
 ### `max contacts sync`
 
@@ -1141,6 +1421,10 @@ forget where the last sync left off and take the whole list again
 max contacts sync
 ```
 
+**Returns:** forget where the last sync left off and take the whole list again
+
+**Example:** `max personal contacts sync`
+
 ### `max contacts lookup`
 
 who MAX has under a phone number — asks for it, or reads it from stdin
@@ -1148,6 +1432,10 @@ who MAX has under a phone number — asks for it, or reads it from stdin
 ```sh
 max contacts lookup
 ```
+
+**Returns:** who MAX has under a phone number — asks for it, or reads it from stdin
+
+**Example:** `max personal contacts lookup`
 
 ### `max contacts add`
 
@@ -1163,6 +1451,10 @@ max contacts add <person>
 |---|---|---|
 | `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name. |
 
+**Returns:** add a person to your contacts
+
+**Example:** `max personal contacts add "Alex Example"`
+
 ### `max contacts remove`
 
 remove a person from your contacts; the chat stays, a name you gave them may not
@@ -1176,6 +1468,10 @@ max contacts remove <person>
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name. |
+
+**Returns:** remove a person from your contacts; the chat stays, a name you gave them may not
+
+**Example:** `max personal contacts remove "Alex Example"`
 
 ### `max contacts block`
 
@@ -1191,6 +1487,10 @@ max contacts block <person>
 |---|---|---|
 | `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name. |
 
+**Returns:** stop a person from writing to you — they need not be a contact
+
+**Example:** `max personal contacts block "Alex Example"`
+
 ### `max contacts unblock`
 
 let a blocked person write to you again
@@ -1204,6 +1504,10 @@ max contacts unblock <person>
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name. |
+
+**Returns:** let a blocked person write to you again
+
+**Example:** `max personal contacts unblock "Alex Example"`
 
 ### `max contacts rename`
 
@@ -1219,7 +1523,11 @@ max contacts rename <person> <first-name> [last-name]
 |---|---|---|
 | `person` | обязательный | person id — `contacts lookup` finds one — or part of a known name. |
 | `first-name` | обязательный | the name you want to see for them. |
-| `last-name` | необязательный |  |
+| `last-name` | необязательный | the last name you want to see for them. |
+
+**Returns:** change a contact's name in the messenger address book
+
+**Example:** `max personal contacts rename "Alex Example" Alex Example`
 
 ### `max contacts import`
 
@@ -1234,6 +1542,10 @@ max contacts import <file>
 | Аргумент | | Что это |
 |---|---|---|
 | `file` | обязательный | one person per line: number, then a comma, a tab or a semicolon, then the name. |
+
+**Returns:** upload phone numbers and add the people the messenger has under them
+
+**Example:** `max personal contacts import ./contacts.csv`
 
 ### `max contacts context`
 
@@ -1253,6 +1565,31 @@ max contacts context <person> [options]
 | `--since-time <time>` | nothing older than this ISO 8601 time, or 2h / 1d ago. |
 | `--chat <chat>` | a chat, by id or name; repeat it for more — then their newest messages in each, 20 unless --limit, short unless -v. |
 | `--sync-first` | with --chat, read their newest messages in each from the messenger first. |
+
+**Returns:** what the local archive knows about a person
+
+**Example:** `max personal contacts context "Alex Example" --limit 10`
+
+### `max contacts prepare`
+
+before you talk to someone: what contacts context gives, plus the one-to-one chats where they wrote last, open tasks, accepted facts, your notes and their recent meetings, each with its reference; never connects
+
+```sh
+max contacts prepare <person> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `person` | обязательный | their id, @username, or part of their name. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | at most this many messages, and items in each section; 10 if not given. |
+| `--since-time <time>` | no message or meeting older than this ISO 8601 time, or 2h / 1d ago. |
+
+**Returns:** what to know before you talk to someone, each item with its reference
+
+**Example:** `max personal contacts prepare Ana`
 
 ### `max contacts timeline`
 
@@ -1274,6 +1611,10 @@ max contacts timeline <person> [options]
 | `--limit <n>` | at most this many; 50 if not given. |
 | `--cursor <cursor>` | go on from where the last page stopped; page.next gives it, with the same filters. |
 
+**Returns:** one person's activity across their linked identities
+
+**Example:** `max personal contacts timeline "Alex Example" --limit 10`
+
 ### `max contacts check`
 
 whether one person looks like a bot, a fake or a spammer: their profile and what they wrote in the store — a hint, never a verdict; the public ban lists cover Telegram only, so nothing is sent
@@ -1290,6 +1631,10 @@ max contacts check <person> [options]
 |---|---|
 | `--no-registries` | do not ask the public ban lists; nothing about them leaves this machine. |
 
+**Returns:** check a person's profile and messages for signs of abuse
+
+**Example:** `max personal contacts check "Alex Example"`
+
 ### `max contacts link`
 
 record that two people in the store are one person — the same name is never enough
@@ -1305,6 +1650,10 @@ max contacts link <person> <other>
 | `person` | обязательный | their id, @username, or part of their name. |
 | `other` | обязательный | the same in another messenger of the store, as <messenger>:<person> — max:Ana; me: it is you, as zoom:<id> me. |
 
+**Returns:** link identities that belong to one person
+
+**Example:** `max personal contacts link "Alex Example" zoom:101`
+
 ### `max contacts unlink`
 
 undo contacts link for one identity: it is a person of its own again
@@ -1318,6 +1667,10 @@ max contacts unlink <person>
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name; <messenger>:<person> for another messenger. |
+
+**Returns:** undo contacts link for one identity: it is a person of its own again
+
+**Example:** `max personal contacts unlink "Alex Example"`
 
 ## `max messages`
 
@@ -1342,7 +1695,12 @@ max messages list <chat> [query] [options]
 | `--cursor <cursor>` | go on from where the last page stopped; page.next gives it. |
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
-| `--mark-read` | also mark the chat read up to the newest message shown; the other person sees it. |
+
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands schema messages list
+
+**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
+
+**Example:** `max personal messages list "Book club" --limit 20`
 
 ### `max messages show`
 
@@ -1356,6 +1714,10 @@ max messages show <chat> [message]
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
 | `message` | необязательный | the message id. |
+
+**Returns:** one message, by its chat and id or by its msg: locator
+
+**Example:** `max personal messages show "Book club" 101`
 
 ### `max messages context`
 
@@ -1380,6 +1742,10 @@ max messages context <chat> [message] [options]
 | `--before-n <n>` | how many before it. По умолчанию: `5`. |
 | `--after-n <n>` | how many after it. По умолчанию: `5`. |
 
+**Returns:** a message and what came either side of it, oldest first
+
+**Example:** `max personal messages context "Book club" 101 --before-n 3 --after-n 3`
+
 ### `max messages links`
 
 why a message is in its conversation: each link it has, and the chain of answers back to the start
@@ -1393,6 +1759,10 @@ max messages links <chat> <message>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the message id. |
 
+**Returns:** why a message belongs to its conversation
+
+**Example:** `max personal messages links "Book club" 101`
+
 ### `max messages link`
 
 a message permalink when supported, and its account-scoped locator
@@ -1405,6 +1775,12 @@ max messages link <chat> [message]
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
 | `message` | необязательный | the message id. |
+
+**Returns:** message link — ref, url, access, reason; every field: max commands schema messages link
+
+**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
+
+**Example:** `max personal messages link "Book club" 101`
 
 ### `max messages download`
 
@@ -1428,6 +1804,10 @@ max messages download <chat> [message] [options]
 | `--pause <duration>` | with --all, a pause between pages, to stay under the provider's limits. По умолчанию: `5s`. |
 | `--extract` | read text layers from the files this download maps into the local content index. |
 
+**Returns:** download files attached to stored messages
+
+**Example:** `max personal messages download "Book club" 101 --output-dir ./downloads`
+
 ### `max messages evidence`
 
 a bounded evidence packet from stored messages, newest first
@@ -1444,6 +1824,10 @@ max messages evidence <chat> [options]
 |---|---|
 | `--limit <n>` | how many, 1–100. |
 | `--cursor <cursor>` | go on from where page.next says the last packet stopped. |
+
+**Returns:** a bounded evidence packet from stored messages, newest first
+
+**Example:** `max personal messages evidence "Book club" --limit 10`
 
 ### `max messages sync`
 
@@ -1475,6 +1859,10 @@ max messages sync [chat] [options]
 | `--background` | run as a job that outlives this command; `store jobs show` follows it. |
 | `--dry-run` | only estimate how many messages, requests and minutes a full fetch would still take — from the store, no request. |
 
+**Returns:** fetch and save a chat's message history
+
+**Example:** `max personal messages sync "Book club" --last 100`
+
 ### `max messages transcribe`
 
 turn a voice message into text, on this machine — the recording goes nowhere
@@ -1491,6 +1879,10 @@ max messages transcribe <chat> <message> [options]
 | Опция | Что делает |
 |---|---|
 | `--model <id>` | which downloaded speech model to use; `max models audio list` shows them. |
+
+**Returns:** turn a voice message into text, on this machine — the recording goes nowhere
+
+**Example:** `max personal messages transcribe Team 1234`
 
 ### `max messages send`
 
@@ -1523,6 +1915,10 @@ max messages send <chat> [text] [options]
 | `--at-time <time>` | let the messenger send it later, even with this machine off: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now. |
 | `--sticker <id>` | send this sticker, alone; `stickers list` finds its id. |
 
+**Returns:** send a text message; without [text], the text is read from stdin
+
+**Example:** `max personal messages send "Book club" "The meeting starts at 10."`
+
 ### `max messages scheduled`
 
 messages waiting to be sent later in a chat, soonest first; cancel one in the app
@@ -1534,6 +1930,12 @@ max messages scheduled <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands schema messages scheduled
+
+**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
+
+**Example:** `max personal messages scheduled "Book club"`
 
 ### `max messages edit`
 
@@ -1555,6 +1957,10 @@ max messages edit <chat> <message> [text] [options]
 |---|---|
 | `--md` | read this messenger's Markdown; see its formatting guide for supported syntax. |
 
+**Returns:** change the text of your own message; the other side may have read it already
+
+**Example:** `max personal messages edit "Book club" 101 "The meeting starts at 11."`
+
 ### `max messages delete`
 
 delete messages for you only; with --for-everyone, for everyone in the chat
@@ -1562,18 +1968,22 @@ delete messages for you only; with --for-everyone, for everyone in the chat
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max messages delete <chat> <messages> [options]
+max messages delete <chat> <message> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
-| `messages` | обязательный | the message ids, by spaces or commas, at most 10. |
+| `message` | обязательный | the message ids, by spaces or commas, at most 10. |
 
 | Опция | Что делает |
 |---|---|
 | `--for-everyone` | delete for everyone in the chat, not only for you — they cannot get it back. |
 | `--allow-dangerous` | go ahead without the question an ask level puts before a deletion. |
+
+**Returns:** delete messages for you only; with --for-everyone, for everyone in the chat
+
+**Example:** `max personal messages delete "Book club" 101`
 
 ### `max messages forward`
 
@@ -1597,6 +2007,10 @@ max messages forward <chat> <message> [options]
 | `--send-as <id>` | post as one of the identities `chats send-as` lists for the --to chat; required where the chat posts as someone else by default. |
 | `--operation-id <id>` | repeat a forward whose outcome was unknown, without risking a second copy. |
 
+**Returns:** forward one message to another chat
+
+**Example:** `max personal messages forward "Book club" 101 --to "Project room"`
+
 ### `max messages pin`
 
 pin a message in a chat, quietly unless --notify
@@ -1616,6 +2030,10 @@ max messages pin <chat> <message> [options]
 |---|---|
 | `--notify` | tell the chat's members about the pin. |
 
+**Returns:** pin a message in a chat, quietly unless --notify
+
+**Example:** `max personal messages pin <chat> <message>`, `max personal messages pin <chat> <message> --notify`
+
 ### `max messages unpin`
 
 unpin a message in a chat
@@ -1630,6 +2048,10 @@ max messages unpin <chat> <message>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the message id. |
+
+**Returns:** unpin a message in a chat
+
+**Example:** `max personal messages unpin <chat> <message>`
 
 ### `max messages press`
 
@@ -1647,6 +2069,10 @@ max messages press <chat> <message> <button>
 | `message` | обязательный | the id of the message with the buttons. |
 | `button` | обязательный | its number as `messages show` prints it, or its exact text. |
 
+**Returns:** press a bot's button under a message; the bot sees that you pressed it
+
+**Example:** `max personal messages press Team 1234 <button>`
+
 ## `max store`
 
 the local store of messages
@@ -1663,6 +2089,10 @@ max store status [chat]
 |---|---|---|
 | `chat` | необязательный | a chat: its id, or part of its title. |
 
+**Returns:** what the local archive holds and what is missing
+
+**Example:** `max personal store status "Book club"`
+
 ### `max store gaps`
 
 inspect recorded interior coverage gaps and explicitly fetch them
@@ -1678,6 +2108,10 @@ max store gaps plan <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+
+**Returns:** local coverage plan; missing message ids alone do not imply missing history
+
+**Example:** `max personal store gaps plan "Book club"`
 
 #### `max store gaps repair`
 
@@ -1708,6 +2142,10 @@ max store gaps repair <chat> [options]
 | `--catch-up-time <duration>` | preparation time within the repair's remaining budget. |
 | `--background` | repair as an existing store job; inspect store jobs show. |
 
+**Returns:** fetch bounded interior gaps and recheck coverage; never delete unseen messages
+
+**Example:** `max personal store gaps repair "Book club" --limit 100`
+
 ### `max store jobs`
 
 background sync jobs
@@ -1730,6 +2168,10 @@ max store jobs list [query] [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 
+**Returns:** job — id, chat, state, pid, started_at, fetched, finished_at, message_limit, and 5 more; every field: max commands schema store jobs list
+
+**Example:** `max personal store jobs list`
+
 #### `max store jobs show`
 
 one background job — the newest when none is named — and what the store now holds of its chat
@@ -1741,6 +2183,10 @@ max store jobs show [job]
 | Аргумент | | Что это |
 |---|---|---|
 | `job` | необязательный | the job id `messages sync --background` printed. |
+
+**Returns:** one archive job's status and log
+
+**Example:** `max personal store jobs show`
 
 #### `max store jobs cancel`
 
@@ -1755,6 +2201,10 @@ max store jobs cancel <job>
 | Аргумент | | Что это |
 |---|---|---|
 | `job` | обязательный | the job id. |
+
+**Returns:** cancel a queued or running archive job
+
+**Example:** `max personal store jobs cancel job-101`
 
 #### `max store jobs retry`
 
@@ -1774,6 +2224,10 @@ max store jobs retry [job] [options]
 |---|---|
 | `--failed` | every chat whose newest job partial, failed or died. |
 
+**Returns:** retry an archive job
+
+**Example:** `max personal store jobs retry --failed`
+
 #### `max store jobs clear`
 
 forget finished jobs and remove their logs; a running job is kept
@@ -1784,6 +2238,10 @@ forget finished jobs and remove their logs; a running job is kept
 max store jobs clear
 ```
 
+**Returns:** forget finished jobs and remove their logs; a running job is kept
+
+**Example:** `max personal store jobs clear`
+
 ### `max store export`
 
 a chat's stored messages, oldest first: --jsonl one message per line, --json the list envelope of messages; never asks the messenger
@@ -1791,12 +2249,12 @@ a chat's stored messages, oldest first: --jsonl one message per line, --json the
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max store export [chats] [options]
+max store export [chat] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chats` | необязательный | a chat: its id, or part of its title; several with --output-dir. |
+| `chat` | необязательный | a chat: its id, or part of its title; several with --output-dir. |
 
 | Опция | Что делает |
 |---|---|
@@ -1807,6 +2265,10 @@ max store export [chats] [options]
 | `--include <kinds>` | with --output-dir: every stored chat of these kinds, comma-separated: dialog, group, channel, saved. |
 | `--all` | with --output-dir: every stored chat of this account. |
 | `--encrypt` | compress and encrypt with a password, typed at a hidden prompt or piped on stdin; it is never kept — lose it and the file cannot be opened. |
+
+**Returns:** export stored messages to files
+
+**Example:** `max personal store export "Book club" --output ./messages.jsonl`
 
 ### `max store clear`
 
@@ -1822,6 +2284,11 @@ max store clear [options]
 |---|---|
 | `--left` | the chats this account has left — the only thing this clears. |
 | `--allow-dangerous` | yes, delete — it cannot be undone, and a chat you left cannot be fetched again. |
+| `--dry-run` | list the chats it would delete, and delete nothing. |
+
+**Returns:** delete from the store the chats this account has left, with their messages
+
+**Example:** `max personal store clear --left --dry-run`
 
 ### `max store info`
 
@@ -1831,6 +2298,10 @@ the store file: where it is, its size, its schema and how many rows it holds; ch
 max store info
 ```
 
+**Returns:** the local archive's format, size and contents
+
+**Example:** `max personal store info`
+
 ### `max store check`
 
 whether the store is healthy — integrity, search indexes, disk, and which chats are behind
@@ -1838,6 +2309,10 @@ whether the store is healthy — integrity, search indexes, disk, and which chat
 ```sh
 max store check
 ```
+
+**Returns:** check the local archive for problems
+
+**Example:** `max personal store check`
 
 ### `max store migrate`
 
@@ -1849,6 +2324,10 @@ bring the store up to this build's schema, then normalize, index and stem the me
 max store migrate
 ```
 
+**Returns:** migrate an older local archive
+
+**Example:** `max personal store migrate`
+
 ### `max store reindex`
 
 rebuild the word index, its typo vocabulary, the stems, the files' word index, the notes' indexes and who took part in what, from what is stored; loses nothing
@@ -1858,6 +2337,10 @@ rebuild the word index, its typo vocabulary, the stems, the files' word index, t
 ```sh
 max store reindex
 ```
+
+**Returns:** rebuild the local archive's search indexes
+
+**Example:** `max personal store reindex`
 
 ### `max store backup`
 
@@ -1877,6 +2360,10 @@ max store backup <file> [options]
 |---|---|
 | `--encrypt` | compress and encrypt with a password, typed at a hidden prompt or piped on stdin; it is never kept — lose it and the file cannot be opened. |
 
+**Returns:** copy the store into a new file, while it is in use; never overwrites a file
+
+**Example:** `max personal store backup ./backup.db`
+
 ### `max store restore`
 
 put a backup in place of the store; the store it replaces is kept beside it, never deleted
@@ -1890,6 +2377,10 @@ max store restore <file>
 | Аргумент | | Что это |
 |---|---|---|
 | `file` | обязательный | a file `store backup` wrote; one written with --encrypt asks for its password. |
+
+**Returns:** restore a backup while keeping the current store
+
+**Example:** `max personal store restore ./backup.db`
 
 ### `max store decrypt`
 
@@ -1909,6 +2400,10 @@ max store decrypt <file> [options]
 |---|---|
 | `--output <file>` | the new file, readable only by you. |
 
+**Returns:** open a file written with --encrypt into a new file; asks for its password
+
+**Example:** `max personal store decrypt ./backup.enc --output ./restored.db`
+
 ### `max store repair`
 
 bring every table to this build's shape, deleting nothing: a table of the wrong shape is kept as a copy beside a new one
@@ -1923,6 +2418,10 @@ max store repair [options]
 |---|---|
 | `--dry-run` | say what it would do, and change nothing. |
 
+**Returns:** repair table shapes while keeping the old tables
+
+**Example:** `max personal store repair --dry-run`
+
 ### `max store reset`
 
 back the store up beside itself, then delete it and start an empty one at this build's schema; asks first, or --yes
@@ -1936,6 +2435,10 @@ max store reset [options]
 | Опция | Что делает |
 |---|---|
 | `--no-backup` | delete the store without backing it up first. |
+
+**Returns:** back up the local archive and replace it with an empty one
+
+**Example:** `max personal store reset`
 
 ### `max store copies`
 
@@ -1954,6 +2457,10 @@ max store copies delete <name>
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | обязательный | the copy's name, as `store repair` printed it. |
+
+**Returns:** delete one copy `store repair` kept, named exactly; refuses any other table
+
+**Example:** `max personal store copies delete messages_copy_1`
 
 ## `max stats`
 
@@ -1989,6 +2496,10 @@ max stats messages show [query] [options]
 | `--exact` | bare words and quotes match their exact form only, as exact:word does; text: still matches every form. |
 | `--saved <name\|id>` | count what a saved search or an earlier run matches; options typed here replace its own. |
 
+**Returns:** message counts — by, total, rows; every field: max commands schema stats messages show
+
+**Example:** `max personal stats messages show --chat "Book club" --by day`
+
 #### `max stats messages counters`
 
 per-counter observations and bounded remote refresh
@@ -2015,6 +2526,10 @@ max stats messages counters show [query] [options]
 | `--counters <names>` | distinct views,reactions,comments fields; all three by default. |
 | `--limit <n>` | messages, 1–100; 20 by default. |
 | `--max-age <duration>` | maximum fresh observation age; 24h by default. |
+
+**Returns:** counters — cutoff, max_age_ms, selection, rows; every field: max commands schema stats messages counters show
+
+**Example:** `max personal stats messages counters show --chat "Book club" --limit 10`
 
 #### `max stats messages counters refresh`
 
@@ -2043,6 +2558,10 @@ max stats messages counters refresh [query] [options]
 | `--sync-time <duration>` | remote refresh budget; 30s by default, maximum 5m. |
 | `--dry-run` | preview exact stored targets and counter capabilities without connecting. |
 
+**Returns:** counter refresh — dry_run, targets, counters, supported, unsupported, max_messages, time_ms, results, and 2 more; every field: max commands schema stats messages counters refresh
+
+**Example:** `max personal stats messages counters refresh --chat "Book club" --dry-run`
+
 #### `max stats messages unanswered`
 
 oldest detected questions without an observed qualifying explicit reply
@@ -2066,6 +2585,10 @@ max stats messages unanswered [query] [options]
 | `--answerer <person>` | stored name, alias, @username, ID or person:provider/account/id; ambiguous names require a choice; repeat for more. |
 | `--older-than <duration>` | minimum age of a question without an observed qualifying answer. |
 
+**Returns:** admin report — report, cutoff, total, summary, quality, rows; every field: max commands schema stats messages unanswered
+
+**Example:** `max personal stats messages unanswered --chat "Project room"`
+
 #### `max stats messages discussion`
 
 viewed posts with little recorded discussion
@@ -2088,6 +2611,10 @@ max stats messages discussion [query] [options]
 | `--limit <n>` | report rows, 1–100; 20 if not given. |
 | `--min-views <n>` | minimum known cumulative views. |
 | `--max-replies <n>` | maximum observed discussion replies. |
+
+**Returns:** admin report — report, cutoff, total, summary, quality, rows; every field: max commands schema stats messages discussion
+
+**Example:** `max personal stats messages discussion --chat "Book club"`
 
 #### `max stats messages top`
 
@@ -2118,6 +2645,10 @@ max stats messages top [query] [options]
 | `--limit <n>` | ranked rows, 1–100. |
 | `--saved <name\|id>` | run a saved query or ranking run; typed options replace stored options. |
 
+**Returns:** ranking — target, measure, order, preset, weights, min_messages, message_kind, total, and 7 more; every field: max commands schema stats messages top
+
+**Example:** `max personal stats messages top --chat "Book club" --limit 10`
+
 #### `max stats messages evidence`
 
 bounded messages, answer pairs or retention members from an exact drilldown selection
@@ -2136,6 +2667,10 @@ max stats messages evidence <message> [options]
 | `--component <name>` | the exposed ranking component. |
 | `--limit <n>` | evidence rows, 1–100; 20 if not given. |
 | `--cursor <cursor>` | continue the same component and stored-evidence fingerprint. |
+
+**Returns:** evidence — ; every field: max commands schema stats messages evidence
+
+**Example:** `max personal stats messages evidence "$message" --selection "$selection" --component reactions`
 
 ### `max stats contacts`
 
@@ -2162,6 +2697,10 @@ max stats contacts responses [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--limit <n>` | report rows, 1–100; 20 if not given. |
 | `--answerer <person>` | stored name, alias, @username, ID or person:provider/account/id; ambiguous names require a choice; repeat for more. |
+
+**Returns:** admin report — report, cutoff, total, summary, quality, rows; every field: max commands schema stats contacts responses
+
+**Example:** `max personal stats contacts responses --chat "Project room"`
 
 #### `max stats contacts top`
 
@@ -2193,6 +2732,10 @@ max stats contacts top [query] [options]
 | `--saved <name\|id>` | run a saved query or ranking run; typed options replace stored options. |
 | `--min-messages <n>` | minimum selected messages per author; 1, or 5 for engaging. |
 
+**Returns:** ranking — target, measure, order, preset, weights, min_messages, message_kind, total, and 7 more; every field: max commands schema stats contacts top
+
+**Example:** `max personal stats contacts top --chat "Book club" --limit 10`
+
 #### `max stats contacts evidence`
 
 bounded messages, answer pairs or retention members from an exact drilldown selection
@@ -2211,6 +2754,10 @@ max stats contacts evidence <person> [options]
 | `--component <name>` | the exposed ranking component. |
 | `--limit <n>` | evidence rows, 1–100; 20 if not given. |
 | `--cursor <cursor>` | continue the same component and stored-evidence fingerprint. |
+
+**Returns:** evidence — ; every field: max commands schema stats contacts evidence
+
+**Example:** `max personal stats contacts evidence 101 --selection "$selection" --component messages`
 
 ### `max stats chats`
 
@@ -2234,6 +2781,10 @@ max stats chats show <chat> [options]
 | `--by <day\|week>` | also one row per calendar day or week (weeks start on Monday). |
 | `--timezone <zone>` | the IANA timezone for calendar days. |
 
+**Returns:** chat stats — chat, since, until, complete, completeness, messages, senders, replies, and 10 more; every field: max commands schema stats chats show
+
+**Example:** `max personal stats chats show "Book club"`
+
 #### `max stats chats newcomers`
 
 known-join members and their help within a join window
@@ -2255,6 +2806,10 @@ max stats chats newcomers <chat> [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--limit <n>` | report rows, 1–100; 20 if not given. |
 | `--answerer <person>` | stored name, alias, @username, ID or person:provider/account/id; ambiguous names require a choice; repeat for more. |
+
+**Returns:** admin report — report, cutoff, total, summary, quality, rows; every field: max commands schema stats chats newcomers
+
+**Example:** `max personal stats chats newcomers "Book club"`
 
 #### `max stats chats retention`
 
@@ -2278,6 +2833,10 @@ max stats chats retention <chat> [options]
 | `--timezone <zone>` | IANA timezone for joining cohorts. |
 | `--limit <n>` | cohorts and member evidence, 1–100. |
 
+**Returns:** retention — chat_ref, cutoff, since, until, checkpoints_ms, within_ms, by, timezone, and 5 more; every field: max commands schema stats chats retention
+
+**Example:** `max personal stats chats retention "Book club"`
+
 ### `max stats tasks`
 
 task statistics
@@ -2294,6 +2853,10 @@ max stats tasks show [options]
 |---|---|
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
 | `--type <type>` | only this type: question, request, mention or promise. |
+
+**Returns:** task stats — open, rows; every field: max commands schema stats tasks show
+
+**Example:** `max personal stats tasks show --chat "Project room"`
 
 ### `max stats charts`
 
@@ -2317,6 +2880,10 @@ max stats charts <chat> [options]
 | `--timezone <zone>` | the IANA timezone for calendar days. |
 | `--output <file>` | write a dark image to a new .svg or .png file. |
 
+**Returns:** chart — version, kind, title, x, series, unit, timezone, partial, and 2 more; every field: max commands schema stats charts
+
+**Example:** `max personal stats charts "Book club" --output ./activity.svg`
+
 ## `max tasks`
 
 what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; review, inbox and messages sync add them, serve only the requests of auto-reply rules
@@ -2336,6 +2903,12 @@ max tasks list [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many. |
+
+**Returns:** task — ref, id, title, kind, state, created_at, key, description, and 15 more; every field: max commands schema tasks list
+
+**Next usually:** `max tasks show <task>`, `max tasks related <task>`, `max tasks plan <task>`
+
+**Example:** `max personal tasks list --limit 10`
 
 ### `max tasks add`
 
@@ -2363,6 +2936,10 @@ max tasks add <message> [options]
 | `--remind-time <time>` | when to look at it again: an ISO 8601 time or 2h, 3d from now; none clears it. |
 | `--assignee <person...>` | who does it: sender (whoever sent the task's message) or person:<id>; none clears it. Leave it out when unsure: a task with no assignee is better than none. |
 
+**Returns:** add a task for a stored message or note — a promise, a request
+
+**Example:** `max personal tasks add note:101 --type promise --category documents --title "Review draft"`
+
 ### `max tasks plan`
 
 set a task's title, description, due date, next check, category and assignee; nothing reaches the messenger
@@ -2386,6 +2963,10 @@ max tasks plan <task> [options]
 | `--remind-time <time>` | when to look at it again: an ISO 8601 time or 2h, 3d from now; none clears it. |
 | `--assignee <person...>` | who does it: sender (whoever sent the task's message) or person:<id>; none clears it. Leave it out when unsure: a task with no assignee is better than none. |
 
+**Returns:** set a task's title, description, due date, next check, category and assignee
+
+**Example:** `max personal tasks plan DOC-12 --title "Review draft"`
+
 ### `max tasks link`
 
 link a task to messages, chats, people or URLs — or to another task: task:<id>
@@ -2406,6 +2987,10 @@ max tasks link <task> [targets] [options]
 | `--chat <chat>` | a chat it concerns, repeatable; a chat: its id, or part of its title. |
 | `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by, follow-up-of, duplicate-of or discovered-from. |
 
+**Returns:** link a task to messages, chats, people or URLs — or to another task: task:<id>
+
+**Example:** `max personal tasks link DOC-12 https://example.com/draft`
+
 ### `max tasks show`
 
 one task: its plan and everything linked to it
@@ -2417,6 +3002,10 @@ max tasks show <task>
 | Аргумент | | Что это |
 |---|---|---|
 | `task` | обязательный | the task's id or key, as tasks list shows it. |
+
+**Returns:** one task: its plan and everything linked to it
+
+**Example:** `max personal tasks show DOC-12`
 
 ### `max tasks related`
 
@@ -2433,6 +3022,10 @@ max tasks related <task> [options]
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many, at most 40 (default 10). |
+
+**Returns:** tasks that may be the same job as this one, best first; merges nothing
+
+**Example:** `max personal tasks related PR-12`
 
 ### `max tasks duplicates`
 
@@ -2457,13 +3050,17 @@ two tasks are not the same job: the pair leaves the list and is never offered ag
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max tasks duplicates reject <dup> <task>
+max tasks duplicates reject <task> <other-task>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `dup` | обязательный | the task listed as the duplicate, by its id or key. |
-| `task` | обязательный | the task it was paired with. |
+| `task` | обязательный | the task listed as the duplicate, by its id or key. |
+| `other-task` | обязательный | the task it was paired with. |
+
+**Returns:** two tasks are not the same job: the pair is never offered again
+
+**Example:** `max personal tasks duplicates reject PR-14 PR-12`
 
 #### `max tasks duplicates defer`
 
@@ -2472,13 +3069,17 @@ the fields and the text cannot tell: leave the pair to the owner, who lists it w
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max tasks duplicates defer <dup> <task>
+max tasks duplicates defer <task> <other-task>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `dup` | обязательный | the task listed as the duplicate, by its id or key. |
-| `task` | обязательный | the task it was paired with. |
+| `task` | обязательный | the task listed as the duplicate, by its id or key. |
+| `other-task` | обязательный | the task it was paired with. |
+
+**Returns:** the fields and the text cannot tell: leave the pair to the owner
+
+**Example:** `max personal tasks duplicates defer PR-14 PR-12`
 
 ### `max tasks merge`
 
@@ -2487,16 +3088,20 @@ one job seen twice: link every message of the duplicate to the task and close th
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max tasks merge <dup> [options]
+max tasks merge <task> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `dup` | обязательный | the duplicate, by its id or key; it must be open. |
+| `task` | обязательный | the duplicate, by its id or key; it must be open. |
 
 | Опция | Что делает |
 |---|---|
 | `--into <id>` | the task that stays, by its id or key. |
+
+**Returns:** one job seen twice: fold the duplicate into the task that stays
+
+**Example:** `max personal tasks merge PR-14 --into PR-12`
 
 ### `max tasks unmerge`
 
@@ -2505,12 +3110,16 @@ undo a merge: reopen the task and remove its duplicate-of relation; messages the
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max tasks unmerge <dup>
+max tasks unmerge <task>
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
-| `dup` | обязательный | the merged task, by its id or key. |
+| `task` | обязательный | the merged task, by its id or key. |
+
+**Returns:** undo a merge: reopen the task and remove its duplicate-of relation
+
+**Example:** `max personal tasks unmerge PR-14`
 
 ### `max tasks agenda`
 
@@ -2532,6 +3141,10 @@ max tasks agenda [query] [options]
 | `--within <duration>` | leave out chats silent longer than this: they ended (default 30d). |
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
+**Returns:** agenda — at, account, stored_at, stale, tasks, owed, waiting, unsynced, and 2 more; every field: max commands schema tasks agenda
+
+**Example:** `max personal tasks agenda`
+
 ### `max tasks categories`
 
 the categories a task takes, with what each means and the words a rule picks it by
@@ -2539,6 +3152,10 @@ the categories a task takes, with what each means and the words a rule picks it 
 ```sh
 max tasks categories
 ```
+
+**Returns:** the categories a task takes, with what each means
+
+**Example:** `max personal tasks categories`
 
 ### `max tasks scan`
 
@@ -2557,6 +3174,10 @@ max tasks scan <chat> [options]
 | Опция | Что делает |
 |---|---|
 | `--last <n>` | read the newest n stored messages of each chat (default 50, at most 1000). |
+
+**Returns:** build tasks from a chat's stored history: unanswered questions and mentions
+
+**Example:** `max personal tasks scan <chat>`, `max personal tasks scan <chat> --last 300 --yes`
 
 ### `max tasks claim`
 
@@ -2577,6 +3198,10 @@ max tasks claim <task> [options]
 | `--lease <duration>` | how long the claim lasts: 30m, 2h (default 30m); claiming again extends it. |
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
+**Returns:** take an open task so no other agent works it at once; the claim lapses by itself
+
+**Example:** `max personal tasks claim PR-12 --lease 2h`
+
 ### `max tasks release`
 
 give back a task you claimed, before the claim lapses; the owner may release any
@@ -2594,6 +3219,10 @@ max tasks release <task> [options]
 | Опция | Что делает |
 |---|---|
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
+
+**Returns:** give back a task you claimed, before the claim lapses; the owner may release any
+
+**Example:** `max personal tasks release PR-12`
 
 ### `max tasks close`
 
@@ -2616,6 +3245,10 @@ max tasks close <task> [options]
 | `--certainty <n>` | an agent's: how sure it is, 0 to 1, that the task needs nothing more. |
 | `--as-owner` | close it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
+**Returns:** close a task as done or dismissed
+
+**Example:** `max personal tasks close Q-15 --as done --certainty 0.9 --reason answered-in-chat`, `max personal tasks close Q-15`
+
 ### `max tasks reject`
 
 refuse the close an agent suggested: the task stays open and leaves close:suggested; the agent may close it again
@@ -2634,6 +3267,10 @@ max tasks reject <task> [options]
 |---|---|
 | `--as-owner` | refuse it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
+**Returns:** refuse an agent's close of a task: it stays open and the suggestion goes
+
+**Example:** `max personal tasks reject Q-15`
+
 ## `max conversations`
 
 the conversations inside a chat, found in the stored messages by replies, mentions and who wrote next
@@ -2642,7 +3279,7 @@ the conversations inside a chat, found in the stored messages by replies, mentio
 
 find a chat's conversations in what the store holds, replacing the last build; without --chat, every chat that changed since its build and every group never built; never asks the messenger
 
-**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
+**Отправляет текст во внешний сервис.**
 
 ```sh
 max conversations build [options]
@@ -2658,6 +3295,10 @@ max conversations build [options]
 | `--size <n>` | analysis answer messages per batch, 10–200; default 50. |
 | `--max-tokens <n>` | analysis input/output reservation cap per run; default 100000. |
 | `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
+
+**Returns:** build conversation links from stored messages
+
+**Example:** `max personal conversations build --chat "Book club"`
 
 ### `max conversations list`
 
@@ -2676,6 +3317,10 @@ max conversations list <chat> [query] [options]
 |---|---|
 | `--limit <n>` | how many. |
 
+**Returns:** conversation — id, chat, first_message, started_at, ended_at, messages_count, senders_count, built_at, and 1 more; every field: max commands schema conversations list
+
+**Example:** `max personal conversations list "Book club"`
+
 ### `max conversations show`
 
 one conversation's messages, oldest first — by its id, or the one a message is in
@@ -2688,6 +3333,10 @@ max conversations show <conversation> [message]
 |---|---|---|
 | `conversation` | обязательный | a conversation id from `conversations list`; or a chat: its id, or part of its title, with a message. |
 | `message` | необязательный | a message id in that chat: show the conversation it is in. |
+
+**Returns:** one conversation and its messages
+
+**Example:** `max personal conversations show "Book club" 101`
 
 ### `max conversations related`
 
@@ -2710,6 +3359,10 @@ max conversations related <chat> <message> [options]
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 
+**Returns:** conversations nearest in meaning to a message's conversation
+
+**Example:** `max personal conversations related "Book club" 101`
+
 ### `max conversations status`
 
 how fresh each built chat's conversations and vectors are: messages the build has not seen, chunks with a current, stale or missing vector
@@ -2725,6 +3378,10 @@ max conversations status [options]
 | `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+
+**Returns:** which chats are ready for conversation search
+
+**Example:** `max personal conversations status`
 
 ### `max conversations batches`
 
@@ -2743,6 +3400,10 @@ max conversations batches status [options]
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--size <n>` | messages to answer per batch, 10–200; 50 by default. |
 
+**Returns:** progress of conversation-link batches
+
+**Example:** `max personal conversations batches status --chat "Book club"`
+
 #### `max conversations batches next`
 
 the next window to answer, with the messages before it; message text goes to stdout only
@@ -2755,6 +3416,10 @@ max conversations batches next [options]
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--size <n>` | messages to answer per batch, 10–200; 50 by default. |
+
+**Returns:** get the next batch of messages to link
+
+**Example:** `max personal conversations batches next --chat "Book club"`
 
 ### `max conversations links`
 
@@ -2774,6 +3439,10 @@ max conversations links add [options]
 |---|---|
 | `--batch <id>` | the batch id `conversations batches next` printed. |
 
+**Returns:** save an agent's conversation-link answers
+
+**Example:** `max personal conversations links add --batch "$batch"`
+
 #### `max conversations links clear`
 
 drop your agent's answers for a chat, or only one model's; messages are never touched
@@ -2789,21 +3458,49 @@ max conversations links clear [options]
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--model <model>` | only the answers this model gave. |
 
+**Returns:** remove an agent's saved conversation-link answers
+
+**Example:** `max personal conversations links clear --chat "Book club"`
+
+### `max conversations rebuild`
+
+build, then embed with the model on this machine, the chats that changed since their build and the group chats never built — or only --chat; bounded per run, so run it again for the rest; never asks the messenger, downloads no model and sends no text anywhere
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max conversations rebuild [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | a chat: its id, or part of its title. |
+| `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
+| `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given. |
+
+**Returns:** build and embed the chats that changed, on this machine only
+
+**Example:** `max personal conversations rebuild --max-chats 5`
+
 ### `max conversations consents`
 
 remembered analysis permissions for this account's chats and provider endpoints
 
 #### `max conversations consents list`
 
-
+which chats and provider endpoints you allowed to analyse, and when
 
 ```sh
 max conversations consents list
 ```
 
+**Returns:** which chats and provider endpoints you allowed to analyse, and when
+
+**Example:** `max personal conversations consents list`
+
 #### `max conversations consents revoke`
 
-
+forget analysis permissions so the next analysis asks again
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2816,11 +3513,15 @@ max conversations consents revoke [options]
 | `--chat <chat>` | revoke only this chat's consents; defaults to every chat. |
 | `--provider <identity>` | exact provider identity from consents list; defaults to every provider. |
 
+**Returns:** forget analysis permissions so the next analysis asks again
+
+**Example:** `max personal conversations consents revoke --chat "Book club"`
+
 ### `max conversations embed`
 
 compute a vector for each chunk of a chat's conversations for search by meaning — on this machine, or with --provider through a service and your key; resumes where it stopped; without --chat, every built chat with chunks left, on this machine only
 
-**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
+**Отправляет текст во внешний сервис.**
 
 ```sh
 max conversations embed [options]
@@ -2855,6 +3556,10 @@ max conversations embed status [options]
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 
+**Returns:** which conversation vectors are ready or stale
+
+**Example:** `max personal conversations embed status --chat "Book club"`
+
 #### `max conversations embed clear`
 
 drop a chat's vectors, or only one model's; messages and conversations are never touched
@@ -2872,6 +3577,10 @@ max conversations embed clear [options]
 | `--provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
+
+**Returns:** remove stored conversation vectors
+
+**Example:** `max personal conversations embed clear --chat "Book club"`
 
 ## `max attachments`
 
@@ -2898,6 +3607,10 @@ max attachments extract [options]
 | `--ocr` | explicitly call models.ocr for bulk image and scanned-PDF text extraction. |
 | `--concurrency <n>` | remote: requests at once (default: 4). |
 
+**Returns:** extract text from retained message files
+
+**Example:** `max personal attachments extract --chat "Book club" --limit 10`
+
 ### `max attachments list`
 
 files of stored messages, newest first: where each was saved and whether its text is held — never the text
@@ -2915,6 +3628,10 @@ max attachments list [query] [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
+
+**Returns:** attachment — kind, message, position, url, name, title, mime, size, and 7 more; every field: max commands schema attachments list
+
+**Example:** `max personal attachments list --limit 10`
 
 ### `max attachments show`
 
@@ -2936,6 +3653,10 @@ max attachments show <chat> [message] [options]
 | `--offset-bytes <n>` | byte offset from 0. |
 | `--chunk-bytes <n>` | bytes to return, 1–1048576 (default524288). |
 | `--expected-fingerprint <hash>` | require the whole file SHA-256 from the preceding chunk. |
+
+**Returns:** read a bounded chunk of one retained attachment; JSON includes base64 bytes
+
+**Example:** `max personal attachments show "Book club" 101 --attachment 1`
 
 ### `max attachments text`
 
@@ -2961,6 +3682,173 @@ max attachments text set <chat> [message] [options]
 | `--attachment <n>` | which file of the message, from 1; needed when it has more than one. |
 | `--text-file <path>` | read the text from this file; - or none reads stdin. |
 
+**Returns:** save the text read from one message file
+
+**Example:** `max personal attachments text set "Book club" 101 --text-file ./transcript.txt`
+
+### `max attachments download`
+
+archive media from selected chats; verify and keep existing copies
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments download <dir> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory; created if missing. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; repeat for more; a chat: its id, or part of its title. По умолчанию: ``. |
+| `--since-time <time>` | include messages from this ISO timestamp with a time zone. |
+| `--pause <duration>` | pause between history pages. По умолчанию: `5s`. |
+
+**Returns:** archive media from selected chats; verify and keep existing copies
+
+**Example:** `max personal attachments download ./media-archive`
+
+### `max attachments check`
+
+rehash all archived files without connecting to the messenger
+
+```sh
+max attachments check <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory. |
+
+**Returns:** rehash all archived files without connecting to the messenger
+
+**Example:** `max personal attachments check ./media-archive`
+
+### `max attachments jobs`
+
+daily media archive timers for this profile
+
+#### `max attachments jobs install`
+
+install a Linux daily archive timer for this directory; starts nothing
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs install <dir> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+| Опция | Что делает |
+|---|---|
+| `--at <HH:mm>` | daily start time. По умолчанию: `03:00`. |
+| `--timezone <zone>` | IANA time zone of the daily start time. По умолчанию: `UTC`. |
+| `--chat <chat>` | only this chat; repeat for more; a chat: its id, or part of its title. По умолчанию: ``. |
+| `--since-time <time>` | include messages from this ISO timestamp with a time zone. |
+
+**Returns:** install a Linux daily archive timer for this directory; starts nothing
+
+**Example:** `max personal attachments jobs install ./media-archive`
+
+#### `max attachments jobs start`
+
+enable the installed archive timer at login and start its daily schedule
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs start <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** enable the installed archive timer at login and start its daily schedule
+
+**Example:** `max personal attachments jobs start ./media-archive`
+
+#### `max attachments jobs stop`
+
+disable the archive timer; a download already running finishes
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs stop <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** disable the archive timer; a download already running finishes
+
+**Example:** `max personal attachments jobs stop ./media-archive`
+
+#### `max attachments jobs status`
+
+show whether this directory's archive timer is installed and active
+
+```sh
+max attachments jobs status <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** show whether this directory's archive timer is installed and active
+
+**Example:** `max personal attachments jobs status ./media-archive`
+
+#### `max attachments jobs uninstall`
+
+remove this directory's stopped archive timer; keep archived files
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs uninstall <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** remove this directory's stopped archive timer; keep archived files
+
+**Example:** `max personal attachments jobs uninstall ./media-archive`
+
+### `max attachments move`
+
+move older images into another verified archive; remember their new locations
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments move <dir> <archive-dir> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | source media archive directory. |
+| `archive-dir` | обязательный | destination archive directory; created if needed. |
+
+| Опция | Что делает |
+|---|---|
+| `--before-time <time>` | move images whose message date is before this ISO timestamp with zone. |
+| `--dry-run` | show counts and bytes without moving files or creating the destination. |
+
+**Returns:** move older images into another verified archive; remember their new locations
+
+**Example:** `max personal attachments move ./media-archive ./older-images --before-time 2026-10-01T00:00:00Z --dry-run`
+
 ## `max tags`
 
 your own labels on chats, people, messages and tasks, kept in the local store and never sent; tag: in a search finds them
@@ -2982,6 +3870,10 @@ max tags auto [options]
 | `--sync-first` | read current descriptions from the messenger before classifying. |
 | `--dry-run` | preview cached classification without changing the store. |
 
+**Returns:** derive local group/channel tags from cached metadata using keyword rules
+
+**Example:** `max personal tags auto --chat "Book club" --dry-run`
+
 ### `max tags add`
 
 put tags on one chat, person, message or task
@@ -3002,6 +3894,10 @@ max tags add <tag> [options]
 | `--contact <person>` | the person to tag: their id, @username or name, as the local store knows them. |
 | `--message <message>` | the message to tag: its id in --chat, or a msg: locator alone. |
 | `--task <id>` | the task to tag: its id or key, as tasks list shows it. |
+
+**Returns:** put tags on one chat, person, message or task
+
+**Example:** `max personal tags add reading --chat "Book club"`
 
 ### `max tags remove`
 
@@ -3025,6 +3921,10 @@ max tags remove <tag> [options]
 | `--task <id>` | the task to untag: its id or key, as tasks list shows it. |
 | `--source <manual\|auto>` | remove only this ownership claim. |
 
+**Returns:** take tags off one chat, person, message or task
+
+**Example:** `max personal tags remove reading --chat "Book club"`
+
 ### `max tags list`
 
 what is tagged: this account's chats, messages and tasks, and the people of its messenger
@@ -3036,6 +3936,10 @@ max tags list [query]
 | Аргумент | | Что это |
 |---|---|---|
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** tagging — tag, type, target, name, sources, created_at; every field: max commands schema tags list
+
+**Example:** `max personal tags list`, `max personal tags list tag:reading`
 
 ## `max mentions`
 
@@ -3059,6 +3963,10 @@ max mentions list [query] [options]
 | `--page <n>` | which page, starting at 1. |
 | `--new` | undecided mentions found since the last --new run that showed them all; the first run shows every one. |
 
+**Returns:** this account's mentions matching the query, newest first
+
+**Example:** `max personal mentions list kind:phone`, `max personal mentions list domain:google.com`, `max personal mentions list --new`
+
 ### `max mentions domains`
 
 the sites this account's links point to, most linked first, with chats and first and last time
@@ -3076,6 +3984,10 @@ max mentions domains [query] [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 
+**Returns:** the sites this account's links point to, most linked first
+
+**Example:** `max personal mentions domains`, `max personal mentions domains status:found`
+
 ### `max mentions places`
 
 confirmed addresses, in every account, most mentioned first; `mentions confirm <id>` adds one
@@ -3089,6 +4001,10 @@ max mentions places [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 
+**Returns:** confirmed street addresses, most mentioned first
+
+**Example:** `max personal mentions places`
+
 ### `max mentions show`
 
 one mention, the text around it, and how many other places hold its value
@@ -3100,6 +4016,10 @@ max mentions show <id>
 | Аргумент | | Что это |
 |---|---|---|
 | `id` | обязательный | the mention's id, from mentions list. |
+
+**Returns:** one mention, the text around it, and how many other places hold its value
+
+**Example:** `max personal mentions show 12`
 
 ### `max mentions confirm`
 
@@ -3121,6 +4041,10 @@ max mentions confirm <id> [person] [options]
 | `--all-in-chat` | a name: also every undecided place of the same name in its chat. |
 | `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
+**Returns:** say what a mention is, everywhere its value is written
+
+**Example:** `max personal mentions confirm 12 person:7`, `max personal mentions confirm 15`, `max personal mentions confirm 31 person:7 --all-in-chat`
+
 ### `max mentions reject`
 
 not a real mention: dismiss its value everywhere and on later syncs; a name only where it is
@@ -3140,6 +4064,10 @@ max mentions reject <id> [options]
 | `--all-in-chat` | a name: also every undecided place of the same name in its chat. |
 | `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
+**Returns:** dismiss a mention's value everywhere, and on later syncs
+
+**Example:** `max personal mentions reject 12`
+
 ### `max mentions rebuild`
 
 find the mentions of every stored message again; decisions are kept
@@ -3153,6 +4081,10 @@ max mentions rebuild [kind]
 | Аргумент | | Что это |
 |---|---|---|
 | `kind` | необязательный | only this kind: person-name after people were added or renamed. Одно из: `phone`, `email`, `url`, `document`, `person-name`, `place`. |
+
+**Returns:** find the mentions of every stored message again; decisions are kept
+
+**Example:** `max personal mentions rebuild`, `max personal mentions rebuild person-name`
 
 ## `max images`
 
@@ -3173,6 +4105,10 @@ max images embed [options]
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
 | `--limit <n>` | at most this many pictures in one run; 100 if not given. |
 
+**Returns:** compute a vector for each stored picture that has none; resumes where it stopped
+
+**Example:** `max personal images embed`, `max personal images embed --limit 500`
+
 ### `max images models`
 
 models that read pictures, for `images embed` and picture search
@@ -3189,11 +4125,17 @@ max images models list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
 
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands schema images models list
+
+**Next usually:** `max models audio download <model>`, `max models text download <model>`, `max images models download <model>`
+
+**Example:** `max personal images models list`
+
 #### `max images models download`
 
 download a picture model once, checked against the sha256 this version expects
 
-**Меняет что-то только на этом компьютере.**
+**Читает из внешнего сервиса.**
 
 ```sh
 max images models download <model>
@@ -3202,6 +4144,12 @@ max images models download <model>
 | Аргумент | | Что это |
 |---|---|---|
 | `model` | обязательный | a model id from `images models list`. |
+
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands schema images models download
+
+**Next usually:** `max models audio download <model>`, `max models text download <model>`
+
+**Example:** `max personal images models download clip-b32`
 
 ## `max metadata`
 
@@ -3219,6 +4167,10 @@ max metadata get [options]
 |---|---|
 | `--chat <chat>` | a stored chat. |
 
+**Returns:** a stored chat's cached description, as automatic tags read it
+
+**Example:** `max personal metadata get --chat 7`
+
 ### `max metadata refresh`
 
 fetch group and channel descriptions again and cache them
@@ -3235,13 +4187,17 @@ max metadata refresh [options]
 | `--only-missing` | only chats with no metadata yet; without --chat, every stored group/channel. |
 | `--limit <number>` | process at most 1–500 chats. По умолчанию: `50`. |
 
+**Returns:** fetch group and channel descriptions again and cache them
+
+**Example:** `max personal metadata refresh --chat 7 --chat 8`, `max personal metadata refresh --only-missing --limit 20`
+
 ## `max search`
 
-find things by text: one resource when you know it (messages, notes), or search all across messages and notes; mail is memo search mail
+find things by text: one resource when you know it (messages, notes), or search all across messages and notes; for mail, the separate memo CLI: memo search mail
 
 ### `max search all`
 
-search messenger messages and notes in the local store, and the messenger's server for messages (--backend; notes are local only), and a meeting account's transcripts when --source names one — best match first; not mail (memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
+search messenger messages and notes in the local store, and by default the messenger's server for messages too (notes are local only; --backend archive or --offline keeps it to the local store), and a meeting account's transcripts when --source names one — best match first; not mail (the separate memo CLI searches it: memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
 
 ```sh
 max search all <query> [options]
@@ -3262,6 +4218,10 @@ max search all <query> [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
+
+**Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 4 more; every field: max commands schema search all
+
+**Example:** `max personal search all draft`
 
 ### `max search messages`
 
@@ -3298,6 +4258,12 @@ max search messages [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
+**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, match, and 5 more; every field: max commands schema search messages
+
+**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
+
+**Example:** `max personal search messages draft --limit 10`
+
 ### `max search notes`
 
 search the notes — written in memo, or imported from a notes folder — by words and, with the local text model, by meaning; each hit says which found it and what it links to
@@ -3319,9 +4285,15 @@ max search notes <query> [options]
 | `--exact` | words as written only; meaning is not searched. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 
+**Returns:** note hit — ref, source, folder_id, path, title, updated_at, kind, provider, and 5 more; every field: max commands schema search notes
+
+**Example:** `max personal search notes draft --limit 10`
+
 ### `max search conversations`
 
 the conversations nearest to a query in meaning and in words, best first, in one chat or every one — meaning after `conversations embed`; runs on this machine
+
+**Читает из внешнего сервиса.**
 
 ```sh
 max search conversations <query> [options]
@@ -3349,6 +4321,10 @@ max search conversations <query> [options]
 | `--timezone <zone>` | IANA timezone for filter dates; system timezone by default. |
 | `--limit <n>` | how many. |
 | `--catch-up` | first build and embed, on this machine, the chats in scope that changed or were never built — within --max-chats and --max-chunks. |
+
+**Returns:** find conversations by words and meaning
+
+**Example:** `max personal search conversations "Reviewing the project draft"`
 
 ## `max searches`
 
@@ -3382,6 +4358,10 @@ max searches create <name> [query] [options]
 | `--selection <json>` | save the resolved parent ranking query and options from a drilldown. |
 | `--replace` | overwrite a saved search of the same name. |
 
+**Returns:** saved search — id, name, command, params, language, version, fields_version, created_at, and 2 more; every field: max commands schema searches create
+
+**Example:** `max personal searches create project-drafts draft --chat "Project room"`
+
 ### `max searches show`
 
 one saved search or earlier run: its query, options and how often it ran
@@ -3394,6 +4374,10 @@ max searches show <name|id>
 |---|---|---|
 | `name\|id` | обязательный | a saved search's name, or the id of any row of searches history. |
 
+**Returns:** saved search — id, name, command, params, language, version, fields_version, created_at, and 2 more; every field: max commands schema searches show
+
+**Example:** `max personal searches show project-drafts`
+
 ### `max searches list`
 
 the saved searches, by name
@@ -3405,6 +4389,10 @@ max searches list [query]
 | Аргумент | | Что это |
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
+
+**Returns:** saved search — id, name, command, params, language, version, fields_version, created_at, and 2 more; every field: max commands schema searches list
+
+**Example:** `max personal searches list`
 
 ### `max searches history`
 
@@ -3420,6 +4408,10 @@ max searches history [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 
+**Returns:** saved search — id, name, command, params, language, version, fields_version, created_at, and 2 more; every field: max commands schema searches history
+
+**Example:** `max personal searches history --limit 10`
+
 ### `max searches delete`
 
 delete a saved search, or one run from the history
@@ -3434,6 +4426,10 @@ max searches delete <name|id>
 |---|---|---|
 | `name\|id` | обязательный | a saved search's name, or the id of any row of searches history. |
 
+**Returns:** saved search — id, name, command, params, language, version, fields_version, created_at, and 2 more; every field: max commands schema searches delete
+
+**Example:** `max personal searches delete project-drafts`
+
 ### `max searches clear`
 
 empty the history; saved searches stay
@@ -3443,6 +4439,10 @@ empty the history; saved searches stay
 ```sh
 max searches clear
 ```
+
+**Returns:** empty the history; saved searches stay
+
+**Example:** `max personal searches clear`
 
 ## `max flood`
 
@@ -3457,6 +4457,10 @@ forget them, lift the hold and the profile's pace, once MAX no longer limits the
 ```sh
 max flood clear
 ```
+
+**Returns:** clear a profile's stored rate-limit hold
+
+**Example:** `max personal flood clear`
 
 ## `max models`
 
@@ -3478,11 +4482,17 @@ max models audio list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
 
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands schema models audio list
+
+**Next usually:** `max models audio download <model>`, `max models text download <model>`, `max images models download <model>`
+
+**Example:** `max personal models audio list`
+
 #### `max models audio download`
 
 download a speech model once, checked against the sha256 this version expects
 
-**Меняет что-то только на этом компьютере.**
+**Читает из внешнего сервиса.**
 
 ```sh
 max models audio download <model>
@@ -3491,6 +4501,12 @@ max models audio download <model>
 | Аргумент | | Что это |
 |---|---|---|
 | `model` | обязательный | a model id from `models audio list`. |
+
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands schema models audio download
+
+**Next usually:** `max models text download <model>`, `max images models download <model>`
+
+**Example:** `max personal models audio download parakeet-v3`
 
 ### `max models text`
 
@@ -3508,11 +4524,17 @@ max models text list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
 
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands schema models text list
+
+**Next usually:** `max models text download <model>`, `max models audio download <model>`, `max images models download <model>`
+
+**Example:** `max personal models text list`
+
 #### `max models text download`
 
 download an embedding model once, checked against the sha256 this version expects
 
-**Меняет что-то только на этом компьютере.**
+**Читает из внешнего сервиса.**
 
 ```sh
 max models text download <model> [options]
@@ -3525,6 +4547,12 @@ max models text download <model> [options]
 | Опция | Что делает |
 |---|---|
 | `--accept-terms` | accept the model's licence terms, for a model that has its own. |
+
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands schema models text download
+
+**Next usually:** `max models audio download <model>`, `max images models download <model>`
+
+**Example:** `max personal models text download e5-small`
 
 #### `max models text key`
 
@@ -3544,6 +4572,10 @@ max models text key set <provider>
 |---|---|---|
 | `provider` | обязательный | openai, anthropic, or the host of a --base-url server that wants a key. |
 
+**Returns:** store a key, typed at a hidden prompt or piped on stdin — never as an argument
+
+**Example:** `max personal models text key set openai`
+
 #### `max models text key remove`
 
 forget a stored key
@@ -3557,6 +4589,10 @@ max models text key remove <provider>
 | Аргумент | | Что это |
 |---|---|---|
 | `provider` | обязательный | openai, anthropic, or a server's host. |
+
+**Returns:** forget a stored key
+
+**Example:** `max personal models text key remove openai`
 
 ## `max polls`
 
@@ -3574,6 +4610,10 @@ max polls show <chat> <message>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the id of the message that carries the poll. |
+
+**Returns:** a poll and its answer ids, as the message carries it now
+
+**Example:** `max personal polls show "Book club" 101`
 
 ### `max polls vote`
 
@@ -3595,6 +4635,10 @@ max polls vote <chat> <message> [answers] [options]
 |---|---|
 | `--retract` | take your vote back. |
 
+**Returns:** vote in a poll, or take your vote back; the others see it unless the poll is anonymous
+
+**Example:** `max personal polls vote "Book club" 101 0`
+
 ### `max polls close`
 
 close your own poll; nobody can vote after that, and it cannot be reopened
@@ -3609,6 +4653,10 @@ max polls close <chat> <message>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the id of your own message that carries the poll. |
+
+**Returns:** close your own poll; nobody can vote after that, and it cannot be reopened
+
+**Example:** `max personal polls close "Book club" 101`
 
 ### `max polls create`
 
@@ -3635,6 +4683,10 @@ max polls create <chat> <question> <answers> [options]
 | `--send-as <id>` | post as one of the identities `chats send-as` lists; required where the chat posts as someone else by default. |
 | `--operation-id <id>` | repeat a create whose outcome was unknown, without risking a second poll. |
 
+**Returns:** send a poll to a chat, as a message of its own; public unless --anonymous
+
+**Example:** `max personal polls create "Book club" "Which day?" Monday Tuesday`
+
 ## `max reactions`
 
 react to messages
@@ -3655,6 +4707,10 @@ max reactions add <chat> <message> <emoji>
 | `message` | обязательный | the message id. |
 | `emoji` | обязательный | one emoji, for example 👍. |
 
+**Returns:** put your reaction on a message; it replaces the one you had
+
+**Example:** `max personal reactions add "Book club" 101 👍`
+
 ### `max reactions remove`
 
 take your reaction off a message
@@ -3670,6 +4726,10 @@ max reactions remove <chat> <message>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `message` | обязательный | the message id. |
 
+**Returns:** take your reaction off a message
+
+**Example:** `max personal reactions remove "Book club" 101`
+
 ## `max recipients`
 
 the chats this profile may send to, when the list is on
@@ -3681,6 +4741,10 @@ the chats on the list; empty and off until the first add
 ```sh
 max recipients list
 ```
+
+**Returns:** the chats on the list; empty and off until the first add
+
+**Example:** `max personal recipients list`
 
 ### `max recipients add`
 
@@ -3696,6 +4760,10 @@ max recipients add <chat>
 |---|---|---|
 | `chat` | обязательный | chat id, or part of a chat name. |
 
+**Returns:** allow sending to this chat; the first add turns the list on
+
+**Example:** `max personal recipients add Team`
+
 ### `max recipients remove`
 
 stop allowing this chat; the list stays on
@@ -3710,6 +4778,10 @@ max recipients remove <chat>
 |---|---|---|
 | `chat` | обязательный | chat id, or the title as the list shows it. |
 
+**Returns:** stop allowing this chat; the list stays on
+
+**Example:** `max personal recipients remove Team`
+
 ### `max recipients clear`
 
 empty the list and turn it off: this profile may send to any chat again
@@ -3719,6 +4791,10 @@ empty the list and turn it off: this profile may send to any chat again
 ```sh
 max recipients clear
 ```
+
+**Returns:** empty the list and turn it off: this profile may send to any chat again
+
+**Example:** `max personal recipients clear`
 
 ## `max sends`
 
@@ -3737,6 +4813,10 @@ max sends list [options]
 | `--limit <n>` | how many to show. |
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
+
+**Returns:** attempts to send, newest first: sent, refused, failed, or not known
+
+**Example:** `max personal sends list`
 
 ## `max inbox`
 
@@ -3758,8 +4838,12 @@ max inbox [query] [options]
 | `--kind <kinds>` | only chats of these kinds, comma-separated: dialog, group, channel, saved. |
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
-| `--mark-read` | also mark each chat shown read, up to the newest message shown; the other side sees it. |
-| `--no-mark-read` | do not, whatever the catch_up_marks_read setting says. |
+
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, outgoing, text, attachments, chat_title, and 1 more; every field: max commands schema inbox
+
+**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
+
+**Example:** `max personal inbox --limit 10`
 
 ## `max review`
 
@@ -3781,8 +4865,12 @@ max review [query] [options]
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 | `--new` | what changed since the last `review --new`, a point per chat — for scheduled runs. |
-| `--mark-read` | also mark each chat shown read, up to the newest message shown; the other side sees it. |
-| `--no-mark-read` | do not, whatever the catch_up_marks_read setting says. |
+
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, outgoing, text, attachments, chat_title, and 1 more; every field: max commands schema review
+
+**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
+
+**Example:** `max personal review "date>2h"`
 
 ## `max replies`
 
@@ -3802,6 +4890,10 @@ max replies add <id>
 |---|---|---|
 | `id` | обязательный | lower-case letters, digits and -; unique in this profile. |
 
+**Returns:** add a rule with every default written out, off until you edit and enable it
+
+**Example:** `max personal replies add 1`
+
 ### `max replies on`
 
 enable one reply rule; its template must be ready
@@ -3816,6 +4908,10 @@ max replies on <id>
 |---|---|---|
 | `id` | обязательный | the rule's id. |
 
+**Returns:** enable one reply rule; its template must be ready
+
+**Example:** `max personal replies on 1`
+
 ### `max replies off`
 
 disable one reply rule
@@ -3829,6 +4925,10 @@ max replies off <id>
 | Аргумент | | Что это |
 |---|---|---|
 | `id` | обязательный | the rule's id. |
+
+**Returns:** disable one reply rule
+
+**Example:** `max personal replies off 1`
 
 ### `max replies edit`
 
@@ -3870,6 +4970,10 @@ max replies edit <id> [options]
 | `--timezone <zone>` | the IANA timezone for the working window. |
 | `--no-hours` | clear the working window. |
 
+**Returns:** change only the named fields of a reply rule; lists replace the whole list
+
+**Example:** `max personal replies edit 1`
+
 ### `max replies audience`
 
 show the reply audience, who the rules may answer, or replace its named fields; a new file answers everyone a rule matches
@@ -3888,6 +4992,10 @@ max replies audience [options]
 | `--deny-people <ids>` | replace denied sender ids, comma-separated; empty clears; deny wins. |
 | `--deny-chats <ids>` | replace denied chat ids, comma-separated; empty clears; deny wins. |
 
+**Returns:** show the reply audience, who the rules may answer, or replace its named fields; a new…
+
+**Example:** `max personal replies audience`
+
 ### `max replies consents`
 
 consent for reply models once per profile and endpoint, with chat opt-outs
@@ -3900,6 +5008,10 @@ show the reply model consent and chat opt-outs; never calls a model
 max replies consents show
 ```
 
+**Returns:** show the reply model consent and chat opt-outs; never calls a model
+
+**Example:** `max personal replies consents show`
+
 #### `max replies consents grant`
 
 allow incoming message data to go to the configured reply model for this profile; chat opt-outs remain
@@ -3910,6 +5022,10 @@ allow incoming message data to go to the configured reply model for this profile
 max replies consents grant
 ```
 
+**Returns:** allow incoming message data to go to the configured reply model for this profile; chat…
+
+**Example:** `max personal replies consents grant`
+
 #### `max replies consents revoke`
 
 revoke the profile's reply model consent immediately; chat opt-outs remain
@@ -3919,6 +5035,10 @@ revoke the profile's reply model consent immediately; chat opt-outs remain
 ```sh
 max replies consents revoke
 ```
+
+**Returns:** revoke the profile's reply model consent immediately; chat opt-outs remain
+
+**Example:** `max personal replies consents revoke`
 
 #### `max replies consents deny`
 
@@ -3934,6 +5054,10 @@ max replies consents deny <chat>
 |---|---|---|
 | `chat` | обязательный | the native chat id, used as written; never resolved over the network. |
 
+**Returns:** keep this chat's incoming data away from the reply model
+
+**Example:** `max personal replies consents deny Team`
+
 #### `max replies consents allow`
 
 remove this chat's model opt-out; does not grant profile consent
@@ -3947,6 +5071,10 @@ max replies consents allow <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | the native chat id, used as written; never resolved over the network. |
+
+**Returns:** remove this chat's model opt-out; does not grant profile consent
+
+**Example:** `max personal replies consents allow Team`
 
 ### `max replies test`
 
@@ -3965,6 +5093,10 @@ max replies test [rule] [options]
 | `--since-time <time>` | from this ISO 8601 time, or 2h / 1d ago; 7d ago if not given. |
 | `--ai` | call the configured reply model with stored message data; requires reply consent, otherwise uses fallback. |
 
+**Returns:** what the rules would have answered in the stored messages, to whom and why — sends…
+
+**Example:** `max personal replies test`
+
 ### `max replies pause`
 
 stop every reply rule of this profile at once, a running serve too; resume undoes it
@@ -3974,6 +5106,10 @@ stop every reply rule of this profile at once, a running serve too; resume undoe
 ```sh
 max replies pause
 ```
+
+**Returns:** stop every reply rule of this profile at once, a running serve too; resume undoes it
+
+**Example:** `max personal replies pause`
 
 ### `max replies resume`
 
@@ -3985,6 +5121,10 @@ let the reply rules answer again after pause
 max replies resume
 ```
 
+**Returns:** let the reply rules answer again after pause
+
+**Example:** `max personal replies resume`
+
 ### `max replies status`
 
 whether the rules may send, which are on, and who they may answer
@@ -3992,6 +5132,10 @@ whether the rules may send, which are on, and who they may answer
 ```sh
 max replies status
 ```
+
+**Returns:** whether the rules may send, which are on, and who they may answer
+
+**Example:** `max personal replies status`
 
 ## `max serve`
 
@@ -4008,6 +5152,10 @@ max serve [options]
 | `--idle <duration>` | stop after this long with nobody using it — 15m, 1h is 60m. |
 | `--max-subscriber-buffer-bytes <bytes>` | buffer per watcher before disconnecting it; 0 is unlimited. |
 | `--max-subscriber-total-buffer-bytes <bytes>` | combined watcher buffer budget; 0 is unlimited. |
+
+**Returns:** stay connected to MAX and stream new messages to `max watch`, until Ctrl-C
+
+**Example:** `max personal serve`
 
 ## `max server`
 
@@ -4027,6 +5175,10 @@ max server start [options]
 |---|---|
 | `--idle <duration>` | stop after this long with nobody using it — 15m, 1h. |
 
+**Returns:** start this profile's background server
+
+**Example:** `max personal server start`
+
 ### `max server stop`
 
 stop this profile's serve — through the unit if it runs under one
@@ -4036,6 +5188,10 @@ stop this profile's serve — through the unit if it runs under one
 ```sh
 max server stop
 ```
+
+**Returns:** stop this profile's serve — through the unit if it runs under one
+
+**Example:** `max personal server stop`
 
 ### `max server restart`
 
@@ -4051,6 +5207,10 @@ max server restart [options]
 |---|---|
 | `--idle <duration>` | stop after this long with nobody using it — 15m, 1h. |
 
+**Returns:** stop it and start it again
+
+**Example:** `max personal server restart`
+
 ### `max server status`
 
 whether serve runs for this profile, since when, who started it, and the unit if there is one
@@ -4058,6 +5218,10 @@ whether serve runs for this profile, since when, who started it, and the unit if
 ```sh
 max server status
 ```
+
+**Returns:** this profile's background-server status
+
+**Example:** `max personal server status`
 
 ### `max server logs`
 
@@ -4071,6 +5235,10 @@ max server logs [options]
 |---|---|
 | `-n, --limit <n>` | how many lines. По умолчанию: `50`. |
 
+**Returns:** serve's latest log lines — from the journal under systemd, else its log file
+
+**Example:** `max personal server logs --limit 20`
+
 ### `max server install`
 
 write a systemd user unit or a launchd agent for this profile; starts nothing
@@ -4081,6 +5249,10 @@ write a systemd user unit or a launchd agent for this profile; starts nothing
 max server install
 ```
 
+**Returns:** write a systemd user unit or a launchd agent for this profile; starts nothing
+
+**Example:** `max personal server install`
+
 ### `max server uninstall`
 
 remove this profile's unit; stop it first
@@ -4090,6 +5262,10 @@ remove this profile's unit; stop it first
 ```sh
 max server uninstall
 ```
+
+**Returns:** remove this profile's unit; stop it first
+
+**Example:** `max personal server uninstall`
 
 ## `max schedule`
 
@@ -4116,6 +5292,10 @@ max schedule command <name> <args> [options]
 | `--at <HH:MM>` | every day at this local time. |
 | `--at-time <time>` | one run: 30m, 2d from now, or an ISO time; the schedule removes itself after it. |
 
+**Returns:** run max <args…> on a timer — reads save what they read, so this is how a chat's history…
+
+**Example:** `max personal schedule command daily <args>`
+
 ### `max schedule agent`
 
 start an agent (claude or codex) with a prompt on a timer; it runs with MAX_READ_ONLY=1, so it reads and drafts and cannot send — its answer is kept and you are notified
@@ -4139,6 +5319,10 @@ max schedule agent <name> <harness> <prompt> [options]
 | `--at <HH:MM>` | every day at this local time. |
 | `--at-time <time>` | one run: 30m, 2d from now, or an ISO time; the schedule removes itself after it. |
 
+**Returns:** start an agent (claude or codex) with a prompt on a timer; it runs with MAX_READ_ONLY=1,…
+
+**Example:** `max personal schedule agent daily claude <prompt>`
+
 ### `max schedule list`
 
 the schedules, when they run and how their last run went
@@ -4146,6 +5330,10 @@ the schedules, when they run and how their last run went
 ```sh
 max schedule list
 ```
+
+**Returns:** the schedules, when they run and how their last run went
+
+**Example:** `max personal schedule list`
 
 ### `max schedule run`
 
@@ -4161,6 +5349,10 @@ max schedule run <name>
 |---|---|---|
 | `name` | обязательный |  |
 
+**Returns:** run a schedule now, as its timer would, and wait for it
+
+**Example:** `max personal schedule run daily`
+
 ### `max schedule remove`
 
 stop a schedule and remove its timer; its past output stays
@@ -4174,6 +5366,10 @@ max schedule remove <name>
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | обязательный |  |
+
+**Returns:** stop a schedule and remove its timer; its past output stays
+
+**Example:** `max personal schedule remove daily`
 
 ### `max schedule exec`
 
@@ -4189,6 +5385,10 @@ max schedule exec <file>
 |---|---|---|
 | `file` | обязательный |  |
 
+**Returns:** what a timer runs, given the schedule's file; to run one by hand, use run
+
+**Example:** `max personal schedule exec ./report.pdf`
+
 ## `max watch`
 
 print new messages as they arrive, from a running `max serve`
@@ -4200,6 +5400,10 @@ max watch [options]
 | Опция | Что делает |
 |---|---|
 | `--events` | also print edits, deletions, reactions, reads and chat changes; every line then names its event. |
+
+**Returns:** print new messages as they arrive, from a running `max serve`
+
+**Example:** `max personal watch`
 
 ## `max config`
 
@@ -4217,6 +5421,10 @@ max config show [options]
 |---|---|
 | `--bot` | the settings a bot command on this profile gets, rather than the personal account's. |
 
+**Returns:** the profile, the profiles that exist, and each setting with where it came from
+
+**Example:** `max personal config show`
+
 ### `max config set`
 
 save a setting to the configuration file
@@ -4229,7 +5437,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 | `value` | обязательный | a number, true or false, or a list like contacts,polls. |
 
 | Опция | Что делает |
@@ -4237,6 +5445,10 @@ max config set <setting> <value> [options]
 | `--defaults` | change what every profile gets, rather than this profile. |
 | `--personal` | only for personal accounts — the personal section of the file. |
 | `--bot` | only for bots — the bot section of the file. |
+
+**Returns:** save a setting to the configuration file
+
+**Example:** `max personal config set <setting> <value>`
 
 ### `max config unset`
 
@@ -4250,13 +5462,17 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, catch_up_marks_read, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, analysis_provider, analysis_model, analysis_base_url, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, default_profile, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 
 | Опция | Что делает |
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile. |
 | `--personal` | only for personal accounts — the personal section of the file. |
 | `--bot` | only for bots — the bot section of the file. |
+
+**Returns:** remove a setting from the configuration file
+
+**Example:** `max personal config unset <setting>`
 
 ## `max doctor`
 
@@ -4289,6 +5505,10 @@ max doctor report create [options]
 | `--run <id>` | the run the report is about; the newest failed one if not given. |
 | `--output <file>` | where to write it; a new file in this directory if not given. |
 
+**Returns:** write a problem report to a file, and print how to send it
+
+**Example:** `max personal doctor report create`
+
 ## `max runs`
 
 recorded runs — what this tool did, and when
@@ -4306,6 +5526,10 @@ max runs list [options]
 | `--limit <n>` | how many to show. По умолчанию: `20`. |
 | `--page <n>` | which page, starting at 1. По умолчанию: `1`. |
 
+**Returns:** recorded runs, newest first
+
+**Example:** `max personal runs list --limit 10`
+
 ### `max runs show`
 
 one run: what it was, how it ended, and every event it logged
@@ -4321,6 +5545,10 @@ max runs show <run-id> [options]
 | Опция | Что делает |
 |---|---|
 | `--problems` | only failed responses, warnings and crashes. |
+
+**Returns:** one run: what it was, how it ended, and every event it logged
+
+**Example:** `max personal runs show run-101`
 
 ### `max runs search`
 
@@ -4344,6 +5572,10 @@ max runs search [query] [options]
 | `--limit <n>` | matches per page, at most 100. По умолчанию: `20`. |
 | `--page <n>` | result page. По умолчанию: `1`. |
 
+**Returns:** search recorded diagnostic metadata and events; no message contents
+
+**Example:** `max personal runs search timeout --limit 10`
+
 ### `max runs path`
 
 the directory holding one run
@@ -4355,6 +5587,10 @@ max runs path <run-id>
 | Аргумент | | Что это |
 |---|---|---|
 | `run-id` | обязательный | an id from `max runs list`. |
+
+**Returns:** the directory holding one run
+
+**Example:** `max personal runs path run-101`
 
 ## `max skill`
 
@@ -4372,6 +5608,10 @@ max skill show [name]
 |---|---|---|
 | `name` | необязательный | one of the skills shipped for a task: follow-ups, link-conversations. |
 
+**Returns:** print the tool's instructions for AI agents
+
+**Example:** `max skill show`, `max skill show follow-ups`
+
 ### `max skill install`
 
 write SKILL.md to \~/.claude/skills/max-cli/ (Claude Code) and \~/.agents/skills/max-cli/ (Codex, Gemini CLI)
@@ -4386,9 +5626,13 @@ max skill install [options]
 |---|---|
 | `--for <agents>` | which agents to install for. Одно из: `claude`, `agents`, `all`. По умолчанию: `all`. |
 
+**Returns:** install the tool's instructions for AI agents
+
+**Example:** `max skill install --for agents`
+
 ## `max commands`
 
-commands, options and exit codes as JSON — inspect one command path per call
+every command by section, one line each; --json: the contract, one path per call
 
 ### `max commands schema`
 
@@ -4401,6 +5645,10 @@ max commands schema <path>
 | Аргумент | | Что это |
 |---|---|---|
 | `path` | обязательный | one command path, for example: stats messages show. |
+
+**Returns:** one command's argv and result schemas, effects, permissions and retry guidance
+
+**Example:** `max commands schema <path>`
 
 ## `max upgrade`
 
@@ -4416,6 +5664,10 @@ max upgrade [options]
 |---|---|
 | `--check` | say whether a newer version exists, and install nothing. |
 
+**Returns:** upgrade max with the package manager that installed it; --check only looks
+
+**Example:** `max upgrade --check`, `max upgrade`
+
 ## `max complete`
 
 shell completion: `max complete zsh` prints the script to source
@@ -4426,11 +5678,15 @@ max complete [words]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `words` | необязательный |  |
+| `words` | необязательный | zsh for the shell script, or command words to complete. |
+
+**Returns:** shell completion: `max complete zsh` prints the script to source
+
+**Example:** `max complete zsh`
 
 ## `max mcp`
 
-serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max mcp`
+serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max <profile> mcp`
 
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
@@ -4458,6 +5714,10 @@ max mcp config [options]
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 
+**Returns:** print this profile's local MCP configuration
+
+**Example:** `max personal mcp config`
+
 ### `max mcp setup`
 
 add this profile's local MCP server to Codex or Claude Code
@@ -4477,6 +5737,10 @@ max mcp setup <client> [options]
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 
+**Returns:** add this profile's local MCP server to Codex or Claude Code
+
+**Example:** `max personal mcp setup codex --allow-writes`
+
 ### `max mcp doctor`
 
 check this profile's local MCP handshake and tool list
@@ -4488,6 +5752,10 @@ max mcp doctor [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
+
+**Returns:** check this profile's local MCP handshake and tool list
+
+**Example:** `max personal mcp doctor`
 
 ## `max bot`
 
@@ -4507,6 +5775,10 @@ check a bot token with MAX, then keep it — typed at a hidden prompt or piped o
 max bot auth set
 ```
 
+**Returns:** check a bot token with MAX, then keep it — typed at a hidden prompt or piped on stdin
+
+**Example:** `max personal bot auth set`
+
 #### `max bot auth show`
 
 where this profile's bot token comes from, and which bot it is
@@ -4514,6 +5786,10 @@ where this profile's bot token comes from, and which bot it is
 ```sh
 max bot auth show
 ```
+
+**Returns:** where this profile's bot token comes from, and which bot it is
+
+**Example:** `max personal bot auth show`
 
 #### `max bot auth remove`
 
@@ -4524,6 +5800,10 @@ forget this profile's bot token
 ```sh
 max bot auth remove
 ```
+
+**Returns:** forget this profile's bot token
+
+**Example:** `max personal bot auth remove`
 
 ### `max bot list`
 
@@ -4537,6 +5817,10 @@ max bot list [options]
 |---|---|
 | `--check` | ask the messenger who each bot is, with its token. |
 
+**Returns:** every name on this machine that has a bot token; --check asks MAX which bot each is
+
+**Example:** `max personal bot list`
+
 ### `max bot chats`
 
 the chats this bot is in — MAX gives a bot no list of them, so `list` shows the ones it has seen
@@ -4549,6 +5833,10 @@ chats this bot has seen on this machine — not a complete list from MAX
 max bot chats list
 ```
 
+**Returns:** chats this bot has seen on this machine — not a complete list from MAX
+
+**Example:** `max personal bot chats list`
+
 #### `max bot chats show`
 
 one chat from MAX, and remember it
@@ -4560,6 +5848,10 @@ max bot chats show <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+
+**Returns:** one chat from MAX, and remember it
+
+**Example:** `max personal bot chats show Team`
 
 #### `max bot chats leave`
 
@@ -4574,6 +5866,10 @@ max bot chats leave <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+
+**Returns:** take the bot out of a chat; only an admin of the chat can bring it back
+
+**Example:** `max personal bot chats leave Team`
 
 #### `max bot chats action`
 
@@ -4590,6 +5886,10 @@ max bot chats action <chat> <action>
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
 | `action` | обязательный | what the chat sees. Одно из: `typing`, `photo`, `video`, `voice`, `file`. |
 
+**Returns:** show what the bot is doing in a chat — typing, sending a photo — for a few seconds
+
+**Example:** `max personal bot chats action Team typing`
+
 #### `max bot chats admins`
 
 the admins of a chat the bot is an admin in
@@ -4605,6 +5905,10 @@ max bot chats admins list <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+
+**Returns:** the chat's admins and what each may do
+
+**Example:** `max personal bot chats admins list Team`
 
 #### `max bot chats admins add`
 
@@ -4626,6 +5930,10 @@ max bot chats admins add <chat> <person> [options]
 | `--can <rights>` | what they may do, comma-separated: read, members, admins, info, pin, link, edit, delete. |
 | `--title <title>` | the title shown beside their name. |
 
+**Returns:** make a member an admin with these rights
+
+**Example:** `max personal bot chats admins add Team Anna --can <rights>`
+
 #### `max bot chats admins remove`
 
 take an admin's rights back; they stay a member
@@ -4640,6 +5948,10 @@ max bot chats admins remove <chat> <person>
 |---|---|---|
 | `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
 | `person` | обязательный | the person's user id. |
+
+**Returns:** take an admin's rights back; they stay a member
+
+**Example:** `max personal bot chats admins remove Team Anna`
 
 #### `max bot chats members`
 
@@ -4664,6 +5976,10 @@ max bot chats members remove <chat> <person> [options]
 |---|---|
 | `--block` | also keep them from coming back by the chat's link. |
 
+**Returns:** take a person out of a chat; their messages stay
+
+**Example:** `max personal bot chats members remove Team Anna`
+
 #### `max bot chats members list`
 
 members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page gave
@@ -4681,6 +5997,10 @@ max bot chats members list <chat> [options]
 | `--limit <n>` | how many, up to 100. |
 | `--cursor <cursor>` | continue from here. |
 
+**Returns:** members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page…
+
+**Example:** `max personal bot chats members list Team`
+
 #### `max bot chats members add`
 
 add people to a chat by user id, at most 100; the bot must be an admin that may add members
@@ -4695,6 +6015,10 @@ max bot chats members add <chat> <users>
 |---|---|---|
 | `chat` | обязательный |  |
 | `users` | обязательный |  |
+
+**Returns:** add people to a chat by user id, at most 100; the bot must be an admin that may add…
+
+**Example:** `max personal bot chats members add Team <users>`
 
 #### `max bot chats rules`
 
@@ -4712,6 +6036,10 @@ max bot chats rules show <chat>
 |---|---|---|
 | `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
 
+**Returns:** the chat's rules; the defaults, marked not saved, if it has none yet
+
+**Example:** `max personal bot chats rules show Team`
+
 #### `max bot chats rules set`
 
 change one rule — trusted, blocked, blockedNames, links, invites, forwards, blockedPeople, flood.messages, flood.minutes, flood.action, newAccount.days, newAccount.action, consent.delete, consent.remove
@@ -4728,6 +6056,10 @@ max bot chats rules set <chat> <key> <value>
 | `key` | обязательный | the rule. |
 | `value` | обязательный | its new value. |
 
+**Returns:** change one rule — trusted, blocked, blockedNames, links, invites, forwards,…
+
+**Example:** `max personal bot chats rules set Team <key> <value>`
+
 #### `max bot chats rules unset`
 
 put one rule back to its default
@@ -4742,6 +6074,10 @@ max bot chats rules unset <chat> <key>
 |---|---|---|
 | `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
 | `key` | обязательный | the rule. |
+
+**Returns:** put one rule back to its default
+
+**Example:** `max personal bot chats rules unset Team <key>`
 
 #### `max bot chats moderate`
 
@@ -4764,6 +6100,10 @@ max bot chats moderate <chat> [options]
 | `--allow-dangerous` | yes to every action whose level in the group's rules is ask. |
 | `--no-block` | remove without banning; by default a removed person cannot come back by the link. |
 | `--max-actions <n>` | at most this many actions in one run; 10 if not given. |
+
+**Returns:** judge a group's new messages and joins by its rules, and act as they allow — as the bot
+
+**Example:** `max personal bot chats moderate Team`
 
 ### `max bot messages`
 
@@ -4796,6 +6136,10 @@ max bot messages send <chat> [text] [options]
 | `--voice <file>` | send an Ogg Opus file as a voice message, alone, with no text. |
 | `--allow-any-file` | send a file even from credential folders or this CLI's own folders. |
 
+**Returns:** send a message as the bot; without [text], the text is read from stdin
+
+**Example:** `max personal bot messages send Team "on my way"`
+
 #### `max bot messages list`
 
 the latest messages in a chat; where MAX gives a bot no history, and with --offline, the ones this bot has seen on this machine
@@ -4812,6 +6156,10 @@ max bot messages list <chat> [options]
 |---|---|
 | `--limit <n>` | how many, the newest. |
 
+**Returns:** the latest messages in a chat; where MAX gives a bot no history, and with --offline, the…
+
+**Example:** `max personal bot messages list Team`
+
 #### `max bot messages show`
 
 one message by its id in a chat
@@ -4824,6 +6172,10 @@ max bot messages show <chat> <message>
 |---|---|---|
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
 | `message` | обязательный | message id. |
+
+**Returns:** one message by its id in a chat
+
+**Example:** `max personal bot messages show Team 1234`
 
 #### `max bot messages edit`
 
@@ -4846,6 +6198,10 @@ max bot messages edit <chat> <message> <text> [options]
 | `--md` | read this messenger's Markdown; see its formatting guide for supported syntax. |
 | `--html` | the text is HTML: <b>, <i>, <a href>, <code>. |
 
+**Returns:** replace the text of a message the bot sent
+
+**Example:** `max personal bot messages edit Team 1234 "on my way"`
+
 #### `max bot messages delete`
 
 delete messages in a chat the bot can delete in; it cannot be undone
@@ -4864,6 +6220,10 @@ max bot messages delete <chat> <messages> [options]
 | Опция | Что делает |
 |---|---|
 | `--allow-dangerous` | delete without asking. |
+
+**Returns:** delete messages in a chat the bot can delete in; it cannot be undone
+
+**Example:** `max personal bot messages delete Team <messages>`
 
 #### `max bot messages pin`
 
@@ -4884,6 +6244,10 @@ max bot messages pin <chat> <message> [options]
 |---|---|
 | `--notify` | tell the chat's members. |
 
+**Returns:** pin a message in a chat; quietly unless --notify
+
+**Example:** `max personal bot messages pin Team 1234`
+
 #### `max bot messages unpin`
 
 unpin a message in a chat
@@ -4898,6 +6262,10 @@ max bot messages unpin <chat> <message>
 |---|---|---|
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
 | `message` | обязательный | message id. |
+
+**Returns:** unpin a message in a chat
+
+**Example:** `max personal bot messages unpin Team 1234`
 
 #### `max bot messages between`
 
@@ -4916,6 +6284,10 @@ max bot messages between <people> [options]
 | `--all-bots` | also read every other bot's copy on this machine that read_other_bots allows. |
 | `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by read_other_bots. |
 | `--limit <n>` | how many of the latest messages from each chat. |
+
+**Returns:** what two or more people wrote in the chats they have all written in — from the local…
+
+**Example:** `max personal bot messages between Anna`
 
 ### `max bot search`
 
@@ -4942,6 +6314,10 @@ max bot search messages [query] [options]
 | `--newest` | newest first instead of best first. |
 | `--from <who>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several. |
 
+**Returns:** search the messages this bot has read, sent or received on this machine — the local copy…
+
+**Example:** `max personal bot search messages "invoice"`
+
 ### `max bot recipients`
 
 the chats this bot may write to; with no list, every chat — `clear` removes the list
@@ -4953,6 +6329,10 @@ the chats on the list, or nothing when there is no list
 ```sh
 max bot recipients list
 ```
+
+**Returns:** the chats on the list, or nothing when there is no list
+
+**Example:** `max personal bot recipients list`
 
 #### `max bot recipients add`
 
@@ -4968,6 +6348,10 @@ max bot recipients add <chat>
 |---|---|---|
 | `chat` | обязательный |  |
 
+**Returns:** allow a chat: its id, `user:<id>`, or the title of a chat this bot has seen
+
+**Example:** `max personal bot recipients add Team`
+
 #### `max bot recipients remove`
 
 take a chat off the list
@@ -4982,6 +6366,10 @@ max bot recipients remove <chat>
 |---|---|---|
 | `chat` | обязательный |  |
 
+**Returns:** take a chat off the list
+
+**Example:** `max personal bot recipients remove Team`
+
 #### `max bot recipients clear`
 
 remove the list: the bot may write to any chat again
@@ -4992,17 +6380,25 @@ remove the list: the bot may write to any chat again
 max bot recipients clear
 ```
 
+**Returns:** remove the list: the bot may write to any chat again
+
+**Example:** `max personal bot recipients clear`
+
 ### `max bot sends`
 
 what this bot sent, edited and deleted from this machine — ids and outcomes, never text
 
 #### `max bot sends list`
 
-
+every send, edit and delete this bot made from this machine, with its outcome
 
 ```sh
 max bot sends list
 ```
+
+**Returns:** every send, edit and delete this bot made from this machine, with its outcome
+
+**Example:** `max personal bot sends list`
 
 ### `max bot watch`
 
@@ -5018,6 +6414,12 @@ max bot watch [options]
 |---|---|
 | `--events` | also edits, deletions, buttons pressed and people coming and going; every line names its event. |
 | `--types <types>` | only these update types, comma-separated, in the messenger's words. |
+| `--public-url <url>` | receive by webhook at your tunnel's https address instead of polling, e.g. https://<name>.ts.net. |
+| `--port <port>` | the local port behind the tunnel for --public-url (default 8766). |
+
+**Returns:** print new messages as they arrive and keep them, until Ctrl-C or --timeout (either ends…
+
+**Example:** `max personal bot watch`
 
 ### `max bot callbacks`
 
@@ -5042,6 +6444,10 @@ max bot callbacks answer <callback> [options]
 | `--text <text>` | the message's new text. |
 | `--notification <text>` | a note only the person who pressed sees. |
 
+**Returns:** answer a pressed button by its callback id: --notification shows the person a one-time…
+
+**Example:** `max personal bot callbacks answer <callback>`
+
 ### `max bot commands`
 
 the bot's command menu — what people see after /
@@ -5053,6 +6459,10 @@ the commands in the menu now
 ```sh
 max bot commands list
 ```
+
+**Returns:** the commands in the menu now
+
+**Example:** `max personal bot commands list`
 
 #### `max bot commands set`
 
@@ -5068,6 +6478,10 @@ max bot commands set <commands>
 |---|---|---|
 | `commands` | обязательный | name=description, one per command. |
 
+**Returns:** replace the whole menu: each command as name=description, e.g. start=Begin
+
+**Example:** `max personal bot commands set <commands>`
+
 #### `max bot commands clear`
 
 empty the menu
@@ -5077,6 +6491,10 @@ empty the menu
 ```sh
 max bot commands clear
 ```
+
+**Returns:** empty the menu
+
+**Example:** `max personal bot commands clear`
 
 ### `max bot webhooks`
 
@@ -5089,6 +6507,10 @@ the webhooks this bot has
 ```sh
 max bot webhooks list
 ```
+
+**Returns:** the webhooks this bot has
+
+**Example:** `max personal bot webhooks list`
 
 #### `max bot webhooks set`
 
@@ -5110,6 +6532,10 @@ max bot webhooks set <url> [options]
 | `--secret-stdin` | a secret the messenger sends back with each update — asked for, or read from a pipe. |
 | `--add` | keep the webhooks already set and add this one beside them. |
 
+**Returns:** send this bot's updates to an HTTPS address; refused while another is set
+
+**Example:** `max personal bot webhooks set https://example.com`
+
 #### `max bot webhooks delete`
 
 stop sending updates to this address; with none left, `bot watch` works again
@@ -5123,6 +6549,10 @@ max bot webhooks delete <url>
 | Аргумент | | Что это |
 |---|---|---|
 | `url` | обязательный | the address. |
+
+**Returns:** stop sending updates to this address; with none left, `bot watch` works again
+
+**Example:** `max personal bot webhooks delete https://example.com`
 
 ### `max bot contacts`
 
@@ -5146,6 +6576,10 @@ max bot contacts show <who> [options]
 | `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by read_other_bots. |
 | `--limit <n>` | how many messages from the private chat. |
 | `--sync-first` | read the private chat with them again from the messenger first — one request. |
+
+**Returns:** one person: the chats they wrote in (with their last message there) and the latest…
+
+**Example:** `max personal bot contacts show <who>`
 
 ### `max bot store`
 
@@ -5173,6 +6607,10 @@ max bot store fetch <chat> [options]
 | `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
 | `--last <n>` | stop once the newest n messages are held. |
 
+**Returns:** fetch a chat's history into the bot's local copy, newest first; run it again to continue
+
+**Example:** `max personal bot store fetch Team`
+
 ### `max bot mcp`
 
 serve this bot to an agent over MCP, on stdin and stdout — `claude mcp add sales-bot -- max sales bot mcp`
@@ -5185,6 +6623,10 @@ print the mcpServers entry for Claude Desktop, Cursor and others, with full path
 max bot mcp config
 ```
 
+**Returns:** print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes…
+
+**Example:** `max personal bot mcp config`
+
 ### `max bot me`
 
 the bot this profile's token belongs to: name, id, description, commands
@@ -5192,6 +6634,10 @@ the bot this profile's token belongs to: name, id, description, commands
 ```sh
 max bot me
 ```
+
+**Returns:** the bot this profile's token belongs to: name, id, description, commands
+
+**Example:** `max personal bot me`
 
 ### `max bot comments`
 
@@ -5213,6 +6659,10 @@ max bot comments list <message> [options]
 |---|---|
 | `--limit <n>` | how many, up to 100. |
 
+**Returns:** the comments under a post, newest last
+
+**Example:** `max personal bot comments list 1234`
+
 #### `max bot comments get`
 
 one comment under a post
@@ -5225,6 +6675,10 @@ max bot comments get <message> <comment>
 |---|---|---|
 | `message` | обязательный |  |
 | `comment` | обязательный |  |
+
+**Returns:** one comment under a post
+
+**Example:** `max personal bot comments get 1234 <comment>`
 
 #### `max bot comments send`
 
@@ -5244,6 +6698,10 @@ max bot comments send <message> <text> [options]
 | Опция | Что делает |
 |---|---|
 | `--format <format>` | how the text is marked up. Одно из: `markdown`, `html`. |
+
+**Returns:** comment under a post as the bot; - reads stdin
+
+**Example:** `max personal bot comments send 1234 "on my way"`
 
 #### `max bot comments edit`
 
@@ -5265,6 +6723,10 @@ max bot comments edit <message> <comment> <text> [options]
 |---|---|
 | `--format <format>` | how the text is marked up. Одно из: `markdown`, `html`. |
 
+**Returns:** replace the text of a comment the bot wrote; - reads stdin
+
+**Example:** `max personal bot comments edit 1234 <comment> "on my way"`
+
 #### `max bot comments delete`
 
 delete a comment under a post
@@ -5283,6 +6745,10 @@ max bot comments delete <message> <comment> [options]
 | Опция | Что делает |
 |---|---|
 | `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
+
+**Returns:** delete a comment under a post
+
+**Example:** `max personal bot comments delete 1234 <comment>`
 
 ### `max bot uploads`
 
@@ -5307,6 +6773,10 @@ max bot uploads put <file> [options]
 | `--type <type>` | upload as this kind instead of guessing by extension. Одно из: `image`, `video`, `audio`, `file`. |
 | `--allow-any-file` | upload a file even from credential folders or WireCat apps' folders. |
 
+**Returns:** upload a file from disk and print the attachment to put in a message's `attachments` —…
+
+**Example:** `max personal bot uploads put ./report.pdf`
+
 ### `max bot api`
 
 every operation of the official Bot API, generated from its schema — docs/dev/bot-api-coverage.md
@@ -5327,6 +6797,10 @@ Get current bot info — read (GET /me)
 max bot api get-my-info
 ```
 
+**Returns:** Get current bot info — read (GET /me)
+
+**Example:** `max personal bot api get-my-info`
+
 #### `max bot api edit-my-commands`
 
 Edit current bot commands — write (PATCH /me/commands)
@@ -5342,6 +6816,10 @@ max bot api edit-my-commands [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Edit current bot commands — write (PATCH /me/commands)
+
+**Example:** `max personal bot api edit-my-commands`
+
 #### `max bot api get-chat`
 
 Get chat — read (GET /chats/{chatId})
@@ -5353,6 +6831,10 @@ max bot api get-chat [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Requested chat or channel identifier. |
+
+**Returns:** Get chat — read (GET /chats/{chatId})
+
+**Example:** `max personal bot api get-chat --chat-id <value>`
 
 #### `max bot api edit-chat`
 
@@ -5370,6 +6852,10 @@ max bot api edit-chat [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Edit chat or channel info — write (PATCH /chats/{chatId})
+
+**Example:** `max personal bot api edit-chat --chat-id <value>`
+
 #### `max bot api send-action`
 
 Send action — write (POST /chats/{chatId}/actions)
@@ -5386,6 +6872,10 @@ max bot api send-action [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Send action — write (POST /chats/{chatId}/actions)
+
+**Example:** `max personal bot api send-action --chat-id <value>`
+
 #### `max bot api get-pinned-message`
 
 Get pinned message — read (GET /chats/{chatId}/pin)
@@ -5397,6 +6887,10 @@ max bot api get-pinned-message [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Chat identifier to get its pinned message. |
+
+**Returns:** Get pinned message — read (GET /chats/{chatId}/pin)
+
+**Example:** `max personal bot api get-pinned-message --chat-id <value>`
 
 #### `max bot api pin-message`
 
@@ -5414,6 +6908,10 @@ max bot api pin-message [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Pin message — write (PUT /chats/{chatId}/pin)
+
+**Example:** `max personal bot api pin-message --chat-id <value>`
+
 #### `max bot api unpin-message`
 
 Unpin message — write (DELETE /chats/{chatId}/pin)
@@ -5428,6 +6926,10 @@ max bot api unpin-message [options]
 |---|---|
 | `--chat-id <value>` | Chat identifier to remove pinned message. |
 
+**Returns:** Unpin message — write (DELETE /chats/{chatId}/pin)
+
+**Example:** `max personal bot api unpin-message --chat-id <value>`
+
 #### `max bot api get-membership`
 
 Get chat or channel membership — read (GET /chats/{chatId}/members/me)
@@ -5439,6 +6941,10 @@ max bot api get-membership [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Chat or channel identifier. |
+
+**Returns:** Get chat or channel membership — read (GET /chats/{chatId}/members/me)
+
+**Example:** `max personal bot api get-membership --chat-id <value>`
 
 #### `max bot api leave-chat`
 
@@ -5454,6 +6960,10 @@ max bot api leave-chat [options]
 |---|---|
 | `--chat-id <value>` | Chat or channel identifier. |
 
+**Returns:** Leave chat — destructive (DELETE /chats/{chatId}/members/me)
+
+**Example:** `max personal bot api leave-chat --chat-id <value>`
+
 #### `max bot api get-admins`
 
 Get chat or channel admins — read (GET /chats/{chatId}/members/admins)
@@ -5465,6 +6975,10 @@ max bot api get-admins [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Chat or channel identifier. |
+
+**Returns:** Get chat or channel admins — read (GET /chats/{chatId}/members/admins)
+
+**Example:** `max personal bot api get-admins --chat-id <value>`
 
 #### `max bot api post-admins`
 
@@ -5482,6 +6996,10 @@ max bot api post-admins [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Set chat or channel admins — write (POST /chats/{chatId}/members/admins)
+
+**Example:** `max personal bot api post-admins --chat-id <value>`
+
 #### `max bot api delete-admins`
 
 Revoke admin rights — write (DELETE /chats/{chatId}/members/admins/{userId})
@@ -5497,6 +7015,10 @@ max bot api delete-admins [options]
 | `--chat-id <value>` | Chat or channel identifier. |
 | `--user-id <value>` | User identifier. |
 
+**Returns:** Revoke admin rights — write (DELETE /chats/{chatId}/members/admins/{userId})
+
+**Example:** `max personal bot api delete-admins --chat-id <value> --user-id <value>`
+
 #### `max bot api get-members`
 
 Get members — read (GET /chats/{chatId}/members)
@@ -5511,6 +7033,10 @@ max bot api get-members [options]
 | `--user-ids <value>` | Comma-separated list of users identifiers to get their membership. When this parameter is passed, both `count` and `marker` are ignored. |
 | `--marker <value>` | Marker. |
 | `--count <value>` | Count. |
+
+**Returns:** Get members — read (GET /chats/{chatId}/members)
+
+**Example:** `max personal bot api get-members --chat-id <value>`
 
 #### `max bot api add-members`
 
@@ -5528,6 +7054,10 @@ max bot api add-members [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Add members — write (POST /chats/{chatId}/members)
+
+**Example:** `max personal bot api add-members --chat-id <value>`
+
 #### `max bot api remove-member`
 
 Remove member — write (DELETE /chats/{chatId}/members)
@@ -5544,6 +7074,10 @@ max bot api remove-member [options]
 | `--user-id <value>` | User id to remove from chat or channel. |
 | `--block <value>` | Set to `true` if user should be blocked in chat. |
 
+**Returns:** Remove member — write (DELETE /chats/{chatId}/members)
+
+**Example:** `max personal bot api remove-member --chat-id <value> --user-id <value>`
+
 #### `max bot api get-subscriptions`
 
 Get subscriptions — read (GET /subscriptions)
@@ -5551,6 +7085,10 @@ Get subscriptions — read (GET /subscriptions)
 ```sh
 max bot api get-subscriptions
 ```
+
+**Returns:** Get subscriptions — read (GET /subscriptions)
+
+**Example:** `max personal bot api get-subscriptions`
 
 #### `max bot api subscribe`
 
@@ -5567,6 +7105,10 @@ max bot api subscribe [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Subscribe — write (POST /subscriptions)
+
+**Example:** `max personal bot api subscribe`
+
 #### `max bot api unsubscribe`
 
 Unsubscribe — write (DELETE /subscriptions)
@@ -5581,6 +7123,10 @@ max bot api unsubscribe [options]
 |---|---|
 | `--url <value>` | URL to remove from WebHook subscriptions. |
 
+**Returns:** Unsubscribe — write (DELETE /subscriptions)
+
+**Example:** `max personal bot api unsubscribe --url <value>`
+
 #### `max bot api get-upload-url`
 
 Get upload URL — write (POST /uploads)
@@ -5594,6 +7140,10 @@ max bot api get-upload-url [options]
 | Опция | Что делает |
 |---|---|
 | `--type <value>` | Uploaded file type: image, audio, video, file. |
+
+**Returns:** Get upload URL — write (POST /uploads)
+
+**Example:** `max personal bot api get-upload-url --type <value>`
 
 #### `max bot api get-messages`
 
@@ -5613,6 +7163,10 @@ max bot api get-messages [options]
 | `--after <value>` | Messages after timestamp. |
 | `--count <value>` | Maximum amount of messages in response. |
 
+**Returns:** Get messages — read (GET /messages)
+
+**Example:** `max personal bot api get-messages`
+
 #### `max bot api send-message`
 
 Send message — write (POST /messages)
@@ -5631,6 +7185,10 @@ max bot api send-message [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Send message — write (POST /messages)
+
+**Example:** `max personal bot api send-message`
+
 #### `max bot api edit-message`
 
 Edit message — write (PUT /messages)
@@ -5647,6 +7205,10 @@ max bot api edit-message [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Edit message — write (PUT /messages)
+
+**Example:** `max personal bot api edit-message --message-id <value>`
+
 #### `max bot api delete-message`
 
 Delete message — destructive (DELETE /messages)
@@ -5662,6 +7224,10 @@ max bot api delete-message [options]
 | `--message-id <value>` | Deleting message identifier. |
 | `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
 
+**Returns:** Delete message — destructive (DELETE /messages)
+
+**Example:** `max personal bot api delete-message --message-id <value>`
+
 #### `max bot api get-message-by-id`
 
 Get message — read (GET /messages/{messageId})
@@ -5673,6 +7239,10 @@ max bot api get-message-by-id [options]
 | Опция | Что делает |
 |---|---|
 | `--message-id <value>` | Message identifier (`mid`) to get single message in chat or channel. |
+
+**Returns:** Get message — read (GET /messages/{messageId})
+
+**Example:** `max personal bot api get-message-by-id --message-id <value>`
 
 #### `max bot api get-comments`
 
@@ -5689,6 +7259,10 @@ max bot api get-comments [options]
 | `--before <value>` | Comments before timestamp. |
 | `--after <value>` | Comments after timestamp. |
 | `--count <value>` | Maximum amount of comments in response. |
+
+**Returns:** Get comments — read (GET /messages/{messageId}/comments)
+
+**Example:** `max personal bot api get-comments --message-id <value>`
 
 #### `max bot api send-comment`
 
@@ -5707,6 +7281,10 @@ max bot api send-comment [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Send comment — write (POST /messages/{messageId}/comments)
+
+**Example:** `max personal bot api send-comment --message-id <value>`
+
 #### `max bot api edit-comment`
 
 Edit comment — write (PUT /messages/{messageId}/comments)
@@ -5724,6 +7302,10 @@ max bot api edit-comment [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Edit comment — write (PUT /messages/{messageId}/comments)
+
+**Example:** `max personal bot api edit-comment --message-id <value> --comment-id <value>`
+
 #### `max bot api delete-comment`
 
 Delete comment — destructive (DELETE /messages/{messageId}/comments)
@@ -5740,6 +7322,10 @@ max bot api delete-comment [options]
 | `--comment-id <value>` | Deleting comment identifier. |
 | `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
 
+**Returns:** Delete comment — destructive (DELETE /messages/{messageId}/comments)
+
+**Example:** `max personal bot api delete-comment --message-id <value> --comment-id <value>`
+
 #### `max bot api get-comment-by-id`
 
 Get comment — read (GET /messages/{messageId}/comments/{commentId})
@@ -5753,6 +7339,10 @@ max bot api get-comment-by-id [options]
 | `--message-id <value>` | Message identifier (`mid`) of the commented message. |
 | `--comment-id <value>` | Comment identifier (`mid`) to get single comment in channel. |
 
+**Returns:** Get comment — read (GET /messages/{messageId}/comments/{commentId})
+
+**Example:** `max personal bot api get-comment-by-id --message-id <value> --comment-id <value>`
+
 #### `max bot api get-video-attachment-details`
 
 Get video details — read (GET /videos/{videoToken})
@@ -5764,6 +7354,10 @@ max bot api get-video-attachment-details [options]
 | Опция | Что делает |
 |---|---|
 | `--video-token <value>` | Video attachment token. |
+
+**Returns:** Get video details — read (GET /videos/{videoToken})
+
+**Example:** `max personal bot api get-video-attachment-details --video-token <value>`
 
 #### `max bot api answer-on-callback`
 
@@ -5782,6 +7376,10 @@ max bot api answer-on-callback [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
+**Returns:** Answer on callback — write (POST /answers)
+
+**Example:** `max personal bot api answer-on-callback --callback-id <value>`
+
 #### `max bot api get-updates`
 
 Get updates — write (GET /updates)
@@ -5798,6 +7396,26 @@ max bot api get-updates [options]
 | `--poll-timeout <value>` | Timeout in seconds for long polling. |
 | `--marker <value>` | Pass `null` to get updates you didn't get yet. |
 | `--types <value>` | Comma separated list of update types your bot want to receive. |
+
+**Returns:** Get updates — write (GET /updates)
+
+**Example:** `max personal bot api get-updates`
+
+## `max guide`
+
+scenarios: the commands for a common task, in order, and why each
+
+```sh
+max guide [name]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `name` | необязательный | one scenario; without it, the list. |
+
+**Returns:** scenarios: the commands for a common task, in order, and why each
+
+**Example:** `max guide`, `max guide <name> --json`
 
 ## Коды возврата
 

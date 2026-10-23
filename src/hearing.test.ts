@@ -133,7 +133,7 @@ describe("max messages list --transcribe", () => {
     expect(page.missing).toEqual([
       { field: "transcript", why: expect.stringContaining("not transcribed"), step: "messages.transcribe" },
     ])
-    expect(stderr).toMatch(/max models audio download gigaam-v3/)
+    expect(stderr).toMatch(/max h-none models audio download gigaam-v3/)
     expect(stderr).toContain("not transcribed")
   })
 

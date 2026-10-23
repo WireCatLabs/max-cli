@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { listRuns, runsDirFor } from "@wirecat/cli-core/cli"
+import { checkGuide, listRuns, runsDirFor } from "@wirecat/cli-core/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"
@@ -166,20 +166,61 @@ describe("the program", () => {
     expect((await runWith(["--help"])).stdout).toContain("Usage: max")
   })
 
-  it("offers every resource at the top level", async () => {
+  it("prints help and exits 0 for `--help` on every command", async () => {
+    type Node = { name(): string; commands: readonly Node[] }
+    const leaves = (command: Node, path: string[] = []): string[][] =>
+      command.commands.flatMap((child) => {
+        const here = [...path, child.name()]
+        return child.commands.length === 0 ? [here] : leaves(child, here)
+      })
+    const paths = leaves(createProgram()).filter(([top]) => top !== "help")
+    const failed: string[] = []
+    for (const path of paths) {
+      const { code, stderr } = await runWith(["h-sweep", ...path, "--help"], { keyring: memoryKeyring() })
+      if (code !== 0) failed.push(`${path.join(" ")}: ${code} ${stderr}`)
+    }
+    expect(paths.length).toBeGreaterThan(300)
+    expect(failed).toEqual([])
+  }, 120_000)
+
+  it("**opens on the first screen**, which says what max does and where the full list is", async () => {
     const { stdout } = await runWith(["--help"])
+    expect(stdout).toContain("What you can do:")
+    expect(stdout).toContain("MAX_READ_ONLY=1 max …")
+    expect(stdout).toContain("max guide")
+    expect(stdout).not.toContain("Getting started")
+  })
+
+  it("**ships scenarios whose every step parses**", async () => {
+    expect(await checkGuide(() => createProgram(), { packageRoot: process.cwd() })).toEqual([])
+  })
+
+  it("prints one scenario's steps as data, with no profile", async () => {
+    const { stdout, code } = await runWith(["guide", "catch-up", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).item.steps[0].run).toBe("max review 'date>1d' --unanswered 4h")
+  })
+
+  it("prints the options for every command under `help options`, with no profile", async () => {
+    const { stdout, code } = await runWith(["help", "options"])
+    expect(code).toBe(0)
+    expect(stdout).toContain("--offline")
+  })
+
+  it("offers every resource at the top level", async () => {
+    const { stdout } = await runWith(["--help-all"])
     for (const command of ["session", "account", "chats", "contacts", "messages", "store", "runs"]) {
       expect(stdout).toContain(command)
     }
   })
 
   it("offers offline reads and cleanup of departed chats", async () => {
-    expect((await runWith(["--help"])).stdout).toContain("--offline")
+    expect((await runWith(["--help-all"])).stdout).toContain("--offline")
     expect((await runWith(["store", "--help"])).stdout).toContain("clear")
   })
 
   it("**does not offer --no-cache**, because not using the record is already what happens", async () => {
-    expect((await runWith(["--help"])).stdout).not.toContain("--no-cache")
+    expect((await runWith(["--help-all"])).stdout).not.toContain("--no-cache")
   })
 
   it("reads --offline as a switch the commands can see", () => {
@@ -215,7 +256,7 @@ describe("the program", () => {
 
   it("promises only what `--trace` actually does", async () => {
     // `commander` wraps the column, so the promise is checked in the piece that survives wrapping.
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).toContain("ids and timings")
     // It said "without anything that identifies you" until 2026-09-20, and the line names the chat.
     expect(stdout).not.toContain("without anything that identifies you")
@@ -262,10 +303,13 @@ describe("the program", () => {
     expect(code).not.toBe(0)
   })
 
-  it("reads a mistyped option of a list that takes a query as a query word, and refuses it", async () => {
+  it("refuses a mistyped option of a list that takes a query as an unknown option", async () => {
     const { stdout, stderr, code } = await runWith(["chats", "list", "--nonsense", "--offline", "--json"])
     expect(stdout).toBe("")
-    expect(JSON.parse(stderr).error).toMatchObject({ code: "validation_error", reason: "query.invalid-syntax" })
+    expect(JSON.parse(stderr).error).toMatchObject({
+      code: "validation_error",
+      message: expect.stringContaining("unknown option '--nonsense'"),
+    })
     expect(code).toBe(2)
   })
 
@@ -280,12 +324,12 @@ describe("the program", () => {
   })
 
   it("carries the global options every command needs", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     for (const option of ["--json", "--jsonl", "--quiet", "--verbose", "--trace"]) expect(stdout).toContain(option)
   })
 
   it("**has no `--profile`, and says in its help where the profile went**", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).not.toContain("--profile")
     expect(stdout).toContain("max [profile]")
     expect(stdout).toContain("The first word is the profile")
@@ -319,7 +363,10 @@ describe("the program", () => {
   it("offers every search under `search`, and none under `messages`", async () => {
     const { stdout } = await runWith(["messages", "--help"])
     expect(stdout).not.toMatch(/^\s+search\b/m)
-    expect((await runWith(["search", "--help"])).stdout).toMatch(/all .*\n[\s\S]*messages[\s\S]*mail[\s\S]*notes/)
+    const index = (await runWith(["search", "--help"])).stdout
+    for (const resource of ["all", "messages", "notes", "conversations"])
+      expect(index).toMatch(new RegExp(`^\\s+${resource}\\b`, "m"))
+    expect(index).toContain("memo search mail")
 
     const search = await runWith(["search", "messages", "--help"])
     expect(search.stdout).toContain("chat: narrows it to one chat")
@@ -385,13 +432,13 @@ describe("the program", () => {
   })
 
   it("offers --timeout at the top level, where every command can be given one", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).toContain("--timeout <duration>")
     expect(stdout).toContain("whole command")
   })
 
   it("offers `config show`, so the settings in force can be read without guessing", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).toContain("config")
 
     const show = await runWith(["config", "--help"])
@@ -503,6 +550,19 @@ describe("the program", () => {
           profile: null,
           profile_from: "none named",
         })
+      } finally {
+        process.env.MAX_PROFILE = MAX_PROFILE
+      }
+    })
+
+    it("a mistyped profile is refused and not listed as a profile afterwards", async () => {
+      const { MAX_PROFILE } = process.env
+      delete process.env.MAX_PROFILE
+      try {
+        const typo = await runWith(["t-typo", "chats", "list", "--json"], { keyring: memoryKeyring() })
+        expect(JSON.parse(typo.stderr).error.message).toMatch(/no session for profile "t-typo"/)
+        const listed = JSON.parse((await runWith(["chats", "list", "--json"])).stderr).error.details.profiles
+        expect(listed).not.toContain("t-typo")
       } finally {
         process.env.MAX_PROFILE = MAX_PROFILE
       }

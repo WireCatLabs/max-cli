@@ -97,6 +97,22 @@ max personal recipients add "Иван Петров"       # и писать то
 - **Claude Desktop — запланированные задачи.** Задача запускается на вашем компьютере, поэтому ей
   доступен `max` и ваш вход. Пропущенный запуск (компьютер спал) выполняется один раз после
   пробуждения. См. [запланированные задачи Claude](https://code.claude.com/docs/en/desktop-scheduled-tasks).
+- **`max schedule`.** Встроенное расписание: само делает запись в системном планировщике (systemd в Linux,
+  launchd в macOS, Планировщик заданий в Windows) и не требует править crontab. Профиль называется первым
+  словом, как у любой команды:
+
+  ```sh
+  max personal schedule command inbox-daily --at 08:30 -- inbox      # команда `max personal inbox` каждый день
+  max personal schedule agent morning claude "прочитай max skill show follow-ups и выполни ежедневную проверку" --at 08:30
+  max personal schedule list                                         # что назначено и как прошёл последний запуск
+  max personal schedule run morning                                  # запустить сейчас, как это сделал бы таймер
+  max personal schedule remove morning
+  ```
+
+  `schedule agent` запускает `claude` или `codex` с переменной `MAX_READ_ONLY=1`: агент читает и пишет
+  черновики, но отправить ничего не может. Ответ агента сохраняется, и вам приходит уведомление.
+  `--max-cost` останавливает запуск `claude`, который стоит дороже заданной суммы в долларах.
+  Расписание задают `--every 30m`, `--at 08:30` (каждый день) или `--at-time 2h` (один запуск).
 - **cron и `claude -p`.** Без приложения, на любом компьютере, который включён в это время:
 
   ```cron
@@ -107,7 +123,7 @@ max personal recipients add "Иван Петров"       # и писать то
 
   - **`node: not found`, код 127.** Node, поставленный через nvm, fnm или Volta, лежит не в
     системном `PATH`, а cron знает только системный.
-  - **`no token found for profile "default", although it has logged in on this machine`, код 4.**
+  - **`no token found for profile "personal", although it has logged in on this machine`, код 4.**
     `max` не может достучаться до хранилища паролей системы и не видит токен. **Не входите
     заново**: вход в порядке, дело в окружении.
 
@@ -135,6 +151,16 @@ max personal recipients add "Иван Петров"       # и писать то
 Облачные задачи Claude (routines) не подходят: они выполняются на другом компьютере, где нет `max` и
 вашего входа.
 
+## Ежедневная проверка обещаний
+
+Готовый навык `follow-ups` ведёт ваши договорённости: раз в день читает `max tasks agenda`, смотрит только
+те чаты, которые она называет, ставит и связывает задачи и отдаёт короткий список с черновиками ответов.
+Он ничего не отправляет. Прочитать его: `max skill show follow-ups`. Запустить по расписанию:
+
+```sh
+max personal schedule agent follow-ups claude "выполни ежедневную проверку: max skill show follow-ups" --at 08:30
+```
+
 ## Утренняя сводка
 
 Пишет в MAX: **нет**. Разрешить: `Bash(max personal inbox:*)`.
@@ -152,9 +178,8 @@ max personal recipients add "Иван Петров"       # и писать то
 - `max personal inbox --new` — с прошлого запуска `--new`. Эту точку знает только `max`, собеседники её не видят.
 - `max personal inbox 'date>2d'` — за последние два дня; сохранённая точка не сдвигается.
 
-Ни одна из них не отмечает сообщения прочитанными. Если это нужно, добавьте `--mark-read` или
-включите `catch_up_marks_read` в [настройках](configuration.md). Тогда собеседник увидит, что вы
-прочитали.
+Ни одна из них не отмечает сообщения прочитанными. Если это нужно, выполните
+`max personal chats mark-read <чат>`. Тогда собеседник увидит, что вы прочитали.
 
 ### Отдельно личные, группы и каналы
 

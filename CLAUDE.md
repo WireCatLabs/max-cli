@@ -117,6 +117,8 @@ branch off `main`, in a worktree, and open a pull request.
 Local commits check only staged lint and secrets. There is no pre-push check.
 Config integrity, repository lint, Markdown, and secret detection run in PR CI.
 The bounded `ci:quick` step adds typechecking, a build and the command lint for CLI packages or synthetic unit tests for the docs site.
-Full tests, coverage, builds and parity also run once on each merge to `main` (Linux only, no publishing).
+Full validation (`ci.yml`: tests with the coverage floor, contracts, docs, builds, parity, a secret scan) runs on
+every pull request (`pr.yml`) and again on each merge to `main`, Linux only, no publishing (`WC-CI-5`, `WC-CI-7`,
+`WC-TEST-11`). `ci:quick` stays the two-minute early check (`WC-CI-4`).
 Browser and platform suites run for releases, explicit manual validation, and monthly nonpublishing validation. See the
 [shared policy](https://github.com/WireCatLabs/community/blob/main/standards/README.md#ci-and-hooks).
