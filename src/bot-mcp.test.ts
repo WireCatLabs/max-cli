@@ -148,6 +148,8 @@ const READS = [
   "recipients list",
   "me",
   "status",
+  "list",
+  "webhooks list",
 ]
 
 describe("max bot mcp", () => {
@@ -156,13 +158,14 @@ describe("max bot mcp", () => {
     expect((await names(readonly.client)).sort()).toEqual([...READS].sort())
 
     const all = await names((await connect()).client)
-    expect(all).toHaveLength(30)
+    expect(all).toHaveLength(39)
     expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete"]))
-    expect(all.some((name) => /recipients_(add|remove|clear)|webhooks|auth|api|uploads|_mcp/.test(name))).toBe(false)
+    expect(all.some((name) => /recipients_(add|remove|clear)|auth|api|uploads|_mcp/.test(name))).toBe(false)
   })
 
   it("**bot: deny leaves what no level stops**, and a key opened under it offers that write alone", async () => {
     expect((await names((await connect({ permissions: { bot: "deny" } })).client)).sort()).toEqual([
+      "list",
       "recipients list",
       "sends list",
       "status",

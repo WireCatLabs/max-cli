@@ -148,20 +148,19 @@ max work mcp config
 |---|---|
 | `setup`, `session` | вход и выход: их делает человек |
 | `upgrade`, `complete` | обновляют саму программу и автодополнение в терминале |
-| `serve`, `watch`, `server`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
-| `config`, `bot auth`, `bot list` | права, настройки и токены профиля: агент не меняет свои же права |
+| `serve`, `watch`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
+| `config set`, `config unset`, `skill install`, `flood clear`, `models text key set`, `models text key remove` | меняют, что смогут следующие запуски; иначе агент снял бы ограничение «только чтение» |
+| `recipients add`, `recipients remove`, `recipients clear`, `chats rules set`, `chats rules unset` | то же |
+| `replies add`, `replies on`, `replies off`, `replies edit`, `replies audience`, `replies pause`, `replies resume` | то же |
+| `replies consents grant`, `replies consents revoke`, `replies consents deny`, `replies consents allow` | то же |
+| `schedule command`, `schedule agent`, `schedule remove`, `server install`, `server uninstall` | то же |
+| `attachments jobs install`, `attachments jobs start`, `attachments jobs stop`, `attachments jobs uninstall` | то же |
+| `bot chats rules set`, `bot chats rules unset`, `bot recipients add`, `bot recipients remove`, `bot recipients clear` | то же, для бота |
+| `store backup`, `store restore`, `store migrate`, `store repair`, `store reset`, `store clear`, `store decrypt` | ни один ключ прав пока их не ограничивает |
+| `store copies delete`, `server start`, `server stop`, `server restart`, `schedule run`, `schedule exec` | то же |
+| `images models download`, `models audio download`, `models text download`, `doctor report create` | то же |
+| `account sessions end`, `chats delete`, `chats clear`, `bot auth`, `bot store fetch`, `bot api` | то же |
 | `bot uploads put` | читает файл с вашего компьютера |
-| `account sessions end` | завершает ваши сеансы на других устройствах |
-| `attachments jobs`, `attachments move` | ставят ежедневное копирование на этом компьютере и переносят файлы между папками |
-| `chats rules set`, `chats rules unset`, `chats delete`, `chats clear` | пока закрыты для агента |
-| `store status`, `store info`, `store check`, `store export`, `store backup`, `store restore`, `store decrypt` | пока закрыты для агента |
-| `store migrate`, `store reindex`, `store repair`, `store clear`, `store reset`, `store copies delete` | пока закрыты для агента |
-| `store jobs cancel`, `store jobs retry`, `store jobs clear` | пока закрыты для агента |
-| `models`, `images models`, `skill`, `guide`, `runs list`, `runs show`, `runs path`, `commands schema` | пока закрыты для агента |
-| `recipients add`, `recipients remove`, `recipients clear`, `replies`, `schedule`, `flood clear` | пока закрыты для агента |
-| `bot chats leave`, `bot chats admins add`, `bot chats admins remove`, `bot chats rules set`, `bot chats rules unset` | пока закрыты для агента |
-| `bot recipients add`, `bot recipients remove`, `bot recipients clear`, `bot commands set`, `bot commands clear` | пока закрыты для агента |
-| `bot webhooks`, `bot store fetch`, `bot api` | пока закрыты для агента |
 
 ## Инструменты
 

@@ -8,8 +8,19 @@
 
 ### Что нового
 
-- **Агент через MCP может запустить `doctor report` и `doctor report create`.** Какие команды агенту недоступны
-  и почему — в разделе [«Чего нет в MCP»](docs/mcp.md#чего-нет-в-mcp).
+- **Через MCP агенту доступно больше команд,** каждая в пределах прав профиля (cli-core 0.398.0): `config show`,
+  `doctor report`, `runs list|show|path`, `store status|info|check|export|reindex`, `store jobs cancel|retry|clear`,
+  `attachments move`, `attachments jobs status`, `commands schema`, `guide`, `skill show`, списки моделей,
+  `replies status|test|consents show`, `schedule list`, `server status|logs`; у бота — `list`, `chats leave`,
+  `chats admins add|remove`, `commands set|clear`, `webhooks list|set|delete`. Что агенту недоступно и почему —
+  в разделе [«Чего нет в MCP»](docs/mcp.md#чего-нет-в-mcp).
+- **`max <profile> review --offline` отвечает по локальной копии** вместо отказа (cli-core 0.398.0). Он показывает
+  только то, что уже было синхронизировано, и предупреждает об этом (`missing` в JSON).
+
+### Исправлено
+
+- **Пример из `--help` можно вставить и запустить:** строка `Example:` называет профиль `personal`
+  (`max personal review "date>2h"`), а не падает с «name a profile» (cli-core 0.398.0).
 
 ## 0.71.0 — 23.10.2026
 
