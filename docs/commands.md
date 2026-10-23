@@ -3686,6 +3686,145 @@ max attachments text set <chat> [message] [options]
 
 **Example:** `max attachments text set Team 1234`
 
+### `max attachments download`
+
+archive media from selected chats; verify and keep existing copies
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments download <dir> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory; created if missing. |
+
+| Опция | Что делает |
+|---|---|
+| `--chat <chat>` | only this chat; repeat for more; a chat: its id, or part of its title. По умолчанию: ``. |
+| `--since-time <time>` | include messages from this ISO timestamp with a time zone. |
+| `--pause <duration>` | pause between history pages. По умолчанию: `5s`. |
+
+**Returns:** archive media from selected chats; verify and keep existing copies
+
+**Example:** `max attachments download ./media-archive`
+
+### `max attachments check`
+
+rehash all archived files without connecting to the messenger
+
+```sh
+max attachments check <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory. |
+
+**Returns:** rehash all archived files without connecting to the messenger
+
+**Example:** `max attachments check ./media-archive`
+
+### `max attachments jobs`
+
+daily media archive timers for this profile
+
+#### `max attachments jobs install`
+
+install a Linux daily archive timer for this directory; starts nothing
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs install <dir> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+| Опция | Что делает |
+|---|---|
+| `--at <HH:mm>` | daily start time. По умолчанию: `03:00`. |
+| `--timezone <zone>` | IANA time zone of the daily start time. По умолчанию: `UTC`. |
+| `--chat <chat>` | only this chat; repeat for more; a chat: its id, or part of its title. По умолчанию: ``. |
+| `--since-time <time>` | include messages from this ISO timestamp with a time zone. |
+
+**Returns:** install a Linux daily archive timer for this directory; starts nothing
+
+**Example:** `max attachments jobs install ./media-archive`
+
+#### `max attachments jobs start`
+
+enable the installed archive timer at login and start its daily schedule
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs start <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** enable the installed archive timer at login and start its daily schedule
+
+**Example:** `max attachments jobs start ./media-archive`
+
+#### `max attachments jobs stop`
+
+disable the archive timer; a download already running finishes
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs stop <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** disable the archive timer; a download already running finishes
+
+**Example:** `max attachments jobs stop ./media-archive`
+
+#### `max attachments jobs status`
+
+show whether this directory's archive timer is installed and active
+
+```sh
+max attachments jobs status <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** show whether this directory's archive timer is installed and active
+
+**Example:** `max attachments jobs status ./media-archive`
+
+#### `max attachments jobs uninstall`
+
+remove this directory's stopped archive timer; keep archived files
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max attachments jobs uninstall <dir>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `dir` | обязательный | archive directory, used with the same profile as install. |
+
+**Returns:** remove this directory's stopped archive timer; keep archived files
+
+**Example:** `max attachments jobs uninstall ./media-archive`
+
 ## `max tags`
 
 your own labels on chats, people, messages and tasks, kept in the local store and never sent; tag: in a search finds them

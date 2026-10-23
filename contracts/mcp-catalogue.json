@@ -144,6 +144,8 @@
   "attachments list": "read",
   "attachments show": "read",
   "attachments text set": "write",
+  "attachments download": "write",
+  "attachments check": "read",
   "tags auto": "write",
   "tags add": "write",
   "tags remove": "write",

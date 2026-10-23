@@ -30,6 +30,7 @@ const setup = () => {
     const code = await run(["default", ...argv, "--json"], {
       streams,
       tty: false,
+      keyring,
       connection: never,
       store: (profile) => new SessionStore({ profile, keyring }),
     })
