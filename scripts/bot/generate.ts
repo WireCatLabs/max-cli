@@ -11,6 +11,7 @@ import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 import {
+  adaptOpenApi,
   coverageGenerator,
   generate,
   manifestGenerator,
@@ -19,7 +20,6 @@ import {
   writeArtifacts,
 } from "@wirecat/cli-base/codegen"
 import { parse } from "yaml"
-import { adaptOpenApi } from "./openapi-adapter.ts"
 import { overrides } from "./overrides.ts"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..")
