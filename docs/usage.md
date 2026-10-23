@@ -479,7 +479,7 @@ max personal contacts alias rm "Борис Тестов"
 ```
 
 ```sh
-max personal contacts notes add "Борис Тестов" --file note.txt   # или текст из stdin
+max personal contacts notes add "Борис Тестов" --text-file note.txt   # или текст из stdin
 ```
 
 ```sh
@@ -487,7 +487,7 @@ max personal contacts notes list "Борис Тестов"
 ```
 
 ```sh
-max personal contacts notes edit "Борис Тестов" <id> --revision 1 --file note.txt
+max personal contacts notes edit "Борис Тестов" <id> --revision 1 --text-file note.txt
 ```
 
 ```sh

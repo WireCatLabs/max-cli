@@ -222,9 +222,9 @@ MAX эта запись не меняет.
 ```sh
 max personal contacts alias set "Борис Пример" Боря            # ваше имя для человека, только на этом компьютере
 max personal contacts alias rm "Борис Пример"
-max personal contacts notes add "Борис Пример" --file note.txt  # или текст из stdin
+max personal contacts notes add "Борис Пример" --text-file note.txt  # или текст из stdin
 max personal contacts notes list "Борис Пример"
-max personal contacts notes edit "Борис Пример" <id> --revision 1 --file note.txt
+max personal contacts notes edit "Борис Пример" <id> --revision 1 --text-file note.txt
 max personal contacts notes remove "Борис Пример" <id>
 max personal contacts show "Борис Пример" --with-notes
 max personal contacts list notes:квартира                     # люди, в чьих заметках есть этот текст
