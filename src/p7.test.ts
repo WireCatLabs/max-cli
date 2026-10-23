@@ -77,6 +77,7 @@ describe("P7 permissions", () => {
     ["serve"],
     ["messages", "sync", "111"],
     ["contacts", "context", "synthetic-person"],
+    ["contacts", "prepare", "synthetic-person"],
     ["contacts", "timeline", "synthetic-person"],
   ])("refuses message reads through %j before any MAX request", async (...args) => {
     save({ profiles: { work: { permissions: { messages: "deny" } } } })
