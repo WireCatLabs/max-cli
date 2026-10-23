@@ -2,12 +2,12 @@ import { captureStreams } from "@wirecat/cli-base"
 import { describe, expect, it, vi } from "vitest"
 import { run } from "./program.js"
 
-const invoke = async (argv: string[]) => {
+const invoke = async (argv: string[], tty = true) => {
   const streams = captureStreams()
   const opened = vi.fn(() => {
     throw new Error("discovery/preview must not open the messenger")
   })
-  const code = await run(argv, { streams, tty: true, connection: opened })
+  const code = await run(argv, { streams, tty, connection: opened })
   return { code, streams, opened }
 }
 
@@ -34,15 +34,11 @@ describe("the adopted agent CLI contract", () => {
     expect(opened).not.toHaveBeenCalled()
   })
   it("previews a native write before connecting and without repeating its payload", async () => {
-    const { code, streams, opened } = await invoke([
-      "messages",
-      "send",
-      "synthetic-chat",
-      "synthetic-payload",
-      "--dry-run",
-      "--json",
-    ])
-    expect(code).toBe(0)
+    const { code, streams, opened } = await invoke(
+      ["messages", "send", "synthetic-chat", "synthetic-payload", "--dry-run", "--json"],
+      false,
+    )
+    expect(code, streams.stderr.join("")).toBe(0)
     expect(JSON.parse(streams.stdout.join(""))).toMatchObject({
       item: { preview: true, effects: { action_invoked: false, write_reserved: false } },
     })

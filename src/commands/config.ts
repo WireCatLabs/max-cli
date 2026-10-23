@@ -113,7 +113,7 @@ export const configCommand = (): Command => {
     })
 
   for (const action of ["set", "unset"] as const) {
-    const sub = grantsAuthority(annotate(command.command(action), { effects: LOCAL_WRITE, mcp: false }))
+    const sub = grantsAuthority(annotate(command.command(action), { effects: LOCAL_WRITE }))
       .argument("<setting>", `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`)
       .option("--defaults", "change what every profile gets, rather than this profile")
       .option("--personal", "only for personal accounts — the personal section of the file")

@@ -142,20 +142,13 @@ max work mcp config
 
 ### Чего нет в MCP
 
-Агент видит все команды, кроме этих. Права профиля ограничивают остальные.
+Агент видит все команды, кроме этих. Права профиля ограничивают остальные. Команды, которые меняют, что смогут следующие запуски (`config set`, `recipients add`, `replies add`, `schedule command`, `skill install` и подобные), предлагаются только там, где в профиле `permissions.mcp.authority` равно `allow`; по умолчанию `deny`, и агент не может сменить этот ключ через `config set`.
 
 | Команды | Почему |
 |---|---|
 | `setup`, `session` | вход и выход: их делает человек |
 | `upgrade`, `complete` | обновляют саму программу и автодополнение в терминале |
 | `serve`, `watch`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
-| `config set`, `config unset`, `skill install`, `flood clear`, `models text key set`, `models text key remove` | меняют, что смогут следующие запуски; иначе агент снял бы ограничение «только чтение» |
-| `recipients add`, `recipients remove`, `recipients clear`, `chats rules set`, `chats rules unset` | то же |
-| `replies add`, `replies on`, `replies off`, `replies edit`, `replies audience`, `replies pause`, `replies resume` | то же |
-| `replies consents grant`, `replies consents revoke`, `replies consents deny`, `replies consents allow` | то же |
-| `schedule command`, `schedule agent`, `schedule remove`, `server install`, `server uninstall` | то же |
-| `attachments jobs install`, `attachments jobs start`, `attachments jobs stop`, `attachments jobs uninstall` | то же |
-| `bot chats rules set`, `bot chats rules unset`, `bot recipients add`, `bot recipients remove`, `bot recipients clear` | то же, для бота |
 | `store backup`, `store restore`, `store migrate`, `store repair`, `store reset`, `store clear`, `store decrypt` | ни один ключ прав пока их не ограничивает |
 | `store copies delete`, `server start`, `server stop`, `server restart`, `schedule run`, `schedule exec` | то же |
 | `images models download`, `models audio download`, `models text download`, `doctor report create` | то же |

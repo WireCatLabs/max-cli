@@ -252,7 +252,7 @@ API OCR принимает PDF до 20 страниц, изображения д
 `MESSAGING_BATCH_MAX_ERROR_PERCENT` задаёт целый процент от 1 до 100. Ограничение частоты или отказ
 авторизации останавливает раньше; выполняющиеся параллельные запросы могут ещё завершиться.
 После паузы сервера повторите только незавершённое. Ошибки и частичные запуски ищутся через
-`max personal runs search --status partial --json` или `max_read` с `command: "runs search"` в MCP
+`max personal search runs status:partial --json` или `max_read` с `command: "search runs"` в MCP
 ([диагностика](diagnostics.md)).
 
 ## Копии после удаления сообщения

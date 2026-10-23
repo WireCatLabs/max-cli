@@ -6,7 +6,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { toJsonSchema } from "@valibot/to-json-schema"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { describeProgram } from "@wirecat/cli-base/commands"
-import { botInstructions } from "@wirecat/cli-core/cli"
+import { botInstructions, changesAuthorityAt } from "@wirecat/cli-core/cli"
 import { createBotServer } from "@wirecat/cli-core/mcp"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
@@ -94,9 +94,11 @@ const connect = async (
   const profile = `bm-${++profiles}`
   new BotTokenStore({ profile, keyring }).write("bot-token")
   const mcp = maxBotMcp(run)
+  const root = createProgram()
   const { build, tools } = createBotServer({
     bot: { ...maxBot, mcp },
-    program: { run: botMcpRun(run, testEnvironment()), commands: describeProgram(createProgram()) },
+    program: { run: botMcpRun(run, testEnvironment()), commands: describeProgram(root) },
+    authority: changesAuthorityAt(root),
     settings: { profile, permissions, readOtherBots },
     env,
     ...(mcp.keyOf ? { keyOf: mcp.keyOf } : {}),
