@@ -7,7 +7,6 @@ import {
   itemOf,
   LOCAL_WRITE,
   outputFor,
-  ownerOnlyOption,
   REMOTE_READ,
   renderAnswer,
   runsDirFor,
@@ -222,10 +221,10 @@ const reportCommand = (): Command => {
     await run("doctor report", async () => explain(this, { renderer, format, streams }))
   })
 
-  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE }))
+  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE, mcp: false }))
     .description("write a problem report to a file, and print how to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
-    .addOption(ownerOnlyOption("--output <file>", "where to write it; a new file in this directory if not given"))
+    .option("--output <file>", "where to write it; a new file in this directory if not given")
     .action(async function (this: Command) {
       const options = this.opts<{ run?: string; output?: string }>()
       let context: ReturnType<typeof forCommand> | undefined

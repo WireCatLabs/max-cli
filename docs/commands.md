@@ -71,7 +71,7 @@ max session start [method]
 
 **Returns:** log this profile in to MAX
 
-**Example:** `max session start`
+**Example:** `max personal session start`
 
 ### `max session end`
 
@@ -85,7 +85,7 @@ max session end
 
 **Returns:** log this profile out on MAX's side and forget the session here
 
-**Example:** `max session end`
+**Example:** `max personal session end`
 
 ## `max setup`
 
@@ -104,7 +104,7 @@ max setup [options]
 
 **Returns:** set up your personal MAX account and connect your agent
 
-**Example:** `max setup`
+**Example:** `max personal setup`
 
 ## `max account`
 
@@ -211,7 +211,7 @@ max account privacy show
 
 **Returns:** the account's privacy settings; reading changes nothing
 
-**Example:** `max account privacy show`, `max account privacy show --json`
+**Example:** `max personal account privacy show`, `max personal account privacy show --json`
 
 #### `max account privacy set`
 
@@ -233,7 +233,7 @@ max account privacy set [options]
 
 **Returns:** change who may find, call or add the account; the settings not named stay
 
-**Example:** `max account privacy set --find-by-phone contacts`, `max account privacy set --hide-online on`
+**Example:** `max personal account privacy set --find-by-phone contacts`, `max personal account privacy set --hide-online on`
 
 ## `max calls`
 
@@ -253,7 +253,7 @@ max calls list [options]
 
 **Returns:** calls made and received, newest first; reading changes nothing
 
-**Example:** `max calls list`
+**Example:** `max personal calls list`
 
 ## `max stickers`
 
@@ -273,7 +273,7 @@ max stickers list [options]
 
 **Returns:** sticker sets, or with --set the stickers in one; reading changes nothing
 
-**Example:** `max stickers list`
+**Example:** `max personal stickers list`
 
 ## `max chats`
 
@@ -417,7 +417,7 @@ max chats mark-read <chat> [options]
 
 **Returns:** mark a chat read; the other side sees that you read it
 
-**Example:** `max chats mark-read Team`
+**Example:** `max personal chats mark-read Team`
 
 ### `max chats leave`
 
@@ -1066,7 +1066,7 @@ max chats media <chat> [options]
 
 **Returns:** a chat's photos, videos, files, audio and links, from the messenger's server; reading…
 
-**Example:** `max chats media Team`
+**Example:** `max personal chats media Team`
 
 ### `max chats mute`
 
@@ -1088,7 +1088,7 @@ max chats mute <chat> [options]
 
 **Returns:** stop notifications from a chat, for good or until a time; nobody in it is told
 
-**Example:** `max chats mute "Book club"`, `max chats mute "Book club" --until 2h`
+**Example:** `max personal chats mute "Book club"`, `max personal chats mute "Book club" --until 2h`
 
 ### `max chats unmute`
 
@@ -1106,7 +1106,7 @@ max chats unmute <chat>
 
 **Returns:** hear a muted chat again
 
-**Example:** `max chats unmute "Book club"`
+**Example:** `max personal chats unmute "Book club"`
 
 ### `max chats delete`
 
@@ -1172,7 +1172,7 @@ max chats start <bot> [options]
 
 **Returns:** start a bot, as its Start button does; the bot sees that you started it
 
-**Example:** `max chats start <bot>`
+**Example:** `max personal chats start <bot>`
 
 ### `max chats app`
 
@@ -1194,7 +1194,7 @@ max chats app <bot> [options]
 
 **Returns:** the address that opens a bot's mini app, signed in as you — keep it to yourself
 
-**Example:** `max chats app <bot>`
+**Example:** `max personal chats app <bot>`
 
 ## `max contacts`
 
@@ -1423,7 +1423,7 @@ max contacts sync
 
 **Returns:** forget where the last sync left off and take the whole list again
 
-**Example:** `max contacts sync`
+**Example:** `max personal contacts sync`
 
 ### `max contacts lookup`
 
@@ -1435,7 +1435,7 @@ max contacts lookup
 
 **Returns:** who MAX has under a phone number — asks for it, or reads it from stdin
 
-**Example:** `max contacts lookup`
+**Example:** `max personal contacts lookup`
 
 ### `max contacts add`
 
@@ -1589,7 +1589,7 @@ max contacts prepare <person> [options]
 
 **Returns:** what to know before you talk to someone, each item with its reference
 
-**Example:** `max contacts prepare Ana`
+**Example:** `max personal contacts prepare Ana`
 
 ### `max contacts timeline`
 
@@ -1882,7 +1882,7 @@ max messages transcribe <chat> <message> [options]
 
 **Returns:** turn a voice message into text, on this machine — the recording goes nowhere
 
-**Example:** `max messages transcribe Team 1234`
+**Example:** `max personal messages transcribe Team 1234`
 
 ### `max messages send`
 
@@ -2032,7 +2032,7 @@ max messages pin <chat> <message> [options]
 
 **Returns:** pin a message in a chat, quietly unless --notify
 
-**Example:** `max messages pin <chat> <message>`, `max messages pin <chat> <message> --notify`
+**Example:** `max personal messages pin <chat> <message>`, `max personal messages pin <chat> <message> --notify`
 
 ### `max messages unpin`
 
@@ -2051,7 +2051,7 @@ max messages unpin <chat> <message>
 
 **Returns:** unpin a message in a chat
 
-**Example:** `max messages unpin <chat> <message>`
+**Example:** `max personal messages unpin <chat> <message>`
 
 ### `max messages press`
 
@@ -2071,7 +2071,7 @@ max messages press <chat> <message> <button>
 
 **Returns:** press a bot's button under a message; the bot sees that you pressed it
 
-**Example:** `max messages press Team 1234 <button>`
+**Example:** `max personal messages press Team 1234 <button>`
 
 ## `max store`
 
@@ -3025,7 +3025,7 @@ max tasks related <task> [options]
 
 **Returns:** tasks that may be the same job as this one, best first; merges nothing
 
-**Example:** `max tasks related PR-12`
+**Example:** `max personal tasks related PR-12`
 
 ### `max tasks duplicates`
 
@@ -3060,7 +3060,7 @@ max tasks duplicates reject <task> <other-task>
 
 **Returns:** two tasks are not the same job: the pair is never offered again
 
-**Example:** `max tasks duplicates reject PR-14 PR-12`
+**Example:** `max personal tasks duplicates reject PR-14 PR-12`
 
 #### `max tasks duplicates defer`
 
@@ -3079,7 +3079,7 @@ max tasks duplicates defer <task> <other-task>
 
 **Returns:** the fields and the text cannot tell: leave the pair to the owner
 
-**Example:** `max tasks duplicates defer PR-14 PR-12`
+**Example:** `max personal tasks duplicates defer PR-14 PR-12`
 
 ### `max tasks merge`
 
@@ -3101,7 +3101,7 @@ max tasks merge <task> [options]
 
 **Returns:** one job seen twice: fold the duplicate into the task that stays
 
-**Example:** `max tasks merge PR-14 --into PR-12`
+**Example:** `max personal tasks merge PR-14 --into PR-12`
 
 ### `max tasks unmerge`
 
@@ -3119,7 +3119,7 @@ max tasks unmerge <task>
 
 **Returns:** undo a merge: reopen the task and remove its duplicate-of relation
 
-**Example:** `max tasks unmerge PR-14`
+**Example:** `max personal tasks unmerge PR-14`
 
 ### `max tasks agenda`
 
@@ -3155,7 +3155,7 @@ max tasks categories
 
 **Returns:** the categories a task takes, with what each means
 
-**Example:** `max tasks categories`
+**Example:** `max personal tasks categories`
 
 ### `max tasks scan`
 
@@ -3177,7 +3177,7 @@ max tasks scan <chat> [options]
 
 **Returns:** build tasks from a chat's stored history: unanswered questions and mentions
 
-**Example:** `max tasks scan <chat>`, `max tasks scan <chat> --last 300 --yes`
+**Example:** `max personal tasks scan <chat>`, `max personal tasks scan <chat> --last 300 --yes`
 
 ### `max tasks claim`
 
@@ -3200,7 +3200,7 @@ max tasks claim <task> [options]
 
 **Returns:** take an open task so no other agent works it at once; the claim lapses by itself
 
-**Example:** `max tasks claim PR-12 --lease 2h`
+**Example:** `max personal tasks claim PR-12 --lease 2h`
 
 ### `max tasks release`
 
@@ -3222,7 +3222,7 @@ max tasks release <task> [options]
 
 **Returns:** give back a task you claimed, before the claim lapses; the owner may release any
 
-**Example:** `max tasks release PR-12`
+**Example:** `max personal tasks release PR-12`
 
 ### `max tasks close`
 
@@ -3247,7 +3247,7 @@ max tasks close <task> [options]
 
 **Returns:** close a task as done or dismissed
 
-**Example:** `max tasks close Q-15 --as done --certainty 0.9 --reason answered-in-chat`, `max tasks close Q-15`
+**Example:** `max personal tasks close Q-15 --as done --certainty 0.9 --reason answered-in-chat`, `max personal tasks close Q-15`
 
 ### `max tasks reject`
 
@@ -3269,7 +3269,7 @@ max tasks reject <task> [options]
 
 **Returns:** refuse an agent's close of a task: it stays open and the suggestion goes
 
-**Example:** `max tasks reject Q-15`
+**Example:** `max personal tasks reject Q-15`
 
 ## `max conversations`
 
@@ -3480,7 +3480,7 @@ max conversations rebuild [options]
 
 **Returns:** build and embed the chats that changed, on this machine only
 
-**Example:** `max conversations rebuild --max-chats 5`
+**Example:** `max personal conversations rebuild --max-chats 5`
 
 ### `max conversations consents`
 
@@ -3708,7 +3708,7 @@ max attachments download <dir> [options]
 
 **Returns:** archive media from selected chats; verify and keep existing copies
 
-**Example:** `max attachments download ./media-archive`
+**Example:** `max personal attachments download ./media-archive`
 
 ### `max attachments check`
 
@@ -3724,7 +3724,7 @@ max attachments check <dir>
 
 **Returns:** rehash all archived files without connecting to the messenger
 
-**Example:** `max attachments check ./media-archive`
+**Example:** `max personal attachments check ./media-archive`
 
 ### `max attachments jobs`
 
@@ -3753,7 +3753,7 @@ max attachments jobs install <dir> [options]
 
 **Returns:** install a Linux daily archive timer for this directory; starts nothing
 
-**Example:** `max attachments jobs install ./media-archive`
+**Example:** `max personal attachments jobs install ./media-archive`
 
 #### `max attachments jobs start`
 
@@ -3771,7 +3771,7 @@ max attachments jobs start <dir>
 
 **Returns:** enable the installed archive timer at login and start its daily schedule
 
-**Example:** `max attachments jobs start ./media-archive`
+**Example:** `max personal attachments jobs start ./media-archive`
 
 #### `max attachments jobs stop`
 
@@ -3789,7 +3789,7 @@ max attachments jobs stop <dir>
 
 **Returns:** disable the archive timer; a download already running finishes
 
-**Example:** `max attachments jobs stop ./media-archive`
+**Example:** `max personal attachments jobs stop ./media-archive`
 
 #### `max attachments jobs status`
 
@@ -3805,7 +3805,7 @@ max attachments jobs status <dir>
 
 **Returns:** show whether this directory's archive timer is installed and active
 
-**Example:** `max attachments jobs status ./media-archive`
+**Example:** `max personal attachments jobs status ./media-archive`
 
 #### `max attachments jobs uninstall`
 
@@ -3823,7 +3823,7 @@ max attachments jobs uninstall <dir>
 
 **Returns:** remove this directory's stopped archive timer; keep archived files
 
-**Example:** `max attachments jobs uninstall ./media-archive`
+**Example:** `max personal attachments jobs uninstall ./media-archive`
 
 ### `max attachments move`
 
@@ -3847,7 +3847,7 @@ max attachments move <dir> <archive-dir> [options]
 
 **Returns:** move older images into another verified archive; remember their new locations
 
-**Example:** `max attachments move ./media-archive ./older-images --before-time 2026-10-01T00:00:00Z --dry-run`
+**Example:** `max personal attachments move ./media-archive ./older-images --before-time 2026-10-01T00:00:00Z --dry-run`
 
 ## `max tags`
 
@@ -3965,7 +3965,7 @@ max mentions list [query] [options]
 
 **Returns:** this account's mentions matching the query, newest first
 
-**Example:** `max mentions list kind:phone`, `max mentions list domain:google.com`, `max mentions list --new`
+**Example:** `max personal mentions list kind:phone`, `max personal mentions list domain:google.com`, `max personal mentions list --new`
 
 ### `max mentions domains`
 
@@ -3986,7 +3986,7 @@ max mentions domains [query] [options]
 
 **Returns:** the sites this account's links point to, most linked first
 
-**Example:** `max mentions domains`, `max mentions domains status:found`
+**Example:** `max personal mentions domains`, `max personal mentions domains status:found`
 
 ### `max mentions places`
 
@@ -4003,7 +4003,7 @@ max mentions places [options]
 
 **Returns:** confirmed street addresses, most mentioned first
 
-**Example:** `max mentions places`
+**Example:** `max personal mentions places`
 
 ### `max mentions show`
 
@@ -4019,7 +4019,7 @@ max mentions show <id>
 
 **Returns:** one mention, the text around it, and how many other places hold its value
 
-**Example:** `max mentions show 12`
+**Example:** `max personal mentions show 12`
 
 ### `max mentions confirm`
 
@@ -4043,7 +4043,7 @@ max mentions confirm <id> [person] [options]
 
 **Returns:** say what a mention is, everywhere its value is written
 
-**Example:** `max mentions confirm 12 person:7`, `max mentions confirm 15`, `max mentions confirm 31 person:7 --all-in-chat`
+**Example:** `max personal mentions confirm 12 person:7`, `max personal mentions confirm 15`, `max personal mentions confirm 31 person:7 --all-in-chat`
 
 ### `max mentions reject`
 
@@ -4066,7 +4066,7 @@ max mentions reject <id> [options]
 
 **Returns:** dismiss a mention's value everywhere, and on later syncs
 
-**Example:** `max mentions reject 12`
+**Example:** `max personal mentions reject 12`
 
 ### `max mentions rebuild`
 
@@ -4084,7 +4084,7 @@ max mentions rebuild [kind]
 
 **Returns:** find the mentions of every stored message again; decisions are kept
 
-**Example:** `max mentions rebuild`, `max mentions rebuild person-name`
+**Example:** `max personal mentions rebuild`, `max personal mentions rebuild person-name`
 
 ## `max images`
 
@@ -4107,7 +4107,7 @@ max images embed [options]
 
 **Returns:** compute a vector for each stored picture that has none; resumes where it stopped
 
-**Example:** `max images embed`, `max images embed --limit 500`
+**Example:** `max personal images embed`, `max personal images embed --limit 500`
 
 ### `max images models`
 
@@ -4129,7 +4129,7 @@ max images models list [query]
 
 **Next usually:** `max models audio download <model>`, `max models text download <model>`, `max images models download <model>`
 
-**Example:** `max images models list`
+**Example:** `max personal images models list`
 
 #### `max images models download`
 
@@ -4149,7 +4149,7 @@ max images models download <model>
 
 **Next usually:** `max models audio download <model>`, `max models text download <model>`
 
-**Example:** `max images models download clip-b32`
+**Example:** `max personal images models download clip-b32`
 
 ## `max metadata`
 
@@ -4169,7 +4169,7 @@ max metadata get [options]
 
 **Returns:** a stored chat's cached description, as automatic tags read it
 
-**Example:** `max metadata get --chat 7`
+**Example:** `max personal metadata get --chat 7`
 
 ### `max metadata refresh`
 
@@ -4189,7 +4189,7 @@ max metadata refresh [options]
 
 **Returns:** fetch group and channel descriptions again and cache them
 
-**Example:** `max metadata refresh --chat 7 --chat 8`, `max metadata refresh --only-missing --limit 20`
+**Example:** `max personal metadata refresh --chat 7 --chat 8`, `max personal metadata refresh --only-missing --limit 20`
 
 ## `max search`
 
@@ -4197,7 +4197,7 @@ find things by text: one resource when you know it (messages, notes), or search 
 
 ### `max search all`
 
-search messenger messages and notes in the local store, and the messenger's server for messages (--backend; notes are local only), and a meeting account's transcripts when --source names one — best match first; not mail (the separate memo CLI searches it: memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
+search messenger messages and notes in the local store, and by default the messenger's server for messages too (notes are local only; --backend archive or --offline keeps it to the local store), and a meeting account's transcripts when --source names one — best match first; not mail (the separate memo CLI searches it: memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
 
 ```sh
 max search all <query> [options]
@@ -4460,7 +4460,7 @@ max flood clear
 
 **Returns:** clear a profile's stored rate-limit hold
 
-**Example:** `max flood clear`
+**Example:** `max personal flood clear`
 
 ## `max models`
 
@@ -4744,7 +4744,7 @@ max recipients list
 
 **Returns:** the chats on the list; empty and off until the first add
 
-**Example:** `max recipients list`
+**Example:** `max personal recipients list`
 
 ### `max recipients add`
 
@@ -4762,7 +4762,7 @@ max recipients add <chat>
 
 **Returns:** allow sending to this chat; the first add turns the list on
 
-**Example:** `max recipients add Team`
+**Example:** `max personal recipients add Team`
 
 ### `max recipients remove`
 
@@ -4780,7 +4780,7 @@ max recipients remove <chat>
 
 **Returns:** stop allowing this chat; the list stays on
 
-**Example:** `max recipients remove Team`
+**Example:** `max personal recipients remove Team`
 
 ### `max recipients clear`
 
@@ -4794,7 +4794,7 @@ max recipients clear
 
 **Returns:** empty the list and turn it off: this profile may send to any chat again
 
-**Example:** `max recipients clear`
+**Example:** `max personal recipients clear`
 
 ## `max sends`
 
@@ -4816,7 +4816,7 @@ max sends list [options]
 
 **Returns:** attempts to send, newest first: sent, refused, failed, or not known
 
-**Example:** `max sends list`
+**Example:** `max personal sends list`
 
 ## `max inbox`
 
@@ -4843,7 +4843,7 @@ max inbox [query] [options]
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
-**Example:** `max inbox`
+**Example:** `max personal inbox --limit 10`
 
 ## `max review`
 
@@ -4870,7 +4870,7 @@ max review [query] [options]
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
-**Example:** `max review`
+**Example:** `max personal review "date>2h"`
 
 ## `max replies`
 
@@ -4892,7 +4892,7 @@ max replies add <id>
 
 **Returns:** add a rule with every default written out, off until you edit and enable it
 
-**Example:** `max replies add 1`
+**Example:** `max personal replies add 1`
 
 ### `max replies on`
 
@@ -4910,7 +4910,7 @@ max replies on <id>
 
 **Returns:** enable one reply rule; its template must be ready
 
-**Example:** `max replies on 1`
+**Example:** `max personal replies on 1`
 
 ### `max replies off`
 
@@ -4928,7 +4928,7 @@ max replies off <id>
 
 **Returns:** disable one reply rule
 
-**Example:** `max replies off 1`
+**Example:** `max personal replies off 1`
 
 ### `max replies edit`
 
@@ -4972,7 +4972,7 @@ max replies edit <id> [options]
 
 **Returns:** change only the named fields of a reply rule; lists replace the whole list
 
-**Example:** `max replies edit 1`
+**Example:** `max personal replies edit 1`
 
 ### `max replies audience`
 
@@ -4994,7 +4994,7 @@ max replies audience [options]
 
 **Returns:** show the reply audience, who the rules may answer, or replace its named fields; a new…
 
-**Example:** `max replies audience`
+**Example:** `max personal replies audience`
 
 ### `max replies consents`
 
@@ -5010,7 +5010,7 @@ max replies consents show
 
 **Returns:** show the reply model consent and chat opt-outs; never calls a model
 
-**Example:** `max replies consents show`
+**Example:** `max personal replies consents show`
 
 #### `max replies consents grant`
 
@@ -5024,7 +5024,7 @@ max replies consents grant
 
 **Returns:** allow incoming message data to go to the configured reply model for this profile; chat…
 
-**Example:** `max replies consents grant`
+**Example:** `max personal replies consents grant`
 
 #### `max replies consents revoke`
 
@@ -5038,7 +5038,7 @@ max replies consents revoke
 
 **Returns:** revoke the profile's reply model consent immediately; chat opt-outs remain
 
-**Example:** `max replies consents revoke`
+**Example:** `max personal replies consents revoke`
 
 #### `max replies consents deny`
 
@@ -5056,7 +5056,7 @@ max replies consents deny <chat>
 
 **Returns:** keep this chat's incoming data away from the reply model
 
-**Example:** `max replies consents deny Team`
+**Example:** `max personal replies consents deny Team`
 
 #### `max replies consents allow`
 
@@ -5074,7 +5074,7 @@ max replies consents allow <chat>
 
 **Returns:** remove this chat's model opt-out; does not grant profile consent
 
-**Example:** `max replies consents allow Team`
+**Example:** `max personal replies consents allow Team`
 
 ### `max replies test`
 
@@ -5095,7 +5095,7 @@ max replies test [rule] [options]
 
 **Returns:** what the rules would have answered in the stored messages, to whom and why — sends…
 
-**Example:** `max replies test`
+**Example:** `max personal replies test`
 
 ### `max replies pause`
 
@@ -5109,7 +5109,7 @@ max replies pause
 
 **Returns:** stop every reply rule of this profile at once, a running serve too; resume undoes it
 
-**Example:** `max replies pause`
+**Example:** `max personal replies pause`
 
 ### `max replies resume`
 
@@ -5123,7 +5123,7 @@ max replies resume
 
 **Returns:** let the reply rules answer again after pause
 
-**Example:** `max replies resume`
+**Example:** `max personal replies resume`
 
 ### `max replies status`
 
@@ -5135,7 +5135,7 @@ max replies status
 
 **Returns:** whether the rules may send, which are on, and who they may answer
 
-**Example:** `max replies status`
+**Example:** `max personal replies status`
 
 ## `max serve`
 
@@ -5155,7 +5155,7 @@ max serve [options]
 
 **Returns:** stay connected to MAX and stream new messages to `max watch`, until Ctrl-C
 
-**Example:** `max serve`
+**Example:** `max personal serve`
 
 ## `max server`
 
@@ -5294,7 +5294,7 @@ max schedule command <name> <args> [options]
 
 **Returns:** run max <args…> on a timer — reads save what they read, so this is how a chat's history…
 
-**Example:** `max schedule command daily <args>`
+**Example:** `max personal schedule command daily <args>`
 
 ### `max schedule agent`
 
@@ -5321,7 +5321,7 @@ max schedule agent <name> <harness> <prompt> [options]
 
 **Returns:** start an agent (claude or codex) with a prompt on a timer; it runs with MAX_READ_ONLY=1,…
 
-**Example:** `max schedule agent daily claude <prompt>`
+**Example:** `max personal schedule agent daily claude <prompt>`
 
 ### `max schedule list`
 
@@ -5333,7 +5333,7 @@ max schedule list
 
 **Returns:** the schedules, when they run and how their last run went
 
-**Example:** `max schedule list`
+**Example:** `max personal schedule list`
 
 ### `max schedule run`
 
@@ -5351,7 +5351,7 @@ max schedule run <name>
 
 **Returns:** run a schedule now, as its timer would, and wait for it
 
-**Example:** `max schedule run daily`
+**Example:** `max personal schedule run daily`
 
 ### `max schedule remove`
 
@@ -5369,7 +5369,7 @@ max schedule remove <name>
 
 **Returns:** stop a schedule and remove its timer; its past output stays
 
-**Example:** `max schedule remove daily`
+**Example:** `max personal schedule remove daily`
 
 ### `max schedule exec`
 
@@ -5387,7 +5387,7 @@ max schedule exec <file>
 
 **Returns:** what a timer runs, given the schedule's file; to run one by hand, use run
 
-**Example:** `max schedule exec ./report.pdf`
+**Example:** `max personal schedule exec ./report.pdf`
 
 ## `max watch`
 
@@ -5403,7 +5403,7 @@ max watch [options]
 
 **Returns:** print new messages as they arrive, from a running `max serve`
 
-**Example:** `max watch`
+**Example:** `max personal watch`
 
 ## `max config`
 
@@ -5423,7 +5423,7 @@ max config show [options]
 
 **Returns:** the profile, the profiles that exist, and each setting with where it came from
 
-**Example:** `max config show`
+**Example:** `max personal config show`
 
 ### `max config set`
 
@@ -5448,7 +5448,7 @@ max config set <setting> <value> [options]
 
 **Returns:** save a setting to the configuration file
 
-**Example:** `max config set <setting> <value>`
+**Example:** `max personal config set <setting> <value>`
 
 ### `max config unset`
 
@@ -5472,7 +5472,7 @@ max config unset <setting> [options]
 
 **Returns:** remove a setting from the configuration file
 
-**Example:** `max config unset <setting>`
+**Example:** `max personal config unset <setting>`
 
 ## `max doctor`
 
@@ -5507,7 +5507,7 @@ max doctor report create [options]
 
 **Returns:** write a problem report to a file, and print how to send it
 
-**Example:** `max doctor report create`
+**Example:** `max personal doctor report create`
 
 ## `max runs`
 
@@ -5528,7 +5528,7 @@ max runs list [options]
 
 **Returns:** recorded runs, newest first
 
-**Example:** `max runs list --limit 10`
+**Example:** `max personal runs list --limit 10`
 
 ### `max runs show`
 
@@ -5548,7 +5548,7 @@ max runs show <run-id> [options]
 
 **Returns:** one run: what it was, how it ended, and every event it logged
 
-**Example:** `max runs show run-101`
+**Example:** `max personal runs show run-101`
 
 ### `max runs search`
 
@@ -5574,7 +5574,7 @@ max runs search [query] [options]
 
 **Returns:** search recorded diagnostic metadata and events; no message contents
 
-**Example:** `max runs search timeout --limit 10`
+**Example:** `max personal runs search timeout --limit 10`
 
 ### `max runs path`
 
@@ -5590,7 +5590,7 @@ max runs path <run-id>
 
 **Returns:** the directory holding one run
 
-**Example:** `max runs path run-101`
+**Example:** `max personal runs path run-101`
 
 ## `max skill`
 
@@ -5682,7 +5682,7 @@ max complete [words]
 
 **Returns:** shell completion: `max complete zsh` prints the script to source
 
-**Example:** `max complete`
+**Example:** `max complete zsh`
 
 ## `max mcp`
 
@@ -5777,7 +5777,7 @@ max bot auth set
 
 **Returns:** check a bot token with MAX, then keep it — typed at a hidden prompt or piped on stdin
 
-**Example:** `max bot auth set`
+**Example:** `max personal bot auth set`
 
 #### `max bot auth show`
 
@@ -5789,7 +5789,7 @@ max bot auth show
 
 **Returns:** where this profile's bot token comes from, and which bot it is
 
-**Example:** `max bot auth show`
+**Example:** `max personal bot auth show`
 
 #### `max bot auth remove`
 
@@ -5803,7 +5803,7 @@ max bot auth remove
 
 **Returns:** forget this profile's bot token
 
-**Example:** `max bot auth remove`
+**Example:** `max personal bot auth remove`
 
 ### `max bot list`
 
@@ -5819,7 +5819,7 @@ max bot list [options]
 
 **Returns:** every name on this machine that has a bot token; --check asks MAX which bot each is
 
-**Example:** `max bot list`
+**Example:** `max personal bot list`
 
 ### `max bot chats`
 
@@ -5835,7 +5835,7 @@ max bot chats list
 
 **Returns:** chats this bot has seen on this machine — not a complete list from MAX
 
-**Example:** `max bot chats list`
+**Example:** `max personal bot chats list`
 
 #### `max bot chats show`
 
@@ -5851,7 +5851,7 @@ max bot chats show <chat>
 
 **Returns:** one chat from MAX, and remember it
 
-**Example:** `max bot chats show Team`
+**Example:** `max personal bot chats show Team`
 
 #### `max bot chats leave`
 
@@ -5869,7 +5869,7 @@ max bot chats leave <chat>
 
 **Returns:** take the bot out of a chat; only an admin of the chat can bring it back
 
-**Example:** `max bot chats leave Team`
+**Example:** `max personal bot chats leave Team`
 
 #### `max bot chats action`
 
@@ -5888,7 +5888,7 @@ max bot chats action <chat> <action>
 
 **Returns:** show what the bot is doing in a chat — typing, sending a photo — for a few seconds
 
-**Example:** `max bot chats action Team typing`
+**Example:** `max personal bot chats action Team typing`
 
 #### `max bot chats admins`
 
@@ -5908,7 +5908,7 @@ max bot chats admins list <chat>
 
 **Returns:** the chat's admins and what each may do
 
-**Example:** `max bot chats admins list Team`
+**Example:** `max personal bot chats admins list Team`
 
 #### `max bot chats admins add`
 
@@ -5932,7 +5932,7 @@ max bot chats admins add <chat> <person> [options]
 
 **Returns:** make a member an admin with these rights
 
-**Example:** `max bot chats admins add Team Anna --can <rights>`
+**Example:** `max personal bot chats admins add Team Anna --can <rights>`
 
 #### `max bot chats admins remove`
 
@@ -5951,7 +5951,7 @@ max bot chats admins remove <chat> <person>
 
 **Returns:** take an admin's rights back; they stay a member
 
-**Example:** `max bot chats admins remove Team Anna`
+**Example:** `max personal bot chats admins remove Team Anna`
 
 #### `max bot chats members`
 
@@ -5978,7 +5978,7 @@ max bot chats members remove <chat> <person> [options]
 
 **Returns:** take a person out of a chat; their messages stay
 
-**Example:** `max bot chats members remove Team Anna`
+**Example:** `max personal bot chats members remove Team Anna`
 
 #### `max bot chats members list`
 
@@ -5999,7 +5999,7 @@ max bot chats members list <chat> [options]
 
 **Returns:** members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page…
 
-**Example:** `max bot chats members list Team`
+**Example:** `max personal bot chats members list Team`
 
 #### `max bot chats members add`
 
@@ -6018,7 +6018,7 @@ max bot chats members add <chat> <users>
 
 **Returns:** add people to a chat by user id, at most 100; the bot must be an admin that may add…
 
-**Example:** `max bot chats members add Team <users>`
+**Example:** `max personal bot chats members add Team <users>`
 
 #### `max bot chats rules`
 
@@ -6038,7 +6038,7 @@ max bot chats rules show <chat>
 
 **Returns:** the chat's rules; the defaults, marked not saved, if it has none yet
 
-**Example:** `max bot chats rules show Team`
+**Example:** `max personal bot chats rules show Team`
 
 #### `max bot chats rules set`
 
@@ -6058,7 +6058,7 @@ max bot chats rules set <chat> <key> <value>
 
 **Returns:** change one rule — trusted, blocked, blockedNames, links, invites, forwards,…
 
-**Example:** `max bot chats rules set Team <key> <value>`
+**Example:** `max personal bot chats rules set Team <key> <value>`
 
 #### `max bot chats rules unset`
 
@@ -6077,7 +6077,7 @@ max bot chats rules unset <chat> <key>
 
 **Returns:** put one rule back to its default
 
-**Example:** `max bot chats rules unset Team <key>`
+**Example:** `max personal bot chats rules unset Team <key>`
 
 #### `max bot chats moderate`
 
@@ -6103,7 +6103,7 @@ max bot chats moderate <chat> [options]
 
 **Returns:** judge a group's new messages and joins by its rules, and act as they allow — as the bot
 
-**Example:** `max bot chats moderate Team`
+**Example:** `max personal bot chats moderate Team`
 
 ### `max bot messages`
 
@@ -6138,7 +6138,7 @@ max bot messages send <chat> [text] [options]
 
 **Returns:** send a message as the bot; without [text], the text is read from stdin
 
-**Example:** `max bot messages send Team "on my way"`
+**Example:** `max personal bot messages send Team "on my way"`
 
 #### `max bot messages list`
 
@@ -6158,7 +6158,7 @@ max bot messages list <chat> [options]
 
 **Returns:** the latest messages in a chat; where MAX gives a bot no history, and with --offline, the…
 
-**Example:** `max bot messages list Team`
+**Example:** `max personal bot messages list Team`
 
 #### `max bot messages show`
 
@@ -6175,7 +6175,7 @@ max bot messages show <chat> <message>
 
 **Returns:** one message by its id in a chat
 
-**Example:** `max bot messages show Team 1234`
+**Example:** `max personal bot messages show Team 1234`
 
 #### `max bot messages edit`
 
@@ -6200,7 +6200,7 @@ max bot messages edit <chat> <message> <text> [options]
 
 **Returns:** replace the text of a message the bot sent
 
-**Example:** `max bot messages edit Team 1234 "on my way"`
+**Example:** `max personal bot messages edit Team 1234 "on my way"`
 
 #### `max bot messages delete`
 
@@ -6223,7 +6223,7 @@ max bot messages delete <chat> <messages> [options]
 
 **Returns:** delete messages in a chat the bot can delete in; it cannot be undone
 
-**Example:** `max bot messages delete Team <messages>`
+**Example:** `max personal bot messages delete Team <messages>`
 
 #### `max bot messages pin`
 
@@ -6246,7 +6246,7 @@ max bot messages pin <chat> <message> [options]
 
 **Returns:** pin a message in a chat; quietly unless --notify
 
-**Example:** `max bot messages pin Team 1234`
+**Example:** `max personal bot messages pin Team 1234`
 
 #### `max bot messages unpin`
 
@@ -6265,7 +6265,7 @@ max bot messages unpin <chat> <message>
 
 **Returns:** unpin a message in a chat
 
-**Example:** `max bot messages unpin Team 1234`
+**Example:** `max personal bot messages unpin Team 1234`
 
 #### `max bot messages between`
 
@@ -6287,7 +6287,7 @@ max bot messages between <people> [options]
 
 **Returns:** what two or more people wrote in the chats they have all written in — from the local…
 
-**Example:** `max bot messages between Anna`
+**Example:** `max personal bot messages between Anna`
 
 ### `max bot search`
 
@@ -6316,7 +6316,7 @@ max bot search messages [query] [options]
 
 **Returns:** search the messages this bot has read, sent or received on this machine — the local copy…
 
-**Example:** `max bot search messages "invoice"`
+**Example:** `max personal bot search messages "invoice"`
 
 ### `max bot recipients`
 
@@ -6332,7 +6332,7 @@ max bot recipients list
 
 **Returns:** the chats on the list, or nothing when there is no list
 
-**Example:** `max bot recipients list`
+**Example:** `max personal bot recipients list`
 
 #### `max bot recipients add`
 
@@ -6350,7 +6350,7 @@ max bot recipients add <chat>
 
 **Returns:** allow a chat: its id, `user:<id>`, or the title of a chat this bot has seen
 
-**Example:** `max bot recipients add Team`
+**Example:** `max personal bot recipients add Team`
 
 #### `max bot recipients remove`
 
@@ -6368,7 +6368,7 @@ max bot recipients remove <chat>
 
 **Returns:** take a chat off the list
 
-**Example:** `max bot recipients remove Team`
+**Example:** `max personal bot recipients remove Team`
 
 #### `max bot recipients clear`
 
@@ -6382,7 +6382,7 @@ max bot recipients clear
 
 **Returns:** remove the list: the bot may write to any chat again
 
-**Example:** `max bot recipients clear`
+**Example:** `max personal bot recipients clear`
 
 ### `max bot sends`
 
@@ -6398,7 +6398,7 @@ max bot sends list
 
 **Returns:** every send, edit and delete this bot made from this machine, with its outcome
 
-**Example:** `max bot sends list`
+**Example:** `max personal bot sends list`
 
 ### `max bot watch`
 
@@ -6419,7 +6419,7 @@ max bot watch [options]
 
 **Returns:** print new messages as they arrive and keep them, until Ctrl-C or --timeout (either ends…
 
-**Example:** `max bot watch`
+**Example:** `max personal bot watch`
 
 ### `max bot callbacks`
 
@@ -6446,7 +6446,7 @@ max bot callbacks answer <callback> [options]
 
 **Returns:** answer a pressed button by its callback id: --notification shows the person a one-time…
 
-**Example:** `max bot callbacks answer <callback>`
+**Example:** `max personal bot callbacks answer <callback>`
 
 ### `max bot commands`
 
@@ -6462,7 +6462,7 @@ max bot commands list
 
 **Returns:** the commands in the menu now
 
-**Example:** `max bot commands list`
+**Example:** `max personal bot commands list`
 
 #### `max bot commands set`
 
@@ -6480,7 +6480,7 @@ max bot commands set <commands>
 
 **Returns:** replace the whole menu: each command as name=description, e.g. start=Begin
 
-**Example:** `max bot commands set <commands>`
+**Example:** `max personal bot commands set <commands>`
 
 #### `max bot commands clear`
 
@@ -6494,7 +6494,7 @@ max bot commands clear
 
 **Returns:** empty the menu
 
-**Example:** `max bot commands clear`
+**Example:** `max personal bot commands clear`
 
 ### `max bot webhooks`
 
@@ -6510,7 +6510,7 @@ max bot webhooks list
 
 **Returns:** the webhooks this bot has
 
-**Example:** `max bot webhooks list`
+**Example:** `max personal bot webhooks list`
 
 #### `max bot webhooks set`
 
@@ -6534,7 +6534,7 @@ max bot webhooks set <url> [options]
 
 **Returns:** send this bot's updates to an HTTPS address; refused while another is set
 
-**Example:** `max bot webhooks set https://example.com`
+**Example:** `max personal bot webhooks set https://example.com`
 
 #### `max bot webhooks delete`
 
@@ -6552,7 +6552,7 @@ max bot webhooks delete <url>
 
 **Returns:** stop sending updates to this address; with none left, `bot watch` works again
 
-**Example:** `max bot webhooks delete https://example.com`
+**Example:** `max personal bot webhooks delete https://example.com`
 
 ### `max bot contacts`
 
@@ -6579,7 +6579,7 @@ max bot contacts show <who> [options]
 
 **Returns:** one person: the chats they wrote in (with their last message there) and the latest…
 
-**Example:** `max bot contacts show <who>`
+**Example:** `max personal bot contacts show <who>`
 
 ### `max bot store`
 
@@ -6609,7 +6609,7 @@ max bot store fetch <chat> [options]
 
 **Returns:** fetch a chat's history into the bot's local copy, newest first; run it again to continue
 
-**Example:** `max bot store fetch Team`
+**Example:** `max personal bot store fetch Team`
 
 ### `max bot mcp`
 
@@ -6625,7 +6625,7 @@ max bot mcp config
 
 **Returns:** print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes…
 
-**Example:** `max bot mcp config`
+**Example:** `max personal bot mcp config`
 
 ### `max bot me`
 
@@ -6637,7 +6637,7 @@ max bot me
 
 **Returns:** the bot this profile's token belongs to: name, id, description, commands
 
-**Example:** `max bot me`
+**Example:** `max personal bot me`
 
 ### `max bot comments`
 
@@ -6661,7 +6661,7 @@ max bot comments list <message> [options]
 
 **Returns:** the comments under a post, newest last
 
-**Example:** `max bot comments list 1234`
+**Example:** `max personal bot comments list 1234`
 
 #### `max bot comments get`
 
@@ -6678,7 +6678,7 @@ max bot comments get <message> <comment>
 
 **Returns:** one comment under a post
 
-**Example:** `max bot comments get 1234 <comment>`
+**Example:** `max personal bot comments get 1234 <comment>`
 
 #### `max bot comments send`
 
@@ -6701,7 +6701,7 @@ max bot comments send <message> <text> [options]
 
 **Returns:** comment under a post as the bot; - reads stdin
 
-**Example:** `max bot comments send 1234 "on my way"`
+**Example:** `max personal bot comments send 1234 "on my way"`
 
 #### `max bot comments edit`
 
@@ -6725,7 +6725,7 @@ max bot comments edit <message> <comment> <text> [options]
 
 **Returns:** replace the text of a comment the bot wrote; - reads stdin
 
-**Example:** `max bot comments edit 1234 <comment> "on my way"`
+**Example:** `max personal bot comments edit 1234 <comment> "on my way"`
 
 #### `max bot comments delete`
 
@@ -6748,7 +6748,7 @@ max bot comments delete <message> <comment> [options]
 
 **Returns:** delete a comment under a post
 
-**Example:** `max bot comments delete 1234 <comment>`
+**Example:** `max personal bot comments delete 1234 <comment>`
 
 ### `max bot uploads`
 
@@ -6775,7 +6775,7 @@ max bot uploads put <file> [options]
 
 **Returns:** upload a file from disk and print the attachment to put in a message's `attachments` —…
 
-**Example:** `max bot uploads put ./report.pdf`
+**Example:** `max personal bot uploads put ./report.pdf`
 
 ### `max bot api`
 
@@ -6799,7 +6799,7 @@ max bot api get-my-info
 
 **Returns:** Get current bot info — read (GET /me)
 
-**Example:** `max bot api get-my-info`
+**Example:** `max personal bot api get-my-info`
 
 #### `max bot api edit-my-commands`
 
@@ -6818,7 +6818,7 @@ max bot api edit-my-commands [options]
 
 **Returns:** Edit current bot commands — write (PATCH /me/commands)
 
-**Example:** `max bot api edit-my-commands`
+**Example:** `max personal bot api edit-my-commands`
 
 #### `max bot api get-chat`
 
@@ -6834,7 +6834,7 @@ max bot api get-chat [options]
 
 **Returns:** Get chat — read (GET /chats/{chatId})
 
-**Example:** `max bot api get-chat --chat-id <value>`
+**Example:** `max personal bot api get-chat --chat-id <value>`
 
 #### `max bot api edit-chat`
 
@@ -6854,7 +6854,7 @@ max bot api edit-chat [options]
 
 **Returns:** Edit chat or channel info — write (PATCH /chats/{chatId})
 
-**Example:** `max bot api edit-chat --chat-id <value>`
+**Example:** `max personal bot api edit-chat --chat-id <value>`
 
 #### `max bot api send-action`
 
@@ -6874,7 +6874,7 @@ max bot api send-action [options]
 
 **Returns:** Send action — write (POST /chats/{chatId}/actions)
 
-**Example:** `max bot api send-action --chat-id <value>`
+**Example:** `max personal bot api send-action --chat-id <value>`
 
 #### `max bot api get-pinned-message`
 
@@ -6890,7 +6890,7 @@ max bot api get-pinned-message [options]
 
 **Returns:** Get pinned message — read (GET /chats/{chatId}/pin)
 
-**Example:** `max bot api get-pinned-message --chat-id <value>`
+**Example:** `max personal bot api get-pinned-message --chat-id <value>`
 
 #### `max bot api pin-message`
 
@@ -6910,7 +6910,7 @@ max bot api pin-message [options]
 
 **Returns:** Pin message — write (PUT /chats/{chatId}/pin)
 
-**Example:** `max bot api pin-message --chat-id <value>`
+**Example:** `max personal bot api pin-message --chat-id <value>`
 
 #### `max bot api unpin-message`
 
@@ -6928,7 +6928,7 @@ max bot api unpin-message [options]
 
 **Returns:** Unpin message — write (DELETE /chats/{chatId}/pin)
 
-**Example:** `max bot api unpin-message --chat-id <value>`
+**Example:** `max personal bot api unpin-message --chat-id <value>`
 
 #### `max bot api get-membership`
 
@@ -6944,7 +6944,7 @@ max bot api get-membership [options]
 
 **Returns:** Get chat or channel membership — read (GET /chats/{chatId}/members/me)
 
-**Example:** `max bot api get-membership --chat-id <value>`
+**Example:** `max personal bot api get-membership --chat-id <value>`
 
 #### `max bot api leave-chat`
 
@@ -6962,7 +6962,7 @@ max bot api leave-chat [options]
 
 **Returns:** Leave chat — destructive (DELETE /chats/{chatId}/members/me)
 
-**Example:** `max bot api leave-chat --chat-id <value>`
+**Example:** `max personal bot api leave-chat --chat-id <value>`
 
 #### `max bot api get-admins`
 
@@ -6978,7 +6978,7 @@ max bot api get-admins [options]
 
 **Returns:** Get chat or channel admins — read (GET /chats/{chatId}/members/admins)
 
-**Example:** `max bot api get-admins --chat-id <value>`
+**Example:** `max personal bot api get-admins --chat-id <value>`
 
 #### `max bot api post-admins`
 
@@ -6998,7 +6998,7 @@ max bot api post-admins [options]
 
 **Returns:** Set chat or channel admins — write (POST /chats/{chatId}/members/admins)
 
-**Example:** `max bot api post-admins --chat-id <value>`
+**Example:** `max personal bot api post-admins --chat-id <value>`
 
 #### `max bot api delete-admins`
 
@@ -7017,7 +7017,7 @@ max bot api delete-admins [options]
 
 **Returns:** Revoke admin rights — write (DELETE /chats/{chatId}/members/admins/{userId})
 
-**Example:** `max bot api delete-admins --chat-id <value> --user-id <value>`
+**Example:** `max personal bot api delete-admins --chat-id <value> --user-id <value>`
 
 #### `max bot api get-members`
 
@@ -7036,7 +7036,7 @@ max bot api get-members [options]
 
 **Returns:** Get members — read (GET /chats/{chatId}/members)
 
-**Example:** `max bot api get-members --chat-id <value>`
+**Example:** `max personal bot api get-members --chat-id <value>`
 
 #### `max bot api add-members`
 
@@ -7056,7 +7056,7 @@ max bot api add-members [options]
 
 **Returns:** Add members — write (POST /chats/{chatId}/members)
 
-**Example:** `max bot api add-members --chat-id <value>`
+**Example:** `max personal bot api add-members --chat-id <value>`
 
 #### `max bot api remove-member`
 
@@ -7076,7 +7076,7 @@ max bot api remove-member [options]
 
 **Returns:** Remove member — write (DELETE /chats/{chatId}/members)
 
-**Example:** `max bot api remove-member --chat-id <value> --user-id <value>`
+**Example:** `max personal bot api remove-member --chat-id <value> --user-id <value>`
 
 #### `max bot api get-subscriptions`
 
@@ -7088,7 +7088,7 @@ max bot api get-subscriptions
 
 **Returns:** Get subscriptions — read (GET /subscriptions)
 
-**Example:** `max bot api get-subscriptions`
+**Example:** `max personal bot api get-subscriptions`
 
 #### `max bot api subscribe`
 
@@ -7107,7 +7107,7 @@ max bot api subscribe [options]
 
 **Returns:** Subscribe — write (POST /subscriptions)
 
-**Example:** `max bot api subscribe`
+**Example:** `max personal bot api subscribe`
 
 #### `max bot api unsubscribe`
 
@@ -7125,7 +7125,7 @@ max bot api unsubscribe [options]
 
 **Returns:** Unsubscribe — write (DELETE /subscriptions)
 
-**Example:** `max bot api unsubscribe --url <value>`
+**Example:** `max personal bot api unsubscribe --url <value>`
 
 #### `max bot api get-upload-url`
 
@@ -7143,7 +7143,7 @@ max bot api get-upload-url [options]
 
 **Returns:** Get upload URL — write (POST /uploads)
 
-**Example:** `max bot api get-upload-url --type <value>`
+**Example:** `max personal bot api get-upload-url --type <value>`
 
 #### `max bot api get-messages`
 
@@ -7165,7 +7165,7 @@ max bot api get-messages [options]
 
 **Returns:** Get messages — read (GET /messages)
 
-**Example:** `max bot api get-messages`
+**Example:** `max personal bot api get-messages`
 
 #### `max bot api send-message`
 
@@ -7187,7 +7187,7 @@ max bot api send-message [options]
 
 **Returns:** Send message — write (POST /messages)
 
-**Example:** `max bot api send-message`
+**Example:** `max personal bot api send-message`
 
 #### `max bot api edit-message`
 
@@ -7207,7 +7207,7 @@ max bot api edit-message [options]
 
 **Returns:** Edit message — write (PUT /messages)
 
-**Example:** `max bot api edit-message --message-id <value>`
+**Example:** `max personal bot api edit-message --message-id <value>`
 
 #### `max bot api delete-message`
 
@@ -7226,7 +7226,7 @@ max bot api delete-message [options]
 
 **Returns:** Delete message — destructive (DELETE /messages)
 
-**Example:** `max bot api delete-message --message-id <value>`
+**Example:** `max personal bot api delete-message --message-id <value>`
 
 #### `max bot api get-message-by-id`
 
@@ -7242,7 +7242,7 @@ max bot api get-message-by-id [options]
 
 **Returns:** Get message — read (GET /messages/{messageId})
 
-**Example:** `max bot api get-message-by-id --message-id <value>`
+**Example:** `max personal bot api get-message-by-id --message-id <value>`
 
 #### `max bot api get-comments`
 
@@ -7262,7 +7262,7 @@ max bot api get-comments [options]
 
 **Returns:** Get comments — read (GET /messages/{messageId}/comments)
 
-**Example:** `max bot api get-comments --message-id <value>`
+**Example:** `max personal bot api get-comments --message-id <value>`
 
 #### `max bot api send-comment`
 
@@ -7283,7 +7283,7 @@ max bot api send-comment [options]
 
 **Returns:** Send comment — write (POST /messages/{messageId}/comments)
 
-**Example:** `max bot api send-comment --message-id <value>`
+**Example:** `max personal bot api send-comment --message-id <value>`
 
 #### `max bot api edit-comment`
 
@@ -7304,7 +7304,7 @@ max bot api edit-comment [options]
 
 **Returns:** Edit comment — write (PUT /messages/{messageId}/comments)
 
-**Example:** `max bot api edit-comment --message-id <value> --comment-id <value>`
+**Example:** `max personal bot api edit-comment --message-id <value> --comment-id <value>`
 
 #### `max bot api delete-comment`
 
@@ -7324,7 +7324,7 @@ max bot api delete-comment [options]
 
 **Returns:** Delete comment — destructive (DELETE /messages/{messageId}/comments)
 
-**Example:** `max bot api delete-comment --message-id <value> --comment-id <value>`
+**Example:** `max personal bot api delete-comment --message-id <value> --comment-id <value>`
 
 #### `max bot api get-comment-by-id`
 
@@ -7341,7 +7341,7 @@ max bot api get-comment-by-id [options]
 
 **Returns:** Get comment — read (GET /messages/{messageId}/comments/{commentId})
 
-**Example:** `max bot api get-comment-by-id --message-id <value> --comment-id <value>`
+**Example:** `max personal bot api get-comment-by-id --message-id <value> --comment-id <value>`
 
 #### `max bot api get-video-attachment-details`
 
@@ -7357,7 +7357,7 @@ max bot api get-video-attachment-details [options]
 
 **Returns:** Get video details — read (GET /videos/{videoToken})
 
-**Example:** `max bot api get-video-attachment-details --video-token <value>`
+**Example:** `max personal bot api get-video-attachment-details --video-token <value>`
 
 #### `max bot api answer-on-callback`
 
@@ -7378,7 +7378,7 @@ max bot api answer-on-callback [options]
 
 **Returns:** Answer on callback — write (POST /answers)
 
-**Example:** `max bot api answer-on-callback --callback-id <value>`
+**Example:** `max personal bot api answer-on-callback --callback-id <value>`
 
 #### `max bot api get-updates`
 
@@ -7399,7 +7399,7 @@ max bot api get-updates [options]
 
 **Returns:** Get updates — write (GET /updates)
 
-**Example:** `max bot api get-updates`
+**Example:** `max personal bot api get-updates`
 
 ## `max guide`
 

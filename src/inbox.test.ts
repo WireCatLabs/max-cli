@@ -327,4 +327,21 @@ describe("max inbox and review — by kind, and marking read", () => {
     expect(JSON.parse(second.stdout).items).toEqual([])
     expect(marks(max)).toEqual([])
   })
+
+  it("review --offline answers from what an online run stored, without connecting", async () => {
+    const { environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
+    await runWith(["k-review-offline", "review", "date>2h", "--json"], environment)
+
+    const offline = await runWith(["k-review-offline", "review", "date>2h", "--offline", "--json"], {
+      ...environment,
+      connection: () => {
+        throw new Error("scripted: --offline must not connect")
+      },
+    })
+
+    expect(offline.code).toBe(0)
+    expect(new Set(JSON.parse(offline.stdout).items.map((item: { chat_id: string }) => item.chat_id))).toEqual(
+      new Set(["111"]),
+    )
+  })
 })
