@@ -1,6 +1,6 @@
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
-import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { run } from "../program.js"
@@ -71,11 +71,11 @@ describe("max bot store fetch", () => {
   it("**pages back through getMessages by time**, and a second run reaches the chat's start", async () => {
     const first = await bot("bf-pages", ["store", "fetch", "-100", "--limit", "120", "--pause", "1ms", "--json"])
     expect(first.code).toBe(0)
-    expect(first.answer).toMatchObject({ chat: "-100", complete: false })
+    expect(first.answer.item).toMatchObject({ chat: "-100", complete: false })
     expect(asked[1]).toContain(`before=${START + 130 * 60_000 + 1}`)
 
     const second = await bot("bf-pages", ["store", "fetch", "-100", "--pause", "1ms", "--json"])
-    expect(second.answer).toMatchObject({ complete: true })
+    expect(second.answer.item).toMatchObject({ complete: true })
     const kept = await bot("bf-pages", ["messages", "list", "-100", "--limit", "100", "--offline", "--json"])
     expect(kept.answer.items.at(-1)).toMatchObject({ id: "mid.229" })
   })
@@ -93,11 +93,11 @@ describe("max bot store fetch", () => {
       "1ms",
       "--json",
     ])
-    expect(last.answer).toMatchObject({ reachedLast: true })
+    expect(last.answer.item).toMatchObject({ reached_last: true })
     expect(asked[0]).toContain("count=20")
 
     const since = new Date(START + 200 * 60_000).toISOString()
     const recent = await bot("bf-since", ["store", "fetch", "-100", "--since-time", since, "--pause", "1ms", "--json"])
-    expect(recent.answer).toMatchObject({ reachedSince: true })
+    expect(recent.answer.item).toMatchObject({ reached_since: true })
   })
 })

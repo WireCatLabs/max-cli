@@ -1,9 +1,11 @@
 import { chmodSync, mkdirSync, rmSync } from "node:fs"
 import { connect, createServer, type Server, type Socket } from "node:net"
 import { dirname } from "node:path"
-import { CliError } from "@wirecat/cli-core"
-import type { SendGuard } from "@wirecat/cli-messaging/sends"
+import { CliError } from "@wirecat/cli-base"
+import type { MessageHit } from "@wirecat/cli-core"
+import type { SendGuard } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
+import type { MessageChange } from "../client/shapes.js"
 import {
   FIRST_TAB_SYNC,
   isJoinRequest,
@@ -13,7 +15,6 @@ import {
   type TabSync,
 } from "../client.js"
 import { resolveSettings } from "../config.js"
-import type { MessageChange, MessageHit } from "../domain/models.js"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { assertReadable } from "../permissions.js"
 import { Connection, type ConnectionOptions, ProtocolError } from "../protocol/connection.js"
@@ -27,13 +28,15 @@ import { VERSION } from "../version.js"
 import { fromLine, lineReader, toLine } from "./lines.js"
 import { serverReplies } from "./replies.js"
 import { forwardedOperation, OPERATIONS_FINGERPRINT, stopServer } from "./server-connection.js"
+import { type SubscriberBudgets, Subscribers } from "./subscribers.js"
 
 export type ServerEvent =
   | { event: "message"; message: MessageHit }
   | { event: "change"; change: MessageChange }
   | { event: "status"; connected: boolean; at: string; byHand?: boolean; pid?: number }
 
-export interface MaxServerOptions {
+export interface MaxServerOptions extends SubscriberBudgets {
+  now?: () => number
   members?: (client: () => MaxClient | undefined) => { start(): void; stop(): Promise<void> }
   store: SessionStore
   timeoutMs?: number
@@ -103,8 +106,9 @@ const REFRESH_EVERY_MS = 60_000
  */
 export class MaxServer {
   readonly #options: MaxServerOptions
+  readonly #now: () => number
   readonly #record: MaxRecord
-  readonly #subscribers = new Set<Socket>()
+  readonly #subscribers: Subscribers
   #listener: Server | undefined
   #client: MaxClient | undefined
   #ping: ReturnType<typeof setInterval> | undefined
@@ -120,8 +124,8 @@ export class MaxServer {
   #markUp: () => void = () => {}
   #refresh: ReturnType<typeof setTimeout> | undefined
   #lastRefresh = 0
-  #lastUse = Date.now()
-  readonly #startedAt = new Date().toISOString()
+  #lastUse: number
+  readonly #startedAt: string
   #idle: ReturnType<typeof setInterval> | undefined
   #telemetry: ReturnType<typeof setTimeout> | undefined
   /** What the last reads after login answered, sent back on the next login as the tab does (`MAX-52`). */
@@ -130,6 +134,7 @@ export class MaxServer {
   #resume: ResumeFrom | undefined
   #handing: Promise<void> = Promise.resolve()
   readonly #connecting = new Set<MaxClient>()
+  #connectPromise: Promise<void> | undefined
   readonly #replies: ReturnType<typeof serverReplies>
   readonly #members: ReturnType<NonNullable<MaxServerOptions["members"]>> | undefined
   #finish: ((error?: Error) => void) | undefined
@@ -138,12 +143,16 @@ export class MaxServer {
 
   constructor(options: MaxServerOptions) {
     this.#options = options
+    this.#now = options.now ?? Date.now
+    this.#lastUse = this.#now()
+    this.#startedAt = new Date(this.#lastUse).toISOString()
+    this.#subscribers = new Subscribers(options, options.note)
     this.#members = options.members?.(() => (this.#stopped ? undefined : this.#client))
-    this.#record = maxRecord({ account: () => options.store.readState().viewerId })
+    this.#record = maxRecord({ account: () => options.store.viewerId() })
     this.#replies = serverReplies({
       profile: options.store.profile,
       since: Date.parse(this.#startedAt),
-      owner: () => options.store.readState().viewerId,
+      owner: () => options.store.viewerId(),
       client: () => this.#client,
       guard: () =>
         options.guard?.() ??
@@ -169,7 +178,7 @@ export class MaxServer {
   async start(): Promise<void> {
     // The socket first: whoever binds it is the profile's one server, and a second one learns it
     // before it has logged in — not after, with a login MAX has already counted.
-    const sessionId = Date.now()
+    const sessionId = this.#now()
     try {
       await this.#listen()
       await this.#connect()
@@ -180,12 +189,12 @@ export class MaxServer {
       rmSync(startingPath(this.#options.store), { force: true })
     }
     if (this.#stopped) return
-    this.#reportChatList(sessionId, Date.now() + CHAT_LIST_SHOWN_AFTER_MS)
+    this.#reportChatList(sessionId, this.#now() + CHAT_LIST_SHOWN_AFTER_MS)
     const { idleMs } = this.#options
     if (idleMs !== undefined) {
       this.#idle = setInterval(
         () => {
-          if (this.#open.size === 0 && Date.now() - this.#lastUse >= idleMs) {
+          if (this.#open.size === 0 && this.#now() - this.#lastUse >= idleMs) {
             this.#options.note(`nobody has used it for ${Math.round(idleMs / 60_000)} min — stopping`)
             void this.stop()
           }
@@ -233,7 +242,19 @@ export class MaxServer {
    * replaces, if any. Pushes that arrive before the login finishes are held and replayed, not
    * dropped: `Connection` has already acknowledged them, so MAX will not send them again.
    */
-  async #connect(): Promise<void> {
+  #connect(): Promise<void> {
+    if (this.#connectPromise) return this.#connectPromise
+    const connecting = this.#connectOnce()
+    this.#connectPromise = connecting
+    void connecting
+      .finally(() => {
+        if (this.#connectPromise === connecting) this.#connectPromise = undefined
+      })
+      .catch(() => {})
+    return connecting
+  }
+
+  async #connectOnce(): Promise<void> {
     if (this.#stopped) return
     const { store, timeoutMs, events } = this.#options
     let mine: MaxClient | undefined
@@ -255,8 +276,7 @@ export class MaxServer {
     const client = new MaxClient({
       store,
       connection,
-      // `#forward` guards every write a command hands this server, before this client sends it.
-      sends: "caller",
+      now: this.#now,
       fullLogin: true,
       ...(resume ? { resume } : {}),
       warn: this.#options.note,
@@ -284,13 +304,13 @@ export class MaxServer {
     this.#members?.start()
     this.#markUp()
     this.#attempt = 0
-    this.#lastRefresh = Date.now()
+    this.#lastRefresh = this.#now()
     clearInterval(this.#ping)
     this.#ping = setInterval(() => {
       client.live.ping().catch(() => {})
     }, this.#options.pingEveryMs ?? PING_EVERY_MS)
     if (replaced) await replaced.close().catch(() => {})
-    else this.#broadcast({ event: "status", connected: true, at: new Date().toISOString() })
+    else this.#broadcast({ event: "status", connected: true, at: new Date(this.#now()).toISOString() })
     for (const [opcode, payload] of early) this.#pushed(client, opcode, payload)
     client.live
       .readLikeTab(this.#tabSync)
@@ -302,7 +322,7 @@ export class MaxServer {
 
   /** Once per server, never again after a reconnect: the tab it copies keeps its session too. */
   #reportChatList(sessionId: number, at: number): void {
-    const wait = Math.max(0, sessionId + (this.#options.telemetryAfterMs ?? TELEMETRY_AFTER_MS) - Date.now())
+    const wait = Math.max(0, sessionId + (this.#options.telemetryAfterMs ?? TELEMETRY_AFTER_MS) - this.#now())
     this.#telemetry = setTimeout(() => {
       this.#client?.live
         .chatListShown({ at, sessionId })
@@ -337,7 +357,7 @@ export class MaxServer {
   #goneStale(): void {
     if (this.#refresh || this.#stopped) return
     const every = this.#options.refreshEveryMs ?? REFRESH_EVERY_MS
-    const wait = Math.max(0, this.#lastRefresh + every - Date.now())
+    const wait = Math.max(0, this.#lastRefresh + every - this.#now())
     this.#refresh = setTimeout(() => {
       this.#connect()
         .catch((error: Error) => {
@@ -361,7 +381,7 @@ export class MaxServer {
     client?.close().catch(() => {})
     if (this.#stopped) return
 
-    this.#broadcast({ event: "status", connected: false, at: new Date().toISOString() })
+    this.#broadcast({ event: "status", connected: false, at: new Date(this.#now()).toISOString() })
     this.#reconnectLater(error)
   }
 
@@ -383,7 +403,6 @@ export class MaxServer {
       try {
         assertReadable(resolveSettings({ profile: this.#options.store.profile }), "messages.watch")
       } catch {
-        for (const socket of this.#subscribers) socket.destroy()
         this.#subscribers.clear()
         return
       }
@@ -395,7 +414,7 @@ export class MaxServer {
       if (this.#seen.size > 500) this.#seen.delete(this.#seen.values().next().value as string)
     }
     const line = toLine(event)
-    for (const socket of this.#subscribers) socket.write(line)
+    this.#subscribers.broadcast(line)
   }
 
   async #listen(): Promise<void> {
@@ -443,7 +462,7 @@ export class MaxServer {
     socket.on("close", () => {
       this.#subscribers.delete(socket)
       this.#open.delete(socket)
-      this.#lastUse = Date.now()
+      this.#lastUse = this.#now()
     })
     socket.on(
       "data",
@@ -467,7 +486,7 @@ export class MaxServer {
     const status = {
       event: "status",
       connected: this.connected,
-      at: new Date().toISOString(),
+      at: new Date(this.#now()).toISOString(),
       byHand: !this.#options.startedByCommand,
       pid: process.pid,
       version: VERSION,
@@ -475,7 +494,7 @@ export class MaxServer {
       startedAt: this.#startedAt,
     }
     const { id } = request
-    this.#lastUse = Date.now()
+    this.#lastUse = this.#now()
 
     if (request.subscribe === true) {
       try {
@@ -485,7 +504,7 @@ export class MaxServer {
         return
       }
       this.#subscribers.add(socket)
-      socket.write(toLine(status))
+      this.#subscribers.write(socket, toLine(status))
     } else if (request.status === true) {
       socket.write(toLine(status))
     } else if (request.stop === true) {
@@ -566,7 +585,7 @@ export class MaxServer {
     let guard: SendGuard
     try {
       entry = { ...operation.guard(request), ...(operationId === undefined ? {} : { operationId }) }
-      // Read again for every write, so `config set readOnly true` needs no restart.
+      // Read again for every write, so a changed permission needs no restart.
       guard =
         this.#options.guard?.() ??
         guardFor(resolveSettings({ profile: this.#options.store.profile }), this.#options.note, async (key) => {

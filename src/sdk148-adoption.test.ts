@@ -1,8 +1,8 @@
 import { mkdirSync } from "node:fs"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring, resolvePaths, writeSecurely } from "@wirecat/cli-core"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams, memoryKeyring, resolvePaths, writeSecurely } from "@wirecat/cli-base"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { openStore } from "@wirecat/cli-core/store"
 import { beforeAll, describe, expect, it } from "vitest"
 import { MAX_APP as app } from "./app.js"
 import { run } from "./program.js"
@@ -39,9 +39,9 @@ beforeAll(async () => {
       lastMessageAt: null,
       participantsCount: null,
     }
-    await store.saveChats(account, [chat])
-    await store.saveChats({ ...account, account: "502" }, [chat])
-    await store.saveMessages(
+    await store.chats.saveChats(account, [chat])
+    await store.chats.saveChats({ ...account, account: "502" }, [chat])
+    await store.messages.saveMessages(
       account,
       "7",
       [
@@ -94,15 +94,15 @@ describe("SDK148 local commands through the consumer", () => {
   it("tags one account's chat and searches it without a network connection", async () => {
     const added = await cli(["tags", "add", "Work", "--chat", "7", "--json"])
     expect(added.code, added.err).toBe(0)
-    expect(JSON.parse(added.out)).toMatchObject({ added: ["work"] })
-    const listed = await cli(["tags", "list", "--tag", "work", "--type", "chat", "--json"])
+    expect(JSON.parse(added.out)).toMatchObject({ item: { added: ["work"], target: { chat_id: "7" } } })
+    const listed = await cli(["tags", "list", "tag:work", "type:chat", "--json"])
     expect(JSON.parse(listed.out).items).toHaveLength(1)
     const found = await cli(["search", "messages", "tag:work", "--json"])
     expect(found.code, found.err).toBe(0)
-    expect(JSON.parse(found.out).items.map((m: { id: string }) => m.id)).toEqual(["101"])
+    expect(JSON.parse(found.out).items.map((m: { ref: string }) => m.ref)).toEqual(["msg:max/501/7/101"])
     const store = await openStore()
     try {
-      expect(await store.tags({ provider: account.provider, account: "502" }, {})).toEqual([])
+      expect(await store.tags.tags({ provider: account.provider, account: "502" }, {})).toEqual([])
     } finally {
       await store.close()
     }
@@ -124,17 +124,26 @@ describe("SDK148 local commands through the consumer", () => {
   it("clears owner-maintenance flood state without opening a connection", async () => {
     const cleared = await cli(["flood", "clear", "--json"])
     expect(cleared.code, cleared.err).toBe(0)
-    expect(JSON.parse(cleared.out)).toMatchObject({ cleared: { deadlines: [], sendBlock: null } })
+    expect(JSON.parse(cleared.out)).toMatchObject({ item: { cleared: { deadlines: [], send_block: null } } })
+  })
+  it("refuses a camelCase setting name as an unknown setting", async () => {
+    for (const typed of ["keepRunsForDays", "searchStemmers.latin"]) {
+      const refused = await cli(["config", "set", typed, "7", "--defaults", "--json"])
+      expect(refused.code).toBe(2)
+      expect(JSON.parse(refused.err).error.message).toContain(`no setting called "${typed}"`)
+    }
+    expect((await cli(["config", "set", "keep_runs_for_days", "7", "--defaults", "--json"])).code).toBe(0)
+    expect((await cli(["config", "unset", "keep_runs_for_days", "--defaults", "--json"])).code).toBe(0)
   })
   it("uses store-wide stem settings and refuses them under a profile lock", async () => {
-    const set = await cli(["config", "set", "searchStemmers.latin", "english", "--json"])
+    const set = await cli(["config", "set", "search_stemmers.latin", "english", "--json"])
     expect(set.code, set.err).toBe(0)
-    expect(JSON.parse(set.out)).toMatchObject({ scope: "store", value: "english" })
-    expect((await cli(["config", "set", "searchStemmers.latin", "english", "--defaults", "--json"])).code).toBe(2)
+    expect(JSON.parse(set.out)).toMatchObject({ item: { scope: "store", value: "english" } })
+    expect((await cli(["config", "set", "search_stemmers.latin", "english", "--defaults", "--json"])).code).toBe(2)
     const before = process.env.MAX_PROFILE_LOCK
     process.env.MAX_PROFILE_LOCK = profile
     try {
-      expect((await cli(["config", "unset", "searchStemmers.latin", "--json"])).code).toBe(5)
+      expect((await cli(["config", "unset", "search_stemmers.latin", "--json"])).code).toBe(5)
     } finally {
       if (before === undefined) delete process.env.MAX_PROFILE_LOCK
       else process.env.MAX_PROFILE_LOCK = before

@@ -3,7 +3,8 @@ import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { PassThrough } from "node:stream"
 import { stripVTControlCharacters } from "node:util"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { plainQr } from "@wirecat/cli-core"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -53,14 +54,25 @@ describe("MAX guided setup", () => {
   it("reuses credentials, checks five chats and returns one result without fetching history", async () => {
     const h = harness()
     expect(await h.setup("--json")).toBe(0)
+    expect(h.streams.stderr.join("\n")).toContain("2/4 — Link this device")
     const output = h.streams.stdout.join("\n")
-    expect(JSON.parse(output)).toMatchObject({
+    const answer = JSON.parse(output)
+    expect(answer.item).toMatchObject({
       profile: "setup-test",
       session: { reused: true },
-      chats: { checked: 5, hasMore: true },
+      chats: { checked: 5, has_more: true },
       agent: { name: "none", written: [] },
-      next: { instructions: "max setup-test skill show", chats: "max setup-test chats list --limit 5" },
     })
+    expect(answer.item.next).toBeUndefined()
+    expect(answer.next).toEqual([
+      expect.objectContaining({ kind: "command", command: "skill show", args: {}, safe_to_auto_execute: true }),
+      expect.objectContaining({
+        kind: "command",
+        command: "chats list",
+        args: { limit: 5 },
+        safe_to_auto_execute: true,
+      }),
+    ])
     expect(output).not.toContain("setup-token")
     expect(h.max.sent.map((x) => x.opcode)).not.toContain(Opcode.CHAT_HISTORY)
     expect(h.max.sent.map((x) => x.opcode)).not.toContain(Opcode.GET_QR)
@@ -77,7 +89,7 @@ describe("MAX guided setup", () => {
     h.environment.stdin = input
     expect(await h.setup("--method", "token", "--agent", "none", "--json")).toBe(0)
     expect(h.store.readToken()).toBe("new-setup-token")
-    expect(JSON.parse(h.streams.stdout.join("\n"))).toMatchObject({ session: { reused: false } })
+    expect(JSON.parse(h.streams.stdout.join("\n")).item).toMatchObject({ session: { reused: false } })
     expect(h.streams.stdout.join("\n") + h.streams.stderr.join("\n")).not.toContain("new-setup-token")
   })
 
@@ -85,7 +97,7 @@ describe("MAX guided setup", () => {
     const h = harness({ token: false })
     h.environment.interactive = true
     const browser = vi.fn(async () => "browser-setup-token")
-    h.environment.browser = { chromiumToken: browser, open: async () => {} }
+    h.environment.browser = { chromiumToken: browser }
     expect(await h.setup("--method", method, "--agent", "none")).toBe(0)
     expect(browser).toHaveBeenCalledOnce()
     expect(h.store.readToken()).toBe("browser-setup-token")
@@ -113,8 +125,32 @@ describe("MAX guided setup", () => {
     h.environment.columns = 200
     expect(await h.setup("--agent", "none")).toBe(0)
     expect(h.store.readToken()).toBe("qr-setup-token")
+    const screen = h.streams.stderr.join("\n")
+    expect(screen).toContain("[2/4] Link this device")
+    expect(screen.slice(0, screen.indexOf("▀"))).not.toMatch(/scan/i)
     expect(qr.unexpected).toEqual([])
     expect(h.max.unexpected).toEqual([])
+  })
+
+  it("**logs in by QR without a terminal**: the code is printed as text to paste", async () => {
+    const h = harness({ token: false })
+    const link = "https://qr.example/?token=synthetic"
+    const qr = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.GET_QR]: { qrLink: link, trackId: "synthetic", pollingInterval: 1, expiresAt: Date.now() + 60_000 },
+        [Opcode.GET_QR_STATUS]: { status: { loginAvailable: true } },
+        [Opcode.LOGIN_BY_QR]: { tokenAttrs: { LOGIN: { token: "qr-setup-token" } } },
+      },
+    })
+    let count = 0
+    h.environment.connection = () =>
+      new Connection({ createSocket: (count++ === 0 ? qr : h.max).createSocket, timeoutMs: 50 })
+    expect(await h.setup("--json")).toBe(0)
+    const lines = plainQr(link).split("\n")
+    const stderr = h.streams.stderr.join("\n")
+    for (const line of lines) expect(stderr).toContain(line)
+    expect(h.store.readToken()).toBe("qr-setup-token")
   })
 
   it("does not try a fresh login when a previously used keyring is unreachable", async () => {
@@ -174,13 +210,6 @@ describe("MAX guided setup", () => {
     expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.code).toBe("timeout")
   })
 
-  it("refuses a first QR login without a terminal and does not contact MAX", async () => {
-    const h = harness({ token: false })
-    expect(await h.setup("--json")).toBe(2)
-    expect(h.streams.stderr.join("\n")).toContain("local terminal")
-    expect(h.max.sent).toEqual([])
-  })
-
   it("skips the optional agent question under CI even on a terminal", async () => {
     const h = harness()
     h.environment.env = { ...process.env, CI: "true" }
@@ -197,12 +226,7 @@ describe("MAX guided setup", () => {
     h.environment.tty = true
     const browser = vi.fn(async () => "must-not-be-used")
     const ask = vi.fn(async () => "must-not-be-used")
-    h.environment.browser = {
-      chromiumToken: browser,
-      open: async () => {
-        await browser()
-      },
-    }
+    h.environment.browser = { chromiumToken: browser }
     h.environment.ask = ask
     expect(await h.setup("--method", "qr-chrome", flag)).toBe(2)
     expect(browser).not.toHaveBeenCalled()
@@ -226,7 +250,7 @@ describe("MAX guided setup", () => {
     vi.stubEnv("USERPROFILE", home)
     const h = harness()
     expect(await h.setup("--agent", agent, "--json")).toBe(0)
-    const { agent: result } = JSON.parse(h.streams.stdout.join("\n"))
+    const { agent: result } = JSON.parse(h.streams.stdout.join("\n")).item
     expect(result.name).toBe(agent)
     expect(result.written).toHaveLength(agent === "all" ? 2 : 1)
     for (const path of result.written) {
@@ -251,8 +275,11 @@ describe("MAX guided setup", () => {
   it("keeps an npm exec runner in next commands", async () => {
     const h = harness()
     h.environment.update = { scriptPath: "/tmp/.npm/_npx/abc/node_modules/@wirecat/max-cli/dist/bin/max.js" }
-    expect(await h.setup("--json")).toBe(0)
-    expect(JSON.parse(h.streams.stdout.join("\n")).next.instructions).toContain(
+    h.environment.tty = true
+    h.environment.interactive = true
+    h.environment.ask = async () => "none"
+    expect(await h.setup()).toBe(0)
+    expect(stripVTControlCharacters(h.streams.stdout.join("\n"))).toContain(
       "exec --yes --package=@wirecat/max-cli -- max setup-test skill show",
     )
   })
@@ -263,7 +290,7 @@ describe("MAX guided setup", () => {
     input.end("synthetic-secret")
     h.environment.stdin = input
     expect(await h.setup("--method", "token", "--max-input-bytes", "4", "--json")).toBe(2)
-    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.reason).toBe("input_limit")
+    expect(JSON.parse(h.streams.stderr.at(-1) ?? "").error.reason).toBe("input.too-large")
     expect(h.max.sent).toEqual([])
     expect(h.store.readToken()).toBeUndefined()
   })
@@ -285,7 +312,7 @@ describe("MAX guided setup", () => {
   )("makes instructions available without credentials: %j", async (argv) => {
     const h = harness({ token: false })
     expect(await run(argv, h.environment)).toBe(0)
-    expect(h.streams.stdout.join("\n")).toContain("max setup")
+    expect(h.streams.stdout.join("\n")).toContain("max personal setup")
     expect(h.max.sent).toEqual([])
   })
 })

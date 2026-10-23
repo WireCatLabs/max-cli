@@ -1,7 +1,7 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import type { Message } from "@wirecat/cli-messaging"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import type { Message } from "@wirecat/cli-core"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { openStore } from "@wirecat/cli-core/store"
 import { beforeAll, describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
 import { run } from "../program.js"
@@ -54,8 +54,8 @@ beforeAll(async () => {
       lastMessageAt: null,
       participantsCount: null,
     }
-    await store.saveChats(account, [chat, { ...chat, id: "8", title: "Synthetic Notes" }])
-    await store.saveMessages(
+    await store.chats.saveChats(account, [chat, { ...chat, id: "8", title: "Synthetic Notes" }])
+    await store.messages.saveMessages(
       account,
       "7",
       [
@@ -64,15 +64,15 @@ beforeAll(async () => {
       ],
       { via: "fixture" },
     )
-    await store.saveMessages(
+    await store.messages.saveMessages(
       account,
       "8",
       [message("9007199254740993103", "8", "42", "note", "2026-10-04T00:30:00.000Z")],
       { via: "fixture" },
     )
     const foreign = { provider: "max", account: "502" }
-    await store.saveChats(foreign, [{ ...chat, title: "Foreign Work" }])
-    await store.saveMessages(
+    await store.chats.saveChats(foreign, [{ ...chat, title: "Foreign Work" }])
+    await store.messages.saveMessages(
       foreign,
       "7",
       [message("9007199254740993104", "7", "43", "invoice foreign", "2026-10-04T00:30:00.000Z")],
@@ -98,12 +98,10 @@ describe("shared local message statistics", () => {
     ])
     expect(result.code, result.stderr).toBe(0)
     expect(result.stdout.trim().split("\n")).toHaveLength(1)
-    expect(JSON.parse(result.stdout)).toMatchObject({
+    expect(JSON.parse(result.stdout).item).toEqual({
       by: "chat",
       total: 2,
-      items: [{ key: "7", count: 2 }],
-      page: 1,
-      query: { language: "lucene-v1" },
+      rows: [{ key: "7", count: 2, name: "Synthetic Work", ref: "chat:max/501/7" }],
     })
     expect(result.stdout).not.toContain("Foreign Work")
   })
@@ -112,33 +110,30 @@ describe("shared local message statistics", () => {
     const result = await cli(["stats", "messages", "show", "--by", "sender", "--limit", "1", "--json"])
     expect(result.code, result.stderr).toBe(0)
     expect(JSON.parse(result.stdout)).toMatchObject({
-      by: "sender",
-      total: 3,
-      items: [{ key: "41", count: 2 }],
-      limit: 1,
-      page: 1,
-      hasMore: true,
+      item: { by: "sender", total: 3, rows: [{ key: "41", count: 2 }] },
+      meta: { truncated: true },
     })
   })
 
-  it("groups by calendar day and hour in the requested timezone, and emits JSONL rows", async () => {
+  it("groups by calendar day and hour in the requested timezone, and refuses JSONL for a report", async () => {
     const day = await cli(["stats", "messages", "show", "--by", "day", "--timezone", "Europe/Madrid", "--json"])
     expect(day.code, day.stderr).toBe(0)
-    expect(JSON.parse(day.stdout)).toMatchObject({ total: 3, items: [{ key: "2026-10-04", count: 3 }] })
-    const hour = await cli(["stats", "messages", "show", "--by", "hour", "--timezone", "UTC", "--jsonl"])
+    expect(JSON.parse(day.stdout).item).toMatchObject({ total: 3, rows: [{ key: "2026-10-04", count: 3 }] })
+    const hour = await cli(["stats", "messages", "show", "--by", "hour", "--timezone", "UTC", "--json"])
     expect(hour.code, hour.stderr).toBe(0)
-    const rows = hour.stdout
-      .trim()
-      .split("\n")
-      .map((line) => JSON.parse(line))
+    const { rows } = JSON.parse(hour.stdout).item
     expect(rows).toHaveLength(3)
-    expect(rows.map((row) => row.count)).toEqual([1, 1, 1])
+    expect(rows.map((row: { count: number }) => row.count)).toEqual([1, 1, 1])
+    const lines = await cli(["stats", "messages", "show", "--by", "hour", "--timezone", "UTC", "--jsonl"])
+    expect(lines.code).toBe(2)
+    expect(lines.stdout).toBe("")
+    expect(JSON.parse(lines.stderr)).toMatchObject({ error: { reason: "output.one-object" } })
   })
 
   it("widens to other accounts only when explicitly asked with source", async () => {
     const result = await cli(["stats", "messages", "show", "invoice", "--source", "max", "--json"])
     expect(result.code, result.stderr).toBe(0)
-    expect(JSON.parse(result.stdout).total).toBe(3)
+    expect(JSON.parse(result.stdout).item.total).toBe(3)
   })
 
   it("rejects invalid grouping and timezone without data or a connection", async () => {

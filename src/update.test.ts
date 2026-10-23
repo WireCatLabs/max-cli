@@ -13,6 +13,7 @@ const setup = (latest: string | Error = "99.0.0") => {
     ...process.env,
     MAX_NO_UPDATE_CHECK: undefined,
     CI: undefined,
+    NO_UPDATE_NOTIFIER: undefined,
     MAX_STATE_DIR: join(home, "state"),
     MAX_CONFIG_DIR: join(home, "config"),
   }

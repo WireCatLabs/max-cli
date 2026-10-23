@@ -6,7 +6,7 @@
 #
 # A build with a newer cache schema migrates whatever cache it opens and drops the read history, so
 # a build from a worktree never opens the real one. The same variables scope the keyring entry
-# (`pathsAreOverridden` in cli-core), so the first run copies the installed max's sessions in —
+# (`pathsAreOverridden` in cli-base), so the first run copies the installed max's sessions in —
 # a `session start` here would be a new device login on the real account. `pnpm seed:worktree`
 # copies them again after a new login.
 set -eu

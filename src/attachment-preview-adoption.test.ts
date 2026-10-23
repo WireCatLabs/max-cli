@@ -2,9 +2,9 @@ import { createHash } from "node:crypto"
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { openStore } from "@wirecat/cli-core/store"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import { run } from "./program.js"
@@ -45,10 +45,10 @@ beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
   writeFileSync(path, bytes)
   writeFileSync(textFile, "pdfpreviewneedle")
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "PDF fixture", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
-  await db.saveMessages(
+  await db.messages.saveMessages(
     account,
     "7",
     [
@@ -69,7 +69,7 @@ beforeAll(async () => {
     ],
     { via: "test" },
   )
-  await db.keepDownloads(account, "7", "1", [{ kind: "file", position: 0, path }])
+  await db.attachments.keepDownloads(account, "7", "1", [{ kind: "file", position: 0, path }])
 })
 afterAll(async () => {
   await db.close()
@@ -93,26 +93,28 @@ const invoke = async (...args: string[]) => {
 
 describe("shared PDF page-preview adoption", () => {
   it("returns a retained page image without indexing, then explicitly saves searchable agent text", async () => {
-    const shown = await invoke("attachments", "show", "7", "1", "--page", "1", "--if-sha256", sha256)
+    const shown = await invoke("attachments", "show", "7", "1", "--page", "1", "--expected-fingerprint", sha256)
     expect(shown.code, shown.stderr).toBe(0)
-    const preview = JSON.parse(shown.stdout)
+    const preview = JSON.parse(shown.stdout).item
     expect(preview).toMatchObject({
-      mimeType: "image/png",
+      mime_type: "image/png",
       complete: true,
-      pdf: { page: 1, pageCount: 1, sourceSha256: sha256, sourceBytes: bytes.length },
+      pdf: { page: 1, page_count: 1, source_sha256: sha256, source_bytes: bytes.length },
     })
     const png = Buffer.from(preview.base64, "base64")
     expect(png.subarray(0, 8)).toEqual(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
     expect(createHash("sha256").update(png).digest("hex")).toBe(preview.sha256)
-    const before = await invoke("attachments", "list", "--chat", "7", "--needs-text")
+    const before = await invoke("attachments", "list", "chat:7 is:needs_text")
     expect(before.code, before.stderr).toBe(0)
     expect(JSON.parse(before.stdout).items).toHaveLength(1)
     const saved = await invoke("attachments", "text", "set", "7", "1", "--text-file", textFile)
     expect(saved.code, saved.stderr).toBe(0)
-    expect(JSON.parse(saved.stdout)).toMatchObject({ origin: "agent", chars: 16 })
-    const found = await invoke("search", "messages", "content:pdfpreviewneedle", "--chat", "7", "--backend", "archive")
+    expect(JSON.parse(saved.stdout).item).toMatchObject({ origin: "agent", chars: 16 })
+    const after = await invoke("attachments", "list", "chat:7 is:needs_text")
+    expect(JSON.parse(after.stdout).items).toEqual([])
+    const found = await invoke("search", "messages", "content:pdfpreviewneedle chat:7", "--backend", "archive")
     expect(found.code, found.stderr).toBe(0)
-    expect(JSON.parse(found.stdout).items.map((item: { id: string }) => item.id)).toEqual(["1"])
+    expect(JSON.parse(found.stdout).items.map((item: { ref: string }) => item.ref)).toEqual(["msg:max/512/7/1"])
     const outside = await invoke("attachments", "show", "7", "1", "--page", "2")
     expect(outside.code).not.toBe(0)
     const permission = await invoke("config", "set", "permissions.attachments.show", "deny")

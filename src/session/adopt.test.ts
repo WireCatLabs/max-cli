@@ -1,7 +1,7 @@
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
+import { memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import { MaxClient } from "../client.js"
 import { Opcode } from "../generated/opcodes.generated.js"
@@ -15,6 +15,7 @@ const loginAnswer = { profile: { contact: { id: 10000001, names: [{ name: "Test 
 const setup = (max: ReturnType<typeof mockMax>, existing?: string) => {
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
   const store = new SessionStore({
+    profile: "default",
     keyring: memoryKeyring(),
     configDir: dir,
     stateDir: join(dir, "state"),
@@ -25,7 +26,6 @@ const setup = (max: ReturnType<typeof mockMax>, existing?: string) => {
   return {
     store,
     client: new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: () => {},

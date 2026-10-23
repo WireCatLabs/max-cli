@@ -3,14 +3,22 @@ import { link, rm } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { PassThrough, Readable, Transform, Writable } from "node:stream"
 import { pipeline } from "node:stream/promises"
-import { CliError } from "@wirecat/cli-core"
-import type { AttachmentLink } from "./domain/models.js"
+import { CliError } from "@wirecat/cli-base"
+import type { AttachmentLink } from "@wirecat/cli-core"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
 export interface Saved {
   kind: string
   path: string
   bytes: number
+}
+
+const retryAfterMs = (value: string | null): number | undefined => {
+  if (!value?.trim()) return undefined
+  const seconds = Number(value)
+  const milliseconds = Number.isFinite(seconds) ? seconds * 1000 : Date.parse(value) - Date.now()
+  const delay = Math.ceil(milliseconds)
+  return Number.isSafeInteger(delay) && delay >= 0 ? delay : undefined
 }
 
 const EXTENSIONS: Record<string, string> = {
@@ -116,7 +124,14 @@ const open = async (
     }
     if (!response.ok || !response.body) {
       await response.body?.cancel()
-      failed(new CliError("network_error", `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`))
+      const pause = retryAfterMs(response.headers.get("retry-after"))
+      failed(
+        new CliError(
+          response.status === 429 ? "rate_limited" : "network_error",
+          `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`,
+          { status: response.status, ...(pause === undefined ? {} : { retry_after_ms: pause }) },
+        ),
+      )
     }
     const declared = Number(response.headers.get("content-length") ?? Number.NaN)
     if (declared > limit) {

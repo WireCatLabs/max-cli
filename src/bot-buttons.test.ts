@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -92,7 +92,7 @@ describe("a bot's buttons on the personal account", () => {
     const shown = await runWith(["b-show", "messages", "show", String(DIALOG), MESSAGE], environment)
 
     expect(shown.code).toBe(0)
-    const [attachment] = JSON.parse(shown.stdout).attachments
+    const [attachment] = JSON.parse(shown.stdout).item.attachments
     expect(attachment.buttons).toEqual([
       [
         { kind: "callback", text: "Yes" },
@@ -114,7 +114,7 @@ describe("a bot's buttons on the personal account", () => {
     expect(
       sentWith(Opcode.MSG_CALLBACK).map(({ payload }) => ({ ...payload, timestamp: typeof payload.timestamp })),
     ).toEqual([{ callbackId: "cb-1", type: "CALLBACK", payload: "answer:no", timestamp: "number" }])
-    expect(JSON.parse(pressed.stdout)).toMatchObject({ button: { kind: "callback", text: "No" } })
+    expect(JSON.parse(pressed.stdout).item).toMatchObject({ button: { kind: "callback", text: "No" } })
     const journal = new SendJournal(sendsPathFor("b-press")).entries().filter((entry) => entry.outcome === "sent")
     expect(journal.map((entry) => entry.kind)).toContain("reaction")
   })
@@ -130,7 +130,7 @@ describe("a bot's buttons on the personal account", () => {
 
   it("starts a bot with the web client's service message, guarded as a send", async () => {
     const { environment, sentWith } = messenger()
-    const started = await runWith(["b-start", "chats", "start", String(DIALOG), "--payload", "ref1"], environment)
+    const started = await runWith(["b-start", "chats", "start", String(DIALOG), "--start", "ref1"], environment)
 
     expect(started.code).toBe(0)
     expect(sentWith(Opcode.MSG_SEND).map(({ payload }) => payload)).toEqual([
@@ -150,7 +150,7 @@ describe("a bot's buttons on the personal account", () => {
 
     expect(lost.code).toBe(14)
     const { error } = JSON.parse(lost.stderr)
-    expect(error).toMatchObject({ code: "outcome_unknown", retryable: false })
+    expect(error).toMatchObject({ code: "outcome_unknown" })
     expect(sentWith(Opcode.MSG_SEND)).toHaveLength(1)
     expect(new SendJournal(sendsPathFor("b-start-lost")).entries()).toMatchObject([
       { kind: "message", outcome: "outcome_unknown", sendId: expect.any(String) },
@@ -162,7 +162,7 @@ describe("a bot's buttons on the personal account", () => {
     const lost = await runWith(["b-press-lost", "messages", "press", "111", MESSAGE, "Yes"], environment)
 
     expect(lost.code).toBe(14)
-    expect(JSON.parse(lost.stderr).error).toMatchObject({ code: "outcome_unknown", retryable: false })
+    expect(JSON.parse(lost.stderr).error).toMatchObject({ code: "outcome_unknown" })
     expect(sentWith(Opcode.MSG_CALLBACK)).toHaveLength(1)
     expect(new SendJournal(sendsPathFor("b-press-lost")).entries()).toMatchObject([
       { kind: "reaction", outcome: "outcome_unknown", messageId: MESSAGE },
@@ -194,7 +194,7 @@ describe("a bot's buttons on the personal account", () => {
     const opened = await runWith(["b-app", "--trace", "chats", "app", String(DIALOG), "--start", "p"], environment)
 
     expect(opened.code).toBe(0)
-    expect(JSON.parse(opened.stdout)).toMatchObject({ chatId: String(DIALOG), url: APP_URL })
+    expect(JSON.parse(opened.stdout).item).toMatchObject({ chat_id: String(DIALOG), url: APP_URL })
     expect(sentWith(Opcode.BOT_WEB_APP).map(({ payload }) => payload)).toEqual([
       { botId: BOT, chatId: DIALOG, startParam: "p" },
     ])

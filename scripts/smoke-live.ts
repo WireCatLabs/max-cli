@@ -2,7 +2,7 @@
  * Every writing operation once against the real MAX, before a release is announced (`MAX-56`).
  * Run by hand, never by CI, and only with the owner's yes (`NEED-150`).
  *
- *   pnpm smoke:live
+ *   MAX_PROFILE=<profile> pnpm smoke:live
  *
  * **One login, and Saved messages (chat 0) only.** It goes through `MaxClient`, the code the
  * commands run, on a single connection — driving the commands would be a login per write, since
@@ -27,14 +27,19 @@ const MULTIPLE = 2
 const REVOTE = 4
 const stamp = new Date().toISOString()
 
-const store = new SessionStore({ profile: process.env.MAX_PROFILE ?? "default" })
+const profile = process.env.MAX_PROFILE
+if (!profile) {
+  console.error("name the profile to test: MAX_PROFILE=<profile> pnpm smoke:live")
+  process.exit(2)
+}
+const store = new SessionStore({ profile })
 if (!store.readToken()) {
   console.error("no session on this profile — run `max session start` first")
   process.exit(2)
 }
 
 const connection = new Connection({ timeoutMs: 20_000 })
-const client = new MaxClient({ store, connection, timeoutMs: 20_000, sends: "caller" })
+const client = new MaxClient({ store, connection, timeoutMs: 20_000 })
 const created: string[] = []
 const failures: string[] = []
 

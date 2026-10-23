@@ -1,7 +1,7 @@
 import * as v from "valibot"
 import { defineOperation } from "../define.js"
 import { ambiguous, chatOf, countOf, messageOf, objectOf, peopleOf } from "../guards.js"
-import { id } from "../scalars.js"
+import { id, wireId } from "../scalars.js"
 
 export const messagesSend = defineOperation({
   name: "messages.send",
@@ -247,6 +247,34 @@ export const messagesSearch = defineOperation({
     ],
     notes:
       "Answers `{result: [{message, highlights}], total}`, or `{result: [], ucpQId}` when nothing matched. One chat only: without `chatId` it is refused (`proto.payload`). Matches a word's beginning, not other forms of a Russian word.",
+  },
+})
+
+export const messagesSearchGlobal = defineOperation({
+  name: "messages.searchGlobal",
+  constant: "MSG_SEARCH_GLOBAL",
+  opcode: 68,
+  auth: true,
+  request: v.strictObject({
+    query: v.pipe(v.string(), v.minLength(1)),
+    count: v.number(),
+    marker: v.optional(wireId()),
+  }),
+  response: v.looseObject({
+    result: v.optional(v.array(v.looseObject({}))),
+    counters: v.optional(v.looseObject({})),
+    total: v.optional(v.number()),
+    marker: v.optional(wireId()),
+  }),
+  guard: null,
+  provenance: {
+    confidence: "measured",
+    sources: [
+      "web.max.ru chunk `_app/immutable/chunks/Cdo8IOYe.js`, function `Noi`, read 2026-10-11: `send(68, {query, count: 30, marker})`, `marker` left out on the first page",
+      "measured 2026-10-11 on the owner's account, read-only, with the owner's yes (`pnpm probe:search-ops`, max-cli PR #562)",
+    ],
+    notes:
+      "Searches every chat, as web.max.ru's search box. Answers `{result, counters: {MESSAGES}, total, ucpQId, marker?}`; each result is `{chatId, section, count, highlights, message, chat?}`, ONE per chat — its best message, `count` the matches in that chat. `section` is `MESSAGES`, `CHATS` (a title hit) or `PUBLIC_CHATS`, or absent; only `MESSAGES` carries a message we keep, and its `count` is dropped: a message has no place for it. While `marker` is present, more chats match. MAX's own name for 68 is not in any source we hold: `MSG_SEARCH_GLOBAL` is ours. `marker`'s type is unmeasured (the probe's query answered none), so any id-like scalar is taken.",
   },
 })
 

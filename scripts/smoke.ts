@@ -11,7 +11,7 @@ import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from "node
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { openCache } from "@wirecat/cli-messaging/store"
+import { openCache } from "@wirecat/cli-core/store"
 import { decodeOgg } from "../dist/transcribe/speech.js"
 
 const runtime = typeof (globalThis as { Bun?: unknown }).Bun === "undefined" ? "node" : "bun"
@@ -28,7 +28,7 @@ const max = (...args: string[]) => spawnSync(process.execPath, ["dist/bin/max.js
  *
  * Every check below writes something, and none of it may land in the owner's real state directory
  * — the overrides also move the keyring entry to a service of this directory's own, so nothing
- * here can read or delete the real session (`cli-core`, `pathsAreOverridden`).
+ * here can read or delete the real session (`cli-base`, `pathsAreOverridden`).
  */
 const isolated = mkdtempSync(join(tmpdir(), "max-smoke-run-"))
 const maxHere = (...args: string[]) =>
@@ -36,6 +36,7 @@ const maxHere = (...args: string[]) =>
     encoding: "utf8",
     env: {
       ...process.env,
+      MAX_PROFILE: "default",
       MAX_CONFIG_DIR: join(isolated, "config"),
       MAX_STATE_DIR: join(isolated, "state"),
       MAX_CACHE_DIR: join(isolated, "cache"),
@@ -68,16 +69,18 @@ check("`runs list` exits cleanly with nothing to show", empty.status === 0)
 check("`runs list` prints an empty list on stdout", JSON.parse(empty.stdout).items?.length === 0)
 check("`runs list` says on stderr why it is empty", empty.stderr.includes("--record"))
 
-// Pino writes the event log, and this is the only place it runs under Bun. `session end` reaches
+// cli-base's log writer writes the event log, and this is the only place it runs under Bun. `session end` reaches
 // no network and, in this directory, no real session — what it proves is that the run directory,
 // the atomic `run.json` and the log stream all work under this runtime.
 const recordedRun = maxHere("session", "end", "--record", "--json")
 check("a recorded command exits cleanly", recordedRun.status === 0)
-check("a recorded command still prints its own answer", JSON.parse(recordedRun.stdout).forgotten === false)
+check("a recorded command still prints its own answer", JSON.parse(recordedRun.stdout).item?.forgotten === false)
 
 const days = readdirSync(join(isolated, "state", "runs"))
 const day = days[0] ?? ""
-const kept = readdirSync(join(isolated, "state", "runs", day))
+const kept = readdirSync(join(isolated, "state", "runs", day), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name)
 const runDir = join(isolated, "state", "runs", day, kept[0] ?? "")
 check("it left exactly one run directory", days.length === 1 && kept.length === 1)
 check("the run directory holds its metadata", existsSync(join(runDir, "run.json")))
@@ -87,10 +90,10 @@ const listed = maxHere("runs", "list", "--json")
 check("`runs list` finds the run that was just kept", JSON.parse(listed.stdout).items?.[0]?.status === "success")
 
 const path = maxHere("runs", "path", kept[0] ?? "", "--json")
-check("`runs path` answers with the directory, as one JSON value", JSON.parse(path.stdout).path === runDir)
+check("`runs path` answers with the directory, as one JSON value", JSON.parse(path.stdout).item?.path === runDir)
 
 const shown = maxHere("runs", "show", kept[0] ?? "", "--json")
-check("`runs show` answers with the run and its events", JSON.parse(shown.stdout).runId === kept[0])
+check("`runs show` answers with the run and its events", JSON.parse(shown.stdout).item?.run_id === kept[0])
 check("`runs show` refuses an id it does not have", maxHere("runs", "show", "no-such-run").status !== 0)
 
 const database = await openCache(join(isolated, "smoke.db"))

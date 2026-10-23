@@ -1,4 +1,4 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -92,23 +92,23 @@ describe("reads only MAX's server answers", () => {
     expect(json.items).toEqual([
       {
         id: "2",
-        chatId: "111",
-        callerId: String(SELF),
+        chat_id: "111",
+        caller_id: String(SELF),
         direction: "outgoing",
         outcome: "answered",
         kind: "video",
         at: new Date(1789775000000).toISOString(),
-        durationSeconds: 65,
+        duration_seconds: 65,
       },
       {
         id: "1",
-        chatId: "111",
-        callerId: "20000002",
+        chat_id: "111",
+        caller_id: "20000002",
         direction: "incoming",
         outcome: "missed",
         kind: "audio",
         at: new Date(1789770000000).toISOString(),
-        durationSeconds: null,
+        duration_seconds: null,
       },
     ])
   })
@@ -118,12 +118,12 @@ describe("reads only MAX's server answers", () => {
     const { code, json } = await runWith(["account", "privacy", "show"], environment)
 
     expect(code).toBe(0)
-    expect(json).toEqual({
-      findByPhone: "contacts",
-      phoneNumber: "contacts",
+    expect(json.item).toEqual({
+      find_by_phone: "contacts",
+      phone_number: "contacts",
       calls: "everyone",
-      chatInvites: "nobody",
-      hideOnline: true,
+      chat_invites: "nobody",
+      hide_online: true,
     })
     expect(max.sent.map((one) => one.opcode)).toEqual([Opcode.SESSION_INIT, Opcode.LOGIN])
   })
@@ -136,19 +136,19 @@ describe("reads only MAX's server answers", () => {
     expect(
       sent(Opcode.CHAT_MEDIA).map((one) => ({ ...one, chatId: String(one.chatId), messageId: String(one.messageId) })),
     ).toEqual([{ chatId: "111", messageId: String(NEWEST), attachTypes: ["PHOTO", "SHARE"], forward: 0, backward: 6 }])
-    expect(json).toMatchObject({ items: [{ id: "116762160362694580" }], hasMore: false })
+    expect(json).toMatchObject({ items: [{ id: "116762160362694580" }], page: { has_more: false } })
     expect(sent(Opcode.CHAT_MARK)).toEqual([])
   })
 
   it("`calls list --limit` keeps the newest and says more remain", async () => {
     const { environment } = messenger()
     const { json } = await runWith(["calls", "list", "--limit", "1"], environment)
-    expect(json).toMatchObject({ items: [{ id: "2" }], hasMore: true, limit: 1 })
+    expect(json).toMatchObject({ items: [{ id: "2" }], page: { limit: 1, has_more: true } })
   })
 
-  it("`chats media --before-id` reads back from that message, needs no history, and leaves it out", async () => {
+  it("`chats media --cursor` reads back from that message, needs no history, and leaves it out", async () => {
     const { environment, sent } = messenger()
-    const { code } = await runWith(["chats", "media", "111", "--before-id", "116762160362694585"], environment)
+    const { code } = await runWith(["chats", "media", "111", "--cursor", "116762160362694585"], environment)
 
     expect(code).toBe(0)
     expect(sent(Opcode.CHAT_HISTORY)).toEqual([])

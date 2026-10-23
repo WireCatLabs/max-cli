@@ -100,6 +100,8 @@ export class Connection {
   #seq = 0
   #lastPush: number | undefined
   #closed = false
+  #opening: Promise<void> | undefined
+  #cancelOpen: ((error: Error) => void) | undefined
 
   constructor(options: ConnectionOptions = {}) {
     this.#url = options.url ?? MAX_WEBSOCKET_URL
@@ -120,38 +122,55 @@ export class Connection {
         }))
   }
 
-  async open(): Promise<void> {
-    if (this.#socket) return
+  open(): Promise<void> {
+    if (this.#closed) return Promise.reject(new Error("the connection is closed"))
+    if (this.#opening) return this.#opening
+    if (this.#socket) return Promise.resolve()
+    const opening = this.#openSocket()
+    this.#opening = opening
+    void opening
+      .finally(() => {
+        if (this.#opening === opening) this.#opening = undefined
+      })
+      .catch(() => {})
+    return opening
+  }
 
+  async #openSocket(): Promise<void> {
     const socket = this.#createSocket(this.#url, this.#origin)
     this.#socket = socket
-
     try {
       await new Promise<void>((resolve, reject) => {
-        const onOpen = () => {
+        const cleanup = () => {
+          socket.off("open", onOpen)
           socket.off("error", onError)
+          socket.off("close", onClose)
+          this.#cancelOpen = undefined
+        }
+        const onOpen = () => {
+          cleanup()
+          socket.on("message", (data: Buffer | ArrayBuffer | Buffer[]) => this.#receive(asBytes(data)))
+          socket.on("close", (code?: number, reason?: Buffer) => this.#lost(new Error(closedBy(code, reason))))
+          socket.on("error", (error: Error) => this.#lost(error))
           resolve()
         }
         const onError = (error: Error) => {
-          socket.off("open", onOpen)
+          cleanup()
           reject(error)
         }
+        const onClose = (code?: number, reason?: Buffer) => onError(new Error(closedBy(code, reason)))
+        this.#cancelOpen = onError
         socket.once("open", onOpen)
         socket.once("error", onError)
+        socket.once("close", onClose)
       })
     } catch (error) {
-      // Left set, the next `open()` would return at once and the request after it wait out its timeout.
       if (this.#socket === socket) this.#socket = undefined
       socket.removeAllListeners()
       socket.on("error", () => {})
       if (socket.readyState === socket.OPEN || socket.readyState === socket.CONNECTING) socket.close()
       throw error
     }
-
-    socket.on("message", (data: Buffer | ArrayBuffer | Buffer[]) => this.#receive(asBytes(data)))
-    // The code and reason are all there is to tell MAX ending the session from a network drop.
-    socket.on("close", (code?: number, reason?: Buffer) => this.#lost(new Error(closedBy(code, reason))))
-    socket.on("error", (error: Error) => this.#lost(error))
   }
 
   // The web client's INIT goes out as seq 0; the header holds two bytes, so the count wraps, and
@@ -183,7 +202,7 @@ export class Connection {
       throw new Error(`refusing to send a frame with a non-integer opcode: ${String(opcode)}`)
     }
     if (this.#closed) throw new Error("the connection is closed")
-    if (!this.#socket) throw new Error("the connection is not open")
+    if (!this.#socket || this.#opening) throw new Error("the connection is not open")
 
     const seq = this.#nextSeq()
     const socket = this.#socket
@@ -196,8 +215,14 @@ export class Connection {
       }, this.#timeoutMs)
 
       this.#pending.set(seq, { resolve, reject, timer })
-      socket.send(sent)
-      watch?.({ phase: "sent", seq, opcode, bytes: sent.length })
+      try {
+        socket.send(sent)
+        watch?.({ phase: "sent", seq, opcode, bytes: sent.length })
+      } catch (error) {
+        clearTimeout(timer)
+        this.#pending.delete(seq)
+        reject(error instanceof Error ? error : new Error(String(error)))
+      }
     })
 
     const frame = answer.frame
@@ -223,6 +248,7 @@ export class Connection {
    */
   async close(): Promise<void> {
     this.#closed = true
+    this.#cancelOpen?.(new Error("the connection was closed before it opened"))
     const socket = this.#socket
     this.#socket = undefined
 

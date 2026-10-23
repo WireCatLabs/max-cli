@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { listRuns, runsDirFor } from "@wirecat/cli-messaging/cli"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { checkGuide, listRuns, runsDirFor } from "@wirecat/cli-core/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"
@@ -131,31 +131,19 @@ describe("the program", () => {
     expect(max.sent.some(({ opcode }) => opcode === Opcode.MSG_SEND)).toBe(false)
   })
 
-  it("refuses a topic read without marking the whole chat read", async () => {
+  it("offers no --topic, since MAX has no forum topics, and sends nothing when given one", async () => {
     const { max, ...environment } = scriptedMax()
-    const result = await runWith(["chats", "mark-read", "111", "--topic", "12", "--json"], environment)
-    expect(result.code).toBe(2)
-    expect(result.stdout).toBe("")
-    expect(result.stderr).toContain("mark a forum topic read")
-    expect(max.sent.some(({ opcode }) => opcode === Opcode.CHAT_MARK)).toBe(false)
-  })
-
-  it("refuses --topic for shared message and poll commands without sending", async () => {
-    const { max, ...environment } = scriptedMax()
-    const sent = await runWith(["messages", "send", "111", "hi", "--topic", "12", "--json"], environment)
-    const poll = await runWith(
-      ["polls", "create", "111", "Friday?", "yes", "no", "--topic", "12", "--json"],
-      environment,
-    )
-    for (const result of [sent, poll]) {
+    const results = [
+      await runWith(["chats", "mark-read", "111", "--topic", "12", "--json"], environment),
+      await runWith(["messages", "send", "111", "hi", "--topic", "12", "--json"], environment),
+      await runWith(["polls", "create", "111", "Friday?", "yes", "no", "--topic", "12", "--json"], environment),
+    ]
+    for (const result of results) {
       expect(result.code).toBe(2)
       expect(result.stdout).toBe("")
-      expect(JSON.parse(result.stderr).error).toMatchObject({
-        code: "validation_error",
-        message: "this messenger cannot send to a forum topic",
-      })
+      expect(JSON.parse(result.stderr).error.message).toBe("unknown option '--topic'")
     }
-    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND)).toEqual([])
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEND || opcode === Opcode.CHAT_MARK)).toEqual([])
   })
 
   it("shows a control character from the command line in an error, instead of passing it to the terminal", async () => {
@@ -178,20 +166,61 @@ describe("the program", () => {
     expect((await runWith(["--help"])).stdout).toContain("Usage: max")
   })
 
-  it("offers every resource at the top level", async () => {
+  it("prints help and exits 0 for `--help` on every command", async () => {
+    type Node = { name(): string; commands: readonly Node[] }
+    const leaves = (command: Node, path: string[] = []): string[][] =>
+      command.commands.flatMap((child) => {
+        const here = [...path, child.name()]
+        return child.commands.length === 0 ? [here] : leaves(child, here)
+      })
+    const paths = leaves(createProgram()).filter(([top]) => top !== "help")
+    const failed: string[] = []
+    for (const path of paths) {
+      const { code, stderr } = await runWith(["h-sweep", ...path, "--help"], { keyring: memoryKeyring() })
+      if (code !== 0) failed.push(`${path.join(" ")}: ${code} ${stderr}`)
+    }
+    expect(paths.length).toBeGreaterThan(300)
+    expect(failed).toEqual([])
+  }, 120_000)
+
+  it("**opens on the first screen**, which says what max does and where the full list is", async () => {
     const { stdout } = await runWith(["--help"])
+    expect(stdout).toContain("What you can do:")
+    expect(stdout).toContain("MAX_READ_ONLY=1 max …")
+    expect(stdout).toContain("max guide")
+    expect(stdout).not.toContain("Getting started")
+  })
+
+  it("**ships scenarios whose every step parses**", async () => {
+    expect(await checkGuide(() => createProgram(), { packageRoot: process.cwd() })).toEqual([])
+  })
+
+  it("prints one scenario's steps as data, with no profile", async () => {
+    const { stdout, code } = await runWith(["guide", "catch-up", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).item.steps[0].run).toBe("max review 'date>1d' --unanswered 4h")
+  })
+
+  it("prints the options for every command under `help options`, with no profile", async () => {
+    const { stdout, code } = await runWith(["help", "options"])
+    expect(code).toBe(0)
+    expect(stdout).toContain("--offline")
+  })
+
+  it("offers every resource at the top level", async () => {
+    const { stdout } = await runWith(["--help-all"])
     for (const command of ["session", "account", "chats", "contacts", "messages", "store", "runs"]) {
       expect(stdout).toContain(command)
     }
   })
 
   it("offers offline reads and cleanup of departed chats", async () => {
-    expect((await runWith(["--help"])).stdout).toContain("--offline")
+    expect((await runWith(["--help-all"])).stdout).toContain("--offline")
     expect((await runWith(["store", "--help"])).stdout).toContain("clear")
   })
 
   it("**does not offer --no-cache**, because not using the record is already what happens", async () => {
-    expect((await runWith(["--help"])).stdout).not.toContain("--no-cache")
+    expect((await runWith(["--help-all"])).stdout).not.toContain("--no-cache")
   })
 
   it("reads --offline as a switch the commands can see", () => {
@@ -227,7 +256,7 @@ describe("the program", () => {
 
   it("promises only what `--trace` actually does", async () => {
     // `commander` wraps the column, so the promise is checked in the piece that survives wrapping.
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).toContain("ids and timings")
     // It said "without anything that identifies you" until 2026-09-20, and the line names the chat.
     expect(stdout).not.toContain("without anything that identifies you")
@@ -268,16 +297,26 @@ describe("the program", () => {
   })
 
   it("keeps a subcommand from killing the process on a bad option", async () => {
-    const { stdout, stderr, code } = await runWith(["chats", "list", "--nonsense"])
+    const { stdout, stderr, code } = await runWith(["messages", "list", "111", "--nonsense"])
     expect(stdout).toBe("")
     expect(stderr).toContain("unknown option")
     expect(code).not.toBe(0)
   })
 
+  it("refuses a mistyped option of a list that takes a query as an unknown option", async () => {
+    const { stdout, stderr, code } = await runWith(["chats", "list", "--nonsense", "--offline", "--json"])
+    expect(stdout).toBe("")
+    expect(JSON.parse(stderr).error).toMatchObject({
+      code: "validation_error",
+      message: expect.stringContaining("unknown option '--nonsense'"),
+    })
+    expect(code).toBe(2)
+  })
+
   it("counts -v, gives the version to -V, and turns -vv into the second level", async () => {
     expect((await runWith(["-V"])).stdout.trim()).toMatch(/^\d+\.\d+\.\d+/)
-    expect(resolveSettings({ verbose: 2 }, { env: {} }).detail).toBe(2)
-    expect(resolveSettings({ verbose: 5 }, { env: {} }).detail).toBe(2)
+    expect(resolveSettings({ verbose: 2 }, { env: {}, needsProfile: false }).detail).toBe(2)
+    expect(resolveSettings({ verbose: 5 }, { env: {}, needsProfile: false }).detail).toBe(2)
 
     const program = createProgram()
     program.parseOptions(["-vv"])
@@ -285,12 +324,12 @@ describe("the program", () => {
   })
 
   it("carries the global options every command needs", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     for (const option of ["--json", "--jsonl", "--quiet", "--verbose", "--trace"]) expect(stdout).toContain(option)
   })
 
   it("**has no `--profile`, and says in its help where the profile went**", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).not.toContain("--profile")
     expect(stdout).toContain("max [profile]")
     expect(stdout).toContain("The first word is the profile")
@@ -310,13 +349,13 @@ describe("the program", () => {
   it("**refuses a search shorter than the index can answer**, instead of printing an empty list", async () => {
     // A trigram index returns nothing for one or two characters rather than complaining, and an
     // empty list is indistinguishable from "no matches". Measured 2026-09-22.
-    const { code, stderr } = await runWith(["chats", "list", "--search", "ив"])
+    const { code, stderr } = await runWith(["chats", "list", "title:ив", "--offline"])
     expect(code).not.toBe(0)
     expect(stderr).toContain("3 characters")
   })
 
-  it("refuses an unknown --kind by name, rather than answering with nothing", async () => {
-    const { code, stderr } = await runWith(["chats", "list", "--kind", "chanel"])
+  it("refuses an unknown kind by name, rather than answering with nothing", async () => {
+    const { code, stderr } = await runWith(["chats", "list", "kind:chanel", "--offline"])
     expect(code).not.toBe(0)
     expect(stderr).toContain("dialog, group, channel")
   })
@@ -324,25 +363,14 @@ describe("the program", () => {
   it("offers every search under `search`, and none under `messages`", async () => {
     const { stdout } = await runWith(["messages", "--help"])
     expect(stdout).not.toMatch(/^\s+search\b/m)
-    expect((await runWith(["search", "--help"])).stdout).toMatch(/all .*\n[\s\S]*messages[\s\S]*mail[\s\S]*notes/)
+    const index = (await runWith(["search", "--help"])).stdout
+    for (const resource of ["all", "messages", "notes", "conversations"])
+      expect(index).toMatch(new RegExp(`^\\s+${resource}\\b`, "m"))
+    expect(index).toContain("memo search mail")
 
     const search = await runWith(["search", "messages", "--help"])
-    expect(search.stdout).toContain("--chat")
+    expect(search.stdout).toContain("chat: narrows it to one chat")
     expect(search.stdout).toContain("local store")
-  })
-
-  it("`search messages --regex` tests one pattern against what the store holds", async () => {
-    const { environment } = acquaintedMax()
-    await runWith(["t-regex", "messages", "list", "111", "--json"], environment)
-
-    const found = await runWith(["t-regex", "search", "messages", "^lat", "--regex", "--json"], environment)
-
-    expect(found.code).toBe(0)
-    expect(
-      JSON.parse(found.stdout)
-        .items.map((hit: { text: string }) => hit.text)
-        .sort(),
-    ).toEqual(["later", "latest"])
   })
 
   it("**finds a chat for a search by its stored name**, without connecting", async () => {
@@ -351,13 +379,50 @@ describe("the program", () => {
     const sent = max.sent.length
 
     const found = await runWith(
-      ["t-search-name", "search", "messages", "latest", "--chat", "First", "--backend", "archive", "--json"],
+      ["t-search-name", "search", "messages", "latest", "chat:First", "--backend", "archive", "--json"],
       environment,
     )
 
-    expect(found.code).toBe(0)
-    expect(JSON.parse(found.stdout).items.map((hit: { chatId: string }) => hit.chatId)).toEqual(["111"])
+    expect(found.code, found.stderr).toBe(0)
+    expect(JSON.parse(found.stdout).items.map((hit: { ref: string }) => hit.ref.split("/")[2])).toEqual(["111"])
     expect(max.sent).toHaveLength(sent)
+  })
+
+  it("`search messages` with no chat asks MAX's server once, with opcode 68, and keeps the message hit", async () => {
+    const { max, environment } = acquaintedMax({
+      [Opcode.MSG_SEARCH_GLOBAL]: {
+        result: [
+          {
+            chatId: 222,
+            section: "MESSAGES",
+            count: 3,
+            highlights: ["invoice"],
+            message: { id: 116762160362699001n, time: 1789776000000, sender: 10000002, text: "invoice due" },
+          },
+          { chatId: 333, section: "PUBLIC_CHATS", count: 1, highlights: [] },
+        ],
+        counters: { MESSAGES: 1 },
+        total: 1,
+      },
+    })
+
+    await runWith(["t-search-global", "messages", "list", "111", "--json"], environment)
+
+    const found = await runWith(["t-search-global", "search", "messages", "invoice", "--json"], environment)
+
+    expect(found.code).toBe(0)
+    expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_SEARCH_GLOBAL).map(({ payload }) => payload)).toEqual([
+      { query: "invoice", count: 30 },
+    ])
+    expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.MSG_SEARCH)
+    const hit = { ref: "msg:max/10000001/222/116762160362699001", excerpt: "invoice due" }
+    expect(JSON.parse(found.stdout)).toMatchObject({ items: [{ ...hit, found_in: "server" }] })
+
+    const kept = await runWith(
+      ["t-search-global", "search", "messages", "invoice", "--backend", "archive", "--json"],
+      environment,
+    )
+    expect(JSON.parse(kept.stdout)).toMatchObject({ items: [hit] })
   })
 
   it("**refuses `--timeout` without a unit**, because the neighbouring setting is milliseconds", async () => {
@@ -367,13 +432,13 @@ describe("the program", () => {
   })
 
   it("offers --timeout at the top level, where every command can be given one", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).toContain("--timeout <duration>")
     expect(stdout).toContain("whole command")
   })
 
   it("offers `config show`, so the settings in force can be read without guessing", async () => {
-    const { stdout } = await runWith(["--help"])
+    const { stdout } = await runWith(["--help-all"])
     expect(stdout).toContain("config")
 
     const show = await runWith(["config", "--help"])
@@ -385,21 +450,23 @@ describe("the program", () => {
     it("`config show --json` answers one object on stdout", async () => {
       const { stdout, code } = await runWith(["config", "show", "--json"])
       expect(code).toBe(0)
-      expect(JSON.parse(stdout)).toMatchObject({ profile: "default", configFound: true })
+      expect(JSON.parse(stdout).item).toMatchObject({ profile: "default", config_found: true })
     })
 
     it("`config show` includes the speech model", async () => {
       const { stdout } = await runWith(["config", "show", "--json"])
-      expect(JSON.parse(stdout).settings.map((row: { setting: string }) => row.setting)).toContain("transcribeModel")
+      expect(JSON.parse(stdout).item.settings.map((row: { setting: string }) => row.setting)).toContain(
+        "transcribe_model",
+      )
     })
 
     it("`config set` saves a setting that `config show` then reports from the file", async () => {
       const set = await runWith(["work", "config", "set", "limit", "30", "--json"])
       expect(set.code).toBe(0)
-      expect(JSON.parse(set.stdout)).toMatchObject({ scope: "profiles.work", setting: "limit", value: 30 })
+      expect(JSON.parse(set.stdout).item).toMatchObject({ scope: "profiles.work", setting: "limit", value: 30 })
 
       const { stdout } = await runWith(["work", "config", "show", "--json"])
-      expect(JSON.parse(stdout).settings).toContainEqual({
+      expect(JSON.parse(stdout).item.settings).toContainEqual({
         setting: "limit",
         value: 30,
         from: "config file: profiles.work",
@@ -407,7 +474,7 @@ describe("the program", () => {
 
       await runWith(["work", "config", "unset", "limit"])
       const after = await runWith(["work", "config", "show", "--json"])
-      expect(JSON.parse(after.stdout).settings).toContainEqual({
+      expect(JSON.parse(after.stdout).item.settings).toContainEqual({
         setting: "limit",
         value: 20,
         from: "config file: defaults",
@@ -415,27 +482,27 @@ describe("the program", () => {
     })
 
     it("`config set --bot` writes the bot side, and `config show --bot` reads it back", async () => {
-      const set = await runWith(["test", "config", "set", "--bot", "sendsPerHour", "60", "--json"])
-      expect(JSON.parse(set.stdout)).toMatchObject({ scope: "bot.profiles.test", value: 60 })
+      const set = await runWith(["test", "config", "set", "--bot", "sends_per_hour", "60", "--json"])
+      expect(JSON.parse(set.stdout).item).toMatchObject({ scope: "bot.profiles.test", value: 60 })
 
-      const bot = JSON.parse((await runWith(["test", "config", "show", "--bot", "--json"])).stdout)
+      const bot = JSON.parse((await runWith(["test", "config", "show", "--bot", "--json"])).stdout).item
       expect(bot.kind).toBe("bot")
       expect(bot.settings.map((row: { setting: string }) => row.setting)).not.toContain("serve")
       expect(bot.settings).toContainEqual({
-        setting: "sendsPerHour",
+        setting: "sends_per_hour",
         value: 60,
         from: "config file: bot.profiles.test",
       })
-      const personal = JSON.parse((await runWith(["test", "config", "show", "--json"])).stdout)
-      expect(personal.settings).toContainEqual({ setting: "sendsPerHour", value: 30, from: "config file: defaults" })
+      const personal = JSON.parse((await runWith(["test", "config", "show", "--json"])).stdout).item
+      expect(personal.settings).toContainEqual({ setting: "sends_per_hour", value: 30, from: "config file: defaults" })
     })
 
     it("`config set --personal` writes the personal section, which a bot on the same profile does not read", async () => {
       const set = await runWith(["t-side", "config", "set", "--personal", "limit", "40", "--json"])
-      expect(JSON.parse(set.stdout)).toMatchObject({ scope: "personal.profiles.t-side", value: 40 })
+      expect(JSON.parse(set.stdout).item).toMatchObject({ scope: "personal.profiles.t-side", value: 40 })
 
       const limitOf = async (argv: string[]) =>
-        JSON.parse((await runWith(["t-side", "config", "show", ...argv, "--json"])).stdout).settings.find(
+        JSON.parse((await runWith(["t-side", "config", "show", ...argv, "--json"])).stdout).item.settings.find(
           (row: { setting: string }) => row.setting === "limit",
         )
       expect(await limitOf([])).toEqual({ setting: "limit", value: 40, from: "config file: personal.profiles.t-side" })
@@ -443,26 +510,26 @@ describe("the program", () => {
     })
 
     it("`config unset --personal` and `--bot` each remove only their own section's value", async () => {
-      await runWith(["t-unset", "config", "set", "--personal", "sendsPerHour", "10"])
-      await runWith(["t-unset", "config", "set", "--bot", "sendsPerHour", "50"])
+      await runWith(["t-unset", "config", "set", "--personal", "sends_per_hour", "10"])
+      await runWith(["t-unset", "config", "set", "--bot", "sends_per_hour", "50"])
       const sendsPerHour = async (argv: string[]) =>
-        JSON.parse((await runWith(["t-unset", "config", "show", ...argv, "--json"])).stdout).settings.find(
-          (row: { setting: string }) => row.setting === "sendsPerHour",
+        JSON.parse((await runWith(["t-unset", "config", "show", ...argv, "--json"])).stdout).item.settings.find(
+          (row: { setting: string }) => row.setting === "sends_per_hour",
         ).from
 
-      const unset = await runWith(["t-unset", "config", "unset", "--personal", "sendsPerHour", "--json"])
-      expect(JSON.parse(unset.stdout)).toMatchObject({ scope: "personal.profiles.t-unset", value: null })
+      const unset = await runWith(["t-unset", "config", "unset", "--personal", "sends_per_hour", "--json"])
+      expect(JSON.parse(unset.stdout).item).toMatchObject({ scope: "personal.profiles.t-unset", value: null })
       expect(await sendsPerHour([])).toBe("config file: defaults")
       expect(await sendsPerHour(["--bot"])).toBe("config file: bot.profiles.t-unset")
 
-      await runWith(["t-unset", "config", "unset", "--bot", "sendsPerHour"])
+      await runWith(["t-unset", "config", "unset", "--bot", "sends_per_hour"])
       expect(await sendsPerHour(["--bot"])).toBe("default")
     })
 
     it("`--serve` and `--no-serve` decide the serve setting for this command, over the file", async () => {
       await runWith(["t-serve", "config", "set", "serve", "false"])
       const serveOf = async (flag: string) =>
-        JSON.parse((await runWith(["t-serve", flag, "config", "show", "--json"])).stdout).settings.find(
+        JSON.parse((await runWith(["t-serve", flag, "config", "show", "--json"])).stdout).item.settings.find(
           (row: { setting: string }) => row.setting === "serve",
         )
 
@@ -471,11 +538,48 @@ describe("the program", () => {
       expect(await serveOf("--no-serve")).toEqual({ setting: "serve", value: false, from: "flag" })
     })
 
-    it("`config set defaultProfile` picks the profile a bare `max` uses", async () => {
-      await runWith(["config", "set", "defaultProfile", "mila"])
-      const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout)
-      expect(shown).toMatchObject({ profile: "mila", profileFrom: "config file: defaultProfile" })
-      await runWith(["config", "unset", "defaultProfile"])
+    it("**assumes no profile**: an account command stops and lists them; account list and config show still run", async () => {
+      const { MAX_PROFILE } = process.env
+      delete process.env.MAX_PROFILE
+      try {
+        const chats = await runWith(["chats", "list", "--json"])
+        expect(chats.code).toBe(2)
+        expect(JSON.parse(chats.stderr).error.message).toMatch(/^name a profile: /)
+        expect((await runWith(["account", "list", "--json"])).code).toBe(0)
+        expect(JSON.parse((await runWith(["config", "show", "--json"])).stdout).item).toMatchObject({
+          profile: null,
+          profile_from: "none named",
+        })
+      } finally {
+        process.env.MAX_PROFILE = MAX_PROFILE
+      }
+    })
+
+    it("a mistyped profile is refused and not listed as a profile afterwards", async () => {
+      const { MAX_PROFILE } = process.env
+      delete process.env.MAX_PROFILE
+      try {
+        const typo = await runWith(["t-typo", "chats", "list", "--json"], { keyring: memoryKeyring() })
+        expect(JSON.parse(typo.stderr).error.message).toMatch(/no session for profile "t-typo"/)
+        const listed = JSON.parse((await runWith(["chats", "list", "--json"])).stderr).error.details.profiles
+        expect(listed).not.toContain("t-typo")
+      } finally {
+        process.env.MAX_PROFILE = MAX_PROFILE
+      }
+    })
+
+    it("refuses `config set default_profile`, so a bare `max` still names no profile", async () => {
+      const { MAX_PROFILE } = process.env
+      delete process.env.MAX_PROFILE
+      try {
+        const set = await runWith(["config", "set", "default_profile", "mila", "--json"])
+        expect(JSON.parse(set.stderr).error.message).toMatch(/default_profile is gone/)
+        const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout).item
+        expect(shown).toMatchObject({ profile: null, profile_from: "none named" })
+        expect((await runWith(["config", "unset", "default_profile"])).code).toBe(0)
+      } finally {
+        process.env.MAX_PROFILE = MAX_PROFILE
+      }
     })
 
     it("`skill show` prints the skill file itself", async () => {
@@ -496,8 +600,8 @@ describe("the program", () => {
       expect(stderr).toBe("")
       expect(code).toBe(0)
       expect(JSON.parse(stdout)).toMatchObject({
-        items: [{ id: "116762160362694583", text: "hi", senderName: "Someone Else" }],
-        hasMore: false,
+        items: [{ id: "116762160362694583", text: "hi", sender_name: "Someone Else" }],
+        page: { has_more: false },
       })
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
     })
@@ -505,10 +609,12 @@ describe("the program", () => {
     it("`--jsonl` writes one object per line and nothing else", async () => {
       const { max: _, ...environment } = scriptedMax()
       const { stdout } = await runWith(["messages", "list", "111", "--jsonl"], environment)
-      expect(stdout.split("\n").map((line) => JSON.parse(line).id)).toEqual(["116762160362694583"])
+      const [item, end] = stdout.split("\n").map((line) => JSON.parse(line))
+      expect(item.data.id).toBe("116762160362694583")
+      expect(end).toMatchObject({ type: "end", complete: true })
     })
 
-    it("--agent-json exposes controls while --json preserves original message text", async () => {
+    it("--json keeps message text as written, invisible characters included", async () => {
       const text = "synthetic\u202e text"
       const { environment } = acquaintedMax({
         [Opcode.CHAT_HISTORY]: pagedHistory([
@@ -516,12 +622,8 @@ describe("the program", () => {
         ]),
       })
       const ordinary = await runWith(["t-agent-json", "messages", "list", "111", "--json"], environment)
-      const agent = await runWith(["t-agent-json", "messages", "list", "111", "--agent-json"], environment)
-      expect([ordinary.code, agent.code]).toEqual([0, 0])
+      expect(ordinary.code).toBe(0)
       expect(JSON.parse(ordinary.stdout).items[0].text).toBe(text)
-      const visible = JSON.parse(agent.stdout).items[0].text as string
-      expect(visible).toBe("synthetic\\u202e text")
-      expect(agent.stderr).toBe("")
     })
 
     it("**leaves stdout empty on a failure** — no session, nothing printed but the error", async () => {
@@ -552,21 +654,26 @@ describe("the program", () => {
   })
 
   describe("reading without sending anything", () => {
-    it("`chats list --unread` answers only the chats with something unread", async () => {
+    it("`chats list unread_count>0` answers only the chats with something unread", async () => {
       const { max, environment } = acquaintedMax()
-      const { stdout, code } = await runWith(["t-unread", "chats", "list", "--unread", "--json"], environment)
+      expect((await runWith(["t-unread", "chats", "list", "--json"], environment)).code).toBe(0)
+      const { stdout, stderr, code } = await runWith(
+        ["t-unread", "chats", "list", "unread_count>0", "--offline", "--json"],
+        environment,
+      )
 
       expect(max.unexpected).toEqual([])
-      expect(code).toBe(0)
-      expect(JSON.parse(stdout)).toMatchObject({ items: [{ id: "111", unreadCount: 2 }], hasMore: false })
+      expect(code, stderr).toBe(0)
+      expect(JSON.parse(stdout)).toMatchObject({ items: [{ id: "111", unread_count: 2 }], page: { has_more: false } })
+      expect(JSON.parse(stdout).items).toHaveLength(1)
     })
 
     it("`chats list` pages by `--limit` and `--page`, and `--all` ignores the limit", async () => {
       const { environment } = acquaintedMax()
       const idsOf = async (argv: string[]) => {
         const { stdout } = await runWith(["t-pages", "chats", "list", ...argv, "--json"], environment)
-        const { items, hasMore } = JSON.parse(stdout)
-        return { ids: items.map((chat: { id: string }) => chat.id), hasMore }
+        const { items, page } = JSON.parse(stdout)
+        return { ids: items.map((chat: { id: string }) => chat.id), hasMore: page.has_more }
       }
 
       expect(await idsOf(["--limit", "1"])).toEqual({ ids: ["111"], hasMore: true })
@@ -583,7 +690,7 @@ describe("the program", () => {
 
       expect(max.unexpected).toEqual([])
       expect(code).toBe(0)
-      expect(JSON.parse(stdout)).toMatchObject({ id: "116762160362694583", text: "anchor", anchor: true })
+      expect(JSON.parse(stdout).item).toMatchObject({ id: "116762160362694583", text: "anchor", anchor: true })
       const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
       expect(history).toMatchObject({ from: Number(116762160362694583n >> 16n), backward: 1, forward: 0 })
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
@@ -621,34 +728,30 @@ describe("the program", () => {
       await runWith(["t-search", "messages", "list", "111", "--json"], environment)
 
       const capped = await runWith(
-        [
-          "t-search",
-          "search",
-          "messages",
-          "lat*",
-          "--language",
-          "lucene",
-          "--timezone",
-          "Europe/Madrid",
-          "--limit",
-          "1",
-          "--json",
-        ],
+        ["t-search", "search", "messages", "lat*", "--timezone", "Europe/Madrid", "--limit", "1", "--json"],
         environment,
       )
       const all = await runWith(["t-search", "search", "messages", "lat*", "--json"], environment)
 
-      expect(JSON.parse(capped.stdout)).toMatchObject({ hasMore: true })
+      expect(JSON.parse(capped.stdout)).toMatchObject({
+        page: { limit: 1, has_more: true },
+        next: expect.arrayContaining([
+          expect.objectContaining({ step: "page.next", args: expect.objectContaining({ page: 2 }) }),
+        ]),
+      })
       expect(JSON.parse(capped.stdout).items).toHaveLength(1)
       expect(JSON.parse(all.stdout).items).toHaveLength(2)
-      expect(JSON.parse(capped.stdout).query).toMatchObject({ language: "lucene-v1", timezone: "Europe/Madrid" })
-      const strict = await runWith(["t-search", "search", "messages", "lat", "--json"], environment)
-      const legacy = await runWith(
-        ["t-search", "search", "messages", "lat", "--language", "legacy", "--json"],
+      expect(JSON.parse(capped.stdout).next).toContainEqual(
+        expect.objectContaining({
+          step: "page.next",
+          args: expect.objectContaining({ query: "lat*", timezone: "Europe/Madrid" }),
+        }),
+      )
+      const strict = await runWith(
+        ["t-search", "search", "messages", "lat", "--backend", "archive", "--json"],
         environment,
       )
-      expect(JSON.parse(strict.stdout).items.map((message: { text: string }) => message.text)).toEqual(["later"])
-      expect(JSON.parse(legacy.stdout).items).toHaveLength(2)
+      expect(JSON.parse(strict.stdout).items.map((message: { excerpt: string }) => message.excerpt)).toEqual(["later"])
     })
 
     it("`search messages --newest` orders hits newest first, and `--context` brings the messages around each", async () => {
@@ -693,95 +796,89 @@ describe("the program", () => {
     it("`runs show` and `runs path` read back a recorded run, and the record carries no message text", async () => {
       const { environment } = acquaintedMax()
       await runWith(["t-runs", "messages", "list", "111", "--record", "--json"], environment)
-      const { runId } = JSON.parse((await runWith(["t-runs", "runs", "list", "--json"])).stdout).items.find(
+      const { run_id: runId } = JSON.parse((await runWith(["t-runs", "runs", "list", "--json"])).stdout).items.find(
         (run: { profile: string }) => run.profile === "t-runs",
       )
 
-      const shown = await runWith(["t-runs", "runs", "show", runId, "--json"])
+      const shown = await runWith(["t-runs", "runs", "show", runId, "-v", "--json"])
       const path = await runWith(["t-runs", "runs", "path", runId, "--json"])
       const missing = await runWith(["t-runs", "runs", "show", "no-such-run", "--json"])
 
-      expect(JSON.parse(shown.stdout)).toMatchObject({ command: "messages list", directory: expect.any(String) })
-      expect(JSON.parse(shown.stdout).events.length).toBeGreaterThan(0)
+      const run = JSON.parse(shown.stdout).item
+      expect(run).toMatchObject({ command: "messages list", directory: expect.any(String) })
+      expect(run.events.length).toBeGreaterThan(0)
       for (const text of ["anchor", "later", "latest"]) expect(shown.stdout).not.toContain(`"${text}"`)
-      expect(JSON.parse(path.stdout)).toEqual({ path: JSON.parse(shown.stdout).directory })
-      expect(existsSync(JSON.parse(path.stdout).path)).toBe(true)
+      expect(JSON.parse(path.stdout).item).toEqual({ path: run.directory })
+      expect(existsSync(JSON.parse(path.stdout).item.path)).toBe(true)
       expect(missing.code).not.toBe(0)
     })
 
-    it("`messages list --after-id` reads forward from the message, leaves it out, and names the next page", async () => {
+    it("`messages list id>` reads forward from the message, leaves it out, and names the next page", async () => {
       const { max, environment } = acquaintedMax()
       const { stdout, stderr, code } = await runWith(
-        ["t-after", "messages", "list", "111", "--after-id", "116762160362694583", "--limit", "1", "--jsonl"],
+        ["t-after", "messages", "list", "111", "id>116762160362694583", "--limit", "1", "--json"],
         environment,
       )
 
       expect(max.unexpected).toEqual([])
-      expect(code).toBe(0)
-      expect(JSON.parse(stdout).id).toBe("116762160362694584")
-      expect(stderr).toContain("--after-id 116762160362694584")
+      expect(code, stderr).toBe(0)
+      const listed = JSON.parse(stdout)
+      expect(listed.items.map((message: { id: string }) => message.id)).toEqual(["116762160362694584"])
+      expect(listed).toMatchObject({
+        page: { mode: "cursor", has_more: true, next_cursor: expect.any(String) },
+        next: [{ step: "page.next", args: { cursor: listed.page.next_cursor } }],
+      })
 
       const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
       expect(history).toMatchObject({ from: Number(116762160362694583n >> 16n) + 1, forward: 2, backward: 0 })
       expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
     })
 
-    it("`messages list --before-id` leaves out the message it pages from, which MAX's answer includes", async () => {
+    it("`messages list id<` leaves out the message it pages from, which MAX's answer includes", async () => {
       const { environment } = acquaintedMax()
-      const { stdout, code } = await runWith(
-        ["t-before", "messages", "list", "111", "--before-id", "116762160362694585", "--limit", "2", "--json"],
+      const { stdout, stderr, code } = await runWith(
+        ["t-before", "messages", "list", "111", "id<116762160362694585", "--limit", "2", "--json"],
         environment,
       )
 
-      expect(code).toBe(0)
+      expect(code, stderr).toBe(0)
       expect(JSON.parse(stdout).items.map((message: { id: string }) => message.id)).toEqual([
         "116762160362694583",
         "116762160362694584",
       ])
     })
 
-    it("`messages list --before-time` reads back from just before that moment", async () => {
+    it("`messages list date<` reads back from just before that moment", async () => {
       const { max, environment } = acquaintedMax()
-      const { code } = await runWith(
-        ["t-before-time", "messages", "list", "111", "--before-time", "2026-09-21T00:00:00Z", "--limit", "2", "--json"],
+      const { code, stderr } = await runWith(
+        ["t-before-time", "messages", "list", "111", 'date<"2026-09-21T00:00:00Z"', "--limit", "2", "--json"],
         environment,
       )
 
-      expect(code).toBe(0)
+      expect(code, stderr).toBe(0)
       const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
       expect(history).toMatchObject({ from: Date.parse("2026-09-21T00:00:00Z") - 1, backward: 2, forward: 0 })
     })
 
-    it("**refuses `--after-time` with `--before-time`** before connecting to anything", async () => {
+    it("**refuses `date>` with `date<`** before connecting to anything", async () => {
       const { max, environment } = acquaintedMax()
       const { code, stderr } = await runWith(
-        [
-          "t-both",
-          "messages",
-          "list",
-          "111",
-          "--after-time",
-          "2026-09-20T00:00:00Z",
-          "--before-time",
-          "2026-09-21T00:00:00Z",
-        ],
+        ["t-both", "messages", "list", "111", 'date>"2026-09-20T00:00:00Z"', 'date<"2026-09-21T00:00:00Z"'],
         environment,
       )
 
       expect(code).toBe(2)
-      expect(stderr).toContain("two starting points")
+      expect(JSON.parse(stderr).error).toMatchObject({ reason: "query.unsupported-placement" })
+      expect(stderr).toContain("date only once")
       expect(max.sent).toEqual([])
     })
 
-    it("blames `--after-time` for a value that is not a time", async () => {
+    it("blames `date` for a value that is not a time", async () => {
       const { environment } = acquaintedMax()
-      const { code, stderr } = await runWith(
-        ["t-bad", "messages", "list", "111", "--after-time", "tuesday"],
-        environment,
-      )
+      const { code, stderr } = await runWith(["t-bad", "messages", "list", "111", "date>tuesday"], environment)
 
       expect(code).toBe(2)
-      expect(stderr).toContain("--after-time takes")
+      expect(stderr).toContain("date")
     })
 
     it("`chats show` answers one chat with its members, and refuses an id that is not a chat", async () => {
@@ -791,14 +888,16 @@ describe("the program", () => {
       expect(max.unexpected).toEqual([])
       expect(shown.code).toBe(0)
       expect(JSON.parse(shown.stdout)).toMatchObject({
-        id: "111",
-        kind: "group",
-        unreadCount: 2,
-        participantsCount: 3,
-        members: [{ name: "Another Person" }, { name: "Someone Else", username: "someone" }],
+        item: {
+          id: "111",
+          kind: "group",
+          unread_count: 2,
+          participants_count: 3,
+          members: [{ name: "Another Person" }, { name: "Someone Else", username: "someone" }],
+        },
+        missing: [{ field: "members", why: expect.stringContaining("may omit your account or be partial") }],
       })
-      expect(shown.stderr).toContain("2 listed members; the chat reports 3 participants")
-      expect(shown.stderr).toContain("may omit your account or be partial")
+      expect(JSON.parse(shown.stdout).missing[0].why).toContain("2 listed; the chat reports 3")
 
       const missing = await runWith(["t-show", "chats", "show", "999", "--json"], environment)
       expect(JSON.parse(missing.stderr).error.code).toBe("not_found")
@@ -826,12 +925,12 @@ describe("the program", () => {
 
       expect(max.unexpected).toEqual([])
       expect(shown.code).toBe(0)
-      const profile = JSON.parse(shown.stdout)
+      const profile = JSON.parse(shown.stdout).item
       expect(profile).toMatchObject({
         id: "10000002",
         usernames: ["someone"],
         registered: { at: "2020-09-13T12:26:40.000Z", source: "max", precision: "day" },
-        hasPhoto: true,
+        has_photo: true,
         flags: {},
         seen: "2026-09-19T00:00:00.000Z",
       })
@@ -842,14 +941,14 @@ describe("the program", () => {
         ["111", "group"],
         ["222", "dialog"],
       ])
-      expect(profile.chats[0]).toHaveProperty("theirMessages")
+      expect(profile.chats[0]).toHaveProperty("their_messages")
       expect(profile.aliases).toEqual([])
       expect(profile.phone).toBe("***0123")
       const whole = await runWith(
         ["t-profile", "contacts", "profile", "@someone", "--show-phone", "--json"],
         environment,
       )
-      expect(JSON.parse(whole.stdout).phone).toBe("0123")
+      expect(JSON.parse(whole.stdout).item.phone).toBe("0123")
     })
 
     it("`contacts show` finds a person by @username, with every chat shared, and refuses an ambiguous name", async () => {
@@ -858,7 +957,7 @@ describe("the program", () => {
 
       expect(max.unexpected).toEqual([])
       expect(shown.code).toBe(0)
-      expect(JSON.parse(shown.stdout)).toMatchObject({
+      expect(JSON.parse(shown.stdout).item).toMatchObject({
         id: "10000002",
         name: "Someone Else",
         chats: [
@@ -868,11 +967,11 @@ describe("the program", () => {
       })
 
       const group = await runWith(["t-person", "contacts", "show", "another", "--json"], environment)
-      expect(JSON.parse(group.stdout)).toMatchObject({ id: "10000003", chats: [{ id: "111" }] })
+      expect(JSON.parse(group.stdout).item).toMatchObject({ id: "10000003", chats: [{ id: "111" }] })
 
       const ambiguous = await runWith(["t-person", "contacts", "show", "on", "--json"], environment)
       expect(ambiguous.code).toBe(2)
-      expect(JSON.parse(ambiguous.stderr).error.candidates).toHaveLength(2)
+      expect(JSON.parse(ambiguous.stderr).error.details.candidates).toHaveLength(2)
     })
 
     it("**`--offline` reaches the command**: it answers from the record and never connects", async () => {
@@ -883,15 +982,17 @@ describe("the program", () => {
       const offline = await runWith(["t-offline", "chats", "show", "First", "--offline", "--json"], silent.environment)
       expect(offline.code).toBe(0)
       expect(JSON.parse(offline.stdout)).toMatchObject({
-        id: "111",
-        participantsCount: 3,
-        members: [
-          { id: "10000003", name: "Another Person" },
-          { id: "10000002", name: "Someone Else" },
-        ],
+        item: {
+          id: "111",
+          participants_count: 3,
+          members: [
+            { id: "10000003", name: "Another Person" },
+            { id: "10000002", name: "Someone Else" },
+          ],
+        },
+        missing: [{ field: "members", why: expect.stringContaining("may omit your account or be partial") }],
       })
-      expect(offline.stderr).toContain("2 listed members; the chat reports 3 participants")
-      expect(offline.stderr).toContain("may omit your account or be partial")
+      expect(JSON.parse(offline.stdout).missing[0].why).toContain("2 listed; the chat reports 3")
 
       const send = await runWith(["t-offline", "messages", "send", "111", "hi", "--offline"], silent.environment)
       expect(send.code).not.toBe(0)
@@ -913,17 +1014,23 @@ describe("the program", () => {
   })
 
   it("**puts a failure on stderr as JSON, never on stdout**", async () => {
-    const { stdout, stderr, code } = await runWith(["a-profile-that-does-not-exist", "account", "show", "--json"])
+    const { stdout, stderr, code } = await runWith(["a-profile-that-does-not-exist", "account", "show", "--json"], {
+      store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
+    })
 
     expect(stdout).toBe("")
     expect(JSON.parse(stderr).error.code).toBe("authentication_error")
-    // 4 is authentication_error in cli-core's table: a script branches on this, not on the text.
+    // 4 is authentication_error in cli-base's table: a script branches on this, not on the text.
     expect(code).toBe(4)
   })
 
   it("tells a person what to do next, **naming the profile they actually typed**", async () => {
     const streams = captureStreams()
-    const code = await run(["a-profile-that-does-not-exist", "account", "show"], { streams, tty: true })
+    const code = await run(["a-profile-that-does-not-exist", "account", "show"], {
+      streams,
+      tty: true,
+      store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }),
+    })
 
     expect(streams.stdout).toEqual([])
     expect(streams.stderr.join("")).toContain("max a-profile-that-does-not-exist setup")

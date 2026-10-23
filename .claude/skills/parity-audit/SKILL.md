@@ -6,7 +6,7 @@ description: Compare MAX and Telegram functionality, every CLI command/argument/
 # Detailed MAX/Telegram parity audit
 
 Start from the latest audit linked in `docs_ai/HANDOFF.md` (or the public backlog if private docs are
-absent), cli-messaging's STANDARD and current claims. The report answers which functionality is
+absent), cli-core's STANDARD and current claims. The report answers which functionality is
 shared, what differs, where implementations remain separate, what tests actually prove, and what
 is unverified. Preserve the owner's scope: this audit authorizes no live account operations.
 
@@ -18,7 +18,7 @@ From max-cli, run:
 python3 .claude/skills/parity-audit/scripts/run.py
 ```
 
-The launcher clones fresh cli-messaging main into a disposable workspace; the shared runner clones
+The launcher clones fresh cli-core main into a disposable workspace; the shared runner clones
 and builds both consumers on pinned main snapshots. It captures discovery and MCP in empty homes,
 runs coverage/gates/argv matrices, collects source registration evidence, and executes the same
 synthetic local search/read scenarios through both actual CLIs. No user binary or profile is used.
@@ -32,7 +32,7 @@ its report says tests **not-run**, and must not be described as a complete audit
 For development of the auditor, `--shared-source <isolated-cli-messaging-worktree>` runs the same
 workflow against that worktree. Never pass a shared checkout another session owns. The direct
 shared command is documented in
-[PARITY-AUDIT.md](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/dev/PARITY-AUDIT.md).
+[PARITY-AUDIT.md](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/PARITY-AUDIT.md).
 
 ## Read the evidence before judging
 

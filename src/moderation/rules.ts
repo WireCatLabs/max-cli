@@ -1,5 +1,5 @@
-import { defaultRules, type GroupRules, ModerationRules, moderationPathFor as sharedPath } from "@wirecat/cli-messaging"
-import { LEVELS } from "@wirecat/cli-messaging/sends"
+import { defaultRules, type GroupRules, ModerationRules, moderationPathFor as sharedPath } from "@wirecat/cli-core"
+import { LEVELS } from "@wirecat/cli-core/sends"
 import { MAX_APP } from "../app.js"
 
 export { defaultRules, type GroupRules, ModerationRules }

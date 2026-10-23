@@ -1,5 +1,5 @@
-import type { Chat, Contact, Id, Member, PeopleLookup } from "@wirecat/cli-messaging"
-import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@wirecat/cli-messaging/store"
+import type { Chat, Contact, Id, Member, PeopleLookup } from "@wirecat/cli-core"
+import { type AccountKey, type MessageStore, openStore, type PersonFacts } from "@wirecat/cli-core/store"
 
 const MARKER = "login.marker"
 
@@ -52,18 +52,18 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
   return {
     transcript: async (chatId, messageId) => {
       const key = keyOf()
-      return key ? (await store()).transcript(key, chatId, messageId) : undefined
+      return key ? (await store()).messages.transcript(key, chatId, messageId) : undefined
     },
 
     keepTranscript: async (chatId, messageId, text, source) => {
       const key = keyOf()
       if (!key) throw new Error("cannot keep a transcript before the MAX account is known")
-      await (await store()).keepTranscript(key, chatId, messageId, text, source)
+      await (await store()).messages.keepTranscript(key, chatId, messageId, text, source)
     },
 
     syncMarker: async () => {
       const key = keyOf()
-      const saved = key && (await (await store()).syncState(key, MARKER))
+      const saved = key && (await (await store()).sync.syncState(key, MARKER))
       return saved === undefined ? undefined : Number(saved.value)
     },
 
@@ -71,16 +71,21 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
       const key = keyOf()
       if (!key) return
       const db = await store()
-      const known = await db.people("max", { account: key.account })
+      const known = await db.people.people("max", { account: key.account })
       const added = people.filter((person) => !known.get(person.id)).length
-      await db.applyDelta(key, {
+      await db.sync.applyDelta(key, {
         chats,
         people: people.map(factsOf),
         members,
         ...(marker === undefined ? {} : { state: { [MARKER]: String(marker) } }),
       })
+      if (chats.length > 0)
+        await db.chats.rejoinChats(
+          key,
+          chats.map((chat) => chat.id),
+        )
       return {
-        known: (await db.people("max", { account: key.account })).all().length,
+        known: (await db.people.people("max", { account: key.account })).all().length,
         added,
         changed: people.length - added,
       }
@@ -88,37 +93,37 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
 
     people: async () => {
       const key = keyOf()
-      return key ? (await store()).people("max", { account: key.account }) : { get: () => undefined, all: () => [] }
+      return key
+        ? (await store()).people.people("max", { account: key.account })
+        : { get: () => undefined, all: () => [] }
     },
 
     chatsWith: async (personId) => {
       const key = keyOf()
-      return key ? (await store()).chatsWith(key, personId) : []
+      return key ? (await store()).chats.chatsWith(key, personId) : []
     },
 
     rememberChats: async (chats, complete) => {
       const key = keyOf()
       if (!key) return chats
       const db = await store()
-      await db.saveChats(key, chats)
-      if (complete && chats.length > 0)
-        await db.markChatsLeft(
-          key,
-          chats.map((chat) => chat.id),
-        )
-      return (await db.chats(key, {})).items
+      await db.chats.saveChats(key, chats)
+      const ids = chats.map((chat) => chat.id)
+      if (complete && ids.length > 0) await db.chats.markChatsLeft(key, ids)
+      else if (ids.length > 0) await db.chats.rejoinChats(key, ids)
+      return (await db.chats.chats(key, {})).items
     },
 
     members: async (chatId) => {
       const key = keyOf()
-      return key ? (await store()).members(key, chatId) : []
+      return key ? (await store()).roster.members(key, chatId) : []
     },
 
     names: async (ids) => {
       const key = keyOf()
       const names = new Map<Id, string>()
       if (!key || ids.length === 0) return names
-      const known = await (await store()).people("max", { account: key.account })
+      const known = await (await store()).people.people("max", { account: key.account })
       for (const id of ids) {
         const name = known.get(id)?.name
         if (name) names.set(id, name)
@@ -128,12 +133,12 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
 
     remember: async (people) => {
       const key = keyOf()
-      if (key && people.length > 0) await (await store()).savePeople(key, people.map(factsOf))
+      if (key && people.length > 0) await (await store()).people.savePeople(key, people.map(factsOf))
     },
 
     forgetMarker: async () => {
       const key = keyOf()
-      if (key) await (await store()).clearSyncState(key, MARKER)
+      if (key) await (await store()).sync.clearSyncState(key, MARKER)
     },
 
     close: async () => {

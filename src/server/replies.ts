@@ -1,5 +1,5 @@
-import { CliError } from "@wirecat/cli-core"
-import type { ChatKind, Id, Message } from "@wirecat/cli-messaging"
+import { CliError } from "@wirecat/cli-base"
+import type { ChatKind, Id, Message, MessageHit } from "@wirecat/cli-core"
 import {
   NO_RULES,
   openRequestTask,
@@ -9,13 +9,12 @@ import {
   replyRenderer,
   replyTo,
   senderFacts,
-} from "@wirecat/cli-messaging/cli"
-import { guardedWrite, levelFor, type SendGuard } from "@wirecat/cli-messaging/sends"
-import { type MessageStore, openStore } from "@wirecat/cli-messaging/store"
+} from "@wirecat/cli-core/cli"
+import { guardedWrite, levelFor, type SendGuard } from "@wirecat/cli-core/sends"
+import { type MessageStore, openStore } from "@wirecat/cli-core/store"
 import { MAX_APP } from "../app.js"
 import type { MaxClient } from "../client.js"
 import { resolveSettings } from "../config.js"
-import type { MessageHit } from "../domain/models.js"
 
 export interface RepliesOptions {
   profile: string

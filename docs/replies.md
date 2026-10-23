@@ -11,12 +11,12 @@
   задачу или и то и другое.
 - **Шаблон** — текст ответа. В нём можно подставить имя отправителя и время.
 - **Аудитория** — люди и чаты, которым вообще можно отвечать, что бы ни говорило правило.
-- `max serve` — фоновый процесс, который получает новые сообщения и применяет правила.
+- `max personal serve` — фоновый процесс, который получает новые сообщения и применяет правила.
 
 Кто получает ответ и когда что-то отправляется:
 
 - **Ответ получает каждый, кого выбрали правила, пока вы не ограничите аудиторию.** Отвечать только
-  выбранным людям: `max replies audience --reply listed --allow-people …`; исключить кого-то:
+  выбранным людям: `max personal replies audience --reply listed --allow-people …`; исключить кого-то:
   `--deny-people` и `--deny-chats`.
 - **Ничего не отправляется, пока вы не включите отправку.** Нужно `permissions.replies.send allow`;
   `ask` тоже запрещает отправку, потому что у фонового сервера некого спросить. Новое правило
@@ -27,26 +27,26 @@
 ## Создать и включить правило
 
 ```sh
-max replies add away
-max replies edit away --template 'Спасибо, {{ sender.firstName | default: "вам" }}! Отвечу утром.'
-max replies edit away --outside 09:00-19:00 --days mon-fri --timezone Europe/Madrid
-max replies edit away --per-chat 1/12h --per-person 1/1d
+max personal replies add away
+max personal replies edit away --template 'Спасибо, {{ sender.firstName | default: "вам" }}! Отвечу утром.'
+max personal replies edit away --outside 09:00-19:00 --days mon-fri --timezone Europe/Madrid
+max personal replies edit away --per-chat 1/12h --per-person 1/1d
 ```
 
 `add` создаёт выключенное правило со всеми текущими настройками. Файл
-`<профиль>.replies.json` находится рядом с `configFile` из `max config show --json`.
+`<профиль>.replies.json` находится рядом с `config_file` из `max config show --json`.
 По умолчанию правила отвечают всем, кого выбрали. Чтобы отвечать только выбранным людям,
-перечислите их id в MAX через запятую; `max contacts show <имя> --json` показывает id человека
+перечислите их id в MAX через запятую; `max personal contacts show <имя> --json` показывает id человека
 в поле `id`:
 
 ```sh
-max replies audience --reply listed --allow-people 1000001
+max personal replies audience --reply listed --allow-people 1000001
 ```
 
 Чтобы отвечать всем, кроме некоторых людей или чатов, оставьте `--reply all` и запретите их:
 
 ```sh
-max replies audience --deny-people 1000002 --deny-chats 1000003
+max personal replies audience --deny-people 1000002 --deny-chats 1000003
 ```
 
 После первой команды в файле:
@@ -66,15 +66,15 @@ max replies audience --deny-people 1000002 --deny-chats 1000003
 без текста шаблона. Для выключенного правила и действия `task` пустой текст допустим.
 
 ```sh
-max replies test --since-time 7d
-max replies on away
-max config set permissions.replies.send allow
-max serve
+max personal replies test --since-time 7d
+max personal replies on away
+max personal config set permissions.replies.send allow
+max personal serve
 ```
 
 `replies test` читает только сохранённые сообщения: ничего не отправляет, ничего не меняет
 и не подключается к MAX. Без разрешения отправки сервер молчит.
-`max replies off away` выключает одно правило.
+`max personal replies off away` выключает одно правило.
 
 ## Редактировать условия и аудиторию
 
@@ -84,9 +84,9 @@ max serve
 | Поля | Опции |
 |---|---|
 | Действия | `--do reply,task` — ответ, задача или оба действия |
-| Чаты | `--kinds dialog,group`, `--chats`, `--not-chats` |
+| Чаты | `--kinds dialog,group`, `--allow-chats`, `--deny-chats` |
 | Условия | `--words`, `--question` / `--no-question`, `--mentions-me` / `--no-mentions-me` |
-| Отправители | `--people`, `--not-people`, `--contacts-only` / `--no-contacts-only` |
+| Отправители | `--allow-people`, `--deny-people`, `--contacts-only` / `--no-contacts-only` |
 | Ответ | `--template`, `--as-reply` / `--no-as-reply` |
 | Лимиты | `--per-chat`, `--per-person`, например `1/12h` |
 | Рабочее время | `--outside`, `--days`, `--timezone`, `--no-hours` |
@@ -96,7 +96,7 @@ max serve
 исходный файл и весь результат. Неверная правка не перезаписывает файл; другие правила,
 аудитория, порядок правил и история ответов сохраняются.
 
-`max replies audience` показывает общую аудиторию файла. Новый файл — это `--reply all`:
+`max personal replies audience` показывает общую аудиторию файла. Новый файл — это `--reply all`:
 он отвечает любому, кого выбрало правило. `--reply listed` отвечает только разрешённым людям и чатам. Опции `--allow-people`,
 `--allow-chats`, `--deny-people`, `--deny-chats` заменяют соответствующие списки.
 Запрет побеждает разрешение. При `listed` с пустым списком никто не получает ответ;
@@ -128,19 +128,19 @@ max serve
 используется `else`. Без него ответ пропускается с объяснением.
 
 Настройте `models.replies.provider` (`openai` или `anthropic`), точный id модели в
-`models.replies.model` и при необходимости `models.replies.baseUrl`. Общие значения
+`models.replies.model` и при необходимости `models.replies.base_url`. Общие значения
 берутся из `models.default`; `provider off` выключает назначение. `config set` и
 `config unset` принимают эти ключи, `config show` показывает источник каждого поля.
-Старые `analysisProvider`, `analysisModel`, `analysisBaseUrl` продолжают работать для анализа.
-Ключ хранится через `max models text key set`; для своего сервера имя ключа — его host
+Старые `analysis_provider`, `analysis_model`, `analysis_base_url` продолжают работать для анализа.
+Ключ хранится через `max personal models text key set`; для своего сервера имя ключа — его host
 с портом, и ключ публичного провайдера туда не передаётся.
 
 Согласие на модель отдельно от права отправлять ответы:
 
 ```sh
-max replies consents show
-max replies consents grant
-max replies consents revoke
+max personal replies consents show
+max personal replies consents grant
+max personal replies consents revoke
 ```
 
 `grant` разрешает передавать входящие данные выбранному провайдеру для всего профиля.
@@ -149,8 +149,8 @@ max replies consents revoke
 Смена провайдера или endpoint требует нового согласия. Изменение согласия, настроек,
 правила, аудитории или pause во время вызова проверяется перед отправкой результата.
 
-`max replies test` показывает инструкции и запасной текст без вызова модели.
-`max replies test --ai` явно разрешает передать сохранённые сообщения настроенной модели
+`max personal replies test` показывает инструкции и запасной текст без вызова модели.
+`max personal replies test --ai` явно разрешает передать сохранённые сообщения настроенной модели
 с действующим согласием. Это не отправляет ответ в мессенджер и не меняет историю ответов;
 `--ai` несовместим с `--offline`.
 Старые `{firstName}`, `{name}` и `model: may-reword` читаются с предупреждением:
@@ -165,6 +165,6 @@ max replies consents revoke
 
 Лимиты `perChat` и `perPerson` обязательны. Два автоответчика останавливаются на первом лимите.
 
-`max replies pause` немедленно останавливает все правила, `resume` отменяет паузу;
+`max personal replies pause` немедленно останавливает все правила, `resume` отменяет паузу;
 перезапуск не нужен. `status` показывает разрешение отправки, включённые правила и аудиторию.
-`max sends list` показывает отправленные ответы с пометкой правила.
+`max personal sends list` показывает отправленные ответы с пометкой правила.

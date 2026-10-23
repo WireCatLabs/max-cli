@@ -22,6 +22,10 @@ Published as `@wirecat/max-cli` and working against the real MAX. The commands a
 [`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md); what is left is
 [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md).
 
+Security audits of this repository follow the shared
+[security method](https://github.com/WireCatLabs/cli-testing/tree/main/docs/security) in cli-testing;
+vulnerabilities are reported as the [security policy](SECURITY.md) says.
+
 ## The constraints that shape everything
 
 1. **This is the owner's real personal messenger account.** A mistake here does not fail a test,
@@ -112,7 +116,9 @@ branch off `main`, in a worktree, and open a pull request.
 
 Local commits check only staged lint and secrets. There is no pre-push check.
 Config integrity, repository lint, Markdown, and secret detection run in PR CI.
-The bounded `ci:quick` step adds typechecking for CLI packages or synthetic unit tests for the docs site.
-Full tests, coverage, builds, parity, browser and platform suites run for releases,
-explicit manual validation, and monthly nonpublishing validation. See the
+The bounded `ci:quick` step adds typechecking, a build and the command lint for CLI packages or synthetic unit tests for the docs site.
+Full validation (`ci.yml`: tests with the coverage floor, contracts, docs, builds, parity, a secret scan) runs on
+every pull request (`pr.yml`) and again on each merge to `main`, Linux only, no publishing (`WC-CI-5`, `WC-CI-7`,
+`WC-TEST-11`). `ci:quick` stays the two-minute early check (`WC-CI-4`).
+Browser and platform suites run for releases, explicit manual validation, and monthly nonpublishing validation. See the
 [shared policy](https://github.com/WireCatLabs/community/blob/main/standards/README.md#ci-and-hooks).

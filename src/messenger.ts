@@ -1,18 +1,18 @@
-import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@wirecat/cli-messaging/cli"
-import { AI_SETTING_KEYS } from "@wirecat/cli-messaging/cli"
-import type { GuardRequest, SendGuard } from "@wirecat/cli-messaging/sends"
-import { moderationService } from "@wirecat/cli-messaging/services"
+import type { GlobalFlags, Messenger, ResolveOptions, Settings } from "@wirecat/cli-core/cli"
+import { AI_SETTING_KEYS } from "@wirecat/cli-core/cli"
+import { type Asker, type GuardRequest, keyForWrite, type SendGuard } from "@wirecat/cli-core/sends"
+import { moderationService } from "@wirecat/cli-core/services"
 import type { Command } from "commander"
-import { maxAdapter } from "./adapter/max-adapter.js"
+import { type MaxAdapter, maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
 import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
-import { migrateModerationPoints } from "./moderation/points.js"
-import { askerFor, assertReadable, commandPermission, permissionKeyOf } from "./permissions.js"
+import { approvePermission, askerFor, commandPermission, forgetApprovals, permissionKeyOf } from "./permissions.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
+import { SKILL } from "./skill.js"
 import { SPEECH_MODELS } from "./transcribe/models.js"
 
 /** The client each command connected, so its guard can tell whether `max serve` journals for it. */
@@ -37,14 +37,17 @@ export const overServer = (guard: SendGuard, server: () => { readonly journals: 
 /** One subcommand of a shared command group, to sit among max's own. */
 export const sharedSubcommand = (group: Command, name: string): Command => {
   const found = group.commands.find((one) => one.name() === name)
-  if (!found) throw new Error(`cli-messaging's ${group.name()} has no ${name}`)
+  if (!found) throw new Error(`cli-core's ${group.name()} has no ${name}`)
   return found
 }
 
-/** What cli-messaging's shared commands and services need from max, for the personal account. */
+/** What cli-core's shared commands and services need from max, for the personal account. */
 export const maxMessenger: Messenger = {
+  inviteLinkCreate: false,
   inviteLinkList: false,
   inviteLinkRevoke: false,
+  joinRequestsAll: false,
+  channelComments: false,
   folderJoin: false,
   groupPhoto: true,
   chatMedia: true,
@@ -55,6 +58,18 @@ export const maxMessenger: Messenger = {
   stickers: true,
   app: MAX_APP,
   provider: "max",
+  topics: false,
+  skill: SKILL,
+  diagnose: async (command) => {
+    const { store } = forCommand(command)
+    let token: string
+    try {
+      token = store.tokenSource() ?? "none"
+    } catch {
+      token = "unreachable"
+    }
+    return { kind: store.isBot() ? "personal + bot" : "personal", token, logged_in_here: store.hasLoggedIn() }
+  },
   counterFields: ["views", "reactions"],
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",
@@ -71,23 +86,43 @@ export const maxMessenger: Messenger = {
 
   permissionKey: permissionKeyOf,
   tracksMembers: true,
-  // Opcode 73 answers in one chat only (measured 2026-10-07).
-  serverSearch: "chat",
+  // A named chat goes to opcode 73, no chat to 68 — the best message of each chat (measured 2026-10-11).
+  serverSearch: true,
 
-  guard: (command, { profile }, warn) => {
+  guard: (command, settings, warn, ask?: Asker) => {
     const client = () => clients.get(rootOf(command))
+    // The server's own asker approves; `max serve` checks again and needs the approval sent with the write.
+    const approving: Asker | undefined = ask
+      ? async (key, request) => {
+          await ask(key, request)
+          approvePermission(key, request.operationId)
+        }
+      : undefined
     const guard = overServer(
       guardFor(
-        resolveSettings({ profile }),
+        settings,
         warn,
-        askerFor(command.optsWithGlobals(), environmentOf(command)),
+        approving ?? askerFor(command.optsWithGlobals(), environmentOf(command)),
         commandPermission(command) ?? undefined,
       ),
       () => client()?.server,
     )
     return {
       ...guard,
+      ...(ask
+        ? {
+            // Over MCP the client is where the profile's levels and this server's `--permission` apply.
+            check: (request, options) => {
+              guard.check(request, options)
+              approvePermission(
+                request.key ?? keyForWrite(request.kind ?? "message", request.action),
+                request.operationId,
+              )
+            },
+          }
+        : {}),
       record: (entry) => {
+        forgetApprovals(entry.operationId)
         const applied = client()?.takeApplied(entry.operationId) === true
         // MAX can acknowledge the closure before the token save or follow-up session read fails.
         if (applied && (entry.outcome === "failed" || entry.outcome === "outcome_unknown")) {
@@ -105,6 +140,7 @@ export const maxMessenger: Messenger = {
       {
         ...(options.env === undefined ? {} : { env: options.env }),
         ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+        ...(options.needsProfile === undefined ? {} : { needsProfile: options.needsProfile }),
       },
     )
     return {
@@ -135,13 +171,11 @@ export const maxMessenger: Messenger = {
   }),
 
   connect: async (command, context, { events } = {}) => {
-    const { createClient, store, reach, settings } = forCommand(command)
-    if (command.name() === "moderate") migrateModerationPoints(store, context.env)
-    const record = maxRecord({ account: () => store.readState().viewerId, env: context.env })
+    const { createClient, store, reach } = forCommand(command)
+    const record = maxRecord({ account: () => store.viewerId(), env: context.env })
+    let opened: MaxAdapter | undefined
     try {
       const client = createClient({
-        sends: "caller",
-        reads: (key) => assertReadable(settings, commandPermission(command) ?? key),
         record,
         ...(events ? { events } : {}),
       })
@@ -149,6 +183,9 @@ export const maxMessenger: Messenger = {
       const adapter = maxAdapter(client, store, reach, (message) => context.renderer.note(message), {
         reactions: command.name() !== "moderate",
       })
+      opened = adapter
+      // cli-core names the account once, at connect; a profile that never logged in has no id until LOGIN answers.
+      if (adapter.self() === null) await client.connect()
       return {
         ...adapter,
         close: async () => {
@@ -160,7 +197,11 @@ export const maxMessenger: Messenger = {
         },
       }
     } catch (error) {
-      await record.close()
+      try {
+        await opened?.close()
+      } finally {
+        await record.close()
+      }
       throw error
     }
   },

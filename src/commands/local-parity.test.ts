@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs"
-import { captureStreams } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import { run } from "../program.js"
 import { sendsPathFor } from "../sends.js"
@@ -27,11 +27,11 @@ describe("local command parity", () => {
     expect((await cli([profile, "config", "set", "limit", "2"])).code).toBe(0)
     const configured = await cli([profile, "sends", "list", "--json"])
     expect(configured.code).toBe(0)
-    expect(JSON.parse(configured.stdout)).toMatchObject({ page: 1, limit: 2, hasMore: true })
+    expect(JSON.parse(configured.stdout)).toMatchObject({ page: { limit: 2, has_more: true } })
     expect(JSON.parse(configured.stdout).items).toHaveLength(2)
     const explicit = await cli([profile, "sends", "list", "--limit", "1", "--json"])
     expect(explicit.code).toBe(0)
-    expect(JSON.parse(explicit.stdout)).toMatchObject({ limit: 1, hasMore: true })
+    expect(JSON.parse(explicit.stdout)).toMatchObject({ page: { limit: 1, has_more: true } })
     expect(JSON.parse(explicit.stdout).items).toHaveLength(1)
     expect(readFileSync(sendsPathFor(profile), "utf8")).toBe(before)
   })

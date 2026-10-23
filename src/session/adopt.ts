@@ -11,7 +11,7 @@ import type { SessionStore } from "./store.js"
  * is that a typo, an expired token or a browser tab that has been closed replaces a *working*
  * credential with a dead one. There is no way back: `Credentials.write` overwrites unconditionally
  * and a keyring entry cannot be read out again afterwards. The same shape destroyed two working
- * keys in `brazecli` on 2026-09-14 — `cli-core`'s own `credentials.ts` says so.
+ * keys in `brazecli` on 2026-09-14 — `cli-base`'s own `credentials.ts` says so.
  *
  * Restoring the old token after a failed login was the obvious alternative and is worse: a process
  * killed between the write and the restore leaves the profile broken. Here nothing is written until

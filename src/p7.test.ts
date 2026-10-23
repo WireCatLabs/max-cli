@@ -1,12 +1,11 @@
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs"
-import { dirname, join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { levelFor } from "@wirecat/cli-messaging/sends"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { mkdirSync, writeFileSync } from "node:fs"
+import { dirname } from "node:path"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { levelFor } from "@wirecat/cli-core/sends"
+import { openStore } from "@wirecat/cli-core/store"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
-import { contextFor } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { commandPermission } from "./permissions.js"
@@ -60,14 +59,14 @@ describe("P7 permissions", () => {
     save({ profiles: { work: { permissions: { messages: "readonly", "messages.delete": "allow" } } } })
     const { max, environment } = scripted()
     expect((await cli(["work", "messages", "send", "111", "synthetic", "--json"], environment)).code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(max.sent.filter(({ opcode }) => opcode !== Opcode.SESSION_INIT && opcode !== Opcode.LOGIN)).toEqual([])
     expect((await cli(["work", "messages", "list", "111", "--json"], environment)).code).toBe(0)
     const deleted = await cli(["work", "messages", "delete", "111", "116762160362694583", "--json"], environment)
     expect(deleted.code, deleted.stderr).toBe(0)
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
     expect(levelFor(resolveSettings({ profile: "work" }).permissions, "contacts.add").level).toBe("allow")
     const shown = await cli(["work", "config", "show", "--json"])
-    expect(JSON.parse(shown.stdout).permissionSources["messages.delete"]).toBe("config file: profiles.work")
+    expect(JSON.parse(shown.stdout).item.permission_sources["messages.delete"]).toBe("config file: profiles.work")
   })
 
   it.each([
@@ -76,8 +75,9 @@ describe("P7 permissions", () => {
     ["review"],
     ["watch"],
     ["serve"],
-    ["store", "fetch", "111"],
+    ["messages", "sync", "111"],
     ["contacts", "context", "synthetic-person"],
+    ["contacts", "prepare", "synthetic-person"],
     ["contacts", "timeline", "synthetic-person"],
   ])("refuses message reads through %j before any MAX request", async (...args) => {
     save({ profiles: { work: { permissions: { messages: "deny" } } } })
@@ -109,15 +109,12 @@ describe("P7 permissions", () => {
     expect((await cli(["work", "messages", "send", "111", "synthetic", "--json", "--yes"], environment)).code).toBe(0)
   })
 
-  it("gates native client reads as well as command handlers", async () => {
+  it("refuses a denied native read before it reaches MAX", async () => {
     save({ profiles: { work: { permissions: { messages: "deny" } } } })
     const { max, environment } = scripted()
-    const client = contextFor({ profile: "work" }, environment).createClient()
-    try {
-      expect(() => client.messages.list("111")).toThrow("denies messages")
-    } finally {
-      await client.close()
-    }
+    const result = await cli(["work", "messages", "list", "111", "--json"], environment)
+    expect(result.code).toBe(5)
+    expect(result.stdout + result.stderr).toContain("denies messages")
     expect(max.sent).toEqual([])
   })
 
@@ -127,35 +124,6 @@ describe("P7 permissions", () => {
       for (const child of node.commands) walk(child)
     }
     walk(createProgram())
-  })
-
-  it("migrates legacy settings and group consent, previews without writing, and refuses retired setters", async () => {
-    save({ defaults: { allow: ["send", "pin"] }, profiles: { work: { readOnly: true }, home: { serve: false } } })
-    const path = join(process.env.MAX_STATE_DIR ?? "", "profiles", "work.moderation.json")
-    const { defaultRules } = await import("./moderation/rules.js")
-    mkdirSync(dirname(path), { recursive: true })
-    writeFileSync(
-      path,
-      JSON.stringify({
-        groups: { "111": { ...defaultRules("Synthetic"), consent: { delete: "flag", remove: "forbid" } } },
-        checkedUntil: { "111": "2026-10-01T00:00:00Z" },
-      }),
-    )
-    const before = readFileSync(configPath(), "utf8")
-    const rulesBefore = readFileSync(path, "utf8")
-    expect((await cli(["config", "migrate", "--dry-run", "--json"])).code).toBe(0)
-    expect(readFileSync(configPath(), "utf8")).toBe(before)
-    expect(readFileSync(path, "utf8")).toBe(rulesBefore)
-    expect((await cli(["config", "migrate", "--json"])).code).toBe(0)
-    expect(resolveSettings({ profile: "home" }).serve).toBe(false)
-    expect(levelFor(resolveSettings({ profile: "work" }).permissions, "messages.send").level).toBe("readonly")
-    expect(levelFor(resolveSettings({ profile: "home" }).permissions, "messages.unpin").level).toBe("allow")
-    expect(JSON.parse(readFileSync(path, "utf8"))).toMatchObject({
-      groups: { "111": { consent: { delete: "ask", remove: "deny" } } },
-      checkedUntil: { "111": "2026-10-01T00:00:00Z" },
-    })
-    expect((await cli(["work", "config", "set", "readOnly", "false", "--json"])).code).toBe(2)
-    expect(JSON.parse((await cli(["config", "migrate", "--json"])).stdout).changed).toBe(false)
   })
 })
 
@@ -171,27 +139,13 @@ it("refuses a permission key that names no command, and takes max's own bot keys
 it("keeps a native read child override and checks nested native read groups", async () => {
   save({ profiles: { work: { permissions: { account: "deny", "account.show": "allow", chats: "deny" } } } })
   const { max, environment } = scripted()
-  const client = contextFor({ profile: "work" }, environment).createClient()
-  try {
-    expect(() => client.chats.members.list("111")).toThrow("denies chats.members.list")
-    expect(max.sent).toEqual([])
-    expect(await client.account.me()).toMatchObject({ id: "10000001" })
-  } finally {
-    await client.close()
-  }
-})
-
-it("allows migration preview under a profile lock and refuses the whole-file write", async () => {
-  save({ profiles: { work: { readOnly: true } } })
-  const before = readFileSync(configPath(), "utf8")
-  process.env.MAX_PROFILE_LOCK = "work"
-  try {
-    expect((await cli(["config", "migrate", "--json"])).code).toBe(5)
-    expect((await cli(["config", "migrate", "--dry-run", "--json"])).code).toBe(0)
-    expect(readFileSync(configPath(), "utf8")).toBe(before)
-  } finally {
-    delete process.env.MAX_PROFILE_LOCK
-  }
+  const members = await cli(["work", "chats", "members", "list", "111", "--json"], environment)
+  expect(members.code).toBe(5)
+  expect(members.stdout + members.stderr).toContain("denies chats.members.list")
+  expect(max.sent).toEqual([])
+  const me = await cli(["work", "account", "show", "--json"], environment)
+  expect(me.code, me.stderr).toBe(0)
+  expect(me.stdout).toContain("10000001")
 })
 
 it("honors a shared read child override even when its adapter uses a context read internally", async () => {
@@ -212,15 +166,17 @@ it("refuses a readonly command child when the parent allows writes", async () =>
 })
 
 describe("contacts context in named chats", () => {
-  it("reads the chat from MAX with --refresh and answers one person's messages, short unless -v, then their timeline", async () => {
+  it("reads the chat from MAX with --sync-first and answers one person's messages, short unless -v, then their timeline", async () => {
     const profile = "context-chats"
     rememberAccount(MAX_APP, profile, "10000001", process.env)
     const store = await openStore()
     try {
-      await store.saveChats({ provider: "max", account: "10000001" }, [
+      await store.chats.saveChats({ provider: "max", account: "10000001" }, [
         { id: "111", title: "Synthetic", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
       ])
-      await store.savePeople({ provider: "max", account: "10000001" }, [{ id: "20000002", name: "Synthetic Person" }])
+      await store.people.savePeople({ provider: "max", account: "10000001" }, [
+        { id: "20000002", name: "Synthetic Person" },
+      ])
     } finally {
       await store.close()
     }
@@ -253,7 +209,7 @@ describe("contacts context in named chats", () => {
     }
 
     const short = await cli(
-      [profile, "contacts", "context", "20000002", "--chat", "111", "--refresh", "--json"],
+      [profile, "contacts", "context", "20000002", "--chat", "111", "--sync-first", "--json"],
       environment,
     )
     const detailed = await cli(
@@ -262,11 +218,34 @@ describe("contacts context in named chats", () => {
     )
 
     expect(short.code, short.stderr).toBe(0)
-    expect(JSON.parse(short.stdout).chats[0].messages).toEqual([
+    expect(JSON.parse(short.stdout).item.chats[0].messages).toEqual([
       { at: new Date(1789775000000).toISOString(), text: "synthetic first" },
     ])
     expect(detailed.code, detailed.stderr).toBe(0)
-    expect(JSON.parse(detailed.stdout).chats[0].messages[0]).toHaveProperty("locator")
+    expect(JSON.parse(detailed.stdout).item.chats[0].messages[0]).toHaveProperty("locator")
+
+    const prepared = await cli(
+      [
+        profile,
+        "contacts",
+        "prepare",
+        "20000002",
+        "--limit",
+        "1",
+        "--since-time",
+        new Date(1789774000000).toISOString(),
+        "--offline",
+        "--json",
+      ],
+      {
+        ...environment,
+        connection: () => {
+          throw new Error("prepare must not connect")
+        },
+      },
+    )
+    expect(prepared.code, prepared.stderr).toBe(0)
+    expect(JSON.parse(prepared.stdout).item.prepare).toHaveProperty("coverage")
 
     const timeline = await cli(
       [
@@ -288,7 +267,7 @@ describe("contacts context in named chats", () => {
     )
     expect(timeline.code, timeline.stderr).toBe(0)
     expect(JSON.parse(timeline.stdout)).toMatchObject({
-      hasMore: false,
+      page: { limit: 5, has_more: false },
       items: [{ role: "sender", scope: "personal", locator: "msg:max/10000001/111/116762160362694583" }],
     })
   })

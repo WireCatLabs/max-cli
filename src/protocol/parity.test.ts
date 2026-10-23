@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { decode, ExtData } from "@msgpack/msgpack"
-import { memoryKeyring } from "@wirecat/cli-core"
+import { memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import { MaxClient } from "../client.js"
 import { Opcode } from "../generated/opcodes.generated.js"
@@ -79,7 +79,13 @@ describe("our requests beside web.max.ru's", async () => {
       },
     })
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
-  const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const store = new SessionStore({
+    profile: "default",
+    keyring: memoryKeyring(),
+    configDir: dir,
+    stateDir: join(dir, "state"),
+    env: {},
+  })
   store.writeToken("a-token")
   const record = maxRecord({
     account: () => store.readState().viewerId,
@@ -91,7 +97,6 @@ describe("our requests beside web.max.ru's", async () => {
   for (let run = 0; run < 2; run++) {
     max = scripted()
     const client = new MaxClient({
-      sends: "caller",
       store,
       record,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),

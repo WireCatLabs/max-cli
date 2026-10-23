@@ -1,8 +1,8 @@
 import { openAsBlob, statSync } from "node:fs"
 import { basename, extname } from "node:path"
-import { CliError, type ErrorCode, realSleep, type SleepLike } from "@wirecat/cli-core"
-import { type FetchLike, statusToCode } from "@wirecat/cli-core/http"
-import type { DiagnosticEvent } from "@wirecat/cli-messaging/cli"
+import { CliError, type ErrorCode, realSleep, type SleepLike } from "@wirecat/cli-base"
+import { type FetchLike, statusToCode } from "@wirecat/cli-base/http"
+import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
 import { parse } from "lossless-json"
 import { plainJson } from "./transport.js"
 
@@ -62,9 +62,9 @@ const UPLOAD_TIMEOUT_MS = 10 * 60_000
  * Video and audio answer XML and are named by step one's token; image and file by the answer.
  */
 export const uploadFile = async (options: {
-  /** A file on disk, or one already read — `content` — as the shared commands hand it over. */
+  /** A file on disk, or the Blob the shared commands hand over — `content`. */
   path?: string
-  content?: { name: string; bytes: Uint8Array }
+  content?: { name: string; blob: Blob }
   type: UploadType
   endpoint: UploadEndpoint
   fetch: FetchLike
@@ -76,7 +76,7 @@ export const uploadFile = async (options: {
   const { path, content, type, endpoint } = options
   const name = content ? content.name : basename(path ?? "")
   const size = content
-    ? content.bytes.byteLength
+    ? content.blob.size
     : (() => {
         try {
           const stat = statSync(path ?? "")
@@ -87,7 +87,7 @@ export const uploadFile = async (options: {
       })()
   if (size === undefined) throw new CliError("not_found", `no file at ${path}`)
   const form = new FormData()
-  form.append("data", content ? new Blob([content.bytes]) : await openAsBlob(path ?? ""), name)
+  form.append("data", content ? content.blob : await openAsBlob(path ?? ""), name)
   const signals = [
     AbortSignal.timeout(options.timeoutMs ?? UPLOAD_TIMEOUT_MS),
     ...(options.signal ? [options.signal] : []),
@@ -151,9 +151,9 @@ export const uploadFile = async (options: {
 const NOT_READY_WAITS_MS = [500, 1000, 2000, 5000]
 
 const notReady = (error: unknown): boolean => {
-  const failure = error as { code?: ErrorCode; message?: string; details?: { maxCode?: string } }
+  const failure = error as { code?: ErrorCode; message?: string; details?: { max_code?: string } }
   if (failure.code === "outcome_unknown") return false
-  return /not\.ready|not\.processed/.test(`${failure.details?.maxCode ?? ""} ${failure.message ?? ""}`)
+  return /not\.ready|not\.processed/.test(`${failure.details?.max_code ?? ""} ${failure.message ?? ""}`)
 }
 
 /**

@@ -1,8 +1,8 @@
 import { existsSync, mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { memoryKeyring } from "@wirecat/cli-base"
+import { openStore } from "@wirecat/cli-core/store"
 import { describe, expect, it } from "vitest"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -32,7 +32,13 @@ class Served extends Connection {
 const setUp = () => {
   const dir = mkdtempSync(join(tmpdir(), "max-record-"))
   const env = { MESSAGING_STORE: join(dir, "messages.db") }
-  const session = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const session = new SessionStore({
+    profile: "default",
+    keyring: memoryKeyring(),
+    configDir: dir,
+    stateDir: join(dir, "state"),
+    env: {},
+  })
   session.writeToken("a-token")
   const loginOnce = async (
     served = false,
@@ -45,7 +51,6 @@ const setUp = () => {
     const record = maxRecord({ account: () => session.readState().viewerId, env })
     const Wire = served ? Served : Connection
     const client = new MaxClient({
-      sends: "caller",
       store: session,
       record,
       connection: new Wire({ createSocket: max.createSocket, timeoutMs: 50 }),
@@ -84,10 +89,10 @@ describe("the record", () => {
 
     const store = await openStore({ env })
     const key = { provider: "max", account: ME }
-    expect((await store.chats(key, {})).items.map((chat) => chat.id).sort()).toEqual(["111", "222"])
-    expect((await store.members(key, "111")).map((member) => member.name)).toEqual(["Someone Else"])
-    expect((await store.syncState(key, "login.marker"))?.value).toBe("1789776000000")
-    expect((await store.chats({ provider: "max", account: "99" }, {})).items).toEqual([])
+    expect((await store.chats.chats(key, {})).items.map((chat) => chat.id).sort()).toEqual(["111", "222"])
+    expect((await store.roster.members(key, "111")).map((member) => member.name)).toEqual(["Someone Else"])
+    expect((await store.sync.syncState(key, "login.marker"))?.value).toBe("1789776000000")
+    expect((await store.chats.chats({ provider: "max", account: "99" }, {})).items).toEqual([])
     await store.close()
   })
 
@@ -141,7 +146,11 @@ describe("the record", () => {
       login.chats.slice(0, 1),
     )
     const store = await openStore({ env })
-    expect(await store.leftChats({ provider: "max", account: ME })).toEqual({ chats: 1, messages: 0 })
+    expect(await store.chats.leftChats({ provider: "max", account: ME })).toEqual({
+      chats: 1,
+      messages: 0,
+      left: [expect.objectContaining({ messages: 0 })],
+    })
     await store.close()
   })
 
@@ -159,8 +168,79 @@ describe("the record", () => {
 
     const store = await openStore({ env })
     const key = { provider: "max", account: ME }
-    expect((await store.chats(key, {})).items).toHaveLength(2)
-    expect(await store.syncState(key, "login.marker")).toBeUndefined()
+    expect((await store.chats.chats(key, {})).items).toHaveLength(2)
+    expect(await store.sync.syncState(key, "login.marker")).toBeUndefined()
     await store.close()
+  })
+
+  describe("rejoining chats the owner is back in", () => {
+    const key = { provider: "max", account: ME }
+    const other = { provider: "max", account: "10000009" }
+    const chat = (id: string) => ({
+      id,
+      title: `Chat ${id}`,
+      kind: "group" as const,
+      unreadCount: 0,
+      lastMessageAt: null,
+      participantsCount: null,
+    })
+    const seeded = async () => {
+      const { env } = setUp()
+      const store = await openStore({ env })
+      await store.chats.saveChats(key, [
+        { ...chat("111"), membershipState: "left" },
+        { ...chat("222"), membershipState: "archived" },
+        chat("333"),
+      ])
+      await store.chats.saveChats(other, [{ ...chat("111"), membershipState: "left" }])
+      await store.close()
+      return { env, record: maxRecord({ account: () => ME, env }) }
+    }
+    const states = async (env: { MESSAGING_STORE: string }) => {
+      const store = await openStore({ env })
+      const left = await store.chats.leftChats(key)
+      const all = (await store.chats.chats(key, {})).items
+      const otherLeft = await store.chats.leftChats(other)
+      await store.close()
+      return {
+        left: left.chats,
+        otherLeft: otherLeft.chats,
+        listed: all.map((stored) => [stored.id, stored.membershipState]),
+      }
+    }
+
+    it("a cut-short list takes the left mark off a chat it names and keeps the archived one", async () => {
+      const { env, record } = await seeded()
+      const known = await record.rememberChats([chat("111"), chat("222")], false)
+      await record.close()
+
+      expect(known.map((stored) => stored.id).sort()).toEqual(["111", "222", "333"])
+      expect(await states(env)).toMatchObject({
+        left: 0,
+        otherLeft: 1,
+        listed: expect.arrayContaining([["222", "archived"]]),
+      })
+    })
+
+    it("a complete list still marks the chats it leaves out as left", async () => {
+      const { env, record } = await seeded()
+      const known = await record.rememberChats([chat("111"), chat("222")], true)
+      await record.close()
+
+      expect(known.map((stored) => stored.id).sort()).toEqual(["111", "222"])
+      expect(await states(env)).toMatchObject({ left: 1, listed: expect.arrayContaining([["222", "archived"]]) })
+    })
+
+    it("a login takes the left mark off the chats it names and keeps the archived one", async () => {
+      const { env, record } = await seeded()
+      await record.applyLogin({ chats: [chat("111"), chat("222")], people: [], members: new Map() })
+      await record.close()
+
+      expect(await states(env)).toMatchObject({
+        left: 0,
+        otherLeft: 1,
+        listed: expect.arrayContaining([["222", "archived"]]),
+      })
+    })
   })
 })

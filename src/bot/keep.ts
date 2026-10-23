@@ -1,12 +1,12 @@
-import { CliError } from "@wirecat/cli-core"
-import type { Chat, Message } from "@wirecat/cli-messaging"
+import { CliError } from "@wirecat/cli-base"
+import type { Chat, Message } from "@wirecat/cli-core"
 import {
   type AccountKey,
   type IngestedVia,
   type MessageStore,
   openStore,
   type PersonFacts,
-} from "@wirecat/cli-messaging/store"
+} from "@wirecat/cli-core/store"
 import type { ChatRegistry } from "./registry.js"
 
 /** How a bot's messages are told apart from a personal account's in the shared store and its locators. */
@@ -65,9 +65,9 @@ export const keep = async (
   if (byChat.size === 0) return true
   return quietly(async (store) => {
     for (const [chatId, chatMessages] of byChat) {
-      await store.saveMessages(accountOf(botId), chatId, chatMessages, { via })
+      await store.messages.saveMessages(accountOf(botId), chatId, chatMessages, { via })
     }
-    await store.savePeople(accountOf(botId), [...senders])
+    await store.people.savePeople(accountOf(botId), [...senders])
   }, warn)
 }
 
@@ -76,7 +76,7 @@ export const keep = async (
  * (`RISK-53`), and the partial facts stay in the registry, which merges them.
  */
 export const keepChat = async (botId: string | undefined, chat: Chat, warn: (message: string) => void) => {
-  if (botId && CHAT_ID.test(chat.id)) await quietly((store) => store.saveChats(accountOf(botId), [chat]), warn)
+  if (botId && CHAT_ID.test(chat.id)) await quietly((store) => store.chats.saveChats(accountOf(botId), [chat]), warn)
 }
 
 /**
@@ -91,7 +91,8 @@ export const forget = async (
   const known = removals.filter((removal) => CHAT_ID.test(removal.chatId))
   if (known.length === 0) return true
   return quietly(async (store) => {
-    for (const { chatId, messageId } of known) await store.markDeleted(accountOf(botId), [messageId], { chatId })
+    for (const { chatId, messageId } of known)
+      await store.messages.markDeleted(accountOf(botId), [messageId], { chatId })
   }, warn)
 }
 

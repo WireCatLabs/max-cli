@@ -1,6 +1,6 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { ModerationRules as SharedRules } from "@wirecat/cli-messaging"
-import { RecipientList, SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { ModerationRules as SharedRules } from "@wirecat/cli-core"
+import { RecipientList, SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "../commands/context.js"
 import { Opcode } from "../generated/opcodes.generated.js"
@@ -58,7 +58,7 @@ const check = async (argv: string[], environment: Environment) => {
   const streams = captureStreams()
   const code = await run(argv, { ...environment, streams, tty: false })
   const body = JSON.parse(streams.stdout.join("\n") || "null")
-  return { code, json: body?.rows, body, stderr: streams.stderr.join("\n") }
+  return { code, json: body?.item?.rows, body, stderr: streams.stderr.join("\n") }
 }
 
 describe("max chats moderate", () => {
@@ -72,7 +72,7 @@ describe("max chats moderate", () => {
       expect.objectContaining({
         kind: "message",
         rule: "invites",
-        personId: "30000003",
+        person_id: "30000003",
         action: "report",
         outcome: "reported",
       }),
@@ -91,7 +91,7 @@ describe("max chats moderate", () => {
     const second = await check(["ck-act", "chats", "moderate", "Team", "--json"], environment)
 
     expect(first.json).toEqual([
-      expect.objectContaining({ messageId: String(history[0]?.id), action: "delete", outcome: "done" }),
+      expect.objectContaining({ message_id: String(history[0]?.id), action: "delete", outcome: "done" }),
     ])
     expect(deletes()).toEqual([{ chatId: GROUP.id, messageIds: [history[0]?.id], forMe: false }])
     expect(new SendJournal(sendsPathFor("ck-act")).entries()).toEqual([
@@ -128,13 +128,13 @@ describe("max chats moderate", () => {
 
     expect(dry.json).toEqual([
       expect.objectContaining({
-        messageId: String(history[0]?.id),
+        message_id: String(history[0]?.id),
         action: "delete",
         outcome: "planned",
         reason: "--dry-run",
       }),
     ])
-    expect(real.json).toEqual([expect.objectContaining({ messageId: String(history[0]?.id), outcome: "done" })])
+    expect(real.json).toEqual([expect.objectContaining({ message_id: String(history[0]?.id), outcome: "done" })])
     expect(deletes()).toHaveLength(1)
   })
 
@@ -147,7 +147,7 @@ describe("max chats moderate", () => {
 
     expect(capped.json).toEqual([
       expect.objectContaining({
-        messageId: String(history[0]?.id),
+        message_id: String(history[0]?.id),
         outcome: "skipped",
         reason: "over the limit of 0 actions per check",
       }),
@@ -166,44 +166,8 @@ describe("max chats moderate", () => {
     const saved = await check(["ck-since", "chats", "moderate", "Team", "--json"], environment)
 
     expect(later.json).toEqual([])
-    expect(saved.json).toEqual([expect.objectContaining({ messageId: String(history[0]?.id), rule: "invites" })])
+    expect(saved.json).toEqual([expect.objectContaining({ message_id: String(history[0]?.id), rule: "invites" })])
   })
-  it("starts the first shared run at legacy session progress, and keeps the numeric group's title", async () => {
-    const profile = "ck-migrate"
-    const { environment, keyring, deletes, max } = group()
-    const store = new SessionStore({ profile, keyring })
-    const point = new Date(at(25)).toISOString()
-    store.writeState({ ...store.readState(), checkedUntil: { [String(GROUP.id)]: point } })
-    const rules = new ModerationRules(moderationPathFor(profile))
-    rules.set(String(GROUP.id), "Team", "invites", "delete")
-    rules.set(String(GROUP.id), "Team", "consent.delete", "allow")
-    const result = await check([profile, "chats", "moderate", String(GROUP.id), "--json"], environment)
-    expect(result.code, result.stderr).toBe(0)
-    expect(result.json).toEqual([])
-    expect(deletes()).toEqual([])
-    const shown = await check([profile, "chats", "rules", "show", String(GROUP.id), "--json"], environment)
-    expect(shown.code, shown.stderr).toBe(0)
-    expect(shown.body).toMatchObject({ title: "Team", chatId: String(GROUP.id) })
-    expect(new SharedRules(rules.path).checkedUntil(String(GROUP.id))).toBe(
-      new Date(history[1]?.time ?? 0).toISOString(),
-    )
-    expect(store.readState().checkedUntil?.[String(GROUP.id)]).toBe(point)
-    expect(max.sent.some((call) => call.opcode === Opcode.CHAT_MARK || call.opcode === Opcode.MSG_GET_REACTIONS)).toBe(
-      false,
-    )
-  })
-
-  it("refuses a broken legacy checkpoint before connecting or deleting", async () => {
-    const profile = "ck-bad-point"
-    const { environment, keyring, max } = group()
-    const store = new SessionStore({ profile, keyring })
-    store.writeState({ ...store.readState(), checkedUntil: { [String(GROUP.id)]: "broken" } })
-    const result = await check([profile, "chats", "moderate", "Team", "--json"], environment)
-    expect(result.code).not.toBe(0)
-    expect(result.stderr).toContain("saved moderation time")
-    expect(max.sent).toEqual([])
-  })
-
   it.each(["--offline", "--read-only"])(
     "%s refuses before any request and preserves session progress",
     async (flag) => {
@@ -252,7 +216,7 @@ describe("max chats moderate", () => {
     const result = await check([profile, "chats", "moderate", "Team", "--dry-run", "--json"], environment)
     expect(result.code, result.stderr).toBe(0)
     expect(result.json).toEqual([
-      expect.objectContaining({ kind: "member", personId: "30000003", rule: "newAccount", outcome: "reported" }),
+      expect.objectContaining({ kind: "member", person_id: "30000003", rule: "newAccount", outcome: "reported" }),
     ])
     expect(deletes()).toEqual([])
   })
@@ -260,7 +224,10 @@ describe("max chats moderate", () => {
     const profile = "ck-permission"
     const { environment, deletes } = group()
     deleting(profile)
-    const config = await check([profile, "config", "set", "allow", "groups", "--json"], environment)
+    const config = await check(
+      [profile, "config", "set", "permissions", '{"messages":"readonly","chats.moderate":"allow"}', "--json"],
+      environment,
+    )
     expect(config.code, config.stderr).toBe(0)
     const result = await check([profile, "chats", "moderate", "Team", "--json"], environment)
     expect(result.json).toEqual([
@@ -341,13 +308,13 @@ describe("max chats moderate", () => {
     })
     const first = await check([profile, "chats", "moderate", "Team", "--json"], environment)
     expect(first.code, first.stderr).toBe(0)
-    expect(first.json).toEqual([expect.objectContaining({ kind: "member", personId: "30000003" })])
+    expect(first.json).toEqual([expect.objectContaining({ kind: "member", person_id: "30000003" })])
     expect(new SharedRules(moderationPathFor(profile)).checkedUntil(String(GROUP.id))).toBe(
       new Date(start + 9990).toISOString(),
     )
     const second = await check([profile, "chats", "moderate", "Team", "--json"], environment)
     expect(second.code, second.stderr).toBe(0)
-    expect(second.json).toEqual([expect.objectContaining({ kind: "member", personId: "30000004" })])
+    expect(second.json).toEqual([expect.objectContaining({ kind: "member", person_id: "30000004" })])
     expect(deletes()).toEqual([])
   })
 })

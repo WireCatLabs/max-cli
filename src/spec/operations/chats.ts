@@ -1,4 +1,4 @@
-import type { ChatAction } from "@wirecat/cli-messaging/sends"
+import type { ChatAction } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { defineOperation } from "../define.js"
 import { ambiguous, chatOf, countOf, messageOf, peopleOf } from "../guards.js"
@@ -60,7 +60,7 @@ export const chatsMark = defineOperation({
   opcode: 50,
   auth: true,
   /**
-   * Sent only by `max chats mark-read` and `messages list --mark-read`: reading never sends it, and the
+   * Sent only by `max chats mark-read`: reading never sends it, and the
    * tests that assert so stay (REQUIREMENTS §19).
    */
   request: v.strictObject({

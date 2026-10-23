@@ -1,0 +1,1041 @@
+{
+  "list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "check": {
+          "type": "boolean",
+          "description": "ask the messenger who each bot is, with its token"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats show": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats leave": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, or the title of a chat this bot has seen"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats action": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "action": {
+          "enum": [
+            "typing",
+            "photo",
+            "video",
+            "voice",
+            "file"
+          ],
+          "type": "string",
+          "description": "what the chat sees"
+        }
+      },
+      "required": [
+        "chat",
+        "action"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats admins list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, or the title of a chat this bot has seen"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats admins add": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, or the title of a chat this bot has seen"
+        },
+        "person": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the person's user id"
+        },
+        "can": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "one value"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "what they may do, comma-separated: read, members, admins, info, pin, link, edit, delete"
+            }
+          ],
+          "description": "what they may do, comma-separated: read, members, admins, info, pin, link, edit, delete"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the title shown beside their name"
+        }
+      },
+      "required": [
+        "chat",
+        "person",
+        "can"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats admins remove": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, or the title of a chat this bot has seen"
+        },
+        "person": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the person's user id"
+        }
+      },
+      "required": [
+        "chat",
+        "person"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats members remove": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, or the title of a chat this bot has seen"
+        },
+        "person": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the person's user id"
+        },
+        "block": {
+          "type": "boolean",
+          "description": "also keep them from coming back by the chat's link"
+        }
+      },
+      "required": [
+        "chat",
+        "person"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats members list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "chat"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "how many, up to 100"
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "continue from here"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats members add": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "chat"
+        },
+        "users": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "users"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "users"
+            }
+          ]
+        }
+      },
+      "required": [
+        "chat",
+        "users"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats rules show": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a group's id, or the title of a group this bot has seen"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats moderate": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a group's id, or the title of a group this bot has seen"
+        },
+        "since_time": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "judge what came after this ISO 8601 time, or 2h / 1d ago; the saved point stays"
+        },
+        "dry_run": {
+          "type": "boolean",
+          "description": "judge and plan; do nothing"
+        },
+        "no_block": {
+          "type": "boolean",
+          "description": "remove without banning; by default a removed person cannot come back by the link"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages send": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the message"
+        },
+        "reply_to": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "answer this message, by its id in the same chat"
+        },
+        "silent": {
+          "type": "boolean",
+          "description": "deliver without a notification"
+        },
+        "md": {
+          "type": "boolean",
+          "description": "read this messenger's Markdown; see its formatting guide for supported syntax"
+        },
+        "html": {
+          "type": "boolean",
+          "description": "the text is HTML: <b>, <i>, <a href>, <code>"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "how many, the newest"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages show": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message id"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat",
+        "message"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages edit": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message id"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the new text"
+        },
+        "md": {
+          "type": "boolean",
+          "description": "read this messenger's Markdown; see its formatting guide for supported syntax"
+        },
+        "html": {
+          "type": "boolean",
+          "description": "the text is HTML: <b>, <i>, <a href>, <code>"
+        }
+      },
+      "required": [
+        "chat",
+        "message",
+        "text"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages delete": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "messages": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "message ids"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "message ids"
+            }
+          ]
+        }
+      },
+      "required": [
+        "chat",
+        "messages"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages pin": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message id"
+        },
+        "notify": {
+          "type": "boolean",
+          "description": "tell the chat's members"
+        }
+      },
+      "required": [
+        "chat",
+        "message"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages unpin": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, user:<id> for a person, or the title of a chat this bot has seen"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message id"
+        }
+      },
+      "required": [
+        "chat",
+        "message"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "messages between": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "people": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "two or more people — an id, @username or part of a name each"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "two or more people — an id, @username or part of a name each"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "how many of the latest messages from each chat"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "people"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "search messages": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "the words to find"
+              },
+              "minItems": 0
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "the words to find"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "how many"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "which page, starting at 1"
+        },
+        "newest": {
+          "type": "boolean",
+          "description": "newest first instead of best first"
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "only what this person wrote — an id, @username or part of a name; repeat it for any of several"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "recipients list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "sends list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "callbacks answer": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "callback": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the callback id `bot watch` printed"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the message's new text"
+        },
+        "notification": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a note only the person who pressed sees"
+        }
+      },
+      "required": [
+        "callback"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "commands list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "commands set": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "commands": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "name=description, one per command"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "name=description, one per command"
+            }
+          ]
+        }
+      },
+      "required": [
+        "commands"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "commands clear": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "webhooks list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "webhooks set": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the HTTPS address"
+        },
+        "types": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "one value"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "only these update types, comma-separated, in the messenger's words"
+            }
+          ],
+          "description": "only these update types, comma-separated, in the messenger's words"
+        },
+        "secret_stdin": {
+          "type": "boolean",
+          "description": "a secret the messenger sends back with each update — asked for, or read from a pipe"
+        },
+        "add": {
+          "type": "boolean",
+          "description": "keep the webhooks already set and add this one beside them"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "webhooks delete": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the address"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "contacts show": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "who": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "an id, @username or part of a name"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "how many messages from the private chat"
+        },
+        "sync_first": {
+          "type": "boolean",
+          "description": "read the private chat with them again from the messenger first — one request"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "who"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "me": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "comments list": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "how many, up to 100"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "comments get": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "comment"
+        }
+      },
+      "required": [
+        "message",
+        "comment"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "comments send": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "text"
+        },
+        "format": {
+          "enum": [
+            "markdown",
+            "html"
+          ],
+          "type": "string",
+          "description": "how the text is marked up"
+        }
+      },
+      "required": [
+        "message",
+        "text"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "comments edit": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "comment"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "text"
+        },
+        "format": {
+          "enum": [
+            "markdown",
+            "html"
+          ],
+          "type": "string",
+          "description": "how the text is marked up"
+        }
+      },
+      "required": [
+        "message",
+        "comment",
+        "text"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "comments delete": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "message"
+        },
+        "comment": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "comment"
+        }
+      },
+      "required": [
+        "message",
+        "comment"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  }
+}

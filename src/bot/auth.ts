@@ -1,5 +1,5 @@
-import type { KeyringStore } from "@wirecat/cli-core"
-import { BotTokenStore as SharedBotTokenStore } from "@wirecat/cli-messaging/cli"
+import type { KeyringStore } from "@wirecat/cli-base"
+import { BotTokenStore as SharedBotTokenStore } from "@wirecat/cli-core/cli"
 import { MAX_APP } from "../app.js"
 
 export interface BotTokenStoreOptions {
@@ -9,7 +9,7 @@ export interface BotTokenStoreOptions {
   configDir?: string
 }
 
-/** cli-messaging's, under max-cli's names: keyring `max-cli` / `bot:<profile>`, `MAX_BOT_TOKEN` (`NEED-295`). */
+/** cli-core's, under max-cli's names: keyring `max-cli` / `bot:<profile>`, `MAX_BOT_TOKEN` (`NEED-295`). */
 export class BotTokenStore extends SharedBotTokenStore {
   constructor(options: BotTokenStoreOptions) {
     super({ app: MAX_APP, ...options })

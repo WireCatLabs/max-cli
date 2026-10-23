@@ -1,13 +1,16 @@
-import { CliError } from "@wirecat/cli-core"
+import { annotate } from "@wirecat/cli-base/commands"
 import {
   deleteCommand,
   editCommand,
   forwardCommand,
+  itemOf,
   pinCommand,
+  REMOTE_READ,
+  renderAnswer,
   sendCommand,
   messagesCommand as sharedMessagesCommand,
   unpinCommand,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
@@ -21,33 +24,20 @@ export const messagesCommand = (): Command => {
 
   const shared = sharedMessagesCommand(maxMessenger)
   for (const name of ["list", "show", "context", "links"]) command.addCommand(sharedSubcommand(shared, name))
-  const list = command.commands.find((one) => one.name() === "list")
-  // MAX has no forum topics.
-  if (list) Object.assign(list, { options: list.options.filter((option) => option.attributeName() !== "topic") })
 
   const localLinks = sharedMessagesCommand({ ...maxMessenger, history: "store" })
   command.addCommand(sharedSubcommand(localLinks, "link"))
 
-  const download = sharedSubcommand(shared, "download")
-    .option("--output <dir>", "compatibility alias for --output-dir")
-    .hook("preAction", (action) => {
-      const { output, outputDir } = action.opts<{ output?: string; outputDir: string }>()
-      if (output === undefined) return
-      if (action.getOptionValueSource("outputDir") !== "default" && outputDir !== output) {
-        throw new CliError("validation_error", "--output and --output-dir must name the same directory")
-      }
-      action.setOptionValue("outputDir", output)
-    })
-  command.addCommand(download)
+  command.addCommand(sharedSubcommand(shared, "download"))
   command.addCommand(sharedSubcommand(shared, "evidence"))
+  command.addCommand(sharedSubcommand(shared, "sync"))
 
   /**
    * **On this machine, and only with a model the owner downloaded** (`NEED-231`). The recording is
    * fetched, the connection closed, and then the model runs — up to a minute for five minutes of
    * speech, which should not hold a socket open.
    */
-  command
-    .command("transcribe")
+  annotate(command.command("transcribe"), { effects: REMOTE_READ })
     .argument("<chat>", "chat id, or part of a chat name")
     .argument("<message>", "id of a voice message")
     .description("turn a voice message into text, on this machine — the recording goes nowhere")
@@ -60,7 +50,7 @@ export const messagesCommand = (): Command => {
       const directory = modelsDirectory()
       await run("messages transcribe", async (events) => {
         const client = createClient({ events })
-        const record = maxRecord({ account: () => context.store.readState().viewerId })
+        const record = maxRecord({ account: () => context.store.viewerId() })
         try {
           const chatId = await client.chats.resolve(chat)
           if (!isInstalled(model, directory)) {
@@ -78,7 +68,20 @@ export const messagesCommand = (): Command => {
             },
           })
           if (format === "pretty") streams.data(`${transcript.text}\n`)
-          else renderer.result(transcript)
+          else
+            renderAnswer(
+              this,
+              { renderer, format, streams },
+              itemOf({
+                message_id: transcript.messageId,
+                chat_id: transcript.chatId,
+                text: transcript.text,
+                pending: false,
+                via: "local",
+                model: transcript.model,
+                cached: transcript.cached,
+              }),
+            )
         } finally {
           try {
             await client.close()
@@ -89,23 +92,12 @@ export const messagesCommand = (): Command => {
       })
     })
 
-  const send = sendCommand(maxMessenger)
-  Object.assign(send, {
-    options: send.options.filter(
-      (option) => !["spoiler", "captionAbove", "commentTo"].includes(option.attributeName()),
-    ),
-  })
-  command.addCommand(send)
+  command.addCommand(sendCommand(maxMessenger))
 
   command.addCommand(sharedSubcommand(shared, "scheduled"))
 
   command.addCommand(editCommand(maxMessenger))
-  const remove = deleteCommand(maxMessenger)
-  remove.registeredArguments[1]?.argParser((value: string, previous: string[] = []) => [
-    ...previous,
-    ...value.split(",").map((id) => id.trim()),
-  ])
-  command.addCommand(remove)
+  command.addCommand(deleteCommand(maxMessenger))
   command.addCommand(forwardCommand(maxMessenger))
   command.addCommand(pinCommand(maxMessenger))
   command.addCommand(unpinCommand(maxMessenger))

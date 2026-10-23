@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import {
   type Asker,
   currentOperation,
@@ -12,9 +12,9 @@ import {
   sendGuard,
   recipientsPathFor as sharedRecipientsPath,
   sendsPathFor as sharedSendsPath,
-} from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/sends"
 import { MAX_APP } from "./app.js"
-import { type Settings, setCommandFor } from "./config.js"
+import type { Settings } from "./config.js"
 import { approvePermission } from "./permissions.js"
 
 export const sendsPathFor = (profile: string, env: NodeJS.ProcessEnv = process.env): string =>
@@ -28,8 +28,8 @@ export const recipientListFor = (profile: string, env: NodeJS.ProcessEnv = proce
 
 /**
  * Every line one write leaves in the journal carries the same `operationId`, minted at its check;
- * a send's is its send id. A write a shared service started keeps the service's. `MaxClient` checks before each write and records after it, one at a
- * time, and the server builds a guard per request, so one guard never holds two writes at once.
+ * a send's is its send id. A write a shared service started keeps the service's. A shared service checks before each write and records after it,
+ * one at a time, and the server builds a guard per request, so one guard never holds two writes at once.
  */
 export const operating = (guard: SendGuard, key?: string): SendGuard => {
   let current: string | undefined
@@ -78,27 +78,24 @@ export const operating = (guard: SendGuard, key?: string): SendGuard => {
 
 /**
  * The guard a profile's configuration asks for — the command's, and `max serve`'s for every write
- * it forwards. Built per request in the server, so `config set readOnly true` needs no restart.
+ * it forwards. Built per request in the server, so a changed permission needs no restart.
  */
-export const guardFor = (settings: Settings, warn: (message: string) => void, ask?: Asker, key?: string): SendGuard => {
+export const guardFor = (
+  settings: Pick<Settings, "profile" | "readOnlyLock" | "permissions" | "permissionSources" | "sendsPerHour">,
+  warn: (message: string) => void,
+  ask?: Asker,
+  key?: string,
+): SendGuard => {
   const guard = operating(
     sendGuard({
       profile: settings.profile,
       command: MAX_APP.command,
-      readOnly: settings.readOnly,
-      readOnlyFrom: settings.sources.readOnly,
-      ...(settings.allow
-        ? {
-            allow: settings.allow,
-            allowFrom: settings.sources.allow,
-            allowFix: setCommandFor(settings.sources.allow, settings.profile, "allow"),
-          }
-        : {}),
+      ...(settings.readOnlyLock ? { readOnlyLock: settings.readOnlyLock } : {}),
       permissions: settings.permissions,
       permissionSources: settings.permissionSources,
       ...(ask ? { ask } : {}),
       sendsPerHour: settings.sendsPerHour,
-      journal: new SendJournal(sendsPathFor(settings.profile)),
+      journal: new SendJournal(sendsPathFor(settings.profile), { service: MAX_APP.command, version: MAX_APP.version }),
       recipients: recipientListFor(settings.profile),
       warn,
     }),
@@ -116,7 +113,8 @@ export const guardFor = (settings: Settings, warn: (message: string) => void, as
           })
       }
       guard.check(request, options)
-      if (request.key === "chats.moderate") approvePermission(keyForWrite(request.kind ?? "message", request.action))
+      if (request.key === "chats.moderate")
+        approvePermission(keyForWrite(request.kind ?? "message", request.action), request.operationId)
     },
   }
 }

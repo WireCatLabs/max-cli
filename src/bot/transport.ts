@@ -7,11 +7,11 @@ import {
   realSleep,
   type SleepLike,
   singleLine,
-} from "@wirecat/cli-core"
-import type { ManifestOperation } from "@wirecat/cli-core/codegen"
-import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-core/http"
-import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-messaging/cli"
-import { guardedWrite, newOperationId } from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-base"
+import type { ManifestOperation } from "@wirecat/cli-base/codegen"
+import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-base/http"
+import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-core/cli"
+import { guardedWrite, newOperationId } from "@wirecat/cli-core/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
 import { VERSION } from "../version.js"
 import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"
@@ -142,7 +142,7 @@ export class BotTransport {
         if (this.#signal?.aborted) throw error
         const retryable = reads && error.details.retryable === true && attempt <= this.#retry.retries
         if (!retryable) throw error
-        const wait = error.details.retryAfterMs ?? backoffMs(attempt, this.#retry, this.#random)
+        const wait = error.details.retry_after_ms ?? backoffMs(attempt, this.#retry, this.#random)
         if (wait > this.#retry.maxRetryAfterMs) throw error
         try {
           await this.#sleep(wait, this.#signal, "retry")
@@ -269,7 +269,12 @@ export class BotTransport {
         "outcome_unknown",
         `${operation.id} got ${response.status} from a gateway in front of MAX${reason}; MAX may or may not have ` +
           "carried it out — check before repeating it",
-        { operation: operation.id, status: response.status, retryable: false, ...(maxCode ? { maxCode } : {}) },
+        {
+          operation: operation.id,
+          status: response.status,
+          retryable: false,
+          ...(maxCode ? { max_code: maxCode } : {}),
+        },
       )
     }
     const retryable = response.status === 429 || response.status === 502 || response.status === 503
@@ -281,8 +286,8 @@ export class BotTransport {
         operation: operation.id,
         status: response.status,
         retryable,
-        ...(maxCode ? { maxCode } : {}),
-        ...(retryAfterMs === undefined ? {} : { retryAfterMs }),
+        ...(maxCode ? { max_code: maxCode } : {}),
+        ...(retryAfterMs === undefined ? {} : { retry_after_ms: retryAfterMs }),
       },
     )
   }
@@ -311,7 +316,7 @@ const idsIn = (input: CallInput): Record<string, string> | undefined => {
 const failureOf = (error: unknown): Pick<RequestEvent, "outcome" | "errorCode" | "status" | "providerError"> => {
   if (!(error instanceof CliError)) return { outcome: "error", errorCode: "generic_failure" }
   const status = typeof error.details.status === "number" ? error.details.status : undefined
-  const providerError = providerErrorKey(error.details.maxCode)
+  const providerError = providerErrorKey(error.details.max_code)
   return {
     outcome: "error",
     errorCode: error.code,

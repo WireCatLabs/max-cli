@@ -1,5 +1,4 @@
-import { CliError } from "@wirecat/cli-core"
-import { asId, type Payload } from "../protocol/frame.js"
+import { CliError } from "@wirecat/cli-base"
 import type {
   AccountSession,
   Attachment,
@@ -11,7 +10,6 @@ import type {
   ChatKind,
   Contact,
   Folder,
-  GroupCard,
   GroupMember,
   GroupSettings,
   Id,
@@ -20,11 +18,14 @@ import type {
   PrivacySettings,
   Profile,
   ProfileFacts,
+  ProviderMetadata,
   QuotedMessage,
   Reactions,
   Sticker,
   StickerSet,
-} from "./models.js"
+} from "@wirecat/cli-core"
+import type { GroupCard } from "../client/shapes.js"
+import { asId, type Payload } from "../protocol/frame.js"
 
 /**
  * Wire shapes into our own types.
@@ -51,7 +52,7 @@ export const toChat = (raw: Payload): Chat => ({
 })
 
 /** Our name for each flag MAX lets an owner write (PyMax `ChatOption`); the rest are read-only. */
-export const SETTING_FLAGS: Record<keyof GroupSettings, string> = {
+export const SETTING_FLAGS: Record<Exclude<keyof GroupSettings, "joinApproval">, string> = {
   allCanPin: "ALL_CAN_PIN_MESSAGE",
   onlyAdminsAdd: "ONLY_ADMIN_CAN_ADD_MEMBER",
   onlyAdminsCall: "ONLY_ADMIN_CAN_CALL",
@@ -88,7 +89,7 @@ export const toMessage = (raw: Payload, chatId: Id, lookup: NameLookup = {}): Me
     editedAt: timestamp(raw.updateTime),
     text: text(raw.text) ?? "",
     outgoing: lookup.viewerId === undefined || senderId === undefined ? null : senderId === lookup.viewerId,
-    attachments: attachments(raw.attaches),
+    attachments: attachments(raw.attaches, chatId, asId(raw.id) ?? ""),
     ...linked(raw.link, lookup),
     reactions: historyReactions(raw.reactionInfo),
     ...scheduled(raw.delayedAttributes),
@@ -129,22 +130,23 @@ const scheduled = (value: unknown): Pick<Message, "scheduledFor"> => {
 const linked = (value: unknown, lookup: NameLookup): Pick<Message, "replyTo" | "forwardedFrom"> => {
   const link = asRecord(value)
   const quoted = asRecord(link?.message)
-  const message = quoted ? toQuoted(quoted, lookup) : null
+  const message = quoted ? toQuoted(quoted, asId(link?.chatId) ?? "", lookup) : null
   return {
     replyTo: link?.type === "REPLY" ? message : null,
     forwardedFrom: link?.type === "FORWARD" ? message : null,
   }
 }
 
-const toQuoted = (raw: Payload, lookup: NameLookup): QuotedMessage => {
+const toQuoted = (raw: Payload, chatId: Id, lookup: NameLookup): QuotedMessage => {
   const senderId = asId(raw.sender) ?? null
+  const id = asId(raw.id) ?? ""
   return {
-    id: asId(raw.id) ?? "",
+    id,
     senderId,
     senderName: senderId ? (lookup.names?.get(senderId) ?? null) : null,
     timestamp: timestamp(raw.time),
     text: text(raw.text) ?? "",
-    attachments: attachments(raw.attaches),
+    attachments: attachments(raw.attaches, chatId, id),
     outgoing: lookup.viewerId === undefined || senderId === null ? null : senderId === lookup.viewerId,
   }
 }
@@ -393,9 +395,9 @@ export const toReactions = (raw: Payload): Reactions => {
  * `pnpm probe:attachments` measured on 2026-09-22: `baseUrl` on a photo, `url` on a share. A file
  * and a video have no link, only `fileId` and `videoId` (measured 2026-09-23). A service message is
  * `CONTROL` with `event`, and `userIds` for `new`/`add` but a single `userId` for `remove`
- * (`pnpm probe:control`, 2026-09-27).
+ * (`pnpm probe:control`, 2026-09-27). MAX's `audio` is a recorded voice message; music goes as a file.
  */
-const attachments = (value: unknown): Attachment[] => {
+const attachments = (value: unknown, chatId: Id, messageId: Id): Attachment[] => {
   if (!Array.isArray(value)) return []
   return value
     .map(asRecord)
@@ -416,20 +418,24 @@ const attachments = (value: unknown): Attachment[] => {
           ? undefined
           : [entry.userId]
       const userIds = people?.map(asId).filter((id): id is Id => id !== undefined)
-      const poll = entry._type === "POLL" ? toPoll(entry) : undefined
+      const poll = entry._type === "POLL" ? toPoll(entry, chatId, messageId) : undefined
       const buttons = entry._type === "INLINE_KEYBOARD" ? toButtons(entry) : undefined
+      const kind = typeof entry._type === "string" ? entry._type.toLowerCase() : "unknown"
+      const ref: ProviderMetadata = {
+        ...(fileId ? { fileId } : {}),
+        ...(videoId ? { videoId } : {}),
+        ...(event ? { event } : {}),
+        ...(userIds ? { userIds } : {}),
+      }
       return {
-        kind: typeof entry._type === "string" ? entry._type.toLowerCase() : "unknown",
+        kind: kind === "audio" ? "voice" : kind,
         ...(url ? { url } : {}),
         ...(width !== null ? { width } : {}),
         ...(height !== null ? { height } : {}),
         ...(title ? { title } : {}),
         ...(name ? { name } : {}),
         ...(size !== null ? { size } : {}),
-        ...(fileId ? { fileId } : {}),
-        ...(videoId ? { videoId } : {}),
-        ...(event ? { event } : {}),
-        ...(userIds ? { userIds } : {}),
+        ...(Object.keys(ref).length > 0 ? { providerRef: ref } : {}),
         ...(poll ? { poll } : {}),
         ...(buttons ? { buttons } : {}),
       }
@@ -475,10 +481,9 @@ const ANSWER_VOTED = 1
  */
 const POLL_VERSION = 2
 
-export const toPoll = (entry: Payload): Poll | undefined => {
+export const toPoll = (entry: Payload, chatId: Id, messageId: Id): Poll | undefined => {
   const version = count(entry.version)
-  const id = asId(entry.pollId)
-  if (!id || (version !== null && version > POLL_VERSION)) return undefined
+  if (!asId(entry.pollId) || (version !== null && version > POLL_VERSION)) return undefined
 
   const settings = count(entry.settings) ?? 0
   const state = asRecord(entry.state)
@@ -498,22 +503,23 @@ export const toPoll = (entry: Payload): Poll | undefined => {
       return {
         id: answerId,
         text: typeof answer.text === "string" ? answer.text : "",
-        votes: count(result?.voteCount) ?? 0,
-        mine: ((count(result?.options) ?? 0) & ANSWER_VOTED) !== 0,
+        voters: count(result?.voteCount) ?? 0,
+        chosen: ((count(result?.options) ?? 0) & ANSWER_VOTED) !== 0,
       }
     })
     .filter((answer) => answer.id !== "")
 
   return {
-    id,
+    chatId,
+    messageId,
     question: typeof entry.title === "string" ? entry.title : "",
     answers,
-    total: count(state?.total) ?? 0,
+    closed: (settings & POLL_CLOSED) !== 0,
     multiple: (settings & POLL_MULTIPLE) !== 0,
     anonymous: (settings & POLL_ANONYMOUS) !== 0,
-    revote: (settings & POLL_REVOTE) !== 0,
-    closed: (settings & POLL_CLOSED) !== 0,
+    voters: count(state?.total) ?? 0,
     quiz: (settings & POLL_QUIZ) !== 0,
+    revote: (settings & POLL_REVOTE) !== 0,
   }
 }
 

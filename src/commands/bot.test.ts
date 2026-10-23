@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { join } from "node:path"
-import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { botOperations } from "../bot/client.js"
@@ -67,7 +67,7 @@ describe("max bot auth", () => {
   it("keeps a token only after MAX accepted it", async () => {
     const { code, stdout } = await max(["bot", "auth", "set", "--json"], { answer: GOOD })
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ profile: "default", bot: "Helper", id: "9007199254740993" })
+    expect(JSON.parse(stdout).item).toMatchObject({ profile: "default", bot: "Helper", id: "9007199254740993" })
     expect(store().read()?.token).toBe(GOOD)
     expect(stdout).not.toContain(GOOD)
   })
@@ -84,7 +84,7 @@ describe("max bot auth", () => {
     expect((await max(["staging", "bot", "me", "--json"])).code).toBe(0)
     const missing = await max(["bot", "me", "--json"])
     expect(missing.code).not.toBe(0)
-    expect(missing.stdout + missing.stderr).toContain("max bot auth set")
+    expect(missing.stdout + missing.stderr).toContain("max default bot auth set")
   })
 
   it("forgets the profile's token on remove, without asking MAX, and leaves other profiles' tokens", async () => {
@@ -92,7 +92,7 @@ describe("max bot auth", () => {
     store("staging").write(GOOD)
     const { code, stdout } = await max(["bot", "auth", "remove", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toEqual({ profile: "default", removed: ["keyring"] })
+    expect(JSON.parse(stdout).item).toEqual({ profile: "default", removed: ["keyring"] })
     expect(store().read()).toBeUndefined()
     expect(store("staging").read()?.token).toBe(GOOD)
     expect(requests).toHaveLength(0)
@@ -104,7 +104,7 @@ describe("max bot me", () => {
     store().write(GOOD)
     const { code, stdout } = await max(["bot", "me", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toMatchObject({ user_id: "9007199254740993", first_name: "Helper" })
+    expect(JSON.parse(stdout).item).toMatchObject({ user_id: "9007199254740993", first_name: "Helper" })
   })
 })
 
@@ -167,7 +167,7 @@ describe("max bot api, guarded like the personal account", () => {
   beforeEach(() => store().write(GOOD))
 
   it("refuses every bot write on a read-only profile, and still reads", async () => {
-    await max(["ro", "config", "set", "readOnly", "true"])
+    await max(["ro", "config", "set", "permissions.bot", "readonly"])
     store("ro").write(GOOD)
     const write = await max([
       "ro",
@@ -184,37 +184,7 @@ describe("max bot api, guarded like the personal account", () => {
     expect(write.stdout + write.stderr).toContain("does not allow bot.messages.send to write")
     expect(requests).toHaveLength(0)
     expect((await max(["ro", "bot", "me", "--json"])).code).toBe(0)
-  })
-
-  it("maps a bot write onto the allow list, and refuses one the list cannot name", async () => {
-    await max(["narrow", "config", "set", "allow", "send"])
-    store("narrow").write(GOOD)
-    const body = `{"text": "hi"}`
-    expect((await max(["narrow", "bot", "api", "send-message", "--chat-id", "1", "--body", body, "--json"])).code).toBe(
-      0,
-    )
-    const pin = await max([
-      "narrow",
-      "bot",
-      "api",
-      "pin-message",
-      "--chat-id",
-      "1",
-      "--body",
-      `{"message_id": "m"}`,
-      "--json",
-    ])
-    expect(pin.stdout + pin.stderr).toContain("does not allow bot.messages.pin to write")
-    const hook = await max([
-      "narrow",
-      "bot",
-      "api",
-      "subscribe",
-      "--body",
-      `{"url": "https://example.test/h"}`,
-      "--json",
-    ])
-    expect(hook.stdout + hook.stderr).toContain("does not allow bot.webhooks.set to write")
+    await max(["ro", "config", "unset", "permissions.bot"])
   })
 
   it("keeps message text out of what it prints and of every file it writes", async () => {
@@ -303,7 +273,7 @@ describe("the run log for a bot command", () => {
   it("traces each request on stderr and keeps stdout to the answer", async () => {
     const { code, stdout, stderr } = await max(["bot", "api", "get-chat", "--chat-id", "7", "--trace", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toEqual({ success: true })
+    expect(JSON.parse(stdout).item).toEqual({ success: true })
     const events = stderr.split("\n").map((line) => JSON.parse(line))
     expect(events).toEqual([
       { event: "request", operation: "getChat", ids: { chat: "7" } },
@@ -320,9 +290,9 @@ describe("the run log for a bot command", () => {
 
   it("**records a shared bot command once, with its request**, as max's own bot commands are", async () => {
     const added = async (command: string, argv: string[]) => {
-      const before = new Set((await runsOf(command)).map((run) => run.runId))
+      const before = new Set((await runsOf(command)).map((run) => run.run_id))
       await max(argv)
-      return (await runsOf(command)).filter((run) => !before.has(run.runId))
+      return (await runsOf(command)).filter((run) => !before.has(run.run_id))
     }
 
     expect(await added("bot auth show", ["bot", "auth", "show", "--record", "--json"])).toEqual([
@@ -337,7 +307,7 @@ describe("the run log for a bot command", () => {
     const { code } = await max(["bot", "api", "get-pinned-message", "--chat-id", "404", "--json"])
     expect(code).not.toBe(0)
     expect(await runsOf("bot api get-pinned-message")).toEqual([
-      expect.objectContaining({ status: "failed", requests: 1, errorCode: "not_found", keptBecauseFailed: true }),
+      expect.objectContaining({ status: "failed", requests: 1, error_code: "not_found", kept_because_failed: true }),
     ])
   })
 })

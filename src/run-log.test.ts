@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { CliError, captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import {
   crashOf,
   type DiagnosticEvent,
@@ -10,7 +10,7 @@ import {
   readEvents,
   recorded,
   renderEvent,
-} from "@wirecat/cli-messaging/cli"
+} from "@wirecat/cli-core/cli"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "./app.js"
 import { MaxClient } from "./client.js"
@@ -64,11 +64,16 @@ describe("MAX's refusal, as a key", () => {
     const run = async (refusal: string) => {
       const max = mockMax({ answers, refuse: { [Opcode.CHAT_HISTORY]: refusal } })
       const dir = mkdtempSync(join(tmpdir(), "max-run-log-"))
-      const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "s"), env: {} })
+      const store = new SessionStore({
+        profile: "default",
+        keyring: memoryKeyring(),
+        configDir: dir,
+        stateDir: join(dir, "s"),
+        env: {},
+      })
       store.writeToken("a-token")
       const events: DiagnosticEvent[] = []
       const client = new MaxClient({
-        sends: "caller",
         store,
         connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
         warn: () => {},
@@ -83,7 +88,7 @@ describe("MAX's refusal, as a key", () => {
     const worded = await run("you sent: Привет, как дела")
 
     expect(keyed.response).toMatchObject({ errorCode: "provider_error", providerError: "proto.payload" })
-    expect((keyed.error as CliError).details.providerError).toBe("proto.payload")
+    expect((keyed.error as CliError).details.provider_error).toBe("proto.payload")
     expect(worded.response).not.toHaveProperty("providerError")
   })
 })
@@ -92,14 +97,14 @@ describe("a failed run", () => {
   it("is kept without --record, with every event before the failure and the key MAX gave", async () => {
     const { runs, events } = await recordRun({ keepFailed: true }, async (emit) => {
       emit(REQUEST)
-      throw new CliError("provider_error", "MAX refused opcode 49: proto.payload", { providerError: "proto.payload" })
+      throw new CliError("provider_error", "MAX refused opcode 49: proto.payload", { provider_error: "proto.payload" })
     })
 
     expect(runs).toMatchObject([
       { status: "failed", errorCode: "provider_error", providerError: "proto.payload", keptBecauseFailed: true },
     ])
     expect(runs[0]).toMatchObject({ runtime: expect.stringMatching(/^(node|bun) /), platform: process.platform })
-    expect(events).toMatchObject([{ event: "request", operation: "chats.history" }])
+    expect(events).toMatchObject([{ event: "provider.request", operation: "chats.history" }])
   })
 
   it("leaves nothing when it succeeds, or when recording was turned off by name", async () => {
@@ -116,7 +121,11 @@ describe("a failed run", () => {
     })
 
     expect(runs[0]).toMatchObject({ errorCode: "generic_failure" })
-    expect(events.at(-1)).toMatchObject({ event: "crash", errorName: "TypeError", frames: expect.any(Array) })
+    expect(events.at(-1)).toMatchObject({
+      event: "command.crashed",
+      error_class: "TypeError",
+      frames: expect.any(Array),
+    })
     expect(raw).not.toContain("секрет")
   })
 })
@@ -153,11 +162,16 @@ describe("a warning", () => {
       refuse: { [Opcode.MSG_GET_REACTIONS]: "proto.payload" },
     })
     const dir = mkdtempSync(join(tmpdir(), "max-run-log-"))
-    const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "s"), env: {} })
+    const store = new SessionStore({
+      profile: "default",
+      keyring: memoryKeyring(),
+      configDir: dir,
+      stateDir: join(dir, "s"),
+      env: {},
+    })
     store.writeToken("a-token")
     const events: DiagnosticEvent[] = []
     const client = new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: () => {},

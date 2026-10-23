@@ -1,9 +1,9 @@
-import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { levelFor } from "@wirecat/cli-messaging/sends"
+import { levelFor } from "@wirecat/cli-core/sends"
 import { beforeEach, describe, expect, it } from "vitest"
-import { changeSetting, configuredProfiles, resolveSettings, setCommandFor } from "./config.js"
+import { changeSetting, configuredProfiles, resolveSettings } from "./config.js"
 
 let configDir: string
 
@@ -11,14 +11,16 @@ const withConfig = (contents: string): void => {
   writeFileSync(join(configDir, "config.json"), contents)
 }
 
-const settings = (flags = {}, env: NodeJS.ProcessEnv = {}) => resolveSettings(flags, { env, configDir })
+// Most of these are about the values, not the profile rule: "no profile named" resolves as `default` here.
+const settings = (flags = {}, env: NodeJS.ProcessEnv = {}) =>
+  resolveSettings(flags, { env, configDir, needsProfile: false })
 
 beforeEach(() => {
   configDir = mkdtempSync(join(tmpdir(), "max-config-"))
 })
 
 it("uses the shared request pace setting and its environment override, with zero disabling pacing", () => {
-  withConfig(JSON.stringify({ profiles: { default: { requestsPerMinute: 12 } } }))
+  withConfig(JSON.stringify({ profiles: { default: { requests_per_minute: 12 } } }))
   expect(settings().requestsPerMinute).toBe(12)
   expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" }).requestsPerMinute).toBe(0)
   expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" }).sources.requestsPerMinute).toBe("MAX_REQUESTS_PER_MINUTE")
@@ -28,16 +30,29 @@ it("uses the shared request pace setting and its environment override, with zero
 })
 
 describe("where a setting came from", () => {
+  it("**assumes no profile**: none named is an error listing max's own profiles, or saying how to make one", () => {
+    const env = { MAX_STATE_DIR: mkdtempSync(join(tmpdir(), "max-state-")) }
+    const strict = () => resolveSettings({}, { env, configDir })
+    expect(strict).toThrow("there is none on this computer yet — create one with `max personal setup`")
+
+    mkdirSync(join(env.MAX_STATE_DIR, "profiles"))
+    writeFileSync(join(env.MAX_STATE_DIR, "profiles", "work.json"), "{}")
+    expect(strict).toThrow("name a profile: `max <profile> …` — profiles here: work (or set MAX_PROFILE)")
+    expect(resolveSettings({ profile: "work" }, { env, configDir }).profile).toBe("work")
+  })
+
   it("names the layer that decided the profile, so nobody has to re-derive the order", () => {
-    expect(settings().sources.profile).toBe("default")
+    expect(settings().sources.profile).toBe("none named")
     expect(settings({}, { MAX_PROFILE: "work" }).sources.profile).toBe("MAX_PROFILE")
     expect(settings({ profile: "work" }, { MAX_PROFILE: "other" }).sources.profile).toBe("first word")
   })
 
-  it("credits the file when the file is what decided it", () => {
-    withConfig(JSON.stringify({ defaultProfile: "work" }))
-    expect(settings().profile).toBe("work")
-    expect(settings().sources.profile).toBe("config file: defaultProfile")
+  it("**stops on a leftover default_profile** with the profile to type and how to remove it", () => {
+    withConfig(JSON.stringify({ default_profile: "work" }))
+    expect(() => resolveSettings({}, { env: {}, configDir })).toThrow(
+      "default_profile is no longer read — name the profile: `max work …`; `max config unset default_profile`",
+    )
+    expect(resolveSettings({ profile: "work" }, { env: {}, configDir }).profile).toBe("work")
   })
 
   it("**names where the command budget came from**, which has no file row to fall back on", () => {
@@ -70,7 +85,7 @@ describe("--timeout", () => {
   })
 
   it("**refuses a bare number**, because the unit is the whole question", () => {
-    // `timeoutMs` in the configuration file is milliseconds and every comparable tool means
+    // `timeout_ms` in the configuration file is milliseconds and every comparable tool means
     // seconds. Either guess is a thirty-fold surprise, so it asks.
     expect(() => settings({ timeout: "30" })).toThrow(/30s, 2m or 500ms/)
     expect(() => settings({ timeout: "abc" })).toThrow(/duration with a unit/)
@@ -95,8 +110,8 @@ describe("--timeout", () => {
     expect(() => settings({ timeout: "soon" })).toThrow(/--timeout/)
   })
 
-  it("**is not `timeoutMs`**, which stays one request's wait and comes only from the file", () => {
-    withConfig(JSON.stringify({ profiles: { default: { timeoutMs: 5000 } } }))
+  it("**is not `timeout_ms`**, which stays one request's wait and comes only from the file", () => {
+    withConfig(JSON.stringify({ profiles: { default: { timeout_ms: 5000 } } }))
     const resolved = settings({ timeout: "30s" })
 
     expect(resolved.timeoutMs).toBe(5000)
@@ -132,18 +147,13 @@ describe("paging", () => {
 
 describe("the order a setting is decided in", () => {
   it("prefers the command line to everything else", () => {
-    withConfig(JSON.stringify({ defaultProfile: "fromFile" }))
+    withConfig(JSON.stringify({ default_profile: "fromFile" }))
     expect(settings({ profile: "fromFlag" }, { MAX_PROFILE: "fromEnv" }).profile).toBe("fromFlag")
   })
 
   it("prefers the environment to the file", () => {
-    withConfig(JSON.stringify({ defaultProfile: "fromFile" }))
+    withConfig(JSON.stringify({ default_profile: "fromFile" }))
     expect(settings({}, { MAX_PROFILE: "fromEnv" }).profile).toBe("fromEnv")
-  })
-
-  it("prefers the file to the built-in default", () => {
-    withConfig(JSON.stringify({ defaultProfile: "fromFile" }))
-    expect(settings().profile).toBe("fromFile")
   })
 
   it("falls back to `default`, which is what an unconfigured machine has", () => {
@@ -188,21 +198,11 @@ describe("permissions across sections", () => {
     expect(levelFor(permissions, "messages.send").level).toBe("readonly")
     expect(permissionSources).toEqual({ messages: "config file: profiles.agent" })
   })
-
-  it("reads an old `readOnly` in the profile as nearer than `defaults.permissions`", () => {
-    withConfig(
-      JSON.stringify({
-        defaults: { permissions: { "messages.send": "allow" } },
-        profiles: { agent: { readOnly: true } },
-      }),
-    )
-    expect(levelFor(settings({ profile: "agent" }).permissions, "messages.send").level).toBe("readonly")
-  })
 })
 
 describe("a process locked to one profile", () => {
   it("uses the locked profile when nothing names one, and refuses any other a first word or MAX_PROFILE names", () => {
-    withConfig(JSON.stringify({ defaultProfile: "personal", profiles: {} }))
+    withConfig(JSON.stringify({ default_profile: "personal", profiles: {} }))
     const lock = { MAX_PROFILE_LOCK: "agent" }
 
     expect(settings({}, lock)).toMatchObject({ profile: "agent", sources: { profile: "MAX_PROFILE_LOCK" } })
@@ -213,6 +213,11 @@ describe("a process locked to one profile", () => {
 })
 
 describe("the configuration file", () => {
+  it("refuses the retired read-marking setting", () => {
+    withConfig(JSON.stringify({ profiles: { default: { catch_up_marks_read: true } } }))
+    expect(() => settings()).toThrowError(/catch_up_marks_read is an unknown setting/)
+  })
+
   it("**is not required** — an unconfigured machine is not a broken one", () => {
     expect(settings().profile).toBe("default")
   })
@@ -238,22 +243,17 @@ describe("the configuration file", () => {
     expect(() => settings()).toThrowError(/profiles\.default\.limit/)
   })
 
-  it("**says in plain words what is wrong and what is allowed**, not the validation library's", () => {
+  it("**names the first bad key in plain words and never its value**, not the validation library's", () => {
     withConfig(JSON.stringify({ profiles: { default: { limitt: 5 } } }))
-    expect(() => settings()).toThrowError(
-      "profiles.default.limitt: unknown setting — the known ones are limit, timeoutMs, color, record, keepRunsForDays",
-    )
+    expect(() => settings()).toThrowError("profiles.default.limitt is an unknown setting")
 
     withConfig(JSON.stringify({ profiles: { default: { limit: 0, color: "yes" } } }))
-    expect(() => settings()).toThrowError("profiles.default.limit: has to be a whole number, 1 or more, not 0")
-    expect(() => settings()).toThrowError('profiles.default.color: has to be true or false, not "yes"')
+    expect(() => settings()).toThrowError("profiles.default.limit has an invalid value (and 1 more problem)")
+    expect(() => settings()).not.toThrowError(/yes/)
 
     withConfig(JSON.stringify({ profiles: { default: { limit: 2.5 } }, defaultProfil: "x" }))
-    expect(() => settings()).toThrowError("limit: has to be a whole number, 1 or more, not 2.5")
-    expect(() => settings()).toThrowError(
-      "defaultProfil: unknown setting — the known ones are defaultProfile, defaults, profiles, personal, bot",
-    )
-    expect(() => settings()).not.toThrowError(/Expected|Invalid/)
+    expect(() => settings()).toThrowError(/\(and 1 more problem\)$/)
+    expect(() => settings()).not.toThrowError(/Expected|Invalid|2\.5/)
   })
 
   it("says the file is not JSON rather than reporting a missing setting", () => {
@@ -283,7 +283,7 @@ describe("where each setting came from", () => {
       defaults: { limit: 20 },
       profiles: {},
     })
-    expect(resolved.sources).toMatchObject({ limit: "config file: defaults", profile: "default", record: "default" })
+    expect(resolved.sources).toMatchObject({ limit: "config file: defaults", profile: "none named", record: "default" })
   })
 
   it("tells a flag from the file from the built-in value", () => {
@@ -299,12 +299,11 @@ describe("where each setting came from", () => {
     expect(settings().configFound).toBe(true)
   })
 
-  it("names what chose the profile: the first word, then MAX_PROFILE, then the file", () => {
-    withConfig(JSON.stringify({ defaultProfile: "home", profiles: { home: {}, work: {} } }))
+  it("names what chose the profile: the first word, then MAX_PROFILE", () => {
+    withConfig(JSON.stringify({ profiles: { home: {}, work: {} } }))
 
     expect(settings({ profile: "work" }, { MAX_PROFILE: "home" }).sources.profile).toBe("first word")
     expect(settings({}, { MAX_PROFILE: "work" }).sources.profile).toBe("MAX_PROFILE")
-    expect(settings().sources.profile).toBe("config file: defaultProfile")
     expect(settings().configuredProfiles).toEqual(["home", "work"])
   })
 })
@@ -338,36 +337,35 @@ describe("personal and bot sections", () => {
   it("take the most specific entry: this profile's side, the profile, the side, everyone", () => {
     withConfig(
       JSON.stringify({
-        defaults: { limit: 1, keepRunsForDays: 1, timeoutMs: 1, readOnly: true },
-        bot: { defaults: { limit: 2, keepRunsForDays: 2, timeoutMs: 2 }, profiles: { test: { limit: 4 } } },
-        profiles: { test: { limit: 3, keepRunsForDays: 3 } },
+        defaults: { limit: 1, keep_runs_for_days: 1, timeout_ms: 1 },
+        bot: { defaults: { limit: 2, keep_runs_for_days: 2, timeout_ms: 2 }, profiles: { test: { limit: 4 } } },
+        profiles: { test: { limit: 3, keep_runs_for_days: 3 } },
         personal: { profiles: { test: { limit: 9 } } },
       }),
     )
 
-    expect(bot({ profile: "test" })).toMatchObject({ limit: 4, keepRunsForDays: 3, timeoutMs: 2, readOnly: true })
+    expect(bot({ profile: "test" })).toMatchObject({ limit: 4, keepRunsForDays: 3, timeoutMs: 2 })
     expect(bot({ profile: "test" }).sources).toMatchObject({
       limit: "config file: bot.profiles.test",
       keepRunsForDays: "config file: profiles.test",
       timeoutMs: "config file: bot.defaults",
-      readOnly: "config file: defaults",
     })
     expect(settings({ profile: "test" }).limit).toBe(9)
     expect(settings({ profile: "test" }).timeoutMs).toBe(1)
   })
 
   it("give a bot an hourly limit only from the bot section", () => {
-    withConfig(JSON.stringify({ defaults: { sendsPerHour: 5 }, profiles: { test: { sendsPerHour: 6 } } }))
+    withConfig(JSON.stringify({ defaults: { sends_per_hour: 5 }, profiles: { test: { sends_per_hour: 6 } } }))
     expect(bot({ profile: "test" }).sendsPerHour).toBe(Number.POSITIVE_INFINITY)
     expect(settings({ profile: "test" }).sendsPerHour).toBe(6)
 
-    withConfig(JSON.stringify({ bot: { defaults: { sendsPerHour: 100 } } }))
+    withConfig(JSON.stringify({ bot: { defaults: { sends_per_hour: 100 } } }))
     expect(bot({ profile: "test" }).sendsPerHour).toBe(100)
   })
 
   it("refuse a personal-only setting in the bot section", () => {
     withConfig(JSON.stringify({ bot: { defaults: { serve: true } } }))
-    expect(() => settings()).toThrowError(/bot\.defaults\.serve: unknown setting/)
+    expect(() => settings()).toThrowError(/bot\.defaults\.serve is an unknown setting/)
   })
 
   it("list the profiles named in any section", () => {
@@ -391,19 +389,19 @@ describe("changing a setting", () => {
   })
 
   it("writes to `defaults` when no profile is named", () => {
-    changeSetting(path(), { profile: undefined, setting: "keepRunsForDays", value: "7" })
-    expect(file().defaults).toEqual({ keepRunsForDays: 7 })
+    changeSetting(path(), { profile: undefined, setting: "keep_runs_for_days", value: "7" })
+    expect(file().defaults).toEqual({ keep_runs_for_days: 7 })
   })
 
   it("writes to a side of the file with a kind, and tidies it away when empty", () => {
-    changeSetting(path(), { profile: "test", kind: "bot", setting: "sendsPerHour", value: "60" })
+    changeSetting(path(), { profile: "test", kind: "bot", setting: "sends_per_hour", value: "60" })
     changeSetting(path(), { profile: undefined, kind: "personal", setting: "serve", value: "false" })
     expect(file()).toMatchObject({
-      bot: { profiles: { test: { sendsPerHour: 60 } } },
+      bot: { profiles: { test: { sends_per_hour: 60 } } },
       personal: { defaults: { serve: false } },
     })
 
-    changeSetting(path(), { profile: "test", kind: "bot", setting: "sendsPerHour", value: undefined })
+    changeSetting(path(), { profile: "test", kind: "bot", setting: "sends_per_hour", value: undefined })
     expect(file().bot).toBeUndefined()
   })
 
@@ -412,41 +410,31 @@ describe("changing a setting", () => {
       /personal accounts/,
     )
     expect(() =>
-      changeSetting(path(), { profile: undefined, kind: "bot", setting: "updateCheck", value: "true" }),
+      changeSetting(path(), { profile: undefined, kind: "bot", setting: "update_check", value: "true" }),
     ).toThrow(/whole program/)
   })
 
-  it("keeps readOtherBots for bots: true, false or a list, and refuses it for a personal account", () => {
-    changeSetting(path(), { profile: "shop", kind: "bot", setting: "readOtherBots", value: "true" })
-    changeSetting(path(), { profile: undefined, kind: "bot", setting: "readOtherBots", value: "shop,news" })
+  it("keeps read_other_bots for bots: true, false or a list, and refuses it for a personal account", () => {
+    changeSetting(path(), { profile: "shop", kind: "bot", setting: "read_other_bots", value: "true" })
+    changeSetting(path(), { profile: undefined, kind: "bot", setting: "read_other_bots", value: "shop,news" })
     expect(file().bot).toEqual({
-      defaults: { readOtherBots: ["shop", "news"] },
-      profiles: { shop: { readOtherBots: true } },
+      defaults: { read_other_bots: ["shop", "news"] },
+      profiles: { shop: { read_other_bots: true } },
     })
     expect(resolveSettings({ profile: "shop" }, { configDir, kind: "bot" }).readOtherBots).toBe(true)
     expect(resolveSettings({ profile: "other" }, { configDir, kind: "bot" }).readOtherBots).toEqual(["shop", "news"])
     expect(resolveSettings({ profile: "shop" }, { configDir }).readOtherBots).toBe(false)
-    expect(() => changeSetting(path(), { profile: "me", setting: "readOtherBots", value: "true" })).toThrow(/--bot/)
+    expect(() => changeSetting(path(), { profile: "me", setting: "read_other_bots", value: "true" })).toThrow(/--bot/)
   })
 
-  it("sets and clears defaultProfile at the top of the file", () => {
-    expect(changeSetting(path(), { profile: "mila", setting: "defaultProfile", value: "mila" })).toBe("mila")
-    expect(file().defaultProfile).toBe("mila")
-    expect(() => changeSetting(path(), { profile: undefined, setting: "defaultProfile", value: "a/b" })).toThrow(
-      /profile name/,
+  it("refuses to set default_profile and still clears a leftover one", () => {
+    withConfig(JSON.stringify({ default_profile: "mila", profiles: {} }))
+    expect(() => changeSetting(path(), { profile: undefined, setting: "default_profile", value: "mila" })).toThrow(
+      /default_profile is gone/,
     )
-    changeSetting(path(), { profile: undefined, setting: "defaultProfile", value: undefined })
-    expect(file().defaultProfile).toBeUndefined()
-  })
-
-  it("names the `config set` that writes where a value came from", () => {
-    expect(setCommandFor("config file: profiles.work", "work", "allow")).toBe("max work config set allow")
-    expect(setCommandFor("config file: defaults", "work", "allow")).toBe("max config set --defaults allow")
-    expect(setCommandFor("config file: bot.profiles.t", "t", "allow")).toBe("max t config set --bot allow")
-    expect(setCommandFor("config file: personal.defaults", "w", "allow")).toBe(
-      "max config set --personal --defaults allow",
-    )
-    expect(setCommandFor("default", "work", "allow")).toBe("max work config set allow")
+    expect(file().default_profile).toBe("mila")
+    changeSetting(path(), { profile: undefined, setting: "default_profile", value: undefined })
+    expect(file().default_profile).toBeUndefined()
   })
 
   it("**refuses a value the reader would refuse, and leaves the file as it was**", () => {
@@ -470,9 +458,9 @@ describe("shared AI provider configuration", () => {
   it("keeps profile/kind/default precedence, validates endpoints and lets environment override", () => {
     withConfig(
       JSON.stringify({
-        defaults: { embeddingModel: "default-model" },
-        profiles: { work: { embeddingModel: "profile-model", analysisProvider: "anthropic" } },
-        personal: { profiles: { work: { embeddingModel: "kind-model" } } },
+        defaults: { embedding_model: "default-model" },
+        profiles: { work: { embedding_model: "profile-model", analysis_provider: "anthropic" } },
+        personal: { profiles: { work: { embedding_model: "kind-model" } } },
       }),
     )
     const own = settings({ profile: "work" })
@@ -481,17 +469,17 @@ describe("shared AI provider configuration", () => {
     expect(own.analysisProvider).toBe("anthropic")
     expect(own.sources.embeddingModel).toBe("config file: personal.profiles.work")
     expect(settings({ profile: "work" }, { MAX_EMBEDDING_MODEL: "env-model" }).embeddingModel).toBe("env-model")
-    expect(() => settings({}, { MAX_EMBEDDING_DIMS: "0" })).toThrow("embeddingDims")
+    expect(() => settings({}, { MAX_EMBEDDING_DIMS: "0" })).toThrow("embedding_dims")
     changeSetting(join(configDir, "config.json"), {
       profile: "work",
-      setting: "embeddingBaseUrl",
+      setting: "embedding_base_url",
       value: "https://example.test/v1",
     })
     expect(settings({ profile: "work" }).embeddingBaseUrl).toBe("https://example.test/v1")
     expect(() =>
       changeSetting(join(configDir, "config.json"), {
         profile: "work",
-        setting: "analysisBaseUrl",
+        setting: "analysis_base_url",
         value: "https://user:secret@example.test",
       }),
     ).toThrow()
@@ -501,7 +489,7 @@ describe("shared AI provider configuration", () => {
 describe("local search catch-up setting", () => {
   it("defaults off and honors the personal profile's explicit override", () => {
     expect(settings().searchCatchUp).toBe(false)
-    withConfig(JSON.stringify({ defaults: { searchCatchUp: true }, profiles: { work: { searchCatchUp: false } } }))
+    withConfig(JSON.stringify({ defaults: { search_catch_up: true }, profiles: { work: { search_catch_up: false } } }))
     expect(settings()).toMatchObject({ searchCatchUp: true, sources: { searchCatchUp: "config file: defaults" } })
     expect(settings({ profile: "work" })).toMatchObject({
       searchCatchUp: false,
@@ -514,7 +502,7 @@ describe("the request pace", () => {
   it("is MAX's own unless the file or MAX_REQUESTS_PER_MINUTE sets it, and refuses a negative", () => {
     withConfig(JSON.stringify({ defaults: {} }))
     expect(settings().requestsPerMinute).toBeUndefined()
-    withConfig(JSON.stringify({ defaults: { requestsPerMinute: 10 } }))
+    withConfig(JSON.stringify({ defaults: { requests_per_minute: 10 } }))
     expect(settings().requestsPerMinute).toBe(10)
     expect(settings({}, { MAX_REQUESTS_PER_MINUTE: "0" })).toMatchObject({
       requestsPerMinute: 0,

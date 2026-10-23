@@ -1,9 +1,9 @@
 import { createHash, randomBytes } from "node:crypto"
 import { homedir } from "node:os"
 import { basename, join } from "node:path"
-import { CliError } from "@wirecat/cli-core"
-import { findRun, listRuns, type RunMetadata, readEvents, runtime } from "@wirecat/cli-messaging/cli"
-import type { SendEntry } from "@wirecat/cli-messaging/sends"
+import { CliError } from "@wirecat/cli-base"
+import { findRun, listRuns, type RunMetadata, readEvents, runtime } from "@wirecat/cli-core/cli"
+import type { SendEntry } from "@wirecat/cli-core/sends"
 import type { Diagnosis } from "./diagnose.js"
 import { VERSION } from "./version.js"
 
@@ -18,8 +18,9 @@ export interface Report {
   runtime: string
   platform: string
   arch: string
-  profile: string
-  doctor: Diagnosis
+  /** Null, with the doctor's place taken by the config error, when the config could not be read. */
+  profile: string | null
+  doctor: Diagnosis | { config: { error: string } }
   /** The run the report is about: the one asked for, or the newest that failed. */
   run: { metadata: RunMetadata; events: Record<string, unknown>[] } | null
   /** The newest write actions — outcomes and ids, never text (`src/sends/journal.ts`). */
@@ -28,8 +29,8 @@ export interface Report {
 
 /**
  * **Everything a report holds is already free of content** — the run log and the send journal are
- * built that way. Two things are added: chat and message ids become labels, and the home directory
- * is hidden, since the doctor's paths name the person's account on this machine.
+ * built that way. Chat, message and write ids become labels, and the home directory is hidden,
+ * since the doctor's paths name the person's account on this machine.
  */
 export const buildReport = ({
   profile,
@@ -40,8 +41,8 @@ export const buildReport = ({
   now = new Date(),
   home = homedir(),
 }: {
-  profile: string
-  doctor: Diagnosis
+  profile: string | null
+  doctor: Report["doctor"]
   runsDir: string
   runId?: string
   sends: SendEntry[]
@@ -61,13 +62,9 @@ export const buildReport = ({
     arch: process.arch,
     profile,
     // The shell commands in `fix` quote the path in ways no spelling above matches; `binDir` says it.
-    doctor: { ...doctor, install: { ...doctor.install, fix: [] } },
+    doctor: "install" in doctor ? { ...doctor, install: { ...doctor.install, fix: [] } } : doctor,
     run: chosen ? { metadata: chosen.metadata, events: readEvents(chosen.dir).map(labelled) } : null,
-    sends: sends.slice(-RECENT_SENDS).map((entry) => ({
-      ...entry,
-      chatId: entry.chatId === null ? null : label(entry.chatId),
-      ...(entry.messageId === undefined ? {} : { messageId: label(entry.messageId) }),
-    })),
+    sends: sends.slice(-RECENT_SENDS).map((entry) => labelledSend(entry, label)),
   }
   return JSON.parse(hideHome(JSON.stringify(report), home)) as Report
 }
@@ -95,19 +92,36 @@ const labeller = () => {
   return (id: string): string => `id:${createHash("sha256").update(salt).update(id).digest("hex").slice(0, 12)}`
 }
 
+const SEND_ID_FIELDS = [
+  "chatId",
+  "messageId",
+  "replyTo",
+  "threadId",
+  "sendAs",
+  "resultChatId",
+  "sendId",
+  "operationId",
+  "parentOperationId",
+  "reservation",
+] as const satisfies readonly (keyof SendEntry)[]
+
+const labelledSend = (entry: SendEntry, label: (id: string) => string): SendEntry => {
+  const copy = { ...entry }
+  for (const field of SEND_ID_FIELDS) {
+    const value = copy[field]
+    if (value !== undefined && value !== null) copy[field] = label(String(value))
+  }
+  return copy
+}
+
 const labelledEvent =
   (label: (id: string) => string) =>
   (event: Record<string, unknown>): Record<string, unknown> => {
     const ids = event.ids
     if (typeof ids !== "object" || ids === null) return event
-    const { chat, message, ...rest } = ids as Record<string, unknown>
     return {
       ...event,
-      ids: {
-        ...rest,
-        ...(typeof chat === "string" ? { chat: label(chat) } : {}),
-        ...(typeof message === "string" ? { message: label(message) } : {}),
-      },
+      ids: Object.fromEntries(Object.entries(ids).map(([name, id]) => [name, label(String(id))])),
     }
   }
 

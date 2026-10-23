@@ -1,9 +1,9 @@
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { Readable } from "node:stream"
-import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
-import { storePath } from "@wirecat/cli-messaging/store"
+import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
+import { storePath } from "@wirecat/cli-core/store"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -124,17 +124,17 @@ describe("contacts", () => {
     const all = await runWith(["a-list", "contacts", "list", "--limit", "1", "--all"], environment)
 
     expect(idsOf(first.stdout)).toEqual(["31", "32"])
-    expect(JSON.parse(first.stdout).hasMore).toBe(true)
+    expect(JSON.parse(first.stdout).page.has_more).toBe(true)
     expect(idsOf(second.stdout)).toEqual(["33"])
-    expect(JSON.parse(second.stdout).hasMore).toBe(false)
+    expect(JSON.parse(second.stdout).page.has_more).toBe(false)
     expect(idsOf(all.stdout)).toEqual(["31", "32", "33"])
   })
 
-  it("`list --order name` sorts by name, and `--search` keeps only the names that match", async () => {
+  it("`list --order name` sorts by name, and `name:` keeps only the names that match", async () => {
     const { environment } = acquaintances()
     const byName = await runWith(["a-order", "contacts", "list", "--order", "name"], environment)
-    const found = await runWith(["a-order", "contacts", "list", "--search", "rook"], environment)
-    const short = await runWith(["a-order", "contacts", "list", "--search", "ro"], environment)
+    const found = await runWith(["a-order", "contacts", "list", "name:rook"], environment)
+    const short = await runWith(["a-order", "contacts", "list", "name:ro"], environment)
 
     expect(idsOf(byName.stdout)).toEqual(["32", "33", "31"])
     expect(JSON.parse(found.stdout).items).toMatchObject([{ id: "33", name: "Bob Brook" }])
@@ -190,8 +190,9 @@ describe("contacts", () => {
         .map((login) => login.contactsSync)
         .slice(1),
     ).toEqual([1789776000000, 0])
-    expect(Object.keys(JSON.parse(synced.stdout)).sort()).toEqual(["added", "changed", "full", "known"])
-    expect(JSON.parse(synced.stdout)).toMatchObject({ full: true })
+    const { item } = JSON.parse(synced.stdout)
+    expect(Object.keys(item).sort()).toEqual(["added", "changed", "full", "known"])
+    expect(item).toMatchObject({ full: true })
     for (const name of ["Carol", "Alice", "Bob"]) expect(synced.stdout + synced.stderr).not.toContain(name)
   })
 
@@ -201,7 +202,7 @@ describe("contacts", () => {
 
     expect(found.code).toBe(0)
     expect(sent(Opcode.CONTACT_INFO_BY_PHONE)).toEqual([{ phone: PHONE }])
-    expect(JSON.parse(found.stdout)).toMatchObject({ id: "20000002", name: "Found Person" })
+    expect(JSON.parse(found.stdout).item).toMatchObject({ id: "20000002", name: "Found Person" })
     expect(found.stderr).not.toContain("1234567890")
     expectNowhereOnDisk("1234567890")
   })
@@ -240,13 +241,13 @@ describe("contacts", () => {
     const { environment, sent } = account()
     const added = await runWith(["contacts", "add", "20000002"], environment)
     expect(added.code).toBe(0)
-    expect(JSON.parse(added.stdout)).toEqual({
-      operationId: expect.any(String),
+    expect(JSON.parse(added.stdout).item).toEqual({
+      operation_id: expect.any(String),
       person: { id: "20000002", name: "Found Person", username: null },
     })
     const removed = await runWith(["contacts", "remove", "20000002"], environment)
     expect(removed.code).toBe(0)
-    expect(JSON.parse(removed.stdout)).toEqual({ operationId: expect.any(String), personId: "20000002" })
+    expect(JSON.parse(removed.stdout).item).toEqual({ operation_id: expect.any(String), person_id: "20000002" })
 
     expect(sent(Opcode.CONTACT_UPDATE).map((one) => ({ ...one, contactId: String(one.contactId) }))).toEqual([
       { contactId: "20000002", action: "ADD" },
@@ -264,7 +265,7 @@ describe("contacts", () => {
     ]) {
       const result = await runWith(argv, environment)
       expect(result.code).toBe(0)
-      expect(JSON.parse(result.stdout)).toMatchObject({ operationId: expect.any(String) })
+      expect(JSON.parse(result.stdout).item).toMatchObject({ operation_id: expect.any(String) })
     }
 
     expect(sent(Opcode.CONTACT_UPDATE).map((one) => ({ ...one, contactId: String(one.contactId) }))).toEqual([
@@ -296,7 +297,7 @@ describe("contacts", () => {
     expect(sent(Opcode.SYNC)).toEqual([
       { contactList: { [PHONE]: { firstName: "Found Person" }, "+79990003344": { firstName: "Other One" } } },
     ])
-    expect(JSON.parse(imported.stdout)).toEqual({ operationId: expect.any(String), sent: 2, recognised: [] })
+    expect(JSON.parse(imported.stdout).item).toEqual({ operation_id: expect.any(String), sent: 2, recognised: [] })
     expect(imported.stdout).not.toContain("1234567890")
     expect(imported.stderr).not.toContain("1234567890")
     for (const file of filesUnder(resolvePaths({ appName: "max-cli", prefix: "MAX", env: process.env }).state))
@@ -316,8 +317,8 @@ describe("contacts", () => {
     writeFileSync(file, `${PHONE}, Found Person\n`)
     const imported = await runWith(["contacts", "import", file], environment)
     expect(imported.code).toBe(0)
-    expect(JSON.parse(imported.stdout)).toEqual({
-      operationId: expect.any(String),
+    expect(JSON.parse(imported.stdout).item).toEqual({
+      operation_id: expect.any(String),
       sent: 1,
       recognised: [{ id: "20000002", name: "Found Person", username: null }],
     })
@@ -328,7 +329,7 @@ describe("contacts", () => {
     async (action) => {
       const { environment, sent } = account()
       const profile = `contact-readonly-${action}`
-      await runWith([profile, "config", "set", "readOnly", "true"])
+      expect((await runWith([profile, "config", "set", "permissions.contacts", "readonly"])).code).toBe(0)
       const result = await runWith(
         [profile, "contacts", action, "20000002", ...(action === "rename" ? ["Neighbour"] : [])],
         environment,
@@ -380,15 +381,15 @@ describe("the profile", () => {
 
     expect(updated.code).toBe(0)
     expect(sent(Opcode.PROFILE)).toEqual([{ firstName: "Test", lastName: "Person", description: "hi" }])
-    expect(JSON.parse(updated.stdout)).toEqual({
-      operationId: expect.any(String),
+    expect(JSON.parse(updated.stdout).item).toEqual({
+      operation_id: expect.any(String),
       account: { id: "10000001", name: "Test Person", username: null, phone: null },
     })
   })
 
   it("a read-only profile refuses before anything is sent, and journals the refusal", async () => {
     const { environment, sent } = account()
-    await runWith(["a-readonly", "config", "set", "readOnly", "true"])
+    expect((await runWith(["a-readonly", "config", "set", "permissions.account", "readonly"])).code).toBe(0)
 
     const refused = await runWith(["a-readonly", "account", "update", "--first-name", "X"], environment)
 
@@ -414,8 +415,8 @@ describe("the profile", () => {
     })
     const result = await runWith(["account", "update", "--description", "about me"], environment)
     expect(result.code).toBe(0)
-    expect(JSON.parse(result.stdout)).toEqual({
-      operationId: expect.any(String),
+    expect(JSON.parse(result.stdout).item).toEqual({
+      operation_id: expect.any(String),
       account: {
         id: "10000001",
         name: "Test Person",
@@ -454,9 +455,15 @@ describe("the phone number", () => {
     const masked = await runWith(["account", "show"], environment)
     const whole = await runWith(["account", "show", "--show-phone"], environment)
 
-    expect(JSON.parse(masked.stdout)).toMatchObject({ phone: "***7890", username: null, description: null })
+    expect(JSON.parse(masked.stdout).item).toEqual({
+      provider: "max",
+      id: "10000001",
+      name: "Test Person",
+      username: null,
+      phone: "***7890",
+    })
     expect(masked.stdout).not.toContain("123456")
-    expect(JSON.parse(whole.stdout).phone).toBe(PHONE)
+    expect(JSON.parse(whole.stdout).item.phone).toBe(PHONE)
   })
 })
 
@@ -470,7 +477,7 @@ describe("folders", () => {
     expect(sent(Opcode.FOLDERS_UPDATE)).toEqual([])
     expect(JSON.parse(listed.stdout)).toMatchObject({
       items: [{ id: "folder.personal", title: "Personal" }],
-      hasMore: false,
+      page: { has_more: false },
     })
   })
 
@@ -479,9 +486,9 @@ describe("folders", () => {
     const updated = await runWith(["chats", "folders", "update", "Personal", "--title", "Renamed"], environment)
 
     expect(updated.code).toBe(0)
-    expect(JSON.parse(updated.stdout)).toEqual({
-      operationId: expect.any(String),
-      folder: { id: "folder.personal", title: "Renamed", chatIds: ["111"] },
+    expect(JSON.parse(updated.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      folder: { id: "folder.personal", title: "Renamed", chat_ids: ["111"] },
     })
     const [request] = sent(Opcode.FOLDERS_UPDATE)
     expect({ ...request, include: (request as { include: unknown[] }).include.map(String) }).toEqual({
@@ -506,11 +513,14 @@ describe("folders", () => {
     const deletedResult = await runWith(["chats", "folders", "delete", "Personal"], environment)
     expect(createdResult.code).toBe(0)
     expect(deletedResult.code).toBe(0)
-    expect(JSON.parse(createdResult.stdout)).toMatchObject({
-      operationId: expect.any(String),
+    expect(JSON.parse(createdResult.stdout).item).toMatchObject({
+      operation_id: expect.any(String),
       folder: { id: "folder.personal" },
     })
-    expect(JSON.parse(deletedResult.stdout)).toEqual({ operationId: expect.any(String), folderId: "folder.personal" })
+    expect(JSON.parse(deletedResult.stdout).item).toEqual({
+      operation_id: expect.any(String),
+      folder_id: "folder.personal",
+    })
 
     const [created] = sent(Opcode.FOLDERS_UPDATE)
     expect(created?.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-/)
@@ -576,7 +586,7 @@ describe("folders", () => {
     const byId = await runWith(["chats", "folders", "delete", "folder.second"], environment)
     expect(byId.code).toBe(0)
     expect(sent(Opcode.FOLDERS_DELETE)).toEqual([{ folderIds: ["folder.second"] }])
-    expect(JSON.parse(byId.stdout)).toEqual({ operationId: expect.any(String), folderId: "folder.second" })
+    expect(JSON.parse(byId.stdout).item).toEqual({ operation_id: expect.any(String), folder_id: "folder.second" })
   })
 
   it("`order` sends every folder's id, the named ones first, and the rest in their order after them", async () => {
@@ -604,7 +614,7 @@ describe("folders", () => {
 
   it("read-only folders order never writes and journals one refusal", async () => {
     const { environment, sent } = account()
-    await runWith(["folder-readonly-order", "config", "set", "readOnly", "true"])
+    expect((await runWith(["folder-readonly-order", "config", "set", "permissions.chats", "readonly"])).code).toBe(0)
     const result = await runWith(["folder-readonly-order", "chats", "folders", "order", "Personal"], environment)
     expect(JSON.parse(result.stderr).error.code).toBe("permission_error")
     expect(sent(Opcode.FOLDERS_REORDER)).toEqual([])
@@ -618,7 +628,7 @@ describe("folders", () => {
     async (action) => {
       const { environment, sent } = account()
       const profile = `folder-readonly-${action}`
-      await runWith([profile, "config", "set", "readOnly", "true"])
+      expect((await runWith([profile, "config", "set", "permissions.chats", "readonly"])).code).toBe(0)
       const args =
         action === "create"
           ? ["New", "--chat", "111"]
@@ -678,11 +688,10 @@ describe("sessions", () => {
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([])
     expect(JSON.parse(listed.stdout)).toEqual({
       items: [
-        { current: true, client: "WEB", device: "Chrome", location: null, lastActiveAt: "2026-09-19T00:00:00.000Z" },
+        { current: true, client: "WEB", device: "Chrome", location: null, last_active_at: "2026-09-19T00:00:00.000Z" },
       ],
-      page: 1,
-      limit: 1,
-      hasMore: false,
+      page: { mode: "page", limit: 1, has_more: false },
+      meta: expect.any(Object),
     })
   })
 
@@ -706,10 +715,10 @@ describe("sessions", () => {
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([{}])
     expect(stores.at(-1)?.readToken()).toBe("a-new-token")
     expect(ended.stdout + ended.stderr).not.toContain("a-new-token")
-    expect(JSON.parse(ended.stdout)).toEqual({
-      operationId: expect.any(String),
+    expect(JSON.parse(ended.stdout).item).toEqual({
+      operation_id: expect.any(String),
       sessions: [
-        { current: true, client: "WEB", device: "Chrome", location: null, lastActiveAt: "2026-09-19T00:00:00.000Z" },
+        { current: true, client: "WEB", device: "Chrome", location: null, last_active_at: "2026-09-19T00:00:00.000Z" },
       ],
     })
   })
@@ -725,7 +734,7 @@ describe("sessions", () => {
       connection: () => new Connection({ createSocket: refusing.createSocket, timeoutMs: 50 }),
     })
 
-    expect(JSON.parse(ended.stderr).error.message).toContain("run `max session start`")
+    expect(JSON.parse(ended.stderr).error.message).toContain("run `max default session start`")
     expect(new SendJournal(sendsPathFor("default")).entries().at(-1)).toMatchObject({
       kind: "account",
       action: "sessions-end",
@@ -771,10 +780,11 @@ describe("sessions", () => {
     ])
   })
 
-  it.each(["offline", "readOnly"])("refuses session closure with %s before login", async (flag) => {
+  it.each(["offline", "readonly"])("refuses session closure with %s before login", async (flag) => {
     const { environment, sent } = account()
     const profile = `a-end-${flag}`
-    if (flag === "readOnly") await runWith([profile, "config", "set", "readOnly", "true"])
+    if (flag === "readonly")
+      expect((await runWith([profile, "config", "set", "permissions.account", "readonly"])).code).toBe(0)
     const result = await runWith(
       [profile, "account", "sessions", "end", "--others", "--yes", ...(flag === "offline" ? ["--offline"] : [])],
       environment,

@@ -1,19 +1,22 @@
 # Backlog
 
-Open work only, one item per line. A finished item's line is deleted.
+Open P1 and P2 work only, most important first, one item per entry. A finished item's line is deleted.
+P3 and research: [`BACKLOG_LATER.md`](BACKLOG_LATER.md). Long analysis: [`BACKLOG-NOTES.md`](BACKLOG-NOTES.md).
 What the tool does today: [`../commands.md`](../commands.md) (generated). How it is built:
-[`ARCHITECTURE.md`](ARCHITECTURE.md). What the owner ruled: `docs_ai/DECISIONS.md`.
+[`ARCHITECTURE.md`](ARCHITECTURE.md). What the owner ruled: in private notes.
 
 ## Rules
 
 - **An id is permanent** and never reused. Take one with `bin/next-id <PREFIX>`: one counter for
   every worktree on the machine, under a lock, and never below the highest number on any branch.
 - **Prefixes:** `RES` research and measurement · `OPS` repository, tooling, CI, release · `CORE`
-  `cli-core` · `SPEC` protocol spec and generator · `MAX` domain, client, transport, session ·
+  `cli-base` · `SPEC` protocol spec and generator · `MAX` domain, client, transport, session ·
   `CLI` commands and output · `DOC` handwritten docs · `PROTO` protocol unknowns · `RISK` risks.
-- **One item:** the task as a title, then where the work starts (`path:line` or a REQUIREMENTS §).
-  Analysis goes to a plan in `docs_ai/plans/`, a ruling to `DECISIONS.md`.
-- **Priority:** **P1** blocks work or breaks something real · **P2** this cycle · **P3** someday.
+- **One item, one to three lines:** id · priority · the task as a title · where the work starts
+  (`path:line` or a REQUIREMENTS §) · a link to details. Analysis goes to a plan in the private notes or
+  to [`BACKLOG-NOTES.md`](BACKLOG-NOTES.md), a ruling to `DECISIONS.md`.
+- **Priority:** **P1** blocks work or breaks something real · **P2** this cycle · **P3** someday, kept in
+  [`BACKLOG_LATER.md`](BACKLOG_LATER.md) until it becomes P2.
 - **Mark:** none — not started · 🚧 `<branch>` — taken · 🟡 — half done, the rest named ·
   ⏸️ — deferred by the owner · 🚩 — waits on an owner decision.
 - **Claim before code:** put `🚧 <branch>` on the line in the first push of the branch, so two agents
@@ -21,127 +24,16 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 - **Close in the PR that ships the work:** delete the line here in that PR. Users read what shipped in
   `CHANGELOG.md`.
 
-## Features
+## Launch blockers (P1)
 
-- **CLI-76** · P2 · Reactions broken down by emoji in message rankings: `max stats messages top --measure reactions`
-  ranks by the total only; show each top message's reactions by emoji (for example 👍 4, 😂 3) beside the total, in
-  the table and in `--json`. Starts in cli-messaging `src/store/sqlite/rankings.ts`, `src/domain/rankings-options.ts`.
+None open.
 
-- **MAX-71** · P3 · Research left: join requests on a public group (a private group ignores `JOIN_REQUEST`; a
-  channel keeps it — MAX-73).
+## Next (P2)
 
-- **CLI-71** · P3 · HTML reports from statistics and charts: standalone report pages with summary
-  numbers and embedded charts, reusing the shared neutral chart data and replaceable renderer.
-  Starts in cli-messaging `src/charts/` and `src/cli/messenger/stats-command.ts`; plan the report
-  structure and command surface before implementation.
-
-
-- **CLI-68** · P3 · `mcp --http` as a background service: `server install` for it (systemd/launchd), so the
-  browser apps reach a machine without an open terminal. Follows CLI-58's live check (NEED-595 A: foreground
-  first).
-
-**From the PyMax comparison (2026-09-24, `NEED-175`).** Each is what PyMax's source declares
-(`MaxApiTeam/PyMax`, `src/pymax/api/`, commit `53103f0`) — a claim until measured. Every writing
-operation is measured first in Saved messages (chat 0), as replies and reactions were (`NEED-150`),
-and needs the owner's yes before it ships. Deleting messages was ruled out (`NEED-32`) until the owner asked for it on 2026-09-24 (`MAX-47`); marking
-read only on an explicit flag (`CLI-33`, REQUIREMENTS §19).
-
-- **MAX-48** · P3 · Send a round video note ("кружок"): opcode 82 `{type: 1, uploaderType: 1}`,
-  `thumbhash` from the upload answer, `_type: "VIDEO"` with `videoType: 1`. MAX refuses a file that
-  is not 480×480, `yuv420p`, limited range, bt709, baseline, AAC 48 kHz mono (PyMax #94). `thumbhash`
-  is bytes — a `Uint8Array` in a payload goes out as MessagePack bin since `MAX-40`.
-- **MAX-49** · P3 · Two-step password: log in when MAX asks for it (`passwordChallenge` in the login
-  answer, then `AUTH_LOGIN_CHECK_PASSWORD` 115 `{trackId, password}`), and set or remove one
-  (112 → 107 → 111). PyMax 2.4.1, code; a user logged in with it on the mobile client (PyMax #106).
-  The password is typed at a prompt, never an argument.ts:51`). Left: setting and removing one (112 → 107 → 111).
-- **MAX-34** · 🟡 P3 · Live events: a long-running `max listen` that prints new messages, edits,
-  reactions and typing as they arrive (PyMax's `on_message`, `on_message_edit`,
-  `on_reaction_update`…). Conflicts with one-shot commands (`CLAUDE.md` constraint 4), so it needs
-  a ruling first. What is new since the last check is already `max inbox` (`CLI-23`). `max serve` holds the connection and `max
-  watch` prints new messages as they arrive (`src/server/server.ts`, `#pushed`). What is left is
-  edits, reactions and typing. The server receives them but passes on only new messages (opcode 128).
-
-  Done 2026-09-25 from the third tab recording: `max watch --events` prints edits (128 with
-  `status: EDITED`), deletions (128 with `status: REMOVED`) and reactions (155); the plain stream is
-  unchanged. Left: typing — MAX pushes 129 only after `75 {chatId, subscribe: true}`, which the tab
-  sends for the chat it has open and repeats every 60 s; `max serve` subscribes to nothing.
-  Done 2026-10-08 (`MAX-67`): reads (130) and chat changes (135, or a 128 carrying the chat).
-- **MAX-4** · 🟡 P3 · Chat addressing. Done: an id, or a title matched exactly then as a fragment,
-  an ambiguous one refused (`resolve`, `src/client.ts:325`; `pickChat`, `src/resolve.ts:13`). Left: `@username`, a phone number, a chat the
-  account is not in.max.ru computes it.
-- **CLI-36** · P3 · The local copy made optional: a setting under which `max` writes no chats or
-  messages to disk and answers everything from MAX (`--offline` and `search messages` then refuse).
-  The option controls shared adapter recording and the login record (`src/record.ts`).
-- **CLI-5** · P3 · `max raw <operation>` — a debug escape hatch, validated against the spec, never
-  arbitrary frames (REQUIREMENTS §22).
-- **MAX-52** · 🟡 P2 · The requests a real tab sends right after LOGIN: 21 on a fresh start
-  (`48 48 272 35 32 302 163 208 27×4 209 28 22 48 28 35 53 209 35`) and 9 after a re-login. `max`
-  sends none, which shows on every login — a stronger difference than telemetry. Decide per
-  request: the read-only ones (272 folders, 302 banners, 163 call history, 27) could be copied; 22
-  subscribes to push and changes state. Captured 2026-09-25, `docs/dev/capture/2026-09-25-web-tab.md`.
-  Names by PyMax (53103f0): 22 `CONFIG`, 27 `ASSETS_UPDATE`, 28 `ASSETS_GET_BY_IDS`, 32
-  `CONTACT_INFO`, 35 `CONTACT_PRESENCE`, 48 `CHAT_INFO`, 53 `CHATS_LIST`, 208/209 stories, 272
-  `FOLDERS_GET`, 302 `BANNERS_GET`; 163 is not in its list. Only `max serve` will send them.
-  2026-09-25: the recording kept 27's `type` only as `"string"`, and no answer bodies, so what 27
-  asks for and which sync value each re-login sends back are unknown. The recorder now keeps both;
-  the code waits on the next recording (with `MAX-51`).
-
-  Done 2026-09-25 from the second recording (`docs_ai/captures/2026-09-25-web-tab-2.jsonl`):
-  `max serve` sends 272, 302, 163 and 27 ×4 (`STICKER`, `FAVORITE_STICKER`, `REACTION`,
-  `ANIMOJI_SET`) after every login, each re-login with the sync its previous answer returned
-  (`src/client.ts`, `live.readLikeTab`). Left: 48 `{chatIds}`, 32 and 35 `{contactIds}`, 28, and
-  the stories 208/209. Never: 22, which subscribes to push.
-- **RES-5** · 🟡 P2 · Does `LOGIN` move presence? Known: reading history marks nothing; the tab's
-  LOGIN sends `interactive: false`, `true` only in pings while its window has focus; the tab marks a
-  chat read with an explicit opcode 50, and 49 without `interactive` moves nothing. Left: whether
-  LOGIN itself moves presence — needs a second device watching.
-- **RES-7** · P3 · What a real client sends as opcode 36's payload. `{}`, `{marker}` are refused and
-  `{marker, count}` closes the connection (`pnpm probe:contacts`), so only a capture answers it. It
-  is the only route to contacts who share no chat. Closes `PROTO-1`.
-- **PROTO-1** · 🟡 P3 · What opcode 36 returns: other clients call it `CONTACT_LIST`, the protocol
-  notes call it `GET_BLOCKED`. Waits on `RES-7`.
-- **PROTO-3** · P3 · The upper bound on `chatsCount` in `LOGIN`: 100 works, 200 is refused. The spec
-  caps it at 100 (`src/spec/operations/session.ts:109`).
-- **PROTO-6** · P3 · What the `messages` object in the `LOGIN` answer holds. Nothing reads it
-  (`src/spec/operations/session.ts:156`); `pnpm probe:ids` prints its type and key count.
-- **SPEC-3** · 🟡 P3 · Sanitized protocol fixtures, synthetic values only (REQUIREMENTS §24). Done:
-  the web client's frames, headers and payload structure without values
-  (`src/testing/fixtures/web-capture-2026-09-25.json`, `MAX-40`), and the recorder for more
-  (`scripts/capture/web-recorder.js`). Left: fixtures of MAX's answers to our own operations —
-  response shapes are still tested with made-up payloads in `src/spec/`.
-- **SPEC-4** · P3 · A generated list of implemented operations (§8, §30). Deferred: listing what MAX
-  has and we lack means maintaining MAX's whole surface (§10).
-
-**Group moderation on the personal account** (`NEED-306`…`NEED-314`, plan
-`docs_ai/plans/2026-09-27-group-moderation.md`). `review --unanswered` shipped as `CLI-43`, `chats events` as `CLI-44`, `chats members list` as `CLI-45`, `chats rules` and `chats check` as `CLI-46`, MCP `max_chats_check` as `CLI-47`.
-
-- **CLI-48** · P3 · Roles in `chats members list` come from the chat as the login carried it, which
-  lags: right after `admins add` the bot still showed as `member`, while `bot admins list` already had
-  it. Refresh the chat (opcode 48, `CHAT_INFO`) before reading roles, or say the roles may be old.
-
-- **MAX-62** · P3 · Lifting a bot's ban. `max <bot> bot members remove --block` (and `bot chats check`)
-  ban a person from rejoining by the invite link (measured 2026-09-27). The Bot API has no unblock,
-  and the owner found no ban list in the MAX app. Re-adding the person by an admin works, but
-  whether it lifts the ban is unknown — after leaving, the link may still refuse them. Find where MAX
-  keeps the ban (a capture of the web client's group settings, or `CHAT_MEMBERS` 59 with another
-  `type`), then offer `max chats members unban`.
-
-## Foundation and risks
-
-- **CORE-10** · P3 · Plugins from npm, **only from an allow-list** kept in the CLI itself — package
-  names with pinned versions and integrity hashes — never an arbitrary package: a plugin runs inside
-  a program holding the token of a personal account. oclif's `plugin-plugins` is the model.
-- **CORE-11** · P3 · Installers and standalone archives per platform (oclif's `pack`), after a
-  single-file build (G4 §3.9: Bun only). Lowest priority.
-
-## Later — each reopens a ruling
-
-Added by the owner on 2026-09-24. Each one goes against REQUIREMENTS §3 or §18, and the line says
-which; the plan for it starts by saying so.
-
-- **CLI-27** · P3 · Hooks for workflows: `max` runs a configured command when a check finds
-  something new. Asked by the owner 2026-09-24 (`NEED-172`). Two things to settle in the plan: the
-  message text reaches that command, so it must go as data on stdin and never into the command
-  line; and `max watch --jsonl | <command>` on a running `max serve` (`MAX-35`) already does this
-  for live messages, as `max inbox --new` on a schedule does for batches — say what a hook adds
-  over those two pipes.
+- **MAX-52** · 🟡 🚩 P2 · Send the rest of the requests a real tab sends after LOGIN: 48 `{chatIds}`, 32 and 35
+  `{contactIds}`, 28, stories 208/209 — from `max serve` only; never 22. `src/client/live.ts:44` (`readLikeTab`);
+  [notes](BACKLOG-NOTES.md#max-52).
+- **RES-5** · 🟡 P2 · Does `LOGIN` itself move presence? Needs a second device watching; the steps are in the notes.
+  [notes](BACKLOG-NOTES.md#res-5).
+- **CLI-79** · P2 · `chats requests accept|decline --all` and `--link <link>`, as tg has them (`cli-dev audit`
+  same-path-contract). cli-core `chats requests`; max's join requests: `src/client/chat-writes.ts`.

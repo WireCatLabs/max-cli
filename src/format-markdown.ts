@@ -1,5 +1,5 @@
-import { CliError } from "@wirecat/cli-core"
-import { type FormattedText, type TextSpan, validateFormattedText } from "@wirecat/cli-messaging"
+import { CliError } from "@wirecat/cli-base"
+import { type FormattedText, type TextSpan, validateFormattedText } from "@wirecat/cli-core"
 
 const STYLES: [string, TextSpan["type"]][] = [
   ["**", "bold"],

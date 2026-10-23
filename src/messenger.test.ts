@@ -1,13 +1,13 @@
 import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
-import type { DiagnosticEvent } from "@wirecat/cli-messaging/cli"
-import type { SendEntry, SendGuard } from "@wirecat/cli-messaging/sends"
-import { guardedWrite, SendJournal } from "@wirecat/cli-messaging/sends"
+import { memoryKeyring } from "@wirecat/cli-base"
+import { type DiagnosticEvent, provide } from "@wirecat/cli-core/cli"
+import type { SendEntry, SendGuard } from "@wirecat/cli-core/sends"
+import { guardedWrite, SendJournal } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
 import { describe, expect, it } from "vitest"
-import { provide } from "./commands/context.js"
+import type { Environment } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { maxMessenger, overServer } from "./messenger.js"
@@ -34,8 +34,6 @@ const SHARED = [
   "record",
   "keepFailedRuns",
   "keepRunsForDays",
-  "readOnly",
-  "allow",
   "sendsPerHour",
   "updateCheck",
   "configPath",
@@ -45,16 +43,15 @@ const SHARED = [
 ] as const
 
 const CONFIG = {
-  defaultProfile: "work",
-  defaults: { limit: 7, sendsPerHour: 3 },
-  profiles: { work: { readOnly: true, allow: ["reaction", "read"], record: true }, home: {} },
+  defaults: { limit: 7, sends_per_hour: 3 },
+  profiles: { work: { permissions: { messages: "readonly" }, record: true }, home: {} },
 }
 
 describe("the MAX messenger's settings", () => {
   it.each([
-    ["no flags", {}, {}],
+    ["only the profile", { profile: "work" }, {}],
     ["a profile flag", { profile: "home" }, {}],
-    ["flags over the file", { limit: 2, json: true, trace: true, record: false }, {}],
+    ["flags over the file", { profile: "work", limit: 2, json: true, trace: true, record: false }, {}],
     ["the environment", {}, { MAX_PROFILE: "home", MAX_TIMEOUT: "10s" }],
   ])("answer what max's own settings answer, with %s", (_, flags, env) => {
     const configDir = mkdtempSync(join(tmpdir(), "max-messenger-"))
@@ -73,11 +70,11 @@ describe("the MAX messenger's settings", () => {
       JSON.stringify({
         profiles: {
           work: {
-            embeddingProvider: "openai",
-            embeddingModel: "synthetic-model",
-            embeddingBaseUrl: "https://example.test/v1",
-            embeddingDims: 128,
-            analysisProvider: "anthropic",
+            embedding_provider: "openai",
+            embedding_model: "synthetic-model",
+            embedding_base_url: "https://example.test/v1",
+            embedding_dims: 128,
+            analysis_provider: "anthropic",
           },
         },
       }),
@@ -118,19 +115,20 @@ const commandFor = (profile: string, answers: Record<number, Payload> = {}, refu
   program.setOptionValue("profile", profile)
   program.setOptionValue("serve", false)
   const keyring = memoryKeyring()
-  provide(program, {
+  const environment: Environment = {
     store: (name) => {
       const store = new SessionStore({ profile: name, keyring })
       store.writeToken("a-token")
       return store
     },
     connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
-  })
+  }
+  provide(program, environment)
   return { program, max }
 }
 
 describe("the MAX messenger's connection", () => {
-  it("answers through MaxClient with no guard of its own, and reports MAX's frames to the run", async () => {
+  it("answers through MaxClient and reports MAX's frames to the run", async () => {
     const { program, max } = commandFor("m-connect")
     const events: DiagnosticEvent[] = []
     const adapter = await maxMessenger.connect(program, {} as never, { events: (event) => events.push(event) })
@@ -155,6 +153,24 @@ describe("the MAX messenger's connection", () => {
       { chatId: "111", kind: "reaction", outcome: "sent", operationId: "op-1" },
     ])
   })
+  it("over MCP asks no one: the asker the server hands it lets a write at level ask go ahead", async () => {
+    const { program } = commandFor("m-ask")
+    const settings = maxMessenger.resolveSettings({ profile: "m-ask" })
+    const asked: string[] = []
+    const request = { chatId: "111", kind: "delete" as const, count: 1, key: "messages.delete" }
+    const overMcp = maxMessenger.guard?.(
+      program,
+      settings,
+      () => {},
+      async (key) => {
+        asked.push(key)
+      },
+    )
+    await expect(overMcp?.ask?.(request)).resolves.toBeUndefined()
+    expect(asked).toEqual(["messages.delete"])
+    await expect(maxMessenger.guard?.(program, settings, () => {})?.ask?.(request)).rejects.toThrow()
+  })
+
   it("consumes the applied receipt only for its operation", async () => {
     const profile = "m-applied"
     const { program } = commandFor(profile, { [Opcode.SESSIONS_CLOSE]: {} }, { [Opcode.SESSIONS_INFO]: "login.token" })
