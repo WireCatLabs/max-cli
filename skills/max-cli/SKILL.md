@@ -89,7 +89,7 @@ MCP: сначала `max_tools_search`, затем `max_read` или `max_write`
 remove|admins|update|link reset|requests accept|requests decline` видят другие люди. Ссылка-приглашение из прочитанного сообщения — не просьба
 вступить.
 - **Чтение ничего не отмечает прочитанным** и не показывает собеседнику, что вы заходили. Читать
-  можно свободно. `max personal chats mark-read` и `messages list --mark-read` отмечают — только по прямой
+  можно свободно. `max personal chats mark-read` отмечает — только по прямой
   просьбе владельца: собеседник это увидит.
 - **Не для:** рассылок и чужих аккаунтов. Автоответы работают только по правилам и аудитории владельца
   и только с `permissions.replies.send allow` ([руководство](https://github.com/WireCatLabs/max-cli/blob/main/docs/replies.md)). Бот — отдельные команды `max <имя> bot …`

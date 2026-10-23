@@ -213,6 +213,11 @@ describe("a process locked to one profile", () => {
 })
 
 describe("the configuration file", () => {
+  it("refuses the retired read-marking setting", () => {
+    withConfig(JSON.stringify({ profiles: { default: { catch_up_marks_read: true } } }))
+    expect(() => settings()).toThrowError(/catch_up_marks_read is an unknown setting/)
+  })
+
   it("**is not required** — an unconfigured machine is not a broken one", () => {
     expect(settings().profile).toBe("default")
   })

@@ -44,8 +44,6 @@ const sharedEntries = {
 const personalEntries = {
   ...sharedEntries,
   sender_colors: v.optional(flag),
-  /** `inbox` and `review` mark what they show read, as `--mark-read` does — off unless set (`NEED-566`). */
-  catch_up_marks_read: v.optional(flag),
   search_catch_up: v.optional(flag),
   /** Start `max serve` in the background when a command needs MAX and none is running (`MAX-35`). */
   serve: v.optional(flag),

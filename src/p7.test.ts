@@ -223,6 +223,29 @@ describe("contacts context in named chats", () => {
     expect(detailed.code, detailed.stderr).toBe(0)
     expect(JSON.parse(detailed.stdout).item.chats[0].messages[0]).toHaveProperty("locator")
 
+    const prepared = await cli(
+      [
+        profile,
+        "contacts",
+        "prepare",
+        "20000002",
+        "--limit",
+        "1",
+        "--since-time",
+        new Date(1789774000000).toISOString(),
+        "--offline",
+        "--json",
+      ],
+      {
+        ...environment,
+        connection: () => {
+          throw new Error("prepare must not connect")
+        },
+      },
+    )
+    expect(prepared.code, prepared.stderr).toBe(0)
+    expect(JSON.parse(prepared.stdout).item.prepare).toHaveProperty("coverage")
+
     const timeline = await cli(
       [
         profile,
