@@ -41,10 +41,10 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   the docs (owner, 2026-10-23). Done in max: `doctor report` opened, the exceptions table in `docs/mcp.md` (a test keeps
   it exact). Left: the commands cli-core marks `mcp: false` (store export and backup, replies, schedules, `bot api`…);
   after the cli-core bump, update the table.
-- **MAX-52** · 🟡 P2 · Send the rest of the requests a real tab sends after LOGIN: 48 `{chatIds}`, 32 and 35
+- **MAX-52** · 🟡 🚩 P2 · Send the rest of the requests a real tab sends after LOGIN: 48 `{chatIds}`, 32 and 35
   `{contactIds}`, 28, stories 208/209 — from `max serve` only; never 22. `src/client/live.ts:44` (`readLikeTab`);
   [notes](BACKLOG-NOTES.md#max-52).
-- **RES-5** · 🟡 P2 · Does `LOGIN` itself move presence? Needs a second device watching.
+- **RES-5** · 🟡 P2 · Does `LOGIN` itself move presence? Needs a second device watching; the steps are in the notes.
   [notes](BACKLOG-NOTES.md#res-5).
 - **CLI-79** · P2 · `chats requests accept|decline --all` and `--link <link>`, as tg has them (`cli-dev audit`
   same-path-contract). cli-core `chats requests`; max's join requests: `src/client/chat-writes.ts`.

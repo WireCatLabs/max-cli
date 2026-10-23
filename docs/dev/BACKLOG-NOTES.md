@@ -42,12 +42,41 @@ which; the plan for it starts by saying so.
   (`src/client.ts`, `live.readLikeTab`). Left: 48 `{chatIds}`, 32 and 35 `{contactIds}`, 28, and
   the stories 208/209. Never: 22, which subscribes to push.
 
+  2026-10-23, read from web.max.ru's main bundle `_app/immutable/chunks/CLv-WKyI.js` (byte offsets approximate;
+  source, not a capture). None of the left requests comes from a fixed "after login" step. After LOGIN the client
+  stores what the answer holds; each later request is a cache miss that a batcher collects. The cache is the tab's
+  IndexedDB, so which ids go out depends on what that tab already had — a copy can only approximate it.
+
+  | Op | Payload | What picks the ids | Where |
+  |---|---|---|---|
+  | 48 | `{chatIds}` | a chat named by a folder's `include` or `favoriteIds`, or a comment chat's channel, missing from the cache | ~1850000, ~1852600 |
+  | 32 | `{contactIds}` | a dialog's other person, a group's owner, a message sender, missing from the cache | ~1846100 |
+  | 35 | `{contactIds}` | every contact stored or invalidated, collected for 500 ms | ~1851977, ~1845304 |
+  | 28 | `{type: "ANIMOJI_SET" or "ANIMOJI", ids}` | the sets the 27 `ANIMOJI_SET` answer names, then each set's `animojiIds`, as the UI reads them | ~1859000, ~1697006 |
+  | 208 | `{cursor: "0", count: 15}` | the stories bar on mount, then every `stories-config.update-ttl` s | ~1882059, ~2483540 |
+  | 209 | `{owners: [{type, ownerId}]}`, up to 30 | each chat-list row drawn: 0 + the other person for a dialog, 1 + chat id for a group, 2 for a channel | ~1912237, ~1707345 |
+
+  🚩 Waiting on the owner: copy the rule without the tab's cache — `max serve` would send 35 for the dialog partners
+  of the LOGIN chats on every login, 32 for those missing from LOGIN `contacts`, and on the first login only 209 for
+  the first 15 chats, 208 once, and 48 for folder chats missing from LOGIN `chats` — or leave the five unsent.
+  Either way the counts differ from a tab's. 28 needs the 27 answer bodies first; 48, 208 and 209 need new
+  operations in the spec.
+
 ## RES-5
 
 - **RES-5** · 🟡 P2 · Does `LOGIN` move presence? Known: reading history marks nothing; the tab's
   LOGIN sends `interactive: false`, `true` only in pings while its window has focus; the tab marks a
   chat read with an explicit opcode 50, and 49 without `interactive` moves nothing. Left: whether
   LOGIN itself moves presence — needs a second device watching.
+
+  The live check (personal A is measured, personal B watches; through `bin/max`, see the test-live skill):
+  1. A's other MAX apps closed or offline for 10 minutes, so nothing else moves A's presence.
+  2. B: `bin/max <B> contacts profile <A's id> --json` — note `seen` (T0).
+  3. A, two minutes later: `bin/max <A> chats list --limit 1 --timeout 60s` — one LOGIN with `interactive: false`
+     and nothing else that could move presence. Note the time (T1).
+  4. B, at once and again after 60 s: the same `contacts profile`; and on B's phone, A's dialog header.
+  5. `seen` moved to about T1, or the phone said "в сети": LOGIN moves presence. `seen` stayed at T0: it does not.
+  6. Repeat with `bin/max <A> serve` running two minutes (pings with `interactive: false`); stop it by its PID.
 
 ## MAX-34
 
