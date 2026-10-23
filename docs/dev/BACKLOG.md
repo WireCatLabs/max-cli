@@ -34,9 +34,6 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
   example fails with "name a profile". Generated in cli-core `src/cli/help/command-help` (`generatedExample`);
   `Returns:` also repeats the description when a command has no schema. Owner (2026-10-23): examples use a real profile
   name.
-- **DOC-21** · P1 · Two claims about max-mcp are untrue: `docs/index.md:121` says it cannot send video (its `send_file`
-  sends video files) and `:113` says it has no export (it dumps channel posts, 1,000 per call). Also tone down
-  `README.md:113` "as in the app". Evidence: cli-private `research/comparisons/max.md`.
 
 ## Next (P2)
 
