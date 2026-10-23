@@ -8,7 +8,7 @@
   "fixtures": [
     {
       "path": "MAX/CONFIG/config.json",
-      "text": "{\"defaults\": {\"limit\": 7}, \"profiles\": {\"readonly\": {\"readOnly\": true}, \"contract\": {}}}"
+      "text": "{\"defaults\": {\"limit\": 7}, \"profiles\": {\"contract\": {}}}"
     }
   ],
   "canaries": ["wirecat-synthetic-message-canary"],
@@ -43,64 +43,6 @@
       }
     },
     {
-      "id": "migration-preview",
-      "args": ["config", "migrate", "--dry-run", "--json"],
-      "exit": 0,
-      "stream": "stdout",
-      "kind": "json",
-      "json": {
-        "changed": true,
-        "dryRun": true
-      },
-      "files": [
-        {
-          "path": "MAX/CONFIG/config.json",
-          "unchanged": true
-        }
-      ]
-    },
-    {
-      "id": "migration-apply",
-      "args": ["config", "migrate", "--json"],
-      "exit": 0,
-      "stream": "stdout",
-      "kind": "json",
-      "json": {
-        "changed": true,
-        "dryRun": false
-      },
-      "files": [
-        {
-          "path": "MAX/CONFIG/config.json",
-          "json": {
-            "defaults": {
-              "limit": 7
-            },
-            "personal": {
-              "profiles": {
-                "readonly": {
-                  "permissions": {
-                    "messages": "readonly",
-                    "tasks": "readonly"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "id": "migration-repeat",
-      "args": ["config", "migrate", "--json"],
-      "exit": 0,
-      "stream": "stdout",
-      "kind": "json",
-      "json": {
-        "changed": false
-      }
-    },
-    {
       "id": "candidate-store-migrate",
       "args": ["contract", "store", "migrate", "--json"],
       "exit": 0,
@@ -127,21 +69,34 @@
     },
     {
       "id": "task-add",
-      "args": ["contract", "--json", "--record", "tasks", "add", "msg:max/601/7/101", "--type", "promise"],
+      "args": [
+        "contract",
+        "--json",
+        "--record",
+        "tasks",
+        "add",
+        "msg:max/601/7/101",
+        "--type",
+        "promise",
+        "--category",
+        "other"
+      ],
       "exit": 0,
       "stream": "stdout",
       "kind": "json",
       "capture": {
-        "task": "/id"
+        "task": "/item/id"
       },
       "json": {
-        "state": "open"
+        "item": {
+          "state": "open"
+        }
       },
       "allowSensitiveOutput": true
     },
     {
       "id": "task-list",
-      "args": ["contract", "--json", "--trace", "--record", "tasks", "list", "--state", "open"],
+      "args": ["contract", "--json", "--trace", "--record", "tasks", "list", "state:open"],
       "exit": 0,
       "stream": "stdout",
       "kind": "json",
@@ -150,10 +105,7 @@
         "items": [
           {
             "id": "{{task}}",
-            "state": "open",
-            "message": {
-              "text": "wirecat-synthetic-message-canary"
-            }
+            "state": "open"
           }
         ]
       }
@@ -176,14 +128,16 @@
       "stream": "stdout",
       "kind": "json",
       "json": {
-        "state": "dismissed",
-        "reason": "synthetic-check"
+        "item": {
+          "state": "dismissed",
+          "reason": "synthetic-check"
+        }
       },
       "allowSensitiveOutput": true
     },
     {
       "id": "task-persisted",
-      "args": ["contract", "--json", "tasks", "list", "--state", "dismissed"],
+      "args": ["contract", "--json", "tasks", "list", "state:dismissed"],
       "exit": 0,
       "stream": "stdout",
       "kind": "json",

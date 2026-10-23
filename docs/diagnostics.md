@@ -9,8 +9,8 @@
 - **Запуск** — один вызов `max`, от старта до выхода.
 - **Запись запуска** — каталог, где хранится, что делал один запуск: команда, итог и по строке на
   каждый запрос к MAX. Текстов сообщений, имён и названий в нём нет никогда.
-- **`max doctor`** проверяет установку: версию, вход, настройки и локальную копию.
-- **Отчёт о проблеме** — один файл JSON из ответа `max doctor` и неудачного запуска. Его
+- **`max personal doctor`** проверяет установку: версию, вход, настройки и локальную копию.
+- **Отчёт о проблеме** — один файл JSON из ответа `max personal doctor` и неудачного запуска. Его
   прикладывают к задаче на GitHub.
 
 ## Что можно сделать
@@ -19,15 +19,15 @@
 |---|---|---|
 | Видеть каждый запрос по ходу работы | `max … --trace` | ничего, только вывод в stderr |
 | Сохранить запись одного запуска | `max … --record` | запись запуска |
-| Найти неудачный запуск позже | `max runs list` | неудачный запуск сохраняется сам |
-| Сохранять каждый запуск | `max config set record true` | запись каждого запуска |
-| Проверить установку | `max doctor`, `max doctor --online` | ничего |
-| Составить отчёт о проблеме | `max doctor report create` | один файл, который вы отправляете |
+| Найти неудачный запуск позже | `max personal runs list` | неудачный запуск сохраняется сам |
+| Сохранять каждый запуск | `max personal config set record true` | запись каждого запуска |
+| Проверить установку | `max personal doctor`, `max personal doctor --online` | ничего |
+| Составить отчёт о проблеме | `max personal doctor report create` | один файл, который вы отправляете |
 
 ## Показать: `--trace`
 
 ```sh
-max chats list --trace
+max personal chats list --trace
 ```
 
 ```text
@@ -46,14 +46,14 @@ max chats list --trace
 Всё это идёт **в stderr**, поэтому рядом с `--json` ничего не ломается:
 
 ```sh
-max chats list --json --trace > chats.json    # данные в файл, диагностика на экран
+max personal chats list --json --trace > chats.json    # данные в файл, диагностика на экран
 ```
 
 В терминале — строки выше. В трубе — по одному объекту JSON на строку, по тому же правилу, что и
 для данных:
 
 ```sh
-max chats list --json --trace 2>&1 >/dev/null | jq -c 'select(.event == "response")'
+max personal chats list --json --trace 2>&1 >/dev/null | jq -c 'select(.event == "response")'
 ```
 
 `--trace` сильнее `--quiet`: флаг, который вы дописали сами, срабатывает всегда.
@@ -82,10 +82,10 @@ max shop bot messages list -100 --trace
 ## Сохранить: `--record`
 
 ```sh
-max chats list --record
-max runs list                 # что делалось, новое сверху
-max runs show <id>            # один запуск: чем кончился и куда ходил
-max runs path <id>            # каталог, для jq и grep
+max personal chats list --record
+max personal runs list                 # что делалось, новое сверху
+max personal runs show <id>            # один запуск: чем кончился и куда ходил
+max personal runs path <id>            # каталог, для jq и grep
 ```
 
 Каталог запуска:
@@ -103,14 +103,14 @@ max runs path <id>            # каталог, для jq и grep
 Итог записывается **на любом пути** — в том числе когда команда упала, не успев подключиться:
 
 ```json
-{ "runId": "…", "command": "chats list", "profile": "default", "status": "failed",
-  "requests": 0, "errorCode": "authentication_error", "durationMs": 12 }
+{ "run_id": "…", "command": "chats list", "profile": "personal", "status": "failed",
+  "requests": 0, "error_code": "authentication_error", "duration_ms": 12 }
 ```
 
 ## Неудачный запуск сохраняется всегда
 
 Если команда кончилась ошибкой, её запуск сохраняется и без `--record` — с пометкой
-`"keptBecauseFailed": true` в `run.json`. Это касается любой команды и любой ошибки: неверного
+`"kept_because_failed": true` в `run.json`. Это касается любой команды и любой ошибки: неверного
 флага, неизвестной команды, проверки до начала работы, команд, которые в MAX не ходят (`models`,
 `server`, `watch`, `upgrade`). В записи — только слова команды, например `messages list`, без того,
 что было написано после них.
@@ -125,14 +125,14 @@ max runs path <id>            # каталог, для jq и grep
 ## Когда записывать постоянно
 
 ```sh
-max config set record true          # этот профиль
-max chats list --no-record          # но не этот запуск
+max personal config set record true          # этот профиль
+max personal chats list --no-record          # но не этот запуск
 ```
 
 То же в файле настроек:
 
 ```json
-{ "profiles": { "default": { "record": true } } }
+{ "profiles": { "personal": { "record": true } } }
 ```
 
 Тогда пишется каждый запуск. По умолчанию полностью удачный запуск не записывается, пока не попросили:
@@ -141,7 +141,7 @@ max chats list --no-record          # но не этот запуск
 
 ## Сколько это живёт
 
-**30 дней**, или `keepRunsForDays` в [настройках](configuration.md). Старое удаляется только тогда,
+**30 дней**, или `keep_runs_for_days` в [настройках](configuration.md). Старое удаляется только тогда,
 когда что-то записывается: инструменту, который ничего не пишет, незачем ходить по этому каталогу.
 Удаляется днями целиком, по имени каталога, поэтому ничего не нужно открывать, чтобы решить.
 
@@ -173,11 +173,11 @@ max chats list --no-record          # но не этот запуск
 
 То же верно и для отчёта, собранного из запуска.
 
-## Проверить установку: `max doctor`
+## Проверить установку: `max personal doctor`
 
 ```sh
-max doctor              # никуда не подключается
-max doctor --online     # ещё и входит в MAX один раз; ничего не отправляет
+max personal doctor              # никуда не подключается
+max personal doctor --online     # ещё и входит в MAX один раз; ничего не отправляет
 ```
 
 Без `--online` он печатает, **не подключаясь к MAX**, то, от чего зависит любая команда:
@@ -185,16 +185,15 @@ max doctor --online     # ещё и входит в MAX один раз; нич�
 - есть ли токен и откуда, какая запись в ключнице и не сдвинули ли её переменные окружения (сам
   токен не печатается никогда — только «есть» и «откуда»);
 - сколько было входов и когда последний; все профили на этой машине — личный аккаунт, бот или оба;
-- общее хранилище: в ответе `--json` поле `store` — путь, схема и число сохранённых чатов и
-  сообщений. Проверка не создаёт и не обновляет хранилище. `legacyCache` только указывает, есть ли
-  старый файл локальной копии; если он есть, `doctor` подсказывает путь для ручного удаления;
+- общее хранилище: в ответе `--json` поле `item.store` — путь, схема и число сохранённых чатов и
+  сообщений. Проверка не создаёт и не обновляет хранилище;
 - каталог запусков;
 - какой версией веб-клиента MAX `max` представляется, и дату, когда её прочитали. Если этой дате
-  больше 60 дней, `max doctor` предупредит: MAX может перестать принимать старую версию, и тогда
+  больше 60 дней, `max personal doctor` предупредит: MAX может перестать принимать старую версию, и тогда
   поможет обновление `max`;
 - чем запущен `max` (Node или Bun, и где), каким менеджером пакетов поставлен, какую команду `max`
   найдёт новый терминал, грузятся ли ключница и SQLite, скачана ли модель речи. Если каталог с
-  командой `max` не на `PATH`, `max doctor` печатает точные команды, которые его туда добавят: на
+  командой `max` не на `PATH`, `max personal doctor` печатает точные команды, которые его туда добавят: на
   Windows — для PowerShell, на Linux и macOS — строку `export`;
 - пауза входа после отказа MAX за слишком частые входы, если она есть.
 
@@ -211,11 +210,11 @@ API, чей это токен, и печатает имя и id бота. Есл
 ## Отчёт о проблеме
 
 ```sh
-max doctor report create              # о последнем неудачном запуске
-max doctor report create --run <id>   # об этом запуске
+max personal doctor report create              # о последнем неудачном запуске
+max personal doctor report create --run <id>   # об этом запуске
 ```
 
-Команда пишет файл JSON — то, что показывает `max doctor`, и запуск — и печатает ссылку на новую
+Команда пишет файл JSON — то, что показывает `max personal doctor`, и запуск — и печатает ссылку на новую
 задачу в [github.com/WireCatLabs/max-cli/issues](https://github.com/WireCatLabs/max-cli/issues). Прочитайте
 файл, прежде чем отправлять. Текстов сообщений в нём нет, а номера чатов и сообщений заменены
 метками. Что ещё в нём есть — в разделе [как сообщить о проблеме](troubleshooting.md#как-сообщить-о-проблеме).
@@ -224,23 +223,23 @@ max doctor report create --run <id>   # об этом запуске
 
 ## Что делать с записями
 
-Записи — это JSON, поэтому на вопросы о них отвечает `jq`. `max runs list --json` отвечает
-`{ items, page, limit, hasMore }`, а `items` — это `run.json` запусков, новые сверху:
+Записи — это JSON, поэтому на вопросы о них отвечает `jq`. `max personal runs list --json` отвечает
+`{ items, page: { limit, has_more } }`, а `items` — это `run.json` запусков, новые сверху:
 
 ```sh
 # какие запуски закончились плохо
-max runs list --json | jq '.items[] | select(.status=="failed") | {runId, command, errorCode}'
+max personal runs list --json | jq '.items[] | select(.status=="failed") | {run_id, command, error_code}'
 
 # сколько времени ушло на вход в последних запусках
-for id in $(max runs list --json | jq -r '.items[].runId'); do
-  jq -r 'select(.operation=="session.login" and .event=="response") | "\(.durationMs)ms"' \
-    "$(max runs path "$id" --json | jq -r .path)/events.jsonl"
+for id in $(max personal runs list --json | jq -r '.items[].run_id'); do
+  jq -r 'select(.operation=="session.login" and .event=="response") | "\(.duration_ms)ms"' \
+    "$(max personal runs path "$id" --json | jq -r .item.path)/events.jsonl"
 done
 ```
 
-`max runs show` печатает те же события таблицей, без служебных полей, которые повторяются в каждой
+`max personal runs show` печатает те же события таблицей, без служебных полей, которые повторяются в каждой
 строке: иначе таблица уезжает за правый край экрана раньше, чем доходит до длительностей. Файл
-целиком, со служебными полями, лежит в каталоге, который печатает `max runs path`.
+целиком, со служебными полями, лежит в каталоге, который печатает `max personal runs path`.
 
 ## Дальше
 
@@ -250,18 +249,18 @@ done
 ## Найти ошибку или частичный запуск
 
 ```sh
-max runs search --error-code rate_limited --json
-max runs search --status partial --since-time 2026-10-01 --json
+max personal runs search --error-code rate_limited --json
+max personal runs search --status partial --since-time 2026-10-01 --json
 ```
 
 `runs search` ищет буквальный текст в метаданных и безопасных диагностических событиях;
 `--operation`, `--profile`, `--since-time`, `--limit` и `--page` уточняют поиск. Одна страница — до 100
-запусков; в запуске возвращается до 100 совпавших событий, `eventsTruncated` сообщает о сокращении.
+запусков; в запуске возвращается до 100 совпавших событий, `events_truncated` сообщает о сокращении.
 Ошибка отдельного файла или страницы истории создаёт частичную запись `status: "partial"` с
 неудачными ID, этапами и кодами. Текст сообщений и текст отказа сервера в неё не копируются.
 Запись сохраняется по умолчанию, если её явно не выключили. Поиск сам не создаёт новый запуск.
 
 В MCP вызовите `max_read` с `command: "runs search"`; поля `arguments`: `query`, `status`, `error_code`, `operation`, `since_time`, `limit`,
 `page`. Он читает только записи активного профиля, не подключается к MAX и не открывает сырые
-журналы фоновых заданий. Полный результат частичной команды содержит действия для восстановления;
+журналы фоновых заданий. Полный результат частичной команды называет неудачные элементы и коды их ошибок;
 диагностическая запись сохраняет только безопасные идентификаторы и коды.

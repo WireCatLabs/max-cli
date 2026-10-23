@@ -2,11 +2,12 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync
 import { createServer, type Server } from "node:net"
 import { dirname, join } from "node:path"
 import { decode, ExtData } from "@msgpack/msgpack"
-import { type CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@wirecat/cli-core"
-import { thisMachine, unitScope } from "@wirecat/cli-messaging/background"
-import { rememberAccount, repliesPathFor } from "@wirecat/cli-messaging/cli"
-import { guardedWrite, RecipientList, SendJournal } from "@wirecat/cli-messaging/sends"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { CliError, captureStreams, exitCodeFor, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
+import { thisMachine, unitScope } from "@wirecat/cli-core/background"
+import { rememberAccount, repliesPathFor } from "@wirecat/cli-core/cli"
+import { guardedWrite, RecipientList, SendJournal } from "@wirecat/cli-core/sends"
+import { openStore } from "@wirecat/cli-core/store"
+import { Command } from "commander"
 import { afterEach, describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
 import { MaxClient } from "../client.js"
@@ -14,8 +15,8 @@ import { contextFor } from "../commands/context.js"
 import { maxServerOptions, NO_RESTART_ON } from "../commands/server.js"
 import { resolveSettings } from "../config.js"
 import { Opcode } from "../generated/opcodes.generated.js"
-import { overServer } from "../messenger.js"
-import { permissionScope, withPermissionApproval } from "../permissions.js"
+import { maxMessenger, overServer } from "../messenger.js"
+import { permissionApprovals, permissionScope, withPermissionApproval } from "../permissions.js"
 import { run } from "../program.js"
 import { Connection } from "../protocol/connection.js"
 import { decodeHeader, HEADER_BYTES } from "../protocol/frame.js"
@@ -86,22 +87,28 @@ const serve = async (
   profile: string,
   max = scripted(),
   extra: {
+    now?: () => number
     pingEveryMs?: number
     telemetryAfterMs?: number
     refreshEveryMs?: number
     idleMs?: number
     startedByCommand?: boolean
+    maxSubscriberBufferBytes?: number
+    maxSubscriberTotalBufferBytes?: number
+    requestTimeoutMs?: number
   } = {},
 ) => {
   const store = new SessionStore({ profile, keyring: memoryKeyring() })
   store.writeToken("a-token")
   const notes: string[] = []
+  const { requestTimeoutMs = 200, ...serverOptions } = extra
   const server = new MaxServer({
     store,
     note: (line) => notes.push(line),
-    connection: (hooks) => new Connection({ ...hooks, live: true, createSocket: max.createSocket, timeoutMs: 200 }),
+    connection: (hooks) =>
+      new Connection({ ...hooks, live: true, createSocket: max.createSocket, timeoutMs: requestTimeoutMs }),
     retryAfterMs: () => 0,
-    ...extra,
+    ...serverOptions,
   })
   running.push(server)
   await server.start()
@@ -141,6 +148,36 @@ const tabReads = (max: ReturnType<typeof scripted>, logins = 1) =>
     `reads after ${logins} login(s)`,
   )
 
+it("uses its injected clock for status and start metadata", async () => {
+  const now = Date.parse("2026-10-01T12:00:00.000Z")
+  const { store } = await serve("server-clock", scripted(), { now: () => now })
+  expect(await serverStatus(store.socketPath())).toMatchObject({
+    at: "2026-10-01T12:00:00.000Z",
+    startedAt: "2026-10-01T12:00:00.000Z",
+  })
+})
+
+it("ends a subscription with the error its handler threw, rather than crashing the process", async () => {
+  const { store, server } = await serve("subscriber-throws", scripted())
+  const failure = new CliError("authentication_error", "this profile has not logged in yet")
+  await expect(
+    subscribe(store.socketPath(), store.profile, () => {
+      throw failure
+    }),
+  ).rejects.toBe(failure)
+  expect(server.connected).toBe(true)
+})
+
+it("reports a subscription buffer refusal to watch while leaving the server available", async () => {
+  const { store, server, notes } = await serve("subscriber-budget", scripted(), { maxSubscriberBufferBytes: 1 })
+  await expect(subscribe(store.socketPath(), store.profile, () => {})).rejects.toMatchObject({
+    code: "invalid_response",
+    details: { reason: "output.too-large" },
+  })
+  expect(notes.some((note) => note.includes("output buffer budget"))).toBe(true)
+  expect(server.connected).toBe(true)
+})
+
 describe("max serve", () => {
   it("logs in once and listens on a socket only its owner can open", async () => {
     const { store, max } = await serve("s-start")
@@ -156,8 +193,8 @@ describe("max serve", () => {
     const db = await openStore()
     try {
       const key = { provider: "max", account: String(ME) }
-      expect((await db.chats(key, {})).items.find((chat) => chat.id === "111")).toMatchObject({ title: "First" })
-      expect((await db.people("max", { account: key.account })).get("10000002")?.name).toBe("Someone Else")
+      expect((await db.chats.chats(key, {})).items.find((chat) => chat.id === "111")).toMatchObject({ title: "First" })
+      expect((await db.people.people("max", { account: key.account })).get("10000002")?.name).toBe("Someone Else")
       expect(existsSync(join(resolvePaths({ appName: "max-cli", prefix: "MAX" }).cache, `${store.profile}.db`))).toBe(
         false,
       )
@@ -498,7 +535,6 @@ describe("a command through max serve", () => {
   const commandClient = (store: SessionStore, direct = own()) => {
     let opened = 0
     const client = new MaxClient({
-      sends: "caller",
       store,
       connection: new ServerConnection({
         path: store.socketPath(),
@@ -576,9 +612,8 @@ describe("a command through max serve", () => {
   })
 
   it("sends through the server too: one connection to MAX for everything", async () => {
-    const { store, max } = await serve("c-send")
-    // The reads after login first: sharing the 200 ms budget with them, the send timed out on CI and
-    // was retried with its cid — two MSG_SEND for one message.
+    // Coverage instrumentation can use the short retry fixtures' entire request budget.
+    const { store, max } = await serve("c-send", scripted(), { requestTimeoutMs: 2000 })
     await tabReads(max)
     const { client, opened } = commandClient(store)
 
@@ -614,7 +649,6 @@ describe("a command through max serve", () => {
     store.writeToken("a-token")
     let started = 0
     const client = new MaxClient({
-      sends: "caller",
       store,
       connection: new ServerConnection({
         path: store.socketPath(),
@@ -959,7 +993,7 @@ describe("the send guard, in the server", () => {
   const journal = (profile: string) => new SendJournal(sendsPathFor(profile)).entries()
 
   it("refuses a send over the socket on a read-only profile, before MAX, and journals the refusal", async () => {
-    await cli(["g-ro", "config", "set", "readOnly", "true"])
+    expect(await cli(["g-ro", "config", "set", "permissions.messages", "readonly"])).toBe(0)
     const { store, max } = await serve("g-ro")
 
     const answer = await ask(store, {
@@ -983,7 +1017,7 @@ describe("the send guard, in the server", () => {
       })
 
     expect((await send(1)).error).toBeUndefined()
-    await cli(["g-later", "config", "set", "readOnly", "true"])
+    expect(await cli(["g-later", "config", "set", "permissions.messages", "readonly"])).toBe(0)
     expect((await send(2)).error).toMatchObject({ code: "permission_error" })
     expect(max.sent.filter((call) => call.opcode === Opcode.MSG_SEND)).toHaveLength(1)
   })
@@ -1026,30 +1060,11 @@ describe("the send guard, in the server", () => {
     ])
   })
 
-  it("a command's client handed an undefined send guard is guarded as if none was handed", async () => {
-    await cli(["g-undefined", "config", "set", "readOnly", "true"])
-    const max = mockMax({ answers: {} })
-    const store = new SessionStore({ profile: "g-undefined", keyring: memoryKeyring() })
-    const context = contextFor(
-      { profile: "g-undefined" },
-      {
-        store: () => store,
-        streams: captureStreams(),
-        connection: () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
-      },
-    )
-    const client = context.createClient({ sends: undefined })
-
-    await expect(client.messages.send("111", "hi")).rejects.toMatchObject({ code: "permission_error" })
-    await client.close()
-    expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.MSG_SEND)
-  })
-
   it("a refusal by the server reaches the command as the same error, with its exit code", async () => {
     const { store } = await serve("g-exit")
     const context = contextFor({ profile: "g-exit" }, { store: () => store, streams: captureStreams() })
     const client = context.createClient()
-    await cli(["g-exit", "config", "set", "sendsPerHour", "1"])
+    expect(await cli(["g-exit", "config", "set", "sends_per_hour", "1"])).toBe(0)
     await client.messages.send("111", "one")
 
     await expect(client.messages.send("111", "two")).rejects.toMatchObject({ code: "rate_limited" })
@@ -1059,7 +1074,7 @@ describe("the send guard, in the server", () => {
   it("journals a forwarded write under the operation id of the command that made it, and a send by its send id", async () => {
     const { store } = await serve("g-operation", scripted())
     const context = contextFor({ profile: "g-operation" }, { store: () => store, streams: captureStreams() })
-    const client = context.createClient({ sends: "caller" })
+    const client = context.createClient({})
     const passing = { check: () => {}, record: () => {} }
 
     await withPermissionApproval("messages.delete", () =>
@@ -1089,7 +1104,7 @@ describe("the send guard, in the server", () => {
       },
     })
     const { store } = await serve("g-retry", max)
-    await cli(["g-retry", "config", "set", "sendsPerHour", "2"])
+    expect(await cli(["g-retry", "config", "set", "sends_per_hour", "2"])).toBe(0)
     const context = contextFor({ profile: "g-retry" }, { store: () => store, streams: captureStreams() })
     const client = context.createClient()
 
@@ -1106,7 +1121,7 @@ describe("the send guard, in the server", () => {
 
   it("counts a cid that was already sent as a new send, in its own chat or another", async () => {
     const { store, max } = await serve("g-reuse")
-    await cli(["g-reuse", "config", "set", "sendsPerHour", "1"])
+    expect(await cli(["g-reuse", "config", "set", "sends_per_hour", "1"])).toBe(0)
     const context = contextFor({ profile: "g-reuse" }, { store: () => store, streams: captureStreams() })
     const client = context.createClient()
     await client.messages.send("111", "sent")
@@ -1126,7 +1141,7 @@ describe("the send guard, in the server", () => {
   })
 
   it("refuses a request shape no command sends: a field the spec does not have, a control attachment in a message", async () => {
-    await cli(["g-shape", "config", "set", "allow", "send"])
+    expect(await cli(["g-shape", "config", "set", "permissions.messages.send", "allow"])).toBe(0)
     const { store, max } = await serve("g-shape")
 
     const extra = await ask(store, {
@@ -1192,7 +1207,7 @@ describe("max server", () => {
   it("status: says nothing runs, as a result a script can read, and exits 0", async () => {
     const { code, out } = await max(["x-none", "server", "status", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toMatchObject({ profile: "x-none", running: false, cliVersion: VERSION })
+    expect(JSON.parse(out).item).toMatchObject({ profile: "x-none", running: false, cli_version: VERSION })
   })
 
   it("status: pid, start time, version and whether MAX is connected", async () => {
@@ -1200,16 +1215,16 @@ describe("max server", () => {
     const { code, out, err } = await max(["x-status", "server", "status", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toMatchObject({
+    expect(JSON.parse(out).item).toMatchObject({
       profile: "x-status",
       running: true,
       connected: true,
       pid: process.pid,
       by: "hand",
       version: VERSION,
-      cliVersion: VERSION,
+      cli_version: VERSION,
     })
-    expect(Date.parse(JSON.parse(out).startedAt)).toBeLessThanOrEqual(Date.now())
+    expect(Date.parse(JSON.parse(out).item.started_at)).toBeLessThanOrEqual(Date.now())
     expect(err).toBe("")
   })
 
@@ -1225,11 +1240,13 @@ describe("max server", () => {
     )
     await new Promise<void>((resolve) => old.listen(store.socketPath(), resolve))
 
-    const { out, err } = await max(["x-old", "server", "status", "--json"])
+    const { out } = await max(["x-old", "server", "status", "--json"])
     old.close()
 
-    expect(JSON.parse(out)).toMatchObject({ running: true, version: "0.8.0", cliVersion: VERSION })
-    expect(err).toContain("max server restart")
+    expect(JSON.parse(out)).toMatchObject({
+      item: { running: true, version: "0.8.0", cli_version: VERSION },
+      next: [{ step: "server.restart", command: "server restart" }],
+    })
   })
 
   it("stop: stops one started by hand, and says so", async () => {
@@ -1237,7 +1254,7 @@ describe("max server", () => {
     const { code, out } = await max(["x-stop", "server", "stop", "--json"])
 
     expect(code).toBe(0)
-    expect(JSON.parse(out)).toMatchObject({ profile: "x-stop", stopped: true, by: "hand" })
+    expect(JSON.parse(out).item).toMatchObject({ profile: "x-stop", stopped: true, by: "hand" })
     await expect(server.done).resolves.toBeUndefined()
   })
 
@@ -1260,7 +1277,7 @@ describe("max server", () => {
     const unit = join(process.env.XDG_CONFIG_HOME ?? "", "systemd", "user", name)
     expect(unit.startsWith(process.env.MAX_STATE_DIR?.replace(/state$/, "") ?? "/nowhere")).toBe(true)
 
-    expect((await call(["x-unit", "server", "install", "--json"])).answer).toMatchObject({
+    expect((await call(["x-unit", "server", "install", "--json"])).answer.item).toMatchObject({
       path: unit,
       replaced: false,
     })
@@ -1269,19 +1286,22 @@ describe("max server", () => {
     expect(text).toContain("RestartPreventExitStatus=4 8 11")
     expect(text).not.toContain("MAX_TOKEN")
 
-    expect((await call(["x-unit", "server", "logs", "--lines", "5", "--json"])).answer).toMatchObject({
-      unit: name,
-    })
+    expect((await call(["x-unit", "server", "logs", "--limit", "5", "--json"])).answer.items).toEqual([
+      "LoadState=loaded",
+      "ActiveState=inactive",
+      "SubState=dead",
+      "MainPID=0",
+    ])
     expect(ran.at(-1)).toEqual(["journalctl", "--user", "-u", name, "-n", "5", "--no-pager"])
 
-    expect((await call(["x-unit", "server", "uninstall", "--json"])).answer).toMatchObject({ removed: true })
+    expect((await call(["x-unit", "server", "uninstall", "--json"])).answer.item).toMatchObject({ removed: true })
     expect(existsSync(unit)).toBe(false)
     expect(ran.some((argv) => argv[0] === "systemctl" && argv.includes("start"))).toBe(false)
   })
 
   it("stop: with nothing running, stopped is false", async () => {
     const { out } = await max(["x-idle", "server", "stop", "--json"])
-    expect(JSON.parse(out)).toEqual({ profile: "x-idle", stopped: false })
+    expect(JSON.parse(out).item).toEqual({ profile: "x-idle", stopped: false })
   })
 })
 
@@ -1466,7 +1486,7 @@ describe("P7 policy on the raw server socket", () => {
 it("does not ask again on the server after the moderation layer approved the action", async () => {
   const { store, max } = await serve("p7-rule-approved", scripted())
   const client = contextFor({ profile: store.profile }, { store: () => store, streams: captureStreams() }).createClient(
-    { sends: "caller" },
+    {},
   )
   const guard = overServer(
     guardFor(resolveSettings({ profile: store.profile }), () => {}),
@@ -1485,6 +1505,53 @@ it("does not ask again on the server after the moderation layer approved the act
   } finally {
     await client.close()
   }
+})
+
+describe("max's guard over MCP, through max serve", () => {
+  const goAhead = async () => {}
+
+  it("sends the approval of a write at level ask, which the MCP server's asker gave", async () => {
+    const { store, max } = await serve("mcp-ask-serve", scripted())
+    const client = contextFor(
+      { profile: store.profile },
+      { store: () => store, streams: captureStreams() },
+    ).createClient({})
+    const settings = maxMessenger.resolveSettings({ profile: store.profile })
+    const guard = maxMessenger.guard?.(new Command("mcp"), settings, () => {}, goAhead)
+    if (!guard) throw new Error("max has a guard hook")
+    try {
+      await guardedWrite(guard, { operationId: "mcp-delete-1", chatId: "111", kind: "delete", count: 1 }, () =>
+        client.messages.delete("111", ["116762160362694583"]),
+      )
+      expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
+      expect(permissionApprovals("mcp-delete-1")).toEqual([])
+    } finally {
+      await client.close()
+    }
+  })
+
+  it("keeps this server's --permission deny when moderation deletes", async () => {
+    const { store, max } = await serve("mcp-deny-serve", scripted())
+    const client = contextFor(
+      { profile: store.profile },
+      { store: () => store, streams: captureStreams() },
+    ).createClient({})
+    const settings = maxMessenger.resolveSettings({ profile: store.profile, permission: ["messages.delete=deny"] })
+    const guard = maxMessenger.guard?.(new Command("mcp"), settings, () => {}, goAhead)
+    if (!guard) throw new Error("max has a guard hook")
+    try {
+      await expect(
+        guardedWrite(
+          guard,
+          { operationId: "moderated-2", key: "chats.moderate", chatId: "111", kind: "delete", count: 1 },
+          () => client.messages.delete("111", ["116762160362694583"]),
+        ),
+      ).rejects.toMatchObject({ code: "permission_error" })
+      expect(max.sent.some(({ opcode }) => opcode === Opcode.MSG_DELETE)).toBe(false)
+    } finally {
+      await client.close()
+    }
+  })
 })
 
 describe("auto-replies in max serve", () => {
@@ -1625,14 +1692,16 @@ describe("auto-replies in max serve", () => {
       return JSON.parse(streams.stdout.join(""))
     }
 
-    expect(await json("replies", "status")).toMatchObject({
+    expect((await json("replies", "status")).item).toMatchObject({
       send: "deny",
       audience: { reply: "listed", allow: 1 },
       rules: [{ id: "away" }],
     })
-    expect(await json("replies", "test", "--since-time", "1d")).toMatchObject({ rules: [{ id: "away", would: [] }] })
-    expect(await json("replies", "pause")).toMatchObject({ paused: true })
-    expect(await json("replies", "resume")).toMatchObject({ paused: false })
+    expect((await json("replies", "test", "--since-time", "1d")).item).toMatchObject({
+      rules: [{ id: "away", would: [] }],
+    })
+    expect((await json("replies", "pause")).item).toMatchObject({ paused: true })
+    expect((await json("replies", "resume")).item).toMatchObject({ paused: false })
   })
 
   it("never answers what arrived before it started", async () => {

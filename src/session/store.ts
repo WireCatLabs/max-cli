@@ -8,7 +8,7 @@ import {
   pathsAreOverridden,
   resolvePaths,
   writeSecurely,
-} from "@wirecat/cli-core"
+} from "@wirecat/cli-base"
 
 /**
  * What a MAX session actually is: a token, and an identity for this installation.
@@ -45,7 +45,10 @@ export const LOGIN_PAUSES_MS = [1, 5, 30, 60, 6 * 60, 24 * 60].map((minutes) => 
 export const loginPausedUntil = (state: SessionState, now = Date.now()): string | undefined =>
   state.loginPausedUntil !== undefined && Date.parse(state.loginPausedUntil) > now ? state.loginPausedUntil : undefined
 
-export const withLoginRefused = (state: SessionState, now = Date.now()): SessionState => {
+export const withLoginRefused = (
+  state: SessionState,
+  now = Date.now(),
+): SessionState & { loginPausedUntil: string } => {
   const refusals = (state.loginRefusals ?? 0) + 1
   const wait = LOGIN_PAUSES_MS[Math.min(refusals, LOGIN_PAUSES_MS.length) - 1] ?? 0
   return { ...state, loginRefusals: refusals, loginPausedUntil: new Date(now + wait).toISOString() }
@@ -54,7 +57,7 @@ export const withLoginRefused = (state: SessionState, now = Date.now()): Session
 export const withoutLoginPause = ({ loginRefusals, loginPausedUntil, ...state }: SessionState): SessionState => state
 
 export interface SessionStoreOptions {
-  profile?: string
+  profile: string
   env?: NodeJS.ProcessEnv
   keyring?: KeyringStore
   /** Overrides the config and state directories; tests pass a temporary one. */
@@ -69,7 +72,7 @@ export class SessionStore {
   readonly #stateDir: string
   readonly #credentials: Credentials
 
-  constructor({ profile = "default", env = process.env, keyring, configDir, stateDir }: SessionStoreOptions = {}) {
+  constructor({ profile, env = process.env, keyring, configDir, stateDir }: SessionStoreOptions) {
     const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
     this.profile = profile
     this.#stateDir = stateDir ?? paths.state
@@ -128,11 +131,24 @@ export class SessionStore {
 
   /** Whether this profile has logged in on this machine. Reads only: unlike `readState`, never creates the file. */
   hasLoggedIn(): boolean {
+    const parsed = this.#peek()
+    return (parsed.logins ?? 0) > 0 || typeof parsed.viewerId === "string"
+  }
+
+  /**
+   * The logged-in account's id, if any. Reads only: a mistyped profile name must not leave a state
+   * file behind, or it is listed as a profile from then on.
+   */
+  viewerId(): string | undefined {
+    const { viewerId } = this.#peek()
+    return typeof viewerId === "string" ? viewerId : undefined
+  }
+
+  #peek(): Partial<SessionState> {
     try {
-      const parsed = JSON.parse(readFileSync(this.#statePath(), "utf8")) as Partial<SessionState>
-      return (parsed.logins ?? 0) > 0 || typeof parsed.viewerId === "string"
+      return JSON.parse(readFileSync(this.#statePath(), "utf8")) as Partial<SessionState>
     } catch {
-      return false
+      return {}
     }
   }
 
@@ -144,6 +160,7 @@ export class SessionStore {
   forget(): boolean {
     const had = this.readToken() !== undefined
     this.#credentials.remove(this.profile)
+    if (!existsSync(this.#statePath())) return had
     try {
       writeSecurely(this.#statePath(), `${JSON.stringify({ deviceId: randomUUID(), logins: 0 }, null, 2)}\n`, 0o600)
     } catch {

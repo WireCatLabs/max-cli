@@ -1,0 +1,21 @@
+[
+  "bot chats members add <chat>",
+  "bot chats members add <users>",
+  "bot chats members list <chat>",
+  "bot comments delete <comment>",
+  "bot comments delete <message>",
+  "bot comments edit <comment>",
+  "bot comments edit <message>",
+  "bot comments edit <text>",
+  "bot comments get <comment>",
+  "bot comments get <message>",
+  "bot comments list <message>",
+  "bot comments send <message>",
+  "bot comments send <text>",
+  "bot recipients add <chat>",
+  "bot recipients remove <chat>",
+  "bot uploads put <file>",
+  "schedule exec <file>",
+  "schedule remove <name>",
+  "schedule run <name>"
+]

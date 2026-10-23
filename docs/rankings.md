@@ -17,14 +17,14 @@
 
 | Вопрос | Команда |
 | --- | --- |
-| Какие сообщения собрали больше всего реакций | `max stats messages top` |
-| Кто чаще отвечает на вопросы | `max stats contacts top` |
-| Какие вопросы ждут ответа | `max stats messages unanswered` |
-| Как быстро отвечает человек | `max stats contacts responses` |
-| Получили ли новички помощь | `max stats chats newcomers` |
-| Остаются ли новички | `max stats chats retention` |
-| Какие посты смотрели, но не обсуждали | `max stats messages discussion` |
-| Насколько свежи просмотры и реакции | `max stats messages counters show` |
+| Какие сообщения собрали больше всего реакций | `max personal stats messages top` |
+| Кто чаще отвечает на вопросы | `max personal stats contacts top` |
+| Какие вопросы ждут ответа | `max personal stats messages unanswered` |
+| Как быстро отвечает человек | `max personal stats contacts responses` |
+| Получили ли новички помощь | `max personal stats chats newcomers` |
+| Остаются ли новички | `max personal stats chats retention` |
+| Какие посты смотрели, но не обсуждали | `max personal stats messages discussion` |
+| Насколько свежи просмотры и реакции | `max personal stats messages counters show` |
 
 Все запросы, имена и результаты ниже — вымышленные примеры. Замените название чата своим. Таблицы показывают, как агент может оформить ответ; команда с `--json` возвращает данные для него.
 
@@ -39,7 +39,7 @@
 **Команда:**
 
 ```sh
-max stats messages top --chat "Поход" --measure reactions --limit 3 --json
+max personal stats messages top --chat "Поход" --measure reactions --limit 3 --json
 ```
 
 **Пример ответа агента:**
@@ -63,7 +63,7 @@ max stats messages top --chat "Поход" --measure reactions --limit 3 --json
 **Команда:**
 
 ```sh
-max stats contacts top --chat "Поход" --measure answers --limit 3 --json
+max personal stats contacts top --chat "Поход" --measure answers --limit 3 --json
 ```
 
 **Пример ответа агента:**
@@ -89,7 +89,7 @@ max stats contacts top --chat "Поход" --measure answers --limit 3 --json
 **Команда:**
 
 ```sh
-max stats messages unanswered --chat "Поход" --older-than 24h --json
+max personal stats messages unanswered --chat "Поход" --older-than 24h --json
 ```
 
 **Пример ответа агента:**
@@ -115,7 +115,7 @@ max stats messages unanswered --chat "Поход" --older-than 24h --json
 **Команда:**
 
 ```sh
-max stats contacts responses --chat "Поход" --answerer "Алекс" --json
+max personal stats contacts responses --chat "Поход" --answerer "Алекс" --json
 ```
 
 **Пример ответа агента:**
@@ -141,7 +141,7 @@ max stats contacts responses --chat "Поход" --answerer "Алекс" --json
 **Команда:**
 
 ```sh
-max stats chats newcomers "Поход" --within 7d --json
+max personal stats chats newcomers "Поход" --within 7d --json
 ```
 
 **Пример ответа агента:**
@@ -168,7 +168,7 @@ max stats chats newcomers "Поход" --within 7d --json
 **Команда:**
 
 ```sh
-max stats chats retention "Поход" --checkpoints 1d,7d,30d --within 7d --timezone UTC --json
+max personal stats chats retention "Поход" --checkpoints 1d,7d,30d --within 7d --timezone UTC --json
 ```
 
 **Пример ответа агента:**
@@ -194,7 +194,7 @@ max stats chats retention "Поход" --checkpoints 1d,7d,30d --within 7d --tim
 **Команда:**
 
 ```sh
-max stats messages discussion --chat "Новости" --min-views 100 --max-replies 0 --json
+max personal stats messages discussion --chat "Новости" --min-views 100 --max-replies 0 --json
 ```
 
 **Пример ответа агента:**
@@ -218,7 +218,7 @@ max stats messages discussion --chat "Новости" --min-views 100 --max-repl
 **Команда:**
 
 ```sh
-max stats messages counters show --chat "Поход" --counters views,reactions --max-age 24h --limit 20 --json
+max personal stats messages counters show --chat "Поход" --counters views,reactions --max-age 24h --limit 20 --json
 ```
 
 **Пример ответа агента:**
@@ -235,7 +235,7 @@ max stats messages counters show --chat "Поход" --counters views,reactions 
 Перед чтением новых счётчиков попросите показать точные сообщения и пределы.
 
 ```sh
-max stats messages counters refresh --chat "Поход" --counters views,reactions --max-messages 20 --sync-time 30s --dry-run --json
+max personal stats messages counters refresh --chat "Поход" --counters views,reactions --max-messages 20 --sync-time 30s --dry-run --json
 ```
 
 > **План:** не больше 20 сообщений, до 30 секунд. Просмотры и реакции поддерживаются.
@@ -261,6 +261,6 @@ max stats messages counters refresh --chat "Поход" --counters views,reactio
 
 ## Больше контроля
 
-Можно выбрать период, измерение, составную оценку и сохранить выборку для повторного отчёта. Формулы оценок, точные аргументы evidence и пределы страниц находятся в [общей спецификации статистики](https://github.com/WireCatLabs/cli-messaging/blob/main/docs/rankings.md) и [справочнике команд статистики](commands.md#max-stats).
+Можно выбрать период, измерение, составную оценку и сохранить выборку для повторного отчёта. Формулы оценок, точные аргументы evidence и пределы страниц находятся в [общей спецификации статистики](https://github.com/WireCatLabs/cli-core/blob/main/docs/rankings.md) и [справочнике команд статистики](commands.md#max-stats).
 
 Чтобы проверить вывод, попросите агента открыть вопрос, ответ или участников, на которых основана строка отчёта. Для следующего отчёта сначала [проверьте полноту архива](archive.md).

@@ -1,10 +1,8 @@
-import { CliError } from "@wirecat/cli-core"
+import { CliError } from "@wirecat/cli-base"
 import type { Command } from "commander"
 
-export const DEFAULT_PROFILE = "default"
-
-/** How the command line names this profile: the first word, or nothing at all for the default. */
-export const asFirstWord = (profile: string): string => (profile === DEFAULT_PROFILE ? "" : `${profile} `)
+/** How the command line names this profile: always the first word, since none is assumed. */
+export const asFirstWord = (profile: string): string => `${profile} `
 
 /**
  * A profile name becomes a file name — `<state>/profiles/<name>.json` (`session/store.ts:103`) —
@@ -37,8 +35,8 @@ export const commandWords = (program: Command): Set<string> =>
   new Set(["help", ...program.commands.flatMap((command) => [command.name(), ...command.aliases()])])
 
 /**
- * **The first word is the profile unless it names a command.** `max personal chats list`, and
- * `max chats list` on the default profile, with no flag in either.
+ * **The first word is the profile unless it names a command.** `max personal chats list`, with no
+ * flag; without it, `MAX_PROFILE` must name one.
  *
  * An option is never a profile, so `max --json chats list` still works.
  */

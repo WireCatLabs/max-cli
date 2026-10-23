@@ -1,7 +1,7 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { MIGRATIONS, openCache, openStore } from "@wirecat/cli-messaging/store"
+import { MIGRATIONS, openCache, openStore } from "@wirecat/cli-core/store"
 import { beforeEach, describe, expect, it } from "vitest"
 import { diagnose, knownProfiles } from "./diagnose.js"
 
@@ -33,7 +33,6 @@ describe("what a command depends on", () => {
 
     expect(report.session.exists).toBe(false)
     expect(report.token).toEqual({ present: false, from: "none" })
-    expect(report.legacyCache.exists).toBe(false)
     expect(report.loggedInProfiles).toEqual([])
   })
 
@@ -185,13 +184,6 @@ describe("what a command depends on", () => {
         database.close()
       }
       expect((await look()).store).toMatchObject({ schema: future, writable: false })
-    })
-
-    it("names the legacy file without opening or changing it", async () => {
-      mkdirSync(at("cache"), { recursive: true })
-      writeFileSync(at("cache", "default.db"), "old and unreadable")
-      expect((await look()).legacyCache).toEqual({ exists: true, file: at("cache", "default.db") })
-      expect(readFileSync(at("cache", "default.db"), "utf8")).toBe("old and unreadable")
     })
   })
 })

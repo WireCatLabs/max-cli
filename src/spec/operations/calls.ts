@@ -2,7 +2,7 @@ import * as v from "valibot"
 import { defineOperation } from "../define.js"
 
 /** Sent by `max serve` after each login, as a web tab does (`MAX-52`); the answer is kept only for its sync value. */
-const recorded = "web.max.ru tab, recorded 2026-09-25 (`docs_ai/captures/2026-09-25-web-tab-2.jsonl`)"
+const recorded = "web.max.ru tab, recorded 2026-09-25 (private capture 2026-09-25-web-tab-2.jsonl)"
 
 export const callsHistory = defineOperation({
   name: "calls.history",

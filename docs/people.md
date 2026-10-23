@@ -18,24 +18,25 @@
 
 | Задача | Команда |
 | --- | --- |
-| Узнать, кто это и где вы с ним переписываетесь | `max contacts profile` |
-| Прочитать, что он писал, во всех чатах или в названных | `max contacts context` |
-| Проверить, похож ли аккаунт на бота, фейк или спамера | `max contacts check` |
-| Проверить самых подозрительных участников группы | `max chats members audit --deep` |
-| Записать, что аккаунт в MAX и аккаунт в Telegram — один человек | `max contacts link` |
-| Вести своё имя и заметки о человеке | `max contacts alias`, `max contacts notes` |
+| Узнать, кто это и где вы с ним переписываетесь | `max personal contacts profile` |
+| Прочитать, что он писал, во всех чатах или в названных | `max personal contacts context` |
+| Подготовиться к разговору: переписка, задачи, заметки и встречи | `max personal contacts prepare` |
+| Проверить, похож ли аккаунт на бота, фейк или спамера | `max personal contacts check` |
+| Проверить самых подозрительных участников группы | `max personal chats members audit --deep` |
+| Записать, что аккаунт в MAX и аккаунт в Telegram — один человек | `max personal contacts link` |
+| Вести своё имя и заметки о человеке | `max personal contacts alias`, `max personal contacts notes` |
 
 Все опции этих команд — в [справочнике команд для контактов](commands.md#max-contacts).
 
 ## Кто это: `contacts profile`
 
 ```sh
-max contacts profile 20000002
-max contacts profile 20000002 --json
+max personal contacts profile 20000002
+max personal contacts profile 20000002 --json
 ```
 
 Команда показывает, что MAX сообщает о человеке, и сколько его сообщений лежит в локальной копии
-в каждом общем чате:
+в каждом общем чате. В JSON это поле `item` ответа, как и у `contacts context` и `contacts check` ниже:
 
 ```json
 {
@@ -46,17 +47,17 @@ max contacts profile 20000002 --json
   "phone": "***0123",
   "flags": { "bot": false },
   "registered": { "at": "2021-03-14T00:00:00.000Z", "source": "max", "precision": "day" },
-  "hasPhoto": true,
+  "has_photo": true,
   "seen": "2026-10-08T07:12:00.000Z",
   "chats": [
-    { "id": "30000003", "title": "Пример Примеров", "kind": "dialog", "theirMessages": 128,
-      "firstAt": "2024-02-11T09:14:00.000Z", "lastAt": "2026-10-05T18:02:00.000Z", "complete": true },
-    { "id": "-40000004", "title": "Книжный клуб", "kind": "group", "theirMessages": 37,
-      "firstAt": "2025-06-01T10:00:00.000Z", "lastAt": "2026-09-30T20:41:00.000Z", "complete": false }
+    { "id": "30000003", "title": "Пример Примеров", "kind": "dialog", "their_messages": 128,
+      "first_at": "2024-02-11T09:14:00.000Z", "last_at": "2026-10-05T18:02:00.000Z", "complete": true },
+    { "id": "-40000004", "title": "Книжный клуб", "kind": "group", "their_messages": 37,
+      "first_at": "2025-06-01T10:00:00.000Z", "last_at": "2026-09-30T20:41:00.000Z", "complete": false }
   ],
   "aliases": [
-    { "name": "Пример П.", "firstSeenAt": "2024-03-02T08:00:00.000Z",
-      "lastSeenAt": "2024-03-02T08:00:00.000Z", "source": "profile" }
+    { "name": "Пример П.", "first_seen_at": "2024-03-02T08:00:00.000Z",
+      "last_seen_at": "2024-03-02T08:00:00.000Z", "source": "profile" }
   ]
 }
 ```
@@ -64,7 +65,7 @@ max contacts profile 20000002 --json
 - **`registered`** — день создания аккаунта по данным самого MAX (`source: max`). Это не оценка.
 - **`flags`** — `bot: true` у бота. Отметок вроде «мошенник» или «подтверждён» MAX для личных
   аккаунтов не присылает.
-- **`hasPhoto`** — есть ли у человека своё фото.
+- **`has_photo`** — есть ли у человека своё фото.
 - **`seen`** — когда человек был в MAX последний раз, или `online`. MAX отвечает на это отдельным
   запросом при каждом вызове. Поля нет, если MAX ничего не сказал.
 - **`phone`** — только последние четыре цифры и только если MAX показывает вам номер. `--show-phone`
@@ -80,13 +81,25 @@ max contacts profile 20000002 --json
 
 ### Числа — это то, что лежит в копии
 
-`theirMessages`, `firstAt` и `lastAt` считаются по локальной копии, а не спрашиваются у MAX. Если
-`complete: false`, чат сохранён не с начала: число — это минимум, а `firstAt` может быть позже его
+`their_messages`, `first_at` и `last_at` считаются по локальной копии, а не спрашиваются у MAX. Если
+`complete: false`, чат сохранён не с начала: число — это минимум, а `first_at` может быть позже его
 настоящего первого сообщения. Чтобы дополнить, скачайте чат:
 
 ```sh
-max store fetch "Книжный клуб"
+max personal messages sync "Книжный клуб"
 ```
+
+## Подготовиться к разговору
+
+`contacts prepare` собирает справку из сохранённых данных: контекст переписки, личные чаты, где человек
+писал последним, открытые задачи, принятые факты, ваши заметки и недавние встречи. Каждый пункт содержит
+ссылку на источник. Команда не подключается к MAX и не отправляет отметку о прочтении.
+
+```sh
+max personal contacts prepare 20000002 --since-time 2026-10-01T00:00:00Z --limit 10
+```
+
+Для обычного обзора переписки используйте `contacts context` ниже.
 
 ## Что он писал: `contacts context`
 
@@ -95,14 +108,14 @@ max store fetch "Книжный клуб"
 подключается и ничего не отмечает прочитанным.
 
 ```sh
-max contacts context 20000002
+max personal contacts context 20000002
 ```
 
 С `--chat` — его последние сообщения в каждом названном чате, от старых к новым, по 20 на чат:
 
 ```sh
-max contacts context 20000002 --chat "Книжный клуб" --chat "Работа" --limit 10
-max contacts context 20000002 --chat "Книжный клуб" --refresh
+max personal contacts context 20000002 --chat "Книжный клуб" --chat "Работа" --limit 10
+max personal contacts context 20000002 --chat "Книжный клуб" --sync-first
 ```
 
 ```json
@@ -125,15 +138,15 @@ max contacts context 20000002 --chat "Книжный клуб" --refresh
 
 - По умолчанию у сообщения только время и текст, чтобы агент прочитал много сообщений сразу. `-v`
   добавляет номер сообщения, ссылку на него, отправителя и на что это ответ; `-vv` — всё.
-- `--refresh` сначала читает у MAX последнюю страницу каждого чата и берёт из неё сообщения этого
-  человека: искать по отправителю MAX не умеет. Без `--refresh` ответ берётся из копии.
+- `--sync-first` сначала читает у MAX последнюю страницу каждого чата и берёт из неё сообщения этого
+  человека: искать по отправителю MAX не умеет. Без `--sync-first` ответ берётся из копии.
 - `more: true` — есть сообщения старше лимита; `complete: false` — копия хранит чат не с начала.
 - У голосового сообщения есть `transcript`, когда оно переведено в текст.
 
 ## Бот, фейк или спамер: `contacts check`
 
 ```sh
-max contacts check 20000002
+max personal contacts check 20000002
 ```
 
 ```json
@@ -145,13 +158,13 @@ max contacts check 20000002
     { "reason": "link_first", "weight": 2, "source": "store" }
   ],
   "registries": [
-    { "name": "cas", "answer": "unknown", "checkedAt": "2026-10-07T08:00:00.000Z",
+    { "name": "cas", "answer": "unknown", "checked_at": "2026-10-07T08:00:00.000Z",
       "detail": "lists Telegram accounts only, not max" },
-    { "name": "lols", "answer": "unknown", "checkedAt": "2026-10-07T08:00:00.000Z",
+    { "name": "lols", "answer": "unknown", "checked_at": "2026-10-07T08:00:00.000Z",
       "detail": "lists Telegram accounts only, not max" }
   ],
   "unknown": [],
-  "checkedAt": "2026-10-07T08:00:00.000Z"
+  "checked_at": "2026-10-07T08:00:00.000Z"
 }
 ```
 
@@ -180,8 +193,8 @@ max contacts check 20000002
 ## Участники группы: `chats members audit --deep`
 
 ```sh
-max chats members audit "Книжный клуб"
-max chats members audit "Книжный клуб" --deep 10
+max personal chats members audit "Книжный клуб"
+max personal chats members audit "Книжный клуб" --deep 10
 ```
 
 `chats members audit` оценивает всех участников по списку участников и локальной копии, без
@@ -195,8 +208,8 @@ max chats members audit "Книжный клуб" --deep 10
 и аккаунт в Telegram — один человек, запишите это:
 
 ```sh
-max contacts link 20000002 telegram:1000001
-max contacts unlink 20000002
+max personal contacts link 20000002 telegram:1000001
+max personal contacts unlink 20000002
 ```
 
 После этого `contacts context` без `--chat` собирает оба аккаунта: общие чаты и сообщения из MAX и
@@ -207,14 +220,14 @@ MAX эта запись не меняет.
 ## Свои имена и заметки: `contacts alias`, `contacts notes`
 
 ```sh
-max contacts alias set "Борис Пример" Боря            # ваше имя для человека, только на этом компьютере
-max contacts alias rm "Борис Пример"
-max contacts notes add "Борис Пример" --file note.txt  # или текст из stdin
-max contacts notes list "Борис Пример"
-max contacts notes edit "Борис Пример" <id> --revision 1 --file note.txt
-max contacts notes remove "Борис Пример" <id>
-max contacts show "Борис Пример" --with-notes
-max contacts list --search-notes квартира             # люди, в чьих заметках есть этот текст
+max personal contacts alias set "Борис Пример" Боря            # ваше имя для человека, только на этом компьютере
+max personal contacts alias rm "Борис Пример"
+max personal contacts notes add "Борис Пример" --file note.txt  # или текст из stdin
+max personal contacts notes list "Борис Пример"
+max personal contacts notes edit "Борис Пример" <id> --revision 1 --file note.txt
+max personal contacts notes remove "Борис Пример" <id>
+max personal contacts show "Борис Пример" --with-notes
+max personal contacts list notes:квартира                     # люди, в чьих заметках есть этот текст
 ```
 
 Псевдонимы и заметки хранятся в локальной копии и никогда не уходят в MAX. Псевдоним действует
@@ -222,7 +235,7 @@ max contacts list --search-notes квартира             # люди, в ч�
 этом компьютере, где этот человек встречается. `contacts rename` меняет имя в адресной книге MAX —
 это другое. Команда находит человека по вашему псевдониму, если псевдоним не совпадает с чужим
 именем; иначе нужен id. `--revision` не даёт изменить заметку, если её поменяли после того, как вы её
-прочитали.
+прочитали. Обновление контактов сохраняет заметки и псевдонимы, а связывание людей их не объединяет.
 
 ## Что дальше
 

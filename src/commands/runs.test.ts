@@ -1,8 +1,8 @@
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams } from "@wirecat/cli-core"
-import { listRuns, runsDirFor, startRun } from "@wirecat/cli-messaging/cli"
+import { captureStreams } from "@wirecat/cli-base"
+import { listRuns, runsDirFor, startRun } from "@wirecat/cli-core/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "../app.js"
 import { run } from "../program.js"
@@ -19,16 +19,19 @@ describe("the shared runs command in MAX", () => {
         profile: "synthetic",
         command: "chats list",
         cliVersion: MAX_APP.version,
+        service: MAX_APP.command,
       })
       await recorded.finish("success")
     }
     const before = listRuns(dir).map((item) => item.runId)
     const streams = captureStreams()
     expect(await run(["runs", "list", "--limit", "1", "--jsonl"], { streams, tty: false })).toBe(0)
-    expect(streams.stdout).toHaveLength(1)
-    expect(JSON.parse(streams.stdout[0] ?? "")).toMatchObject({ command: "chats list", profile: "synthetic" })
-    expect(streams.stderr.join("\n")).toContain("--limit")
-    expect(streams.stderr.join("\n")).not.toContain("--page")
+    expect(streams.stdout).toHaveLength(2)
+    expect(JSON.parse(streams.stdout[0] ?? "").data).toMatchObject({ command: "chats list", profile: "synthetic" })
+    expect(streams.stderr.join("\n")).toContain("runs list --page 2 --limit 1")
+    const rest = captureStreams()
+    expect(await run(["runs", "list", "--page", "2", "--limit", "1", "--jsonl"], { streams: rest, tty: false })).toBe(0)
+    expect(rest.stdout.slice(0, -1).map((line) => JSON.parse(line).data.run_id)).toEqual(before.slice(1))
     expect(listRuns(dir).map((item) => item.runId)).toEqual(before)
     const metadata = listRuns(dir)[0]
     if (!metadata) throw new Error("no synthetic run")
@@ -48,12 +51,13 @@ describe("the shared runs command in MAX", () => {
       profile: "synthetic",
       command: "messages download",
       cliVersion: MAX_APP.version,
+      service: MAX_APP.command,
     })
     recorded.logger.info({
       event: "response",
       operation: "messages.download",
       errorCode: "rate_limited",
-      ids: { message: "50" },
+      ids: { chat: "50" },
     })
     await recorded.finish("partial", {
       partial: { failed: 1, failures: [{ id: "50", stage: "download", errorCode: "rate_limited" }] },
@@ -90,5 +94,42 @@ describe("the shared runs command in MAX", () => {
     ])
     expect(streams.stderr).toEqual([])
     expect(listRuns(dir).map((item) => item.runId)).toEqual(before)
+  })
+
+  it("shows only a run's problems with --problems", async () => {
+    vi.stubEnv("MAX_STATE_DIR", mkdtempSync(join(tmpdir(), "max-runs-problems-")))
+    const dir = runsDirFor(MAX_APP)
+    const recorded = startRun({
+      runsDir: dir,
+      profile: "synthetic",
+      command: "chats list",
+      cliVersion: MAX_APP.version,
+      service: MAX_APP.command,
+    })
+    recorded.logger.info({ event: "progress", operation: "chats.list" })
+    recorded.logger.warn({ event: "response", operation: "chats.list", errorCode: "rate_limited" })
+    await recorded.finish("success")
+    const id = listRuns(dir)[0]?.runId ?? ""
+    const all = captureStreams()
+    const problems = captureStreams()
+    expect(await run(["runs", "show", id, "--json"], { streams: all, tty: false })).toBe(0)
+    expect(await run(["runs", "show", id, "--problems", "--json"], { streams: problems, tty: false })).toBe(0)
+    expect(problems.stdout.join("").length).toBeLessThan(all.stdout.join("").length)
+    expect(problems.stdout.join("")).toContain("rate_limited")
+  })
+
+  it("**--debug adds the failure's record** as a second line after the error object", async () => {
+    vi.stubEnv("MAX_STATE_DIR", mkdtempSync(join(tmpdir(), "max-runs-debug-")))
+    const streams = captureStreams()
+
+    expect(await run(["runs", "show", "no-such-run", "--json", "--debug"], { streams, tty: false })).not.toBe(0)
+    expect(streams.stdout).toEqual([])
+    const [object, record] = streams.stderr
+      .join("\n")
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line))
+    expect(object.error).toMatchObject({ code: "not_found" })
+    expect(record).toMatchObject({ severity: "error", command: "runs show", resource: { service: "max" } })
   })
 })

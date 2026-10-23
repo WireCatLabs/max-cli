@@ -45,6 +45,7 @@ import {
   messagesReact,
   messagesReactions,
   messagesSearch,
+  messagesSearchGlobal,
   messagesSend,
   messagesUnreact,
 } from "./operations/messages.js"
@@ -114,6 +115,7 @@ export const spec: readonly Entry[] = [
   messagesReactions,
   messagesMedia,
   messagesSearch,
+  messagesSearchGlobal,
   messagesDelete,
   attachmentsVideo,
   attachmentsFile,

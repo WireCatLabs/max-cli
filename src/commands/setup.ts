@@ -1,15 +1,16 @@
 import { accessSync, constants, mkdirSync } from "node:fs"
-import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-core"
-import { annotate } from "@wirecat/cli-core/commands"
-import { installSkill, type SkillTarget } from "@wirecat/cli-core/skill"
-import { runtime } from "@wirecat/cli-messaging/cli"
+import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-base"
+import { annotate } from "@wirecat/cli-base/commands"
+import { installSkill, type SkillTarget } from "@wirecat/cli-base/skill"
+import { type StepDefinition, stepOf } from "@wirecat/cli-base/standards"
+import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, runtime, snakeKeys } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { SKILL, SKILL_APP } from "../skill.js"
 import { installer } from "../update.js"
 import { type CommandContext, environmentOf, forCommand } from "./context.js"
-import { type Method, startSession, TERMS_NOTICE } from "./session.js"
+import { AGENT_QR_HELP, type Method, startSession, TERMS_NOTICE } from "./session.js"
 
 const AGENTS = ["none", "codex", "cursor", "claude", "gemini", "all"] as const
 type Agent = (typeof AGENTS)[number]
@@ -61,29 +62,48 @@ const agentFor = async (context: CommandContext, given: Agent | undefined, pad: 
   return answer as Agent
 }
 
+const SKILL_SHOW: StepDefinition = {
+  id: "setup.instructions",
+  kind: "command",
+  command: "skill show",
+  args: [],
+  why: "MAX is ready; this shows an agent how to use max",
+}
+
+const CHATS_LIST: StepDefinition = {
+  id: "setup.chats",
+  kind: "command",
+  command: "chats list",
+  args: [{ name: "limit", required: false }],
+  why: "this shows the newest chats; choose one before syncing its history",
+}
+
 export const setupCommand = (): Command =>
-  annotate(new Command("setup"), { mutates: true })
+  logsInOrOut(annotate(new Command("setup"), { effects: REMOTE_WRITE, lifetime: "interactive", mcp: false }))
     .description("set up your personal MAX account and connect your agent")
     .configureHelp({ showGlobalOptions: true })
     .addHelpText(
       "after",
       "\nExamples:\n" +
-        "  max setup                         Guided QR login in your local terminal\n" +
-        "  max setup --agent codex           Install the skill for Codex\n" +
-        "  max work setup --agent claude     Set up a separate work profile\n" +
-        "  max setup --method qr-chrome      Log in through web.max.ru in Chromium\n" +
-        "  max setup --method sms            Enter your phone number in that browser\n" +
-        "  max setup --method token          Import a token at a hidden prompt or from stdin\n" +
+        "  max personal setup                     Guided QR login in your local terminal\n" +
+        "  max personal setup --agent codex       Install the skill for Codex\n" +
+        "  max work setup --agent claude          Set up a separate work profile\n" +
+        "  max personal setup --method qr-chrome  Log in through web.max.ru in Chromium\n" +
+        "  max personal setup --method sms        Enter your phone number in that browser\n" +
+        "  max personal setup --method token      Import a token at a hidden prompt or from stdin\n" +
+        "  max personal setup --json              Without a terminal: the QR is printed as text to paste\n" +
+        "\nThe first word names the profile; any name works, and every later command repeats it.\n" +
         "\nAllow about 5 minutes. Scan the QR with MAX on your phone.\n" +
         "Keep tokens and passwords in the local terminal, never in command arguments.\n" +
-        "Agents: read `max skill show` before login. QR/browser login needs a local terminal.\n" +
+        AGENT_QR_HELP +
+        "qr-chrome and sms need a local terminal.\n" +
         "Existing sessions are checked without another login. Machine mode skips agent installation\n" +
         "unless --agent is given. Bot accounts use `max <profile> bot auth set` separately.\n" +
         "\nSetup checks five chats. Choose a chat and how much history to fetch before:\n" +
-        "  max store fetch <chat> --last 100\n" +
+        "  max personal messages sync <chat> --last 100\n" +
         "Setup starts no background service and downloads no message history.\n" +
         "\nWindows: use max.cmd or npm.cmd if PowerShell blocks scripts. Without PATH:\n" +
-        "  npm.cmd exec --yes --package=@wirecat/max-cli -- max setup\n",
+        "  npm.cmd exec --yes --package=@wirecat/max-cli -- max personal setup\n",
     )
     .addOption(
       new Option("--agent <agent>", "install the skill for this agent; asks at a terminal, otherwise none").choices(
@@ -97,7 +117,7 @@ export const setupCommand = (): Command =>
     )
     .action(async function (this: Command) {
       const context = forCommand(this)
-      const { settings, renderer, store } = context
+      const { settings, store } = context
       const options = this.opts<{ agent?: Agent; method: Method }>()
       refuseCommandName(settings.profile, commandWords(rootOf(this)))
       if (this.optsWithGlobals().offline)
@@ -108,10 +128,15 @@ export const setupCommand = (): Command =>
           `this is a bot profile — use max ${asFirstWord(settings.profile)}bot auth set; setup is for your personal account`,
         )
       const reused = store.readToken() !== undefined
-      if (!reused && !store.hasLoggedIn() && options.method !== "token" && !context.interactive)
+      if (
+        !reused &&
+        !store.hasLoggedIn() &&
+        !context.interactive &&
+        (options.method === "qr-chrome" || options.method === "sms")
+      )
         throw new CliError(
           "validation_error",
-          "max setup needs a local terminal for QR/browser login — run it locally; token import uses --method token",
+          "max setup needs a local terminal for a browser login — run it locally, or import a token with --method token",
         )
       const prefix = `max ${asFirstWord(settings.profile)}`
       const runner =
@@ -134,11 +159,10 @@ export const setupCommand = (): Command =>
           screen.detail(
             "Windows: use max.cmd or npm.cmd if PowerShell blocks scripts. Open a new terminal after installing Node.js.",
           )
+        screen.step(2, "Link this device")
         if (reused || store.hasLoggedIn()) {
-          screen.step(2, "Log in")
           screen.detail("✓ existing session, no new login")
         } else {
-          screen.step(2, "Log in: scan the QR code with MAX on your phone")
           const login = await startSession(underStep(context, screen), options.method, events)
           if (login.firstLogin) screen.detail(TERMS_NOTICE)
         }
@@ -160,12 +184,6 @@ export const setupCommand = (): Command =>
           agent === "all" ? ["claude", "agents"] : [agent === "claude" ? "claude" : "agents"]
         context.signal.throwIfAborted()
         const written = agent === "none" ? [] : installSkill(SKILL_APP, SKILL, { targets, env: process.env })
-        const next = {
-          instructions: `${runner}skill show`,
-          chats: `${runner}chats list --limit 5`,
-          history: `${runner}store fetch <chat> --last 100`,
-          ...(agent === "none" ? { skill: `${runner}skill install` } : {}),
-        }
         return {
           profile: settings.profile,
           runtime: runtime(),
@@ -174,19 +192,23 @@ export const setupCommand = (): Command =>
           account: maskedProfile(account),
           chats: { checked: chats.items.length, hasMore: chats.hasMore },
           agent: { name: agent, written },
-          next,
         }
       })
-      if (context.format !== "pretty") renderer.result(answer)
+      if (context.format !== "pretty")
+        renderAnswer(
+          this,
+          context,
+          itemOf(snakeKeys(answer), { next: [stepOf(SKILL_SHOW), stepOf(CHATS_LIST, { args: { limit: 5 } })] }),
+        )
       else {
         const rows = {
-          "Try now": answer.next.chats,
-          History: `${answer.next.history}  (choose the chat and the amount first)`,
+          "Try now": `${runner}chats list --limit 5`,
+          History: `${runner}messages sync <chat> --last 100  (choose the chat and the amount first)`,
           "Agent skill":
             answer.agent.name === "none"
-              ? `skipped — install later: ${answer.next.skill}`
+              ? `skipped — install later: ${runner}skill install`
               : `installed for ${answer.agent.name}; start a new agent session if it is not found`,
-          "For an agent": answer.next.instructions,
+          "For an agent": `${runner}skill show`,
         }
         context.streams.data(
           `\n✓ MAX is ready — profile ${settings.profile}, ${chatCount(answer.chats.checked)} checked\n\n` +

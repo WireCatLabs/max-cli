@@ -1,6 +1,6 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { openStore } from "@wirecat/cli-core/store"
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "./app.js"
 import { run } from "./program.js"
@@ -15,10 +15,10 @@ const refuse = vi.fn(() => {
 const db = await openStore()
 beforeAll(async () => {
   rememberAccount(MAX_APP, profile, account.account, process.env)
-  await db.saveChats(account, [
+  await db.chats.saveChats(account, [
     { id: "7", title: "Synthetic group", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
   ])
-  await db.saveMessages(
+  await db.messages.saveMessages(
     account,
     "7",
     [1, 2, 3].map((id) => ({
@@ -58,7 +58,7 @@ const invoke = async (...args: string[]) => {
   return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
 }
 beforeAll(async () => {
-  await db.saveRoster(account, "7", {
+  await db.roster.saveRoster(account, "7", {
     members: [{ id: "11", name: "Synthetic", username: null, role: "member", joinedAt: "2026-10-01T00:00:00Z" }],
     complete: true,
     participants: 1,
@@ -66,13 +66,12 @@ beforeAll(async () => {
   })
 })
 describe("retention and freshness SDK adoption", () => {
-  it("declares refresh as a local write in native discovery", async () => {
+  it("declares refresh as a read of MAX kept in the store, in native discovery", async () => {
     const result = await invoke("commands", "stats", "messages", "counters", "refresh")
     expect(result.code, result.stderr).toBe(0)
-    const commands = JSON.parse(result.stdout).commands as { path: string[]; mutates?: boolean; local?: boolean }[]
+    const commands = JSON.parse(result.stdout).commands as { path: string[]; effects?: unknown }[]
     expect(commands.find((command) => command.path.join(" ") === "stats messages counters refresh")).toMatchObject({
-      mutates: true,
-      local: true,
+      effects: { remote: "read", local: "write" },
     })
   })
 
@@ -83,9 +82,9 @@ describe("retention and freshness SDK adoption", () => {
       "retention",
       "7",
       "--since-time",
-      "2026-10-01",
+      "2026-10-01T00:00:00Z",
       "--until-time",
-      "2026-10-02",
+      "2026-10-02T00:00:00Z",
       "--checkpoints",
       "1d,7d",
       "--within",
@@ -99,22 +98,27 @@ describe("retention and freshness SDK adoption", () => {
     )
     expect(report.code, report.stderr).toBe(0)
     const found = JSON.parse(report.stdout),
-      row = found.items[0]
+      row = found.item.rows[0]
     expect(row).toMatchObject({ cohort: "2026-10-01", stays: 1, checkpoints: [{ present: 1 }, { unknown: 1 }] })
+    expect(found.next).toMatchObject([{ step: "stats.evidence", args: { selection: JSON.stringify(row.selection) } }])
     const evidence = await invoke(
       "stats",
       "messages",
       "evidence",
       row.cohort,
       "--selection",
-      JSON.stringify(row.drilldown.arguments.selection),
+      JSON.stringify(row.selection),
       "--component",
       "report",
       "--limit",
       "1",
     )
     expect(evidence.code, evidence.stderr).toBe(0)
-    expect(JSON.parse(evidence.stdout)).toMatchObject({ items: [{ person: "11" }], included: 1 })
+    expect(JSON.parse(evidence.stdout)).toMatchObject({
+      items: [{ person_ref: "contact:max/11" }],
+      page: { has_more: false },
+    })
+    expect(JSON.parse(evidence.stdout).items).toHaveLength(1)
   })
   it("mounts counter query/freshness and bounded refresh preview options", async () => {
     const shown = await invoke(
@@ -139,14 +143,14 @@ describe("retention and freshness SDK adoption", () => {
     )
     expect(shown.code, shown.stderr).toBe(0)
     const found = JSON.parse(shown.stdout)
-    expect(found.items[0].counters[0]).toMatchObject({ counter: "views", freshness: "unknown" })
+    expect(found.item.rows[0].counters[0]).toMatchObject({ counter: "views", freshness: "unknown" })
     const pinned = await invoke(
       "stats",
       "messages",
       "counters",
       "show",
       "--selection",
-      JSON.stringify(found.selection),
+      JSON.stringify(found.item.selection),
       "--limit",
       "1",
     )
@@ -175,12 +179,12 @@ describe("retention and freshness SDK adoption", () => {
       "--dry-run",
     )
     expect(preview.code, preview.stderr).toBe(0)
-    expect(JSON.parse(preview.stdout)).toMatchObject({
-      dryRun: true,
-      targets: [found.items[0].locator],
+    expect(JSON.parse(preview.stdout).item).toMatchObject({
+      dry_run: true,
+      targets: [found.item.rows[0].ref],
       supported: ["views", "reactions"],
-      maxMessages: 1,
-      timeMilliseconds: 1000,
+      max_messages: 1,
+      time_ms: 1000,
     })
     const selected = await invoke(
       "stats",
@@ -188,7 +192,7 @@ describe("retention and freshness SDK adoption", () => {
       "counters",
       "refresh",
       "--selection",
-      JSON.stringify(found.selection),
+      JSON.stringify(found.item.selection),
       "--limit",
       "1",
       "--dry-run",

@@ -12,7 +12,7 @@ import tempfile
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, help="new evidence directory; existing paths are refused")
-    parser.add_argument("--shared-source", type=Path, help="an isolated cli-messaging worktree for testing auditor changes")
+    parser.add_argument("--shared-source", type=Path, help="an isolated cli-core worktree for testing auditor changes")
     parser.add_argument("--skip-checks", action="store_true", help="capture only; tests stay explicitly not-run")
     args = parser.parse_args()
     repo = Path(__file__).resolve().parents[4]
@@ -34,9 +34,9 @@ def main():
     print(f"retained auditor workspace: {scratch}", file=sys.stderr, flush=True)
     try:
         if not args.shared_source:
-            subprocess.run(["git", "clone", "--branch", "main", "--depth", "1", "https://github.com/WireCatLabs/cli-messaging.git", str(shared)], env=env, check=True)
+            subprocess.run(["git", "clone", "--branch", "main", "--depth", "1", "https://github.com/WireCatLabs/cli-core.git", str(shared)], env=env, check=True)
         if not (shared / "scripts/parity/deep-audit.ts").is_file():
-            raise RuntimeError("shared source lacks deep-audit tooling; update cli-messaging main before running this skill")
+            raise RuntimeError("shared source lacks deep-audit tooling; update cli-core main before running this skill")
         subprocess.run(["pnpm", "install", "--frozen-lockfile", "--prefer-offline"], cwd=shared, env=env, check=True)
         argv = ["pnpm", "-s", "parity:audit", "--fresh", "--deep", "--output", str(output)]
         if args.skip_checks:

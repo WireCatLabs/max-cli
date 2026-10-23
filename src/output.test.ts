@@ -1,7 +1,7 @@
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
@@ -34,11 +34,16 @@ const readingAChatThatAnswersOddly = async (options: { quiet?: boolean; json?: b
   })
 
   const dir = mkdtempSync(join(tmpdir(), "max-output-"))
-  const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const store = new SessionStore({
+    profile: "default",
+    keyring: memoryKeyring(),
+    configDir: dir,
+    stateDir: join(dir, "state"),
+    env: {},
+  })
   store.writeToken("a-token")
 
   const client = new MaxClient({
-    sends: "caller",
     store,
     connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
     warn: renderer.note,

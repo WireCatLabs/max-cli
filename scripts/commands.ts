@@ -19,7 +19,8 @@ import { execFileSync } from "node:child_process"
 import { writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { COMMANDS_PAGE_LABELS, commandsPage, describeOptions, describeProgram } from "@wirecat/cli-core/commands"
+import { COMMANDS_PAGE_LABELS, commandsPage, describeOptions, describeProgram } from "@wirecat/cli-base/commands"
+import { commandHelpMarkdown } from "@wirecat/cli-core/cli"
 import { createProgram } from "../dist/program.js"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..")
@@ -45,21 +46,26 @@ max [профиль] [опции] <команда> <действие> [аргу�
 \`\`\`
 
 **Первое слово — профиль**, если оно не совпадает с именем команды: \`max personal chats list\`
-читает чаты профиля \`personal\`, а \`max chats list\` — профиля по умолчанию. То же самое говорит
-переменная \`MAX_PROFILE\`; без неё профиль называется \`default\`.
+читает чаты профиля \`personal\`. То же самое говорит переменная \`MAX_PROFILE\` на весь сеанс
+оболочки.
+**Профиль никогда не подразумевается**: если его не назвать, команда, которой нужен аккаунт,
+останавливается и перечисляет профили этого компьютера — даже если профиль один. Первый вход тоже
+с именем: \`max personal setup\`. Без профиля работают только команды, которым аккаунт не нужен:
+\`--help\`, \`--version\`, \`commands\`, \`skill show\`, \`account list\`, \`config show\`.
 
 ⚠ Описания команд и опций ниже — ровно те, что печатает \`max --help\`, то есть по-английски. Это
 не недоработка перевода: текст живёт в программе, и второй его копии здесь быть не должно.`,
     globalHeading: "Общие опции",
     globalIntro: "Действуют на любую команду.",
-    mutates: "**Меняет что-то в MAX.**",
+    mutates: "**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**",
     mutatesLocal: "**Меняет что-то только на этом компьютере.**",
     exitHeading: "Коды возврата",
     exitIntro: "Скрипт ветвится по коду, а не по тексту: текст меняется, код — нет.",
     outro: `\`0\` и только \`0\` означает, что операция выполнена. \`14\` — \`outcome_unknown\` — означает, что
 сообщение **могло** уйти: не отправлено и не провалено, и повторять его можно только с тем же
-\`--send-id\`.`,
+\`--operation-id\`.`,
   },
+  details: (command) => commandHelpMarkdown(program, command.path),
 })
 
 writeFileSync(join(root, "docs/commands.md"), page)

@@ -8,7 +8,7 @@ export default defineConfig({
     maxWorkers: 4,
     // Every test file runs with config, state and cache pointed at a temporary directory. See the
     // file for why this is not optional.
-    setupFiles: ["src/testing/sandbox.ts", "src/testing/unscripted.ts"],
+    setupFiles: ["@wirecat/cli-base/testing/setup", "src/testing/sandbox.ts", "src/testing/unscripted.ts"],
     globalSetup: ["src/testing/argv-log.ts"],
     coverage: {
       provider: "v8",
@@ -18,8 +18,7 @@ export default defineConfig({
         "src/testing/**",
         "src/generated/**",
         "src/bot/generated/**",
-        // Types only, the entry point, and the Bun driver that `pnpm smoke:bun` runs.
-        "src/domain/models.ts",
+        // The entry point, and the Bun driver that `pnpm smoke:bun` runs.
         "src/bin/**",
         "src/cache/drivers/bun-sqlite.ts",
         // Start a process that runs until stopped, or download a model: checked live, not here.

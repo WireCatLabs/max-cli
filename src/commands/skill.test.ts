@@ -1,8 +1,8 @@
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams } from "@wirecat/cli-core"
-import { validateSkill } from "@wirecat/cli-messaging/skill-validation"
+import { captureStreams } from "@wirecat/cli-base"
+import { validateSkill } from "@wirecat/cli-core/skill-validation"
 import type { Command } from "commander"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { createProgram, run } from "../program.js"
@@ -98,7 +98,7 @@ describe("the hint to agents that the skill exists", () => {
 
     expect(first.stderr).toContain("agents: `max skill install` installs this tool's guide")
     expect(first.stdout).not.toContain("skill install")
-    expect(JSON.parse(first.stdout)).toMatchObject({ kind: "personal" })
+    expect(JSON.parse(first.stdout)).toMatchObject({ item: { kind: "personal" } })
     expect(second.stderr).not.toContain("skill install")
   })
 
@@ -119,11 +119,11 @@ describe("the hint to agents that the skill exists", () => {
     expect((await max("config", "show")).stderr).not.toContain("skill install")
   })
 
-  it("stays off when the defaults say skillHint: false", async () => {
+  it("stays off when the defaults say skill_hint: false", async () => {
     const dir = home()
     vi.stubEnv("CLAUDECODE", "1")
     mkdirSync(join(dir, "config"), { recursive: true })
-    writeFileSync(join(dir, "config", "config.json"), JSON.stringify({ defaults: { skillHint: false } }))
+    writeFileSync(join(dir, "config", "config.json"), JSON.stringify({ defaults: { skill_hint: false } }))
 
     expect((await max("config", "show")).stderr).not.toContain("skill install")
   })

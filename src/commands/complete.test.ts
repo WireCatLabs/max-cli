@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
-import { captureStreams, resolvePaths } from "@wirecat/cli-core"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams, resolvePaths } from "@wirecat/cli-base"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { openStore } from "@wirecat/cli-core/store"
 import { beforeAll, describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
 import { ChatRegistry } from "../bot/registry.js"
@@ -26,14 +26,14 @@ beforeAll(async () => {
   bindProfile("tabbed", "500")
   rememberAccount(MAX_APP, "tabbed", "500", process.env)
   const store = await openStore()
-  await store.saveChats({ provider: "max", account: "500" }, [
+  await store.chats.saveChats({ provider: "max", account: "500" }, [
     { id: "101", title: "Family", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 3 },
     { id: "102", title: "Work chat", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 5 },
     { id: "103", title: "Evil\u001b[2K", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
     { id: "104", title: "$(touch x)", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
     { id: "105", title: "ok\n$(touch y)", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
   ])
-  await store.savePeople({ provider: "max", account: "500" }, [
+  await store.people.savePeople({ provider: "max", account: "500" }, [
     { id: "7", name: "Иван Петров", username: "ivan", description: null },
     { id: "8", name: "Eve\n$(touch z)", username: "$(touch w)", description: null },
   ])
@@ -67,10 +67,10 @@ describe("max complete", () => {
     rememberAccount(MAX_APP, "other", "600", process.env)
     const store = await openStore()
     try {
-      await store.saveChats({ provider: "max", account: "600" }, [
+      await store.chats.saveChats({ provider: "max", account: "600" }, [
         { id: "201", title: "Other", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: 2 },
       ])
-      await store.savePeople({ provider: "max", account: "600" }, [{ id: "9", name: "Another account" }])
+      await store.people.savePeople({ provider: "max", account: "600" }, [{ id: "9", name: "Another account" }])
     } finally {
       await store.close()
     }

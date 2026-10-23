@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "../commands/context.js"
 import { Opcode } from "../generated/opcodes.generated.js"
@@ -27,7 +27,7 @@ describe("ModerationRules", () => {
     expect(saved.newAccount).toEqual({ days: 7, action: "report" })
   })
 
-  it("reads the levels cli-messaging writes when a bot of the same name changes its rules", () => {
+  it("reads the levels cli-core writes when a bot of the same name changes its rules", () => {
     const rules = fresh()
     const consent = { delete: "ask", remove: "deny" }
     writeFileSync(rules.path, JSON.stringify({ groups: { "-1": { ...defaultRules("Team"), consent } } }))
@@ -116,13 +116,20 @@ describe("max chats rules", () => {
     const before = await rules(["ru-cmd", "chats", "rules", "show", "Team", "--json"], env)
     const set = await rules(["ru-cmd", "chats", "rules", "set", "Team", "newAccount.days", "3", "--json"], env)
 
-    expect(before.json).toMatchObject({
-      chatId: "-70000000000001",
+    const { blockedNames, blockedPeople, newAccount, ...unrenamed } = defaultRules("Team")
+    expect(before.json.item).toMatchObject({
+      chat_id: "-70000000000001",
       saved: false,
-      rules: { ...defaultRules("Team"), consent: { delete: "ask", remove: "ask" } },
+      rules: {
+        ...unrenamed,
+        blocked_names: blockedNames,
+        blocked_people: blockedPeople,
+        new_account: newAccount,
+        consent: { delete: "ask", remove: "ask" },
+      },
     })
     expect(set.code).toBe(0)
-    expect(set.json).toMatchObject({ saved: true, rules: { newAccount: { days: 3, action: "report" } } })
+    expect(set.json.item).toMatchObject({ saved: true, rules: { new_account: { days: 3, action: "report" } } })
     expect(new ModerationRules(moderationPathFor("ru-cmd")).read("-70000000000001")?.title).toBe("Team")
   })
 
@@ -134,7 +141,7 @@ describe("max chats rules", () => {
     const unset = await rules(["ru-unset", "chats", "rules", "unset", "Team", "newAccount.days", "--json"], env)
 
     expect(unset.code).toBe(0)
-    expect(unset.json.rules.newAccount.days).toBe(defaultRules("Team").newAccount.days)
+    expect(unset.json.item.rules.new_account.days).toBe(defaultRules("Team").newAccount.days)
     expect(new ModerationRules(moderationPathFor("ru-unset")).read("-70000000000001")).toMatchObject({
       newAccount: { days: defaultRules("Team").newAccount.days },
       links: "delete",

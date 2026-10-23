@@ -1,21 +1,25 @@
 import { existsSync } from "node:fs"
-import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@wirecat/cli-core"
-import type { FetchLike } from "@wirecat/cli-core/http"
-import type { ServerSystem } from "@wirecat/cli-messaging/background"
-import { type BaseEnvironment, inputPolicy, recorded, withAbort } from "@wirecat/cli-messaging/cli"
-import { levelFor, sharedJournal } from "@wirecat/cli-messaging/sends"
+import type { Renderer, RenderFormat, RetryConfig, SleepLike, Streams } from "@wirecat/cli-base"
+import type { FetchLike } from "@wirecat/cli-base/http"
+import type { ServerSystem } from "@wirecat/cli-core/background"
+import {
+  type BaseEnvironment,
+  inputPolicy,
+  recorded,
+  environmentOf as sharedEnvironmentOf,
+  withAbort,
+} from "@wirecat/cli-core/cli"
+import { levelFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import type { BotTokenStore } from "../bot/auth.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
-import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
+import { type GlobalFlags, type ResolveOptions, resolveSettings, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
-import { askerFor, assertReadable, currentReadPermission, permissionScope } from "../permissions.js"
-import { rootOf } from "../profile.js"
-import { guardFor } from "../sends.js"
+import { permissionScope } from "../permissions.js"
 import { ServerConnection, stopServer } from "../server/server-connection.js"
 import { ensureServer } from "../server/start.js"
 import { type BrowserDoors, realBrowser } from "../session/browser.js"
@@ -28,9 +32,7 @@ import type { UpdateEnvironment } from "../update.js"
  * What a command writes to and talks through, when it is not the real terminal, keyring and MAX.
  * `run` sets it on the program; without it everything is the real thing.
  */
-export interface Environment extends Pick<BaseEnvironment, "env" | "signal" | "commandSignal" | "trackCloseable"> {
-  streams?: Streams
-  tty?: boolean
+export interface Environment extends Omit<BaseEnvironment, "recognizer"> {
   /** A store over a memory keyring, so a test never touches the owner's. */
   store?: (profile: string) => SessionStore
   /** systemd, launchd and the pause between looks, for `max server` — a test hands in its own. */
@@ -40,11 +42,8 @@ export interface Environment extends Pick<BaseEnvironment, "env" | "signal" | "c
   browser?: BrowserDoors
   /** Where a download may go; a test serving files from this machine allows it. */
   reach?: Reach
-  /** A stand-in speech model, so a test hears without one. */
-  recognizer?: HearAllOptions["open"]
-  /** What the shared commands read as stdin; a test pipes an answer in. */
-  stdin?: NodeJS.ReadableStream & { isTTY?: boolean }
-  answer?: (question: string) => string | null | Promise<string | null>
+  /** A stand-in speech model for max's own transcription, so a test hears without one. */
+  hear?: HearAllOptions["open"]
   ask?: Ask
   interactive?: boolean
   columns?: number
@@ -62,23 +61,7 @@ export interface Environment extends Pick<BaseEnvironment, "env" | "signal" | "c
 /** One line from the person at the terminal; `secret` keeps it off the screen. */
 export type Ask = (prompt: string, options?: { secret?: boolean; signal?: AbortSignal }) => Promise<string>
 
-const environments = new WeakMap<Command, Environment>()
-
-export const provide = (program: Command, environment: Environment): void => {
-  environments.set(program, environment)
-}
-
-export const environmentOf = (command: Command): Environment => environments.get(rootOf(command)) ?? {}
-
-/** For the commands that print but never need settings or a client. */
-export const outputFor = (command: Command) => {
-  const { streams, tty } = environmentOf(command)
-  return resolveOutput({
-    ...command.optsWithGlobals(),
-    ...(streams ? { streams } : {}),
-    ...(tty === undefined ? {} : { tty }),
-  })
-}
+export const environmentOf = (command: Command): Environment => sharedEnvironmentOf<Environment>(command)
 
 export interface CommandContext {
   settings: Settings
@@ -132,22 +115,26 @@ export interface CommandContext {
  * what `commander` happened to parse.
  *
  */
-export const forCommand = (command: Command): CommandContext =>
-  contextFor(command.optsWithGlobals<GlobalFlags & { offline?: boolean }>(), environmentOf(command))
+export const forCommand = (command: Command, resolving: Pick<ResolveOptions, "needsProfile"> = {}): CommandContext =>
+  contextFor(command.optsWithGlobals<GlobalFlags & { offline?: boolean }>(), environmentOf(command), resolving)
 
 /** The same context from flags already parsed — for `max mcp`, whose calls arrive without argv. */
 export const contextFor = (
   flags: GlobalFlags & { offline?: boolean; yes?: boolean; allowDangerous?: boolean },
   environment: Environment = {},
+  resolving: Pick<ResolveOptions, "needsProfile"> = {},
 ): CommandContext => {
-  const settings = resolveSettings(flags, { env: environment.env ?? process.env })
+  const settings = resolveSettings(flags, { env: environment.env ?? process.env, ...resolving })
   const { renderer, format, color, streams } = resolveOutput({
     ...settings,
     env: environment.env ?? process.env,
+    ...(environment.agent ? { capture: environment.agent.result } : {}),
     ...(environment.streams ? { streams: environment.streams } : {}),
     ...(environment.tty === undefined ? {} : { tty: environment.tty }),
   })
-  const store = environment.store?.(settings.profile) ?? new SessionStore({ profile: settings.profile })
+  const store =
+    environment.store?.(settings.profile) ??
+    new SessionStore({ profile: settings.profile, ...(environment.keyring ? { keyring: environment.keyring } : {}) })
 
   // Every client this command builds, so the deadline can shut them. There is always one; relying
   // on that is what makes the second one, some day, the leak that keeps the process alive.
@@ -199,9 +186,6 @@ export const contextFor = (
         ...(environment.sleep ? { sleep: environment.sleep } : {}),
         ...(environment.connection ? { connection: environment.connection() } : wire ? { connection: wire } : {}),
         ...extra,
-        // After `extra`, so an `undefined` handed in falls back to the guard rather than to none.
-        reads: extra.reads ?? ((key) => assertReadable(settings, currentReadPermission() ?? key)),
-        sends: extra.sends ?? sharedJournal(guardFor(settings, renderer.warn, askerFor(flags, environment)), wire),
       })
       track(client)
       return client
@@ -211,7 +195,7 @@ export const contextFor = (
     reach: environment.reach ?? httpOnly,
     hearing: {
       fetchAudio: (link) => fetchBytes(link, environment.reach ?? httpOnly),
-      ...(environment.recognizer ? { open: environment.recognizer } : {}),
+      ...(environment.hear ? { open: environment.hear } : {}),
     },
     ask: (prompt, { secret = false, signal: stop = signal } = {}) => {
       const input = environment.stdin ?? process.stdin

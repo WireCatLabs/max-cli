@@ -1,8 +1,8 @@
 import { mkdtempSync, readdirSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { captureStreams } from "@wirecat/cli-core"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams } from "@wirecat/cli-base"
+import { openStore } from "@wirecat/cli-core/store"
 import { describe, expect, it } from "vitest"
 import { run } from "./program.js"
 
@@ -12,8 +12,8 @@ describe("offline store reset", () => {
     const env = { ...process.env, MESSAGING_STORE: path }
     const key = { provider: "max" as const, account: "synthetic" }
     const original = await openStore({ path })
-    await original.saveAccount(key, { name: null })
-    await original.setSyncState(key, "fixture", "retained-marker")
+    await original.accounts.saveAccount(key, { name: null })
+    await original.sync.setSyncState(key, "fixture", "retained-marker")
     await original.close()
     const call = async (args: string[]) => {
       const streams = captureStreams()
@@ -25,26 +25,26 @@ describe("offline store reset", () => {
           throw new Error("reset must stay offline")
         },
       })
-      return { code, stdout: streams.stdout, answer: JSON.parse(streams.stdout[0] ?? "null") }
+      return { code, stdout: streams.stdout, answer: JSON.parse(streams.stdout[0] ?? "null")?.item }
     }
     const refused = await call(["store", "reset", "--json"])
     expect(refused.code).not.toBe(0)
     const untouched = await openStore({ path })
-    expect(await untouched.syncState(key, "fixture")).toMatchObject({ value: "retained-marker" })
+    expect(await untouched.sync.syncState(key, "fixture")).toMatchObject({ value: "retained-marker" })
     await untouched.close()
     const reset = await call(["store", "reset", "--yes", "--json"])
     expect(reset.code).toBe(0)
     expect(reset.answer).toMatchObject({ path, reset: true, backup: expect.any(String) })
     const backup = await openStore({ path: reset.answer.backup })
-    expect(await backup.syncState(key, "fixture")).toMatchObject({ value: "retained-marker" })
+    expect(await backup.sync.syncState(key, "fixture")).toMatchObject({ value: "retained-marker" })
     await backup.close()
     const cleared = await openStore({ path })
-    expect(await cleared.syncState(key, "fixture")).toBeUndefined()
+    expect(await cleared.sync.syncState(key, "fixture")).toBeUndefined()
     await cleared.close()
     const before = readdirSync(dirname(path)).filter((name) => name.includes(".backup-"))
     const second = await call(["store", "reset", "--no-backup", "--yes", "--json"])
     expect(second.code).toBe(0)
-    expect(second.answer).toMatchObject({ reset: true, backup: null, backedUp: null })
+    expect(second.answer).toMatchObject({ reset: true, backup: null, backed_up: null })
     expect(readdirSync(dirname(path)).filter((name) => name.includes(".backup-"))).toEqual(before)
   })
 })

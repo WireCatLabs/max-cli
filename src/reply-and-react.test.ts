@@ -1,4 +1,4 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { describe, expect, it } from "vitest"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -48,8 +48,8 @@ describe("answering and reacting", () => {
     expect(message.elements).toEqual([])
   })
 
-  it("`messages send --send-id` sends the id it was given, so MAX can collapse a repeat", async () => {
-    const { code, max } = await runAgainst(["messages", "send", "0", "yes", "--send-id", "4242"])
+  it("`messages send --operation-id` sends the id it was given, so MAX can collapse a repeat", async () => {
+    const { code, max } = await runAgainst(["messages", "send", "0", "yes", "--operation-id", "4242"])
 
     expect(code).toBe(0)
     expect(max.sent.filter((call) => call.opcode === Opcode.MSG_SEND).map((call) => call.payload.message)).toEqual([
@@ -73,10 +73,10 @@ describe("answering and reacting", () => {
     expect(String(max.sent.find((call) => call.opcode === Opcode.MSG_CANCEL_REACTION)?.payload.messageId)).toBe(
       "116762160362694583",
     )
-    expect(JSON.parse(stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: "0",
-      messageId: "116762160362694583",
+    expect(JSON.parse(stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: "0",
+      message_id: "116762160362694583",
       reaction: null,
     })
   })
@@ -88,10 +88,10 @@ describe("answering and reacting", () => {
     expect(max.sent.find((call) => call.opcode === Opcode.MSG_REACTION)?.payload).toMatchObject({
       reaction: { reactionType: "EMOJI", id: "👍" },
     })
-    expect(JSON.parse(stdout)).toEqual({
-      operationId: expect.any(String),
-      chatId: "0",
-      messageId: "116762160362694583",
+    expect(JSON.parse(stdout).item).toEqual({
+      operation_id: expect.any(String),
+      chat_id: "0",
+      message_id: "116762160362694583",
       reaction: "👍",
     })
   })

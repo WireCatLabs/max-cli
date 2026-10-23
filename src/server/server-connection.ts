@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto"
 import { connect, type Socket } from "node:net"
-import { CliError, errorCodes } from "@wirecat/cli-core"
-import { currentOperation } from "@wirecat/cli-messaging/sends"
+import { CliError, errorCodes } from "@wirecat/cli-base"
+import { currentOperation } from "@wirecat/cli-core/sends"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { OPERATIONS } from "../generated/operations.generated.js"
 import { permissionApprovals } from "../permissions.js"
@@ -96,7 +96,7 @@ export class ServerConnection implements Wire {
     const answer = await this.#ask({
       opcode,
       payload,
-      approvals: permissionApprovals(),
+      approvals: permissionApprovals(operationId),
       ...(operationId === undefined ? {} : { operationId }),
     })
     watch?.({ phase: "received", seq: this.#id, opcode, bytes: 0 })
@@ -132,7 +132,7 @@ export class ServerConnection implements Wire {
 
   #sameAccount(login: Payload): boolean {
     const profile = login.profile as { contact?: { id?: unknown } } | undefined
-    const viewerId = this.#store.readState().viewerId
+    const viewerId = this.#store.viewerId()
     return viewerId === undefined || asId(profile?.contact?.id) === viewerId
   }
 

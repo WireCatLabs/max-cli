@@ -1,4 +1,5 @@
-import { markReadCommand, chatsCommand as sharedChatsCommand } from "@wirecat/cli-messaging/cli"
+import { annotate } from "@wirecat/cli-base/commands"
+import { markReadCommand, chatsCommand as sharedChatsCommand } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 
@@ -8,6 +9,11 @@ export const chatsCommand = (): Command => {
   const shared = sharedChatsCommand(maxMessenger)
   command.addCommand(sharedSubcommand(shared, "list"))
   command.addCommand(sharedSubcommand(shared, "show"))
+  const documents = sharedSubcommand(shared, "documents")
+  annotate(sharedSubcommand(documents, "list"), {
+    examples: ["max personal chats documents list CHAT_ID --limit 20"],
+  }).addHelpText("after", "Example:\n  max personal chats documents list CHAT_ID --limit 20\n")
+  command.addCommand(documents)
 
   command.addCommand(sharedSubcommand(shared, "events"))
   command.addCommand(sharedSubcommand(shared, "inspect"))
@@ -23,20 +29,13 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "tracking"))
   command.addCommand(sharedSubcommand(shared, "admins"))
   command.addCommand(sharedSubcommand(shared, "update"))
-  command.addCommand(without(sharedSubcommand(shared, "link"), ["create", "list", "revoke"]))
+  command.addCommand(sharedSubcommand(shared, "link"))
   const requests = sharedSubcommand(shared, "requests").description("requests to join a MAX channel needing approval")
-  for (const request of requests.commands) {
-    if (request.name() === "list")
-      request.description("pending requests to join a MAX channel needing approval; admins only; requestedAt is null")
-    for (const option of request.options)
-      if (option.long === "--all" || option.long === "--link")
-        option.description =
-          request.name() === "list"
-            ? "not supported by MAX; use name search instead"
-            : "not supported by MAX; select one person from chats requests list"
-  }
+  sharedSubcommand(requests, "list").description(
+    "pending requests to join a MAX channel needing approval; admins only; requestedAt is null",
+  )
   command.addCommand(requests)
-  command.addCommand(without(sharedSubcommand(shared, "folders"), ["join"]))
+  command.addCommand(sharedSubcommand(shared, "folders"))
   command.addCommand(sharedSubcommand(shared, "rules"))
   command.addCommand(sharedSubcommand(shared, "moderate"))
   command.addCommand(sharedSubcommand(shared, "media"))
@@ -49,7 +48,3 @@ export const chatsCommand = (): Command => {
 
   return command
 }
-
-/** The shared subcommands max's adapter cannot do yet: listed, they would only refuse. */
-const without = (command: Command, names: string[]): Command =>
-  Object.assign(command, { commands: command.commands.filter((one) => !names.includes(one.name())) })

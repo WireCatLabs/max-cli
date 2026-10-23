@@ -3,8 +3,8 @@ import { link, rm } from "node:fs/promises"
 import { basename, join } from "node:path"
 import { PassThrough, Readable, Transform, Writable } from "node:stream"
 import { pipeline } from "node:stream/promises"
-import { CliError } from "@wirecat/cli-core"
-import type { AttachmentLink } from "./domain/models.js"
+import { CliError } from "@wirecat/cli-base"
+import type { AttachmentLink } from "@wirecat/cli-core"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
 export interface Saved {
@@ -129,7 +129,7 @@ const open = async (
         new CliError(
           response.status === 429 ? "rate_limited" : "network_error",
           `the ${attachment.kind} could not be downloaded: HTTP ${response.status}`,
-          { status: response.status, ...(pause === undefined ? {} : { retryAfterMs: pause }) },
+          { status: response.status, ...(pause === undefined ? {} : { retry_after_ms: pause }) },
         ),
       )
     }

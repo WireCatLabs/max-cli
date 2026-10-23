@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
-import type { DiagnosticEvent } from "@wirecat/cli-messaging/cli"
-import { afterEach, describe, expect, it } from "vitest"
+import { errorObjectOf, memoryKeyring } from "@wirecat/cli-base"
+import { type DiagnosticEvent, REMOTE_WRITE } from "@wirecat/cli-core/cli"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { MaxClient } from "./client.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { maxMessenger } from "./messenger.js"
@@ -29,7 +29,7 @@ const historyAnswer = {
 const clientWith = (max: ReturnType<typeof mockMax>, token = "a-token") => {
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
   const keyring = memoryKeyring()
-  const store = new SessionStore({ keyring, configDir: dir, stateDir: join(dir, "state"), env: {} })
+  const store = new SessionStore({ profile: "default", keyring, configDir: dir, stateDir: join(dir, "state"), env: {} })
   if (token) store.writeToken(token)
 
   const notes: string[] = []
@@ -41,7 +41,6 @@ const clientWith = (max: ReturnType<typeof mockMax>, token = "a-token") => {
     notes,
     events,
     client: new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: (note) => notes.push(note),
@@ -51,12 +50,64 @@ const clientWith = (max: ReturnType<typeof mockMax>, token = "a-token") => {
 }
 
 describe("MaxClient", () => {
+  it("shares initialization between simultaneous resource reads", async () => {
+    const max = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer } })
+    const { client } = clientWith(max)
+    try {
+      await Promise.all([client.account.me(), client.account.me(), client.connect()])
+      expect(max.sent.map((call) => call.opcode)).toEqual([Opcode.SESSION_INIT, Opcode.LOGIN])
+    } finally {
+      await client.close()
+    }
+  })
+
+  it("uses the supplied clock while keeping send ids distinct", () => {
+    const max = mockMax({ answers: {} })
+    const { store } = clientWith(max)
+    const client = new MaxClient({
+      store,
+      now: () => 1234,
+      connection: new Connection({ createSocket: max.createSocket }),
+    })
+    expect([client.newSendId(), client.newSendId()]).toEqual(["1234", "1235"])
+  })
+
+  it("never logs in after closing during connection setup", async () => {
+    const { store } = clientWith(mockMax({ answers: {} }))
+    let finishOpening: () => void = () => {}
+    let opened: () => void = () => {}
+    const began = new Promise<void>((resolve) => {
+      opened = resolve
+    })
+    const invoke = vi.fn(async () => ({}))
+    const client = new MaxClient({
+      store,
+      connection: {
+        open: () =>
+          new Promise<void>((resolve) => {
+            finishOpening = resolve
+            opened()
+          }),
+        invoke,
+        close: async () => {
+          finishOpening()
+        },
+      },
+    })
+    const pending = client.connect()
+    await began
+    await client.close()
+    await expect(pending).rejects.toMatchObject({ code: "network_error" })
+    expect(invoke).not.toHaveBeenCalled()
+    await expect(client.connect()).rejects.toMatchObject({ code: "network_error" })
+  })
+
   it("refuses to connect without a session, and names the command that fixes it", async () => {
     const max = mockMax({ answers: {} })
     const { client } = clientWith(max, "")
 
     await expect(client.connect()).rejects.toMatchObject({ code: "authentication_error" })
-    expect(String(await client.connect().catch((error: Error) => error.message))).toContain("max setup")
+    expect(String(await client.connect().catch((error: Error) => error.message))).toContain("max default setup")
   })
 
   it("blames the keyring, not the session, when a profile that has logged in finds no token", async () => {
@@ -79,7 +130,7 @@ describe("MaxClient", () => {
 
     const message = String(await client.connect().catch((error: Error) => error.message))
     expect(message).toContain("is a bot")
-    expect(message).toContain("`max bot …`")
+    expect(message).toContain("`max default bot …`")
   })
 
   it("leaves no state file behind when a profile nobody logged in under is refused", async () => {
@@ -118,7 +169,6 @@ describe("MaxClient", () => {
       })
       const { store } = clientWith(max)
       const client = new MaxClient({
-        sends: "caller",
         store,
         connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
         resume,
@@ -266,7 +316,6 @@ describe("MaxClient", () => {
 
     const again = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer } })
     const second = new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: again.createSocket, timeoutMs: 50 }),
       warn: () => {},
@@ -627,40 +676,6 @@ describe("MaxClient", () => {
     expect(sent.outgoing).toBe(true)
   })
 
-  it("will not build without a decision about the send guard", () => {
-    const max = mockMax({ answers: {} })
-    const { store } = clientWith(max)
-
-    // @ts-expect-error `sends` is required: a guard, or "caller" when whoever holds the client guards.
-    expect(() => new MaxClient({ store, connection: new Connection({ createSocket: max.createSocket }) })).not.toThrow()
-  })
-
-  it("asks its guard before a send, and a refusal sends nothing", async () => {
-    const max = mockMax({
-      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer, [Opcode.MSG_SEND]: { message: { id: 1 } } },
-    })
-    const { store } = clientWith(max)
-    const recorded: unknown[] = []
-    const client = new MaxClient({
-      store,
-      connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
-      warn: () => {},
-      sends: {
-        check: () => {
-          throw Object.assign(new Error("read-only profile"), { code: "permission_error" })
-        },
-        record: (entry) => recorded.push(entry),
-      },
-    })
-
-    await client.connect()
-    await expect(client.messages.send("111", "hello")).rejects.toMatchObject({ code: "permission_error" })
-    await client.close()
-
-    expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.MSG_SEND)
-    expect(recorded).toMatchObject([{ chatId: "111", outcome: "refused" }])
-  })
-
   it("**notifies by default and stays silent only when asked**", async () => {
     const max = mockMax({
       answers: {
@@ -739,8 +754,39 @@ describe("MaxClient", () => {
     await client.close()
 
     expect(failure).toMatchObject({ code: "outcome_unknown" })
-    expect(String(failure)).toContain("--send-id")
+    expect(String(failure)).toContain("--operation-id")
     expect(max.sent.map((call) => call.opcode)).toContain(Opcode.MSG_SEND)
+  })
+
+  it("**says a send MAX refused for its limit may be repeated**", async () => {
+    const max = mockMax({
+      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer },
+      refuse: { [Opcode.MSG_SEND]: "error.limit.violate" },
+    })
+    const { client } = clientWith(max)
+
+    await client.connect()
+    const failure = await client.messages.send("111", "hello").catch((error: Error) => error)
+    await client.close()
+
+    expect(failure).toMatchObject({ code: "rate_limited", details: { sent: false } })
+    expect(errorObjectOf(failure, { effects: REMOTE_WRITE }).error.retry).toEqual({ safe: true })
+  })
+
+  it("keeps a repeat unsafe when the limit answers the resend of a send that may have gone", async () => {
+    let attempts = 0
+    const max = mockMax({
+      answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer, [Opcode.MSG_SEND]: () => undefined },
+      refuse: { [Opcode.MSG_SEND]: () => (++attempts === 2 ? "error.limit.violate" : undefined) },
+    })
+    const { client } = clientWith(max)
+
+    await client.connect()
+    const failure = await client.messages.send("111", "hello").catch((error: Error) => error)
+    await client.close()
+
+    expect(attempts).toBe(2)
+    expect(errorObjectOf(failure, { effects: REMOTE_WRITE }).error.retry).toEqual({ safe: false })
   })
 
   it("closes the socket, so the process can exit", async () => {
@@ -877,6 +923,7 @@ describe("the token MAX answers with", () => {
     const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
     const keyring = memoryKeyring()
     const store = new SessionStore({
+      profile: "default",
       keyring,
       configDir: dir,
       stateDir: join(dir, "state"),
@@ -884,7 +931,6 @@ describe("the token MAX answers with", () => {
     })
     const notes: string[] = []
     const client = new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: (note) => notes.push(note),
@@ -896,7 +942,13 @@ describe("the token MAX answers with", () => {
 
     expect(handedOut.token).toBeUndefined()
 
-    const unset = new SessionStore({ keyring, configDir: dir, stateDir: join(dir, "state"), env: {} })
+    const unset = new SessionStore({
+      profile: "default",
+      keyring,
+      configDir: dir,
+      stateDir: join(dir, "state"),
+      env: {},
+    })
     expect(unset.readToken()).toBeUndefined()
     expect(readdirSync(dir).filter((file) => file !== "state")).toEqual([])
     expect(notes.join(" ")).toContain("MAX_TOKEN")
@@ -937,7 +989,6 @@ describe("the token MAX answers with", () => {
       },
     })
     const second = new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: stranger.createSocket, timeoutMs: 50 }),
       warn: () => {},
@@ -990,10 +1041,15 @@ describe("with a shared record", () => {
   }
   const clientSharing = (record: MaxRecord, max: ReturnType<typeof mockMax>) => {
     const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
-    const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+    const store = new SessionStore({
+      profile: "default",
+      keyring: memoryKeyring(),
+      configDir: dir,
+      stateDir: join(dir, "state"),
+      env: {},
+    })
     store.writeToken("a-token")
     return new MaxClient({
-      sends: "caller",
       store,
       record,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
@@ -1007,7 +1063,6 @@ describe("with a shared record", () => {
     })
     const { store } = clientWith(max)
     const client = new MaxClient({
-      sends: "caller",
       store,
       record: {
         ...record,
@@ -1032,7 +1087,6 @@ describe("with a shared record", () => {
     const max = mockMax({ answers: {} })
     const { store } = clientWith(max)
     const client = new MaxClient({
-      sends: "caller",
       store,
       offline: true,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
@@ -1213,11 +1267,16 @@ describe("one event per request", () => {
   it("keeps working when whoever is listening throws", async () => {
     const max = mockMax({ answers: { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer } })
     const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
-    const store = new SessionStore({ keyring: memoryKeyring(), configDir: dir, stateDir: join(dir, "state"), env: {} })
+    const store = new SessionStore({
+      profile: "default",
+      keyring: memoryKeyring(),
+      configDir: dir,
+      stateDir: join(dir, "state"),
+      env: {},
+    })
     store.writeToken("a-token")
 
     const client = new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       events: () => {

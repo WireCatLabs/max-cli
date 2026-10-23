@@ -1,7 +1,7 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import type { Message } from "@wirecat/cli-messaging"
-import { rememberAccount } from "@wirecat/cli-messaging/cli"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import type { Message } from "@wirecat/cli-core"
+import { rememberAccount } from "@wirecat/cli-core/cli"
+import { openStore } from "@wirecat/cli-core/store"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
 import { run } from "../program.js"
@@ -32,10 +32,10 @@ describe("personal message locator fallback", () => {
     state.writeState({ ...state.readState(), viewerId: key.account })
     const store = await openStore()
     try {
-      await store.saveChats(key, [
+      await store.chats.saveChats(key, [
         { id: "7", title: "Synthetic", kind: "group", unreadCount: 0, lastMessageAt: null, participantsCount: null },
       ])
-      await store.saveMessages(key, "7", [target], { via: "history" })
+      await store.messages.saveMessages(key, "7", [target], { via: "history" })
     } finally {
       await store.close()
     }
@@ -49,14 +49,16 @@ describe("personal message locator fallback", () => {
           throw new Error("link opened a wire")
         },
       })
-      return { code, stdout: streams.stdout.join(""), stderr: streams.stderr.join("\n") }
+      return { code, stdout: streams.stdout.join("\n"), stderr: streams.stderr.join("\n") }
     }
     for (const flag of ["--json", "--jsonl"]) {
       const result = await cli(["messages", "link", "7", id, flag])
       expect(result.code, result.stderr).toBe(0)
-      expect(result.stdout.trim().split("\n")).toHaveLength(1)
-      expect(JSON.parse(result.stdout)).toEqual({
-        locator: `msg:max/500/7/${id}`,
+      const lines = result.stdout.trim().split("\n")
+      expect(lines).toHaveLength(flag === "--json" ? 1 : 2)
+      const answer = JSON.parse(lines[0] ?? "")
+      expect(flag === "--json" ? answer.item : answer.data).toEqual({
+        ref: `msg:max/500/7/${id}`,
         url: null,
         access: "unavailable",
         reason: "unsupported_provider",
@@ -65,7 +67,7 @@ describe("personal message locator fallback", () => {
     }
     const offline = await cli(["--offline", "messages", "link", `msg:max/500/7/${id}`, "--json"])
     expect(offline.code).toBe(0)
-    expect(JSON.parse(offline.stdout).reason).toBe("offline")
+    expect(JSON.parse(offline.stdout).item.reason).toBe("offline")
     const mismatch = await cli(["messages", "link", `msg:max/other/7/${id}`, "--json"])
     expect(mismatch.code).not.toBe(0)
     expect(mismatch.stdout).toBe("")

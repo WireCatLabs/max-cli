@@ -1,9 +1,9 @@
 /**
  * Do the renamed commands still work against the real MAX? Run by hand, never by CI.
  *
- *   bin/max session start                # once per worktree, if there is no session yet
- *   pnpm verify:live                     # reads only
- *   pnpm verify:live --send-to-saved     # also sends one message to Saved messages
+ *   bin/max <profile> session start                 # once per worktree, if there is no session yet
+ *   MAX_PROFILE=<profile> pnpm verify:live          # reads only; the profile is never assumed
+ *   MAX_PROFILE=<profile> pnpm verify:live --send-to-saved   # also sends one to Saved messages
  *
  * **Read-only unless asked, and it prints no content.** Nothing sends and nothing marks anything
  * read, unless `--send-to-saved` is passed — a flag long enough that it cannot be typed by
@@ -80,7 +80,9 @@ const check = (label: string, args: string[], { listing = false } = {}) => {
 
 const session = run(["account", "show", "--json"])
 if (session.status !== 0) {
-  console.error("no working session on this profile — run `bin/max session start` first")
+  console.error(
+    `no working session on this profile — set MAX_PROFILE and run \`bin/max <profile> session start\` first: ${session.stderr.trim()}`,
+  )
   console.error("(this script never logs in itself: a login it did not need is a login spent)")
   process.exit(2)
 }

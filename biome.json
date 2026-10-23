@@ -2,11 +2,20 @@
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "extends": ["./config/wirecat/biome.base.json"],
   "files": {
-    "includes": ["**", "!**/dist", "!**/node_modules", "!pnpm-lock.yaml", "!.worktrees", "!config/wirecat"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/node_modules",
+      "!pnpm-lock.yaml",
+      "!.worktrees",
+      "!config/wirecat",
+      "!lint/baseline",
+      "!contracts/bot-catalogue.json"
+    ]
   },
   "overrides": [
     {
-      "includes": ["src/commands/**", "src/mcp/**"],
+      "includes": ["src/commands/**"],
       "linter": {
         "rules": {
           "style": {
@@ -21,9 +30,10 @@
                       "**/spec/**",
                       "../spec/*",
                       "**/generated/**",
-                      "../generated/*"
+                      "../generated/*",
+                      "**/client/**"
                     ],
-                    "message": "commands and the MCP tools speak the domain model; only src/client.ts may reach the protocol, the specification or the generated wrappers"
+                    "message": "commands and the MCP tools speak the domain model; only src/client.ts and src/client/ may reach the protocol, the specification or the generated wrappers"
                   }
                 ]
               }
@@ -33,7 +43,7 @@
       }
     },
     {
-      "includes": ["src/domain/models.ts", "src/rendering/**", "src/resolve.ts"],
+      "includes": ["src/resolve.ts"],
       "linter": {
         "rules": {
           "style": {

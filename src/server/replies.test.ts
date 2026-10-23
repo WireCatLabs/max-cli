@@ -1,11 +1,11 @@
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-core"
-import { openStore } from "@wirecat/cli-messaging/store"
+import { memoryKeyring } from "@wirecat/cli-base"
+import type { MessageHit } from "@wirecat/cli-core"
+import { openStore } from "@wirecat/cli-core/store"
 import { expect, it } from "vitest"
 import { MaxClient } from "../client.js"
-import type { MessageHit } from "../domain/models.js"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { Connection } from "../protocol/connection.js"
 import { SessionStore } from "../session/store.js"
@@ -56,7 +56,6 @@ it("the native MAX server opens a task for a matching rule without sending, whil
   const session = new SessionStore({ profile: "default", keyring: memoryKeyring() })
   session.writeToken("synthetic-token")
   const client = new MaxClient({
-    sends: "caller",
     store: session,
     connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
   })

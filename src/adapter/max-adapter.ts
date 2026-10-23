@@ -1,6 +1,6 @@
-import { CliError, singleLine } from "@wirecat/cli-core"
-import type { Account, Attachment, Chat, Message, Poll, QuotedMessage, WindowedMessage } from "@wirecat/cli-messaging"
-import { observedCounters } from "@wirecat/cli-messaging"
+import { CliError, singleLine } from "@wirecat/cli-base"
+import type { Account, Chat, Contact, Member, Message, Poll, WindowedMessage } from "@wirecat/cli-core"
+import { observedCounters } from "@wirecat/cli-core"
 import type {
   MessageEditing,
   MessagePins,
@@ -10,10 +10,9 @@ import type {
   ReadState,
   SendOptions,
   ServerReads,
-} from "@wirecat/cli-messaging/cli"
-import type { Upload } from "@wirecat/cli-messaging/sends"
+} from "@wirecat/cli-core/cli"
+import { type Upload, uploadBlob } from "@wirecat/cli-core/sends"
 import type { MaxClient } from "../client.js"
-import type * as Max from "../domain/models.js"
 import { httpOnly, LARGEST_VOICE, type Reach, streamBytes } from "../download.js"
 import { formatMarkdown, toNativeMarkup } from "../format-markdown.js"
 import type { Markup } from "../markdown.js"
@@ -79,6 +78,9 @@ export type MaxAdapter = MessengerAdapter &
     >
   >
 
+// web.max.ru asks for 30 (`_app/immutable/chunks/Cdo8IOYe.js`, 2026-10-11); one hit per chat, so 30 chats.
+const GLOBAL_SEARCH_COUNT = 30
+
 const MARKUP: Record<string, string> = {
   bold: "STRONG",
   italic: "EMPHASIZED",
@@ -87,8 +89,7 @@ const MARKUP: Record<string, string> = {
 }
 
 /**
- * cli-messaging's port over a connected `MaxClient` that was built **without** its send guard: the
- * shared services guard every write, and a second guard would count each one twice. The resend
+ * cli-core's port over a connected `MaxClient`; the shared services guard every write. The resend
  * rule and the name filling stay in `MaxClient` (`NEED-34`).
  */
 export const maxAdapter = (
@@ -107,7 +108,7 @@ export const maxAdapter = (
       formatted.spans.forEach(toNativeMarkup)
       return formatted
     },
-    self: () => store.readState().viewerId ?? null,
+    self: () => store.viewerId() ?? null,
     newSendId: () => client.newSendId(),
 
     me: async (): Promise<Account> => {
@@ -139,13 +140,16 @@ export const maxAdapter = (
       return { ...page, items: items.map(remoteMessage) }
     },
 
+    // With no chat, one opcode 68 call with web.max.ru's count; its `marker` is never followed, so a
+    // query costs one call and `hasMore` tells the caller the answer is partial.
     searchMessages: async (query, { limit }) => {
-      if (query.chat === undefined)
-        throw new CliError("validation_error", "MAX's server searches one chat at a time — name the chat")
-      const page = await client.messages.search(await chatId(query.chat), query.text, limit)
+      const page =
+        query.chat === undefined
+          ? await client.messages.searchGlobal(query.text, GLOBAL_SEARCH_COUNT)
+          : await client.messages.search(await chatId(query.chat), query.text, limit)
       return {
-        items: page.items.map((message) => ({ ...remoteMessage(message), chatTitle: null })),
-        hasMore: page.hasMore,
+        items: page.items.slice(0, limit).map((message) => ({ ...remoteMessage(message), chatTitle: null })),
+        hasMore: page.hasMore || page.items.length > limit,
         chats: [],
       }
     },
@@ -173,7 +177,7 @@ export const maxAdapter = (
         files: links.map((link) => {
           let mime = ""
           return {
-            kind: kindOf(link.kind),
+            kind: link.kind,
             ...(link.name ? { name: link.name } : {}),
             get mime() {
               return mime
@@ -182,7 +186,7 @@ export const maxAdapter = (
               yield* streamBytes(
                 link,
                 reach,
-                link.kind === "audio" ? LARGEST_VOICE : undefined,
+                link.kind === "voice" ? LARGEST_VOICE : undefined,
                 (value) => {
                   mime = value ?? ""
                 },
@@ -195,7 +199,7 @@ export const maxAdapter = (
       }
     },
 
-    scheduled: async (chat) => (await client.messages.scheduled(await chatId(chat))).map(toMessage),
+    scheduled: async (chat) => await client.messages.scheduled(await chatId(chat)),
 
     // An id is taken as it is, without connecting: a write the guard refuses must not have logged in first.
     resolve: async (reference): Promise<Chat> => {
@@ -295,7 +299,10 @@ export const maxAdapter = (
     privacy: () => client.account.privacy(),
     mute: (chatId, until) => client.account.mute(chatId, until),
     updatePrivacy: (change) => client.account.updatePrivacy(change),
-    media: (chatId, { kinds, limit, before }) => client.messages.media(chatId, kinds, limit, before),
+    media: async (chatId, { kinds, limit, before }) => {
+      const page = await client.messages.media(chatId, kinds, limit, before)
+      return page
+    },
     stickerSets: () => client.stickers.sets(),
     stickers: (setId) => client.stickers.list(setId),
 
@@ -322,9 +329,7 @@ export const maxAdapter = (
       })
       signal?.throwIfAborted()
       const message = messages.find((one) => one.id === messageId)
-      return message
-        ? (observedCounters(toMessage(message), new Date().toISOString(), fields).counterObservations ?? {})
-        : {}
+      return message ? (observedCounters(message, new Date().toISOString(), fields).counterObservations ?? {}) : {}
     },
     around: async (chat, messageId, window): Promise<WindowedMessage[]> =>
       (await client.messages.around(await chatId(chat), messageId, window)).map(({ anchor, ...message }) => ({
@@ -349,6 +354,13 @@ export const maxAdapter = (
       if (noPreview) {
         throw new CliError("validation_error", "MAX's own client has no way to send a link without its preview")
       }
+      const uploads = await Promise.all(
+        attachments.map(async (upload) => ({
+          name: upload.name,
+          kind: uploadKind(upload),
+          body: await uploadBlob(upload.source),
+        })),
+      )
       const message = await client.messages.send(to, text, {
         cid: cidOf(sendId),
         ...(silent ? { notify: false } : {}),
@@ -357,33 +369,27 @@ export const maxAdapter = (
         ...((formatting ?? markup).length === 0
           ? {}
           : { markup: formatting ? formatting.map(toNativeMarkup) : markup.map(toMaxMarkup) }),
-        ...(attachments.length === 0
-          ? {}
-          : { uploads: attachments.map((upload) => ({ ...upload, kind: uploadKind(upload) })) }),
+        ...(uploads.length === 0 ? {} : { uploads }),
         ...(sticker === undefined ? {} : { sticker }),
       })
-      return { message: toMessage(message), sendId }
+      return { message, sendId }
     },
 
     edit: async (to, messageId, text, { markup = [], formatting }) =>
-      toMessage(
-        await client.messages.edit(
-          to,
-          messageId,
-          text,
-          (formatting ?? markup).length === 0
-            ? {}
-            : { markup: formatting ? formatting.map(toNativeMarkup) : markup.map(toMaxMarkup) },
-        ),
+      client.messages.edit(
+        to,
+        messageId,
+        text,
+        (formatting ?? markup).length === 0
+          ? {}
+          : { markup: formatting ? formatting.map(toNativeMarkup) : markup.map(toMaxMarkup) },
       ),
 
     forward: async (from, messageId, to, { sendId, silent }) =>
-      toMessage(
-        await client.messages.forward(from, messageId, to, {
-          cid: cidOf(sendId),
-          ...(silent ? { notify: false } : {}),
-        }),
-      ),
+      client.messages.forward(from, messageId, to, {
+        cid: cidOf(sendId),
+        ...(silent ? { notify: false } : {}),
+      }),
 
     delete: async (to, messageIds, { forEveryone }) => {
       await client.messages.delete(to, messageIds, { forEveryone })
@@ -405,14 +411,14 @@ export const maxAdapter = (
       await client.chats.markRead(to, until)
     },
 
-    poll: async (chatId, messageId) => toPoll(await client.polls.show(chatId, messageId)),
-    vote: async (chatId, messageId, answerIds) => toPoll(await client.polls.vote(chatId, messageId, answerIds)),
+    poll: async (chatId, messageId) => answered(await client.polls.show(chatId, messageId)),
+    vote: async (chatId, messageId, answerIds) => answered(await client.polls.vote(chatId, messageId, answerIds)),
     buttons: (chatId, messageId) => client.messages.buttons(chatId, messageId),
     startBot: (chatId, { sendId, payload }) => client.chats.startBot(chatId, cidOf(sendId), payload),
     botApp: (chatId, { startParam }) => client.chats.app(chatId, startParam),
     botByLink: (reference) => client.chats.botLink(reference),
     pressButton: (chatId, messageId, row, column) => client.messages.press(chatId, messageId, row, column),
-    closePoll: async (chatId, messageId) => toPoll(await client.polls.close(chatId, messageId)),
+    closePoll: async (chatId, messageId) => answered(await client.polls.close(chatId, messageId)),
     createPoll: async (
       chatId,
       { question, answers, multiple, anonymous, revote },
@@ -427,7 +433,7 @@ export const maxAdapter = (
         cid: cidOf(sendId),
         ...(silent ? { notify: false } : {}),
       })
-      return { message: toMessage(message), sendId }
+      return { message, sendId }
     },
 
     // `max session end` forgets the session on this machine and never sends LOGOUT, which would end the browser tab's too.
@@ -445,25 +451,17 @@ export const maxAdapter = (
 const cidOf = (sendId: string): number => {
   const cid = Number(sendId)
   if (!Number.isSafeInteger(cid) || String(cid) !== sendId) {
-    throw new CliError("validation_error", `--send-id takes an id MAX gave: "${sendId}" is not one`)
+    throw new CliError("validation_error", `--operation-id takes an id MAX gave: "${sendId}" is not one`)
   }
   return cid
 }
 
 /** As `max messages send --file` always sent them: a picture as a photo, a video as a video unless `--as-file`. */
-const uploadKind = ({ name, kind, asFile }: Upload) =>
+const uploadKind = ({ name, kind, asFile }: Upload): "photo" | "video" | "file" | "voice" =>
   kind === "voice" ? kind : isImage(name) ? "photo" : isVideo(name) && asFile !== true ? "video" : kind
 
-const toPoll = ({ chatId, messageId, poll }: Max.PollMessage): Poll => ({
-  chatId,
-  messageId,
-  question: poll.question,
-  answers: poll.answers.map(({ id, text, votes, mine }) => ({ id, text, voters: votes, chosen: mine })),
-  closed: poll.closed,
-  multiple: poll.multiple,
-  anonymous: poll.anonymous,
-  voters: poll.total,
-})
+/** `max polls` answers without `quiz` and `revote`, as it always has; only `max watch` draws them. */
+const answered = ({ quiz, revote, ...poll }: Poll): Poll => poll
 
 const unknownChat = (id: string): Chat => ({
   id,
@@ -480,35 +478,7 @@ const toMaxMarkup = ({ type, from, length }: { type: string; from: number; lengt
   return { type: native, from, length }
 }
 
-export const toMessage = ({ attachments, replyTo, forwardedFrom, ...message }: Max.Message): Message => ({
-  ...message,
-  attachments: attachments.map(toAttachment),
-  replyTo: replyTo && toQuoted(replyTo),
-  forwardedFrom: forwardedFrom && toQuoted(forwardedFrom),
-})
+const toMember = ({ id, name, username }: Contact): Member => ({ id, name, username })
 
-const toQuoted = ({ attachments, ...quoted }: Max.QuotedMessage): QuotedMessage => ({
-  ...quoted,
-  attachments: attachments.map(toAttachment),
-})
-
-/** What only MAX has — its file and video ids, a control event, a poll — goes where the store keeps a provider's own. */
-/** MAX's `audio` is a recorded voice message; music goes as a file. */
-const kindOf = (kind: string) => (kind === "audio" ? "voice" : kind)
-
-const toAttachment = ({ fileId, videoId, event, userIds, poll, kind, ...shared }: Max.Attachment): Attachment => {
-  const own = {
-    ...(fileId === undefined ? {} : { fileId }),
-    ...(videoId === undefined ? {} : { videoId }),
-    ...(event === undefined ? {} : { event }),
-    ...(userIds === undefined ? {} : { userIds }),
-    ...(poll === undefined ? {} : { poll }),
-  }
-  const typed = { ...shared, kind: kindOf(kind) }
-  return Object.keys(own).length === 0 ? typed : { ...typed, providerRef: own }
-}
-
-const toMember = ({ id, name, username }: Max.Contact): Max.Member => ({ id, name, username })
-
-const remoteMessage = (message: Max.Message): Message =>
-  observedCounters(toMessage(message), new Date().toISOString(), ["views", "reactions"])
+const remoteMessage = (message: Message): Message =>
+  observedCounters(message, new Date().toISOString(), ["views", "reactions"])

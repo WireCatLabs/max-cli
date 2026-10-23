@@ -1,5 +1,5 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import { timeOfMessageId } from "./client.js"
 import type { Environment } from "./commands/context.js"
@@ -66,46 +66,48 @@ describe("marking a chat read", () => {
     expect(marks()).toEqual([])
   })
 
-  it("`messages list --mark-read` marks up to the newest message shown, once, and still prints the listing", async () => {
+  it("messages list never marks read and refuses the retired --mark-read flag", async () => {
     const { environment, marks } = messenger()
-    const { code, stdout, stderr } = await runWith(["r-list", "messages", "list", "111", "--mark-read"], environment)
-
-    expect(code).toBe(0)
-    expect(marks()).toEqual([{ type: "READ_MESSAGE", chatId: "111", messageId: NEWER, mark: expect.any(Number) }])
-    expect(JSON.parse(stdout).items.map(({ id }: { id: string }) => id)).toEqual([OLDER, NEWER])
-    expect(stderr).toContain(`marked read up to ${NEWER}`)
-    expect(journalOf("r-list")).toMatchObject([{ chatId: "111", kind: "read", outcome: "sent", messageId: NEWER }])
+    const listed = await runWith(["r-list", "messages", "list", "111", "--json"], environment)
+    expect(listed.code).toBe(0)
+    expect(journalOf("r-list")).toEqual([])
+    expect(JSON.parse(listed.stdout).items.map(({ id }: { id: string }) => id)).toEqual([OLDER, NEWER])
+    const refused = await runWith(["r-list", "messages", "list", "111", "--mark-read", "--json"], environment)
+    expect(refused.code).toBe(2)
+    expect(refused.stdout).toBe("")
+    expect(marks()).toEqual([])
   })
 
   it("`chats mark-read` marks up to the newest message, or to the one given", async () => {
     const { environment, marks } = messenger()
     const newest = await runWith(["r-chat", "chats", "mark-read", "111"], environment)
-    const given = await runWith(["r-chat", "chats", "mark-read", "Friends", "--until", OLDER], environment)
+    const given = await runWith(["r-chat", "chats", "mark-read", "Friends", "--until-id", OLDER], environment)
 
     expect(newest.code).toBe(0)
-    expect(JSON.parse(newest.stdout)).toEqual({ operationId: expect.any(String), chatId: "111", until: null })
+    expect(JSON.parse(newest.stdout).item).toEqual({ operation_id: expect.any(String), chat_id: "111", until: null })
     expect(given.code).toBe(0)
     expect(marks().map(({ messageId }) => messageId)).toEqual([NEWER, OLDER])
   })
 
   it("marks with the read message's own time, as the web client does, so nothing newer is marked", async () => {
     const { max, environment } = messenger()
-    await runWith(["r-time", "chats", "mark-read", "111", "--until", OLDER], environment)
+    await runWith(["r-time", "chats", "mark-read", "111", "--until-id", OLDER], environment)
     await runWith(["r-time", "chats", "mark-read", "111"], environment)
 
     const marks = max.sent.filter(({ opcode }) => opcode === Opcode.CHAT_MARK).map(({ payload }) => payload.mark)
     expect(marks).toEqual([timeOfMessageId(OLDER), timeOfMessageId(NEWER)])
   })
 
-  it("a read-only profile refuses before connecting, and prints no messages", async () => {
+  it("a read-only profile refuses, sending nothing past the login, and prints no messages", async () => {
     const { max, environment } = messenger()
-    await runWith(["r-ro", "config", "set", "readOnly", "true"])
+    await runWith(["r-ro", "config", "set", "permissions.chats", "readonly"])
+    await runWith(["r-ro", "config", "set", "permissions.messages", "readonly"])
 
     expect((await runWith(["r-ro", "chats", "mark-read", "111"], environment)).code).toBe(5)
-    expect(max.sent).toEqual([])
+    expect(max.sent.every(({ opcode }) => opcode === Opcode.SESSION_INIT || opcode === Opcode.LOGIN)).toBe(true)
 
     const listed = await runWith(["r-ro", "messages", "list", "111", "--mark-read"], environment)
-    expect(listed.code).toBe(5)
+    expect(listed.code).toBe(2)
     expect(listed.stdout).toBe("")
     expect(max.sent.map(({ opcode }) => opcode)).not.toContain(Opcode.CHAT_MARK)
   })

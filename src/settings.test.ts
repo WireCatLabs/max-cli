@@ -1,5 +1,5 @@
-import { captureStreams, memoryKeyring } from "@wirecat/cli-core"
-import { SendJournal } from "@wirecat/cli-messaging/sends"
+import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import { MaxClient } from "./client.js"
 import type { Environment } from "./commands/context.js"
@@ -45,7 +45,9 @@ const runWith = async (argv: string[], environment: Environment) => {
 describe("the owner's own settings", () => {
   it("`chats mute` sends -1 for good, a time with --until, and `unmute` sends 0", async () => {
     const { environment, settings } = messenger()
-    expect((await runWith(["chats", "mute", "111"], environment)).json).toMatchObject({ mutedUntil: "forever" })
+    expect((await runWith(["chats", "mute", "111"], environment)).json).toMatchObject({
+      item: { chat_id: "111", muted_until: "forever" },
+    })
     expect((await runWith(["chats", "mute", "111", "--until", "2h"], environment)).code).toBe(0)
     expect((await runWith(["chats", "unmute", "111"], environment)).code).toBe(0)
 
@@ -66,12 +68,12 @@ describe("the owner's own settings", () => {
 
     expect(code).toBe(0)
     expect(settings()).toEqual([{ user: { INCOMING_CALL: "CONTACTS", HIDDEN: true } }])
-    expect(json.privacy).toEqual({
-      findByPhone: "everyone",
-      phoneNumber: "contacts",
+    expect(json.item.privacy).toEqual({
+      find_by_phone: "everyone",
+      phone_number: "contacts",
       calls: "contacts",
-      chatInvites: "everyone",
-      hideOnline: true,
+      chat_invites: "everyone",
+      hide_online: true,
     })
   })
 
@@ -84,7 +86,7 @@ describe("the owner's own settings", () => {
 
   it("a read-only profile mutes nothing and journals the refusal", async () => {
     const { environment, settings } = messenger()
-    await runWith(["s-readonly", "config", "set", "readOnly", "true"], environment)
+    expect((await runWith(["s-readonly", "config", "set", "permissions.chats", "readonly"], environment)).code).toBe(0)
     const { code } = await runWith(["s-readonly", "chats", "mute", "111"], environment)
 
     expect(code).toBe(5)
@@ -115,7 +117,6 @@ describe("the owner's own settings", () => {
     const store = new SessionStore({ profile: "settings-held", keyring: memoryKeyring() })
     store.writeToken("a-token")
     const client = new MaxClient({
-      sends: "caller",
       store,
       connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
       warn: () => {},
@@ -137,5 +138,25 @@ describe("the owner's own settings", () => {
     } finally {
       await client.close()
     }
+  })
+})
+
+describe("the read-only lock on max's own commands", () => {
+  it("refuses the local writes that would let a later run send, and still reads", async () => {
+    const { environment } = messenger()
+    const locked: Environment = { ...environment, env: { ...process.env, MAX_READ_ONLY: "1" } }
+    for (const argv of [
+      ["config", "set", "permissions.chats", "readonly"],
+      ["config", "unset", "permissions.chats"],
+      ["recipients", "add", "111"],
+      ["recipients", "clear"],
+      ["mcp", "setup", "claude-code"],
+      ["mcp", "setup", "claude-code", "--permission", "messages.send=allow"],
+    ]) {
+      const { code, stderr } = await runWith(["s-locked", ...argv], locked)
+      expect(code, argv.join(" ")).toBe(5)
+      expect(stderr).toContain("MAX_READ_ONLY")
+    }
+    expect((await runWith(["s-locked", "config", "show"], locked)).code).toBe(0)
   })
 })
