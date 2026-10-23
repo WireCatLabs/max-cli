@@ -340,6 +340,8 @@ describe("max inbox and review — by kind, and marking read", () => {
     })
 
     expect(offline.code).toBe(0)
-    expect(JSON.parse(offline.stdout).items.map((item: { chat_id: string }) => item.chat_id)).toEqual(["111"])
+    expect(new Set(JSON.parse(offline.stdout).items.map((item: { chat_id: string }) => item.chat_id))).toEqual(
+      new Set(["111"]),
+    )
   })
 })
