@@ -140,6 +140,28 @@ max work mcp config
 у всех. `--permission ключ=уровень` ужесточает уровень только для процесса сервера и никогда его не
 ослабляет. Профиль можно закрепить через `MAX_PROFILE_LOCK`.
 
+### Чего нет в MCP
+
+Агент видит все команды, кроме этих. Права профиля ограничивают остальные.
+
+| Команды | Почему |
+|---|---|
+| `setup`, `session` | вход и выход: их делает человек |
+| `upgrade`, `complete` | обновляют саму программу и автодополнение в терминале |
+| `serve`, `watch`, `server`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
+| `config`, `bot auth`, `bot list` | права, настройки и токены профиля: агент не меняет свои же права |
+| `bot uploads put` | читает файл с вашего компьютера |
+| `account sessions end` | завершает ваши сеансы на других устройствах |
+| `chats rules set`, `chats rules unset`, `chats delete`, `chats clear` | пока закрыты для агента |
+| `store status`, `store info`, `store check`, `store export`, `store backup`, `store restore`, `store decrypt` | пока закрыты для агента |
+| `store migrate`, `store reindex`, `store repair`, `store clear`, `store reset`, `store copies delete` | пока закрыты для агента |
+| `store jobs cancel`, `store jobs retry`, `store jobs clear` | пока закрыты для агента |
+| `models`, `images models`, `skill`, `guide`, `runs list`, `runs show`, `runs path`, `commands schema` | пока закрыты для агента |
+| `recipients add`, `recipients remove`, `recipients clear`, `replies`, `schedule`, `flood clear` | пока закрыты для агента |
+| `bot chats leave`, `bot chats admins add`, `bot chats admins remove`, `bot chats rules set`, `bot chats rules unset` | пока закрыты для агента |
+| `bot recipients add`, `bot recipients remove`, `bot recipients clear`, `bot commands set`, `bot commands clear` | пока закрыты для агента |
+| `bot webhooks`, `bot store fetch`, `bot api` | пока закрыты для агента |
+
 ## Инструменты
 
 | Инструмент | Для чего |

@@ -37,9 +37,10 @@ What the tool does today: [`../commands.md`](../commands.md) (generated). How it
 
 ## Next (P2)
 
-- **CLI-82** · P2 · MCP exposes every command except login, `upgrade` and `complete`, with the exceptions listed in
-  the docs (owner, 2026-10-23); today 79 personal and 53 bot commands are missing (export, backup, auto-replies,
-  schedules, raw Bot API calls).
+- **CLI-82** · 🟡 P2 · MCP exposes every command except login, `upgrade` and `complete`, with the exceptions listed in
+  the docs (owner, 2026-10-23). Done in max: `doctor report` opened, the exceptions table in `docs/mcp.md` (a test keeps
+  it exact). Left: the commands cli-core marks `mcp: false` (store export and backup, replies, schedules, `bot api`…);
+  after the cli-core bump, update the table.
 - **MAX-52** · 🟡 P2 · Send the rest of the requests a real tab sends after LOGIN: 48 `{chatIds}`, 32 and 35
   `{contactIds}`, 28, stories 208/209 — from `max serve` only; never 22. `src/client/live.ts:44` (`readLikeTab`);
   [notes](BACKLOG-NOTES.md#max-52).
