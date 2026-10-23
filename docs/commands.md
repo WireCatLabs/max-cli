@@ -120,7 +120,7 @@ max account list
 
 **Returns:** every profile on this computer, and the account each is logged in as; asks the messenger…
 
-**Example:** `max account list`
+**Example:** `max personal account list`
 
 ### `max account show`
 
@@ -136,7 +136,7 @@ max account show [options]
 
 **Returns:** account — provider, id, name, username, phone, scope; every field: max commands schema account show
 
-**Example:** `max account show`
+**Example:** `max personal account show`
 
 ### `max account update`
 
@@ -157,7 +157,7 @@ max account update [options]
 
 **Returns:** change the name, the description or the photo everyone sees on your profile
 
-**Example:** `max account update`
+**Example:** `max personal account update --first-name Alex`
 
 ### `max account sessions`
 
@@ -177,7 +177,7 @@ max account sessions list [query]
 
 **Returns:** account session — current, client, device, location, last_active_at, created_at; every field: max commands schema account sessions list
 
-**Example:** `max account sessions list`
+**Example:** `max personal account sessions list`
 
 #### `max account sessions end`
 
@@ -195,7 +195,7 @@ max account sessions end [options]
 
 **Returns:** log out every other device, your phone included; this one stays
 
-**Example:** `max account sessions end`
+**Example:** `max personal account sessions end --others`
 
 ### `max account privacy`
 
@@ -1128,7 +1128,7 @@ max chats delete <chat> [options]
 
 **Returns:** delete a chat from this account; the others in it keep it and its messages
 
-**Example:** `max chats delete Team`
+**Example:** `max personal chats delete "Book club"`
 
 ### `max chats clear`
 
@@ -1150,7 +1150,7 @@ max chats clear <chat> [options]
 
 **Returns:** delete every message in a chat for this account; the others in it keep theirs
 
-**Example:** `max chats clear Team`
+**Example:** `max personal chats clear "Book club"`
 
 ### `max chats start`
 
@@ -1696,7 +1696,7 @@ max messages list <chat> [query] [options]
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <id>` | which downloaded speech model hears them, with --transcribe; `models audio list` shows them. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 27 more; every field: max commands schema messages list
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands schema messages list
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -1931,7 +1931,7 @@ max messages scheduled <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 27 more; every field: max commands schema messages scheduled
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands schema messages scheduled
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -2908,7 +2908,7 @@ max tasks list [query] [options]
 
 **Next usually:** `max tasks show <task>`, `max tasks related <task>`, `max tasks plan <task>`
 
-**Example:** `max tasks list`
+**Example:** `max personal tasks list --limit 10`
 
 ### `max tasks add`
 
@@ -2938,7 +2938,7 @@ max tasks add <message> [options]
 
 **Returns:** add a task for a stored message or note — a promise, a request
 
-**Example:** `max tasks add 1234 --type <type> --category daily`
+**Example:** `max personal tasks add note:101 --type promise --category documents --title "Review draft"`
 
 ### `max tasks plan`
 
@@ -2965,7 +2965,7 @@ max tasks plan <task> [options]
 
 **Returns:** set a task's title, description, due date, next check, category and assignee
 
-**Example:** `max tasks plan 12`
+**Example:** `max personal tasks plan DOC-12 --title "Review draft"`
 
 ### `max tasks link`
 
@@ -2989,7 +2989,7 @@ max tasks link <task> [targets] [options]
 
 **Returns:** link a task to messages, chats, people or URLs — or to another task: task:<id>
 
-**Example:** `max tasks link 12`
+**Example:** `max personal tasks link DOC-12 https://example.com/draft`
 
 ### `max tasks show`
 
@@ -3005,7 +3005,7 @@ max tasks show <task>
 
 **Returns:** one task: its plan and everything linked to it
 
-**Example:** `max tasks show 12`
+**Example:** `max personal tasks show DOC-12`
 
 ### `max tasks related`
 
@@ -3143,7 +3143,7 @@ max tasks agenda [query] [options]
 
 **Returns:** agenda — at, account, stored_at, stale, tasks, owed, waiting, unsynced, and 2 more; every field: max commands schema tasks agenda
 
-**Example:** `max tasks agenda`
+**Example:** `max personal tasks agenda`
 
 ### `max tasks categories`
 
@@ -3298,7 +3298,7 @@ max conversations build [options]
 
 **Returns:** find a chat's conversations in what the store holds, replacing the last build; without…
 
-**Example:** `max conversations build`
+**Example:** `max personal conversations build --chat "Book club"`
 
 ### `max conversations list`
 
@@ -3319,7 +3319,7 @@ max conversations list <chat> [query] [options]
 
 **Returns:** conversation — id, chat, first_message, started_at, ended_at, messages_count, senders_count, built_at, and 1 more; every field: max commands schema conversations list
 
-**Example:** `max conversations list Team`
+**Example:** `max personal conversations list "Book club"`
 
 ### `max conversations show`
 
@@ -3336,7 +3336,7 @@ max conversations show <conversation> [message]
 
 **Returns:** one conversation's messages, oldest first — by its id, or the one a message is in
 
-**Example:** `max conversations show <conversation> 1234`
+**Example:** `max personal conversations show "Book club" 101`
 
 ### `max conversations related`
 
@@ -3361,7 +3361,7 @@ max conversations related <chat> <message> [options]
 
 **Returns:** the conversations nearest in meaning to the one a message is in, in every built chat,…
 
-**Example:** `max conversations related Team 1234`
+**Example:** `max personal conversations related "Book club" 101`
 
 ### `max conversations status`
 
@@ -3381,7 +3381,7 @@ max conversations status [options]
 
 **Returns:** how fresh each built chat's conversations and vectors are: messages the build has not…
 
-**Example:** `max conversations status`
+**Example:** `max personal conversations status`
 
 ### `max conversations batches`
 
@@ -3402,7 +3402,7 @@ max conversations batches status [options]
 
 **Returns:** how many messages still wait for an answer, in how many batches, and how much text
 
-**Example:** `max conversations batches status --chat Team`
+**Example:** `max personal conversations batches status --chat "Book club"`
 
 #### `max conversations batches next`
 
@@ -3419,7 +3419,7 @@ max conversations batches next [options]
 
 **Returns:** the next window to answer, with the messages before it; message text goes to stdout only
 
-**Example:** `max conversations batches next --chat Team`
+**Example:** `max personal conversations batches next --chat "Book club"`
 
 ### `max conversations links`
 
@@ -3441,7 +3441,7 @@ max conversations links add [options]
 
 **Returns:** store your agent's answer to a batch, read as JSON from stdin: { "model", "answers": [{…
 
-**Example:** `max conversations links add --batch 1`
+**Example:** `max personal conversations links add --batch "$batch"`
 
 #### `max conversations links clear`
 
@@ -3460,7 +3460,7 @@ max conversations links clear [options]
 
 **Returns:** drop your agent's answers for a chat, or only one model's; messages are never touched
 
-**Example:** `max conversations links clear --chat Team`
+**Example:** `max personal conversations links clear --chat "Book club"`
 
 ### `max conversations rebuild`
 
@@ -3496,7 +3496,7 @@ max conversations consents list
 
 **Returns:** which chats and provider endpoints you allowed to analyse, and when
 
-**Example:** `max conversations consents list`
+**Example:** `max personal conversations consents list`
 
 #### `max conversations consents revoke`
 
@@ -3515,7 +3515,7 @@ max conversations consents revoke [options]
 
 **Returns:** forget analysis permissions so the next analysis asks again
 
-**Example:** `max conversations consents revoke`
+**Example:** `max personal conversations consents revoke --chat "Book club"`
 
 ### `max conversations embed`
 
@@ -3558,7 +3558,7 @@ max conversations embed status [options]
 
 **Returns:** how many chunks of a chat have a vector of the model, how many are left, and what is left…
 
-**Example:** `max conversations embed status`
+**Example:** `max personal conversations embed status --chat "Book club"`
 
 #### `max conversations embed clear`
 
@@ -3580,7 +3580,7 @@ max conversations embed clear [options]
 
 **Returns:** drop a chat's vectors, or only one model's; messages and conversations are never touched
 
-**Example:** `max conversations embed clear`
+**Example:** `max personal conversations embed clear --chat "Book club"`
 
 ## `max attachments`
 
@@ -3609,7 +3609,7 @@ max attachments extract [options]
 
 **Returns:** read the text of downloaded files — text, PDF/DOCX text layers, ODT/ODS/XLSX/PPTX/EPUB —…
 
-**Example:** `max attachments extract`
+**Example:** `max personal attachments extract --chat "Book club" --limit 10`
 
 ### `max attachments list`
 
@@ -3631,7 +3631,7 @@ max attachments list [query] [options]
 
 **Returns:** attachment — kind, message, position, url, name, title, mime, size, and 7 more; every field: max commands schema attachments list
 
-**Example:** `max attachments list`
+**Example:** `max personal attachments list --limit 10`
 
 ### `max attachments show`
 
@@ -3656,7 +3656,7 @@ max attachments show <chat> [message] [options]
 
 **Returns:** read a bounded chunk of one retained attachment; JSON includes base64 bytes
 
-**Example:** `max attachments show Team 1234`
+**Example:** `max personal attachments show "Book club" 101 --attachment 1`
 
 ### `max attachments text`
 
@@ -3684,7 +3684,7 @@ max attachments text set <chat> [message] [options]
 
 **Returns:** keep the text an agent read from a file — a scan, a photo — so search finds it; nothing…
 
-**Example:** `max attachments text set Team 1234`
+**Example:** `max personal attachments text set "Book club" 101 --text-file ./transcript.txt`
 
 ## `max tags`
 
@@ -4058,7 +4058,7 @@ max search all <query> [options]
 
 **Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 4 more; every field: max commands schema search all
 
-**Example:** `max search all "invoice"`
+**Example:** `max personal search all draft`
 
 ### `max search messages`
 
@@ -4095,11 +4095,11 @@ max search messages [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
-**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, found_in, and 3 more; every field: max commands schema search messages
+**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, match, and 5 more; every field: max commands schema search messages
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
-**Example:** `max search messages "invoice"`
+**Example:** `max personal search messages draft --limit 10`
 
 ### `max search notes`
 
@@ -4124,7 +4124,7 @@ max search notes <query> [options]
 
 **Returns:** note hit — ref, source, folder_id, path, title, updated_at, kind, provider, and 5 more; every field: max commands schema search notes
 
-**Example:** `max search notes "invoice"`
+**Example:** `max personal search notes draft --limit 10`
 
 ### `max search conversations`
 
@@ -4161,7 +4161,7 @@ max search conversations <query> [options]
 
 **Returns:** the conversations nearest to a query in meaning and in words, best first, in one chat or…
 
-**Example:** `max search conversations "invoice"`
+**Example:** `max personal search conversations "Reviewing the project draft"`
 
 ## `max searches`
 
@@ -4323,7 +4323,7 @@ max models audio list [query]
 
 **Next usually:** `max models audio download <model>`, `max models text download <model>`, `max images models download <model>`
 
-**Example:** `max models audio list`
+**Example:** `max personal models audio list`
 
 #### `max models audio download`
 
@@ -4343,7 +4343,7 @@ max models audio download <model>
 
 **Next usually:** `max models text download <model>`, `max images models download <model>`
 
-**Example:** `max models audio download default`
+**Example:** `max personal models audio download parakeet-v3`
 
 ### `max models text`
 
@@ -4365,7 +4365,7 @@ max models text list [query]
 
 **Next usually:** `max models text download <model>`, `max models audio download <model>`, `max images models download <model>`
 
-**Example:** `max models text list`
+**Example:** `max personal models text list`
 
 #### `max models text download`
 
@@ -4389,7 +4389,7 @@ max models text download <model> [options]
 
 **Next usually:** `max models audio download <model>`, `max images models download <model>`
 
-**Example:** `max models text download default`
+**Example:** `max personal models text download e5-small`
 
 #### `max models text key`
 
@@ -4411,7 +4411,7 @@ max models text key set <provider>
 
 **Returns:** store a key, typed at a hidden prompt or piped on stdin — never as an argument
 
-**Example:** `max models text key set <provider>`
+**Example:** `max personal models text key set openai`
 
 #### `max models text key remove`
 
@@ -4429,7 +4429,7 @@ max models text key remove <provider>
 
 **Returns:** forget a stored key
 
-**Example:** `max models text key remove <provider>`
+**Example:** `max personal models text key remove openai`
 
 ## `max polls`
 
@@ -4450,7 +4450,7 @@ max polls show <chat> <message>
 
 **Returns:** a poll and its answer ids, as the message carries it now
 
-**Example:** `max polls show Team 1234`
+**Example:** `max personal polls show "Book club" 101`
 
 ### `max polls vote`
 
@@ -4474,7 +4474,7 @@ max polls vote <chat> <message> [answers] [options]
 
 **Returns:** vote in a poll, or take your vote back; the others see it unless the poll is anonymous
 
-**Example:** `max polls vote Team 1234`
+**Example:** `max personal polls vote "Book club" 101 0`
 
 ### `max polls close`
 
@@ -4493,7 +4493,7 @@ max polls close <chat> <message>
 
 **Returns:** close your own poll; nobody can vote after that, and it cannot be reopened
 
-**Example:** `max polls close Team 1234`
+**Example:** `max personal polls close "Book club" 101`
 
 ### `max polls create`
 
@@ -4522,7 +4522,7 @@ max polls create <chat> <question> <answers> [options]
 
 **Returns:** send a poll to a chat, as a message of its own; public unless --anonymous
 
-**Example:** `max polls create Team <question> <answers>`
+**Example:** `max personal polls create "Book club" "Which day?" Monday Tuesday`
 
 ## `max reactions`
 
@@ -5014,7 +5014,7 @@ max server start [options]
 
 **Returns:** start serve in the background — through the unit if one is installed — and answer once it…
 
-**Example:** `max server start`
+**Example:** `max personal server start`
 
 ### `max server stop`
 
@@ -5028,7 +5028,7 @@ max server stop
 
 **Returns:** stop this profile's serve — through the unit if it runs under one
 
-**Example:** `max server stop`
+**Example:** `max personal server stop`
 
 ### `max server restart`
 
@@ -5046,7 +5046,7 @@ max server restart [options]
 
 **Returns:** stop it and start it again
 
-**Example:** `max server restart`
+**Example:** `max personal server restart`
 
 ### `max server status`
 
@@ -5058,7 +5058,7 @@ max server status
 
 **Returns:** whether serve runs for this profile, since when, who started it, and the unit if there is…
 
-**Example:** `max server status`
+**Example:** `max personal server status`
 
 ### `max server logs`
 
@@ -5074,7 +5074,7 @@ max server logs [options]
 
 **Returns:** serve's latest log lines — from the journal under systemd, else its log file
 
-**Example:** `max server logs`
+**Example:** `max personal server logs --limit 20`
 
 ### `max server install`
 
@@ -5088,7 +5088,7 @@ max server install
 
 **Returns:** write a systemd user unit or a launchd agent for this profile; starts nothing
 
-**Example:** `max server install`
+**Example:** `max personal server install`
 
 ### `max server uninstall`
 
@@ -5102,7 +5102,7 @@ max server uninstall
 
 **Returns:** remove this profile's unit; stop it first
 
-**Example:** `max server uninstall`
+**Example:** `max personal server uninstall`
 
 ## `max schedule`
 
@@ -5365,7 +5365,7 @@ max runs list [options]
 
 **Returns:** recorded runs, newest first
 
-**Example:** `max runs list`
+**Example:** `max runs list --limit 10`
 
 ### `max runs show`
 
@@ -5385,7 +5385,7 @@ max runs show <run-id> [options]
 
 **Returns:** one run: what it was, how it ended, and every event it logged
 
-**Example:** `max runs show <run-id>`
+**Example:** `max runs show run-101`
 
 ### `max runs search`
 
@@ -5411,7 +5411,7 @@ max runs search [query] [options]
 
 **Returns:** search recorded diagnostic metadata and events; no message contents
 
-**Example:** `max runs search "invoice"`
+**Example:** `max runs search timeout --limit 10`
 
 ### `max runs path`
 
@@ -5427,7 +5427,7 @@ max runs path <run-id>
 
 **Returns:** the directory holding one run
 
-**Example:** `max runs path <run-id>`
+**Example:** `max runs path run-101`
 
 ## `max skill`
 
@@ -5445,9 +5445,9 @@ max skill show [name]
 |---|---|---|
 | `name` | необязательный | one of the skills shipped for a task: follow-ups, link-conversations. |
 
-**Returns:** print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look…
+**Returns:** print the tool's instructions for AI agents
 
-**Example:** `max skill show daily`
+**Example:** `max skill show`, `max skill show follow-ups`
 
 ### `max skill install`
 
@@ -5463,9 +5463,9 @@ max skill install [options]
 |---|---|
 | `--for <agents>` | which agents to install for. Одно из: `claude`, `agents`, `all`. По умолчанию: `all`. |
 
-**Returns:** write SKILL.md to ~/.claude/skills/max-cli/ (Claude Code) and ~/.agents/skills/max-cli/…
+**Returns:** install the tool's instructions for AI agents
 
-**Example:** `max skill install`
+**Example:** `max skill install --for agents`
 
 ## `max commands`
 
@@ -5553,7 +5553,7 @@ max mcp config [options]
 
 **Returns:** print the mcpServers entry for Claude Desktop, Cursor and others, with full paths; writes…
 
-**Example:** `max mcp config`
+**Example:** `max personal mcp config`
 
 ### `max mcp setup`
 
@@ -5576,7 +5576,7 @@ max mcp setup <client> [options]
 
 **Returns:** add this profile's local MCP server to Codex or Claude Code
 
-**Example:** `max mcp setup <client>`
+**Example:** `max personal mcp setup codex --allow-writes`
 
 ### `max mcp doctor`
 
@@ -5592,7 +5592,7 @@ max mcp doctor [options]
 
 **Returns:** check this profile's local MCP handshake and tool list
 
-**Example:** `max mcp doctor`
+**Example:** `max personal mcp doctor`
 
 ## `max bot`
 

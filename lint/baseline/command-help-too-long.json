@@ -92,8 +92,6 @@
   "server",
   "server start",
   "server status",
-  "skill install",
-  "skill show",
   "stats chats retention",
   "stats chats show",
   "stats contacts evidence",
