@@ -101,7 +101,7 @@
     "package:check": "node --experimental-strip-types scripts/release-check.ts --package-only"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.1.0",
+    "@modelcontextprotocol/server": "2.3.0",
     "@msgpack/msgpack": "3.1.3",
     "@valibot/to-json-schema": "1.8.0",
     "@wirecat/cli-base": "0.50.1",
