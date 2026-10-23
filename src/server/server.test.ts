@@ -73,6 +73,9 @@ const scripted = (
       [Opcode.BANNERS_GET]: { banners: [] },
       [Opcode.CALL_HISTORY]: { callHistoryItems: [], callHistorySync: 1_788_000_000_000 },
       [Opcode.ASSETS_UPDATE]: { sync: 1_789_776_000_000, sections: [] },
+      [Opcode.STORIES_LIST]: { storiesPreviews: [] },
+      [Opcode.STORIES_PREVIEWS]: { storiesPreviews: [] },
+      [Opcode.CONTACT_PRESENCE]: { presence: {} },
       ...overrides,
     },
   })
@@ -361,6 +364,83 @@ describe("max serve", () => {
       ...types.map((type) => ({ type, sync: 0 })),
       ...types.map((type) => ({ type, sync: 1_789_776_000_000 })),
     ])
+  })
+
+  it("asks after a fresh login what a fresh tab asks, and after a re-login what a re-logged tab asks, never 22", async () => {
+    const dialog = (id: number, partner: number) => ({ id, type: "DIALOG", participants: { [ME]: 0, [partner]: 0 } })
+    const max = scripted({
+      [Opcode.LOGIN]: {
+        profile: { contact: { id: ME, names: [{ name: "Test Person", type: "FULL_NAME" }] } },
+        chats: [
+          dialog(201, 10000002),
+          dialog(202, 10000003),
+          { id: 111, title: "Group", type: "CHAT", lastEventTime: 1789776000000 },
+          { id: 112, title: "Channel", type: "CHANNEL" },
+        ],
+        contacts: [{ id: 10000002, names: [{ name: "Someone Else", type: "FULL_NAME" }] }],
+        chatMarker: 1_789_700_000_000,
+        time: 1_789_776_000_000,
+        config: { hash: "a-hash" },
+      },
+      [Opcode.FOLDERS_GET]: { folders: [{ id: "f", include: [111, 333] }], folderSync: 1_789_000_000_000 },
+      [Opcode.CHAT_INFO]: { chats: [] },
+      [Opcode.CHATS_LIST]: { chats: [dialog(203, 10000004)] },
+      [Opcode.CONTACT_INFO]: { contacts: [] },
+    })
+    const { notes } = await serve("s-tab-like", max)
+    await waitUntil(() => max.sent.some((call) => call.opcode === Opcode.CHATS_LIST), "the fresh reads")
+    await waitUntil(() => max.sent.filter((call) => call.opcode === Opcode.STORIES_PREVIEWS).length === 2, "rows")
+    const fresh = max.sent.splice(0)
+    max.drop()
+    await tabReads(max)
+    await waitUntil(() => max.sent.some((call) => call.opcode === Opcode.CONTACT_PRESENCE), "the re-login reads")
+
+    const afterLogin = (calls: typeof fresh) =>
+      calls
+        .slice(calls.findIndex((call) => call.opcode === Opcode.LOGIN) + 1)
+        .filter((call) => call.opcode !== Opcode.PING)
+    expect(afterLogin(fresh).map((call) => call.opcode)).toEqual([
+      Opcode.FOLDERS_GET,
+      Opcode.CONTACT_PRESENCE,
+      Opcode.CONTACT_INFO,
+      Opcode.BANNERS_GET,
+      Opcode.CALL_HISTORY,
+      Opcode.STORIES_LIST,
+      ...Array(4).fill(Opcode.ASSETS_UPDATE),
+      Opcode.STORIES_PREVIEWS,
+      Opcode.CHAT_INFO,
+      Opcode.CHATS_LIST,
+      Opcode.STORIES_PREVIEWS,
+    ])
+    const payloadOf = (calls: typeof fresh, opcode: number) =>
+      calls.filter((call) => call.opcode === opcode).map((call) => call.payload)
+    expect(payloadOf(fresh, Opcode.CONTACT_PRESENCE)).toEqual([{ contactIds: [10000002, 10000003] }])
+    expect(payloadOf(fresh, Opcode.CONTACT_INFO)).toEqual([{ contactIds: [10000003] }])
+    expect(payloadOf(fresh, Opcode.STORIES_LIST)).toEqual([{ cursor: "0", count: 15 }])
+    expect(payloadOf(fresh, Opcode.STORIES_PREVIEWS)).toEqual([
+      {
+        owners: [
+          { type: 0, ownerId: 10000002 },
+          { type: 0, ownerId: 10000003 },
+          { type: 1, ownerId: 111 },
+          { type: 2, ownerId: 112 },
+        ],
+      },
+      { owners: [{ type: 0, ownerId: 10000004 }] },
+    ])
+    expect(payloadOf(fresh, Opcode.CHAT_INFO)).toEqual([{ chatIds: [333] }])
+    expect(payloadOf(fresh, Opcode.CHATS_LIST)).toEqual([{ marker: 1_789_700_000_000 }])
+
+    expect(afterLogin(max.sent).map((call) => call.opcode)).toEqual([
+      Opcode.FOLDERS_GET,
+      Opcode.BANNERS_GET,
+      Opcode.CALL_HISTORY,
+      ...Array(4).fill(Opcode.ASSETS_UPDATE),
+      Opcode.CONTACT_INFO,
+      Opcode.CONTACT_PRESENCE,
+    ])
+    expect([...fresh, ...max.sent].map((call) => call.opcode)).not.toContain(Opcode.CONFIG)
+    expect(notes.filter((line) => line.startsWith("the reads after login"))).toEqual([])
   })
 
   it("keeps running when MAX refuses the reads after login", async () => {

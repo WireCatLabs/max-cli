@@ -56,11 +56,21 @@ which; the plan for it starts by saying so.
   | 208 | `{cursor: "0", count: 15}` | the stories bar on mount, then every `stories-config.update-ttl` s | ~1882059, ~2483540 |
   | 209 | `{owners: [{type, ownerId}]}`, up to 30 | each chat-list row drawn: 0 + the other person for a dialog, 1 + chat id for a group, 2 for a channel | ~1912237, ~1707345 |
 
-  🚩 Waiting on the owner: copy the rule without the tab's cache — `max serve` would send 35 for the dialog partners
-  of the LOGIN chats on every login, 32 for those missing from LOGIN `contacts`, and on the first login only 209 for
-  the first 15 chats, 208 once, and 48 for folder chats missing from LOGIN `chats` — or leave the five unsent.
-  Either way the counts differ from a tab's. 28 needs the 27 answer bodies first; 48, 208 and 209 need new
-  operations in the spec.
+  Done 2026-10-24 (owner's ruling NEED-1664 "A": an approximate copy, read-only, never 22). `max serve` copies the
+  rule without the tab's cache (`src/client/live.ts`, `readLikeTab`):
+
+  - a fresh login (no `lastLogin`): `272 35 32 302 163 208 27×4 209`, then after the 272 answer `48 53 209`;
+  - a re-login: `272 302 163 27×4 32 35`.
+
+  35 asks for the dialog partners of the LOGIN chats, 32 for those of them missing from LOGIN `contacts`; 209 for
+  the first 15 LOGIN chats, then for the chats the 53 answer added; 48 for the chats a folder's `include` or
+  `favoriteIds` names that LOGIN did not carry; 53 with LOGIN's `chatMarker`. Each is skipped when it would ask for
+  nothing. The answers are not read.
+
+  Left: 28. The tab sends `{type: "ANIMOJI", ids}` twice, with ids from the 27 `ANIMOJI_SET` answer
+  (`animojiSetUpdates`, `animojiUpdates`). The recording kept only the answer's keys, not its shape, so which ids
+  to pick is a guess until an answer is measured. The tab's two leading 48s come from its IndexedDB and have no
+  equivalent without a cache.
 
 ## RES-5
 

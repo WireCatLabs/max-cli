@@ -30,9 +30,9 @@ None open.
 
 ## Next (P2)
 
-- **MAX-52** · 🟡 🚩 P2 · Send the rest of the requests a real tab sends after LOGIN: 48 `{chatIds}`, 32 and 35
-  `{contactIds}`, 28, stories 208/209 — from `max serve` only; never 22. `src/client/live.ts:44` (`readLikeTab`);
-  [notes](BACKLOG-NOTES.md#max-52).
+- **MAX-52** · 🟡 P3 · Send the last request a fresh tab sends after LOGIN: 28 `{type: "ANIMOJI", ids}`, which
+  needs the 27 `ANIMOJI_SET` answer's shape measured first. From `max serve` only; never 22. `src/client/live.ts`
+  (`readLikeTab`); [notes](BACKLOG-NOTES.md#max-52).
 - **RES-5** · 🟡 P2 · Does `LOGIN` itself move presence? Needs a second device watching; the steps are in the notes.
   [notes](BACKLOG-NOTES.md#res-5).
 - **CLI-79** · P2 · `chats requests accept|decline --all` and `--link <link>`, as tg has them (`cli-dev audit`

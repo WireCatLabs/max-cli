@@ -79,6 +79,7 @@ export const wireClient = (invoke: Invoke) => ({
   },
   chats: {
     history: (request: RequestOf<(typeof OPERATIONS)["chats.history"]>) => invoke(OPERATIONS["chats.history"], request),
+    info: (request: RequestOf<(typeof OPERATIONS)["chats.info"]>) => invoke(OPERATIONS["chats.info"], request),
     mark: (request: RequestOf<(typeof OPERATIONS)["chats.mark"]>) => invoke(OPERATIONS["chats.mark"], request),
     list: (request: RequestOf<(typeof OPERATIONS)["chats.list"]>) => invoke(OPERATIONS["chats.list"], request),
     linkInfo: (request: RequestOf<(typeof OPERATIONS)["chats.linkInfo"]>) =>
@@ -92,6 +93,11 @@ export const wireClient = (invoke: Invoke) => ({
     delete: (request: RequestOf<(typeof OPERATIONS)["chats.delete"]>) => invoke(OPERATIONS["chats.delete"], request),
     clear: (request: RequestOf<(typeof OPERATIONS)["chats.clear"]>) => invoke(OPERATIONS["chats.clear"], request),
     app: (request: RequestOf<(typeof OPERATIONS)["chats.app"]>) => invoke(OPERATIONS["chats.app"], request),
+  },
+  stories: {
+    list: (request: RequestOf<(typeof OPERATIONS)["stories.list"]>) => invoke(OPERATIONS["stories.list"], request),
+    previews: (request: RequestOf<(typeof OPERATIONS)["stories.previews"]>) =>
+      invoke(OPERATIONS["stories.previews"], request),
   },
   messages: {
     send: (request: RequestOf<(typeof OPERATIONS)["messages.send"]>) => invoke(OPERATIONS["messages.send"], request),

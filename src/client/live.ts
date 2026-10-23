@@ -13,6 +13,7 @@ import {
   CHAT_FACTS,
   CONFIG_CHANGED,
   eventTime,
+  isPresent,
   LIVE_CHATS,
   NEW_MESSAGE,
   numberOr,
@@ -25,7 +26,10 @@ import {
 
 interface Dependencies {
   connectOnce: () => Promise<void>
-  readonly wire: Pick<ReturnType<typeof wireClient>, "session" | "folders" | "banners" | "calls" | "assets">
+  readonly wire: Pick<
+    ReturnType<typeof wireClient>,
+    "session" | "folders" | "banners" | "calls" | "assets" | "contacts" | "chats" | "stories"
+  >
   readonly store: SessionStore
   session: () => Payload
   login: Payload | undefined
@@ -33,6 +37,29 @@ interface Dependencies {
   readonly connection: Wire
   messageHit: (payload: Payload) => Promise<MessageHit | undefined>
   chatTitle: (chatId: Id) => Promise<string | null>
+  partnerOf: (chat: Payload) => Id | undefined
+}
+
+const STORY_ROWS = 15
+const STORY_OWNERS = 30
+
+const idsOf = (value: unknown): Id[] => (Array.isArray(value) ? value.map(asId).filter(isPresent) : [])
+
+/** Whose stories a chat-list row shows, as the web client names them (chunk `CLv-WKyI`, read 2026-10-23). */
+const storyOwner = (
+  chat: Payload,
+  partnerOf: (chat: Payload) => Id | undefined,
+): { type: 0 | 1 | 2; ownerId: Id } | undefined => {
+  const kind = toChat(chat).kind
+  const chatId = asId(chat.id)
+  if (kind === "dialog") {
+    const partner = partnerOf(chat)
+    return partner === undefined ? undefined : { type: 0, ownerId: partner }
+  }
+  if (chatId === undefined) return undefined
+  if (kind === "group") return { type: 1, ownerId: chatId }
+  if (kind === "channel") return { type: 2, ownerId: chatId }
+  return undefined
 }
 
 export const createLive = (deps: Dependencies) => {
@@ -41,13 +68,65 @@ export const createLive = (deps: Dependencies) => {
       await deps.connectOnce()
       await deps.wire.session.ping({ interactive: false })
     },
-    readLikeTab: async (sync: TabSync): Promise<TabSync> => {
+    readLikeTab: async (sync: TabSync, fresh: boolean): Promise<TabSync> => {
       await deps.connectOnce()
-      const folders = deps.wire.folders.list({ folderSync: sync.folders })
-      const banners = deps.wire.banners.list({ bannersSync: 0 })
-      const calls = deps.wire.calls.history({ callHistorySync: sync.calls })
-      const assets = ASSET_TYPES.map((type) => deps.wire.assets.update({ type, sync: sync.assets[type] ?? 0 }))
-      const [folderAnswer, , callAnswer, answers] = await Promise.all([folders, banners, calls, Promise.all(assets)])
+      const { wire, partnerOf } = deps
+      const login = deps.login ?? {}
+      const chats = asArray(login.chats)
+      const partners = [...new Set(chats.map(partnerOf).filter(isPresent))]
+      const known = new Set(asArray(login.contacts).map((contact) => asId(contact.id)))
+      const unknown = partners.filter((id) => !known.has(id))
+      const contacts = async () => {
+        if (unknown.length > 0) await wire.contacts.info({ contactIds: unknown })
+      }
+      const presence = async () => {
+        if (partners.length > 0) await wire.contacts.presence({ contactIds: partners })
+      }
+      const storiesOf = async (rows: Payload[]) => {
+        const owners = rows
+          .map((chat) => storyOwner(chat, partnerOf))
+          .filter(isPresent)
+          .slice(0, STORY_OWNERS)
+        if (owners.length > 0) await wire.stories.previews({ owners })
+      }
+      const folderChats = async (answer: Payload) => {
+        const held = new Set(chats.map((chat) => asId(chat.id)))
+        const named = asArray(answer.folders).flatMap((folder) => [folder.include, folder.favoriteIds])
+        const missing = [...new Set(named.flatMap(idsOf))].filter((id) => !held.has(id))
+        if (missing.length > 0) await wire.chats.info({ chatIds: missing })
+      }
+      const moreChats = async () => {
+        const marker = numberOr(login.chatMarker, 0)
+        if (marker <= 0) return
+        const answer = await wire.chats.list({ marker })
+        await storiesOf(asArray(answer.chats))
+      }
+
+      // In the tab's order, captured 2026-09-25 (`docs/dev/capture/2026-09-25-web-tab.md`); 22 is never sent.
+      const folders = wire.folders.list({ folderSync: sync.folders })
+      const people = fresh ? [presence(), contacts()] : []
+      const banners = wire.banners.list({ bannersSync: 0 })
+      const calls = wire.calls.history({ callHistorySync: sync.calls })
+      const bar = fresh ? [wire.stories.list({ cursor: "0", count: STORY_ROWS })] : []
+      const assets = Promise.all(ASSET_TYPES.map((type) => wire.assets.update({ type, sync: sync.assets[type] ?? 0 })))
+      const after = fresh
+        ? [
+            storiesOf(chats.slice(0, STORY_ROWS)),
+            folders.then(async (answer) => {
+              await folderChats(answer)
+              await moreChats()
+            }),
+          ]
+        : [contacts(), presence()]
+      const [folderAnswer, callAnswer, answers] = await Promise.all([
+        folders,
+        calls,
+        assets,
+        banners,
+        ...people,
+        ...bar,
+        ...after,
+      ])
       return {
         folders: numberOr(folderAnswer.folderSync, sync.folders),
         calls: numberOr(callAnswer.callHistorySync, sync.calls),

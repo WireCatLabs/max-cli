@@ -23,6 +23,24 @@ export const chatsList = defineOperation({
   },
 })
 
+export const chatsInfo = defineOperation({
+  name: "chats.info",
+  constant: "CHAT_INFO",
+  opcode: 48,
+  auth: true,
+  request: v.strictObject({ chatIds: v.array(id()) }),
+  response: v.looseObject({ chats: v.optional(v.array(v.looseObject({}))) }),
+  guard: null,
+  provenance: {
+    confidence: "observed",
+    sources: [
+      "web.max.ru tab, recorded 2026-09-25 (private capture 2026-09-25-web-tab-2.jsonl): `{chatIds}`, four times after the first LOGIN",
+      "web.max.ru chunk `_app/immutable/chunks/CLv-WKyI.js`, read 2026-10-23: a folder's chats missing from the cache",
+      "PyMax 53103f0 names it `CHAT_INFO`",
+    ],
+  },
+})
+
 export const chatsHistory = defineOperation({
   name: "chats.history",
   constant: "CHAT_HISTORY",

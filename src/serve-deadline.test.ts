@@ -85,6 +85,8 @@ describe("native serve command deadline", () => {
         [Opcode.BANNERS_GET]: { banners: [] },
         [Opcode.CALL_HISTORY]: { callHistoryItems: [] },
         [Opcode.ASSETS_UPDATE]: { sections: [] },
+        [Opcode.STORIES_LIST]: { storiesPreviews: [] },
+        [Opcode.STORIES_PREVIEWS]: { storiesPreviews: [] },
       },
     })
     const profile = `serve-deadline-${phase}`
