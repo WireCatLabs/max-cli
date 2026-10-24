@@ -9,7 +9,6 @@
   "bot me",
   "bot store fetch",
   "bot uploads put",
-  "calls list",
   "chats app",
   "chats mark-read",
   "chats media",
@@ -47,6 +46,5 @@
   "session end",
   "session start",
   "setup",
-  "stickers list",
   "watch"
 ]

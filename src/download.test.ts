@@ -141,30 +141,33 @@ const download = async (
 }
 
 describe("max messages download", () => {
-  it("archives files alongside service events and verifies the copies without reconnecting", async () => {
-    const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "archive-service-"))
-    const login = await download(directory, { args: ["messages", "list", "111", "--json"] })
-    expect(login.code, login.stderr).toBe(0)
-    const { code, max, stdout, stderr } = await download(directory, {
-      serviceEvents: true,
-      args: ["attachments", "download", directory, "--chat", "111", "--pause", "1ms", "--json"],
-    })
-    expect(code, stderr).toBe(0)
-    expect(max.unexpected).toEqual([])
-    expect(JSON.parse(stdout).item).toMatchObject({ saved: 1, complete: true })
-    expect(max.sent.filter((call) => call.opcode === Opcode.FILE_DOWNLOAD)).toHaveLength(1)
+  it.each([false, true])(
+    "archives files alongside call/service events and verifies copies (serviceEvents=%s)",
+    async (serviceEvents) => {
+      const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "archive-service-"))
+      const login = await download(directory, { args: ["messages", "list", "111", "--json"] })
+      expect(login.code, login.stderr).toBe(0)
+      const { code, max, stdout, stderr } = await download(directory, {
+        serviceEvents,
+        args: ["attachments", "download", directory, "--chat", "111", "--pause", "1ms", "--json"],
+      })
+      expect(code, stderr).toBe(0)
+      expect(max.unexpected).toEqual([])
+      expect(JSON.parse(stdout).item).toMatchObject({ saved: 1, complete: true })
+      expect(max.sent.filter((call) => call.opcode === Opcode.FILE_DOWNLOAD)).toHaveLength(1)
 
-    const streams = captureStreams()
-    const checked = await run(["attachments", "check", directory, "--json"], {
-      streams,
-      tty: false,
-      connection: () => {
-        throw new Error("archive verification must not connect")
-      },
-    })
-    expect(checked, streams.stderr.join("")).toBe(0)
-    expect(JSON.parse(streams.stdout.join("")).item).toMatchObject({ checked: 1, valid: true })
-  })
+      const streams = captureStreams()
+      const checked = await run(["attachments", "check", directory, "--json"], {
+        streams,
+        tty: false,
+        connection: () => {
+          throw new Error("archive verification must not connect")
+        },
+      })
+      expect(checked, streams.stderr.join("")).toBe(0)
+      expect(JSON.parse(streams.stdout.join("")).item).toMatchObject({ checked: 1, valid: true })
+    },
+  )
 
   it("asks MAX for the file's link and saves it under the file's own name", async () => {
     const directory = await mkdtemp(join(process.env.TMPDIR ?? "/tmp", "download-"))
