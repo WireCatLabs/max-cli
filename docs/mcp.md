@@ -144,7 +144,8 @@ max work mcp config
 
 Права профиля ограничивают команды агента. Команды, которые меняют, что смогут следующие запуски
 (`config set`, `recipients add`, `replies add`, `schedule command`, `skill install` и подобные),
-предлагаются при `permissions.mcp.authority: allow` или `ask`; по умолчанию — `deny`.
+доступны для выполнения при `permissions.mcp.authority: allow` или `ask`; по умолчанию — `deny`,
+но команды остаются видимыми в каталоге.
 Агент не может менять ключи `permissions.mcp` и `permissions.bot.api`, в том числе через целый
 объект `permissions`: их задаёт владелец в терминале.
 
@@ -154,24 +155,19 @@ MCP и ограничиваются собственными ключами, н�
 подтверждение, MCP допускает запрошенное действие без формы. У бота сырой `bot api` доступен только
 при явном `permissions.bot.api: allow` или `ask`; по умолчанию он закрыт даже при `bot: allow`.
 
-Следующие команды скрыты при стандартных правах. Команды изменения будущих прав и сырые
-операции бота открываются указанными выше ключами. Вход, постоянные процессы и загрузка локальных
-файлов через `bot uploads put` не предлагаются и при разрешённых ключах.
+Запрет не скрывает команду: полный список и поиск `tools_search` возвращают её аргументы и
+`availability: { available: false, reason, permission }`. Для разрешённой команды —
+`availability: { available: true }`. Доступность обновляется по текущим настройкам, а каждый вызов
+проверяет права заново. С указанным профилем CLI-помощь и каталог команд тоже показывают доступность.
+
+Вне MCP остаются только команды, которым нужен терминал или постоянный процесс:
 
 | Команды | Почему |
 |---|---|
 | `setup`, `session` | вход и выход: их делает человек |
-| `upgrade`, `complete` | обновляют саму программу и автодополнение в терминале |
+| `complete` | автодополнение для терминала |
 | `serve`, `watch`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
-| `config set`, `config unset`, `skill install`, `flood clear`, `models keys set`, `models keys remove` | меняют, что смогут следующие запуски; иначе агент снял бы ограничение «только чтение» |
-| `recipients add`, `recipients remove`, `recipients clear`, `chats rules set`, `chats rules unset` | то же |
-| `replies add`, `replies on`, `replies off`, `replies edit`, `replies audience`, `replies pause`, `replies resume` | то же |
-| `replies consents grant`, `replies consents revoke`, `replies consents deny`, `replies consents allow` | то же |
-| `schedule command`, `schedule agent`, `schedule remove`, `server install`, `server uninstall` | то же |
-| `attachments jobs install`, `attachments jobs start`, `attachments jobs stop`, `attachments jobs uninstall` | то же |
-| `bot chats rules set`, `bot chats rules unset`, `bot recipients add`, `bot recipients remove`, `bot recipients clear` | то же, для бота |
 | `bot auth` | токен вводит человек |
-| `bot api` | требуется явный `permissions.bot.api: allow` или `ask` |
 | `bot uploads put` | читает файл с вашего компьютера |
 
 ## Инструменты

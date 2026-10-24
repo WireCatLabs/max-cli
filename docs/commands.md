@@ -1228,7 +1228,7 @@ max contacts list [query] [options]
 | `--all` | every row, no paging. |
 | `--order <recent\|name>` | newest conversation first, or alphabetical. По умолчанию: `recent`. |
 
-**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 2 more; every field: max commands info contacts list
+**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 4 more; every field: max commands info contacts list
 
 **Next usually:** `max contacts show <person>`, `max contacts info <person>`, `max contacts context <person>`
 
@@ -1250,7 +1250,7 @@ max contacts show <person> [options]
 |---|---|
 | `--with-notes` | include your private notes, subject to contacts.notes.list permission. |
 
-**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 2 more; every field: max commands info contacts show
+**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 4 more; every field: max commands info contacts show
 
 **Next usually:** `max contacts info <person>`, `max contacts context <person>`, `max contacts prepare <person>`
 
