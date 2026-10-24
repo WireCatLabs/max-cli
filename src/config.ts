@@ -1,5 +1,5 @@
-import { CliError, saveConfigFile } from "@wirecat/cli-base"
-import { AI_ENTRIES, type AISettings, first, loadSnakeCaseConfig, settingsFor } from "@wirecat/cli-core/cli"
+import { CliError } from "@wirecat/cli-base"
+import { AI_ENTRIES, type AISettings, first, settingsFor } from "@wirecat/cli-core/cli"
 import type { Level } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
@@ -350,109 +350,17 @@ export const changeSetting = (
   path: string,
   { profile, kind, setting, value }: SettingScope & { setting: string; value: string | undefined },
 ): unknown => {
-  const permission = setting.startsWith("permissions.") ? setting.slice("permissions.".length) : undefined
-  const modelField = /^models\.([a-z][a-z0-9-]*)\.(provider|model|base_url)$/.exec(setting)
-  if (!ALL_SETTINGS.includes(setting) && permission === undefined && !modelField) {
-    throw new CliError("validation_error", `no setting called "${setting}" — one of: ${ALL_SETTINGS.join(", ")}`)
-  }
-  const config = readConfig(path)
-  if (setting === "default_profile") {
-    if (kind !== undefined)
-      throw new CliError("validation_error", "default_profile is one for the whole file — drop --personal or --bot")
-    return changeDefaultProfile(path, config, value)
-  }
-
-  if (
-    (profile !== undefined || kind !== undefined) &&
-    (DEFAULTS_ONLY_SETTINGS as readonly string[]).includes(setting)
-  ) {
-    throw new CliError(
-      "validation_error",
-      `${setting} is one setting for the whole program, not per profile — use --defaults without --personal or --bot`,
-    )
-  }
-  if (kind !== "bot" && (BOT_ONLY_SETTINGS as readonly string[]).includes(setting)) {
-    throw new CliError("validation_error", `${setting} is for bots — add --bot`)
-  }
   if (kind === "bot" && (PERSONAL_ONLY_SETTINGS as string[]).includes(setting)) {
     throw new CliError("validation_error", `${setting} is for personal accounts; a bot has no use for it`)
   }
-
-  const section = kind === undefined ? config : { ...config[kind] }
-  const table = (profile === undefined ? section.defaults : section.profiles?.[profile]) as Record<string, unknown>
-  const scope = { ...table }
-  if (modelField) {
-    const purpose = modelField[1] as string
-    const field = modelField[2] as string
-    const models = { ...(scope.models as Record<string, Record<string, unknown>> | undefined) }
-    const target = { ...models[purpose] }
-    if (value === undefined) delete target[field]
-    else target[field] = parseValue(value)
-    if (Object.keys(target).length) models[purpose] = target
-    else delete models[purpose]
-    if (Object.keys(models).length) scope.models = models
-    else delete scope.models
-  } else if (permission !== undefined) {
-    const levels = { ...(scope.permissions as Record<string, Level> | undefined) }
-    if (value === undefined) delete levels[permission]
-    else levels[permission] = value.trim() as Level
-    if (Object.keys(levels).length) scope.permissions = levels
-    else delete scope.permissions
-  } else if (value === undefined) delete scope[setting]
-  else if (setting === "read_other_bots")
-    scope[setting] = value === "true" || value === "false" ? value === "true" : parseList(value)
-  else scope[setting] = parseValue(value)
-  const empty = Object.keys(scope).length === 0
-
-  const place = (holder: { defaults?: unknown; profiles?: Record<string, unknown> }) => {
-    const next = { ...holder, profiles: { ...holder.profiles } }
-    if (profile === undefined) {
-      if (empty) delete next.defaults
-      else next.defaults = scope
-    } else if (empty) delete next.profiles[profile]
-    else next.profiles[profile] = scope
-    return next
-  }
-
-  let changed: Record<string, unknown>
-  if (kind === undefined) {
-    changed = place(config)
-  } else {
-    const placed = place(config[kind] ?? {})
-    if (Object.keys(placed.profiles).length === 0) delete (placed as { profiles?: unknown }).profiles
-    changed = { ...config, [kind]: placed }
-    if (Object.keys(placed).length === 0) delete changed[kind]
-  }
-
-  const checked = v.safeParse(configSchema, changed)
-  if (!checked.success) {
-    throw new CliError(
-      "validation_error",
-      `${setting} cannot be "${value}": ${checked.issues[0]?.message ?? "invalid"}`,
-    )
-  }
-  saveConfigFile(path, checked.output)
-  if (modelField)
-    return (
-      (scope.models as Record<string, Record<string, unknown>> | undefined)?.[modelField[1] as string]?.[
-        modelField[2] as string
-      ] ?? null
-    )
-  return permission === undefined
-    ? (scope[setting] ?? null)
-    : ((scope.permissions as Record<string, Level> | undefined)?.[permission] ?? null)
-}
-
-const changeDefaultProfile = (path: string, config: Config, value: string | undefined): null => {
-  if (value !== undefined) {
-    throw new CliError(
-      "validation_error",
-      "default_profile is gone: a command names its profile every time — `max <profile> …` or MAX_PROFILE",
-    )
-  }
-  const { default_profile: _, ...rest } = config
-  saveConfigFile(path, rest)
-  return null
+  const permission = setting.startsWith("permissions.")
+  const parsed =
+    value === undefined || permission
+      ? value
+      : JSON.stringify(
+          setting === "read_other_bots" && value !== "true" && value !== "false" ? parseList(value) : parseValue(value),
+        )
+  return sharedSettings.changeSetting(path, { profile, kind, setting, value: parsed })
 }
 
 /** `send,reaction` as the owner types it, or the JSON array the file holds; blank is the empty list. */
@@ -470,19 +378,6 @@ const parseValue = (value: string): unknown => {
     return JSON.parse(value)
   } catch {
     return value
-  }
-}
-
-/**
- * A missing file is not an error — it is a program nobody has configured. A malformed one is, in
- * every output mode: an agent reading JSON deserves the same refusal a person gets, and silently
- * falling back to the defaults is what makes a typo cost an afternoon.
- */
-const readConfig = (path: string): Config => {
-  try {
-    return loadSnakeCaseConfig(path, configSchema, () => ({ profiles: {} }))
-  } catch (error) {
-    throw new CliError("configuration_error", error instanceof Error ? error.message : String(error))
   }
 }
 
@@ -511,3 +406,6 @@ const sharedSettings = settingsFor(MAX_APP, {
     }
   },
 })
+
+/** Shared writes keep MAX's schema and legacy value parsing; show retains MAX's released projection. */
+export const configuration = { ...sharedSettings, allSettings: ALL_SETTINGS, changeSetting }

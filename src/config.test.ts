@@ -424,6 +424,8 @@ describe("changing a setting", () => {
     expect(resolveSettings({ profile: "shop" }, { configDir, kind: "bot" }).readOtherBots).toBe(true)
     expect(resolveSettings({ profile: "other" }, { configDir, kind: "bot" }).readOtherBots).toEqual(["shop", "news"])
     expect(resolveSettings({ profile: "shop" }, { configDir }).readOtherBots).toBe(false)
+    changeSetting(path(), { profile: undefined, kind: "bot", setting: "read_other_bots", value: "shop" })
+    expect(resolveSettings({ profile: "other" }, { configDir, kind: "bot" }).readOtherBots).toEqual(["shop"])
     expect(() => changeSetting(path(), { profile: "me", setting: "read_other_bots", value: "true" })).toThrow(/--bot/)
   })
 
