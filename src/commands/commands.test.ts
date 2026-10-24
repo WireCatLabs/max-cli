@@ -266,10 +266,10 @@ describe("max commands", () => {
       "bot auth remove",
       "bot chats rules set",
       "bot chats rules unset",
+      "bot messages sync (reads remotely)",
       "bot recipients add",
       "bot recipients remove",
       "bot recipients clear",
-      "bot store fetch (reads remotely)",
     ])
   })
 

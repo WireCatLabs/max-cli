@@ -165,7 +165,7 @@ describe("max bot mcp", () => {
     const all = await names((await connect()).client)
     expect(await names(readonly.client)).toEqual(all)
     expect(all).toEqual(expect.arrayContaining(["config set", "api get-my-info"]))
-    expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete", "store fetch"]))
+    expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete", "messages sync"]))
     expect(all.some((name) => /^(auth|uploads|mcp)\b/.test(name))).toBe(false)
   })
 
