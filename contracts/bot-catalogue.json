@@ -297,6 +297,26 @@
           "pattern": "^(?!-$)[\\s\\S]+$",
           "description": "chat"
         },
+        "query": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "field:value terms that narrow the list — the fields are below"
+              },
+              "minItems": 0
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "field:value terms that narrow the list — the fields are below"
+            }
+          ]
+        },
         "limit": {
           "type": "integer",
           "minimum": 0,
@@ -1290,6 +1310,26 @@
           "minLength": 1,
           "pattern": "^(?!-$)[\\s\\S]+$",
           "description": "message"
+        },
+        "query": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "field:value terms that narrow the list — the fields are below"
+              },
+              "minItems": 0
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "field:value terms that narrow the list — the fields are below"
+            }
+          ]
         },
         "limit": {
           "type": "integer",
