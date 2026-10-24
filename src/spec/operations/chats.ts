@@ -299,7 +299,7 @@ export const chatsUpdateMembers = defineOperation({
       "measured against MAX 2026-09-24 with a second person who agreed (`pnpm probe:members`): add, make admin, take admin back, remove",
       "PyMax invite_users_to_group, remove_users_from_group, add_admin, confirm_join_request, decline_join_request",
       "answering every request: web.max.ru `_app/immutable/chunks/CLv-WKyI.js` (read 2026-10-23), called from the " +
-        "`acceptAll` modal in `nodes/0.CgXx80Qx.js` — 77 with no `userIds`, `showHistory: true` to accept; re-read 2026-10-24, not measured",
+        "`acceptAll` modal in `nodes/0.CgXx80Qx.js` — 77 with no `userIds`, `showHistory: true` to accept; re-read 2026-10-24; both bulk add/remove measured 2026-10-24 in an isolated private test channel, one pending requester each, membership and queue verified",
     ],
     notes:
       "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. `JOIN_REQUEST` answers a request to join a channel; a private group takes none (`FIND-249`). max-api-docs calls 77 pin/archive/mute; measured otherwise. " +

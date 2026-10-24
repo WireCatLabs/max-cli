@@ -29,7 +29,7 @@
 | Вести список того, что ждёт вас | `max personal tasks list` |
 | Убирать спам по своим правилам | `max personal chats rules set`, `max personal chats moderate` |
 | Заменить утёкшую ссылку-приглашение | `max personal chats links reset` |
-| Впустить людей или отказать им | `max personal chats requests list\|accept\|decline` |
+| Впустить людей или отказать им | `max personal chats requests list\|confirm\|reject` |
 | Посмотреть активность за неделю | `max personal stats chats show` |
 | Сохранять список участников каждый день | `max personal chats members fetch --track` |
 | Найти участников, похожих на ботов или спамеров | `max personal chats members check` |
