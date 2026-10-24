@@ -35,5 +35,5 @@ None open.
   (`readLikeTab`); [notes](BACKLOG-NOTES.md#max-52).
 - **RES-5** · 🟡 P2 · Does `LOGIN` itself move presence? Needs a second device watching; the steps are in the notes.
   [notes](BACKLOG-NOTES.md#res-5).
-- **CLI-79** · P2 · `chats requests accept|decline --all` and `--link <link>`, as tg has them (`cli-dev audit`
+- **CLI-79** · 🚧 `feat/cli79-core0406` · P2 · `chats requests confirm|reject --all`; keep unsupported `--link` out of discovery (`cli-dev audit`
   same-path-contract). cli-core `chats requests`; max's join requests: `src/client/chat-writes.ts`.
