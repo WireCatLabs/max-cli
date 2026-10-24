@@ -154,7 +154,9 @@ MCP и ограничиваются собственными ключами, н�
 подтверждение, MCP допускает запрошенное действие без формы. У бота сырой `bot api` доступен только
 при явном `permissions.bot.api: allow` или `ask`; по умолчанию он закрыт даже при `bot: allow`.
 
-Следующие команды не предлагаются:
+Следующие команды скрыты при стандартных правах. Команды изменения будущих прав и сырые
+операции бота открываются указанными выше ключами. Вход, постоянные процессы и загрузка локальных
+файлов через `bot uploads put` не предлагаются и при разрешённых ключах.
 
 | Команды | Почему |
 |---|---|
@@ -168,8 +170,8 @@ MCP и ограничиваются собственными ключами, н�
 | `schedule command`, `schedule agent`, `schedule remove`, `server install`, `server uninstall` | то же |
 | `attachments jobs install`, `attachments jobs start`, `attachments jobs stop`, `attachments jobs uninstall` | то же |
 | `bot chats rules set`, `bot chats rules unset`, `bot recipients add`, `bot recipients remove`, `bot recipients clear` | то же, для бота |
-| `bot auth`, `bot api` | то же |
-| `bot uploads put` | читает файл с вашего компьютера |
+| `bot auth` | токен вводит человек |
+| `bot api` | требуется явный `permissions.bot.api: allow` или `ask` |
 | `bot uploads put` | читает файл с вашего компьютера |
 
 ## Инструменты
