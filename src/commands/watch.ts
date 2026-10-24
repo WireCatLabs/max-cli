@@ -1,11 +1,21 @@
 import { CliError } from "@wirecat/cli-base"
-import { annotate } from "@wirecat/cli-base/commands"
+import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import { timezoneOf } from "@wirecat/cli-base/query"
 import { type MessageHit, renderMessages } from "@wirecat/cli-core"
-import { messageItem, REMOTE_READ, snakeKeys } from "@wirecat/cli-core/cli"
+import {
+  environmentOf,
+  jsonlRecords,
+  listOf,
+  messageItem,
+  REMOTE_READ,
+  watchCommand as sharedWatchCommand,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
 import type { AccountKey } from "@wirecat/cli-core/store"
 import { Command } from "commander"
 import { MAX_APP } from "../app.js"
+import { SHELL_OVERRIDES } from "../contract-overrides.js"
+import { maxMessenger } from "../messenger.js"
 import { shownTime } from "../output.js"
 import type { ServerEvent } from "../server/server.js"
 import { ensureServer } from "../server/start.js"
@@ -17,16 +27,20 @@ type MessageChange = Extract<ServerEvent, { event: "change" }>["change"]
 /**
  * `max watch` — new messages as they arrive, from a running `max serve`, until Ctrl-C.
  *
- * `--jsonl` gives one message per line in the shape `messages list` answers (`messageItem`), which is what a script,
- * an n8n node or an agent reads. It never marks anything read: the server only listens.
+ * `--jsonl` frames message values as item records and terminates with an end record. It never marks anything read:
+ * the server only listens.
  *
  * `--events` adds edits, deletions and reactions (`MAX-34`), reads and chat changes (`MAX-67`), and then
- * every line names its event —
- * `{"event": "message", "message": …}` among them — so a reader of the plain stream, whose lines
- * are bare messages, never meets a line of another shape.
+ * each item's data names its event, including `{"event": "message", "message": …}`.
  */
-export const watchCommand = (): Command =>
-  annotate(new Command("watch"), { effects: REMOTE_READ, lifetime: "persistent" })
+const watchCommandDefinition = (): Command =>
+  annotate(new Command("watch"), {
+    effects: REMOTE_READ,
+    lifetime: "persistent",
+    output: { entity: "watch_item" },
+    examples: ["max personal watch --jsonl --timeout 30s"],
+  })
+    .summary("stream new messages until interrupted or timed out")
     .description("print new messages as they arrive, from a running `max serve`")
     .option(
       "--events",
@@ -35,8 +49,17 @@ export const watchCommand = (): Command =>
     .action(async function (this: Command, options: { events?: boolean }) {
       const context = forCommand(this)
       const { renderer, settings, format, streams, store, run } = context
+      if (format === "json")
+        throw new CliError("validation_error", "watch is a stream — use --jsonl for one message per line")
+      if (this.optsWithGlobals<{ offline?: boolean }>().offline)
+        throw new CliError("validation_error", "watch listens live; --offline has nothing to wait for")
+      const environment = environmentOf(this)
+      const phase = environment.untilStopped?.()
       const stop = new AbortController()
       const end = () => stop.abort()
+      const given = phase ? AbortSignal.any([phase, context.signal]) : context.signal
+      given.addEventListener("abort", end, { once: true })
+      if (given.aborted) end()
       process.once("SIGINT", end)
       process.once("SIGTERM", end)
       const zone = timezoneOf()
@@ -55,8 +78,23 @@ export const watchCommand = (): Command =>
         })
       let seen = false
       let reader: AccountKey | undefined
-      await run("watch", async () => {
-        try {
+      let printed = 0
+      const finish = (complete: boolean, error?: unknown) => {
+        if (format !== "jsonl" || environment.commandSignal?.aborted) return
+        const issues = error instanceof CliError ? [{ code: error.code, source: "watch" }] : undefined
+        for (const record of jsonlRecords(
+          listOf("watch", {
+            items: [],
+            limit: Math.max(1, printed),
+            has_more: false,
+            paging: "cursor",
+            meta: { complete, ...(issues ? { issues } : {}) },
+          }),
+        ))
+          streams.data(JSON.stringify(record))
+      }
+      try {
+        await run("watch", async () => {
           const listen = () =>
             subscribe(
               store.socketPath(),
@@ -81,7 +119,10 @@ export const watchCommand = (): Command =>
                     reader,
                     zone,
                   })
-                  if (line !== undefined) streams.data(line)
+                  if (line !== undefined) {
+                    streams.data(format === "jsonl" ? JSON.stringify({ type: "item", data: JSON.parse(line) }) : line)
+                    printed++
+                  }
                 }
               },
               stop.signal,
@@ -96,16 +137,21 @@ export const watchCommand = (): Command =>
             }
             await listen()
           }
-        } finally {
-          process.off("SIGINT", end)
-          process.off("SIGTERM", end)
-        }
-      })
+        })
+      } catch (error) {
+        finish(false, error)
+        throw error
+      } finally {
+        process.off("SIGINT", end)
+        process.off("SIGTERM", end)
+        given.removeEventListener("abort", end)
+        environment.endUntilStopped?.()
+      }
+      finish(true)
     })
 
 /**
- * What one event prints. Without `events` the stream is exactly what it always was — bare messages,
- * one per line — so a reader of it never meets a line of another shape.
+ * One event payload for the JSONL item frame, or text for the terminal.
  */
 export const watchLine = (
   event: Exclude<ServerEvent, { event: "status" }>,
@@ -148,3 +194,11 @@ const describeChange = (change: MessageChange, render: (message: MessageHit) => 
   const counts = change.reactions.counts.map(({ reaction, count }) => `${reaction} ${count}`).join(", ")
   return `reactions in ${where} on message ${change.messageId}: ${counts || "none"}\n`
 }
+
+export const watchCommand = () =>
+  customizeSharedCommand(
+    sharedWatchCommand(maxMessenger),
+    "MAX watch reads its native broker subscription and retains its provider event selectors while following the shared stream envelope.",
+    watchCommandDefinition,
+    SHELL_OVERRIDES.watch,
+  )

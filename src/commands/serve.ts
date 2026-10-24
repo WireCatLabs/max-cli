@@ -1,11 +1,13 @@
 import { writeFileSync } from "node:fs"
 import { CliError } from "@wirecat/cli-base"
-import { annotate } from "@wirecat/cli-base/commands"
+import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import { holdLock, lockPath, releaseLock } from "@wirecat/cli-core/background"
-import { REMOTE_WRITE } from "@wirecat/cli-core/cli"
+import { REMOTE_WRITE, serveCommand as sharedServeCommand } from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
 import { parseDuration } from "../config.js"
+import { SHELL_OVERRIDES } from "../contract-overrides.js"
+import { maxMessenger } from "../messenger.js"
 import { asFirstWord } from "../profile.js"
 import { MaxServer, refusedLogin } from "../server/server.js"
 import { refusedPath } from "../server/start.js"
@@ -21,7 +23,7 @@ import { serveStems } from "./serve-stems.js"
  * in the background when none is running** (`serve` setting, `--no-serve` to decline), and that
  * one is given `--idle`, so it does not outlive the work that started it.
  */
-export const serveCommand = (): Command =>
+const serveCommandDefinition = (): Command =>
   annotate(new Command("serve"), { effects: REMOTE_WRITE, lifetime: "persistent" })
     .description("stay connected to MAX and stream new messages to `max watch`, until Ctrl-C")
     .option("--idle <duration>", "stop after this long with nobody using it — 15m, 1h is 60m")
@@ -101,3 +103,11 @@ export const serveCommand = (): Command =>
         }
       })
     })
+
+export const serveCommand = () =>
+  customizeSharedCommand(
+    sharedServeCommand(maxMessenger),
+    "MAX serves command subscribers through its native broker; scanner counters are unavailable, so it deliberately does not claim a serve_summary receipt.",
+    serveCommandDefinition,
+    SHELL_OVERRIDES.serve,
+  )

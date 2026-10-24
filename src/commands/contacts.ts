@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import { annotate } from "@wirecat/cli-base/commands"
+import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import {
   FETCH,
   itemOf,
@@ -9,6 +9,7 @@ import {
   snakeKeys,
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
+import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
 import { forCommand } from "./context.js"
@@ -20,7 +21,7 @@ import { forCommand } from "./context.js"
  * documentation calls `GET_BLOCKED`, and until somebody has watched what it actually returns, this
  * lists what we can establish without guessing.
  */
-export const contactsCommand = (): Command => {
+const contactsCommandDefinition = (): Command => {
   const command = new Command("contacts").description("people you have a one-to-one chat with")
 
   const shared = sharedContactsCommand(maxMessenger)
@@ -38,7 +39,7 @@ export const contactsCommand = (): Command => {
    * ⚠ **The summary is counts.** No name, no username, no description, no phone number — a person
    * in a diagnostic is the one leak this project's sixth constraint is about.
    */
-  annotate(command.command("sync"), { effects: FETCH })
+  annotate(command.command("sync"), { effects: FETCH, output: { entity: "contact_sync" } })
     .description("forget where the last sync left off and take the whole list again")
     .action(async function (this: Command) {
       const context = forCommand(this)
@@ -63,7 +64,7 @@ export const contactsCommand = (): Command => {
    * ⚠ **The number is asked for, never an argument**: argv is read by `ps` and kept by shell
    * history, and a phone number is what the sixth constraint names.
    */
-  annotate(command.command("lookup"), { effects: REMOTE_READ })
+  annotate(command.command("lookup"), { effects: REMOTE_READ, output: { entity: "contact_lookup" } })
     .description("who MAX has under a phone number — asks for it, or reads it from stdin")
     .allowExcessArguments()
     .action(async function (this: Command) {
@@ -109,3 +110,11 @@ export const contactsCommand = (): Command => {
 
   return command
 }
+
+export const contactsCommand = () =>
+  customizeSharedCommand(
+    sharedContactsCommand(maxMessenger),
+    "MAX keeps its native contact lookup and full sync transport while inheriting the shared contact contract defaults.",
+    contactsCommandDefinition,
+    SHELL_OVERRIDES.contacts,
+  )

@@ -1,9 +1,18 @@
 import { CliError } from "@wirecat/cli-base"
-import { annotate } from "@wirecat/cli-base/commands"
+import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import { loginQr } from "@wirecat/cli-core"
-import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, snakeKeys } from "@wirecat/cli-core/cli"
+import {
+  itemOf,
+  logsInOrOut,
+  REMOTE_WRITE,
+  renderAnswer,
+  sharedCommandTemplate,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
 import { Argument, Command } from "commander"
+import { MAX_APP } from "../app.js"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
+import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { stopServer } from "../server/server-connection.js"
@@ -16,7 +25,7 @@ export const TERMS_NOTICE = [
   "Keep using MAX as usual in the browser or on your phone alongside it. More: docs/security.md",
 ].join("\n")
 
-export const sessionCommand = (): Command => {
+const sessionCommandDefinition = (): Command => {
   const command = annotate(new Command("session"), { mcp: false }).description(
     "the stored MAX session for this profile",
   )
@@ -206,3 +215,11 @@ const obtain = async (
     await client.close()
   }
 }
+
+export const sessionCommand = (...args: Parameters<typeof sessionCommandDefinition>) =>
+  customizeSharedCommand(
+    sharedCommandTemplate(MAX_APP, "session"),
+    "This provider binds its own account linking protocol, credential flow and typed receipt to the shared session lifecycle.",
+    () => sessionCommandDefinition(...args),
+    SHELL_OVERRIDES.session,
+  )

@@ -5,6 +5,7 @@ export interface ListedCommand {
   command: string
   title: string
   writes: boolean
+  availability?: { available: boolean; reason?: string; permission?: string }
   arguments: { properties?: Record<string, unknown> }
 }
 

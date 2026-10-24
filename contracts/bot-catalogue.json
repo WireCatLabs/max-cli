@@ -1157,7 +1157,7 @@
           "type": "boolean",
           "description": "a secret the messenger sends back with each update — asked for, or read from a pipe"
         },
-        "add": {
+        "append": {
           "type": "boolean",
           "description": "keep the webhooks already set and add this one beside them"
         }
