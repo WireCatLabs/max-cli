@@ -26,7 +26,7 @@
 | Отправлять, править, удалять и закреплять сообщения и файлы | `max <бот> bot messages send\|edit\|delete\|pin` |
 | Видеть новые сообщения, нажатия кнопок и вступления | `max <бот> bot watch` |
 | Читать и искать то, что видел бот | `max <бот> bot messages list`, `max <бот> bot search messages` |
-| Скачать старую историю чата | `max <бот> bot store fetch` |
+| Скачать старую историю чата | `max <бот> bot messages sync` |
 | Управлять участниками и админами | `max <бот> bot chats members`, `max <бот> bot chats admins` |
 | Наводить порядок в группе по своим правилам | `max <бот> bot chats moderate` |
 | Отвечать в комментариях под постами канала | `max <бот> bot comments` |
@@ -211,9 +211,9 @@ max sales bot search messages "итоги недели"
 Чтобы в копии была и старая история чата, скачайте её:
 
 ```sh
-max sales bot store fetch "Команда продаж"                 # до 1000 сообщений, новые сначала
-max sales bot store fetch "Команда продаж" --last 500      # пока не будет 500 последних
-max sales bot store fetch "Команда продаж" --since-time 7d # за последние семь дней
+max sales bot messages sync "Команда продаж"                 # до 1000 сообщений, новые сначала
+max sales bot messages sync "Команда продаж" --last 500      # пока не будет 500 последних
+max sales bot messages sync "Команда продаж" --since-time 7d # за последние семь дней
 ```
 
 Повторный запуск продолжает с того места, где остановился прошлый, и уже скачанное не просит.
