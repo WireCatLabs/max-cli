@@ -49,4 +49,15 @@ describe("the guard each write declares", () => {
       guardOf("chats.updateMembers")({ chatId: 1n, userIds: [2n], operation: "remove", type: "ADMIN" }),
     ).toMatchObject({ action: "admins.remove", people: 1 })
   })
+  it.each([undefined, "ADMIN"])("refuses missing member ids outside JOIN_REQUEST (%s)", (type) => {
+    expect(() => guardOf("chats.updateMembers")({ chatId: 1n, operation: "add", ...(type ? { type } : {}) })).toThrow()
+  })
+
+  it("allows omitted ids only for an explicit join-request operation", () => {
+    expect(guardOf("chats.updateMembers")({ chatId: 1n, operation: "add", type: "JOIN_REQUEST" })).toMatchObject({
+      chatId: "1",
+      kind: "chat",
+      action: "requests.accept",
+    })
+  })
 })

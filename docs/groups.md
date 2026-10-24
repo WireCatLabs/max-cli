@@ -29,7 +29,7 @@
 | Вести список того, что ждёт вас | `max personal tasks list` |
 | Убирать спам по своим правилам | `max personal chats rules set`, `max personal chats moderate` |
 | Заменить утёкшую ссылку-приглашение | `max personal chats links reset` |
-| Впустить людей или отказать им | `max personal chats requests list\|accept\|decline` |
+| Впустить людей или отказать им | `max personal chats requests list\|confirm\|reject` |
 | Посмотреть активность за неделю | `max personal stats chats show` |
 | Сохранять список участников каждый день | `max personal chats members fetch --track` |
 | Найти участников, похожих на ботов или спамеров | `max personal chats members check` |
@@ -207,7 +207,8 @@ max personal review 'chat:"Поход" date>7d' --json
 | `max personal chats moderate <чат>` | проверка по правилам; делает то, что правила разрешают |
 | `max personal chats members add\|remove`, `admins add\|remove` | участники и админы |
 | `max personal chats requests list <чат>` | заявки в канал с одобрением; видят админы, время заявки неизвестно |
-| `max personal chats requests confirm\|decline <чат> <человек>` | принять или отклонить одну заявку; `--all` и `--link` не поддерживаются |
+| `max personal chats requests confirm\|reject <чат> <человек>` | принять или отклонить одну заявку |
+| `max personal chats requests confirm\|reject <чат> --all` | ответить всем заявкам канала; права и лимит действий проверяются до изменения |
 | `max personal chats links show\|reset <чат>` | ссылка-приглашение; `reset` — новая, старая перестаёт работать |
 | `max personal chats inspect <ссылка>` | куда ведёт приглашение или публичная ссылка; никуда не вступает |
 | `max personal chats create`, `max personal chats join <ссылка>`, `max personal chats leave <чат>` | создать группу, вступить по ссылке, выйти |
@@ -422,7 +423,7 @@ moderate`. Он умеет то, чего не умеет личный акка�
 - **Заявки на вступление — только у канала с одобрением.** У закрытой группы одобрения нет: по
   ссылке входят сразу. В канале с одобрением `chats join` только отправляет заявку
   (`requested: true`). `chats requests list` не показывает, когда человек попросился: MAX этого не
-  сообщает. Ответить всем сразу и отобрать заявки по ссылке нельзя.
+  сообщает. Ответить всем сразу можно через `--all`; отбор по ссылке недоступен: MAX не сообщает её для заявки.
 - **Не больше 10 действий за проверку** (`--max-actions`). Удаления считаются в лимит отправок в
   час; упёрлась в лимит — остальное ждёт следующей проверки.
 - **До 1000 сообщений за проверку в CLI.** Если их больше, следующая проверка продолжит с того места.
