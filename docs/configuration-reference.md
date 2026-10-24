@@ -274,7 +274,7 @@ max config unset default_profile         # убрать старую настр�
 через запятую — так по умолчанию — или `none`) хранятся не в файле настроек, а в общем архиве
 сообщений: они одни на все профили и на оба мессенджера. Поэтому `--defaults`, `--personal` и `--bot`
 с ними не принимаются, а под `MAX_PROFILE_LOCK` их менять нельзя. `config unset` возвращает встроенное
-значение. После смены выполните `max personal store reindex` — см.
+значение. После смены выполните `max personal store rebuild` — см.
 [обслуживание архива](archive.md#обслуживание-архива).
 
 ## Опечатка — это ошибка, а не умолчание
@@ -355,7 +355,7 @@ max personal chats list
 | `allow` | массив разрешённых действий; старый формат | профиль |
 | `read_other_bots` | boolean или массив имён профилей | только `bot` |
 | `update_check`, `skill_hint` | boolean | только `defaults` |
-| `transcribe_model` | строковый id из `max personal models audio list` | только `defaults` |
+| `transcribe_model` | строковый id из `max personal models list kind:audio` | только `defaults` |
 | `embedding_provider` | `local` или `openai` | профиль |
 | `embedding_model`, `analysis_model` | непустая строка, не более 200 символов | профиль |
 | `embedding_base_url`, `analysis_base_url` | URL HTTP(S) без credentials, query и fragment | профиль |
@@ -389,7 +389,7 @@ max personal chats list
 
 Настройки векторов и анализа независимы и могут различаться по профилям. Адрес — HTTP/S без
 встроенного пароля, query и fragment. Внешний сервис векторов получает и вопрос из MCP-поиска.
-Ключи задаются через `models text key set openai|anthropic` и не записываются в `config.json`.
+Ключи задаются через `models keys set openai|anthropic` и не записываются в `config.json`.
 Обычный `build` внешнего анализа не запускает: нужен явный `--analyze`. Провайдеры и примеры — в
 [руководстве по внешним моделям](external-models.md).
 

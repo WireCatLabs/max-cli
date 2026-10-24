@@ -50,31 +50,33 @@ it("authors local contact metadata and classifies cached channels without a mess
     expect(code, streams.stderr.join("")).toBe(0)
     return JSON.parse(streams.stdout.join(""))
   }
-  expect((await call(["contacts", "alias", "set", "101", "Local label"])).item).toMatchObject({ alias: "Local label" })
+  expect((await call(["contacts", "aliases", "set", "101", "Local label"])).item).toMatchObject({
+    alias: "Local label",
+  })
   const file = join(root, "own-note.md")
   writeFileSync(file, "Own synthetic note")
-  const note = (await call(["contacts", "notes", "add", "Local label", "--file", file])).item
+  const note = (await call(["contacts", "notes", "add", "Local label", "--text-file", file])).item
   expect(await call(["contacts", "notes", "list", "101"])).toMatchObject({ items: [{ id: note.id }] })
   expect((await call(["contacts", "notes", "show", "101", note.id])).item).toMatchObject({ text: "Own synthetic note" })
   expect(
-    (await call(["contacts", "notes", "edit", "101", note.id, "--revision", "1", "--file", file])).item,
+    (await call(["contacts", "notes", "edit", "101", note.id, "--revision", "1", "--text-file", file])).item,
   ).toMatchObject({ revision: 2 })
   expect((await call(["contacts", "show", "101", "--with-notes"])).item).toMatchObject({
     alias: "Local label",
     notes: [{ text: "Own synthetic note" }],
   })
-  expect((await call(["metadata", "get", "--chat", "99"])).item).toMatchObject({ metadata: { title: "AI news" } })
-  expect((await call(["tags", "auto", "--chat", "99", "--limit", "1", "--dry-run"])).item).toMatchObject({
+  expect((await call(["metadata", "show", "--chat", "99"])).item).toMatchObject({ metadata: { title: "AI news" } })
+  expect((await call(["tags", "rebuild", "--chat", "99", "--limit", "1", "--dry-run"])).item).toMatchObject({
     dry_run: true,
   })
-  await call(["tags", "auto", "--chat", "99", "--limit", "1"])
+  await call(["tags", "rebuild", "--chat", "99", "--limit", "1"])
   expect(await call(["tags", "list", "sources:auto"])).toMatchObject({
     items: [
       { tag: "ai", sources: ["auto"] },
       { tag: "news", sources: ["auto"] },
     ],
   })
-  await call(["tags", "remove", "news", "--chat", "99", "--source", "auto"])
+  await call(["tags", "remove", "news", "--chat", "99", "--claim", "auto"])
   await call(["contacts", "notes", "remove", "101", note.id])
-  await call(["contacts", "alias", "rm", "101"])
+  await call(["contacts", "aliases", "remove", "101"])
 })

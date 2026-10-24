@@ -281,7 +281,7 @@ max personal attachments list 'chat:"Книжный клуб" is:needs_text'
 ```
 
 ```sh
-max personal attachments text set "Книжный клуб" 204 --text-file ./scan.txt
+max personal attachments update "Книжный клуб" 204 --text-file ./scan.txt
 ```
 
 `attachments extract` читает на этом компьютере обычные текстовые файлы, DOCX и PDF с текстовым слоем.
@@ -301,15 +301,15 @@ XLSX, PPTX и EPUB — без модели и без дополнительно�
 текст может записать агент.
 
 **Фото и сканы** текстового слоя не имеют. Агент по умолчанию читает их своими средствами OCR или
-зрения и записывает текст через `attachments text set`. `attachments list is:needs_text` даёт ему
+зрения и записывает текст через `attachments update`. `attachments list is:needs_text` даёт ему
 сохранённый путь, ссылку на сообщение и номер вложения; команда показывает пути и состояние текста, но
 не сам текст. Проверьте запись поиском `content:`. Если агент работает на другом компьютере, путь на
 MCP-сервере не передаёт ему файл: для чтения нужен доступ к файлу. Такой агент может получить байты
 сохранённого файла частями и проверить их хеш через [attachments show](attachments.md); сама передача
-текст не распознаёт и не индексирует, поэтому текст всё равно записывается через `attachments text set`.
+текст не распознаёт и не индексирует, поэтому текст всё равно записывается через `attachments update`.
 
 **Много сканов сразу** можно передать выбранному вами сервису моделей. Укажите провайдера и модель со
-зрением в `models.ocr`; ключ хранится обычной командой `models text key set`. В примере замените
+зрением в `models.ocr`; ключ хранится обычной командой `models keys set`. В примере замените
 `your-vision-model` именем своей модели.
 
 ```sh
@@ -321,7 +321,7 @@ max personal config set models.ocr.model your-vision-model
 ```
 
 ```sh
-max personal models text key set openai
+max personal models keys set openai
 ```
 
 ```sh
@@ -398,19 +398,19 @@ max personal tags remove work --chat "Книжный клуб"
 модели:
 
 ```sh
-max personal metadata refresh --chat "Книжный клуб"   # прочитать описание чата из MAX (сам чат не меняется)
+max personal metadata sync --chat "Книжный клуб"   # прочитать описание чата из MAX (сам чат не меняется)
 ```
 
 ```sh
-max personal metadata refresh --only-missing          # все сохранённые группы и каналы, у которых описание ещё не читалось
+max personal metadata sync --only-missing          # все сохранённые группы и каналы, у которых описание ещё не читалось
 ```
 
 ```sh
-max personal tags auto --dry-run                      # что получилось бы, без записи
+max personal tags rebuild --dry-run                      # что получилось бы, без записи
 ```
 
 ```sh
-max personal tags auto                                # записать автоматические метки
+max personal tags rebuild                                # записать автоматические метки
 ```
 
 ```sh
@@ -420,10 +420,10 @@ max personal tags list sources:auto                  # только автома
 Автоматическая метка не трогает ваши: повторный запуск убирает только устаревшие автоматические. Если вы
 сами поставите метку, которую уже дала автоматика, она станет вашей.
 
-`max personal tags auto` обрабатывает до 50 чатов за запуск; `--limit` поднимает предел до 500, а `--chat`
+`max personal tags rebuild` обрабатывает до 50 чатов за запуск; `--limit` поднимает предел до 500, а `--chat`
 выбирает чаты (его можно повторить). `--dry-run` берёт сохранённые описания. Чтобы перед разметкой
 прочитать свежие, добавьте `--sync-first` без `--dry-run`. Сохранённое описание показывает
-`max personal metadata get --chat <чат>`.
+`max personal metadata show --chat <чат>`.
 
 ## Сохранённые поиски и история
 
@@ -561,7 +561,7 @@ max personal search messages 'счёт chat:"Книжный клуб"' --sync-fi
 просмотрены и насколько они полны, даже без совпадений. Если `max` просит `max personal store migrate`, индекс
 слов ещё строится; поиск без слов (`has:file`, `date:today`) работает уже сейчас.
 
-**Пробелы в истории чата.** `max personal store gaps plan <чат>` на этом компьютере показывает разрывы между
+**Пробелы в истории чата.** `max personal store gaps show <чат>` на этом компьютере показывает разрывы между
 сохранёнными кусками истории. Пропуски номеров сообщений и тишина сами по себе не означают потерянную
 историю; края сохранённой истории остаются `unknown`. Проверьте план, затем
 `max personal store gaps repair <чат> --fingerprint <хеш>` скачает разрывы. По умолчанию — до 5 разрывов, 500

@@ -4,7 +4,7 @@ goal: Get back a message, a file or a voice note when you remember only a word o
 steps:
   - run: max search all "invoice"
     why: messages, notes, the text of files and voice transcripts in one search, best match first
-  - run: max contacts timeline Anna
+  - run: max contacts events Anna
     why: everything one person wrote or was mentioned in, newest first, from the store
   - run: max messages context Team 1234
     why: the message a hit points to, with what came either side of it

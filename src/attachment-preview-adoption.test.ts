@@ -107,7 +107,7 @@ describe("shared PDF page-preview adoption", () => {
     const before = await invoke("attachments", "list", "chat:7 is:needs_text")
     expect(before.code, before.stderr).toBe(0)
     expect(JSON.parse(before.stdout).items).toHaveLength(1)
-    const saved = await invoke("attachments", "text", "set", "7", "1", "--text-file", textFile)
+    const saved = await invoke("attachments", "update", "7", "1", "--text-file", textFile)
     expect(saved.code, saved.stderr).toBe(0)
     expect(JSON.parse(saved.stdout).item).toMatchObject({ origin: "agent", chars: 16 })
     const after = await invoke("attachments", "list", "chat:7 is:needs_text")

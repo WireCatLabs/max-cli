@@ -302,7 +302,7 @@ describe("max inbox and review — by kind, and marking read", () => {
 
   it("keeps the kinds asked for, never marks read, and refuses retired marking flags", async () => {
     const { max, environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
-    const channels = await runWith(["k-inbox", "inbox", "date>2h", "--kind", "channel", "--json"], environment)
+    const channels = await runWith(["k-inbox", "inbox", "date>2h", "kind:channel", "--json"], environment)
     const unmarked = await runWith(["k-inbox", "inbox", "date>2h", "--json"], environment)
     expect(JSON.parse(channels.stdout).items).toEqual([])
     expect(JSON.parse(unmarked.stdout).items).toHaveLength(1)
@@ -318,7 +318,7 @@ describe("max inbox and review — by kind, and marking read", () => {
   it("review --new reads each chat once, by kind, without marking read", async () => {
     const { max, environment } = inboxMax({ 111: [message(30, 10000002, "new")] })
 
-    const none = await runWith(["k-review", "review", "--new", "--kind", "channel", "--json"], environment)
+    const none = await runWith(["k-review", "review", "--new", "kind:channel", "--json"], environment)
     const first = await runWith(["k-review", "review", "--new", "--json"], environment)
     const second = await runWith(["k-review", "review", "--new", "--json"], environment)
 

@@ -26,8 +26,8 @@ export const contactsCommand = (): Command => {
   const shared = sharedContactsCommand(maxMessenger)
   command.addCommand(sharedSubcommand(shared, "list"))
   command.addCommand(sharedSubcommand(shared, "show"))
-  command.addCommand(sharedSubcommand(shared, "profile"))
-  command.addCommand(sharedSubcommand(shared, "alias"))
+  command.addCommand(sharedSubcommand(shared, "info"))
+  command.addCommand(sharedSubcommand(shared, "aliases"))
   command.addCommand(sharedSubcommand(shared, "notes"))
 
   /**
@@ -99,7 +99,7 @@ export const contactsCommand = (): Command => {
     "import",
     "context",
     "prepare",
-    "timeline",
+    "events",
     "check",
     "link",
     "unlink",

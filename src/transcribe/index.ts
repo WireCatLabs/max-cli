@@ -32,7 +32,7 @@ export const notDownloaded = (model: SpeechModel): CliError =>
     "not_found",
     [
       `the speech model ${model.id} (${model.languages}) is not downloaded — ` +
-        `\`max models audio download ${model.id}\` fetches it (${sizeOf(model)}, once)`,
+        `\`max models download ${model.id}\` fetches it (${sizeOf(model)}, once)`,
       ...MODELS.filter((other) => other.id !== model.id).map(
         (other) => `  or ${other.id}: ${other.languages}, ${sizeOf(other)}`,
       ),

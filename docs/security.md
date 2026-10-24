@@ -77,8 +77,8 @@
 | прежняя локальная копия профиля; больше не открывается | `~/.cache/max-cli/<профиль>.db` и её `-wal`, `-shm` | каталог `0700`, файлы `0600` |
 | выгрузка переписки — **только `max personal store export --output`** | куда вы укажете | `0600` |
 | скачанные файлы из сообщений — `max personal messages download` или `max personal attachments extract --download --output-dir` | текущий каталог или `--output` | `0600` |
-| отчёт о проблеме — **только `max personal doctor report create`** | текущий каталог или `--output` | `0600` |
-| модели распознавания речи — **только после `max personal models audio download`** | `~/.local/share/WireCat/models/audio/…` | каталог `0700`, файлы `0600` |
+| отчёт о проблеме — **только `max personal doctor reports create`** | текущий каталог или `--output` | `0600` |
+| модели распознавания речи — **только после `max personal models download`** | `~/.local/share/WireCat/models/audio/…` | каталог `0700`, файлы `0600` |
 
 ⚠ **Общая локальная копия содержит тексты сообщений и расшифровки голосовых** — это её назначение:
 отвечать без сети. `max personal session end` её не удаляет. `max personal store clear --left --allow-dangerous`
@@ -162,7 +162,7 @@
 - **Не отправляет ничего, чего не просили.** Что-то меняют только `messages send|edit|delete|forward|pin|unpin|press`,
   `reactions add|remove`, `polls vote|close|create`, `contacts add|remove|import|rename|block|unblock`,
   `account update`, `account sessions end`, `session end`, `chats join|leave|create|update|start|app`,
-  `chats members|admins …`, `chats requests accept|decline`, `chats link reset`, `chats folders create|update|delete|order`, `chats moderate`
+  `chats members|admins …`, `chats requests confirm|decline`, `chats links reset`, `chats folders create|update|delete|order`, `chats moderate`
   (только то, что разрешают правила группы), `chats mark-read` — и каждая делает
   только то, что написано в набранной строке. `max commands --json` помечает их `effects.remote: "write"`.
 - **Удаление по умолчанию требует подтверждения.** Уровень `ask` для `messages.delete` требует
@@ -200,10 +200,10 @@
 | `wss://api.oneme.ru/websocket`, заголовок `Origin` — `https://web.max.ru` | каждая команда, которой нужен MAX |
 | серверы файлов MAX — адрес выдаёт сам MAX | `messages send --file`, `messages download` |
 | `https://web.max.ru` во временном профиле Chromium | `session start qr-chrome`, `session start sms`, `setup --method qr-chrome|sms` |
-| Hugging Face и GitHub — файлы модели распознавания речи | только `max personal models audio download`; голос туда не уходит — он распознаётся на этом компьютере |
-| Hugging Face — файлы текстовой модели | только `max personal models text download`; локальная модель не отправляет сообщения |
+| Hugging Face и GitHub — файлы модели распознавания речи | только `max personal models download`; голос туда не уходит — он распознаётся на этом компьютере |
+| Hugging Face — файлы текстовой модели | только `max personal models download`; локальная модель не отправляет сообщения |
 | настроенный внешний сервис векторов | `conversations embed` отправляет текст бесед после согласия; `search conversations`, в том числе MCP, отправляет вопрос при выборе внешнего сервиса |
-| настроенный OpenAI-совместимый сервис или Anthropic | `conversations build --analyze --chat` отправляет ограниченные пачки после согласия для аккаунта, чата и сервиса |
+| настроенный OpenAI-совместимый сервис или Anthropic | `conversations links rebuild --analyze --chat` отправляет ограниченные пачки после согласия для аккаунта, чата и сервиса |
 | `https://platform-api2.max.ru` — официальный Bot API, токен в заголовке `Authorization` | только команды `max sales bot` |
 | реестр npm — узнать номер последней версии | `max upgrade`; и раз в сутки, когда команду запускает человек в терминале. Выключается `update_check: false` |
 
@@ -275,7 +275,7 @@ MAX не публикует API для пользовательских акка
 открываться без входа. Перед передачей проверьте содержимое и круг получателей. Эта страница
 описывает работу инструмента, а не подтверждает соблюдение законодательства для вашего сценария.
 
-Отчёт о проблеме (`max personal doctor report create`) прикладывается к **открытой** задаче на GitHub — его
+Отчёт о проблеме (`max personal doctor reports create`) прикладывается к **открытой** задаче на GitHub — его
 увидят все. Текстов, имён и телефонов в нём нет, номера чатов и сообщений заменены метками; перед
 отправкой файл можно открыть и проверить.
 

@@ -67,8 +67,8 @@
 
 ```sh
 max personal messages sync "Книжный клуб"                  # 1. скачать историю, если её ещё нет
-max personal conversations build --chat "Книжный клуб"   # 2. разделить чат на разговоры
-max personal models text download e5-small               # 3. один раз: скачать модель, 135 МБ, общая с tg
+max personal conversations links rebuild --chat "Книжный клуб"   # 2. разделить чат на разговоры
+max personal models download e5-small               # 3. один раз: скачать модель, 135 МБ, общая с tg
 max personal conversations embed --chat "Книжный клуб"   # 4. посчитать вектор каждого куска
 max personal search conversations "где встречаемся" --chat "Книжный клуб"   # 5. спросить
 max personal conversations show 91                       # 6. прочитать найденный разговор
@@ -94,7 +94,7 @@ max personal conversations show 91                       # 6. прочитать
 
 ### 1. Build: разделить чат на разговоры
 
-`max personal conversations build` читает сохранённые сообщения чата от старых к новым и для каждого решает,
+`max personal conversations links rebuild` читает сохранённые сообщения чата от старых к новым и для каждого решает,
 какое прежнее сообщение оно продолжает. ИИ не используется, к MAX команда не обращается. Связи берутся
 в таком порядке:
 
@@ -230,7 +230,7 @@ max personal search conversations "где встречаемся" --chat "Кни
 
 ```sh
 max personal conversations status                         # что отстало, по чатам
-max personal conversations build                          # все изменившиеся чаты и группы, ни разу не построенные
+max personal conversations links rebuild                          # все изменившиеся чаты и группы, ни разу не построенные
 max personal conversations embed                          # все построенные чаты, где остались куски
 max personal search conversations "аренда квартиры" --catch-up  # сначала догнать, потом искать
 ```
@@ -261,19 +261,19 @@ max personal conversations batches status --chat "Книжный клуб"   # �
 ```
 
 Агент читает инструкцию, говорит, сколько текста прочитает, и ждёт вашего «да». Потом он берёт чат
-пачками (`max personal conversations batches next`), решает, на какое прежнее сообщение отвечает каждое, и
+пачками (`max personal conversations batches show`), решает, на какое прежнее сообщение отвечает каждое, и
 сохраняет ответ (`max personal conversations links add`). Следующий `build` его учитывает: сначала идут ответы
 самого MAX, потом связи агента, потом правила. `max personal conversations links clear --chat "Книжный клуб"`
 убирает ответы агента; после этого постройте чат снова. В этом процессе сам `max` модель не вызывает.
 Сохранять ответы разрешает право профиля `conversations.links`.
 
 `max` может и сам отправить пачки сервису моделей. Обычный `build` использует правила и сохранённые
-связи; `max personal conversations build --chat <чат> --analyze` передаёт ограниченные пачки настроенному
+связи; `max personal conversations links rebuild --chat <чат> --analyze` передаёт ограниченные пачки настроенному
 OpenAI-совместимому сервису или Anthropic. Нужен явный `--chat`. Перед первой передачей команда
 показывает объём, адрес и предел токенов и спрашивает согласие; оно сохраняется для учётной записи,
 чата и выбранного сервиса до отзыва. По умолчанию пачка — 50 сообщений (`--size`), предел резерва —
 100 000 токенов за запуск (`--max-tokens`); `--yes` даёт согласие в скриптах.
-`max personal conversations consents list` показывает согласия, `consents revoke --chat <чат>` отзывает их.
+`max personal conversations consents list` показывает согласия, `consents remove --chat <чат>` отзывает их.
 Встроенный анализ доступен только из командной строки, не через MCP; ключи не записываются в файл
 настроек.
 
@@ -283,8 +283,8 @@ OpenAI-совместимому сервису или Anthropic. Нужен яв
 команде:
 
 ```sh
-max personal models text list                             # модели и какие скачаны
-max personal models text download embeddinggemma --accept-terms
+max personal models list kind:text                             # модели и какие скачаны
+max personal models download embeddinggemma --accept-terms
 ```
 
 `e5-small` — по умолчанию: маленькая и быстрая, около 100 языков. `embeddinggemma` находит больше, но
@@ -298,7 +298,7 @@ max personal models text download embeddinggemma --accept-terms
 Векторы может считать внешний сервис, с вашим ключом:
 
 ```sh
-max personal models text key set openai
+max personal models keys set openai
 max personal conversations embed --chat "Книжный клуб" --embedding-provider openai
 max personal search conversations "аренда квартиры" --embedding-provider openai
 ```
@@ -307,7 +307,7 @@ max personal search conversations "аренда квартиры" --embedding-pr
 чем что-то отправить, `embed` называет число кусков, наибольшее число токенов и наибольшую цену и
 ждёт «да» (`--yes` в скриптах; `--max-tokens` задаёт предел). `--base-url` принимает любой сервер с
 API векторов OpenAI (`/v1/embeddings`), например Ollama или LM Studio на вашем компьютере, вместе с
-`--model` и `--dims`. `max personal models text key remove openai` забывает ключ. Настройка внешних векторов
+`--model` и `--dims`. `max personal models keys remove openai` забывает ключ. Настройка внешних векторов
 действует и на поиск, который ваш агент выполняет через MCP: его вопросы тоже уходят этому сервису.
 
 ## Дальше

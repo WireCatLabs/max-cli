@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
@@ -151,19 +151,21 @@ describe("max doctor", () => {
     expect(stdout).not.toContain("invented-value-7")
   })
 
-  it("writes a problem report with the config problem when the config file is invalid", async () => {
+  it("refuses report creation when invalid config prevents checking its write permission", async () => {
     const output = join(mkdtempSync(join(tmpdir(), "max-report-")), "report.json")
     homes.push(dirname(output))
-    const { code, stdout } = await inAnEmptyHome(["work", "doctor", "report", "create", "--output", output, "--json"], {
-      config: JSON.stringify({ defaultProfile: "invented-value-7", profiles: { work: {} } }),
-    })
+    const { code, stdout, stderr } = await inAnEmptyHome(
+      ["work", "doctor", "reports", "create", "--output", output, "--json"],
+      {
+        config: JSON.stringify({ defaultProfile: "invented-value-7", profiles: { work: {} } }),
+      },
+    )
 
-    expect(code).toBe(0)
-    expect(JSON.parse(stdout).item.path).toBe(output)
-    const report = JSON.parse(readFileSync(output, "utf8"))
-    expect(report).toMatchObject({ profile: null, sends: [] })
-    expect(report.doctor.config.error).toContain("defaultProfile")
-    expect(readFileSync(output, "utf8")).not.toContain("invented-value-7")
+    expect(code).toBe(3)
+    expect(stdout).toBe("")
+    expect(existsSync(output)).toBe(false)
+    expect(stderr).toContain("defaultProfile")
+    expect(stderr).not.toContain("invented-value-7")
   })
 
   it("writes a problem report under MAX_READ_ONLY, since it only adds a file", async () => {
@@ -171,7 +173,7 @@ describe("max doctor", () => {
     homes.push(dirname(output))
     process.env.MAX_READ_ONLY = "1"
     try {
-      const { code } = await inAnEmptyHome(["work", "doctor", "report", "create", "--output", output, "--json"])
+      const { code } = await inAnEmptyHome(["work", "doctor", "reports", "create", "--output", output, "--json"])
       expect(code).toBe(0)
     } finally {
       delete process.env.MAX_READ_ONLY

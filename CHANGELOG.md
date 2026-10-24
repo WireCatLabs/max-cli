@@ -22,6 +22,14 @@
 
 ### Изменено — может сломать скрипты
 
+- **Общие команды переименованы по единому словарю, старых имён больше нет** (cli-core 0.406.0). Например:
+  `contacts profile` → `contacts info`, `contacts timeline` → `contacts events`, `contacts alias` → `contacts aliases`,
+  `chats link` → `chats links`, `metadata refresh` → `metadata sync`, `store reindex` → `store rebuild`,
+  `commands schema` → `commands info`, `stats messages counters refresh` → `stats messages counters sync`,
+  `models text key` → `models keys`, `models audio list` → `models list kind:audio`, `doctor report` → `doctor reports show`.
+  Старая команда не запускается и называет новую. Скрытые старые написания опций тоже убраны.
+  Что учесть: перенесите скрипты, расписания и сохранённые вызовы MCP. Ключ прав со старым путём
+  (например `permissions.metadata.refresh`) теперь останавливает запуск с `configuration_error` и называет новый.
 - **`max <profile> watch --json` печатает записи `{ "type": "item", "data": … }` и в конце `{ "type": "end" }`** (cli-core 0.400.0).
   Поля сообщений и событий — snake_case, значения сообщений в каноническом виде со ссылками. Нормальная остановка
   и таймаут завершаются полным `end`, сбой источника — неполным и кодом ошибки.
@@ -40,7 +48,7 @@
 
 - **Работа с хранилищем, управление сервером, скачивание моделей и создание отчёта доступны через MCP.**
   У команд появились собственные ключи разрешений, например `store.backup`, `server.start`,
-  `models.audio.download`, `doctor.report.create`; по умолчанию — `ask`. Проверьте права профиля, если
+  `models.download`, `doctor.reports.create`; по умолчанию — `ask`. Проверьте права профиля, если
   агент должен выполнять только чтение: в MCP `ask` допускает запрошенную запись без формы подтверждения.
 - **Сырые операции `bot api` доступны агенту только при явном `permissions.bot.api: allow` или `ask`.**
   По умолчанию — `deny`; общий `bot: allow` этот доступ не открывает. Агент не может менять `mcp` и `bot.api`

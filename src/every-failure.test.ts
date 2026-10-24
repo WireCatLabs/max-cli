@@ -48,11 +48,11 @@ describe("every failure is kept as a run", () => {
   })
 
   it("a command that never talks to MAX", async () => {
-    expect(await runWith(["f-local", "models", "audio", "download", "no-such-model"])).not.toBe(0)
-    expect(await runWith(["f-local", "models", "text", "download", "no-such-model"])).not.toBe(0)
+    expect(await runWith(["f-local", "models", "download", "no-such-model"])).not.toBe(0)
+    expect(await runWith(["f-local", "models", "download", "no-such-model"])).not.toBe(0)
     expect(runsOf("f-local")).toMatchObject([
-      { command: "models text download", status: "failed" },
-      { command: "models audio download", status: "failed" },
+      { command: "models download", status: "failed" },
+      { command: "models download", status: "failed" },
     ])
   })
 
@@ -71,7 +71,7 @@ describe("every failure is kept as a run", () => {
       await runWith(["f-off", "messages", "sync", "111", "--since-time", "1d", "--last", "5", "--no-record"]),
     ).toBe(2)
     expect(await runWith(["f-help", "messages", "--help"])).toBe(0)
-    expect(await runWith(["f-help", "doctor", "report"])).toBe(0)
+    expect(await runWith(["f-help", "doctor", "reports", "show"])).toBe(0)
 
     expect(runsOf("f-off")).toEqual([])
     expect(runsOf("f-help")).toEqual([])

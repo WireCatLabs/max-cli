@@ -18,21 +18,21 @@
 
 | Задача | Команда |
 | --- | --- |
-| Узнать, кто это и где вы с ним переписываетесь | `max personal contacts profile` |
+| Узнать, кто это и где вы с ним переписываетесь | `max personal contacts info` |
 | Прочитать, что он писал, во всех чатах или в названных | `max personal contacts context` |
 | Подготовиться к разговору: переписка, задачи, заметки и встречи | `max personal contacts prepare` |
 | Проверить, похож ли аккаунт на бота, фейк или спамера | `max personal contacts check` |
-| Проверить самых подозрительных участников группы | `max personal chats members audit --deep` |
+| Проверить самых подозрительных участников группы | `max personal chats members check --deep` |
 | Записать, что аккаунт в MAX и аккаунт в Telegram — один человек | `max personal contacts link` |
-| Вести своё имя и заметки о человеке | `max personal contacts alias`, `max personal contacts notes` |
+| Вести своё имя и заметки о человеке | `max personal contacts aliases`, `max personal contacts notes` |
 
 Все опции этих команд — в [справочнике команд для контактов](commands.md#max-contacts).
 
-## Кто это: `contacts profile`
+## Кто это: `contacts info`
 
 ```sh
-max personal contacts profile 20000002
-max personal contacts profile 20000002 --json
+max personal contacts info 20000002
+max personal contacts info 20000002 --json
 ```
 
 Команда показывает, что MAX сообщает о человеке, и сколько его сообщений лежит в локальной копии
@@ -190,14 +190,14 @@ max personal contacts check 20000002
 `max` их не спрашивает, и в ответе они отмечены как `unknown`. Id человека никуда не отправляется.
 `--offline` читает только сохранённое.
 
-## Участники группы: `chats members audit --deep`
+## Участники группы: `chats members check --deep`
 
 ```sh
-max personal chats members audit "Книжный клуб"
-max personal chats members audit "Книжный клуб" --deep 10
+max personal chats members check "Книжный клуб"
+max personal chats members check "Книжный клуб" --deep 10
 ```
 
-`chats members audit` оценивает всех участников по списку участников и локальной копии, без
+`chats members check` оценивает всех участников по списку участников и локальной копии, без
 отдельного запроса на каждого, и выводит тех, у кого есть причина, по убыванию оценки. `--deep 10`
 затем делает полную `contacts check` для десяти с наибольшей оценкой, по человеку в секунду. Никого
 не удаляет; владелец и администраторы в список не попадают.
@@ -213,15 +213,15 @@ max personal contacts unlink 20000002
 ```
 
 После этого `contacts context` без `--chat` собирает оба аккаунта: общие чаты и сообщения из MAX и
-из Telegram. `contacts profile` и `contacts context --chat` по-прежнему показывают только тот
+из Telegram. `contacts info` и `contacts context --chat` по-прежнему показывают только тот
 аккаунт, который вы назвали. Связь — только то, что записали вы: одинаковое имя в двух мессенджерах никогда не считается одним человеком. Адресную книгу
 MAX эта запись не меняет.
 
-## Свои имена и заметки: `contacts alias`, `contacts notes`
+## Свои имена и заметки: `contacts aliases`, `contacts notes`
 
 ```sh
-max personal contacts alias set "Борис Пример" Боря            # ваше имя для человека, только на этом компьютере
-max personal contacts alias rm "Борис Пример"
+max personal contacts aliases set "Борис Пример" Боря            # ваше имя для человека, только на этом компьютере
+max personal contacts aliases remove "Борис Пример"
 max personal contacts notes add "Борис Пример" --text-file note.txt  # или текст из stdin
 max personal contacts notes list "Борис Пример"
 max personal contacts notes edit "Борис Пример" <id> --revision 1 --text-file note.txt

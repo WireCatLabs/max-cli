@@ -45,13 +45,13 @@ describe("the adopted agent CLI contract", () => {
   it("discovers the canonical statistics schema without connecting", async () => {
     const { code, streams, opened } = await invoke([
       "commands",
-      "schema",
+      "info",
       "stats",
       "messages",
       "show",
       "--json=schemaVersion",
     ])
-    expect(code).toBe(0)
+    expect(code, streams.stderr.join("\n")).toBe(0)
     expect(JSON.parse(streams.stdout.join(""))).toMatchObject({ schemaVersion: 1 })
     expect(opened).not.toHaveBeenCalled()
   })
@@ -70,7 +70,7 @@ describe("the adopted agent CLI contract", () => {
   it("fails an output byte limit before emitting a partial document", async () => {
     const { code, streams, opened } = await invoke([
       "commands",
-      "schema",
+      "info",
       "messages",
       "list",
       "--json",

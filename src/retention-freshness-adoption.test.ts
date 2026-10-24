@@ -67,10 +67,10 @@ beforeAll(async () => {
 })
 describe("retention and freshness SDK adoption", () => {
   it("declares refresh as a read of MAX kept in the store, in native discovery", async () => {
-    const result = await invoke("commands", "stats", "messages", "counters", "refresh")
+    const result = await invoke("commands", "stats", "messages", "counters", "sync")
     expect(result.code, result.stderr).toBe(0)
     const commands = JSON.parse(result.stdout).commands as { path: string[]; effects?: unknown }[]
-    expect(commands.find((command) => command.path.join(" ") === "stats messages counters refresh")).toMatchObject({
+    expect(commands.find((command) => command.path.join(" ") === "stats messages counters sync")).toMatchObject({
       effects: { remote: "read", local: "write" },
     })
   })
@@ -159,7 +159,7 @@ describe("retention and freshness SDK adoption", () => {
       "stats",
       "messages",
       "counters",
-      "refresh",
+      "sync",
       "Synthetic",
       "--chat",
       "7",
@@ -190,7 +190,7 @@ describe("retention and freshness SDK adoption", () => {
       "stats",
       "messages",
       "counters",
-      "refresh",
+      "sync",
       "--selection",
       JSON.stringify(found.item.selection),
       "--limit",

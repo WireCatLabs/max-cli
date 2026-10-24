@@ -183,7 +183,7 @@ max personal schedule agent follow-ups claude "выполни ежедневну
 
 ### Отдельно личные, группы и каналы
 
-`--kind` оставляет только чаты нужного вида: `dialog` — личные, `group` — группы, `channel` — каналы.
+`kind:` оставляет только чаты нужного вида: `dialog` — личные, `group` — группы, `channel` — каналы.
 Сводку по каналам и сводку по переписке можно запускать по отдельности, в разное время. У каждого
 чата своя точка, и один запуск не прячет то, что ещё не показал другой:
 
@@ -192,7 +192,7 @@ max personal schedule agent follow-ups claude "выполни ежедневну
 0 19 * * * claude -p "$(cat ~/max-recipes/news.md)" --allowedTools "Bash(max personal inbox:*)"
 ```
 
-В `morning.md` — `max personal inbox --new kind:dialog,group --json`, в `news.md` —
+В `morning.md` — `max personal inbox --new 'kind:dialog OR kind:group' --json`, в `news.md` —
 `max personal inbox --new kind:channel --json` и просьба выбрать главное. Без `kind:` — всё вместе.
 
 ## Недельный отчёт по рабочему чату

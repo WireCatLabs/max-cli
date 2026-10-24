@@ -150,8 +150,8 @@ describe("the read-only lock on max's own commands", () => {
       ["config", "unset", "permissions.chats"],
       ["recipients", "add", "111"],
       ["recipients", "clear"],
-      ["mcp", "setup", "claude-code"],
-      ["mcp", "setup", "claude-code", "--permission", "messages.send=allow"],
+      ["mcp", "add", "claude-code"],
+      ["mcp", "add", "claude-code", "--permission", "messages.send=allow"],
     ]) {
       const { code, stderr } = await runWith(["s-locked", ...argv], locked)
       expect(code, argv.join(" ")).toBe(5)

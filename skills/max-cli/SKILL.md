@@ -22,7 +22,7 @@ description: >-
 
 ## Машинный запуск
 
-`max commands schema messages list --json` показывает схемы и эффекты одной команды.
+`max commands info messages list --json` показывает схемы и эффекты одной команды.
 Используйте `--json --no-input` для работы без вопросов; секреты передавайте явно через pipe.
 `--json=id,text` оставляет эти поля каждого элемента списка вместе со страницей и полнотой. Для id
 достаточно `--json=id`. Точка выбирает вложенное поле: `--json=ref,text,reply_to.text`. `--max-output-bytes` и `--max-input-bytes` задают byte budgets;
@@ -174,7 +174,7 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    его аккаунта. Посчитать заранее нельзя: `--dry-run` для MAX отказывает. Скажите владельцу, что
    один запуск — до 40 страниц по 30 сообщений с паузой 5–10 с, то есть 3–7 минут.
 5d. **Ошибку, которую не удаётся объяснить, — в отчёт автору.** Предложите владельцу
-   `max personal doctor report create`: команда пишет файл без текстов сообщений и печатает ссылку на новую
+   `max personal doctor reports create`: команда пишет файл без текстов сообщений и печатает ссылку на новую
    задачу на GitHub. Задачу создаёт владелец сам: она видна всем.
 5e. **`max` не находится — `npx @wirecat/max-cli personal doctor`.** Вместо `personal` подставьте имя профиля владельца. Он скажет, куда поставлена команда и
    почему терминал её не видит, и напечатает команду исправления. Клиенту MCP без терминала (Claude
@@ -267,7 +267,7 @@ max personal chats show -1000 --json                    # один чат и к�
 max personal chats events -1000 'time>=2026-09-20' --json   # кто вступил, вышел, кого добавили и удалили
 max personal chats members list -1000 --all --json            # все участники от MAX: registered_at, last_seen_at
 max personal chats requests list -1000 --json           # заявки в канал с одобрением; ни времени, ни порядка
-max personal chats requests accept -1000 20000002       # по одному человеку и только по просьбе владельца; decline — отказать
+max personal chats requests confirm -1000 20000002       # по одному человеку и только по просьбе владельца; decline — отказать
 max personal chats rules show -1000 --json              # правила модерации группы; set <ключ> <значение> меняет одно
 max personal chats moderate -1000 --dry-run --json         # что нового нарушает правила; без --dry-run — только по слову владельца
 max personal contacts show @ivan --json                 # один человек и общие чаты
@@ -295,10 +295,10 @@ max personal messages transcribe -1000 100000000000000001 --json   # текст 
 `messages list`, `inbox` и `review`; остальные называет запись `transcript` в `missing` (обзор с ними не полон),
 а `--transcribe` расшифровывает их и называет там то, что не вышло. При отсутствии модели пакетное чтение сохраняет
 сообщения и сообщает причину там же; одиночная `messages transcribe` откажет
-и назовёт `max personal models audio download <id>`: **сказать об этом владельцу и не скачивать самому** — это сотни
+и назовёт `max personal models download <id>`: **сказать об этом владельцу и не скачивать самому** — это сотни
 мегабайт, и выбор модели за ним.
 
-Каталог аудиомоделей общий с Telegram; путь каждой модели есть в `max personal models audio list --json` (`path`).
+Каталог аудиомоделей общий с Telegram; путь каждой модели есть в `max personal models list kind:audio --json` (`path`).
 Существующие файлы используются повторно; `WIRECAT_STATE_DIR` задаёт другое место.
 
 Вложение в JSON: `{ "kind": "photo", "url": "https://…", "width": 901, "height": 594 }`. Чтобы
@@ -364,7 +364,7 @@ MCP `max_read` с `command: "stats chats show"` читает активност�
 В CLI: `max personal stats chats show <чат> --offline --json`.
 MCP `inbox`/`review` принимают `kinds` и `new`; отметки новых сообщений отдельны от CLI.
 
-`max personal chats members audit <чат> --json` читает участников и причины оценки, никого не удаляя.
+`max personal chats members check <чат> --json` читает участников и причины оценки, никого не удаляя.
 Оценка — подсказка: проверь `more`, `unknown` и каждого человека до действий модерации.
 
 `max personal mcp --http --public-url https://<имя>.ts.net` работает через HTTPS-туннель со входом по коду.
@@ -391,8 +391,8 @@ MCP `inbox`/`review` принимают `kinds` и `new`; отметки нов�
 `"conversations related"` и `"conversations status"` читает построенное, а `max_write` (`command: "conversations rebuild"`)
 догоняет на этом компьютере. Через MCP агент получает инструкцию `link-conversations`, оценивает объём инструментом
 `max_read` (`command: "conversations batches status"`) и ждёт согласия владельца для этого чата. Затем читает
-`max_read` (`command: "conversations batches next"`), сохраняет ответы через `max_write` (`command: "conversations links add"`) и перестраивает граф через
-`max_write` (`command: "conversations build"`). `max_write` (`command: "conversations links clear"`) удаляет ответы агента; после него граф также нужно
+`max_read` (`command: "conversations batches show"`), сохраняет ответы через `max_write` (`command: "conversations links add"`) и перестраивает граф через
+`max_write` (`command: "conversations links rebuild"`). `max_write` (`command: "conversations links clear"`) удаляет ответы агента; после него граф также нужно
 перестроить. Запись требует `conversations.links`. Настройка внешних векторов действует и на MCP-поиск: вопрос
 отправляется выбранному сервису.
 
@@ -402,19 +402,19 @@ ODT, ODS, XLSX, PPTX и EPUB без модели. Сначала использ�
 кодировку и неподдерживаемый формат проверяй доступными средствами агента.
 
 `content:договор` ищет слова в сохранённом тексте вложения. Для DOCX нужен необязательный mammoth, для
-PDF с текстовым слоем — unpdf. Фото и сканы читает ваш агент и сохраняет текст через `attachments text set`. При нескольких
+PDF с текстовым слоем — unpdf. Фото и сканы читает ваш агент и сохраняет текст через `attachments update`. При нескольких
 вложениях укажите `--attachment`, начиная с 1.
 
 По умолчанию выполняйте OCR сами средствами чтения файлов и зрения агента. После загрузки и локального
 извлечения обработайте строки `needs-agent`: найдите `local_path` через `attachments list is:needs_text`,
-прочитайте фото или скан, затем сохраните буквальную расшифровку через `attachments text set`.
+прочитайте фото или скан, затем сохраните буквальную расшифровку через `attachments update`.
 Сохраняйте locator сообщения и номер вложения; проверьте результат запросом `content:`.
 Не заменяйте этот путь автоматическим вызовом отдельного API. Массовую обработку через API выбирает
 владелец явно. Если файл недоступен вашим средствам, сообщите об этом; путь на MCP-сервере сам по себе
 не передаёт файл удалённому агенту.
 
 Для явно выбранной владельцем массовой API-обработки используйте `attachments extract --ocr`
-с `models.ocr.provider` и `models.ocr.model`, обычным ключом `models text key set` и `--concurrency` (1–8,
+с `models.ocr.provider` и `models.ocr.model`, обычным ключом `models keys set` и `--concurrency` (1–8,
 по умолчанию 4). `--limit` — 1–500 файлов, по умолчанию 100; продолжайте по `cursor`.
 Не добавляйте `--ocr` к обычному извлечению автоматически. Сканы PDF требуют необязательных
 `unpdf` и `@napi-rs/canvas`, максимум 20 страниц. Проверяйте `failed` и статусы; повтор использует
@@ -424,7 +424,7 @@ PDF с текстовым слоем — unpdf. Фото и сканы чита�
 max personal attachments extract --chat "Книжный клуб" --download --output-dir ./files
 max personal search messages 'content:договор'
 max personal attachments list 'chat:"Книжный клуб" is:needs_text'
-max personal attachments text set "Книжный клуб" 204 --text-file ./scan.txt
+max personal attachments update "Книжный клуб" 204 --text-file ./scan.txt
 ```
 
 `--download` требует `--output-dir`; без них извлечение читает уже скачанные файлы. `list` показывает сохранённые
@@ -448,10 +448,10 @@ output_dir в MCP также их защищает. Обычные скрыты�
 Подготовка после явно разрешённой загрузки: `messages sync <чат> --catch-up` с
 `--catch-up-chunks`, `--catch-up-messages`, `--catch-up-time`; `--no-catch-up` отменяет
 настройку `search_catch_up`. Модели не скачиваются, удалённый провайдер не вызывается.
-Разрывы: сначала локальный `store gaps plan <чат>`, затем только по слову владельца
+Разрывы: сначала локальный `store gaps show <чат>`, затем только по слову владельца
 `store gaps repair <чат> --fingerprint <хеш>`; ограничивайте `--max-gaps`, `--limit`,
 `--repair-time`, `--page-size`, `--pause`. `--background` использует обычные задания.
-В MCP найдите `store gaps plan` и `store gaps repair` и `store jobs show` и `store jobs list` через `max_tools_search`,
+В MCP найдите `store gaps show` и `store gaps repair` и `store jobs show` и `store jobs list` через `max_tools_search`,
 затем используйте `max_read` или `max_write` для соответствующей команды. Не трактуйте неизвестные края или
 пропущенные номера сообщений как доказательство потерянной истории.
 
@@ -459,20 +459,20 @@ output_dir в MCP также их защищает. Обычные скрыты�
 
 Псевдонимы хранятся локально для выбранного аккаунта; заметка о человеке видна в каждом профиле,
 где он виден. Обновление контактов их не
-затирает. `contacts rename` меняет запись в адресной книге мессенджера; `contacts alias` —
+затирает. `contacts rename` меняет запись в адресной книге мессенджера; `contacts aliases` —
 только локальное имя. Если псевдоним неоднозначен, укажите id. Личные заметки отделены от
 публичного описания человека. Показывайте и ищите их, когда это нужно для запроса владельца.
 
 Чтобы пересказать, что писал человек, вызывайте `contacts context <человек> --chat <чат> --limit <n>`
 (в MCP — `chats` и `limit`); ответ — `{ at, text }` на сообщение. `-v` (в MCP `detail: 1`) — только
 если нужны номера сообщений или локаторы. Связанные через `contacts link` аккаунты собирает только
-`contacts context` без `--chat`; `contacts profile` и `--chat` читают лишь названный аккаунт.
-`contacts profile` не печатает номер телефона целиком без `--show-phone` по просьбе владельца; MCP
+`contacts context` без `--chat`; `contacts info` и `--chat` читают лишь названный аккаунт.
+`contacts info` не печатает номер телефона целиком без `--show-phone` по просьбе владельца; MCP
 всегда скрывает его. `contacts check` для MAX ничего не отправляет в списки спамеров; оценка — подсказка, не вывод.
 
 ```sh
-max personal contacts alias set 101 'Project lead'
-max personal contacts alias rm 101
+max personal contacts aliases set 101 'Project lead'
+max personal contacts aliases remove 101
 max personal contacts notes add 101 --file /path/to/own-note.md
 max personal contacts notes list 101 --json
 max personal contacts notes show 101 NOTE_ID --json
@@ -480,10 +480,10 @@ max personal contacts notes edit 101 NOTE_ID --revision 1 --file /path/to/own-no
 max personal contacts notes remove 101 NOTE_ID
 max personal contacts show 101 --with-notes --json
 max personal contacts list 'notes:"follow up"' --json
-max personal metadata get --chat CHAT_ID --json
-max personal metadata refresh --chat CHAT_ID --limit 1 --json
-max personal tags auto --chat CHAT_ID --dry-run --json
-max personal tags auto --chat CHAT_ID --sync-first --limit 1 --json
+max personal metadata show --chat CHAT_ID --json
+max personal metadata sync --chat CHAT_ID --limit 1 --json
+max personal tags rebuild --chat CHAT_ID --dry-run --json
+max personal tags rebuild --chat CHAT_ID --sync-first --limit 1 --json
 max personal tags list sources:auto --json
 max personal tags remove news --chat CHAT_ID --source auto
 ```
@@ -493,7 +493,7 @@ max personal tags remove news --chat CHAT_ID --source auto
 запрашивается явно; удалённый чат не меняется. `--dry-run` читает только сохранённые данные
 и не сочетается с `--sync-first`. За запуск обрабатывается не более 500 чатов.
 Оценка правила не является вероятностью. Ручные метки сохраняются при повторной классификации.
-Без `--source` удаление метки убирает оба источника; следующий явный запуск `tags auto` может
+Без `--source` удаление метки убирает оба источника; следующий явный запуск `tags rebuild` может
 создать автоматическую метку снова. Связывание людей не объединяет их личные заметки.
 
 Телефоны, почта, ссылки и документы Google из сохранённых сообщений хранятся как упоминания: их находят
@@ -545,7 +545,7 @@ max personal mentions reject 12
 метаданные, запросите format:base64 и покажите PNG средствами агента. Просмотрите реальные пиксели
 всех страниц, не считайте получение base64 чтением. pdf.source_sha256 — хеш исходного PDF,
 верхний sha256 — хеш PNG. Нет внешнего OCR API или автоматической записи: сохраните свой буквальный
-текст через attachments text set и проверьте content:. Если показать страницы нельзя, сообщите об этом;
+текст через attachments update и проверьте content:. Если показать страницы нельзя, сообщите об этом;
 не подставляйте прежний текст индекса. Качество зависит от разрешения, языка и структуры документа.
 
 Удержание: `max personal stats chats retention <chat> --checkpoints 1d,7d,30d --within 7d --json`.
@@ -555,7 +555,7 @@ max personal mentions reject 12
 
 Счётчики: `max personal stats messages counters show --chat <chat> --counters views,reactions --json`.
 Проверяй observed_at/source/freshness каждого поля (24h по умолчанию). Refresh — remote read + local write:
-`stats messages counters refresh --chat <chat> --max-messages 20 --sync-time 30s --dry-run --json`.
+`stats messages counters sync --chat <chat> --max-messages 20 --sync-time 30s --dry-run --json`.
 Предпросмотр не подключается. Реальный refresh требует разрешённой записи и явного chat или pinned selection;
 никогда не освежай весь аккаунт неявно. MAX поддерживает views/reactions; comments unsupported.
 Не отправляй, не отмечай прочтение и не вызывай increment views. Сохранённые значения без наблюдения — unknown.

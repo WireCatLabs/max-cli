@@ -28,7 +28,7 @@
 | Чтобы запуск ничего не спрашивал | `--no-input`; флаги подтверждения `--yes` и `--allow-dangerous` |
 | Чтобы запуск не завис и не залил вывод | Предел времени и пределы размера ввода и вывода |
 | Только нужные поля | `--json=<поля>` |
-| Параметры команды без чтения документации | `max commands` и `max commands schema` |
+| Параметры команды без чтения документации | `max commands` и `max commands info` |
 | Увидеть, что сделает команда | `--dry-run` |
 | Понять, выполнилась ли запись после сбоя | `outcome_unknown` и `details.operation_id` |
 
@@ -99,7 +99,7 @@ JSONL частичной загрузки добавляет `batch_summary`; у
 ```sh
 max personal messages list <чат> --json=ref,text,reply_to.text
 max commands messages list --json
-max commands schema messages list --json
+max commands info messages list --json
 ```
 
 `--json=<поля>` оставляет только перечисленные через запятую поля каждого элемента.
@@ -110,7 +110,7 @@ JSONL-списки выводят элементы без общей обёрт�
 
 `max commands` перечисляет команды по разделам, а `max commands --json` показывает флаги, допустимые значения,
 значения по умолчанию и коды завершения.
-`max commands schema` отдаёт [JSON Schema](https://json-schema.org/specification) (версии 2020-12)
+`max commands info` отдаёт [JSON Schema](https://json-schema.org/specification) (версии 2020-12)
 аргументов и результата. `schemaVersion` — версия этого описания, она меняется отдельно от версии
 программы, `contract` — версия формы ответов (сейчас 3). `outputSchemaCoverage` говорит, откуда схема
 результата: `declared-entity` — команда описала свою сущность, `envelope-with-open-items` — описана

@@ -393,8 +393,8 @@ max personal contacts sync         # заново получить полный 
 ## Как сообщить о проблеме
 
 ```sh
-max personal doctor report          # что попадёт в отчёт и чего в нём не будет
-max personal doctor report create   # записать отчёт в файл и показать, как его отправить
+max personal doctor reports show          # что попадёт в отчёт и чего в нём не будет
+max personal doctor reports create   # записать отчёт в файл и показать, как его отправить
 ```
 
 `create` пишет файл `max-report-<время>.json` в текущий каталог (права `0600`). В нём версия, среда

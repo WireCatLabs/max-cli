@@ -108,16 +108,16 @@ describe("max mcp, cli-core's command over max's messenger", () => {
 })
 
 describe("the models commands, through the CLI", () => {
-  it("`models audio list` names every model and marks the default, with none downloaded here", async () => {
-    const { code, stdout } = await cli(["models", "audio", "list", "--json"])
+  it("`models list kind:audio` names every model and marks the default, with none downloaded here", async () => {
+    const { code, stdout } = await cli(["models", "list", "kind:audio", "--json"])
     expect(code).toBe(0)
     expect(JSON.parse(stdout).items).toContainEqual(
       expect.objectContaining({ id: "gigaam-v3", default: true, downloaded: false }),
     )
   })
 
-  it("`models text list` names the embedding models `conversations embed` uses", async () => {
-    const { code, stdout } = await cli(["models", "text", "list", "--json"])
+  it("`models list kind:text` names the embedding models `conversations embed` uses", async () => {
+    const { code, stdout } = await cli(["models", "list", "kind:text", "--json"])
     expect(code).toBe(0)
     expect(JSON.parse(stdout).items).toContainEqual(expect.objectContaining({ id: "e5-small", default: true }))
   })

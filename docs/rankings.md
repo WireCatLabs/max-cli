@@ -39,7 +39,7 @@
 **Команда:**
 
 ```sh
-max personal stats messages top chat:"Поход" --measure reactions --limit 3 --json
+max personal stats messages top 'chat:"Поход"' --measure reactions --limit 3 --json
 ```
 
 **Пример ответа агента:**
@@ -63,7 +63,7 @@ max personal stats messages top chat:"Поход" --measure reactions --limit 3 
 **Команда:**
 
 ```sh
-max personal stats contacts top chat:"Поход" --measure answers --limit 3 --json
+max personal stats contacts top 'chat:"Поход"' --measure answers --limit 3 --json
 ```
 
 **Пример ответа агента:**
@@ -89,7 +89,7 @@ max personal stats contacts top chat:"Поход" --measure answers --limit 3 --
 **Команда:**
 
 ```sh
-max personal stats messages unanswered chat:"Поход" older_than:24h --json
+max personal stats messages unanswered 'chat:"Поход"' older_than:24h --json
 ```
 
 **Пример ответа агента:**
@@ -115,7 +115,7 @@ max personal stats messages unanswered chat:"Поход" older_than:24h --json
 **Команда:**
 
 ```sh
-max personal stats contacts responses chat:"Поход" --answerer "Алекс" --json
+max personal stats contacts responses 'chat:"Поход"' --answerer "Алекс" --json
 ```
 
 **Пример ответа агента:**
@@ -194,7 +194,7 @@ max personal stats chats retention "Поход" --checkpoints 1d,7d,30d --within
 **Команда:**
 
 ```sh
-max personal stats messages discussion chat:"Новости" min_views:100 max_replies:0 --json
+max personal stats messages discussion 'chat:"Новости"' min_views:100 max_replies:0 --json
 ```
 
 **Пример ответа агента:**
@@ -235,7 +235,7 @@ max personal stats messages counters show --chat "Поход" --counters views,r
 Перед чтением новых счётчиков попросите показать точные сообщения и пределы.
 
 ```sh
-max personal stats messages counters refresh --chat "Поход" --counters views,reactions --max-messages 20 --sync-time 30s --dry-run --json
+max personal stats messages counters sync --chat "Поход" --counters views,reactions --max-messages 20 --sync-time 30s --dry-run --json
 ```
 
 > **План:** не больше 20 сообщений, до 30 секунд. Просмотры и реакции поддерживаются.
