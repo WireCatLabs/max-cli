@@ -67,14 +67,14 @@ const bot = async (profile: string, argv: string[]) => {
   return { code, answer: out ? JSON.parse(out) : undefined, stderr: streams.stderr.join("\n") }
 }
 
-describe("max bot store fetch", () => {
+describe("max bot messages sync", () => {
   it("**pages back through getMessages by time**, and a second run reaches the chat's start", async () => {
-    const first = await bot("bf-pages", ["store", "fetch", "-100", "--limit", "120", "--pause", "1ms", "--json"])
+    const first = await bot("bf-pages", ["messages", "sync", "-100", "--limit", "120", "--pause", "1ms", "--json"])
     expect(first.code).toBe(0)
     expect(first.answer.item).toMatchObject({ chat: "-100", complete: false })
     expect(asked[1]).toContain(`before=${START + 130 * 60_000 + 1}`)
 
-    const second = await bot("bf-pages", ["store", "fetch", "-100", "--pause", "1ms", "--json"])
+    const second = await bot("bf-pages", ["messages", "sync", "-100", "--pause", "1ms", "--json"])
     expect(second.answer.item).toMatchObject({ complete: true })
     const kept = await bot("bf-pages", ["messages", "list", "-100", "--limit", "100", "--offline", "--json"])
     expect(kept.answer.items.at(-1)).toMatchObject({ id: "mid.229" })
@@ -82,8 +82,8 @@ describe("max bot store fetch", () => {
 
   it("stops at --last and --since-time, with --page-size per request", async () => {
     const last = await bot("bf-last", [
-      "store",
-      "fetch",
+      "messages",
+      "sync",
       "-100",
       "--last",
       "30",
@@ -97,7 +97,16 @@ describe("max bot store fetch", () => {
     expect(asked[0]).toContain("count=20")
 
     const since = new Date(START + 200 * 60_000).toISOString()
-    const recent = await bot("bf-since", ["store", "fetch", "-100", "--since-time", since, "--pause", "1ms", "--json"])
+    const recent = await bot("bf-since", [
+      "messages",
+      "sync",
+      "-100",
+      "--since-time",
+      since,
+      "--pause",
+      "1ms",
+      "--json",
+    ])
     expect(recent.answer.item).toMatchObject({ reached_since: true })
   })
 })

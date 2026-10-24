@@ -6304,6 +6304,32 @@ max bot messages between <people> [options]
 
 **Example:** `max sales bot messages between @ann @bob`
 
+#### `max bot messages sync`
+
+fetch a chat's history into the bot's local copy, newest first; run it again to continue
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max bot messages sync <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | at most this many messages in this run; 1000 if not given. |
+| `--page-size <n>` | how many messages one request asks for; 100 if not given. |
+| `--pause <duration>` | pause between pages, to stay under the messenger's limits. По умолчанию: `1s`. |
+| `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
+| `--last <n>` | stop once the newest n messages are held. |
+
+**Returns:** fetch a chat's history into the bot's local copy, newest first; run it again…
+
+**Example:** `max personal bot messages sync Team`
+
 ### `max bot search`
 
 find what this bot's local copy holds, by text
@@ -6611,36 +6637,6 @@ max bot contacts show <who> [options]
 **Returns:** one person: the chats they wrote in and their chat with the bot
 
 **Example:** `max sales bot contacts show @ann`
-
-### `max bot store`
-
-the bot's local copy on this machine
-
-#### `max bot store fetch`
-
-fetch a chat's history into the bot's local copy, newest first; run it again to continue
-
-**Меняет что-то только на этом компьютере.**
-
-```sh
-max bot store fetch <chat> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
-
-| Опция | Что делает |
-|---|---|
-| `--limit <n>` | at most this many messages in this run; 1000 if not given. |
-| `--page-size <n>` | how many messages one request asks for; 100 if not given. |
-| `--pause <duration>` | pause between pages, to stay under the messenger's limits. По умолчанию: `1s`. |
-| `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
-| `--last <n>` | stop once the newest n messages are held. |
-
-**Returns:** fetch a chat's history into the bot's local copy, newest first; run it again…
-
-**Example:** `max personal bot store fetch Team`
 
 ### `max bot mcp`
 
