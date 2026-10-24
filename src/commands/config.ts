@@ -2,16 +2,12 @@ import { CliError, pathsAreOverridden } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
 import {
   AI_SETTING_KEYS,
-  changeStoreSetting,
-  grantsAuthority,
-  isStoreSetting,
   itemOf,
   LOCAL_READ,
-  LOCAL_WRITE,
   NONE_NAMED,
-  refuseUnknownKey,
   renderAnswer,
   STORE_SETTINGS,
+  configCommand as sharedConfigCommand,
   snakeKeys,
   storeSettings,
 } from "@wirecat/cli-core/cli"
@@ -20,13 +16,11 @@ import { MAX_APP } from "../app.js"
 import {
   ALL_SETTINGS,
   BOT_ONLY_SETTINGS,
-  changeSetting,
+  configuration,
   type GlobalFlags,
   PERSONAL_ONLY_SETTINGS,
-  type ProfileKind,
   resolveSettings,
   type SourcedSetting,
-  scopePath,
 } from "../config.js"
 import { knownProfiles } from "../diagnose.js"
 import { permissionKeyOf } from "../permissions.js"
@@ -130,61 +124,16 @@ export const configCommand = (): Command => {
       }
     })
 
-  for (const action of ["set", "unset"] as const) {
-    const sub = grantsAuthority(annotate(command.command(action), { effects: LOCAL_WRITE }))
-      .argument("<setting>", `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`)
-      .option("--defaults", "change what every profile gets, rather than this profile")
-      .option("--personal", "only for personal accounts — the personal section of the file")
-      .option("--bot", "only for bots — the bot section of the file")
-    if (action === "set")
-      sub
-        .argument("<value>", "a number, true or false, or a list like contacts,polls")
-        .description("save a setting to the configuration file")
-    else sub.description("remove a setting from the configuration file")
-
-    sub.action(async function (this: Command, setting: string, given: unknown) {
-      const value = action === "set" ? String(given) : undefined
-      if (environmentOf(this).agent) refuseAgentPermissionChange(setting)
-      const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
-      const { settings, renderer, format, streams } = forCommand(this, {
-        needsProfile: !flags.defaults && setting !== "default_profile" && !isStoreSetting(setting),
-      })
-      if (flags.personal && flags.bot) {
-        throw new CliError("validation_error", "--personal and --bot name different sections; use one")
-      }
-      if (isStoreSetting(setting)) {
-        if (flags.defaults || flags.personal || flags.bot)
-          throw new CliError("validation_error", `${setting} is store-wide; profile-scope flags do not apply`)
-        if (process.env.MAX_PROFILE_LOCK)
-          throw new CliError("permission_error", `${setting} changes every profile; run outside MAX_PROFILE_LOCK`)
-        const { result, note } = await changeStoreSetting(MAX_APP, process.env, setting, value)
-        renderAnswer(this, { renderer, format, streams }, itemOf(result))
-        renderer.note(note)
-        return
-      }
-      const kind: ProfileKind | undefined = flags.bot ? "bot" : flags.personal ? "personal" : undefined
-      const defaults = flags.defaults === true
-      if ((defaults || setting === "default_profile") && process.env.MAX_PROFILE_LOCK) {
-        // Both reach past this profile: the defaults are every profile's, default_profile picks one.
-        throw new CliError(
-          "permission_error",
-          `this process is locked to profile ${settings.profile} (MAX_PROFILE_LOCK) — ${setting === "default_profile" ? "default_profile" : "--defaults"} changes other profiles`,
-        )
-      }
-      if (value !== undefined) refuseUnknownKey(this, setting, value, permissionKeyOf)
-      const scope = { profile: defaults ? undefined : settings.profile, kind }
-      const saved = changeSetting(settings.configPath, { ...scope, setting, value })
-      renderAnswer(
-        this,
-        { renderer, format, streams },
-        itemOf({
-          config_file: settings.configPath,
-          scope: setting === "default_profile" ? "default_profile" : scopePath(scope),
-          setting,
-          value: saved,
-        }),
-      )
+  const shared = sharedConfigCommand(MAX_APP, configuration, { permissionKey: permissionKeyOf })
+  for (const sub of shared.commands.filter((child) => child.name() !== "show")) {
+    const [setting, value] = sub.registeredArguments
+    if (setting)
+      setting.description = `one of: ${[...ALL_SETTINGS.filter((key) => sub.name() === "unset" || key !== "default_profile"), ...STORE_SETTINGS].join(", ")}`
+    if (value) value.description = "a number, true or false, or a list like contacts,polls"
+    sub.hook("preAction", (_parent, action) => {
+      if (environmentOf(action).agent) refuseAgentPermissionChange(String(action.processedArgs[0]))
     })
+    command.addCommand(sub)
   }
 
   return command
