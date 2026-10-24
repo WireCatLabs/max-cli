@@ -248,14 +248,18 @@ the account's calls
 calls made and received, newest first; reading changes nothing
 
 ```sh
-max calls list [options]
+max calls list [query] [options]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many to show. |
 
-**Returns:** calls made and received, newest first; reading changes nothing
+**Returns:** call record — id, chat_id, caller_id, direction, outcome, kind, at, duration_seconds; every field: max commands info calls list
 
 **Example:** `max personal calls list`
 
@@ -268,14 +272,18 @@ the stickers the account has added
 sticker sets, or with --set the stickers in one; reading changes nothing
 
 ```sh
-max stickers list [options]
+max stickers list [query] [options]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
 | Опция | Что делает |
 |---|---|
 | `--set <id>` | the stickers in this set. |
 
-**Returns:** sticker sets, or with --set the stickers in one; reading changes nothing
+**Returns:** sticker inventory — id, title, count, link, set_id, emoji, url; every field: max commands info stickers list
 
 **Example:** `max personal stickers list`
 
@@ -5317,10 +5325,14 @@ max schedule agent <name> <harness> <prompt> [options]
 the schedules, when they run and how their last run went
 
 ```sh
-max schedule list
+max schedule list [query]
 ```
 
-**Returns:** the schedules, when they run and how their last run went
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** scheduled job — name, kind, when, last; every field: max commands info schedule list
 
 **Example:** `max personal schedule list`
 
@@ -5789,14 +5801,18 @@ max bot auth remove
 every name on this machine that has a bot token; --check asks MAX which bot each is
 
 ```sh
-max bot list [options]
+max bot list [query] [options]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
 | `--check` | ask the messenger who each bot is, with its token. |
 
-**Returns:** every bot profile on this machine; --check asks which bot each is
+**Returns:** bot profile — name, token, bot, id, problem; every field: max commands info bot list
 
 **Example:** `max sales bot list`, `max sales bot list --check`
 
@@ -5809,10 +5825,14 @@ the chats this bot is in — MAX gives a bot no list of them, so `list` shows th
 chats this bot has seen on this machine — not a complete list from MAX
 
 ```sh
-max bot chats list
+max bot chats list [query]
 ```
 
-**Returns:** chats this bot has seen on this machine — not a complete list from MAX
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** bot seen chat — id, title, kind, unread_count, unread_mentions, last_message_at, participants_count, muted, and 9 more; every field: max commands info bot chats list
 
 **Example:** `max sales bot chats list`
 
@@ -5878,14 +5898,15 @@ the admins of a chat the bot is an admin in
 the chat's admins and what each may do
 
 ```sh
-max bot chats admins list <chat>
+max bot chats admins list <chat> [query]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
+| `query` | необязательный | field:value terms; this list filters by none yet. |
 
-**Returns:** the chat's admins and what each may do
+**Returns:** bot admin — id, name, username, role, rights, title; every field: max commands info bot chats admins list
 
 **Example:** `max sales bot chats admins list Team`
 
@@ -6124,18 +6145,21 @@ max bot messages send <chat> [text] [options]
 the latest messages in a chat; where MAX gives a bot no history, and with --offline, the ones this bot has seen on this machine
 
 ```sh
-max bot messages list <chat> [options]
+max bot messages list <chat> [query] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many, the newest. |
 
-**Returns:** the latest messages in a chat
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands info bot messages list
+
+**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max bot messages show <chat> <message>`
 
 **Example:** `max sales bot messages list Team --limit 20`
 
@@ -6306,10 +6330,14 @@ the chats this bot may write to; with no list, every chat — `clear` removes th
 the chats on the list, or nothing when there is no list
 
 ```sh
-max bot recipients list
+max bot recipients list [query]
 ```
 
-**Returns:** the chats on the list, or nothing when there is no list
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** recipient — id, title, added_at, partner_id; every field: max commands info bot recipients list
 
 **Example:** `max sales bot recipients list`
 
@@ -6372,10 +6400,14 @@ what this bot sent, edited and deleted from this machine — ids and outcomes, n
 every send, edit and delete this bot made from this machine, with its outcome
 
 ```sh
-max bot sends list
+max bot sends list [query]
 ```
 
-**Returns:** every send, edit and delete this bot made from this machine, with its outcome
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** send attempt — at, profile, chat_id, outcome, kind, action, people, message_id, and 17 more; every field: max commands info bot sends list
 
 **Example:** `max sales bot sends list`
 
@@ -6436,10 +6468,14 @@ the bot's command menu — what people see after /
 the commands in the menu now
 
 ```sh
-max bot commands list
+max bot commands list [query]
 ```
 
-**Returns:** the commands in the menu now
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
+
+**Returns:** bot menu entry — name, description; every field: max commands info bot commands list
 
 **Example:** `max sales bot commands list`
 
@@ -6484,10 +6520,14 @@ where the messenger pushes this bot's updates — while one is set, `bot watch` 
 the webhooks this bot has
 
 ```sh
-max bot webhooks list
+max bot webhooks list [query]
 ```
 
-**Returns:** the webhooks this bot has
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
+
+**Returns:** bot webhook — url, types; every field: max commands info bot webhooks list
 
 **Example:** `max sales bot webhooks list`
 

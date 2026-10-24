@@ -192,7 +192,7 @@ const fixture = () => {
   )
   writeFileSync(
     join(runDir, "events.jsonl"),
-    `${JSON.stringify({ event: "request", ids: { chat: ids.chatId, message: ids.replyTo, send: ids.sendId } })}\n`,
+    `${JSON.stringify({ time: "2026-10-16T00:00:00.000Z", severity: "info", attributes: { event: "request", opcode: 77, ids: { chat: ids.chatId, message: ids.replyTo, send: ids.sendId } } })}\n`,
   )
   const report = () =>
     buildReport({
@@ -215,6 +215,7 @@ describe("native diagnostic report privacy", () => {
   it("preserves useful links within a report while keeping correlation values private", () => {
     const { report } = fixture()
     const output = report()
+    expect(output.run?.events[0]).toMatchObject({ time: "2026-10-16T00:00:00.000Z", severity: "info", opcode: 77 })
     const eventIds = output.run?.events[0]?.ids as Record<string, string>
     expect(output.sends[0]?.chatId).toBe(eventIds.chat)
     expect(output.sends[0]?.replyTo).toBe(eventIds.message)

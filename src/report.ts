@@ -1,16 +1,12 @@
-import { createHash, randomBytes } from "node:crypto"
 import { homedir } from "node:os"
-import { basename, join } from "node:path"
-import { CliError } from "@wirecat/cli-base"
-import { findRun, listRuns, type RunMetadata, readEvents, runtime } from "@wirecat/cli-core/cli"
+import { basename } from "node:path"
+import { buildDoctorReport, doctorReportFileName, type RunMetadata, runtime } from "@wirecat/cli-core/cli"
 import type { SendEntry } from "@wirecat/cli-core/sends"
 import type { Diagnosis } from "./diagnose.js"
 import { VERSION } from "./version.js"
 
 /** Where problem reports go (`NEED-267`, changed by the owner to issues). Anybody can read them there. */
 export const REPORT_URL = "https://github.com/WireCatLabs/max-cli/issues/new"
-
-const RECENT_SENDS = 20
 
 export interface Report {
   createdAt: string
@@ -49,81 +45,19 @@ export const buildReport = ({
   now?: Date
   home?: string
 }): Report => {
-  const chosen = runId === undefined ? newestFailed(runsDir) : findRun(runsDir, runId)
-  if (runId !== undefined && !chosen) throw new CliError("not_found", `no run ${runId} — \`max runs list\` names them`)
-
-  const label = labeller()
-  const labelled = labelledEvent(label)
-  const report: Report = {
-    createdAt: now.toISOString(),
-    version: VERSION,
-    runtime: runtime(),
-    platform: process.platform,
-    arch: process.arch,
-    profile,
-    // The shell commands in `fix` quote the path in ways no spelling above matches; `binDir` says it.
+  return buildDoctorReport({
+    // Shell commands in fix quote home paths; binDir already reports the relevant location.
     doctor: "install" in doctor ? { ...doctor, install: { ...doctor.install, fix: [] } } : doctor,
-    run: chosen ? { metadata: chosen.metadata, events: readEvents(chosen.dir).map(labelled) } : null,
-    sends: sends.slice(-RECENT_SENDS).map((entry) => labelledSend(entry, label)),
-  }
-  return JSON.parse(hideHome(JSON.stringify(report), home)) as Report
+    context: { version: VERSION, runtime: runtime(), platform: process.platform, arch: process.arch, profile },
+    runsDir,
+    runId,
+    command: "max",
+    eventFields: "recorded",
+    sends,
+    now,
+    home,
+  })
 }
-
-/**
- * Inside JSON a Windows home is spelled with doubled backslashes, and a PATH entry keeps whatever
- * case it was typed in, so the match ignores case — hiding a little too much costs nothing here.
- */
-const hideHome = (json: string, home: string): string => {
-  if (home === "") return json
-  const spellings = [JSON.stringify(home).slice(1, -1), home, home.replaceAll("\\", "/")]
-  return [...new Set(spellings)].reduce(
-    (text, spelling) => text.replace(new RegExp(spelling.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"), "~"),
-    json,
-  )
-}
-
-/**
- * The report is posted to a public issue, and a chat id is somebody's conversation with the owner.
- * Each id becomes a label that is the same everywhere in this report — so a failure can still be
- * followed from request to journal — and **a new salt per report**, so two reports cannot be joined.
- */
-const labeller = () => {
-  const salt = randomBytes(16)
-  return (id: string): string => `id:${createHash("sha256").update(salt).update(id).digest("hex").slice(0, 12)}`
-}
-
-const SEND_ID_FIELDS = [
-  "chatId",
-  "messageId",
-  "replyTo",
-  "threadId",
-  "sendAs",
-  "resultChatId",
-  "sendId",
-  "operationId",
-  "parentOperationId",
-  "reservation",
-] as const satisfies readonly (keyof SendEntry)[]
-
-const labelledSend = (entry: SendEntry, label: (id: string) => string): SendEntry => {
-  const copy = { ...entry }
-  for (const field of SEND_ID_FIELDS) {
-    const value = copy[field]
-    if (value !== undefined && value !== null) copy[field] = label(String(value))
-  }
-  return copy
-}
-
-const labelledEvent =
-  (label: (id: string) => string) =>
-  (event: Record<string, unknown>): Record<string, unknown> => {
-    const ids = event.ids
-    if (typeof ids !== "object" || ids === null) return event
-    return {
-      ...event,
-      ids: Object.fromEntries(Object.entries(ids).map(([name, id]) => [name, label(String(id))])),
-    }
-  }
 
 /**
  * A new issue with its title and body filled in, through GitHub's `title` and `body` query
@@ -150,13 +84,4 @@ export const issueUrlFor = (report: Report, file: string): string => {
   return `${REPORT_URL}?title=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
 }
 
-export const reportFileName = (now: Date): string =>
-  `max-report-${now
-    .toISOString()
-    .replace(/[-:]/g, "")
-    .replace(/\.\d+Z$/, "Z")}.json`
-
-const newestFailed = (runsDir: string): { dir: string; metadata: RunMetadata } | undefined => {
-  const failed = listRuns(runsDir).find((run) => run.status === "failed")
-  return failed ? { dir: join(runsDir, failed.startedAt.slice(0, 10), failed.runId), metadata: failed } : undefined
-}
+export const reportFileName = (now: Date): string => doctorReportFileName("max", now)
