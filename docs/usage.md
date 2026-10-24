@@ -1403,7 +1403,8 @@ max personal chats list --json
 max personal messages list -1000 --jsonl | jq 'select(.type == "item") | .data | select(.sender_id == "111")'
 ```
 
-Ошибка, завершающая команду, уходит **на stderr**, а stdout остаётся пустым — так отказ невозможно принять за результат:
+Отказ до начала вывода уходит **на stderr**, а stdout остаётся пустым — так отказ невозможно принять за результат.
+Если поток уже выдал данные, они сохраняются; при сбое он добавляет неполную запись `end` и возвращает код ошибки:
 
 ```json
 {"error":{"code":"authentication_error","message":"no session for profile \"personal\" — run `max personal setup` in a local terminal; agents: read `max skill show`"}}
