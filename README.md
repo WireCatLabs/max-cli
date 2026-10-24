@@ -139,6 +139,7 @@ max personal mcp config             # запись для Claude Desktop, Cursor
 | для админа группы: вопросы без ответа, проверка по правилам | ✅ | — | — |
 
 Подробнее: [полная таблица](https://github.com/WireCatLabs/max-cli/blob/main/docs/index.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max)).
+Сравнение с другими инструментами MAX: [сравнение](https://github.com/WireCatLabs/max-cli/blob/main/docs/compare.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/compare)).
 
 ## Личный аккаунт
 
