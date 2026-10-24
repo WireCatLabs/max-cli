@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**902 ✅ · 171 ⛔ · 0 ❌** — 356 commands, 717 options.
+**898 ✅ · 173 ⛔ · 0 ❌** — 356 commands, 715 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -160,9 +160,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts prepare` | `--limit` | ✅ |  |
 | `contacts prepare` | `--since-time` | ✅ |  |
 | `contacts events` |  | ✅ |  |
-| `contacts events` | `--scope` | ✅ |  |
-| `contacts events` | `--since-time` | ✅ |  |
-| `contacts events` | `--until-time` | ✅ |  |
 | `contacts events` | `--limit` | ✅ |  |
 | `contacts events` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |
 | `contacts check` |  | ✅ |  |
@@ -414,6 +411,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks add` | `--assignee` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("lists what someone owes the owner with assignee:, after tasks add --assignee sender") drives this through the shared handler MAX mounts (0.320.0) |
 | `tasks update` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks update` | `--category` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks update` | `--priority` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
+| `tasks update` | `--parent` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks update` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks update` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks update` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
@@ -660,7 +659,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search conversations` | `--limit` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `search conversations` | `--catch-up` | ✅ |  |
 | `search runs` |  | ✅ |  |
-| `search runs` | `--since-time` | ✅ |  |
 | `search runs` | `--limit` | ✅ |  |
 | `search runs` | `--page` | ✅ |  |
 | `searches create` |  | ✅ |  |
@@ -919,7 +917,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot webhooks set` |  | ✅ |  |
 | `bot webhooks set` | `--types` | ✅ |  |
 | `bot webhooks set` | `--secret-stdin` | ✅ |  |
-| `bot webhooks set` | `--add` | ✅ |  |
+| `bot webhooks set` | `--append` | ✅ |  |
 | `bot webhooks delete` |  | ✅ |  |
 | `bot contacts show` |  | ✅ |  |
 | `bot contacts show` | `--all-bots` | ✅ |  |

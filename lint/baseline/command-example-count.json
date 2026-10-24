@@ -9,19 +9,12 @@
   "bot me",
   "bot store fetch",
   "bot uploads put",
-  "chats app",
   "chats mark-read",
   "chats media",
-  "chats start",
   "config show",
   "contacts lookup",
   "contacts sync",
-  "messages press",
   "messages transcribe",
-  "recipients add",
-  "recipients clear",
-  "recipients list",
-  "recipients remove",
   "replies add",
   "replies audience",
   "replies consents allow",
@@ -45,6 +38,5 @@
   "serve",
   "session end",
   "session start",
-  "setup",
-  "watch"
+  "setup"
 ]

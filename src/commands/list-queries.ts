@@ -16,12 +16,6 @@ export const botComment = v.looseObject({
   timestamp: v.optional(v.number()),
   body: v.optional(v.looseObject({ mid: v.string(), text: v.optional(v.nullable(v.string())) })),
 })
-const recipient = v.strictObject({
-  id: v.string(),
-  title: v.nullable(v.string()),
-  partner_id: v.optional(v.string()),
-  added_at: v.string(),
-})
 const termsOnly = (registry: QueryRegistry): QueryRegistry => ({
   ...registry,
   fields: registry.fields.map((field) =>
@@ -57,12 +51,5 @@ export const COMMENTS_QUERY = termsOnly({
     },
   }),
 })
-export const RECIPIENTS_QUERY = termsOnly({
-  entity: "recipient",
-  backend: "native",
-  fields: queryFieldsOf(recipient, { native: ["id", "title"], examples: { id: "id:7", title: 'title:"Book club"' } }),
-})
 export const memberId = (words: string[]) => queryTerms(words, MEMBERS_QUERY, "bot chats members list").get("user_id")
 export const commentId = (words: string[]) => queryTerms(words, COMMENTS_QUERY, "bot comments list").get("id")
-export const recipientFilter = (words: string[]) =>
-  Object.fromEntries(queryTerms(words, RECIPIENTS_QUERY, "recipients list"))

@@ -1,10 +1,10 @@
 import type { Client } from "@modelcontextprotocol/client"
 
 export interface ListedCommand {
-  availability?: { available: boolean; reason?: string; permission?: string }
   command: string
   title: string
   writes: boolean
+  availability?: { available: boolean; reason?: string; permission?: string }
   arguments: { properties?: Record<string, unknown> }
 }
 

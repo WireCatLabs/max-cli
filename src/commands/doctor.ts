@@ -1,6 +1,6 @@
 import { resolve } from "node:path"
 import { CliError, writeSecurely } from "@wirecat/cli-base"
-import { annotate } from "@wirecat/cli-base/commands"
+import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import {
   type AnswerOutput,
   destroysNothing,
@@ -10,6 +10,7 @@ import {
   REMOTE_READ,
   renderAnswer,
   runsDirFor,
+  doctorCommand as sharedDoctorCommand,
   snakeKeys,
 } from "@wirecat/cli-core/cli"
 import { SendJournal } from "@wirecat/cli-core/sends"
@@ -17,8 +18,10 @@ import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { BotApiClient } from "../bot/client.js"
+import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { type Diagnosis, diagnose } from "../diagnose.js"
 import { ownScript } from "../install.js"
+import { maxMessenger } from "../messenger.js"
 import { type Check, checkOnline, mcpHandshake } from "../online.js"
 import { shownTime } from "../output.js"
 import { asFirstWord } from "../profile.js"
@@ -42,7 +45,7 @@ import { environmentOf, forCommand } from "./context.js"
  * `max config show` is the neighbouring half and does not overlap: that one reads what was
  * configured, this one reads what exists.
  */
-export const doctorCommand = (): Command => {
+const doctorCommandDefinition = (): Command => {
   const command = annotate(new Command("doctor"), { effects: REMOTE_READ })
     .description("the state this installation is in, without contacting MAX unless --online")
     .option("--online", "also log in once, read one chat and start the MCP server; sends nothing")
@@ -407,3 +410,11 @@ const storeLine = (store: Diagnosis["store"]): string => {
     return `schema ${store.schema}, ${store.chats ?? 0} chats, ${store.messages ?? 0} messages in ${store.path}`
   return `not created yet (${store.path})`
 }
+
+export const doctorCommand = () =>
+  customizeSharedCommand(
+    sharedDoctorCommand(maxMessenger),
+    "MAX reports its own server, protocol library and installation while retaining the shared diagnostic defaults.",
+    doctorCommandDefinition,
+    SHELL_OVERRIDES.doctor,
+  )

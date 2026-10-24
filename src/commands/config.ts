@@ -5,6 +5,7 @@ import {
   itemOf,
   LOCAL_READ,
   NONE_NAMED,
+  overrideSharedContract,
   renderAnswer,
   STORE_SETTINGS,
   configCommand as sharedConfigCommand,
@@ -126,10 +127,16 @@ export const configCommand = (): Command => {
 
   const shared = sharedConfigCommand(MAX_APP, configuration, { permissionKey: permissionKeyOf })
   for (const sub of shared.commands.filter((child) => child.name() !== "show")) {
-    const [setting, value] = sub.registeredArguments
-    if (setting)
-      setting.description = `one of: ${[...ALL_SETTINGS.filter((key) => sub.name() === "unset" || key !== "default_profile"), ...STORE_SETTINGS].join(", ")}`
-    if (value) value.description = "a number, true or false, or a list like contacts,polls"
+    overrideSharedContract(
+      sub,
+      "MAX lists its provider-specific settings and accepted configuration value forms.",
+      () => {
+        const [setting, value] = sub.registeredArguments
+        if (setting)
+          setting.description = `one of: ${[...ALL_SETTINGS.filter((key) => sub.name() === "unset" || key !== "default_profile"), ...STORE_SETTINGS].join(", ")}`
+        if (value) value.description = "a number, true or false, or a list like contacts,polls"
+      },
+    )
     sub.hook("preAction", (_parent, action) => {
       if (environmentOf(action).agent) refuseAgentPermissionChange(String(action.processedArgs[0]))
     })
