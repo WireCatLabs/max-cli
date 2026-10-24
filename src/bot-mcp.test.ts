@@ -7,7 +7,7 @@ import { toJsonSchema } from "@valibot/to-json-schema"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { describeProgram } from "@wirecat/cli-base/commands"
 import { botInstructions, changesAuthorityAt } from "@wirecat/cli-core/cli"
-import { createBotServer, toolsFromCommands } from "@wirecat/cli-core/mcp"
+import { createBotServer } from "@wirecat/cli-core/mcp"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
 import { botMcpRun, maxBot, maxBotMcp } from "./commands/bot-messenger.js"
@@ -129,10 +129,13 @@ const call = async (client: ReturnType<typeof surfaceOf>, command: string, args:
   return { isError: result.isError === true, body, error: body?.error as { code?: string; message?: string } }
 }
 const names = (client: ReturnType<typeof surfaceOf>) => client.commands()
+const availableNames = async (client: ReturnType<typeof surfaceOf>) =>
+  (await client.listed()).filter((one) => one.availability?.available !== false).map((one) => one.command)
 const posts = () => calls.filter((one) => one.method === "POST")
 const deletes = () => calls.filter((one) => one.method === "DELETE")
 
 const READS = [
+  "config show",
   "chats list",
   "chats show",
   "messages list",
@@ -155,19 +158,25 @@ const READS = [
 ]
 
 describe("max bot mcp", () => {
-  it("**offers 0.22.0's reads-only list with bot: readonly**, and every write at the default levels", async () => {
+  it("keeps the readable subset runnable and every command discoverable under bot: readonly", async () => {
     const readonly = await connect({ permissions: { bot: "readonly" } })
-    expect((await names(readonly.client)).sort()).toEqual([...READS].sort())
+    expect((await availableNames(readonly.client)).sort()).toEqual([...READS].sort())
 
     const all = await names((await connect()).client)
-    expect(all).toHaveLength(40)
+    expect(await names(readonly.client)).toEqual(all)
+    expect(all).toEqual(expect.arrayContaining(["config set", "api get-my-info"]))
     expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete", "store fetch"]))
-    expect(all.some((name) => /recipients_(add|remove|clear)|auth|api|uploads|_mcp/.test(name))).toBe(false)
+    expect(all.some((name) => /^(auth|uploads|mcp)\b/.test(name))).toBe(false)
   })
 
   it("offers raw Bot API operations only when bot.api is explicitly allowed", async () => {
     const broad = await names((await connect({ permissions: { bot: "allow" } })).client)
-    expect(broad.some((name) => name.startsWith("api "))).toBe(false)
+    expect(broad).toContain("api get-my-info")
+    const blocked = await connect({ permissions: { bot: "allow" } })
+    expect((await blocked.client.describe("api get-my-info"))?.availability).toMatchObject({
+      available: false,
+      permission: "bot.api",
+    })
 
     const { client } = await connect({ permissions: { "bot.api": "allow" } })
     expect(await names(client)).toContain("api get-my-info")
@@ -176,13 +185,16 @@ describe("max bot mcp", () => {
   })
 
   it("**bot: deny leaves what no level stops**, and a key opened under it offers that write alone", async () => {
-    expect((await names((await connect({ permissions: { bot: "deny" } })).client)).sort()).toEqual([
+    expect((await availableNames((await connect({ permissions: { bot: "deny" } })).client)).sort()).toEqual([
+      "config show",
       "list",
       "recipients list",
       "sends list",
       "status",
     ])
-    const send = await names((await connect({ permissions: { bot: "readonly", "bot.messages.send": "allow" } })).client)
+    const send = await availableNames(
+      (await connect({ permissions: { bot: "readonly", "bot.messages.send": "allow" } })).client,
+    )
     expect(send).toEqual(expect.arrayContaining(["messages send", "comments send"]))
     expect(send).not.toContain("messages edit")
     expect((await call((await connect()).client, "me")).body).toMatchObject({
@@ -249,7 +261,7 @@ describe("max bot mcp", () => {
     const { client } = await connect({ env: { ...process.env, MAX_READ_ONLY: "1" } })
     const { isError, error } = await call(client, "messages send", { chat: "-100", text: "hi" })
     expect(isError).toBe(true)
-    expect(error.message).toContain("MAX_READ_ONLY")
+    expect(error.message).toContain("read-only lock")
     expect(posts()).toHaveLength(0)
   })
 
@@ -352,7 +364,7 @@ describe("max bot mcp", () => {
   })
 
   it("**pins the catalogue** before profile permissions, including authority and raw API commands", async () => {
-    const tools = toolsFromCommands(describeProgram(createProgram()), { root: ["bot"], offline: true })
+    const { tools } = await connect({ readOtherBots: true })
     const catalogue = Object.fromEntries(
       tools.map((tool) => [tool.command, { writes: tool.writes, input: toJsonSchema(tool.input) }]),
     )

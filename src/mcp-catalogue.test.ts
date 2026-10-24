@@ -11,13 +11,14 @@ it("**pins the default personal catalogue** before profile overrides (NEED-1433)
     exclude: [["bot"]],
     offline: true,
     levels: {},
+    includeUnavailable: true,
     authority: changesAuthorityAt(program),
   })
   const catalogue = Object.fromEntries(tools.map((tool) => [tool.command, tool.writes ? "write" : "read"]))
   await expect(`${JSON.stringify(catalogue, null, 2)}\n`).toMatchFileSnapshot("../contracts/mcp-catalogue.json")
 })
 
-it("**docs/mcp.md names every command hidden at default permissions**, and only those (CLI-82)", () => {
+it("**docs/mcp.md names every command excluded by transport**, and only those (CLI-82)", () => {
   const program = createProgram()
   const tree = describeProgram(program)
   const authority = changesAuthorityAt(program)
@@ -29,8 +30,14 @@ it("**docs/mcp.md names every command hidden at default permissions**, and only 
   tree.forEach(walk)
   const exposed = new Set(
     [
-      ...toolsFromCommands(tree, { exclude: [["bot"]], offline: true, levels: {}, authority }),
-      ...toolsFromCommands(tree, { root: ["bot"], offline: true, levels: {}, authority }),
+      ...toolsFromCommands(tree, {
+        exclude: [["bot"]],
+        offline: true,
+        levels: {},
+        authority,
+        includeUnavailable: true,
+      }),
+      ...toolsFromCommands(tree, { root: ["bot"], offline: true, levels: {}, authority, includeUnavailable: true }),
     ].map((tool) => tool.path.join(" ")),
   )
   const hidden = runnable.filter((path) => !exposed.has(path))
