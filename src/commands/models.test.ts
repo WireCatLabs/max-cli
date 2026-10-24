@@ -33,7 +33,7 @@ const sized = (path: string, bytes: number) => {
 describe("shared MAX audio models", () => {
   it("keeps Russian-first ordering, a complete JSON envelope and the chosen shared directory without creating it", async () => {
     const { env, directory } = fresh()
-    const result = await cli(["models", "audio", "list", "--json"], env)
+    const result = await cli(["models", "list", "kind:audio", "--json"], env)
     expect(result.code, result.stderr).toBe(0)
     const json = JSON.parse(result.stdout)
     expect(json.page).toEqual({ mode: "page", limit: 3, has_more: false })
@@ -54,7 +54,7 @@ describe("shared MAX audio models", () => {
     const changed = await cli(["config", "set", "--defaults", "transcribe_model", "parakeet-v3", "--json"], env)
     expect(changed.code, changed.stderr).toBe(0)
     try {
-      const result = await cli(["models", "audio", "list", "--json"], env)
+      const result = await cli(["models", "list", "kind:audio", "--json"], env)
       expect(result.code, result.stderr).toBe(0)
       const items = JSON.parse(result.stdout).items
       expect(items[0].id).toBe(DEFAULT_MODEL)
@@ -73,16 +73,16 @@ describe("shared MAX audio models", () => {
     for (const file of model.files) sized(modelPath(directory, model)(file.name), file.bytes)
     sized(vadPath(directory), VAD.bytes)
     expect(isInstalled(model, directory)).toBe(true)
-    const result = await cli(["models", "audio", "list", "--json"], env)
+    const result = await cli(["models", "list", "kind:audio", "--json"], env)
     expect(JSON.parse(result.stdout).items[0]).toMatchObject({ id: DEFAULT_MODEL, downloaded: true })
     truncateSync(modelPath(directory, model)(model.files[0]?.name ?? ""), 0)
-    const incomplete = await cli(["models", "audio", "list", "--json"], env)
+    const incomplete = await cli(["models", "list", "kind:audio", "--json"], env)
     expect(JSON.parse(incomplete.stdout).items[0].downloaded).toBe(false)
   })
 
   it("streams one model per JSONL line and marks the default in pretty output", async () => {
     const { env } = fresh()
-    const jsonl = await cli(["models", "audio", "list", "--jsonl"], env)
+    const jsonl = await cli(["models", "list", "kind:audio", "--jsonl"], env)
     expect(jsonl.code, jsonl.stderr).toBe(0)
     expect(
       jsonl.stdout
@@ -91,19 +91,19 @@ describe("shared MAX audio models", () => {
         .slice(0, -1)
         .map((line) => JSON.parse(line).data.id),
     ).toEqual(MODELS.map((model) => model.id))
-    const pretty = await cli(["models", "audio", "list"], env, true)
+    const pretty = await cli(["models", "list", "kind:audio"], env, true)
     expect(pretty.code, pretty.stderr).toBe(0)
-    expect(pretty.stdout).toMatch(/^\* gigaam-v3\s/)
+    expect(pretty.stdout).toMatch(/^audio\s+\* gigaam-v3\s/)
     expect(pretty.stdout).toContain("parakeet-v3")
   })
 
   it("rejects an unknown download before creating the shared directory", async () => {
     const { env, directory } = fresh()
-    const result = await cli(["models", "audio", "download", "absent", "--json"], env)
+    const result = await cli(["models", "download", "absent", "--json"], env)
     expect(result.code).toBe(2)
     expect(JSON.parse(result.stderr).error).toMatchObject({
       code: "validation_error",
-      message: expect.stringContaining('no speech model "absent"'),
+      message: expect.stringContaining("models list"),
     })
     expect(result.stdout).toBe("")
     expect(existsSync(directory)).toBe(false)

@@ -37,7 +37,7 @@ max [профиль] [опции] <ресурс> <действие> [аргум�
 | Что ждёт ответа | непрочитанное от других; что вы обещали и что открыто | `max personal inbox`, `max personal review` |
 | Голосовые | превратить голосовое в текст, на этом компьютере | `max personal messages transcribe` |
 | Файлы | скачать вложения сообщения или всего чата; медиа чата | `max personal messages download`, `max personal chats media` |
-| Люди | контакты, свои имена и заметки, профиль человека, проверка на бота | `max personal contacts list`, `max personal contacts profile` |
+| Люди | контакты, свои имена и заметки, профиль человека, проверка на бота | `max personal contacts list`, `max personal contacts info` |
 | Поиск | сообщения, файлы, даты, люди; обсуждения по смыслу | `max personal search messages`, `max personal search conversations` |
 | Отправка | текст, файлы, голосовые, ответы, отложенные сообщения | `max personal messages send` |
 | Изменение | правка, пересылка, закрепление, удаление, реакции, опросы, отметка прочитанным | `max personal messages edit`, `max personal reactions add` |
@@ -338,11 +338,11 @@ max personal review 'chat:"Соседи"' --unanswered 4h  # в одной гр�
 распознавания скачивается один раз, отдельной командой:
 
 ```sh
-max personal models audio list                # какие модели есть, какие скачаны, какая по умолчанию (*)
+max personal models list kind:audio                # какие модели есть, какие скачаны, какая по умолчанию (*)
 ```
 
 ```sh
-max personal models audio download gigaam-v3  # 233 МБ, один раз
+max personal models download gigaam-v3  # 233 МБ, один раз
 ```
 
 ```sh
@@ -350,7 +350,7 @@ max personal messages transcribe "Иван Петров" 100000000000000001
 ```
 
 Модели лежат в общем каталоге MAX и Telegram; `WIRECAT_STATE_DIR` переносит его.
-`models audio list --json` возвращает список `items` с `page`; у каждой модели — путь `path`.
+`models list kind:audio --json` возвращает список `items` с `page`; у каждой модели — путь `path`.
 Скачанные файлы используются повторно. Первой остаётся `gigaam-v3`, а выбранную модель задаёт
 `config set --defaults transcribe_model <модель>`.
 
@@ -471,11 +471,11 @@ max personal contacts sync     # забыть, где остановились, 
 #### Свои имена и заметки о людях
 
 ```sh
-max personal contacts alias set "Борис Тестов" Боря          # своё имя для человека, только на этом компьютере
+max personal contacts aliases set "Борис Тестов" Боря          # своё имя для человека, только на этом компьютере
 ```
 
 ```sh
-max personal contacts alias rm "Борис Тестов"
+max personal contacts aliases remove "Борис Тестов"
 ```
 
 ```sh
@@ -992,7 +992,7 @@ max personal contacts unblock 20000002
 ```
 
 ```sh
-max personal contacts profile 20000002               # профиль, дата создания, его сообщения по общим чатам
+max personal contacts info 20000002               # профиль, дата создания, его сообщения по общим чатам
 ```
 
 ```sh
@@ -1208,11 +1208,11 @@ max personal chats update "Поход" --all-can-pin off       # поменят�
 ```
 
 ```sh
-max personal chats link show "Поход"                      # ссылка-приглашение, если вам её видно
+max personal chats links show "Поход"                      # ссылка-приглашение, если вам её видно
 ```
 
 ```sh
-max personal chats link reset "Поход"                     # новая ссылка; старая перестаёт работать
+max personal chats links reset "Поход"                     # новая ссылка; старая перестаёт работать
 ```
 
 ```sh
@@ -1220,7 +1220,7 @@ max personal chats requests list "Канал"                  # кто прос
 ```
 
 ```sh
-max personal chats requests accept "Канал" 20000002        # впустить; decline — отказать
+max personal chats requests confirm "Канал" 20000002        # впустить; decline — отказать
 ```
 
 ```sh
@@ -1552,7 +1552,7 @@ max config set --defaults permissions.contacts readonly
 
 ## Один человек
 
-`max personal contacts profile <человек>` показывает, что MAX и локальная копия знают о человеке.
+`max personal contacts info <человек>` показывает, что MAX и локальная копия знают о человеке.
 `max personal contacts check <человек>` оценивает, похож ли он на бота. `max personal contacts context <человек>` читает
 из копии его последние сообщения по чатам, а `max personal contacts link` связывает его аккаунт MAX с аккаунтом
 Telegram. Подробно — [люди](people.md).

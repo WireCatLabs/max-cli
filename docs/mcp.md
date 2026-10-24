@@ -47,24 +47,24 @@ ChatGPT и Claude **в браузере** подключаются через `m
 ## Подключение
 
 Сначала выполните `max personal setup --agent none` в локальном терминале. Это вход в ваш аккаунт MAX; через
-MCP вход не делается. `max personal mcp setup` затем отдельно подключает приложение. Агент может прочитать
+MCP вход не делается. `max personal mcp add` затем отдельно подключает приложение. Агент может прочитать
 `max skill show` ещё до входа: там объяснены оба шага.
 
 **Codex или Claude Code на этом компьютере:**
 
 ```sh
-max personal mcp doctor                 # проверяет запуск MCP и список инструментов
-max personal mcp setup codex           # добавляет сервер в Codex
-max personal mcp setup claude-code     # или в Claude Code
+max personal mcp check                 # проверяет запуск MCP и список инструментов
+max personal mcp add codex           # добавляет сервер в Codex
+max personal mcp add claude-code     # или в Claude Code
 ```
 
-Для другого профиля сначала ставьте его имя: `max work mcp setup codex`. Команда установки
+Для другого профиля сначала ставьте его имя: `max work mcp add codex`. Команда установки
 использует само приложение и не трогает другие его серверы. Если запись с тем же именем уже есть,
 удалите её в приложении перед повторной установкой. Если профиль предлагает инструменты записи,
 сначала проверьте его права, затем повторите команду с `--allow-writes`. Этот флаг только
 подтверждает установку: права профиля он не меняет.
 
-`mcp doctor` не читает сообщения и не входит в MAX. Успешная проверка значит, что MCP запускается и
+`mcp check` не читает сообщения и не входит в MAX. Успешная проверка значит, что MCP запускается и
 отдаёт список инструментов, но не значит, что сессия действительна. Число `potential_writes`
 показывает инструменты без пометки «только чтение». Для браузера и телефона нужно отдельное
 удалённое подключение ([подключение из браузера или телефона](remote.md)).
@@ -150,7 +150,7 @@ max work mcp config
 
 Запись в хранилище, управление сервером, скачивание моделей и создание отчёта тоже доступны через
 MCP и ограничиваются собственными ключами, например `store.backup`, `server.start`,
-`models.audio.download`, `doctor.report.create`. По умолчанию у них `ask`: терминал запрашивает
+`models.download`, `doctor.reports.create`. По умолчанию у них `ask`: терминал запрашивает
 подтверждение, MCP допускает запрошенное действие без формы. У бота сырой `bot api` доступен только
 при явном `permissions.bot.api: allow` или `ask`; по умолчанию он закрыт даже при `bot: allow`.
 
@@ -161,7 +161,15 @@ MCP и ограничиваются собственными ключами, н�
 | `setup`, `session` | вход и выход: их делает человек |
 | `upgrade`, `complete` | обновляют саму программу и автодополнение в терминале |
 | `serve`, `watch`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
-| `bot auth` | токен вводит человек |
+| `config set`, `config unset`, `skill install`, `flood clear`, `models keys set`, `models keys remove` | меняют, что смогут следующие запуски; иначе агент снял бы ограничение «только чтение» |
+| `recipients add`, `recipients remove`, `recipients clear`, `chats rules set`, `chats rules unset` | то же |
+| `replies add`, `replies on`, `replies off`, `replies edit`, `replies audience`, `replies pause`, `replies resume` | то же |
+| `replies consents grant`, `replies consents revoke`, `replies consents deny`, `replies consents allow` | то же |
+| `schedule command`, `schedule agent`, `schedule remove`, `server install`, `server uninstall` | то же |
+| `attachments jobs install`, `attachments jobs start`, `attachments jobs stop`, `attachments jobs uninstall` | то же |
+| `bot chats rules set`, `bot chats rules unset`, `bot recipients add`, `bot recipients remove`, `bot recipients clear` | то же, для бота |
+| `bot auth`, `bot api` | то же |
+| `bot uploads put` | читает файл с вашего компьютера |
 | `bot uploads put` | читает файл с вашего компьютера |
 
 ## Инструменты
@@ -225,9 +233,9 @@ MAX и не пишет файлы; нужен доступ `messages`. Всту�
 
 Готовый запрос `link-conversations` позволяет агенту связать ответы в разговоры. Сначала агент
 оценивает объём через `max_read` (`command: "conversations batches status"`) и ждёт вашего согласия
-для этого чата. Затем читает пачки через `max_read` (`command: "conversations batches next"`),
+для этого чата. Затем читает пачки через `max_read` (`command: "conversations batches show"`),
 сохраняет ответы через `max_write` (`command: "conversations links add"`) и перестраивает граф через
-`max_write` (`command: "conversations build"`). `max_write` (`command: "conversations links clear"`)
+`max_write` (`command: "conversations links rebuild"`). `max_write` (`command: "conversations links clear"`)
 удаляет ответы агента; после него граф тоже нужно перестроить. Запись требует права
 `conversations.links`. Если вы настроили внешний сервис для векторов поиска, MCP-поиск тоже
 отправляет ему текст вопроса.
@@ -235,7 +243,7 @@ MAX и не пишет файлы; нужен доступ `messages`. Всту�
 ## Файлы и сохранённые сообщения
 
 `max_read` (`command: "attachments list"`) показывает пути сохранённых файлов и состояние их текста;
-`max_write` (`command: "attachments text set"`) сохраняет текст, который агент прочитал из файла, для
+`max_write` (`command: "attachments update"`) сохраняет текст, который агент прочитал из файла, для
 поиска по `content:`. `max_write` (`command: "attachments extract"`) извлекает текст из сохранённых файлов сам,
 частями через `cursor`, и не возвращает текст в ответе. `max_read` с
 `command: "messages context"` и `arguments: { offline: true }` читает только локальную копию.

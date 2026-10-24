@@ -177,7 +177,7 @@ describe("max store", () => {
     expect((await max(["s-care", "store", "backup", backup, "--json"], environment)).code).toBe(0)
     expect(existsSync(backup)).toBe(true)
     expect((await max(["s-care", "store", "restore", backup, "--json"], environment)).code).toBe(0)
-    expect((await max(["s-care", "store", "reindex", "--json"], environment)).code).toBe(0)
+    expect((await max(["s-care", "store", "rebuild", "--json"], environment)).code).toBe(0)
     expect(sent(Opcode.LOGIN)).toHaveLength(logins)
   })
 
@@ -229,7 +229,7 @@ describe("max conversations", () => {
     const { environment, logins } = await fetched("c-build")
     const before = logins()
 
-    const built = await max(["c-build", "conversations", "build", "--chat", "111", "--json"], environment)
+    const built = await max(["c-build", "conversations", "links", "rebuild", "--chat", "111", "--json"], environment)
     const listed = await max(
       ["c-build", "conversations", "list", "111", "started_at>=2026-08-01", "--limit", "5", "--json"],
       environment,
@@ -311,7 +311,7 @@ describe("max conversations", () => {
   it("**catches up on built chats** a bounded number at a time, says how fresh each is, and finds related ones", async () => {
     const { environment } = await fetched("c-fresh")
 
-    const built = await max(["c-fresh", "conversations", "build", "--max-chats", "1", "--json"], environment)
+    const built = await max(["c-fresh", "conversations", "links", "rebuild", "--max-chats", "1", "--json"], environment)
     const status = await max(
       ["c-fresh", "conversations", "status", "--chat", "111", "--model", "e5-small", "--json"],
       environment,
@@ -330,7 +330,7 @@ describe("max conversations", () => {
   it("**hands a chat to the user's agent in batches**, stores its answer from stdin, and clears it", async () => {
     const { environment, logins } = await fetched("c-batch")
     const before = logins()
-    await max(["c-batch", "conversations", "build", "--chat", "111", "--json"], environment)
+    await max(["c-batch", "conversations", "links", "rebuild", "--chat", "111", "--json"], environment)
     const answer = JSON.stringify({ model: "m", answers: [{ message: second, parent: first, confidence: 0.9 }] })
 
     const status = await max(
@@ -338,7 +338,7 @@ describe("max conversations", () => {
       environment,
     )
     const next = await max(
-      ["c-batch", "conversations", "batches", "next", "--chat", "111", "--size", "10", "--json"],
+      ["c-batch", "conversations", "batches", "show", "--chat", "111", "--size", "10", "--json"],
       environment,
     )
     const stored = await max(
@@ -349,7 +349,7 @@ describe("max conversations", () => {
       },
     )
     const cleared = await max(
-      ["c-batch", "conversations", "links", "clear", "--chat", "111", "--model", "m", "--json"],
+      ["c-batch", "conversations", "links", "clear", "--chat", "111", "--answer-model", "m", "--json"],
       environment,
     )
 
@@ -357,11 +357,11 @@ describe("max conversations", () => {
     expect(JSON.parse(stored.stdout).item).toEqual({ chat: "111", stored: 1 })
     expect(JSON.parse(cleared.stdout).item).toMatchObject({ chat: "111", cleared: 1 })
     const embedded = await max(
-      ["c-batch", "conversations", "embed", "status", "--chat", "111", "--model", "e5-small", "--json"],
+      ["c-batch", "conversations", "embeddings", "status", "--chat", "111", "--model", "e5-small", "--json"],
       environment,
     )
     const dropped = await max(
-      ["c-batch", "conversations", "embed", "clear", "--chat", "111", "--model", "e5-small", "--json"],
+      ["c-batch", "conversations", "embeddings", "clear", "--chat", "111", "--model", "e5-small", "--json"],
       environment,
     )
     expect(JSON.parse(embedded.stdout).item).toMatchObject({ embedded: 0 })

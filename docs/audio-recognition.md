@@ -17,8 +17,8 @@
 
 | Задача | Команда |
 | --- | --- |
-| Посмотреть модели, их размер и что уже скачано | `max personal models audio list` |
-| Скачать модель | `max personal models audio download <модель>` |
+| Посмотреть модели, их размер и что уже скачано | `max personal models list kind:audio` |
+| Скачать модель | `max personal models download <модель>` |
 | Расшифровать одно голосовое | `max personal messages transcribe <чат> <сообщение>` |
 | Расшифровать голосовые в показанном списке | `--transcribe` у `messages list` и `inbox` |
 | Выбрать модель для всех следующих запусков | `max config set --defaults transcribe_model <модель>` |
@@ -26,13 +26,13 @@
 ## Быстрый запуск
 
 ```sh
-max personal models audio list --json
-max personal models audio download gigaam-v3
+max personal models list kind:audio --json
+max personal models download gigaam-v3
 max personal messages transcribe "Учебная группа" 204 --json
 ```
 
 `max` получает запись из MAX, закрывает соединение и только потом запускает модель.
-Модель не скачивается сама во время чтения чата: сначала выполните `models audio download`.
+Модель не скачивается сама во время чтения чата: сначала выполните `models download`.
 Скачанные файлы используются повторно; при установке их контрольная сумма проверяется.
 
 ## Как выбрать модель
@@ -43,11 +43,11 @@ max personal messages transcribe "Учебная группа" 204 --json
 | `gigaam-v3-ctc` | Другой вариант русской модели; текст и его оформление могут отличаться |
 | `parakeet-v3` | Речь на нескольких языках, в том числе испанском, английском и русском; занимает больше места и памяти |
 
-Точный размер и что уже скачано, показывает `models audio list`. Выбирайте модель, которая
+Точный размер и что уже скачано, показывает `models list kind:audio`. Выбирайте модель, которая
 знает язык записи. Для одного запуска:
 
 ```sh
-max personal models audio download parakeet-v3
+max personal models download parakeet-v3
 max personal messages transcribe "Учебная группа" 204 --model parakeet-v3 --json
 ```
 

@@ -1,17 +1,26 @@
 import { readFileSync } from "node:fs"
 import { type CommandInfo, describeProgram } from "@wirecat/cli-base/commands"
+import { changesAuthorityAt } from "@wirecat/cli-core/cli"
 import { toolsFromCommands } from "@wirecat/cli-core/mcp"
 import { expect, it } from "vitest"
 import { createProgram } from "./program.js"
 
 it("**pins the personal catalogue**: every command agents get from `max mcp`, before the profile's levels (NEED-1433)", async () => {
-  const tools = toolsFromCommands(describeProgram(createProgram()), { exclude: [["bot"]], offline: true })
+  const program = createProgram()
+  const tools = toolsFromCommands(describeProgram(program), {
+    exclude: [["bot"]],
+    offline: true,
+    levels: {},
+    authority: changesAuthorityAt(program),
+  })
   const catalogue = Object.fromEntries(tools.map((tool) => [tool.command, tool.writes ? "write" : "read"]))
   await expect(`${JSON.stringify(catalogue, null, 2)}\n`).toMatchFileSnapshot("../contracts/mcp-catalogue.json")
 })
 
 it("**docs/mcp.md names every command agents do not get**, and only those (CLI-82)", () => {
-  const tree = describeProgram(createProgram())
+  const program = createProgram()
+  const tree = describeProgram(program)
+  const authority = changesAuthorityAt(program)
   const runnable: string[] = []
   const walk = (info: CommandInfo) => {
     if (info.commands.length === 0 || info.effects !== undefined) runnable.push(info.path.join(" "))
@@ -20,8 +29,8 @@ it("**docs/mcp.md names every command agents do not get**, and only those (CLI-8
   tree.forEach(walk)
   const exposed = new Set(
     [
-      ...toolsFromCommands(tree, { exclude: [["bot"]], offline: true }),
-      ...toolsFromCommands(tree, { root: ["bot"], offline: true }),
+      ...toolsFromCommands(tree, { exclude: [["bot"]], offline: true, levels: {}, authority }),
+      ...toolsFromCommands(tree, { root: ["bot"], offline: true, levels: {}, authority }),
     ].map((tool) => tool.path.join(" ")),
   )
   const hidden = runnable.filter((path) => !exposed.has(path))

@@ -232,7 +232,7 @@ describe("transcribing a voice message", () => {
     const missing = { ...tiny, id: "absent" }
 
     await expect(transcribe(client, "1", "2", { ...options, model: missing })).rejects.toThrow(
-      /max models audio download absent/,
+      /max models download absent/,
     )
     expect(calls).toEqual([])
     expect(existsSync(join(options.directory, "absent"))).toBe(false)

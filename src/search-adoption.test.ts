@@ -156,7 +156,7 @@ describe("shared search adoption", () => {
     })
   })
   it("filters word-only conversations without loading a model", async () => {
-    expect((await invoke(["conversations", "build", "--chat", "7"])).code).toBe(0)
+    expect((await invoke(["conversations", "links", "rebuild", "--chat", "7"])).code).toBe(0)
     const result = await invoke([
       "search",
       "conversations",
@@ -195,7 +195,8 @@ describe("shared search adoption", () => {
   it("requires a chat for provider analysis before reading credentials", async () => {
     const result = await invoke([
       "conversations",
-      "build",
+      "links",
+      "rebuild",
       "--analyze",
       "--analysis-provider",
       "openai",
@@ -219,7 +220,7 @@ describe("shared search adoption", () => {
     const revoked = await invoke([
       "conversations",
       "consents",
-      "revoke",
+      "remove",
       "--chat",
       "7",
       "--consent-provider",
@@ -229,17 +230,7 @@ describe("shared search adoption", () => {
     expect(JSON.parse(revoked.stdout).item).toEqual({ revoked: true })
   })
   it("writes agent attachment text and searches its contents", async () => {
-    const result = await invoke([
-      "attachments",
-      "text",
-      "set",
-      "7",
-      "105",
-      "--attachment",
-      "1",
-      "--text-file",
-      textPath,
-    ])
+    const result = await invoke(["attachments", "update", "7", "105", "--attachment", "1", "--text-file", textPath])
     expect(result.code).toBe(0)
     const found = await invoke(["search", "messages", "content:agentfiletoken"])
     expect(JSON.parse(found.stdout).items).toMatchObject([{ ref: "msg:max/500/7/105", matched_in: "file" }])
@@ -254,7 +245,7 @@ describe("shared search adoption", () => {
   it("plans recorded gaps locally and validates preparation bounds before connecting", async () => {
     await db.sync.markRange(account, "19", 1, 3)
     await db.sync.markRange(account, "19", 7, 9)
-    const plan = await invoke(["store", "gaps", "plan", "19"])
+    const plan = await invoke(["store", "gaps", "show", "19"])
     expect(plan.code, plan.stderr).toBe(0)
     expect(JSON.parse(plan.stdout).item).toMatchObject({
       scope: "interior",
@@ -296,7 +287,9 @@ describe("shared search adoption", () => {
         writeFileSync(
           path,
           JSON.stringify({
-            profiles: { default: { permissions: { "conversations.links": level, "conversations.embed": "allow" } } },
+            profiles: {
+              default: { permissions: { "conversations.links": level, "conversations.embeddings": "allow" } },
+            },
           }),
         )
         for (const argv of [

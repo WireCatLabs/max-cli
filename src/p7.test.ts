@@ -78,7 +78,7 @@ describe("P7 permissions", () => {
     ["messages", "sync", "111"],
     ["contacts", "context", "synthetic-person"],
     ["contacts", "prepare", "synthetic-person"],
-    ["contacts", "timeline", "synthetic-person"],
+    ["contacts", "events", "synthetic-person"],
   ])("refuses message reads through %j before any MAX request", async (...args) => {
     save({ profiles: { work: { permissions: { messages: "deny" } } } })
     const { max, environment } = scripted()
@@ -251,7 +251,7 @@ describe("contacts context in named chats", () => {
       [
         profile,
         "contacts",
-        "timeline",
+        "events",
         "20000002",
         "--scope",
         "personal",

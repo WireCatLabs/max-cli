@@ -177,7 +177,7 @@ export const toGroupMember = (raw: Payload): GroupMember => {
 }
 
 /**
- * One `CONTACT_INFO` contact as `contacts profile` shows it. MAX tells when the account was made and
+ * One `CONTACT_INFO` contact as `contacts info` shows it. MAX tells when the account was made and
  * whether it has a photo; `options` naming `BOT` marks a bot (measured 2026-10-08, `pnpm probe:bot-link info`).
  */
 export const toProfileFacts = (raw: Payload, chats: ProfileFacts["chats"]): ProfileFacts => {

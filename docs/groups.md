@@ -28,11 +28,11 @@
 | Подвести итог недели: решения, обещания, открытые вопросы | `max personal review 'date>7d'` |
 | Вести список того, что ждёт вас | `max personal tasks list` |
 | Убирать спам по своим правилам | `max personal chats rules set`, `max personal chats moderate` |
-| Заменить утёкшую ссылку-приглашение | `max personal chats link reset` |
+| Заменить утёкшую ссылку-приглашение | `max personal chats links reset` |
 | Впустить людей или отказать им | `max personal chats requests list\|accept\|decline` |
 | Посмотреть активность за неделю | `max personal stats chats show` |
 | Сохранять список участников каждый день | `max personal chats members fetch --track` |
-| Найти участников, похожих на ботов или спамеров | `max personal chats members audit` |
+| Найти участников, похожих на ботов или спамеров | `max personal chats members check` |
 
 Полный список команд для групп — [ниже](#что-можно). Подробно о каждой —
 [группы и каналы в руководстве по использованию](usage.md#группы-и-каналы); каждая опция — в
@@ -110,7 +110,7 @@ max personal chats events "Поход" 'time>=7d' --json
 **Заменить ссылку:**
 
 ```sh
-max personal chats link reset "Поход" --json
+max personal chats links reset "Поход" --json
 ```
 
 **Ограничить добавление участников:**
@@ -207,8 +207,8 @@ max personal review 'chat:"Поход" date>7d' --json
 | `max personal chats moderate <чат>` | проверка по правилам; делает то, что правила разрешают |
 | `max personal chats members add\|remove`, `admins add\|remove` | участники и админы |
 | `max personal chats requests list <чат>` | заявки в канал с одобрением; видят админы, время заявки неизвестно |
-| `max personal chats requests accept\|decline <чат> <человек>` | принять или отклонить одну заявку; `--all` и `--link` не поддерживаются |
-| `max personal chats link show\|reset <чат>` | ссылка-приглашение; `reset` — новая, старая перестаёт работать |
+| `max personal chats requests confirm\|decline <чат> <человек>` | принять или отклонить одну заявку; `--all` и `--link` не поддерживаются |
+| `max personal chats links show\|reset <чат>` | ссылка-приглашение; `reset` — новая, старая перестаёт работать |
 | `max personal chats inspect <ссылка>` | куда ведёт приглашение или публичная ссылка; никуда не вступает |
 | `max personal chats create`, `max personal chats join <ссылка>`, `max personal chats leave <чат>` | создать группу, вступить по ссылке, выйти |
 | `max personal chats update` | настройки, название, описание, фото, кто может закреплять (`--all-can-pin`) и добавлять людей (`--only-admins-add`); прочитать настройки — `max personal chats show` |
@@ -311,7 +311,7 @@ max config set task_categories.travel "поездки и билеты | рейс
 ```
 
 Задача сохраняет категорию, даже когда её убрали из списка. `tasks categories` называет такие категории и
-сколько у них задач, `tasks list category:<имя>` их находит, а `tasks plan <задача> --category <имя>` переносит
+сколько у них задач, `tasks list category:<имя>` их находит, а `tasks update <задача> --category <имя>` переносит
 задачу в другую.
 
 Подробнее — на странице [Задачи](https://wirecat.dev/ru/docs/tasks).
@@ -418,7 +418,7 @@ moderate`. Он умеет то, чего не умеет личный акка�
 ## Ограничения
 
 - **Бана нет.** Удалённый человек может вернуться по ссылке-приглашению: личный аккаунт не умеет
-  банить. Замените ссылку (`max personal chats link reset`) или проверяйте группу ботом — он банит.
+  банить. Замените ссылку (`max personal chats links reset`) или проверяйте группу ботом — он банит.
 - **Заявки на вступление — только у канала с одобрением.** У закрытой группы одобрения нет: по
   ссылке входят сразу. В канале с одобрением `chats join` только отправляет заявку
   (`requested: true`). `chats requests list` не показывает, когда человек попросился: MAX этого не
@@ -492,7 +492,7 @@ max personal stats chats show "Поход" --since-time 7d --offline --json
 хотя отдельные профили и события уже сохранены.
 Профили и история остаются в локальной копии рядом с сообщениями.
 
-`max personal chats members audit` читает участников и показывает признаки подозрительных аккаунтов.
+`max personal chats members check` читает участников и показывает признаки подозрительных аккаунтов.
 `--max-pages` ограничивает страницы, а запрос вроде `score>=3` оставляет участников с оценкой не ниже трёх. Это подсказка для проверки человеком:
 никто не удаляется, админы и владелец исключены; `more` означает неполный список, `unknown` — неизвестные
 признаки. MAX не предоставляет все признаки Telegram. С `--offline` проверка недоступна.
@@ -529,7 +529,7 @@ max personal chats tracking show "Поход" --offline --json
 ```
 
 ```sh
-max personal chats members audit "Поход" --json
+max personal chats members check "Поход" --json
 ```
 
 Попросите агента указать число сообщений и активных отправителей, вопросы без ответа, изменения состава

@@ -212,16 +212,21 @@ const EXCLUDES = ["текстов сообщений", "названий чат�
  * steps (`NEED-267`).
  */
 const reportCommand = (): Command => {
-  const report = annotate(new Command("report"), { effects: REMOTE_READ }).description(
-    "what a problem report holds and where it goes; writes nothing",
+  const report = new Command("reports").description("problem reports")
+
+  annotate(report.command("show"), { effects: REMOTE_READ, examples: ["max doctor reports show"] })
+    .description("what a problem report holds and where it goes; writes nothing")
+    .action(async function (this: Command) {
+      const { renderer, format, streams, run } = forCommand(this)
+      await run("doctor reports show", async () => explain(this, { renderer, format, streams }))
+    })
+
+  destroysNothing(
+    annotate(report.command("create"), {
+      effects: LOCAL_WRITE,
+      examples: ["max personal doctor reports create --output ./problem-report.json"],
+    }),
   )
-
-  report.action(async function (this: Command) {
-    const { renderer, format, streams, run } = forCommand(this)
-    await run("doctor report", async () => explain(this, { renderer, format, streams }))
-  })
-
-  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE }))
     .description("write a problem report to a file, and print how to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
     .option("--output <file>", "where to write it; a new file in this directory if not given")
@@ -290,7 +295,7 @@ const reportCommand = (): Command => {
           ].join("\n"),
         )
       }
-      await (context ? context.run("doctor report create", create) : create())
+      await (context ? context.run("doctor reports create", create) : create())
     })
 
   return report
@@ -302,7 +307,7 @@ const explain = (command: Command, output: AnswerOutput): void => {
     renderAnswer(
       command,
       output,
-      itemOf({ send_to: REPORT_URL, includes: INCLUDES, excludes: EXCLUDES, create: "max doctor report create" }),
+      itemOf({ send_to: REPORT_URL, includes: INCLUDES, excludes: EXCLUDES, create: "max doctor reports create" }),
     )
     return
   }
@@ -316,8 +321,8 @@ const explain = (command: Command, output: AnswerOutput): void => {
       `В файле нет: ${EXCLUDES.join(", ")}.`,
       "Задачи на GitHub видны всем — и приложенный файл тоже.",
       "",
-      "Создать отчёт:             max doctor report create",
-      "Про определённый запуск:   max doctor report create --run <id>   (номера — max runs list)",
+      "Создать отчёт:             max doctor reports create",
+      "Про определённый запуск:   max doctor reports create --run <id>   (номера — max runs list)",
     ].join("\n"),
   )
 }

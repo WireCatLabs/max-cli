@@ -22,7 +22,7 @@
 | Найти неудачный запуск позже | `max personal runs list` | неудачный запуск сохраняется сам |
 | Сохранять каждый запуск | `max personal config set record true` | запись каждого запуска |
 | Проверить установку | `max personal doctor`, `max personal doctor --online` | ничего |
-| Составить отчёт о проблеме | `max personal doctor report create` | один файл, который вы отправляете |
+| Составить отчёт о проблеме | `max personal doctor reports create` | один файл, который вы отправляете |
 
 ## Показать: `--trace`
 
@@ -210,9 +210,12 @@ API, чей это токен, и печатает имя и id бота. Есл
 ## Отчёт о проблеме
 
 ```sh
-max personal doctor report create              # о последнем неудачном запуске
-max personal doctor report create --run <id>   # об этом запуске
+max personal doctor reports create              # о последнем неудачном запуске
+max personal doctor reports create --run <id>   # об этом запуске
 ```
+
+Если конфигурация не читается, сначала вызовите `max doctor --json`: он покажет ошибку настройки.
+Создание файла отчёта требует проверки прав на запись, поэтому неверную настройку нужно исправить до него.
 
 Команда пишет файл JSON — то, что показывает `max personal doctor`, и запуск — и печатает ссылку на новую
 задачу в [github.com/WireCatLabs/max-cli/issues](https://github.com/WireCatLabs/max-cli/issues). Прочитайте
@@ -261,7 +264,7 @@ max personal search runs status:partial --since-time 2026-10-01 --json
 неудачными ID, этапами и кодами. Текст сообщений и текст отказа сервера в неё не копируются.
 Запись сохраняется по умолчанию, если её явно не выключили. Поиск сам не создаёт новый запуск.
 
-В MCP вызовите `max_read` с `command: "runs search"`; поля `arguments`: `query`, `status`, `error_code`, `operation`, `since_time`, `limit`,
+В MCP вызовите `max_read` с `command: "search runs"`; поля `arguments`: `query`, `status`, `error_code`, `operation`, `since_time`, `limit`,
 `page`. Он читает только записи активного профиля, не подключается к MAX и не открывает сырые
 журналы фоновых заданий. Полный результат частичной команды называет неудачные элементы и коды их ошибок;
 диагностическая запись сохраняет только безопасные идентификаторы и коды.

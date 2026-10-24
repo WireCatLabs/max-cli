@@ -122,11 +122,11 @@ describe("joining and leaving", () => {
     })
     const listed = await runWith(["gr-requests", "chats", "requests", "list", "-70000000000001"], environment)
     const accepted = await runWith(
-      ["gr-requests", "chats", "requests", "accept", "-70000000000001", "10000003"],
+      ["gr-requests", "chats", "requests", "confirm", "-70000000000001", "10000003"],
       environment,
     )
     const declined = await runWith(
-      ["gr-requests", "chats", "requests", "decline", "-70000000000001", "10000003"],
+      ["gr-requests", "chats", "requests", "reject", "-70000000000001", "10000003"],
       environment,
     )
     const byLink = await runWith(
@@ -157,7 +157,7 @@ describe("joining and leaving", () => {
       environment,
     )
     const all = await Promise.all(
-      ["accept", "decline"].flatMap((verb) => [
+      ["confirm", "reject"].flatMap((verb) => [
         runWith(["gr-req-all", "chats", "requests", verb, "-70000000000001", "--all"], environment),
         runWith(
           ["gr-req-all", "chats", "requests", verb, "-70000000000001", "--all", "--link", "https://max.ru/join/x"],
@@ -462,7 +462,7 @@ describe("changing a group", () => {
 
   it("replaces the invite link", async () => {
     const { environment, sent } = messenger()
-    expect((await runWith(["gr-link", "chats", "link", "reset", "Team"], environment)).code).toBe(0)
+    expect((await runWith(["gr-link", "chats", "links", "reset", "Team"], environment)).code).toBe(0)
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([{ chatId: -70000000000001, revokePrivateLink: true }])
   })
 
@@ -533,12 +533,12 @@ describe("changing a group", () => {
   it("update and link reset return a chat, while link show keeps its result", async () => {
     const { environment, sent } = messenger()
     const profile = "gr-card-results"
-    const show = await runWith([profile, "chats", "link", "show", String(GROUP.id), "--json"], environment)
+    const show = await runWith([profile, "chats", "links", "show", String(GROUP.id), "--json"], environment)
     expect(JSON.parse(show.stdout).item).toEqual({ chat_id: String(GROUP.id), title: "Team", link: GROUP.link })
     expect(sent(Opcode.CHAT_UPDATE)).toEqual([])
     for (const args of [
       ["update", String(GROUP.id), "--title", "Crew"],
-      ["link", "reset", String(GROUP.id)],
+      ["links", "reset", String(GROUP.id)],
     ]) {
       const result = await runWith([profile, "chats", ...args, "--json"], environment)
       expect(result.code).toBe(0)
@@ -559,7 +559,7 @@ describe("changing a group", () => {
     ["members", "remove", String(GROUP.id), "20000002"],
     ["admins", "add", String(GROUP.id), "20000002", "--can", "pin"],
     ["admins", "remove", String(GROUP.id), "20000002"],
-    ["link", "reset", String(GROUP.id)],
+    ["links", "reset", String(GROUP.id)],
   ]
   it.each(writes.map((args, index) => ({ args, index })))(
     "read-only write $index sends nothing past the login",
@@ -962,8 +962,8 @@ describe("changing a group", () => {
   it("shows the invite link, and says so when there is none to see", async () => {
     const { environment } = messenger()
 
-    const shown = await runWith(["gr-link", "chats", "link", "show", "Team", "--json"], environment)
-    const none = await runWith(["gr-link", "chats", "link", "show", "Strangers", "--json"], environment)
+    const shown = await runWith(["gr-link", "chats", "links", "show", "Team", "--json"], environment)
+    const none = await runWith(["gr-link", "chats", "links", "show", "Strangers", "--json"], environment)
 
     expect(JSON.parse(shown.stdout).item).toEqual({
       chat_id: String(GROUP.id),

@@ -96,11 +96,11 @@ max personal review 'date>3d' --transcribe
 - **ChatGPT или Claude в браузере** — через HTTPS-туннель и вход по коду.
 
 ```sh
-max personal mcp setup claude-code  # или codex
+max personal mcp add claude-code  # или codex
 max personal mcp config             # запись для Claude Desktop, Cursor и других
 ```
 
-Профиль по умолчанию может отправлять, поэтому `mcp setup` сначала останавливается. Проверьте права
+Профиль по умолчанию может отправлять, поэтому `mcp add` сначала останавливается. Проверьте права
 профиля и повторите команду с `--allow-writes`.
 
 С `--json` каждая команда отдаёт только данные, а ошибка приходит отдельно, с постоянным кодом
@@ -252,7 +252,7 @@ max skill install --for all     # или --for claude, --for agents
 доступен ресурсом `max://skill`.
 
 ```sh
-max personal mcp doctor                                       # проверить локальный MCP
+max personal mcp check                                       # проверить локальный MCP
 max personal mcp --http --public-url https://<имя>.ts.net     # для ChatGPT и Claude в браузере
 max personal mcp --permission messages.send=deny              # запретить отправку этому серверу
 ```

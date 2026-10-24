@@ -28,16 +28,6 @@ export const UNTESTED: Untested[] = [
       "--template-mode",
       "cli-core src/cli/messenger/replies-edit-command.test.ts covers the legacy template mode; max mounts the shared command and src/replies.test.ts drives replies edit",
     ],
-    [
-      "conversations build",
-      "--provider",
-      "earlier name of --analysis-provider, kept as an alias; cli-core src/cli/option-meanings.test.ts covers the alias, and src/search-adoption.test.ts drives the new name",
-    ],
-    [
-      "conversations consents revoke",
-      "--provider",
-      "earlier name of --consent-provider, kept as an alias; cli-core src/cli/option-meanings.test.ts covers the alias, and src/search-adoption.test.ts drives the new name",
-    ],
   ].map(([command, option, reason]) => ({ command: command as string, option, reason: reason as string })),
   ...["--public-url", "--port"].map((option) => ({
     command: "bot watch",
@@ -88,15 +78,13 @@ export const UNTESTED: Untested[] = [
   })),
 
   ...[
-    ["contacts alias set"],
-    ["contacts alias rm"],
+    ["contacts aliases set"],
+    ["contacts aliases remove"],
     ["contacts notes list"],
     ["contacts notes show"],
     ["contacts notes add"],
-    ["contacts notes add", "--file"],
     ["contacts notes add", "--text-file"],
     ["contacts notes edit"],
-    ["contacts notes edit", "--file"],
     ["contacts notes edit", "--text-file"],
     ["contacts notes edit", "--revision"],
     ["contacts notes remove"],
@@ -107,11 +95,11 @@ export const UNTESTED: Untested[] = [
       "cli-core src/services/private-people.test.ts («offers offline CLI CRUD…», «guards stale edits…») covers the shared private alias and notes commands this consumer mounts (cli-core 0.174.0)",
   })),
   ...[
-    ["metadata get"],
-    ["metadata get", "--chat"],
-    ["metadata refresh"],
-    ["metadata refresh", "--chat"],
-    ["metadata refresh", "--limit"],
+    ["metadata show"],
+    ["metadata show", "--chat"],
+    ["metadata sync"],
+    ["metadata sync", "--chat"],
+    ["metadata sync", "--limit"],
   ].map(([command, option]) => ({
     command: command as string,
     ...(option ? { option } : {}),
@@ -499,13 +487,13 @@ export const UNTESTED: Untested[] = [
       "shared chat statistics; cli-core src/cli/messenger/messenger.test.ts drives the command offline and online, src/services/chat-stats.test.ts covers every count, day and week series and incomplete stores on a synthetic store; max's own part, channel post views, is src/domain/map.test.ts",
   })),
   ...["", "--max-pages", "--deep"].map((option) => ({
-    command: "chats members audit",
+    command: "chats members check",
     ...(option ? { option } : {}),
     reason:
       "shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members",
   })),
   ...["conversations status", "conversations related"].flatMap((command) =>
-    ["--provider", "--embedding-provider", "--base-url", "--dims"].map((option) => ({
+    ["--embedding-provider", "--base-url", "--dims"].map((option) => ({
       command,
       option,
       reason:
@@ -544,13 +532,13 @@ export const UNTESTED: Untested[] = [
       "serves MCP over stdio until the client closes; it is cli-core's mcpCommand, tested there with a fake messenger",
   },
   ...["--allow-writes", "--permission"].map((option) => ({
-    command: "mcp setup",
+    command: "mcp add",
     option,
     reason:
       "changes the installed Codex or Claude Code configuration; cli-base's src/mcp/index.test.ts covers setup and its probe, and isolated CLI setup was checked with Codex",
   })),
   {
-    command: "mcp doctor",
+    command: "mcp check",
     reason:
       "starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
   },
@@ -572,12 +560,6 @@ export const UNTESTED: Untested[] = [
   {
     command: "search conversations",
     option: "--model",
-    reason:
-      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
-  },
-  {
-    command: "search conversations",
-    option: "--provider",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
   },
@@ -636,12 +618,6 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "conversations embed",
-    option: "--provider",
-    reason:
-      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
-  },
-  {
-    command: "conversations embed",
     option: "--base-url",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
@@ -665,49 +641,37 @@ export const UNTESTED: Untested[] = [
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
   },
   {
-    command: "conversations embed status",
-    option: "--provider",
-    reason:
-      "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
-  },
-  {
-    command: "conversations embed status",
+    command: "conversations embeddings status",
     option: "--embedding-provider",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
   {
-    command: "conversations embed status",
+    command: "conversations embeddings status",
     option: "--base-url",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
   {
-    command: "conversations embed status",
+    command: "conversations embeddings status",
     option: "--dims",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
   {
-    command: "conversations embed clear",
-    option: "--provider",
-    reason:
-      "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
-  },
-  {
-    command: "conversations embed clear",
+    command: "conversations embeddings clear",
     option: "--embedding-provider",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
   {
-    command: "conversations embed clear",
+    command: "conversations embeddings clear",
     option: "--base-url",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
   {
-    command: "conversations embed clear",
+    command: "conversations embeddings clear",
     option: "--dims",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
@@ -737,18 +701,18 @@ export const UNTESTED: Untested[] = [
     reason: "lists picture models from cli-core's images command; its image tests (WireCatLabs/cli-core#1102) cover it",
   },
   {
-    command: "models text download",
+    command: "models download",
     option: "--accept-terms",
     reason:
       "downloads a model over the network after the licence is accepted; cli-core's src/cli/messenger/models-command.test.ts drives it offline",
   },
   {
-    command: "models text key set",
+    command: "models keys set",
     reason:
       "writes a provider key into the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring",
   },
   {
-    command: "models text key remove",
+    command: "models keys remove",
     reason:
       "removes a provider key from the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring",
   },
@@ -759,37 +723,31 @@ export const UNTESTED: Untested[] = [
       "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
   },
   {
-    command: "tags auto",
+    command: "tags rebuild",
     option: "--chat",
     reason:
       "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
   },
   {
-    command: "tags auto",
+    command: "tags rebuild",
     option: "--limit",
     reason:
       "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
   },
   {
-    command: "tags auto",
+    command: "tags rebuild",
     option: "--sync-first",
     reason:
       "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
   },
   {
-    command: "tags auto",
+    command: "tags rebuild",
     option: "--dry-run",
     reason:
       "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
   },
   {
-    command: "tags remove",
-    option: "--source",
-    reason:
-      "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
-  },
-  {
-    command: "tags auto",
+    command: "tags rebuild",
     reason:
       "cli-core src/services/private-people.test.ts covers scoped notes search/exposure, offline note CRUD with file/revision, tag provenance filters, bounded metadata auto tagging, dry-run and retained metadata after failed refresh; this consumer mounts the shared handlers",
   },
@@ -797,9 +755,9 @@ export const UNTESTED: Untested[] = [
     ["tasks add", "--title"],
     ["tasks add", "--due"],
     ["tasks add", "--remind-time"],
-    ["tasks plan"],
-    ["tasks plan", "--due"],
-    ["tasks plan", "--remind-time"],
+    ["tasks update"],
+    ["tasks update", "--due"],
+    ["tasks update", "--remind-time"],
     ["tasks link"],
     ["tasks link", "--chat"],
     ["tasks link", "--kind"],
@@ -816,8 +774,8 @@ export const UNTESTED: Untested[] = [
   })),
   ...[
     ["tasks add", "--description"],
-    ["tasks plan", "--title"],
-    ["tasks plan", "--description"],
+    ["tasks update", "--title"],
+    ["tasks update", "--description"],
     ["tasks agenda", "--unanswered"],
   ].map(([command, option]) => ({
     command: command as string,
@@ -899,7 +857,7 @@ export const UNTESTED: Untested[] = [
       "cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0)",
   })),
   ...[
-    ["contacts timeline", "--cursor"],
+    ["contacts events", "--cursor"],
     ["messages list", "--cursor"],
   ].map(([command, option]) => ({
     command: command as string,

@@ -67,7 +67,7 @@ describe("reply editors and model templates", () => {
       "--contacts-only",
       "--template",
       "Hi {{ sender.name }}",
-      "--model",
+      "--template-mode",
       "fill-only",
       "--no-as-reply",
       "--per-chat",

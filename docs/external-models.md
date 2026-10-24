@@ -22,7 +22,7 @@
 | Задача | Настройка | Как запускается |
 | --- | --- | --- |
 | OCR изображений и сканов PDF | `models.ocr` | `attachments extract --ocr`; нужна модель с поддержкой изображений |
-| Анализ связей разговоров в сохранённых сообщениях | `models.analysis` | `conversations build --analyze`; согласие относится к конкретному чату и провайдеру |
+| Анализ связей разговоров в сохранённых сообщениях | `models.analysis` | `conversations links rebuild --analyze`; согласие относится к конкретному чату и провайдеру |
 | AI-блок в шаблоне ответа | `models.replies` | Правило с блоком `{% ai %}` и отдельным согласием для ответов; см. [правила ответов](replies.md) |
 | Общие значения для этих задач | `models.default` | Используются для полей, которые не заданы у конкретного назначения |
 
@@ -38,7 +38,7 @@
 интерактивный ввод, затем настройте назначение:
 
 ```sh
-max personal models text key set openai
+max personal models keys set openai
 max personal config set models.ocr.provider openai
 max personal config set models.ocr.model gpt-4o-mini
 max config show
@@ -64,7 +64,7 @@ max personal attachments extract --chat "Учебная группа" --ocr --co
 вашего значения, а не готовое имя модели.
 
 ```sh
-max personal models text key set anthropic
+max personal models keys set anthropic
 max personal config set models.ocr.provider anthropic
 max personal config set models.ocr.model your-vision-model
 max personal config unset models.ocr.base_url
@@ -83,7 +83,7 @@ OpenAI-совместимый endpoint использует адаптер `open
 max personal config set models.ocr.provider openai
 max personal config set models.ocr.model your-vision-model
 max personal config set models.ocr.base_url https://gateway.example.org/v1
-max personal models text key set gateway.example.org
+max personal models keys set gateway.example.org
 ```
 
 Для нестандартного endpoint имя ключа — его host, включая порт, если он указан в URL.

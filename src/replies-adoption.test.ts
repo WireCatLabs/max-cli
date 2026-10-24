@@ -44,7 +44,7 @@ describe("shared reply editor adoption", () => {
       "--contacts-only",
       "--template",
       "Thanks {firstName}",
-      "--model",
+      "--template-mode",
       "fill-only",
       "--no-as-reply",
       "--per-chat",

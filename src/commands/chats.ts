@@ -29,7 +29,7 @@ export const chatsCommand = (): Command => {
   command.addCommand(sharedSubcommand(shared, "tracking"))
   command.addCommand(sharedSubcommand(shared, "admins"))
   command.addCommand(sharedSubcommand(shared, "update"))
-  command.addCommand(sharedSubcommand(shared, "link"))
+  command.addCommand(sharedSubcommand(shared, "links"))
   const requests = sharedSubcommand(shared, "requests").description("requests to join a MAX channel needing approval")
   sharedSubcommand(requests, "list").description(
     "pending requests to join a MAX channel needing approval; admins only; requestedAt is null",

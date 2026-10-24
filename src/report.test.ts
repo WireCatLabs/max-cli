@@ -25,22 +25,22 @@ const runWith = async (argv: string[]) => {
 
 const output = (name: string) => join(process.env.TMPDIR ?? "", name)
 
-describe("max doctor report", () => {
+describe("max doctor reports show", () => {
   it("says what a report holds and where it goes, and writes nothing", async () => {
-    const { code, stdout } = await runWith(["doctor", "report", "--json"])
+    const { code, stdout } = await runWith(["doctor", "reports", "show", "--json"])
 
     expect(code).toBe(0)
     const { item } = JSON.parse(stdout)
     expect(item).toMatchObject({
       send_to: "https://github.com/WireCatLabs/max-cli/issues/new",
-      create: "max doctor report create",
+      create: "max doctor reports create",
     })
     expect(item.excludes).toContain("токена")
   })
 
   it("with no failed run yet, still writes the report and says how to get one", async () => {
     const file = output("empty.json")
-    const { code, stdout, stderr } = await runWith(["doctor", "report", "create", "--output", file, "--json"])
+    const { code, stdout, stderr } = await runWith(["doctor", "reports", "create", "--output", file, "--json"])
 
     expect(code).toBe(0)
     expect(JSON.parse(stdout).item).toMatchObject({ path: file, run: null })
@@ -51,7 +51,7 @@ describe("max doctor report", () => {
     await runWith(["r-failed", "chats", "list"])
     const file = output("report.json")
 
-    const { code, stdout } = await runWith(["doctor", "report", "create", "--output", file, "--json"])
+    const { code, stdout } = await runWith(["doctor", "reports", "create", "--output", file, "--json"])
     const answer = JSON.parse(stdout).item
     const report = JSON.parse(readFileSync(file, "utf8")) as Report
 
@@ -70,7 +70,7 @@ describe("max doctor report", () => {
   })
 
   it("refuses a run that does not exist", async () => {
-    const { code } = await runWith(["doctor", "report", "create", "--run", "nope", "--output", output("x.json")])
+    const { code } = await runWith(["doctor", "reports", "create", "--run", "nope", "--output", output("x.json")])
     expect(code).toBe(6)
   })
 })

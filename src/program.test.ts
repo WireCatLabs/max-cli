@@ -904,7 +904,7 @@ describe("the program", () => {
       expect(missing.stdout).toBe("")
     })
 
-    it("`contacts profile` adds when MAX says they registered, their photo, and their stored activity per chat", async () => {
+    it("`contacts info` adds when MAX says they registered, their photo, and their stored activity per chat", async () => {
       const { max, environment } = acquaintedMax({
         [Opcode.CONTACT_INFO]: {
           contacts: [
@@ -921,7 +921,7 @@ describe("the program", () => {
         },
         [Opcode.CONTACT_PRESENCE]: { presence: { "10000002": { seen: 1789776000 } }, time: 1789776100 },
       })
-      const shown = await runWith(["t-profile", "contacts", "profile", "@someone", "--json"], environment)
+      const shown = await runWith(["t-profile", "contacts", "info", "@someone", "--json"], environment)
 
       expect(max.unexpected).toEqual([])
       expect(shown.code).toBe(0)
@@ -944,10 +944,7 @@ describe("the program", () => {
       expect(profile.chats[0]).toHaveProperty("their_messages")
       expect(profile.aliases).toEqual([])
       expect(profile.phone).toBe("***0123")
-      const whole = await runWith(
-        ["t-profile", "contacts", "profile", "@someone", "--show-phone", "--json"],
-        environment,
-      )
+      const whole = await runWith(["t-profile", "contacts", "info", "@someone", "--show-phone", "--json"], environment)
       expect(JSON.parse(whole.stdout).item.phone).toBe("0123")
     })
 
