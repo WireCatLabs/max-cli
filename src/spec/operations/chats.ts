@@ -267,7 +267,8 @@ export const chatsUpdateMembers = defineOperation({
   auth: true,
   request: v.strictObject({
     chatId: id(),
-    userIds: v.pipe(v.array(id()), v.minLength(1)),
+    /** Absent only with `JOIN_REQUEST`: then it answers every pending request (web.max.ru "accept all"). */
+    userIds: v.optional(v.pipe(v.array(id()), v.minLength(1))),
     operation: v.picklist(["add", "remove"]),
     /** Absent means an ordinary member; `JOIN_REQUEST` answers who asked to join (web.max.ru, `remove` measured 2026-10-08). */
     type: v.optional(v.picklist(["ADMIN", "JOIN_REQUEST"])),
@@ -282,7 +283,8 @@ export const chatsUpdateMembers = defineOperation({
     const actions = MEMBER_ACTIONS[String(request.type ?? "MEMBER")]
     const action =
       request.operation === "add" ? actions?.[0] : request.operation === "remove" ? actions?.[1] : undefined
-    if (!action) return ambiguous("chats.updateMembers")
+    if (!action || (request.userIds === undefined && request.type !== "JOIN_REQUEST"))
+      return ambiguous("chats.updateMembers")
     return {
       chatId: chatOf(request),
       kind: "chat",
@@ -296,6 +298,8 @@ export const chatsUpdateMembers = defineOperation({
     sources: [
       "measured against MAX 2026-09-24 with a second person who agreed (`pnpm probe:members`): add, make admin, take admin back, remove",
       "PyMax invite_users_to_group, remove_users_from_group, add_admin, confirm_join_request, decline_join_request",
+      "answering every request: web.max.ru `_app/immutable/chunks/CLv-WKyI.js` (read 2026-10-23), called from the " +
+        "`acceptAll` modal in `nodes/0.CgXx80Qx.js` — 77 with no `userIds`, `showHistory: true` to accept; re-read 2026-10-24, not measured",
     ],
     notes:
       "Taking admin rights back is `type: ADMIN, operation: remove` — in no source, measured. `JOIN_REQUEST` answers a request to join a channel; a private group takes none (`FIND-249`). max-api-docs calls 77 pin/archive/mute; measured otherwise. " +

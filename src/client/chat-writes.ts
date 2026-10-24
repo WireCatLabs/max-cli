@@ -65,6 +65,17 @@ export const createChatWrites = (deps: Dependencies) => {
         })
         return { already: false }
       }),
+    answerAllJoinRequests: (chatId: Id, accept: boolean, link?: string): Promise<void> => {
+      if (link !== undefined) throw new CliError("validation_error", "MAX does not say which link a request came by")
+      return deps.changeChat(async () => {
+        await deps.wire.chats.updateMembers({
+          chatId,
+          ...(accept ? { showHistory: true } : {}),
+          operation: accept ? "add" : "remove",
+          type: "JOIN_REQUEST",
+        })
+      })
+    },
     join: (link: string): Promise<GroupCard | { requested: true }> => {
       const wire = wireLink(link)
       return deps.changeChat(async () => {
@@ -267,6 +278,7 @@ export const createChatWrites = (deps: Dependencies) => {
   }
   return {
     answerJoinRequest: resource.answerJoinRequest,
+    answerAllJoinRequests: resource.answerAllJoinRequests,
     join: resource.join,
     markRead: resource.markRead,
     leave: resource.leave,

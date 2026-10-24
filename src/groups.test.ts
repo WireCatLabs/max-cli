@@ -3,6 +3,7 @@ import { rememberAccount } from "@wirecat/cli-core/cli"
 import { RecipientList, SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "./app.js"
+import { MaxClient } from "./client.js"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -150,22 +151,12 @@ describe("joining and leaving", () => {
     expect(journalOf("gr-requests").map((one) => one.action)).toEqual(["requests.accept", "requests.decline"])
   })
 
-  it("searches requests by name, and refuses answering them all, which MAX has no call for", async () => {
+  it("searches requests by name", async () => {
     const { environment, sent } = messenger({ [Opcode.CHAT_MEMBERS]: { members: [] } })
     const searched = await runWith(
       ["gr-req-search", "chats", "requests", "list", "-70000000000001", "--limit", "5", "--page", "1", "name:Ask"],
       environment,
     )
-    const all = await Promise.all(
-      ["confirm", "reject"].flatMap((verb) => [
-        runWith(["gr-req-all", "chats", "requests", verb, "-70000000000001", "--all"], environment),
-        runWith(
-          ["gr-req-all", "chats", "requests", verb, "-70000000000001", "--all", "--link", "https://max.ru/join/x"],
-          environment,
-        ),
-      ]),
-    )
-
     expect(searched.code).toBe(0)
     expect(sent(Opcode.CHAT_MEMBERS)).toContainEqual({
       chatId: -70000000000001,
@@ -173,7 +164,97 @@ describe("joining and leaving", () => {
       count: expect.any(Number),
       query: "Ask",
     })
-    expect(all.map((one) => one.code === 0)).toEqual([false, false, false, false])
+  })
+
+  it.each(["confirm", "reject"])("%s answers every pending request with one 77 and no userIds", async (verb) => {
+    const asker = (id: number) => ({ contact: { id, names: [{ name: "Asker", type: "ONEME" }] } })
+    const { environment, sent } = messenger({
+      [Opcode.CHAT_MEMBERS]: { members: [asker(10000003), asker(10000004)] },
+    })
+    const result = await runWith(
+      [`gr-all-${verb}`, "chats", "requests", verb, "-70000000000001", "--all", "--json"],
+      environment,
+    )
+    expect(result.code, result.stderr).toBe(0)
+    expect(JSON.parse(result.stdout).item).toMatchObject({ accepted: verb === "confirm", counted: 2 })
+    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([
+      {
+        chatId: -70000000000001,
+        ...(verb === "confirm" ? { showHistory: true } : {}),
+        operation: verb === "confirm" ? "add" : "remove",
+        type: "JOIN_REQUEST",
+      },
+    ])
+    expect(journalOf(`gr-all-${verb}`)).toMatchObject([
+      {
+        action: verb === "confirm" ? "requests.accept" : "requests.decline",
+        count: 2,
+        outcome: "sent",
+      },
+    ])
+  })
+
+  it.each(["confirm", "reject"])("%s refuses --link before connecting", async (verb) => {
+    const { environment, max } = messenger()
+    const result = await runWith(
+      ["gr-link", "chats", "requests", verb, "-70000000000001", "--all", "--link", "https://max.ru/join/x", "--json"],
+      environment,
+    )
+    expect(result.code).toBe(2)
+    expect(max.sent).toEqual([])
+  })
+
+  it("refuses a link on the direct client before connecting", async () => {
+    const { max } = messenger()
+    const client = new MaxClient({
+      store: new SessionStore({ profile: "gr-sdk-link", keyring: memoryKeyring() }),
+      connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+    })
+    try {
+      expect(() => client.chats.answerAllJoinRequests("-70000000000001", true, "https://max.ru/join/x")).toThrow(
+        "which link",
+      )
+      expect(max.sent).toEqual([])
+    } finally {
+      await client.close()
+    }
+  })
+
+  it.each(["confirm", "reject"])("%s honours deny before opening MAX", async (verb) => {
+    const { environment, max } = messenger()
+    const profile = `gr-deny-${verb}`
+    expect(
+      (await runWith([profile, "config", "set", `permissions.chats.requests.${verb}`, "deny", "--json"])).code,
+    ).toBe(0)
+    const result = await runWith(
+      [profile, "chats", "requests", verb, "-70000000000001", "--all", "--json"],
+      environment,
+    )
+    expect(result.code).toBe(5)
+    expect(max.sent).toEqual([])
+  })
+
+  it("counts every request against the hourly limit before a bulk write", async () => {
+    const { environment, sent } = messenger({
+      [Opcode.CHAT_MEMBERS]: { members: [10000003, 10000004].map((id) => ({ contact: { id } })) },
+    })
+    expect((await runWith(["gr-all-limit", "config", "set", "sends_per_hour", "1", "--json"])).code).toBe(0)
+    const result = await runWith(
+      ["gr-all-limit", "chats", "requests", "confirm", "-70000000000001", "--all", "--json"],
+      environment,
+    )
+    expect(result.code).toBe(8)
+    expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([])
+  })
+
+  it("does not send a bulk write when there are no pending requests", async () => {
+    const { environment, sent } = messenger({ [Opcode.CHAT_MEMBERS]: { members: [] } })
+    const result = await runWith(
+      ["gr-all-empty", "chats", "requests", "reject", "-70000000000001", "--all", "--json"],
+      environment,
+    )
+    expect(result.code, result.stderr).toBe(0)
+    expect(JSON.parse(result.stdout).item).toMatchObject({ counted: 0, accepted: false })
     expect(sent(Opcode.CHAT_MEMBERS_UPDATE)).toEqual([])
   })
 
