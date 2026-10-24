@@ -4734,10 +4734,14 @@ the chats this profile may send to, when the list is on
 the chats on the list; empty and off until the first add
 
 ```sh
-max recipients list
+max recipients list [query]
 ```
 
-**Returns:** the chats on the list; empty and off until the first add
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** recipient — id, title, added_at, partner_id; every field: max commands info recipients list
 
 **Example:** `max personal recipients list`
 
@@ -5985,19 +5989,20 @@ max bot chats members remove <chat> <person> [options]
 members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page gave
 
 ```sh
-max bot chats members list <chat> [options]
+max bot chats members list <chat> [query] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный |  |
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many, up to 100. |
 | `--cursor <cursor>` | continue from here. |
 
-**Returns:** members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page…
+**Returns:** max bot member — user_id, first_name, last_name, username, is_owner, is_admin; every field: max commands info bot chats members list
 
 **Example:** `max personal bot chats members list Team`
 
@@ -6667,18 +6672,19 @@ comments under a channel post — each command takes the post's message id (mid.
 the comments under a post, newest last
 
 ```sh
-max bot comments list <message> [options]
+max bot comments list <message> [query] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `message` | обязательный |  |
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many, up to 100. |
 
-**Returns:** the comments under a post, newest last
+**Returns:** max bot comment — id, text, timestamp, body; every field: max commands info bot comments list
 
 **Example:** `max personal bot comments list 1234`
 

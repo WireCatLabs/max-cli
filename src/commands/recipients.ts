@@ -8,10 +8,12 @@ import {
   listOf,
   renderAnswer,
   snakeKeys,
+  withQuery,
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
 import { recipientListFor } from "../sends.js"
 import { forCommand } from "./context.js"
+import { RECIPIENTS_QUERY, recipientFilter } from "./list-queries.js"
 
 /**
  * The chats this profile may send to. Off until the first `add`; `off` turns it off again.
@@ -22,17 +24,19 @@ import { forCommand } from "./context.js"
 export const recipientsCommand = (): Command => {
   const command = new Command("recipients").description("the chats this profile may send to, when the list is on")
 
-  annotate(command.command("list"), { effects: LOCAL_READ })
+  withQuery(annotate(command.command("list"), { effects: LOCAL_READ }), RECIPIENTS_QUERY)
     .description("the chats on the list; empty and off until the first add")
-    .action(async function (this: Command) {
+    .action(async function (this: Command, words: string[]) {
+      const filter = recipientFilter(words)
       const context = forCommand(this)
       const { settings, renderer, run } = context
       await run("recipients list", async () => {
-        const chats = recipientListFor(settings.profile).read()
-        const items = (chats ?? []).map(snakeKeys)
+        const list = recipientListFor(settings.profile).list(filter)
+        const items = list.items.map(snakeKeys)
         renderAnswer(this, context, listOf("recipients list", { items, limit: items.length, has_more: false }))
-        if (!chats) renderer.note("the recipient list is off — this profile may send to any chat")
-        else if (chats.length === 0) renderer.note("the recipient list is on and empty — this profile may send nowhere")
+        if (list.state === "off") renderer.note("the recipient list is off — this profile may send to any chat")
+        else if (list.state === "empty")
+          renderer.note("the recipient list is on and empty — this profile may send nowhere")
       })
     })
 

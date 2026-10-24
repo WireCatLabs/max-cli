@@ -1,11 +1,21 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { itemOf, listOf, ownerOnlyOption, REMOTE_READ, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
+import {
+  answerEntity,
+  itemOf,
+  listOf,
+  ownerOnlyOption,
+  REMOTE_READ,
+  REMOTE_WRITE,
+  renderAnswer,
+  withQuery,
+} from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
 import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { checked } from "./bot-members.js"
 import { guardedCall, operation, textOf } from "./bot-sends.js"
+import { botComment, COMMENTS_QUERY, commentId } from "./list-queries.js"
 import { wholeNumber } from "./paging.js"
 
 const format = () => new Option("--format <format>", "how the text is marked up").choices(["markdown", "html"])
@@ -18,18 +28,28 @@ export const commentsCommand = (): Command => {
     "comments under a channel post — each command takes the post's message id (mid.…) first",
   )
 
-  annotate(command.command("list <message>"), { effects: REMOTE_READ, offline: false })
+  answerEntity(
+    withQuery(annotate(command.command("list <message>"), { effects: REMOTE_READ, offline: false }), COMMENTS_QUERY),
+    "max_bot_comment",
+    botComment,
+  )
     .description("the comments under a post, newest last")
     .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
-    .action(async function (this: Command, message: string) {
+    .action(async function (this: Command, message: string, words: string[]) {
+      const selected = commentId(words)
       const context = botContext(this)
       const limit = context.settings.limit
       if (limit > 100) throw new CliError("validation_error", "MAX gives at most 100 at a time — --limit 100")
       const answer = await context.authenticated().call(operation("getComments"), {
         path: { messageId: message },
-        query: { count: String(limit) },
+        query: { count: String(limit), ...(selected === undefined ? {} : { comment_ids: selected }) },
       })
-      const items = (plainJson(answer) as { messages?: unknown[] } | null)?.messages ?? []
+      const rows = (plainJson(answer) as { messages?: Record<string, unknown>[] } | null)?.messages ?? []
+      const items = rows.map((row) => {
+        const body = row.body as { mid?: unknown } | undefined
+        const id = row.id ?? body?.mid
+        return { ...row, ...(id === undefined ? {} : { id: String(id) }) }
+      })
       renderAnswer(this, context, listOf("bot comments list", { items, limit, has_more: false }))
     })
 

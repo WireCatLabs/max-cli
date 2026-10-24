@@ -1,12 +1,22 @@
 import { CliError } from "@wirecat/cli-base"
 import { annotate } from "@wirecat/cli-base/commands"
-import { itemOf, listOf, REMOTE_READ, REMOTE_WRITE, renderAnswer } from "@wirecat/cli-core/cli"
+import {
+  answerEntity,
+  itemOf,
+  listOf,
+  REMOTE_READ,
+  REMOTE_WRITE,
+  renderAnswer,
+  typedQuery,
+  withQuery,
+} from "@wirecat/cli-core/cli"
 import type { Command } from "commander"
 import { checkBody } from "../bot/input.js"
 import { plainJson } from "../bot/transport.js"
 import { botContext } from "./bot-context.js"
 import { chatIdOf } from "./bot-reads.js"
 import { guardedCall, operation } from "./bot-sends.js"
+import { botMember, MEMBERS_QUERY, memberId } from "./list-queries.js"
 import { wholeNumber } from "./paging.js"
 
 const USER_ID = /^\d+$/
@@ -34,7 +44,13 @@ const limitOf = (limit: number): string => {
 }
 
 /** The Bot API's page of members, in our envelope with string ids (`NEED-358`); its `marker` is the next `--cursor`. */
-const showMembers = (command: Command, context: ReturnType<typeof botContext>, chat: string, answer: unknown): void => {
+const showMembers = (
+  command: Command,
+  context: ReturnType<typeof botContext>,
+  chat: string,
+  answer: unknown,
+  query: string,
+): void => {
   const { members, marker } = plainJson(answer) as { members?: Record<string, unknown>[]; marker?: unknown }
   const items = (members ?? []).map((member) => ({ ...member, user_id: String(member.user_id) }))
   renderAnswer(
@@ -46,7 +62,7 @@ const showMembers = (command: Command, context: ReturnType<typeof botContext>, c
       has_more: marker != null,
       paging: "cursor",
       ...(marker == null ? {} : { cursor: String(marker) }),
-      args: { chat },
+      args: { chat, ...(query ? { query } : {}) },
     }),
   )
 }
@@ -56,18 +72,28 @@ const showMembers = (command: Command, context: ReturnType<typeof botContext>, c
  * `remove` comes from cli-core with the admins.
  */
 export const addMembersCommands = (members: Command): void => {
-  annotate(members.command("list <chat>"), { effects: REMOTE_READ, offline: false })
+  answerEntity(
+    withQuery(annotate(members.command("list <chat>"), { effects: REMOTE_READ, offline: false }), MEMBERS_QUERY),
+    "max_bot_member",
+    botMember,
+  )
     .description("members of a chat, a page at a time — --cursor takes the `page.next_cursor` the last page gave")
     .option("--limit <n>", "how many, up to 100", wholeNumber("--limit"))
     .option("--cursor <cursor>", "continue from here")
-    .action(async function (this: Command, chat: string) {
-      const context = botContext(this)
+    .action(async function (this: Command, chat: string, words: string[]) {
+      const selected = memberId(words)
       const cursor = this.opts<{ cursor?: string }>().cursor
+      if (selected !== undefined && cursor !== undefined)
+        throw new CliError("validation_error", "a user_id query selects memberships directly; omit --cursor")
+      const context = botContext(this)
       const answer = await context.authenticated().call(operation("getMembers"), {
         path: { chatId: chatIdOf(chat, context.registry) },
-        query: { count: limitOf(context.settings.limit), ...(cursor ? { marker: cursor } : {}) },
+        query:
+          selected === undefined
+            ? { count: limitOf(context.settings.limit), ...(cursor ? { marker: cursor } : {}) }
+            : { user_ids: selected },
       })
-      showMembers(this, context, chat, answer)
+      showMembers(this, context, chat, answer, typedQuery(words))
     })
 
   annotate(members.command("add <chat> <users...>"), { effects: REMOTE_WRITE })
