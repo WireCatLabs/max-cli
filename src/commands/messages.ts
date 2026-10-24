@@ -1,4 +1,4 @@
-import { annotate } from "@wirecat/cli-base/commands"
+import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import {
   deleteCommand,
   editCommand,
@@ -12,6 +12,7 @@ import {
   unpinCommand,
 } from "@wirecat/cli-core/cli"
 import { Command } from "commander"
+import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
 import { notDownloaded, transcribe } from "../transcribe/index.js"
@@ -19,7 +20,7 @@ import { isInstalled, modelsDirectory } from "../transcribe/install.js"
 import { speechModel } from "../transcribe/models.js"
 import { forCommand } from "./context.js"
 
-export const messagesCommand = (): Command => {
+const messagesCommandDefinition = (): Command => {
   const command = new Command("messages").description("read and send messages in a chat")
 
   const shared = sharedMessagesCommand(maxMessenger)
@@ -37,7 +38,7 @@ export const messagesCommand = (): Command => {
    * fetched, the connection closed, and then the model runs — up to a minute for five minutes of
    * speech, which should not hold a socket open.
    */
-  annotate(command.command("transcribe"), { effects: REMOTE_READ })
+  annotate(command.command("transcribe"), { effects: REMOTE_READ, output: { entity: "message_transcript" } })
     .argument("<chat>", "chat id, or part of a chat name")
     .argument("<message>", "id of a voice message")
     .description("turn a voice message into text, on this machine — the recording goes nowhere")
@@ -105,3 +106,11 @@ export const messagesCommand = (): Command => {
 
   return command
 }
+
+export const messagesCommand = () =>
+  customizeSharedCommand(
+    sharedMessagesCommand(maxMessenger),
+    "MAX keeps its native voice transcription transport beside the shared message commands.",
+    messagesCommandDefinition,
+    SHELL_OVERRIDES.messages,
+  )

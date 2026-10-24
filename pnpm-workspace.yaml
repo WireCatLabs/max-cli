@@ -10,3 +10,6 @@ minimumReleaseAgeExclude:
 overrides:
   markdownlint-cli2>smol-toml: 1.9.0
   micromark-extension-math>katex: 0.18.2
+
+  "vite@7.3.6": 7.3.7
+  "vite@8.3.2": 8.3.3

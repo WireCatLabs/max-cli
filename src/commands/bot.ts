@@ -3,6 +3,7 @@ import { annotate } from "@wirecat/cli-base/commands"
 import {
   generatedApiCommand,
   itemOf,
+  overrideSharedContract,
   ownerOnlyOption,
   REMOTE_READ,
   renderAnswer,
@@ -44,6 +45,7 @@ export const botCommand = (program: typeof run): Command => {
     .hook("postAction", async (_group, action) => botRecordingOf(action)?.succeed())
 
   annotate(command.command("me"), { effects: REMOTE_READ, offline: false })
+    .summary("the bot this profile's token belongs to")
     .description("the bot this profile's token belongs to: name, id, description, commands")
     .action(async function (this: Command) {
       const context = botContext(this)
@@ -93,7 +95,15 @@ export const botCommand = (program: typeof run): Command => {
   })
   for (const child of api.commands)
     if (["delete-message", "delete-comment"].includes(child.name()))
-      child.addOption(ownerOnlyOption("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask"))
+      overrideSharedContract(
+        child,
+        "MAX deletion API methods use the same owner-only destructive confirmation as bot messages delete.",
+        (command) => {
+          command.addOption(
+            ownerOnlyOption("--allow-dangerous", "skip confirmation for bot.messages.delete at level ask"),
+          )
+        },
+      )
   command.addCommand(api)
 
   return command

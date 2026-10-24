@@ -1,10 +1,20 @@
 import { accessSync, constants, mkdirSync } from "node:fs"
 import { CliError, indent, renderPretty, resolvePaths } from "@wirecat/cli-base"
-import { annotate } from "@wirecat/cli-base/commands"
+import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import { installSkill, type SkillTarget } from "@wirecat/cli-base/skill"
 import { type StepDefinition, stepOf } from "@wirecat/cli-base/standards"
-import { itemOf, logsInOrOut, REMOTE_WRITE, renderAnswer, runtime, snakeKeys } from "@wirecat/cli-core/cli"
+import {
+  itemOf,
+  logsInOrOut,
+  REMOTE_WRITE,
+  renderAnswer,
+  runtime,
+  sharedCommandTemplate,
+  snakeKeys,
+} from "@wirecat/cli-core/cli"
 import { Command, Option } from "commander"
+import { MAX_APP } from "../app.js"
+import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { SKILL, SKILL_APP } from "../skill.js"
@@ -78,7 +88,7 @@ const CHATS_LIST: StepDefinition = {
   why: "this shows the newest chats; choose one before syncing its history",
 }
 
-export const setupCommand = (): Command =>
+const setupCommandDefinition = (): Command =>
   logsInOrOut(annotate(new Command("setup"), { effects: REMOTE_WRITE, lifetime: "interactive", mcp: false }))
     .description("set up your personal MAX account and connect your agent")
     .configureHelp({ showGlobalOptions: true })
@@ -216,3 +226,11 @@ export const setupCommand = (): Command =>
         )
       }
     })
+
+export const setupCommand = (...args: Parameters<typeof setupCommandDefinition>) =>
+  customizeSharedCommand(
+    sharedCommandTemplate(MAX_APP, "setup"),
+    "This provider binds its own account linking protocol, credential flow and typed receipt to the shared setup lifecycle.",
+    () => setupCommandDefinition(...args),
+    SHELL_OVERRIDES.setup,
+  )
