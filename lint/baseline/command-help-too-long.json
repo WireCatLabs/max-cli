@@ -1,19 +1,7 @@
 [
-  "bot api",
   "bot chats members add",
   "bot chats members list",
   "bot comments",
-  "bot store fetch",
   "bot uploads put",
-  "chats media",
-  "chats requests list",
-  "messages scheduled",
-  "polls vote",
-  "replies audience",
-  "replies consents grant",
-  "replies pause",
-  "replies test",
-  "schedule",
-  "schedule agent",
-  "schedule command"
+  "chats requests list"
 ]

@@ -179,7 +179,7 @@ describe("max bot mcp", () => {
     })
 
     const { client } = await connect({ permissions: { "bot.api": "allow" } })
-    expect(await names(client)).toContain("api get-my-info")
+    expect(await client.describe("api get-my-info")).toMatchObject({ availability: { available: true } })
     expect((await call(client, "api get-my-info")).body).toMatchObject({ item: { user_id: 900 } })
     expect(calls).toContainEqual(expect.objectContaining({ method: "GET", url: "/me" }))
   })
