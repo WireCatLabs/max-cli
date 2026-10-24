@@ -299,8 +299,8 @@ max personal models text download embeddinggemma --accept-terms
 
 ```sh
 max personal models text key set openai
-max personal conversations embed --chat "Книжный клуб" --provider openai
-max personal search conversations "аренда квартиры" --provider openai
+max personal conversations embed --chat "Книжный клуб" --embedding-provider openai
+max personal search conversations "аренда квартиры" --embedding-provider openai
 ```
 
 Тогда текст разговоров чата уходит этому сервису, а каждый поиск отправляет ему ваш вопрос. Прежде

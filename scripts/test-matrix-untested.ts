@@ -12,6 +12,33 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  ...[
+    [
+      "conversations links clear",
+      "--answer-model",
+      "cli-core src/cli/option-meanings.test.ts pins the option's meaning; max mounts the shared command and src/search-adoption.test.ts drives it offline",
+    ],
+    [
+      "tags remove",
+      "--claim",
+      "cli-core src/cli/messenger/tags.test.ts covers the ownership claim through the shared command; consumer integration tests cover mounting, account isolation and permissions",
+    ],
+    [
+      "replies edit",
+      "--template-mode",
+      "cli-core src/cli/messenger/replies-edit-command.test.ts covers the legacy template mode; max mounts the shared command and src/replies.test.ts drives replies edit",
+    ],
+    [
+      "conversations build",
+      "--provider",
+      "earlier name of --analysis-provider, kept as an alias; cli-core src/cli/option-meanings.test.ts covers the alias, and src/search-adoption.test.ts drives the new name",
+    ],
+    [
+      "conversations consents revoke",
+      "--provider",
+      "earlier name of --consent-provider, kept as an alias; cli-core src/cli/option-meanings.test.ts covers the alias, and src/search-adoption.test.ts drives the new name",
+    ],
+  ].map(([command, option, reason]) => ({ command: command as string, option, reason: reason as string })),
   ...["--public-url", "--port"].map((option) => ({
     command: "bot watch",
     option,
@@ -67,8 +94,10 @@ export const UNTESTED: Untested[] = [
     ["contacts notes show"],
     ["contacts notes add"],
     ["contacts notes add", "--file"],
+    ["contacts notes add", "--text-file"],
     ["contacts notes edit"],
     ["contacts notes edit", "--file"],
+    ["contacts notes edit", "--text-file"],
     ["contacts notes edit", "--revision"],
     ["contacts notes remove"],
   ].map(([command, option]) => ({
@@ -150,18 +179,6 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "stats messages top",
-    option: "--message-kind",
-    reason:
-      "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
-  },
-  {
-    command: "stats messages top",
-    option: "--chat",
-    reason:
-      "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
-  },
-  {
-    command: "stats messages top",
     option: "--source",
     reason:
       "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
@@ -169,12 +186,6 @@ export const UNTESTED: Untested[] = [
   {
     command: "stats messages top",
     option: "--timezone",
-    reason:
-      "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
-  },
-  {
-    command: "stats messages top",
-    option: "--exact",
     reason:
       "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
   },
@@ -268,18 +279,6 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "stats contacts top",
-    option: "--message-kind",
-    reason:
-      "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
-  },
-  {
-    command: "stats contacts top",
-    option: "--chat",
-    reason:
-      "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
-  },
-  {
-    command: "stats contacts top",
     option: "--source",
     reason:
       "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
@@ -292,12 +291,6 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "stats contacts top",
-    option: "--exact",
-    reason:
-      "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
-  },
-  {
-    command: "stats contacts top",
     option: "--limit",
     reason:
       "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
@@ -305,12 +298,6 @@ export const UNTESTED: Untested[] = [
   {
     command: "stats contacts top",
     option: "--saved",
-    reason:
-      "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
-  },
-  {
-    command: "stats contacts top",
-    option: "--min-messages",
     reason:
       "cli-core src/cli/messenger/rankings-command.test.ts, src/services/rankings.test.ts and src/store/rankings.test.ts cover the rankings over the local store; max mounts the shared stats and searches commands and reads only its store",
   },
@@ -518,7 +505,7 @@ export const UNTESTED: Untested[] = [
       "shared member audit; cli-core src/cli/messenger/messenger.test.ts drives the command and src/services/members-audit.test.ts covers page budgets, thresholds and unavailable signals with synthetic members",
   })),
   ...["conversations status", "conversations related"].flatMap((command) =>
-    ["--provider", "--base-url", "--dims"].map((option) => ({
+    ["--provider", "--embedding-provider", "--base-url", "--dims"].map((option) => ({
       command,
       option,
       reason:
@@ -591,6 +578,12 @@ export const UNTESTED: Untested[] = [
   {
     command: "search conversations",
     option: "--provider",
+    reason:
+      "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
+  },
+  {
+    command: "search conversations",
+    option: "--embedding-provider",
     reason:
       "phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model",
   },
@@ -679,6 +672,12 @@ export const UNTESTED: Untested[] = [
   },
   {
     command: "conversations embed status",
+    option: "--embedding-provider",
+    reason:
+      "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
+  },
+  {
+    command: "conversations embed status",
     option: "--base-url",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
@@ -692,6 +691,12 @@ export const UNTESTED: Untested[] = [
   {
     command: "conversations embed clear",
     option: "--provider",
+    reason:
+      "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
+  },
+  {
+    command: "conversations embed clear",
+    option: "--embedding-provider",
     reason:
       "names an external model provider, reached over the network; cli-core's src/services/embeddings.test.ts drives it with a stand-in",
   },
@@ -914,7 +919,7 @@ export const UNTESTED: Untested[] = [
   ...[
     ["tasks add", "--into"],
     ["tasks add", "--new"],
-    ["tasks duplicates"],
+    ["tasks duplicates list"],
     ["tasks merge"],
     ["tasks merge", "--into"],
   ].map(([command, option]) => ({
@@ -942,7 +947,7 @@ export const UNTESTED: Untested[] = [
     ["mentions domains", "--limit"],
     ["mentions domains", "--page"],
     ["tasks related", "--limit"],
-    ["tasks duplicates", "--limit"],
+    ["tasks duplicates list", "--limit"],
   ].map(([command, option]) => ({
     command: command as string,
     option,

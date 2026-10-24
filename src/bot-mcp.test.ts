@@ -6,8 +6,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/server"
 import { toJsonSchema } from "@valibot/to-json-schema"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { describeProgram } from "@wirecat/cli-base/commands"
-import { botInstructions } from "@wirecat/cli-core/cli"
-import { createBotServer } from "@wirecat/cli-core/mcp"
+import { botInstructions, changesAuthorityAt } from "@wirecat/cli-core/cli"
+import { createBotServer, toolsFromCommands } from "@wirecat/cli-core/mcp"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
 import { botMcpRun, maxBot, maxBotMcp } from "./commands/bot-messenger.js"
@@ -94,9 +94,11 @@ const connect = async (
   const profile = `bm-${++profiles}`
   new BotTokenStore({ profile, keyring }).write("bot-token")
   const mcp = maxBotMcp(run)
+  const root = createProgram()
   const { build, tools } = createBotServer({
     bot: { ...maxBot, mcp },
-    program: { run: botMcpRun(run, testEnvironment()), commands: describeProgram(createProgram()) },
+    program: { run: botMcpRun(run, testEnvironment()), commands: describeProgram(root) },
+    authority: changesAuthorityAt(root),
     settings: { profile, permissions, readOtherBots },
     env,
     ...(mcp.keyOf ? { keyOf: mcp.keyOf } : {}),
@@ -158,9 +160,19 @@ describe("max bot mcp", () => {
     expect((await names(readonly.client)).sort()).toEqual([...READS].sort())
 
     const all = await names((await connect()).client)
-    expect(all).toHaveLength(39)
-    expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete"]))
+    expect(all).toHaveLength(40)
+    expect(all).toEqual(expect.arrayContaining(["messages send", "chats moderate", "comments delete", "store fetch"]))
     expect(all.some((name) => /recipients_(add|remove|clear)|auth|api|uploads|_mcp/.test(name))).toBe(false)
+  })
+
+  it("offers raw Bot API operations only when bot.api is explicitly allowed", async () => {
+    const broad = await names((await connect({ permissions: { bot: "allow" } })).client)
+    expect(broad.some((name) => name.startsWith("api "))).toBe(false)
+
+    const { client } = await connect({ permissions: { "bot.api": "allow" } })
+    expect(await names(client)).toContain("api get-my-info")
+    expect((await call(client, "api get-my-info")).body).toMatchObject({ item: { user_id: 900 } })
+    expect(calls).toContainEqual(expect.objectContaining({ method: "GET", url: "/me" }))
   })
 
   it("**bot: deny leaves what no level stops**, and a key opened under it offers that write alone", async () => {
@@ -339,8 +351,8 @@ describe("max bot mcp", () => {
     })
   })
 
-  it("**pins the catalogue**: a command or an argument agents gain or lose shows up in contracts/", async () => {
-    const { tools } = await connect()
+  it("**pins the catalogue** before profile permissions, including authority and raw API commands", async () => {
+    const tools = toolsFromCommands(describeProgram(createProgram()), { root: ["bot"], offline: true })
     const catalogue = Object.fromEntries(
       tools.map((tool) => [tool.command, { writes: tool.writes, input: toJsonSchema(tool.input) }]),
     )

@@ -1,9 +1,10 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname } from "node:path"
 import { captureStreams } from "@wirecat/cli-base"
 import { httpTokenFile } from "@wirecat/cli-core/cli"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "../app.js"
+import { resolveSettings } from "../config.js"
 import { run } from "../program.js"
 
 const cli = async (argv: string[]) => {
@@ -13,6 +14,47 @@ const cli = async (argv: string[]) => {
 }
 
 describe("max mcp, cli-core's command over max's messenger", () => {
+  it.each([
+    ["set", "permissions.mcp.authority", "allow"],
+    ["unset", "permissions.mcp.authority"],
+    ["set", "permissions.mcp", "allow", "--defaults"],
+    ["set", "permissions.bot.api", "allow", "--bot"],
+    ["unset", "permissions.bot.api", "--bot"],
+    ["set", "permissions.bot.api.send-message", "allow"],
+    ["set", "permissions", "{}"],
+    ["set", "permissions", '{"bot.api":"allow"}'],
+    ["unset", "permissions"],
+  ])("refuses agent config %s %s without changing the file", async (...args) => {
+    expect((await cli(["guarded", "config", "set", "limit", "17", "--json"])).code).toBe(0)
+    const file = resolveSettings({ profile: "guarded" }).configPath
+    const before = readFileSync(file, "utf8")
+    const failures: unknown[] = []
+    const code = await run(["guarded", "config", ...args, "--json"], {
+      streams: captureStreams(),
+      tty: false,
+      agent: { authority: true, result: () => {}, failure: (error) => failures.push(error) },
+    })
+    expect(code).toBe(5)
+    expect(failures).toContainEqual(
+      expect.objectContaining({ error: expect.objectContaining({ code: "permission_error" }) }),
+    )
+    expect(readFileSync(file, "utf8")).toBe(before)
+  })
+
+  it("lets an authorized agent change an ordinary setting while authority stays owner-controlled", async () => {
+    const failures: unknown[] = []
+    const code = await run(["guarded", "config", "set", "limit", "23", "--json"], {
+      streams: captureStreams(),
+      tty: false,
+      agent: { authority: true, result: () => {}, failure: (error) => failures.push(error) },
+    })
+    expect(code).toBe(0)
+    expect(failures).toEqual([])
+    expect(resolveSettings({ profile: "guarded" }).limit).toBe(23)
+    expect((await cli(["guarded", "config", "set", "permissions.mcp.authority", "allow", "--json"])).code).toBe(0)
+    expect((await cli(["guarded", "config", "set", "permissions.bot.api", "allow", "--bot", "--json"])).code).toBe(0)
+  })
+
   it("`mcp config` names the profile's server and keeps startup permissions", async () => {
     const { code, stdout } = await cli(["work", "mcp", "config", "--permission", "messages.send=deny", "--json"])
     expect(code).toBe(0)

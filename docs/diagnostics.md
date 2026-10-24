@@ -249,12 +249,13 @@ done
 ## Найти ошибку или частичный запуск
 
 ```sh
-max personal runs search --error-code rate_limited --json
-max personal runs search --status partial --since-time 2026-10-01 --json
+max personal search runs error_code:rate_limited --json
+max personal search runs status:partial --since-time 2026-10-01 --json
 ```
 
-`runs search` ищет буквальный текст в метаданных и безопасных диагностических событиях;
-`--operation`, `--profile`, `--since-time`, `--limit` и `--page` уточняют поиск. Одна страница — до 100
+`search runs` ищет буквальный текст в метаданных и безопасных диагностических событиях;
+условия `status:`, `error_code:`, `operation:` и `profile:` пишутся в запросе, а `--since-time`, `--limit` и `--page`
+уточняют поиск. Одна страница — до 100
 запусков; в запуске возвращается до 100 совпавших событий, `events_truncated` сообщает о сокращении.
 Ошибка отдельного файла или страницы истории создаёт частичную запись `status: "partial"` с
 неудачными ID, этапами и кодами. Текст сообщений и текст отказа сервера в неё не копируются.

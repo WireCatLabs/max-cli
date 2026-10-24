@@ -252,7 +252,7 @@ max personal review 'chat:"-1000"' --unanswered 4h --json # вопросы в г
 max personal tasks list state:open --json              # что ждёт ответа владельца; задачи открывает и закрывает review
 max personal tasks add <ссылка> --type request --category documents --json
 # выход 2 task.duplicate-candidates: возможно, это та же открытая задача; повторите с --into <задача> или --new. Похожая только на закрытую — новая задача со связью follow-up-of
-max personal tasks duplicates --json               # пары, которые могут быть одной задачей; tasks merge <дубль> --into <задача>
+max personal tasks duplicates list --json               # пары, которые могут быть одной задачей; tasks merge <дубль> --into <задача>
 max personal tasks duplicates reject <дубль> <задача>   # не одна задача; defer — решит владелец (decision:unsure); tasks unmerge <дубль> отменяет merge
 max personal tasks related <задача> --json         # похожие задачи с полосой likely|maybe|different; ничего не меняет
 max personal tasks agenda category:money tag:urgent --json   # план на сегодня; claimed:any — и занятые другими
@@ -261,7 +261,7 @@ max personal tasks categories --json             # категории; спис�
 max personal tasks close <задача> --as dismissed --reason no-reply-needed --certainty 0.9 --json   # только когда владелец так решил; --certainty 0..1 обязателен, ниже порога задача остаётся открытой с предложением закрыть
 max personal tasks list close:suggested --json      # предложения закрыть, которые ждут владельца: он подтверждает tasks close или отклоняет tasks reject
 max personal watch --jsonl                              # новые сообщения по мере прихода; `max personal serve` запустится сам
-max personal watch --events --jsonl                     # плюс правки, удаления, реакции, прочтения, изменения чатов; поле "event"
+max personal watch --events --jsonl                     # плюс правки, удаления, реакции, прочтения, изменения чатов; поле "event" внутри data
 max personal server status --json                       # работает ли фоновый сервер, какой версии, подключён ли
 max personal chats show -1000 --json                    # один чат и кто в нём
 max personal chats events -1000 'time>=2026-09-20' --json   # кто вступил, вышел, кого добавили и удалили
@@ -284,6 +284,10 @@ max personal messages transcribe -1000 100000000000000001 --json   # текст 
 чего не хватает. Следующий обзор начинать с запроса шага `review.next` из `next`: при неполном обзоре он
 повторяет ту же границу. Напоминания —
 черновики, отправка — только по слову владельца.
+
+`watch --json` и `watch --jsonl` возвращают строки `{"type":"item","data":…}` и завершающую
+`{"type":"end",…}`. Читайте сообщение или событие из `data`; имена полей — snake_case.
+Неполный `end` и код ошибки означают сбой источника, а не отсутствие новых сообщений.
 
 Голосовое — вложение `"kind": "voice"` в `messages list|show|context`, `search messages`, `inbox` и `review`.
 Его текст даёт `max personal messages transcribe`; до минуты на пять минут речи, повторно — сразу из общей
@@ -331,6 +335,11 @@ MCP-сервер бота: `max <имя> bot mcp`; права задаются �
 разрешено по умолчанию. `permissions.bot: readonly` ограничивает запись, если нет более точных
 разрешений. `ask`/`allow` допускают запрошенную запись без серверной формы. `--trace` и записи запусков
 (`max personal runs list`) работают и для бота.
+Команды изменения настроек, правил и получателей через MCP требуют `mcp.authority: allow` или
+`ask`; по умолчанию — `deny`. Сырые `bot api` требуют отдельного явного `bot.api: allow` или
+`ask`, даже при `bot: allow`. Не меняйте эти ключи и не заменяйте `permissions` целиком: это
+делает владелец в терминале. Общий ответ «только чтение» при первом запуске ограничивает и
+более точные разрешения профиля; агенту вопросы первого запуска не задаются.
 
 Markdown `--md` обрабатывается форматтером MAX, не Telegram: `**жирный**`/`__жирный__`,
 `*курсив*`/`_курсив_`, `~~зачёркнутый~~`, `++подчёркнутый++`, ссылки и код. Telegram
