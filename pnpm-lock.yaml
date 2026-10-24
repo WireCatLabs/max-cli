@@ -7,6 +7,8 @@ settings:
 overrides:
   markdownlint-cli2>smol-toml: 1.9.0
   micromark-extension-math>katex: 0.18.2
+  vite@7.3.6: 7.3.7
+  vite@8.3.2: 8.3.3
 
 importers:
 
@@ -22,11 +24,11 @@ importers:
         specifier: 1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@7.0.2))
       '@wirecat/cli-base':
-        specifier: 0.50.3
-        version: 0.50.3(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3)
+        specifier: 0.51.0
+        version: 0.51.0(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3)
       '@wirecat/cli-core':
-        specifier: 0.410.0
-        version: 0.410.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.50.3(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
+        specifier: 0.411.0
+        version: 0.411.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.51.0(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
       commander:
         specifier: 15.0.0
         version: 15.0.0
@@ -102,7 +104,7 @@ importers:
         version: 1.8.1(@napi-rs/canvas@1.0.11)
       vitest:
         specifier: ^5.0.3
-        version: 5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))
+        version: 5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.7(@types/node@22.20.4)(yaml@2.9.1))
       yaml:
         specifier: ^2.9.1
         version: 2.9.1
@@ -1297,7 +1299,7 @@ packages:
     resolution: {integrity: sha512-T8sWAIbkSyAjkwTcaEc3Iu0o9A27X1/kdXrizhZkGuSKScRQtRzclfAMpOTcGdXCsqxeWlpGy3XjqaW8CpLORg==}
     peerDependencies:
       msw: ^2.4.9
-      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
+      vite: 7.3.7
     peerDependenciesMeta:
       msw:
         optional: true
@@ -1313,8 +1315,8 @@ packages:
   '@wasm-audio-decoders/opus-ml@0.0.3':
     resolution: {integrity: sha512-SEeTmk0eb3q5etJA/NHCRWW6BivTx9tqvNTmG0kg2ynuATEQRUZnwQE6Ibvl1BBvqIGHqI57+qyJMWmJBwb5XQ==}
 
-  '@wirecat/cli-base@0.50.3':
-    resolution: {integrity: sha512-pwlagOUtR5MqnTp84DZUSDY2GCuyDatNXxTuHkt9bXariz/v9/CCG+2eP4qrTjU0SbUPwKAIZzW3momRLPtGOg==}
+  '@wirecat/cli-base@0.51.0':
+    resolution: {integrity: sha512-zNb034eMvVodMnue/R57+2IW+wGf3dQKZbrpyhra8h5+rScl3LtH9zy3NBB/6IXY+0QL8Yslj83vR3xno4mkCA==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -1332,13 +1334,13 @@ packages:
   '@wirecat/cli-core-sqlite@1.0.1':
     resolution: {integrity: sha512-dFkTE3+XdvZwrt7bZZEd2fzdqR2vFgnnGPOhmBKGNa7uKQHjOdqJL8Q9O5cajIjy5o8Gl0LVn0OZbYajhLvQ1A==}
 
-  '@wirecat/cli-core@0.410.0':
-    resolution: {integrity: sha512-9/TjKVrNj/0qOixGru1o7YZiinE7PabnzcQyutPuj+FwiDVHQPYWpG8EaEtUwZ2AQdE+x813NVKi/ahI46ZfEA==}
+  '@wirecat/cli-core@0.411.0':
+    resolution: {integrity: sha512-kMSv4noqRlAabZk+rb16Q9q42X2TdBYlsRzmuxOP5gf8r0GjyFoCi4KGeLP+1tEIm+DXSZHwmh9io1uO3z28Sg==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
       '@napi-rs/canvas': '>=0.1.69 <2'
-      '@wirecat/cli-base': '>=0.50.2 <0.51.0'
+      '@wirecat/cli-base': '>=0.51.0 <0.52.0'
       commander: '>=15'
     peerDependenciesMeta:
       '@napi-rs/canvas':
@@ -2618,8 +2620,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  vite@7.3.6:
-    resolution: {integrity: sha512-4XP60spRGjSZFf1qYH+dJIkK2znL3zQfl9KkOV9MkkRR/3Dls0dxaBsQPTloEc5BLXWPL9vsOxopxyKoMmDueg==}
+  vite@7.3.7:
+    resolution: {integrity: sha512-AHEzTORMbi7/7aXp7w7KZ5+DCUdSeLsJz0grY8xHpc9DHdYb0vQu6DqJfm2tOw3gDExNgPgnJTXxM6syYFHaCA==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -2674,7 +2676,7 @@ packages:
       '@vitest/ui': 5.0.3
       happy-dom: '*'
       jsdom: '*'
-      vite: ^6.4.0 || ^7.0.0 || ^8.0.0
+      vite: 7.3.7
     peerDependenciesMeta:
       '@edge-runtime/vm':
         optional: true
@@ -3584,7 +3586,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.2.0
       tinyrainbow: 3.1.1
-      vitest: 5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))
+      vitest: 5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.7(@types/node@22.20.4)(yaml@2.9.1))
 
   '@vitest/istanbul-lib-coverage@1.0.2': {}
 
@@ -3592,14 +3594,14 @@ snapshots:
     dependencies:
       '@vitest/istanbul-lib-coverage': 1.0.2
 
-  '@vitest/mocker@5.0.3(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))':
+  '@vitest/mocker@5.0.3(vite@7.3.7(@types/node@22.20.4)(yaml@2.9.1))':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       '@vitest/spy': 5.0.3
       estree-walker: 3.0.3
       magic-string: 1.4.2
     optionalDependencies:
-      vite: 7.3.6(@types/node@22.20.4)(yaml@2.9.1)
+      vite: 7.3.7(@types/node@22.20.4)(yaml@2.9.1)
 
   '@vitest/spy@5.0.3': {}
 
@@ -3612,7 +3614,7 @@ snapshots:
     dependencies:
       '@wasm-audio-decoders/common': 9.0.7
 
-  '@wirecat/cli-base@0.50.3(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3)':
+  '@wirecat/cli-base@0.51.0(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3)':
     dependencies:
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       cli-table3: 0.6.5
@@ -3622,7 +3624,7 @@ snapshots:
     optionalDependencies:
       '@napi-rs/keyring': 2.1.0
       commander: 15.0.0
-      vitest: 5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))
+      vitest: 5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.7(@types/node@22.20.4)(yaml@2.9.1))
     transitivePeerDependencies:
       - typescript
 
@@ -3632,7 +3634,7 @@ snapshots:
 
   '@wirecat/cli-core-sqlite@1.0.1': {}
 
-  '@wirecat/cli-core@0.410.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.50.3(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
+  '@wirecat/cli-core@0.411.0(@napi-rs/canvas@1.0.11)(@wirecat/cli-base@0.51.0(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
     dependencies:
       '@anthropic-ai/sdk': 0.131.0(zod@4.6.7)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
@@ -3640,7 +3642,7 @@ snapshots:
       '@modelcontextprotocol/server': 2.3.0
       '@resvg/resvg-js': 2.6.2
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
-      '@wirecat/cli-base': 0.50.3(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3)
+      '@wirecat/cli-base': 0.51.0(commander@15.0.0)(typescript@7.0.2)(vitest@5.0.3)
       '@wirecat/cli-core-onnx': 1.0.1
       '@wirecat/cli-core-sqlite': 1.0.1
       '@xmldom/xmldom': 0.9.12
@@ -5231,7 +5233,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1):
+  vite@7.3.7(@types/node@22.20.4)(yaml@2.9.1):
     dependencies:
       esbuild: 0.28.2
       fdir: 6.5.0(picomatch@4.0.7)
@@ -5244,10 +5246,10 @@ snapshots:
       fsevents: 2.3.3
       yaml: 2.9.1
 
-  vitest@5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1)):
+  vitest@5.0.3(@types/node@22.20.4)(@vitest/coverage-v8@5.0.3)(vite@7.3.7(@types/node@22.20.4)(yaml@2.9.1)):
     dependencies:
       '@types/chai': 5.2.3
-      '@vitest/mocker': 5.0.3(vite@7.3.6(@types/node@22.20.4)(yaml@2.9.1))
+      '@vitest/mocker': 5.0.3(vite@7.3.7(@types/node@22.20.4)(yaml@2.9.1))
       chai: 6.2.2
       es-module-lexer: 2.3.2
       expect-type: 1.4.0
@@ -5258,7 +5260,7 @@ snapshots:
       tinybench: 6.1.4
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
-      vite: 7.3.6(@types/node@22.20.4)(yaml@2.9.1)
+      vite: 7.3.7(@types/node@22.20.4)(yaml@2.9.1)
       why-is-node-running: 3.2.1
     optionalDependencies:
       '@types/node': 22.20.4

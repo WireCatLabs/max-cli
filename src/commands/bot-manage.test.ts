@@ -519,7 +519,7 @@ describe("max bot commands", () => {
 })
 
 describe("max bot webhooks", () => {
-  it("sets one with a secret from the prompt, refuses a second unless --add, and deletes", async () => {
+  it("sets one with a secret from the prompt, refuses a second unless --append, and deletes", async () => {
     const set = await max(
       ["bot", "webhooks", "set", "https://example.org/hook", "--secret-stdin", "--types", "message_created", "--json"],
       async () => "very-secret-1",
@@ -535,9 +535,9 @@ describe("max bot webhooks", () => {
     const second = await max(["bot", "webhooks", "set", "https://example.org/other", "--json"])
     expect(second.code).toBe(7)
     expect(JSON.parse(second.stderr).error.message).toContain("https://example.org/hook")
-    expect((await max(["bot", "webhooks", "set", "https://example.org/other", "--add", "--json"])).code).toBe(0)
+    expect((await max(["bot", "webhooks", "set", "https://example.org/other", "--append", "--json"])).code).toBe(0)
     const left = await max(["bot", "webhooks", "delete", "https://example.org/hook", "--json"])
-    expect(JSON.parse(left.stdout).items).toEqual([{ url: "https://example.org/other", types: null }])
+    expect(JSON.parse(left.stdout).items).toEqual([{ url: "https://example.org/other" }])
     const rows = await journal()
     expect(JSON.stringify(rows)).not.toContain("very-secret-1")
   })
@@ -547,7 +547,7 @@ describe("max bot webhooks", () => {
     subscriptions = ["https://example.org/hook"]
     const { code, stdout } = await max(["bot", "webhooks", "list", "--json"])
     expect(code).toBe(0)
-    expect(JSON.parse(stdout).items).toEqual([{ url: "https://example.org/hook", types: null }])
+    expect(JSON.parse(stdout).items).toEqual([{ url: "https://example.org/hook" }])
     expect(requests.at(-1)).toMatchObject({ method: "GET", url: "/subscriptions" })
   })
 

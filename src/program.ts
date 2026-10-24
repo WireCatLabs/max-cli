@@ -15,6 +15,7 @@ import {
   mcpCommand,
   mentionsCommand,
   metadataCommand,
+  overrideSharedContract,
   type ProgramDefinition,
   type ProgramOptions,
   pollsCommand,
@@ -107,9 +108,14 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     lockedStore(sharedStoreCommand(maxMessenger)),
     statsCommand(maxMessenger),
     // MAX's own serve does not run the question and mention rules, so the shared "review and serve add them" is untrue here.
-    tasksCommand(maxMessenger).description(
-      "what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; " +
-        "review, inbox and messages sync add them, serve only the requests of auto-reply rules",
+    overrideSharedContract(
+      tasksCommand(maxMessenger),
+      "MAX's serve does not run the shared question and mention scanners; its task help must state that limit.",
+      (command) => {
+        command.description(
+          "what waits on you — unanswered questions, mentions, requests, promises — kept in the local store; review, inbox and messages sync add them, serve only the requests of auto-reply rules",
+        )
+      },
     ),
     conversationsCommand(maxMessenger),
     attachmentsCommand(maxMessenger),

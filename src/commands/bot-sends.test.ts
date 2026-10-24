@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, readFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
@@ -10,6 +10,7 @@ import { BotTokenStore } from "../bot/auth.js"
 import { botOperations } from "../bot/client.js"
 import { BOT_JOURNAL_KINDS, UNJOURNALED_WRITES } from "../bot/permissions.js"
 import { botsDirectory } from "../bot/registry.js"
+import { resolveSettings } from "../config.js"
 import { run } from "../program.js"
 
 const TOKEN = "bot-token"
@@ -167,17 +168,36 @@ describe("max bot messages send", () => {
     expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
   })
 
-  it("has no hourly limit", async () => {
+  it("keeps bots unlimited by default and honors an explicit bot limit", async () => {
+    const root = mkdtempSync(join(tmpdir(), "bot-hourly-limit-"))
+    const env = {
+      ...process.env,
+      MAX_CONFIG_DIR: join(root, "config"),
+      MAX_STATE_DIR: join(root, "state"),
+      MAX_CACHE_DIR: join(root, "cache"),
+    }
+    mkdirSync(env.MAX_CONFIG_DIR, { recursive: true })
+    const config = join(env.MAX_CONFIG_DIR, "config.json")
+    writeFileSync(config, JSON.stringify({ defaults: { sends_per_hour: 1 } }))
+    expect(resolveSettings({ profile: "quiet" }, { env }).sendsPerHour).toBe(1)
+    expect(resolveSettings({ profile: "quiet" }, { kind: "bot", env }).sendsPerHour).toBe(Infinity)
     let sends = 0
     const fetch: FetchLike = async (input) => {
       const sending = new URL(String(input)).pathname === "/messages"
       if (sending) sends += 1
       return new Response(sending ? sent("-100", "x") : BOT, { headers: { "content-type": "application/json" } })
     }
-    for (let index = 0; index < 35; index++) {
-      expect((await max(["quiet", "bot", "messages", "send", "-100", "x", "--json"], undefined, fetch)).code).toBe(0)
+    for (let index = 0; index < 3; index++) {
+      expect((await max(["quiet", "bot", "messages", "send", "-100", "x", "--json"], undefined, fetch, env)).code).toBe(
+        0,
+      )
     }
-    expect(sends).toBe(35)
+    writeFileSync(
+      config,
+      JSON.stringify({ defaults: { sends_per_hour: 1 }, bot: { profiles: { quiet: { sends_per_hour: 1 } } } }),
+    )
+    expect((await max(["quiet", "bot", "messages", "send", "-100", "x", "--json"], undefined, fetch, env)).code).toBe(8)
+    expect(sends).toBe(3)
   })
 
   it("records a send that got no answer as an unknown outcome, and does not repeat it", async () => {
