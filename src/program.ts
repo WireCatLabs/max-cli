@@ -163,19 +163,11 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
       const key = commandPermission(action)
       if (key) {
         // The command's own context refuses an unnamed profile when it uses an account; this only checks levels.
-        let settings: ReturnType<typeof resolveSettings>
-        try {
-          settings = resolveSettings(rootOf(action).opts(), {
-            kind: key.startsWith("bot.") ? "bot" : "personal",
-            needsProfile: false,
-            env: environmentOf(action).env ?? process.env,
-          })
-        } catch (error) {
-          // A broken config is what doctor reports; it cannot prevent the report from being written.
-          if (key === "doctor.report.create" && error instanceof CliError && error.code === "configuration_error")
-            return
-          throw error
-        }
+        const settings = resolveSettings(rootOf(action).opts(), {
+          kind: key.startsWith("bot.") ? "bot" : "personal",
+          needsProfile: false,
+          env: environmentOf(action).env ?? process.env,
+        })
         assertReadable(settings, key)
         const effects = metaOf(action).effects
         const localOnly = effects?.remote === "none" && effects.local === "write"

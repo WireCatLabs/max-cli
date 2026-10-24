@@ -5,7 +5,7 @@ import { toolsFromCommands } from "@wirecat/cli-core/mcp"
 import { expect, it } from "vitest"
 import { createProgram } from "./program.js"
 
-it("**pins the personal catalogue**: every command agents get from `max mcp`, before the profile's levels (NEED-1433)", async () => {
+it("**pins the default personal catalogue** before profile overrides (NEED-1433)", async () => {
   const program = createProgram()
   const tools = toolsFromCommands(describeProgram(program), {
     exclude: [["bot"]],
@@ -17,7 +17,7 @@ it("**pins the personal catalogue**: every command agents get from `max mcp`, be
   await expect(`${JSON.stringify(catalogue, null, 2)}\n`).toMatchFileSnapshot("../contracts/mcp-catalogue.json")
 })
 
-it("**docs/mcp.md names every command agents do not get**, and only those (CLI-82)", () => {
+it("**docs/mcp.md names every command hidden at default permissions**, and only those (CLI-82)", () => {
   const program = createProgram()
   const tree = describeProgram(program)
   const authority = changesAuthorityAt(program)
