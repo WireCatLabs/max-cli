@@ -1,7 +1,6 @@
 [
   "bot comments get",
   "bot uploads put",
-  "chats app",
   "chats folders order",
   "chats media",
   "chats members audit",
@@ -16,7 +15,6 @@
   "conversations consents revoke",
   "mcp doctor",
   "mcp setup",
-  "messages press",
   "metadata get",
   "metadata refresh",
   "replies audience",
