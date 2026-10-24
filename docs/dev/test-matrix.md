@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**898 ✅ · 173 ⛔ · 0 ❌** — 356 commands, 715 options.
+**900 ✅ · 173 ⛔ · 0 ❌** — 356 commands, 717 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -90,7 +90,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `chats requests list` | `--limit` | ✅ |  |
 | `chats requests list` | `--page` | ✅ |  |
 | `chats requests confirm` |  | ✅ |  |
+| `chats requests confirm` | `--all` | ✅ |  |
 | `chats requests reject` |  | ✅ |  |
+| `chats requests reject` | `--all` | ✅ |  |
 | `chats folders list` |  | ✅ |  |
 | `chats folders show` |  | ⛔ | cli-core src/cli/messenger/admin-commands.test.ts tests folder show with cached and remote chat names plus pinned/excluded entries; MAX mounts the same shared handler (SDK0.189.0) |
 | `chats folders create` |  | ✅ |  |

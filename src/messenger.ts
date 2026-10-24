@@ -46,7 +46,7 @@ export const maxMessenger: Messenger = {
   inviteLinkCreate: false,
   inviteLinkList: false,
   inviteLinkRevoke: false,
-  joinRequestsAll: false,
+  joinRequestsByLink: false,
   channelComments: false,
   folderJoin: false,
   groupPhoto: true,

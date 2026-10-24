@@ -826,13 +826,17 @@ let them in; the group sees them join
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max chats requests confirm <chat> <person>
+max chats requests confirm <chat> [person] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
-| `person` | обязательный | who asked: an id from `chats requests list`. |
+| `person` | необязательный | who asked: an id from `chats requests list`. |
+
+| Опция | Что делает |
+|---|---|
+| `--all` | every pending request, counted against the hourly limit first. |
 
 **Returns:** chat request change — ; every field: max commands info chats requests confirm
 
@@ -845,13 +849,17 @@ turn the request away
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max chats requests reject <chat> <person>
+max chats requests reject <chat> [person] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
-| `person` | обязательный | who asked: an id from `chats requests list`. |
+| `person` | необязательный | who asked: an id from `chats requests list`. |
+
+| Опция | Что делает |
+|---|---|
+| `--all` | every pending request, counted against the hourly limit first. |
 
 **Returns:** chat request change — ; every field: max commands info chats requests reject
 
