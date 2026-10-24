@@ -248,7 +248,7 @@ max personal tasks add msg:max/<вы>/<чат>/<сообщение> --type promi
 кандидатов. Повторите с `--into <задача>`, чтобы привязать сообщение к ней, или с `--new`, чтобы всё же открыть
 новую. Если она похожа только на задачу, закрытую за последние 14 дней, `tasks add` открывает новую и связывает
 её с закрытой связью `follow-up-of`; закрытая так и остаётся закрытой, а `tasks show` показывает связь.
-`tasks duplicates` показывает пары, которые нашли правила, а `tasks merge <задача> --into <другая>` объединяет
+`tasks duplicates list` показывает пары, которые нашли правила, а `tasks merge <задача> --into <другая>` объединяет
 их:
 
 ```sh
@@ -274,17 +274,17 @@ max config set task_agent_close_min 0.9
 ```
 
 Пару, которая не одна задача, `tasks duplicates reject` убирает насовсем; `tasks duplicates defer` оставляет
-её вам, и её показывает `tasks duplicates decision:unsure`. `tasks related <задача>` оценивает похожие задачи
+её вам, и её показывает `tasks duplicates list decision:unsure`. `tasks related <задача>` оценивает похожие задачи
 и ничего не меняет, а `tasks unmerge` отменяет объединение:
 
 ```sh
 max personal tasks related <задача>
-max personal tasks duplicates decision:unsure
+max personal tasks duplicates list decision:unsure
 max personal tasks duplicates reject <дубль> <задача>
 max personal tasks unmerge <дубль>
 ```
 
-`tasks agenda` и `tasks duplicates` фильтруются полями запроса:
+`tasks agenda` и `tasks duplicates list` фильтруются полями запроса:
 
 - `tag:` и `category:` оставляют задачи с этой меткой или категорией: `tag:urgent`, `category:money`.
 - `claimed:` — чья бронь на задаче: `none`, `mine`, `others` или `any`. Без этого поля план показывает

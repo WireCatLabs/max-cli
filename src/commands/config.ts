@@ -30,7 +30,7 @@ import {
 } from "../config.js"
 import { knownProfiles } from "../diagnose.js"
 import { permissionKeyOf } from "../permissions.js"
-import { forCommand } from "./context.js"
+import { environmentOf, forCommand } from "./context.js"
 
 const SHOWN: SourcedSetting[] = [
   ...AI_SETTING_KEYS,
@@ -52,6 +52,24 @@ const SHOWN: SourcedSetting[] = [
 ]
 
 const snakeName = (setting: string) => setting.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+
+const refuseAgentPermissionChange = (setting: string): void => {
+  const key = setting.startsWith("permissions.") ? setting.slice("permissions.".length) : undefined
+  if (
+    setting === "permissions" ||
+    key === "mcp" ||
+    key?.startsWith("mcp.") ||
+    key === "bot.api" ||
+    key?.startsWith("bot.api.")
+  )
+    throw new CliError(
+      "permission_error",
+      "an agent cannot replace permissions or change permissions.mcp or permissions.bot.api — the owner sets them in a terminal",
+      {
+        permission: key ?? "mcp.authority",
+      },
+    )
+}
 
 export const configCommand = (): Command => {
   const command = annotate(new Command("config"), {}).description("the settings in force, and where each one came from")
@@ -113,7 +131,7 @@ export const configCommand = (): Command => {
     })
 
   for (const action of ["set", "unset"] as const) {
-    const sub = grantsAuthority(annotate(command.command(action), { effects: LOCAL_WRITE, mcp: false }))
+    const sub = grantsAuthority(annotate(command.command(action), { effects: LOCAL_WRITE }))
       .argument("<setting>", `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`)
       .option("--defaults", "change what every profile gets, rather than this profile")
       .option("--personal", "only for personal accounts — the personal section of the file")
@@ -126,6 +144,7 @@ export const configCommand = (): Command => {
 
     sub.action(async function (this: Command, setting: string, given: unknown) {
       const value = action === "set" ? String(given) : undefined
+      if (environmentOf(this).agent) refuseAgentPermissionChange(setting)
       const flags = this.opts<{ defaults?: boolean; personal?: boolean; bot?: boolean }>()
       const { settings, renderer, format, streams } = forCommand(this, {
         needsProfile: !flags.defaults && setting !== "default_profile" && !isStoreSetting(setting),

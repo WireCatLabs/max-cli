@@ -192,8 +192,8 @@ max personal schedule agent follow-ups claude "выполни ежедневну
 0 19 * * * claude -p "$(cat ~/max-recipes/news.md)" --allowedTools "Bash(max personal inbox:*)"
 ```
 
-В `morning.md` — `max personal inbox --new --kind dialog,group --json`, в `news.md` —
-`max personal inbox --new --kind channel --json` и просьба выбрать главное. Без `--kind` — всё вместе.
+В `morning.md` — `max personal inbox --new kind:dialog,group --json`, в `news.md` —
+`max personal inbox --new kind:channel --json` и просьба выбрать главное. Без `kind:` — всё вместе.
 
 ## Недельный отчёт по рабочему чату
 

@@ -39,7 +39,7 @@
 **Команда:**
 
 ```sh
-max personal stats messages top --chat "Поход" --measure reactions --limit 3 --json
+max personal stats messages top chat:"Поход" --measure reactions --limit 3 --json
 ```
 
 **Пример ответа агента:**
@@ -63,7 +63,7 @@ max personal stats messages top --chat "Поход" --measure reactions --limit 
 **Команда:**
 
 ```sh
-max personal stats contacts top --chat "Поход" --measure answers --limit 3 --json
+max personal stats contacts top chat:"Поход" --measure answers --limit 3 --json
 ```
 
 **Пример ответа агента:**
@@ -89,7 +89,7 @@ max personal stats contacts top --chat "Поход" --measure answers --limit 3 
 **Команда:**
 
 ```sh
-max personal stats messages unanswered --chat "Поход" --older-than 24h --json
+max personal stats messages unanswered chat:"Поход" older_than:24h --json
 ```
 
 **Пример ответа агента:**
@@ -115,7 +115,7 @@ max personal stats messages unanswered --chat "Поход" --older-than 24h --js
 **Команда:**
 
 ```sh
-max personal stats contacts responses --chat "Поход" --answerer "Алекс" --json
+max personal stats contacts responses chat:"Поход" --answerer "Алекс" --json
 ```
 
 **Пример ответа агента:**
@@ -194,7 +194,7 @@ max personal stats chats retention "Поход" --checkpoints 1d,7d,30d --within
 **Команда:**
 
 ```sh
-max personal stats messages discussion --chat "Новости" --min-views 100 --max-replies 0 --json
+max personal stats messages discussion chat:"Новости" min_views:100 max_replies:0 --json
 ```
 
 **Пример ответа агента:**

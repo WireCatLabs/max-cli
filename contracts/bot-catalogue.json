@@ -312,6 +312,63 @@
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
   },
+  "chats rules set": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a group's id, or the title of a group this bot has seen"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the rule"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "its new value"
+        }
+      },
+      "required": [
+        "chat",
+        "key",
+        "value"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "chats rules unset": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a group's id, or the title of a group this bot has seen"
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the rule"
+        }
+      },
+      "required": [
+        "chat",
+        "key"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
   "chats moderate": {
     "writes": true,
     "input": {
@@ -600,6 +657,31 @@
             }
           ]
         },
+        "all_bots": {
+          "type": "boolean",
+          "description": "also read every other bot's copy on this machine that read_other_bots allows"
+        },
+        "bots": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "one value"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "also read these bots' copies, comma separated — each allowed by read_other_bots"
+            }
+          ],
+          "description": "also read these bots' copies, comma separated — each allowed by read_other_bots"
+        },
         "limit": {
           "type": "integer",
           "minimum": 0,
@@ -641,6 +723,31 @@
             }
           ]
         },
+        "all_bots": {
+          "type": "boolean",
+          "description": "also read every other bot's copy on this machine that read_other_bots allows"
+        },
+        "bots": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "one value"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "also read these bots' copies, comma separated — each allowed by read_other_bots"
+            }
+          ],
+          "description": "also read these bots' copies, comma separated — each allowed by read_other_bots"
+        },
         "limit": {
           "type": "integer",
           "minimum": 0,
@@ -672,6 +779,51 @@
   },
   "recipients list": {
     "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "recipients add": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, `user:<id>`, or the title of a chat this bot has seen"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "recipients remove": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the chat id, or the title as the list shows it"
+        }
+      },
+      "required": [
+        "chat"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "recipients clear": {
+    "writes": true,
     "input": {
       "type": "object",
       "properties": {},
@@ -863,6 +1015,31 @@
           "pattern": "^(?!-$)[\\s\\S]+$",
           "description": "an id, @username or part of a name"
         },
+        "all_bots": {
+          "type": "boolean",
+          "description": "also read every other bot's copy on this machine that read_other_bots allows"
+        },
+        "bots": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "one value"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "also read these bots' copies, comma separated — each allowed by read_other_bots"
+            }
+          ],
+          "description": "also read these bots' copies, comma separated — each allowed by read_other_bots"
+        },
         "limit": {
           "type": "integer",
           "minimum": 0,
@@ -879,6 +1056,55 @@
       },
       "required": [
         "who"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "store fetch": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a chat id, or the title of a chat this bot has seen"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "at most this many messages in this run; 1000 if not given"
+        },
+        "page_size": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "how many messages one request asks for; 100 if not given"
+        },
+        "pause": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "pause between pages, to stay under the messenger's limits"
+        },
+        "since_time": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago"
+        },
+        "last": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "stop once the newest n messages are held"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat"
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
@@ -1035,6 +1261,1037 @@
         "message",
         "comment"
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-my-info": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api edit-my-commands": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-chat": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Requested chat or channel identifier"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api edit-chat": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api send-action": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat identifier"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-pinned-message": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat identifier to get its pinned message"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api pin-message": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat identifier where message should be pinned"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api unpin-message": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat identifier to remove pinned message"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-membership": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api leave-chat": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-admins": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api post-admins": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api delete-admins": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        },
+        "user_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "User identifier"
+        }
+      },
+      "required": [
+        "chat_id",
+        "user_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-members": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        },
+        "user_ids": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Comma-separated list of users identifiers to get their membership. When this parameter is passed, both `count` and `marker` are ignored"
+        },
+        "marker": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Marker"
+        },
+        "count": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Count"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api add-members": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat identifier"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "chat_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api remove-member": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier"
+        },
+        "user_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "User id to remove from chat or channel"
+        },
+        "block": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Set to `true` if user should be blocked in chat."
+        }
+      },
+      "required": [
+        "chat_id",
+        "user_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-subscriptions": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api subscribe": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api unsubscribe": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "URL to remove from WebHook subscriptions"
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-upload-url": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Uploaded file type: image, audio, video, file"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-messages": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Chat or channel identifier to get messages in chat or channel"
+        },
+        "message_ids": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Comma-separated list of message ids to get"
+        },
+        "from": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Start time for requested messages - use after instead"
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "End time for requested messages  - use before instead"
+        },
+        "before": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Messages before timestamp"
+        },
+        "after": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Messages after timestamp"
+        },
+        "count": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Maximum amount of messages in response"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api send-message": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Fill this parameter if you want to send message to user"
+        },
+        "chat_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Fill this if you send message to chat or channel"
+        },
+        "disable_link_preview": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "If `false`, server will not generate media preview for links in text"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api edit-message": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Editing message identifier"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "message_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api delete-message": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Deleting message identifier"
+        }
+      },
+      "required": [
+        "message_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-message-by-id": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Message identifier (`mid`) to get single message in chat or channel"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "message_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-comments": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Message identifier (`mid`) of the commented message"
+        },
+        "comment_ids": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Comma-separated list of comment ids to get"
+        },
+        "before": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Comments before timestamp"
+        },
+        "after": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Comments after timestamp"
+        },
+        "count": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Maximum amount of comments in response"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "message_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api send-comment": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Message identifier (`mid`) of the commented message"
+        },
+        "disable_link_preview": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "If `false`, server will not generate media preview for links in text"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "message_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api edit-comment": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Message identifier (`mid`) of the commented message"
+        },
+        "comment_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Editing comment identifier"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "message_id",
+        "comment_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api delete-comment": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Message identifier (`mid`) of the commented message"
+        },
+        "comment_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Deleting comment identifier"
+        }
+      },
+      "required": [
+        "message_id",
+        "comment_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-comment-by-id": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "message_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Message identifier (`mid`) of the commented message"
+        },
+        "comment_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Comment identifier (`mid`) to get single comment in channel"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "message_id",
+        "comment_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-video-attachment-details": {
+    "writes": false,
+    "input": {
+      "type": "object",
+      "properties": {
+        "video_token": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Video attachment token"
+        },
+        "offline": {
+          "type": "boolean",
+          "description": "answer from the copy on this machine only"
+        }
+      },
+      "required": [
+        "video_token"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api answer-on-callback": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "callback_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Identifies a button clicked by user. Bot receives this identifier after user pressed button as part of `MessageCallbackUpdate`"
+        },
+        "disable_link_preview": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "If `true`, server will not generate media preview for links in updated message text"
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          ],
+          "description": "the request body as JSON; - reads it from stdin"
+        },
+        "body_file": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "the request body from a JSON file; - is stdin"
+        }
+      },
+      "required": [
+        "callback_id"
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "api get-updates": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Maximum number of updates to be retrieved"
+        },
+        "poll_timeout": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Timeout in seconds for long polling"
+        },
+        "marker": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "Pass `null` to get updates you didn't get yet"
+        },
+        "types": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "^(?!-$)[\\s\\S]+$",
+                "description": "one value"
+              },
+              "minItems": 1
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^(?!-$)[\\s\\S]+$",
+              "description": "Comma separated list of update types your bot want to receive"
+            }
+          ],
+          "description": "Comma separated list of update types your bot want to receive"
+        }
+      },
+      "required": [],
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
   }

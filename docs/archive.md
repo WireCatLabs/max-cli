@@ -320,10 +320,15 @@ max personal server logs             # последние строки его ж
 max personal server install          # служба systemd (Linux) или launchd (macOS) для профиля; ничего не запускает
 max personal server uninstall        # убрать службу; сначала max personal server stop
 max personal watch                   # в другом: новые сообщения по мере прихода
-max personal watch --jsonl           # то же для скрипта: одно сообщение на строку, как у `messages list`
+max personal watch --jsonl           # для скрипта: записи item/data и завершающая end
 max personal watch --jsonl | ./on-message.sh
-max personal watch --events --jsonl  # ещё правки, удаления, реакции, прочтения и изменения чатов; у строки поле "event"
+max personal watch --events --jsonl  # ещё правки, удаления, реакции, прочтения и изменения чатов; поле "event" внутри data
 ```
+
+В `watch --json` и `watch --jsonl` каждая строка с данными имеет вид
+`{"type":"item","data":…}`. Сообщение или событие находится в `data`; имена полей — snake_case.
+Завершение потока — отдельная запись `{"type":"end",…}` с признаком полноты. При сбое источника
+поток завершается неполным и команда возвращает код ошибки. Обрабатывайте `type` до чтения данных.
 
 - **После обновления `max`** сервер, который запустила команда, сменяется новым сам. Запущенный
   руками работает на старой версии, пока его не перезапустить: `max personal server status` это покажет,

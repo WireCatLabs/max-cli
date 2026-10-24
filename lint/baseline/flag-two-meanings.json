@@ -1,11 +1,5 @@
 [
   "--add",
-  "--by",
-  "--file",
-  "--kind",
-  "--limit",
   "--model",
-  "--provider",
-  "--source",
   "--type"
 ]

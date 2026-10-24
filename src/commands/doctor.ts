@@ -221,7 +221,7 @@ const reportCommand = (): Command => {
     await run("doctor report", async () => explain(this, { renderer, format, streams }))
   })
 
-  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE, mcp: false }))
+  destroysNothing(annotate(report.command("create"), { effects: LOCAL_WRITE }))
     .description("write a problem report to a file, and print how to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
     .option("--output <file>", "where to write it; a new file in this directory if not given")

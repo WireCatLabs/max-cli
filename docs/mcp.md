@@ -142,24 +142,26 @@ max work mcp config
 
 ### Чего нет в MCP
 
-Агент видит все команды, кроме этих. Права профиля ограничивают остальные.
+Права профиля ограничивают команды агента. Команды, которые меняют, что смогут следующие запуски
+(`config set`, `recipients add`, `replies add`, `schedule command`, `skill install` и подобные),
+предлагаются при `permissions.mcp.authority: allow` или `ask`; по умолчанию — `deny`.
+Агент не может менять ключи `permissions.mcp` и `permissions.bot.api`, в том числе через целый
+объект `permissions`: их задаёт владелец в терминале.
+
+Запись в хранилище, управление сервером, скачивание моделей и создание отчёта тоже доступны через
+MCP и ограничиваются собственными ключами, например `store.backup`, `server.start`,
+`models.audio.download`, `doctor.report.create`. По умолчанию у них `ask`: терминал запрашивает
+подтверждение, MCP допускает запрошенное действие без формы. У бота сырой `bot api` доступен только
+при явном `permissions.bot.api: allow` или `ask`; по умолчанию он закрыт даже при `bot: allow`.
+
+Следующие команды не предлагаются:
 
 | Команды | Почему |
 |---|---|
 | `setup`, `session` | вход и выход: их делает человек |
 | `upgrade`, `complete` | обновляют саму программу и автодополнение в терминале |
 | `serve`, `watch`, `mcp`, `bot watch`, `bot mcp` | работают, пока их не остановят, а вызов агента должен закончиться |
-| `config set`, `config unset`, `skill install`, `flood clear`, `models text key set`, `models text key remove` | меняют, что смогут следующие запуски; иначе агент снял бы ограничение «только чтение» |
-| `recipients add`, `recipients remove`, `recipients clear`, `chats rules set`, `chats rules unset` | то же |
-| `replies add`, `replies on`, `replies off`, `replies edit`, `replies audience`, `replies pause`, `replies resume` | то же |
-| `replies consents grant`, `replies consents revoke`, `replies consents deny`, `replies consents allow` | то же |
-| `schedule command`, `schedule agent`, `schedule remove`, `server install`, `server uninstall` | то же |
-| `attachments jobs install`, `attachments jobs start`, `attachments jobs stop`, `attachments jobs uninstall` | то же |
-| `bot chats rules set`, `bot chats rules unset`, `bot recipients add`, `bot recipients remove`, `bot recipients clear` | то же, для бота |
-| `store backup`, `store restore`, `store migrate`, `store repair`, `store reset`, `store clear`, `store decrypt` | ни один ключ прав пока их не ограничивает |
-| `store copies delete`, `server start`, `server stop`, `server restart`, `schedule run`, `schedule exec` | то же |
-| `images models download`, `models audio download`, `models text download`, `doctor report create` | то же |
-| `account sessions end`, `chats delete`, `chats clear`, `bot auth`, `bot store fetch`, `bot api` | то же |
+| `bot auth` | токен вводит человек |
 | `bot uploads put` | читает файл с вашего компьютера |
 
 ## Инструменты

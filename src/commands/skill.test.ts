@@ -28,7 +28,7 @@ describe("the skill an agent is given", () => {
       commands
         .filter((command) => command.options.some((option) => option.long === "--profile"))
         .map((command) => `${command.parent?.name()} ${command.name()}`),
-    ).toEqual(["runs search"])
+    ).toEqual([])
   })
 
   it("names only commands that exist", () => {

@@ -12,8 +12,6 @@
   "bot comments list <message>",
   "bot comments send <message>",
   "bot comments send <text>",
-  "bot recipients add <chat>",
-  "bot recipients remove <chat>",
   "bot uploads put <file>",
   "schedule exec <file>",
   "schedule remove <name>",

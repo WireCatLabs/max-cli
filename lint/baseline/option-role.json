@@ -1,5 +1,4 @@
 [
-  "bot api --store-token",
   "bot search messages --from",
   "replies audience --reply",
   "replies edit --as-reply",
@@ -19,13 +18,5 @@
   "replies edit --template",
   "replies edit --words",
   "replies test --ai",
-  "runs search --error-code",
-  "runs search --operation",
-  "runs search --status",
-  "stats contacts top --message-kind",
-  "stats contacts top --min-messages",
-  "stats messages discussion --min-views",
-  "stats messages top --message-kind",
-  "stats messages unanswered --older-than",
   "stickers list --set"
 ]

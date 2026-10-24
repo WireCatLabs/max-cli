@@ -1,11 +1,7 @@
 import type { Untested } from "./test-matrix-untested.ts"
 
 export const MEDIA_ARCHIVE_UNTESTED: Untested[] = [
-  ["attachments download"],
-  ["attachments download", "--chat"],
   ["attachments download", "--since-time"],
-  ["attachments download", "--pause"],
-  ["attachments check"],
   ["attachments move"],
   ["attachments move", "--before-time"],
   ["attachments move", "--dry-run"],

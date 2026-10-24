@@ -67,17 +67,13 @@ describe("the shared runs command in MAX", () => {
     expect(
       await run(
         [
-          "runs",
           "search",
+          "runs",
           "50",
-          "--status",
-          "partial",
-          "--error-code",
-          "rate_limited",
-          "--operation",
-          "messages.download",
-          "--profile",
-          "synthetic",
+          "status:partial",
+          "error_code:rate_limited",
+          "operation:messages.download",
+          "profile:synthetic",
           "--since-time",
           "2020-01-01",
           "--limit",
