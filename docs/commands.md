@@ -2317,13 +2317,13 @@ max store clear [options]
 
 ### `max store info`
 
-the store file: where it is, its size, its schema and how many rows it holds; changes nothing
+the store file: where it is, its size, its schema and how many rows it holds, by provider, chat kind, account, year (UTC) and attachment kind, over every account; changes nothing
 
 ```sh
 max store info
 ```
 
-**Returns:** store info — path, exists, opens, error, bytes, schema, rows, pending_normalization, and 2 more; every field: max commands info store info
+**Returns:** store info — path, exists, opens, error, bytes, schema, rows, pending_normalization, and 7 more; every field: max commands info store info
 
 **Example:** `max personal store info`
 
@@ -4370,7 +4370,7 @@ max search runs [query] [options]
 | `--limit <n>` | matches per page, at most 100. По умолчанию: `20`. |
 | `--page <n>` | result page. По умолчанию: `1`. |
 
-**Returns:** run hit — run_id, command, profile, started_at, status, cli_version, events, events_truncated, and 13 more; every field: max commands info search runs
+**Returns:** run hit — run_id, command, started_at, status, cli_version, events, events_truncated, profile, and 18 more; every field: max commands info search runs
 
 **Example:** `max personal search runs timeout status:failed --limit 10`
 
@@ -4574,7 +4574,7 @@ max models list [query]
 
 ### `max models download`
 
-download and verify one speech or embedding model
+download and verify one speech or embedding model: tens to hundreds of MB, each size in models list
 
 **Читает из внешнего сервиса.**
 
@@ -4594,7 +4594,7 @@ max models download <model> [options]
 
 **Next usually:** `max images models download <model>`
 
-**Example:** `max personal models download parakeet-v3`, `max personal models download e5-small`
+**Example:** `max personal models download e5-small`
 
 ## `max polls`
 
@@ -5554,7 +5554,7 @@ max runs list [query] [options]
 | `--limit <n>` | how many to show. По умолчанию: `20`. |
 | `--page <n>` | which page, starting at 1. По умолчанию: `1`. |
 
-**Returns:** run — run_id, command, profile, started_at, status, cli_version, completed_at, requests, and 15 more; every field: max commands info runs list
+**Returns:** run — run_id, command, started_at, status, cli_version, profile, completed_at, requests, and 20 more; every field: max commands info runs list
 
 **Example:** `max personal runs list --limit 10`
 
@@ -5574,7 +5574,7 @@ max runs show <run-id> [options]
 |---|---|
 | `--problems` | only failed responses, warnings and crashes. |
 
-**Returns:** run details — run_id, command, profile, started_at, status, cli_version, directory, event_count, and 14 more; every field: max commands info runs show
+**Returns:** run details — run_id, command, started_at, status, cli_version, directory, event_count, events, and 19 more; every field: max commands info runs show
 
 **Example:** `max personal runs show run-101`
 
@@ -7443,7 +7443,7 @@ max guide [name]
 
 **Returns:** scenarios: the commands for a common task, in order, and why each
 
-**Example:** `max guide`, `max guide <name> --json`
+**Example:** `max guide`, `max guide agent-on-a-timer --json`
 
 ## Коды возврата
 
