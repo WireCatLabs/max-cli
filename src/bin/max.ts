@@ -4,7 +4,7 @@ import { errorObjectOf, exitCodeOfError, renderError } from "@wirecat/cli-base"
 
 // Compiling about 1,100 module files is most of a start; later runs reuse what this one compiled.
 enableCompileCache()
-const [{ startCli }, { MAX_APP }] = await Promise.all([import("@wirecat/cli-core/cli"), import("../app.js")])
+const [{ startCli }, { MAX_APP }] = await Promise.all([import("@wirecat/cli-core/cli/start"), import("../app.js")])
 await startCli({
   app: MAX_APP,
   sqlite: true,
