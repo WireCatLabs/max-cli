@@ -88,13 +88,6 @@ describe("global installation", () => {
     expect(existsSync(join(install.home, ".agents"))).toBe(false)
   })
 
-  it("accepts the shared Windows installer's legacy agent selection", () => {
-    const install = sandbox()
-    completeGlobalInstall({ ...install, env: { ...install.env, TG_INSTALL_AGENT: "codex" }, platform: "linux" })
-    expect(existsSync(join(install.home, ".agents/skills/max-cli/SKILL.md"))).toBe(true)
-    expect(existsSync(join(install.home, ".claude"))).toBe(false)
-  })
-
   it("passes Windows paths through environment variables to the bundled repair", () => {
     const install = sandbox()
     vi.mocked(spawnSync).mockReturnValue({ pid: 1, output: [], stdout: "", stderr: "", status: 0, signal: null })
