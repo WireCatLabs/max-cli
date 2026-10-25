@@ -9,7 +9,9 @@ else.
 cleanup list and captures of the real web client (`captures/`). It is **not in this repository**: it is
 the private repository `WireCatLabs/cli-private`; clone it into `docs_ai/` (`secrets/` inside it is ignored
 and never pushed). Without it, start from [`docs/dev/BACKLOG.md`](docs/dev/BACKLOG.md) and
-[`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md). Commit and push `docs_ai/` like any other repository — it is the only copy of the rulings.
+[`docs/dev/ARCHITECTURE.md`](docs/dev/ARCHITECTURE.md). Commit and push it like any other repository — it is the
+only copy of the rulings — but from your own cli-private worktree, never in the shared `docs_ai/` checkout
+(`docs_ai/HANDOFF.md`, "Committing to this repository").
 
 Then the one reference that covers what you are about to touch —
 [`docs/dev/CONVENTIONS.md`](docs/dev/CONVENTIONS.md) for how code and documents are written here, and
