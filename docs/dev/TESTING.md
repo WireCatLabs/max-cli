@@ -363,3 +363,12 @@ process diagnostics and recorded run logs are checked within the contract runner
 These commands run in full validation: on every pull request, on each merge to `main`, monthly, before a release
 and by hand. See the
 [upgrade guide](https://github.com/WireCatLabs/cli-testing/blob/main/docs/ci/UPGRADES.md).
+
+## A version pull request skips the full validation
+
+A pull request that changes only `CHANGELOG.md` and the version in `package.json` and `src/version.ts`, against a
+`main` whose pull request passed every required check on the same tree (bin/release's version pull requests), runs
+`pnpm version:check` and `pnpm docs:check` instead, and reports the other required `validation / …` checks as
+passed, saying why ([`scripts/ci-unchanged.sh`](../../scripts/ci-unchanged.sh),
+[`scripts/ci-fingerprint.sh`](../../scripts/ci-fingerprint.sh)). The push to `main` that follows runs the full
+validation.
