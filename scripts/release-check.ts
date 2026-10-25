@@ -3,7 +3,7 @@
  * `bin/release` runs the full check; release CI uses --artifact-only after full validation, and full validation
  * runs --package-only. The judgement half —
  * changelog wording, docs against the diff, requirements, live scenarios — is the release skill,
- * `.claude/skills/release/SKILL.md`.
+ * `docs/dev/skills/release/SKILL.md`.
  *
  *   pnpm release:check
  */

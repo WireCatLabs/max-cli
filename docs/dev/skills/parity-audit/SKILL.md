@@ -15,7 +15,7 @@ is unverified. Preserve the owner's scope: this audit authorizes no live account
 From max-cli, run:
 
 ```sh
-python3 .claude/skills/parity-audit/scripts/run.py
+python3 docs/dev/skills/parity-audit/scripts/run.py
 ```
 
 The launcher clones fresh cli-core main into a disposable workspace; the shared runner clones

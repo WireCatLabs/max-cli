@@ -114,6 +114,11 @@ kill that PID.
 Conventional commits. The pre-commit hook checks staged lint and secrets. Work on a
 branch off `main`, in a worktree, and open a pull request.
 
+The maintainer skills (`add-command`, `parity-audit`, `release`, `test-live`) live in
+[`docs/dev/skills/`](docs/dev/skills/). A checkout links them once, from a terminal:
+`mkdir -p .claude && ln -s ../docs/dev/skills .claude/skills`. The link is ignored, never tracked:
+skills.sh lists every skill under `.claude/skills` to people who install max-cli's skill.
+
 ## Development check budget
 
 Local commits check only staged lint and secrets. There is no pre-push check.
