@@ -2,7 +2,7 @@
 # Publishes the version in package.json, tags it, creates the GitHub release, installs `max`.
 #
 #   bin/release           # publishes from GitHub Actions (.github/workflows/release.yml)
-#   bin/release --local   # publishes from this machine with the npm token from the keyring
+#   bin/release --local   # publishes from this machine: the keyring entry NPM_KEYRING_ACCOUNT names, else npm's login
 #   bin/release --report <path>   # checks that signed report instead of docs_ai/releases/<version>.md
 #
 # Steps 3–7 of docs_ai/releasing.md. Run on a clean, up-to-date `main`, after the release skill has
@@ -236,12 +236,16 @@ if [ "$mode" = ci ]; then
   exit 0
 fi
 
-token=$(secret-tool lookup service npm account leemour) || { echo "no npm token in the keyring (service=npm account=leemour)" >&2; exit 1; }
-[ -n "$token" ] || { echo "the keyring entry is empty" >&2; exit 1; }
+# No default account: one person's account name does not belong in a shared script. Unset, pnpm uses your npm login.
+if [ -n "${NPM_KEYRING_ACCOUNT:-}" ]; then
+  NPM_TOKEN=$(secret-tool lookup service npm account "$NPM_KEYRING_ACCOUNT" 2>/dev/null) && [ -n "$NPM_TOKEN" ] ||
+    { echo "no npm token in the keyring for service npm, account $NPM_KEYRING_ACCOUNT" >&2; exit 1; }
+  export NPM_TOKEN
+fi
 
 echo "== publishing $version =="
 # Our own checks above stand in for pnpm's: it counts untracked files as a dirty tree.
-NPM_TOKEN="$token" pnpm publish --access public --no-git-checks
+pnpm publish --access public --no-git-checks
 
 echo "== waiting for npm to show $version (up to three minutes) =="
 seen=""
