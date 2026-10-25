@@ -120,6 +120,7 @@ max config show --json     # то же одним объектом
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
 | `sender_colors` | в `max personal messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
 | `search_catch_up` | после `messages sync` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
+| `search_reranker` | какой моделью `search messages --discover` переставляет первые 50 результатов: `mmarco`, `bge-reranker-v2-m3` или `off`. Действует, только когда модель скачана (`max personal models download mmarco`); сама она не скачивается | — | `mmarco` |
 | `record` | записывать ли каждый запуск, как будто передан `--record` ([диагностика](diagnostics.md)) | `--record`, `--no-record` | `false` |
 | `keep_runs_for_days` | сколько дней хранятся записи запусков | — | `30` |
 | `permissions` | уровни прав по ресурсам и командам: `deny`, `readonly`, `ask`, `allow`; более точный ключ имеет приоритет ([ниже](#права-доступа)) | —; `--yes` и `--allow-dangerous` только отвечают на `ask`, `deny` они не снимают | всё `allow`, кроме: удаление, завершение других сессий и ещё несколько необратимых изменений — `ask`; автоответы `replies.send` — `deny` |
@@ -336,6 +337,7 @@ max personal chats list
 | `requests_per_minute` | целое число ≥ 0 | профиль |
 | `color`, `record` | boolean | профиль |
 | `sender_colors`, `search_catch_up`, `serve` | boolean | личный аккаунт |
+| `search_reranker` | `mmarco`, `bge-reranker-v2-m3`, `off` | профиль |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |
 | `read_other_bots` | boolean или массив имён профилей | только `bot` |
 | `update_check`, `skill_hint` | boolean | только `defaults` |
