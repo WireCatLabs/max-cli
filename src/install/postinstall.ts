@@ -47,7 +47,7 @@ export const completeGlobalInstall = ({
     note("max: Windows user PATH updated; refresh the current agent shell or open a new terminal to run max directly.")
   }
   // npm hides a lifecycle script's output, so writing into the owner's agent folders here must be asked for.
-  const agent = env.MAX_INSTALL_AGENT ?? env.TG_INSTALL_AGENT
+  const agent = env.MAX_INSTALL_AGENT
   if (agent === undefined || agent === "none") {
     note("max: agent skill not installed; max personal setup offers it, or run max skill install --for all.")
   } else {

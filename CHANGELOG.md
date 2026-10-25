@@ -13,6 +13,7 @@
 
 ### Изменено — может сломать скрипты
 
+- **`npm install -g` выбирает агента для навыка только по `MAX_INSTALL_AGENT`.** `TG_INSTALL_AGENT` больше не читается.
 - **В ответе `doctor` вместо строки `config.error` — список `config.issues`.** Если настройки не удалось разрешить из-за блокировки профиля, флага или переменной окружения, сообщение — в `settings.error`.
 - **Старые имена настроек больше не распознаются.** `default_profile`, `analysis_provider`, `analysis_model`, `analysis_base_url` с переменными `MAX_ANALYSIS_*` и имена в camelCase (`sendsPerHour` и другие) — неизвестные настройки, как любые другие: команда отказывает и называет `config unset`, который убирает ключ. Модель анализа задаётся в `models.analysis.provider`, `models.analysis.model` и `models.analysis.base_url`.
 - **`messages sync` и `bot messages sync` проверяются по своим ключам `messages.sync` и `bot.messages.sync` (cli-core 0.421.0).** Уровень на `messages` или `bot.messages` по-прежнему действует на них, а запрет, записанный прямо на `messages.sync` или `bot.messages.sync`, теперь останавливает команду. Команды бота проверяют запрет на чтение до подключения.
