@@ -1,14 +1,7 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { CliError } from "@wirecat/cli-base"
 import { metaOf } from "@wirecat/cli-base/commands"
-import {
-  type Asker,
-  assertStatsPermissionsCurrent,
-  keyForCommand,
-  levelFor,
-  readKeysForCommand,
-  skipFlagFor,
-} from "@wirecat/cli-core/sends"
+import { type Asker, keyForCommand, levelFor, readKeysForCommand, skipFlagFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
 import { BOT_KEYS } from "./bot/permissions.js"
 import type { Environment } from "./commands/context.js"
@@ -52,7 +45,6 @@ export const assertReadable = (
   settings: Pick<Settings, "profile" | "permissions" | "permissionSources">,
   key: string,
 ): void => {
-  assertStatsPermissionsCurrent(key.split("."), settings.permissions)
   for (const source of readKeysForCommand(key.split("."))) {
     const resolved = levelFor(settings.permissions, source)
     if (resolved.level === "deny")
