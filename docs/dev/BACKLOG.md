@@ -35,3 +35,7 @@ None open.
   (`readLikeTab`); [notes](BACKLOG-NOTES.md#max-52).
 - **RES-5** · 🟡 P2 · Does `LOGIN` itself move presence? Needs a second device watching; the steps are in the notes.
   [notes](BACKLOG-NOTES.md#res-5).
+- **CLI-85** · P2 · Switch `src/bin/max.ts` to cli-core's `startCli` ([cli-core
+  #1924](https://github.com/WireCatLabs/cli-core/pull/1924)): `sqlite: true`, `run: ({ args }) => run(args)`. Only the
+  bin's `catchCrashes`/`ensureSqlite` lines go; cli-core's `run()` keeps the signals and pipes, so do not add a second
+  set. Start: `src/bin/max.ts:1-14`.
