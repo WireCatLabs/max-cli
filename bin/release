@@ -140,6 +140,19 @@ carry() {
   fi
 }
 
+# A pull request checked before the last release and merged after it put its entry in that release's section;
+# restore moves it to «Не выпущено», so the fold below brings it into this version, and the report goes with it.
+signed_at=$(git rev-parse HEAD)
+restored=$(npx -y -p @wirecat/cli-base@0.55.0 cli-dev changelog restore --land --unreleased "Не выпущено")
+if [ -n "$restored" ]; then
+  echo "$restored"
+  committed
+  signed=$signed_at
+  carry "$version" "bin/release restored the last release's changelog section to its tag." \
+    "docs(releases): $version carried to the restored changelog by bin/release"
+fi
+rerun_if_changed "$@"
+
 # A session that merges after the version was dated, but before it was published, adds «Не выпущено» above it.
 # cli-dev is pinned rather than taken from the dependencies: cli-core accepts only an older cli-base.
 # --land folds on a fresh main through its own pull request, and folds again once if main moves under it.
