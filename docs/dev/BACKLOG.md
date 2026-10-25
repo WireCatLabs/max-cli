@@ -30,6 +30,10 @@ None open.
 
 ## Next (P2)
 
+- **RISK-184** · P2 · `inbox --transcribe` returned a voice message without its transcript once on Windows CI,
+  `src/hearing.test.ts:200` ([run 40143390353](https://github.com/WireCatLabs/max-cli/actions/runs/40143390353)).
+  Unknown: whether `missing` said so (the test stopped before line 201). Its fake connection times out after 50 ms;
+  the shared hearing is in cli-core.
 - **MAX-52** · 🟡 P3 · Send the last request a fresh tab sends after LOGIN: 28 `{type: "ANIMOJI", ids}`, which
   needs the 27 `ANIMOJI_SET` answer's shape measured first. From `max serve` only; never 22. `src/client/live.ts`
   (`readLikeTab`); [notes](BACKLOG-NOTES.md#max-52).
