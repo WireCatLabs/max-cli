@@ -2355,7 +2355,7 @@ max store migrate
 
 ### `max store rebuild`
 
-rebuild the word index, its typo vocabulary, the stems, the files' word index, the notes' indexes and who took part in what, from what is stored; loses nothing
+rebuild the word index, its typo vocabulary, the stems, the files' word index, the notes' indexes and who took part in what, from what is stored, and drop the vectors no stored text uses; loses nothing
 
 **Меняет что-то только на этом компьютере.**
 
@@ -2363,7 +2363,7 @@ rebuild the word index, its typo vocabulary, the stems, the files' word index, t
 max store rebuild
 ```
 
-**Returns:** store reindex — path, exists, normalized, indexed, terms, stemmed, notes_indexed, file_texts, and 1 more; every field: max commands info store rebuild
+**Returns:** store reindex — path, exists, normalized, indexed, terms, stemmed, notes_indexed, file_texts, and 2 more; every field: max commands info store rebuild
 
 **Example:** `max personal store rebuild`
 
@@ -3528,7 +3528,7 @@ max conversations embeddings status [options]
 
 #### `max conversations embeddings clear`
 
-drop a chat's vectors, or only one model's; messages and conversations are never touched
+drop a chat's conversation and message vectors, or only one model's; messages and conversations are never touched
 
 **Меняет что-то только на этом компьютере.**
 
@@ -4577,7 +4577,7 @@ max models keys remove <provider>
 
 ### `max models list`
 
-speech and embedding models, their download status and the default of each kind
+speech, embedding and reranker models: downloaded or not, each kind's default
 
 ```sh
 max models list [query]
@@ -4595,7 +4595,7 @@ max models list [query]
 
 ### `max models download`
 
-download and verify one speech or embedding model: tens to hundreds of MB, each size in models list
+download and verify one speech, embedding or reranker model: tens to hundreds of MB, each size in models list
 
 **Читает из внешнего сервиса.**
 
@@ -4615,7 +4615,7 @@ max models download <model> [options]
 
 **Next usually:** `max images models download <model>`
 
-**Example:** `max personal models download e5-small`
+**Example:** `max personal models download e5-small`, `max personal models download mmarco`
 
 ## `max polls`
 
@@ -5470,7 +5470,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 | `value` | обязательный | a number, true or false, or a list like shop,news. |
 
 | Опция | Что делает |
@@ -5495,7 +5495,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, keep_runs_for_days, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 
 | Опция | Что делает |
 |---|---|
@@ -5705,7 +5705,7 @@ max upgrade [options]
 
 **Returns:** upgrade max with the package manager that installed it; --check only looks
 
-**Example:** `max upgrade --check`, `max upgrade`
+**Example:** `max upgrade --check`
 
 ## `max complete`
 

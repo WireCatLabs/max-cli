@@ -476,6 +476,19 @@ describe("local search catch-up setting", () => {
   })
 })
 
+describe("the discovery reranker setting", () => {
+  it("defaults to mmarco, takes off from the file, and refuses an unknown id", () => {
+    expect(settings()).toMatchObject({ searchReranker: "mmarco", sources: { searchReranker: "default" } })
+    withConfig(JSON.stringify({ profiles: { work: { search_reranker: "off" } } }))
+    expect(settings({ profile: "work" })).toMatchObject({
+      searchReranker: "off",
+      sources: { searchReranker: "config file: profiles.work" },
+    })
+    withConfig(JSON.stringify({ defaults: { search_reranker: "nope" } }))
+    expect(() => settings()).toThrow(/reranker/)
+  })
+})
+
 describe("the request pace", () => {
   it("is MAX's own unless the file or MAX_REQUESTS_PER_MINUTE sets it, and refuses a negative", () => {
     withConfig(JSON.stringify({ defaults: {} }))
