@@ -35,6 +35,7 @@ const SHOWN: SourcedSetting[] = [
   "color",
   "senderColors",
   "searchCatchUp",
+  "searchReranker",
   "record",
   "serve",
   "keepRunsForDays",

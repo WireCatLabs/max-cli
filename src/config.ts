@@ -16,6 +16,8 @@ const zeroOrMore = plain("has to be a whole number, 0 or more")
 const countOrZero = v.pipe(v.number(zeroOrMore), v.integer(zeroOrMore), v.minValue(0, zeroOrMore))
 const flag = v.boolean(plain("has to be true or false"))
 
+const coreEntries = settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries
+
 /**
  * ⚠ `strictObject`, not `object`: an unknown key is an error here.
  *
@@ -34,7 +36,8 @@ const sharedEntries = {
   /** The run log reads these two; nothing records anything until it exists. */
   record: v.optional(flag),
   keep_runs_for_days: v.optional(count),
-  permissions: settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries.permissions,
+  permissions: coreEntries.permissions,
+  search_reranker: coreEntries.search_reranker,
   sends_per_hour: v.optional(count),
   requests_per_minute: v.optional(countOrZero),
   ...AI_ENTRIES,
@@ -139,6 +142,8 @@ export interface Settings extends AISettings {
   /** A colour per sender in `messages` — a matter of taste, so off until the profile asks. */
   senderColors: boolean
   searchCatchUp?: boolean
+  /** Which reranker orders `search messages --discover`'s first hits once it is downloaded, or `off`. */
+  searchReranker?: string
   limit: number
   /** Which page, 1-based. Per invocation only — a page number in a configuration file is a setting nobody wants twice. */
   page: number
@@ -218,6 +223,7 @@ export type SourcedSetting =
   | "color"
   | "senderColors"
   | "searchCatchUp"
+  | "searchReranker"
   | "record"
   | "serve"
   | "keepRunsForDays"
