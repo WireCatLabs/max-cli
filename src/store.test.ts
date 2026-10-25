@@ -172,6 +172,7 @@ describe("max store", () => {
     const logins = sent(Opcode.LOGIN).length
 
     expect((await max(["s-care", "store", "info", "--json"], environment)).code).toBe(0)
+    expect((await max(["s-care", "store", "tables", "list", "--json"], environment)).code).toBe(0)
     expect((await max(["s-care", "store", "check", "--json"], environment)).code).toBe(0)
     expect((await max(["s-care", "store", "migrate", "--json"], environment)).code).toBe(0)
     expect((await max(["s-care", "store", "backup", backup, "--json"], environment)).code).toBe(0)
