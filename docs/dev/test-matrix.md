@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**903 ✅ · 173 ⛔ · 0 ❌** — 358 commands, 718 options.
+**904 ✅ · 173 ⛔ · 0 ❌** — 358 commands, 719 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -286,6 +286,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store repair` | `--dry-run` | ✅ |  |
 | `store reset` |  | ✅ |  |
 | `store reset` | `--no-backup` | ✅ |  |
+| `store reset` | `--dry-run` | ✅ |  |
 | `store copies delete` |  | ✅ |  |
 | `store tables list` |  | ✅ |  |
 | `stats messages show` |  | ✅ |  |

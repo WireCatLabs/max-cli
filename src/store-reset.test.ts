@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest"
 import { run } from "./program.js"
 
 describe("offline store reset", () => {
-  it("backs up by default, requires confirmation, and supports explicit no-backup without connecting", async () => {
+  it("backs up by default, requires confirmation, previews with --dry-run, and supports explicit no-backup without connecting", async () => {
     const path = join(mkdtempSync(join(tmpdir(), "max-reset-")), "wirecat.db")
     const env = { ...process.env, MESSAGING_STORE: path }
     const key = { provider: "max" as const, account: "synthetic" }
@@ -29,6 +29,9 @@ describe("offline store reset", () => {
     }
     const refused = await call(["store", "reset", "--json"])
     expect(refused.code).not.toBe(0)
+    const preview = await call(["store", "reset", "--dry-run", "--json"])
+    expect(preview.code).toBe(0)
+    expect(preview.answer).toMatchObject({ path, dry_run: true, reset: false })
     const untouched = await openStore({ path })
     expect(await untouched.sync.syncState(key, "fixture")).toMatchObject({ value: "retained-marker" })
     await untouched.close()
