@@ -67,7 +67,7 @@ max config show --json     # то же одним объектом
 откуда они взяты: `store` или `default`.
 
 `--bot` показывает настройки так, как их получит `max <имя> bot …`: у бота свой раздел и свой лимит
-отправок. Если файла нет, загрузка настроек сначала создаёт его с обычными значениями по умолчанию.
+отправок. Если файла нет, `config show` сначала создаёт его с обычными значениями по умолчанию.
 Существующий файл не перезаписывается. Если задана одна из переменных `MAX_*_DIR`, команда скажет об
 этом в stderr: с ними у профиля другая запись в ключнице, и вход, сделанный без них, выглядит как
 «нет сессии».
@@ -83,14 +83,12 @@ max config show --json     # то же одним объектом
 ## Файл
 
 `~/.config/max-cli/config.json` на Linux; пути на других системах — в
-[руководстве по настройкам](configuration.md#где-лежит-файл). Первая команда, читающая настройки,
-создаёт его с `limit`, `keep_runs_for_days`, `sends_per_hour`, `update_check` и `skill_hint` в `defaults`.
+[руководстве по настройкам](configuration.md#где-лежит-файл). Первая команда, читающая настройки, —
+например `config show`, `account list` или `chats list` — создаёт его с `limit`, `keep_runs_for_days`, `sends_per_hour`, `update_check` и `skill_hint` в `defaults`.
 Файл создаётся с правами `0600`, а `max personal config set` записывает его с правами `0644`: секретов в нём нет.
+`max personal doctor` файл только читает: если его нет, он отвечает `config.found: false` и не создаёт его.
 
-Имена настроек пишутся в snake_case: `sends_per_hour`, `keep_runs_for_days`, `models.<назначение>.base_url`. Файл со
-старыми именами (`sendsPerHour`, `keepRunsForDays`, `baseUrl`) первое же чтение переименовывает само, один раз и
-только если результат проходит проверку. Имена профилей, пути в `permissions` и назначения моделей не
-меняются. Одна настройка под обоими именами с разными значениями — ошибка.
+Имена настроек пишутся в snake_case: `sends_per_hour`, `keep_runs_for_days`, `models.<назначение>.base_url`.
 
 ```json
 {
@@ -131,14 +129,10 @@ max config show --json     # то же одним объектом
 | `read_other_bots` | может ли бот читать копии других ботов, когда команда просит это `--all-bots` или `--bots`: `false`, `true` — всех, или список профилей ботов. **Только в разделе `bot`** ([боты](bot.md)) | —; `--all-bots` и `--bots` просят, поле разрешает | `false` |
 | `update_check` | раз в сутки спрашивать npm, нет ли новой версии, и сказать об этом в терминале. **Только в `defaults`**: версия у программы одна на все профили | —; выключают `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER`, `CI` | `true` |
 | `skill_hint` | раз в сутки говорить агенту в stderr, что навыка `max` у него нет или он старше программы и что его ставит `max skill install`. Агента узнаём по переменной `AI_AGENT` или `CLAUDECODE`. **Только в `defaults`** | — | `true` |
-| `allow` | старая настройка, читается для совместимости; вместо неё — `permissions` | — | при заданных `permissions` изменять её нельзя |
 | `embedding_provider` | локальная модель (`local`) или `openai` | `--provider` | `local` |
 | `embedding_model` | модель векторов | `--model` | по сервису |
 | `embedding_base_url` | адрес API векторов | `--base-url` | по сервису |
 | `embedding_dims` | размер вектора, целое 1–65 536 | `--dims` | по модели |
-| `analysis_provider` | агент (`agent`), `openai` или `anthropic` | `build --provider` | `agent` |
-| `analysis_model` | модель анализа | `build --model` | нет; для `--analyze` задайте явно |
-| `analysis_base_url` | адрес API анализа | `build --base-url` | по сервису |
 | `models` | внешние модели по назначению ([ниже](#модели-по-назначению)) | переменные `MAX_MODELS_*` | нет |
 | `search_stemmers.cyrillic`, `search_stemmers.latin` | языки основ слов для поиска во всём общем архиве ([ниже](#языки-поиска)) | — | `russian`, `english,spanish` |
 | `task_first_pass_per_chat` | сколько задач правила могут открыть в каждом чате при первой синхронизации аккаунта, по истории; целое число от 0 до 1000. Позже читаются только новые сообщения, а `tasks scan <чат>` строит задачи по истории по вашей просьбе. Общая для всего архива | — | `0` |
@@ -184,9 +178,9 @@ max config show --json     # то же одним объектом
 `mentions`, `search`, `searches`, `tasks`, `replies`, `attachments`, `stats`, `store` или `metadata`. У `calls` и `stickers` есть только чтение, и ключа права у них нет: `config set`
 отвечает кодом 2. У бота ключи
 начинаются с `bot`, например `bot.messages.send`. `config set` отклоняет неизвестный ключ команды, в
-том числе внутри целого объекта `permissions`, с кодом 2. `config unset` позволяет удалить старый
-неизвестный ключ. Чтение уже существующего файла с таким ключом предупреждает в stderr и продолжает
-работу.
+том числе внутри целого объекта `permissions`, с кодом 2. Если такой ключ уже
+записан в файле, команды не запускаются: ошибка `configuration_error` называет ключ и команду
+`config unset`, которая его удаляет. `config show`, `set` и `unset` работают, чтобы файл можно было исправить.
 
 **Более точный ключ переопределяет ресурс.** Пример выше разрешает чтение сообщений и удаление без
 подтверждения и запрещает остальные записи в сообщения. Контакты, чаты, реакции и другие ресурсы
@@ -205,8 +199,7 @@ max config show --json     # то же одним объектом
 ```
 
 Это работает в обе стороны: `messages: allow` у профиля закрывает и `messages.delete: deny` из
-`defaults`, и тогда удаление снова спрашивает, как по умолчанию. Старый `allow`
-действует в том разделе, где записан.
+`defaults`, и тогда удаление снова спрашивает, как по умолчанию.
 
 **По умолчанию разрешено всё, кроме нескольких изменений, которые трудно отменить.** Спрашивают: `messages.delete`,
 `bot.messages.delete`, `chats.delete`, `chats.clear`, `topics.enable`, `topics.delete` и
@@ -244,13 +237,6 @@ max personal config unset permissions.messages.delete         # вернуть �
 включая MCP. Более точный `allow` профиля это ограничение не снимает. Изменить ответ можно
 через `max setup` в терминале.
 
-### Старая настройка `allow`
-
-Список в `allow` (`send`, `forward`, `reaction`, `edit`, `pin`, `read`, `delete`, `groups`, `contacts`,
-`profile`, `folders`, `sessions`) читается как `allow` для этих действий и `readonly` для остальных;
-удаление всё равно спрашивает. Ключ в `permissions` того же раздела важнее. Когда в файле есть
-`permissions`, `config set allow` отказывает и называет новую настройку.
-
 ## Изменить, не открывая файл
 
 ```sh
@@ -261,7 +247,6 @@ max work config unset limit             # убрать; снова решает 
 max agent config set permissions.messages readonly  # чтение сообщений без записи
 max shop config set --bot sends_per_hour 200    # только боту shop
 max config set --personal --defaults limit 30 # всем личным аккаунтам
-max config unset default_profile         # убрать старую настройку: профиль больше не подразумевается
 ```
 
 Значение проверяется той же схемой, что и при чтении, **до записи**: `max personal config set limit 0`
@@ -346,21 +331,18 @@ max personal chats list
 
 | Ключ | Допустимый тип или значение | Область |
 |---|---|---|
-| `default_profile` | не читается: команда без имени профиля останавливается — `max config unset default_profile` | корень файла |
 | `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
 | `requests_per_minute` | целое число ≥ 0 | профиль |
 | `color`, `record` | boolean | профиль |
 | `sender_colors`, `search_catch_up`, `serve` | boolean | личный аккаунт |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |
-| `allow` | массив разрешённых действий; старый формат | профиль |
 | `read_other_bots` | boolean или массив имён профилей | только `bot` |
 | `update_check`, `skill_hint` | boolean | только `defaults` |
 | `transcribe_model` | строковый id из `max personal models list kind:audio` | только `defaults` |
 | `embedding_provider` | `local` или `openai` | профиль |
-| `embedding_model`, `analysis_model` | непустая строка, не более 200 символов | профиль |
-| `embedding_base_url`, `analysis_base_url` | URL HTTP(S) без credentials, query и fragment | профиль |
+| `embedding_model` | непустая строка, не более 200 символов | профиль |
+| `embedding_base_url` | URL HTTP(S) без credentials, query и fragment | профиль |
 | `embedding_dims` | целое 1–65 536 | профиль |
-| `analysis_provider` | `agent`, `openai`, `anthropic` | профиль |
 | `models` | объект назначений моделей; поля описаны ниже | профиль |
 | `search_stemmers.cyrillic` | `russian`, `none` | общий архив, через `config set` |
 | `search_stemmers.latin` | `english`, `spanish`, оба через запятую, `none` | общий архив, через `config set` |
@@ -383,7 +365,7 @@ max personal chats list
 | `models.<назначение>.base_url` | URL HTTP(S) без credentials, query и fragment | адрес провайдера |
 
 В каждом поле сначала действует `MAX_MODELS_<НАЗНАЧЕНИЕ>_PROVIDER`, `_MODEL` или `_BASE_URL`,
-затем ближайшая запись файла для назначения, затем явные старые `analysis*` для `analysis`,
+затем ближайшая запись файла для назначения,
 затем переменные и записи `models.default`. Дефисы в имени назначения превращаются в `_`
 для переменной окружения. Токены провайдера не входят в этот объект.
 
@@ -395,9 +377,8 @@ max personal chats list
 
 ### Переменные для настроек моделей
 
-Семь старых полей поддерживают `MAX_EMBEDDING_PROVIDER`, `MAX_EMBEDDING_MODEL`,
-`MAX_EMBEDDING_BASE_URL`, `MAX_EMBEDDING_DIMS`, `MAX_ANALYSIS_PROVIDER`,
-`MAX_ANALYSIS_MODEL`, `MAX_ANALYSIS_BASE_URL`. Они действуют перед значениями файла; параметры команды
+Настройки векторов читают также `MAX_EMBEDDING_PROVIDER`, `MAX_EMBEDDING_MODEL`,
+`MAX_EMBEDDING_BASE_URL` и `MAX_EMBEDDING_DIMS`. Они действуют перед значениями файла; параметры команды
 сильнее них. `MAX_MODELS_DEFAULT_PROVIDER`, `MAX_MODELS_DEFAULT_MODEL`, `MAX_MODELS_DEFAULT_BASE_URL`
 задают общие поля нового формата; вместо `DEFAULT` можно указать назначение, например `ANALYSIS`.
 Пустая переменная не переопределяет настройку. Неверное значение возвращает `configuration_error`.

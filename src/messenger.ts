@@ -140,6 +140,8 @@ export const maxMessenger: Messenger = {
       {
         ...(options.env === undefined ? {} : { env: options.env }),
         ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
+        ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
+        ...(options.withIssues === undefined ? {} : { withIssues: options.withIssues }),
         ...(options.needsProfile === undefined ? {} : { needsProfile: options.needsProfile }),
       },
     )

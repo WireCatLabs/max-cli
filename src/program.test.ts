@@ -266,34 +266,6 @@ describe("the program", () => {
     const messages = await runWith(["messages", "--help"])
     expect(messages.stdout).toContain("list")
     expect(messages.stdout).toContain("send")
-
-    // `max send` was a top-level command until 2026-09-19. One rule, no exceptions to remember.
-    const gone = await runWith(["send", "0", "hello"])
-    expect(gone.stderr).toContain("unknown command")
-    expect(gone.code).not.toBe(0)
-  })
-
-  it("keeps no alias for a renamed command: the old name fails and sends nothing", async () => {
-    const { max, ...environment } = scriptedMax()
-    const renamed = [
-      ["backup", "messages", "111", "--last", "5", "--run"],
-      ["export", "messages", "111", "--format", "md"],
-      ["update", "--check"],
-      ["chats", "read", "111"],
-      ["chats", "settings", "111"],
-      ["recipients", "off"],
-      ["account", "sessions", "end-others", "--yes"],
-      ["messages", "send", "111", "hello", "--cid", "5"],
-      ["messages", "forward", "111", "116762160362694583", "--to", "111", "--cid", "5"],
-      ["bot", "recipients", "off"],
-    ]
-
-    for (const argv of renamed) {
-      const { code, stdout, stderr } = await runWith([...argv, "--json"], environment)
-      expect({ argv, code, stdout }).toEqual({ argv, code: 2, stdout: "" })
-      expect(stderr).toMatch(/unknown (command|option)/)
-    }
-    expect(max.sent).toEqual([])
   })
 
   it("keeps a subcommand from killing the process on a bad option", async () => {
@@ -563,20 +535,6 @@ describe("the program", () => {
         expect(JSON.parse(typo.stderr).error.message).toMatch(/no session for profile "t-typo"/)
         const listed = JSON.parse((await runWith(["chats", "list", "--json"])).stderr).error.details.profiles
         expect(listed).not.toContain("t-typo")
-      } finally {
-        process.env.MAX_PROFILE = MAX_PROFILE
-      }
-    })
-
-    it("refuses `config set default_profile`, so a bare `max` still names no profile", async () => {
-      const { MAX_PROFILE } = process.env
-      delete process.env.MAX_PROFILE
-      try {
-        const set = await runWith(["config", "set", "default_profile", "mila", "--json"])
-        expect(JSON.parse(set.stderr).error.message).toMatch(/default_profile is gone/)
-        const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout).item
-        expect(shown).toMatchObject({ profile: null, profile_from: "none named" })
-        expect((await runWith(["config", "unset", "default_profile"])).code).toBe(0)
       } finally {
         process.env.MAX_PROFILE = MAX_PROFILE
       }
@@ -1035,8 +993,7 @@ describe("the program", () => {
   })
 
   it("**refuses a profile with no command instead of printing help on stdout**", async () => {
-    // `max me` — renamed away on 2026-09-19 — is now the profile `me` and nothing else. Commander
-    // answers a missing command with help on stdout, which a script cannot tell from a result.
+    // Commander answers a missing command with help on stdout, which a script cannot tell from a result.
     const { stdout, stderr, code } = await runWith(["me"])
 
     expect(stdout).toBe("")

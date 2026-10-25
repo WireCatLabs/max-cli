@@ -131,7 +131,6 @@ max personal serve
 `models.replies.model` и при необходимости `models.replies.base_url`. Общие значения
 берутся из `models.default`; `provider off` выключает назначение. `config set` и
 `config unset` принимают эти ключи, `config show` показывает источник каждого поля.
-Старые `analysis_provider`, `analysis_model`, `analysis_base_url` продолжают работать для анализа.
 Ключ хранится через `max personal models keys set`; для своего сервера имя ключа — его host
 с портом, и ключ публичного провайдера туда не передаётся.
 

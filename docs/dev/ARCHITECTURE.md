@@ -490,12 +490,11 @@ common settings resolve through cli-core `settingsFor`. MAX retains its strict c
 (`src/config.ts`). Commands take what they are given; one that re-derived the order would disagree.
 Every field, variable and the file format: [`../configuration.md`](../configuration.md); profiles and
 paging for users: [`../usage.md`](../usage.md). The profile follows the same order: the first word
-(`max personal chats list`), then `MAX_PROFILE=personal`; nothing else picks one. A leftover
-`default_profile` in the file stops a command that names none, with the profile to type.
+(`max personal chats list`), then `MAX_PROFILE=personal`; nothing else picks one.
 
 ### The profile is the first word, not a flag
 
-- `--profile` was deleted (`NEED-45`). The first word is the profile **unless it names a command**
+- There is no profile flag (`NEED-45`). The first word is the profile **unless it names a command**
   (`liftProfile` in `src/profile.ts`). It must come first: `max --json personal chats` reads
   `personal` as a command and fails.
 - ⚠ **A profile named after a command could never be selected** (`max chats` must mean the command),
@@ -527,8 +526,7 @@ behind it:
   it is exact. It takes a message id, or an ISO 8601 time when the id is gone.
 - ⚠ **A bare integer is always an id.** Ids have 18 digits, ms timestamps 13; telling them apart by
   size breaks when either changes.
-- `contacts list --order recent|name` has no config field: a second spelling of a flag is how
-  `--profile` came to be deleted.
+- `contacts list --order recent|name` has no config field: a setting would be a second spelling of the flag.
 
 ### Two things that jump the queue
 

@@ -66,7 +66,7 @@ max personal search messages 'договор chat:Друзья'     # тольк
 ```
 
 ```sh
-memo search mail 'счёт'                                  # почта — это memo; max search mail подскажет его
+memo search mail 'счёт'                                  # почта — это memo
 ```
 
 ```sh
@@ -78,8 +78,7 @@ max personal search conversations 'переезд на дачу'      # разг
 ```
 
 `search all` у каждой находки пишет, что это — сообщение (`msg:…`) или заметка (`note:…`).
-Почту `max` не ищет: ни `search messages`, ни `search all`; `max personal search mail` отвечает
-подсказкой «mail is memo's: install @wirecat/cli-memo, then `memo search mail …`». В `search messages` `NOT has:attachment`, `has:voice` и `has:file` в запросе
+Почту `max` не ищет: ни `search messages`, ни `search all`. В `search messages` `NOT has:attachment`, `has:voice` и `has:file` в запросе
 оставляют только текст, голосовые или файлы; `source:internal` и `source:file` в запросе `search notes` — заметки из memo или из папки. Если поле не подходит — например, `chat:`/`from:` для заметок — `search all`
 пропускает этот источник и объясняет почему.
 
