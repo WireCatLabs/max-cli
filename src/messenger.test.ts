@@ -74,7 +74,6 @@ describe("the MAX messenger's settings", () => {
             embedding_model: "synthetic-model",
             embedding_base_url: "https://example.test/v1",
             embedding_dims: 128,
-            analysis_provider: "anthropic",
           },
         },
       }),
@@ -85,7 +84,6 @@ describe("the MAX messenger's settings", () => {
       embeddingModel: "synthetic-model",
       embeddingBaseUrl: "https://example.test/v1",
       embeddingDims: 128,
-      analysisProvider: "anthropic",
     })
     expect(shared.configured.embeddingModel).toBe("synthetic-model")
   })

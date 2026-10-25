@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import { AI_ENTRIES, type AISettings, first, settingsFor } from "@wirecat/cli-core/cli"
+import { AI_ENTRIES, type AISettings, type ConfigIssue, first, settingsFor } from "@wirecat/cli-core/cli"
 import type { Level } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
@@ -85,7 +85,6 @@ const kindSection = <T extends v.ObjectEntries>(entries: T) => {
 }
 
 const configEntries = {
-  default_profile: v.optional(v.string()),
   /** What every profile gets unless it says otherwise. */
   defaults: v.optional(defaultsSettings),
   profiles: v.optional(profilesOf(profileSettings), {}),
@@ -106,12 +105,7 @@ export const PERSONAL_ONLY_SETTINGS = Object.keys(personalEntries).filter(
 ) as ProfileSetting[]
 export const DEFAULTS_ONLY_SETTINGS = ["update_check", "skill_hint", "transcribe_model"] as const
 export const BOT_ONLY_SETTINGS = ["read_other_bots"] as const
-export const ALL_SETTINGS: string[] = [
-  ...PROFILE_SETTINGS,
-  ...BOT_ONLY_SETTINGS,
-  ...DEFAULTS_ONLY_SETTINGS,
-  "default_profile",
-]
+export const ALL_SETTINGS: string[] = [...PROFILE_SETTINGS, ...BOT_ONLY_SETTINGS, ...DEFAULTS_ONLY_SETTINGS]
 
 /** Whatever the command line carried. Everything is optional: absent means "not given here". */
 export interface GlobalFlags {
@@ -195,6 +189,10 @@ export interface Settings extends AISettings {
   profilesHere: string[]
   /** Where each value came from — `max config show` prints it. */
   sources: Record<SourcedSetting, Source>
+  /** What is wrong in the file, when resolved `withIssues`; those settings are left out. */
+  configIssues?: ConfigIssue[]
+  /** Every permission key saved anywhere in the file, for `doctor` to check against the commands. */
+  savedPermissions?: { key: string; at: string[] }[]
 }
 
 /** A value from the configuration file names the key it was read from: `config file: bot.profiles.test`. */
@@ -239,6 +237,10 @@ export interface ResolveOptions {
   configDir?: string
   /** `false` for a command that touches no account, so it runs with no profile named. */
   needsProfile?: boolean
+  /** Read the file without writing a default one. */
+  readOnly?: boolean
+  /** Load what is valid and list the rest in `configIssues`, rather than refuse: for `doctor`. */
+  withIssues?: boolean
 }
 
 /**
@@ -341,26 +343,29 @@ export const scopePath = ({ profile, kind }: SettingScope): string =>
 
 /**
  * Sets or removes one setting of one profile, or of `defaults`, and writes the file back.
- * `default_profile` can only be unset: it is the one top-level key, takes no scope, and is no longer read.
  *
  * **The value is checked by the same schema that reads the file**, on the whole result, before
  * anything is written — so `config set` cannot produce a file the next command refuses to load.
  */
 export const changeSetting = (
   path: string,
-  { profile, kind, setting, value }: SettingScope & { setting: string; value: string | undefined },
+  {
+    profile,
+    kind,
+    setting,
+    value,
+    root,
+  }: SettingScope & { setting: string; value: string | undefined; root?: boolean },
 ): unknown => {
   if (kind === "bot" && (PERSONAL_ONLY_SETTINGS as string[]).includes(setting)) {
     throw new CliError("validation_error", `${setting} is for personal accounts; a bot has no use for it`)
   }
-  const permission = setting.startsWith("permissions.")
+  // One bot's name is still a list of one, which cli-core's parsing would leave as text.
   const parsed =
-    value === undefined || permission
-      ? value
-      : JSON.stringify(
-          setting === "read_other_bots" && value !== "true" && value !== "false" ? parseList(value) : parseValue(value),
-        )
-  return sharedSettings.changeSetting(path, { profile, kind, setting, value: parsed })
+    value !== undefined && setting === "read_other_bots" && value !== "true" && value !== "false"
+      ? JSON.stringify(parseList(value))
+      : value
+  return sharedSettings.changeSetting(path, { profile, kind, setting, value: parsed, ...(root ? { root } : {}) })
 }
 
 /** `send,reaction` as the owner types it, or the JSON array the file holds; blank is the empty list. */
@@ -407,5 +412,5 @@ const sharedSettings = settingsFor(MAX_APP, {
   },
 })
 
-/** Shared writes keep MAX's schema and legacy value parsing; show retains MAX's released projection. */
+/** Shared writes keep MAX's schema and its list form of read_other_bots; show retains MAX's released projection. */
 export const configuration = { ...sharedSettings, allSettings: ALL_SETTINGS, changeSetting }
