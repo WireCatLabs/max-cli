@@ -25,6 +25,8 @@ coverage/
 
 # Per-machine Claude Code state; a shared settings.json would be committed.
 .claude/settings.local.json
+# A link to docs/dev/skills, never tracked: skills.sh lists every skill under .claude/skills to users.
+/.claude/skills
 .claude/worktrees/
 
 # Problem reports from `max doctor report create`; attached to an issue, never committed.

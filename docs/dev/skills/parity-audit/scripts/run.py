@@ -15,7 +15,7 @@ def main():
     parser.add_argument("--shared-source", type=Path, help="an isolated cli-core worktree for testing auditor changes")
     parser.add_argument("--skip-checks", action="store_true", help="capture only; tests stay explicitly not-run")
     args = parser.parse_args()
-    repo = Path(__file__).resolve().parents[4]
+    repo = Path(__file__).resolve().parents[5]
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
     reports = repo / "docs_ai/plans/parity"
     output = (args.output or ((reports if reports.is_dir() else Path(tempfile.gettempdir())) / f"audit-{stamp}")).resolve()
