@@ -4,6 +4,7 @@ import {
   buildDoctorReport,
   type ConfigIssue,
   doctorReportFileName,
+  type ModeProblem,
   type RunMetadata,
   runtime,
 } from "@wirecat/cli-core/cli"
@@ -17,6 +18,11 @@ export interface DoctorConfig {
   issues: ConfigIssue[]
 }
 
+/** Whether others can read the config file or enter its folder, as `doctor` answers it. */
+export type DoctorFiles =
+  | { checked: false; reason: string }
+  | { checked: true; ok: boolean; problems: Omit<ModeProblem, "fix">[] }
+
 /** Where problem reports go (`NEED-267`, changed by the owner to issues). Anybody can read them there. */
 export const REPORT_URL = "https://github.com/WireCatLabs/max-cli/issues/new"
 
@@ -28,7 +34,9 @@ export interface Report {
   arch: string
   /** Null, with only the config and the settings' refusal in the doctor's place, when the settings would not resolve. */
   profile: string | null
-  doctor: (Diagnosis & { config: DoctorConfig }) | { config: DoctorConfig; settings: { error: string } }
+  doctor:
+    | (Diagnosis & { config: DoctorConfig; files: DoctorFiles })
+    | { config: DoctorConfig; settings: { error: string }; files: DoctorFiles }
   /** The run the report is about: the one asked for, or the newest that failed. */
   run: { metadata: RunMetadata; events: Record<string, unknown>[] } | null
   /** The newest write actions — outcomes and ids, never text (`src/sends/journal.ts`). */

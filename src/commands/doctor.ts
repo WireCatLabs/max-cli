@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs"
-import { resolve } from "node:path"
+import { dirname, resolve } from "node:path"
 import { CliError, configFilePath, resolvePaths, writeSecurely } from "@wirecat/cli-base"
 import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import {
@@ -9,6 +9,8 @@ import {
   LOCAL_WRITE,
   NONE_NAMED,
   outputFor,
+  type PrivateFiles,
+  privateFiles,
   REMOTE_READ,
   renderAnswer,
   runsDirFor,
@@ -29,7 +31,7 @@ import { type Check, checkOnline, mcpHandshake } from "../online.js"
 import { shownTime } from "../output.js"
 import { configIssuesOf } from "../permissions.js"
 import { asFirstWord } from "../profile.js"
-import { buildReport, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
+import { buildReport, type DoctorFiles, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
 import { sendsPathFor } from "../sends.js"
 import { SessionStore } from "../session/store.js"
 import { environmentOf, forCommand } from "./context.js"
@@ -61,19 +63,24 @@ const doctorCommandDefinition = (): Command => {
       context = forCommand(this, { ...DOCTOR_SETTINGS, needsProfile: false })
     } catch (error) {
       if (!(error instanceof CliError)) throw error
-      renderAnswer(this, outputFor(this), itemOf(unresolved(this, error)))
+      const answer = unresolved(this, error)
+      const output = outputFor(this)
+      renderAnswer(this, output, itemOf(answer))
+      privateNotes(configFileModes(answer.config.path), output.renderer.note.bind(output.renderer))
       return
     }
     const { renderer, settings, format, streams, run, store, createClient } = context
     const botStore = botStoreFor(this)
     const config = configOf(this, settings)
+    const files = configFileModes(settings.configPath)
     const warnIssues = () => {
       for (const issue of config.issues)
         renderer.warn(`${issue.what}, so it is left out${issue.fix ? ` — \`${issue.fix}\` removes it` : ""}`)
     }
     if (settings.sources.profile === NONE_NAMED) {
-      renderAnswer(this, context, itemOf({ profile: null, config }))
+      renderAnswer(this, context, itemOf({ profile: null, config, files: filesReport(files) }))
       warnIssues()
+      privateNotes(files, renderer.note.bind(renderer))
       return
     }
 
@@ -93,15 +100,24 @@ const doctorCommandDefinition = (): Command => {
       const checks = online ? [...personal, ...bot] : undefined
 
       if (format === "pretty")
-        renderer.result({ ...forPerson(report, settings.profile), ...(checks ? checksForPerson(checks) : {}) })
+        renderer.result({
+          ...forPerson(report, settings.profile),
+          files: filesLine(files),
+          ...(checks ? checksForPerson(checks) : {}),
+        })
       else
         renderAnswer(
           this,
           { renderer, format, streams },
-          itemOf({ config, ...(snakeKeys({ ...report, ...(checks ? { online: checks } : {}) }) as object) }),
+          itemOf({
+            config,
+            ...(snakeKeys({ ...report, ...(checks ? { online: checks } : {}) }) as object),
+            files: filesReport(files),
+          }),
         )
 
       warnIssues()
+      privateNotes(files, renderer.note.bind(renderer))
       installNotes(report, renderer.note.bind(renderer))
       // ⚠ Said whenever the environment moved the keyring, because this is the one failure with no
       // other symptom: the profile is there, the login happened, and the answer is "no session".
@@ -175,7 +191,28 @@ const configOf = (command: Command, settings: Settings) => ({
 const unresolved = (command: Command, error: CliError) => {
   const env = environmentOf(command).env ?? process.env
   const path = configFilePath(resolvePaths({ appName: MAX_APP.appName, prefix: MAX_APP.envPrefix, env }).config)
-  return { config: { path, found: existsSync(path), issues: [] }, settings: { error: error.message } }
+  return {
+    config: { path, found: existsSync(path), issues: [] },
+    settings: { error: error.message },
+    files: filesReport(configFileModes(path)),
+  }
+}
+
+/** The config folder is checked even when MAX_CONFIG_DIR names it: credentials.json falls back to it. */
+const configFileModes = (path: string): PrivateFiles => privateFiles({ files: [path], dirs: [dirname(path)] })
+
+/** The answer leaves out the fix: it is a shell command, printed as a note. */
+const filesReport = (files: PrivateFiles): DoctorFiles =>
+  files.checked ? { ...files, problems: files.problems.map(({ path, mode, want }) => ({ path, mode, want })) } : files
+
+const privateNotes = (files: PrivateFiles, note: (message: string) => void): void => {
+  if (files.checked) for (const problem of files.problems) note(`to make it private: ${problem.fix}`)
+}
+
+const filesLine = (files: PrivateFiles): string => {
+  if (!files.checked) return `not checked — ${files.reason}`
+  if (files.ok) return "private"
+  return files.problems.map(({ path, mode, want }) => `${path} is ${mode}, wants ${want}`).join("; ")
 }
 
 const botStoreFor = (command: Command) => {
@@ -284,6 +321,7 @@ const reportCommand = (): Command => {
               doctor: {
                 config: configOf(this, context.settings),
                 ...(await diagnoseProfile(context.settings, context.store, botStoreFor(this), sessionStoreFor(this))),
+                files: filesReport(configFileModes(context.settings.configPath)),
               },
               sends: new SendJournal(sendsPathFor(context.settings.profile)).entries(),
             }

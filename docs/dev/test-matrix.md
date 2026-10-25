@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**900 ✅ · 173 ⛔ · 0 ❌** — 356 commands, 717 options.
+**903 ✅ · 173 ⛔ · 0 ❌** — 358 commands, 718 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -287,6 +287,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store reset` |  | ✅ |  |
 | `store reset` | `--no-backup` | ✅ |  |
 | `store copies delete` |  | ✅ |  |
+| `store tables list` |  | ✅ |  |
 | `stats messages show` |  | ✅ |  |
 | `stats messages show` | `--sync-first` | ✅ |  |
 | `stats messages show` | `--max-chats` | ✅ |  |
@@ -818,8 +819,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `runs show` | `--problems` | ✅ |  |
 | `runs path` |  | ✅ |  |
 | `skill show` |  | ✅ |  |
+| `skill show` | `--for` | ✅ |  |
 | `skill install` |  | ✅ |  |
 | `skill install` | `--for` | ✅ |  |
+| `skill status` |  | ✅ |  |
 | `commands` |  | ✅ |  |
 | `commands info` |  | ✅ |  |
 | `upgrade` |  | ✅ |  |

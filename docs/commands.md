@@ -2317,13 +2317,13 @@ max store clear [options]
 
 ### `max store info`
 
-the store file: where it is, its size, its schema and how many rows it holds; changes nothing
+the store file: where it is, its size, its schema against the one this tool speaks, which tools used it and how many rows it holds, by provider, chat kind, account, year (UTC) and attachment kind, over every account; changes nothing
 
 ```sh
 max store info
 ```
 
-**Returns:** store info — path, exists, opens, error, bytes, schema, rows, pending_normalization, and 2 more; every field: max commands info store info
+**Returns:** store info — path, exists, schema, opens, error, bytes, journal_mode, pages, and 12 more; every field: max commands info store info
 
 **Example:** `max personal store info`
 
@@ -2486,6 +2486,26 @@ max store copies delete <name>
 **Returns:** store copy removal — path, deleted; every field: max commands info store copies delete
 
 **Example:** `max personal store copies delete messages_copy_1`
+
+### `max store tables`
+
+the tables of the local archive
+
+#### `max store tables list`
+
+every table of the local archive: its kind (data, search index, part of a search index, internal) and its rows, a search index's rows not counted; --full adds each table's size on disk, which reads the whole file (about ten seconds for 3 GB); changes nothing
+
+```sh
+max store tables list [query]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** store table — name, kind, rows, bytes; every field: max commands info store tables list
+
+**Example:** `max personal store tables list`, `max personal store tables list kind:data`, `max personal store tables list --full --json`
 
 ## `max stats`
 
@@ -4370,7 +4390,7 @@ max search runs [query] [options]
 | `--limit <n>` | matches per page, at most 100. По умолчанию: `20`. |
 | `--page <n>` | result page. По умолчанию: `1`. |
 
-**Returns:** run hit — run_id, command, profile, started_at, status, cli_version, events, events_truncated, and 13 more; every field: max commands info search runs
+**Returns:** run hit — run_id, command, started_at, status, cli_version, events, events_truncated, profile, and 18 more; every field: max commands info search runs
 
 **Example:** `max personal search runs timeout status:failed --limit 10`
 
@@ -4574,7 +4594,7 @@ max models list [query]
 
 ### `max models download`
 
-download and verify one speech or embedding model
+download and verify one speech or embedding model: tens to hundreds of MB, each size in models list
 
 **Читает из внешнего сервиса.**
 
@@ -4594,7 +4614,7 @@ max models download <model> [options]
 
 **Next usually:** `max images models download <model>`
 
-**Example:** `max personal models download parakeet-v3`, `max personal models download e5-small`
+**Example:** `max personal models download e5-small`
 
 ## `max polls`
 
@@ -5554,7 +5574,7 @@ max runs list [query] [options]
 | `--limit <n>` | how many to show. По умолчанию: `20`. |
 | `--page <n>` | which page, starting at 1. По умолчанию: `1`. |
 
-**Returns:** run — run_id, command, profile, started_at, status, cli_version, completed_at, requests, and 15 more; every field: max commands info runs list
+**Returns:** run — run_id, command, started_at, status, cli_version, profile, completed_at, requests, and 20 more; every field: max commands info runs list
 
 **Example:** `max personal runs list --limit 10`
 
@@ -5574,7 +5594,7 @@ max runs show <run-id> [options]
 |---|---|
 | `--problems` | only failed responses, warnings and crashes. |
 
-**Returns:** run details — run_id, command, profile, started_at, status, cli_version, directory, event_count, and 14 more; every field: max commands info runs show
+**Returns:** run details — run_id, command, started_at, status, cli_version, directory, event_count, events, and 19 more; every field: max commands info runs show
 
 **Example:** `max personal runs show run-101`
 
@@ -5600,15 +5620,19 @@ the instructions an agent is given for this tool
 
 ### `max skill show`
 
-print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look for it
+print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look for it; --for prints the copy already there
 
 ```sh
-max skill show [name]
+max skill show [name] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | необязательный | one of the skills shipped for a task: follow-ups, link-conversations. |
+
+| Опция | Что делает |
+|---|---|
+| `--for <agents>` | print the copy installed for these agents instead of this version's. Одно из: `claude`, `agents`. |
 
 **Returns:** print the tool's instructions for AI agents
 
@@ -5631,6 +5655,18 @@ max skill install [options]
 **Returns:** install the tool's instructions for AI agents
 
 **Example:** `max skill install --for agents`
+
+### `max skill status`
+
+for each place `max skill install` writes to: the path, the version installed there, and whether it is current, stale, missing or unversioned
+
+```sh
+max skill status
+```
+
+**Returns:** whether the installed instructions for AI agents match this version
+
+**Example:** `max skill status`, `max skill status --json`
 
 ## `max commands`
 
@@ -7443,7 +7479,7 @@ max guide [name]
 
 **Returns:** scenarios: the commands for a common task, in order, and why each
 
-**Example:** `max guide`, `max guide <name> --json`
+**Example:** `max guide`, `max guide agent-on-a-timer --json`
 
 ## Коды возврата
 

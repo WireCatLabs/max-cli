@@ -141,9 +141,8 @@ describe("a crash's frames", () => {
     ].join("\n")
 
     expect(crashOf(error).frames).toEqual([
-      "MaxClient.connect client.js:1497",
+      "MaxClient.connect @wirecat/max-cli/client.js:1497",
       "<anonymous> commands/chats.ts:40",
-      "process.processTicksAndRejections task_queues:105",
     ])
   })
 })
