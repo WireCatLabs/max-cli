@@ -58,7 +58,7 @@ git merge -q --ff-only origin/main
 [ "$(git rev-parse HEAD)" = "$before" ] || exec ./bin/release "$@"
 # The workflow publishes origin/main, so a local commit not pushed yet would silently not ship.
 [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] || { echo "main is ahead of origin/main — push first" >&2; exit 1; }
-# One release at a time on this machine, across every package: two sessions published at once on 2026-10-08.
+# One release at a time per package on this machine: two sessions published at once on 2026-10-08.
 . ./config/wirecat/release-lock.sh
 wirecat_release_lock
 version=$(node -p 'require("./package.json").version')
