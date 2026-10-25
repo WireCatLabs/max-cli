@@ -124,8 +124,9 @@ export class BotTransport {
     const timeoutMs = this.#timeoutFor(operation, input)
 
     const ids = idsIn(input)
+    const http = { method: operation.binding.method, endpointTemplate: endpointOf(operation.binding.path) }
     for (let attempt = 1; ; attempt++) {
-      const said = { operation: operation.id, ...(ids ? { ids } : {}) }
+      const said = { operation: operation.id, ...http, ...(ids ? { ids } : {}) }
       const started = this.#now()
       this.#events({ event: "request", ...said })
       try {
@@ -303,6 +304,10 @@ export const plainJson = (value: unknown): unknown =>
       isLosslessNumber(inner) && !isSafeNumber(inner.value) ? inner.toString() : inner,
     ) ?? "null",
   )
+
+/** From the manifest's path, never the URL as sent: MAX takes chat, user and message ids in the query too. */
+const endpointOf = (path: string): string =>
+  path.replace(/\{([^}]+)\}/g, (_, name: string) => (name.endsWith("Token") ? ":token" : ":id"))
 
 const idsIn = (input: CallInput): Record<string, string> | undefined => {
   const ids = Object.entries(input.path ?? {}).flatMap(([name, value]) => {

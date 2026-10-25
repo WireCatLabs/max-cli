@@ -276,7 +276,7 @@ describe("the run log for a bot command", () => {
     expect(JSON.parse(stdout).item).toEqual({ success: true })
     const events = stderr.split("\n").map((line) => JSON.parse(line))
     expect(events).toEqual([
-      { event: "request", operation: "getChat", ids: { chat: "7" } },
+      { event: "request", operation: "getChat", method: "GET", endpoint_template: "/chats/:id", ids: { chat: "7" } },
       expect.objectContaining({ event: "response", operation: "getChat", status: 200, outcome: "ok" }),
     ])
   })
