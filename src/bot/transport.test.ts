@@ -186,6 +186,28 @@ describe("events for the run log", () => {
     await traced.call(operation("getVideoAttachmentDetails"), { path: { videoToken: "vt-secret" } })
     await traced.call(operation("getChat"), { path: { chatId: "5" } })
     expect(JSON.stringify(events)).not.toContain("vt-secret")
-    expect(events.at(-2)).toEqual({ event: "request", operation: "getChat", ids: { chat: "5" } })
+    expect(events.at(-2)).toEqual({
+      event: "request",
+      operation: "getChat",
+      method: "GET",
+      endpointTemplate: "/chats/:id",
+      ids: { chat: "5" },
+    })
+    expect(events[1]).toMatchObject({ endpointTemplate: "/videos/:token" })
+  })
+
+  it("give a refused call its method and the path with ids as :id, never the query or the token", async () => {
+    handler = answer(403, `{"code": "chat.denied", "message": "no access"}`)
+    const events: { event: string; endpointTemplate?: string }[] = []
+    const traced = transport({ events: (event: (typeof events)[number]) => events.push(event) })
+    await failure(traced.call(operation("sendMessage"), { query: { chat_id: "-70000123456" }, body: "{}" }))
+    await failure(traced.call(operation("getChat"), { path: { chatId: "-70000123456" } }))
+
+    expect(events.filter((event) => event.event === "response")).toMatchObject([
+      { method: "POST", endpointTemplate: "/messages", status: 403, outcome: "error" },
+      { method: "GET", endpointTemplate: "/chats/:id", status: 403, outcome: "error" },
+    ])
+    expect(events.map((event) => event.endpointTemplate).join(" ")).not.toContain("70000123456")
+    expect(JSON.stringify(events)).not.toContain(TOKEN)
   })
 })
