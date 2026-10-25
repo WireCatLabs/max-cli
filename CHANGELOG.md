@@ -10,6 +10,7 @@
 
 - **`max skill install --for hermes` ставит навык для Hermes Agent, а `max skill status` говорит, какую копию читает Hermes (cli-base 0.59.0).** Команда добавляет `~/.agents/skills` в `skills.external_dirs` Hermes через `hermes config set`, не трогая уже записанные папки, а если это не вышло — копирует файл в домашнюю папку Hermes. Если Hermes не установлен, команда падает с `not_found` и ничего не пишет. Просто `max skill install` и `--for all` по-прежнему пишут только копии для Claude Code и `~/.agents/skills`. В `skill status --json` рядом с `targets` появился `hermes`.
 - **Запуск, начатый OpenClaw или Hermes Agent, называет этого агента (cli-core 0.437.0).** В `runs show` у команды, которую запустил агент OpenClaw, `agent` — `openclaw`, а если её начало сообщение из чата — ещё `from_chat: true`; у запуска Hermes есть его сессия, так что задачу, взятую Hermes, держит одна сессия.
+- **Навык `max-cli` объявляет для OpenClaw и ClawHub, что ему нужна программа `max` и как её поставить** (`metadata.openclaw`: `requires.bins` и пакет npm `@wirecat/max-cli`). Если `max` нет в PATH, OpenClaw помечает навык как неготовый и предлагает установить пакет. Claude Code и Codex этот блок не читают.
 
 ## 0.78.0 — 26.10.2026
 
