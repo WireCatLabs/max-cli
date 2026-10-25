@@ -15,10 +15,6 @@
       "!spec/bot/schema.yaml"
     ]
   },
-  "markdown": {
-    "formatter": { "enabled": false },
-    "linter": { "enabled": false }
-  },
   "overrides": [
     {
       "includes": ["src/commands/**"],

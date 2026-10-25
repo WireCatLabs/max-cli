@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
@@ -26,12 +26,17 @@ const inAnEmptyHome = async (
     tty = false,
     bots = [] as string[],
     config = undefined as string | undefined,
+    openToOthers = false,
   } = {},
 ) => {
   const home = mkdtempSync(join(tmpdir(), "max-doctor-cmd-"))
   if (config !== undefined) {
     mkdirSync(join(home, "config"), { recursive: true })
     writeFileSync(join(home, "config", "config.json"), config)
+    if (openToOthers) {
+      chmodSync(join(home, "config", "config.json"), 0o644)
+      chmodSync(join(home, "config"), 0o775)
+    }
   }
   for (const bot of bots) {
     mkdirSync(join(home, "state", "bots"), { recursive: true })
@@ -224,6 +229,29 @@ describe("max doctor", () => {
       delete process.env.MAX_READ_ONLY
     }
   })
+
+  it.skipIf(process.platform === "win32")(
+    "**names a config file and folder others can read**, with the chmod that fixes each",
+    async () => {
+      const { code, home, stdout, stderr } = await inAnEmptyHome(["work", "doctor", "--json"], {
+        config: JSON.stringify({ profiles: { work: {} } }),
+        openToOthers: true,
+      })
+      const file = join(home, "config", "config.json")
+
+      expect(code).toBe(0)
+      expect(JSON.parse(stdout).item.files).toEqual({
+        checked: true,
+        ok: false,
+        problems: [
+          { path: file, mode: "0644", want: "0600" },
+          { path: join(home, "config"), mode: "0775", want: "0700" },
+        ],
+      })
+      expect(stderr).toContain(`to make it private: chmod 600 '${file}'`)
+      expect(stderr).toContain(`to make it private: chmod 700 '${join(home, "config")}'`)
+    },
+  )
 
   it("carries the profile from the first word like every other command", async () => {
     const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"])

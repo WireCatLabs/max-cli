@@ -2317,13 +2317,13 @@ max store clear [options]
 
 ### `max store info`
 
-the store file: where it is, its size, its schema and how many rows it holds, by provider, chat kind, account, year (UTC) and attachment kind, over every account; changes nothing
+the store file: where it is, its size, its schema against the one this tool speaks, which tools used it and how many rows it holds, by provider, chat kind, account, year (UTC) and attachment kind, over every account; changes nothing
 
 ```sh
 max store info
 ```
 
-**Returns:** store info — path, exists, opens, error, bytes, schema, rows, pending_normalization, and 7 more; every field: max commands info store info
+**Returns:** store info — path, exists, schema, opens, error, bytes, journal_mode, pages, and 12 more; every field: max commands info store info
 
 **Example:** `max personal store info`
 
@@ -2460,8 +2460,9 @@ max store reset [options]
 | Опция | Что делает |
 |---|---|
 | `--no-backup` | delete the store without backing it up first. |
+| `--dry-run` | list every table it would empty, with its rows, and delete nothing. |
 
-**Returns:** store reset — path, exists, reset, backup, backed_up, schema; every field: max commands info store reset
+**Returns:** store reset — path, exists, reset, dry_run, files, bytes, schema, tables, and 4 more; every field: max commands info store reset
 
 **Example:** `max personal store reset`
 
@@ -2486,6 +2487,26 @@ max store copies delete <name>
 **Returns:** store copy removal — path, deleted; every field: max commands info store copies delete
 
 **Example:** `max personal store copies delete messages_copy_1`
+
+### `max store tables`
+
+the tables of the local archive
+
+#### `max store tables list`
+
+every table of the local archive: its kind (data, search index, part of a search index, internal) and its rows, a search index's rows not counted; --full adds each table's size on disk, which reads the whole file (about ten seconds for 3 GB); changes nothing
+
+```sh
+max store tables list [query]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** store table — name, kind, rows, bytes; every field: max commands info store tables list
+
+**Example:** `max personal store tables list`, `max personal store tables list kind:data`, `max personal store tables list --full --json`
 
 ## `max stats`
 
@@ -5600,15 +5621,19 @@ the instructions an agent is given for this tool
 
 ### `max skill show`
 
-print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look for it
+print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look for it; --for prints the copy already there
 
 ```sh
-max skill show [name]
+max skill show [name] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | необязательный | one of the skills shipped for a task: follow-ups, link-conversations. |
+
+| Опция | Что делает |
+|---|---|
+| `--for <agents>` | print the copy installed for these agents instead of this version's. Одно из: `claude`, `agents`. |
 
 **Returns:** print the tool's instructions for AI agents
 
@@ -5631,6 +5656,18 @@ max skill install [options]
 **Returns:** install the tool's instructions for AI agents
 
 **Example:** `max skill install --for agents`
+
+### `max skill status`
+
+for each place `max skill install` writes to: the path, the version installed there, and whether it is current, stale, missing or unversioned
+
+```sh
+max skill status
+```
+
+**Returns:** whether the installed instructions for AI agents match this version
+
+**Example:** `max skill status`, `max skill status --json`
 
 ## `max commands`
 

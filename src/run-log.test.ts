@@ -131,7 +131,7 @@ describe("a failed run", () => {
 })
 
 describe("a crash's frames", () => {
-  it("keep the function and the file inside the package, not the path to it, and skip Node's own frames", () => {
+  it("keep the function and the file inside the package, not the path to it", () => {
     const error = new Error("x")
     error.stack = [
       "Error: x",

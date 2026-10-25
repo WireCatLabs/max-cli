@@ -85,7 +85,8 @@ max config show --json     # то же одним объектом
 `~/.config/max-cli/config.json` на Linux; пути на других системах — в
 [руководстве по настройкам](configuration.md#где-лежит-файл). Первая команда, читающая настройки, —
 например `config show`, `account list` или `chats list` — создаёт его с `limit`, `keep_runs_for_days`, `sends_per_hour`, `update_check` и `skill_hint` в `defaults`.
-Файл создаётся с правами `0600`, а `max personal config set` записывает его с правами `0644`: секретов в нём нет.
+Файл создаётся и записывается `max personal config set` с правами `0600`, каталог — `0700`. `max personal doctor`
+называет файл или каталог, которые могут читать другие, в `files.problems` и печатает `chmod`, который это исправляет.
 `max personal doctor` файл только читает: если его нет, он отвечает `config.found: false` и не создаёт его.
 
 Имена настроек пишутся в snake_case: `sends_per_hour`, `keep_runs_for_days`, `models.<назначение>.base_url`.
@@ -296,7 +297,7 @@ max config set --personal --defaults limit 30 # всем личным аккау
 | `WIRECAT_STATE_DIR` | папка WireCat, общая для всех CLI: локальная копия и модели речи |
 | `NO_COLOR` | выключает цвет, как и в любой другой программе |
 | `MAX_NO_UPDATE_CHECK`, `NO_UPDATE_NOTIFIER` | не спрашивать npm о новой версии; `CI` действует так же |
-| `MAX_EMBEDDING_*`, `MAX_ANALYSIS_*`, `MAX_MODELS_*` | настройки моделей ([ниже](#переменные-для-настроек-моделей)) |
+| `MAX_EMBEDDING_*`, `MAX_MODELS_*` | настройки моделей ([ниже](#переменные-для-настроек-моделей)) |
 
 Пустая строка — это не значение, а несуществующая переменная: `MAX_PROFILE=` то же самое, что
 `MAX_PROFILE` не задана.

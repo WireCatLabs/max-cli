@@ -84,6 +84,19 @@ describe("max skill", () => {
 
     expect(JSON.parse(stdout).written).toEqual([join(dir, ".claude", "skills", "max-cli", "SKILL.md")])
   })
+
+  it("status says which agent's copy is current, and show --for prints that copy", async () => {
+    home()
+    await max("skill", "install", "--for", "claude")
+
+    const status = JSON.parse((await max("skill", "status", "--json")).stdout)
+    const shown = await max("skill", "show", "--for", "claude", "--json")
+
+    expect(JSON.stringify(status)).toContain('"state":"current"')
+    expect(JSON.stringify(status)).toContain('"state":"missing"')
+    expect(JSON.parse(shown.stdout)).toMatchObject({ name: "max-cli", target: "claude", installed: VERSION })
+    expect((await max("skill", "show", "--for", "agents")).code).not.toBe(0)
+  })
 })
 
 describe("the hint to agents that the skill exists", () => {
