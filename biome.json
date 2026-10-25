@@ -6,12 +6,18 @@
       "**",
       "!**/dist",
       "!**/node_modules",
-      "!pnpm-lock.yaml",
+      "!**/pnpm-lock.yaml",
       "!.worktrees",
       "!config/wirecat",
       "!lint/baseline",
-      "!contracts/bot-catalogue.json"
+      "!contracts/bot-catalogue.json",
+      "!contracts/previous",
+      "!spec/bot/schema.yaml"
     ]
+  },
+  "markdown": {
+    "formatter": { "enabled": false },
+    "linter": { "enabled": false }
   },
   "overrides": [
     {
