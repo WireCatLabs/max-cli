@@ -406,7 +406,7 @@ max chats join <link>
 |---|---|---|
 | `link` | обязательный | an invite link, or a public one. |
 
-**Returns:** chat group change — ; every field: max commands info chats join
+**Returns:** chat group change — operation_id, chat, requested; every field: max commands info chats join
 
 **Example:** `max personal chats join https://example.com/invite/book-club`
 
@@ -469,7 +469,7 @@ max chats create <title> [person] [options]
 |---|---|
 | `--channel` | a private channel instead of a group; people join it by its link. |
 
-**Returns:** chat group change — ; every field: max commands info chats create
+**Returns:** chat group change — operation_id, chat, requested; every field: max commands info chats create
 
 **Example:** `max personal chats create "Book club" "Alex Example"`
 
@@ -585,7 +585,7 @@ max chats members add <chat> <person> [options]
 |---|---|
 | `--history` | the people added also see the messages from before they came. |
 
-**Returns:** chat members change — ; every field: max commands info chats members add
+**Returns:** chat members change — operation_id, chat_id, added, not_added, removed; every field: max commands info chats members add
 
 **Example:** `max personal chats members add "Book club" "Alex Example"`
 
@@ -604,7 +604,7 @@ max chats members remove <chat> <person>
 | `chat` | обязательный | a chat: its id, or part of its title. |
 | `person` | обязательный | an id, or part of a name. |
 
-**Returns:** chat members change — ; every field: max commands info chats members remove
+**Returns:** chat members change — operation_id, chat_id, added, not_added, removed; every field: max commands info chats members remove
 
 **Example:** `max personal chats members remove "Book club" "Alex Example"`
 
@@ -751,7 +751,7 @@ max chats update <chat> [options]
 | `--only-owner-edits-info <on\|off>` | only the owner may change the name and photo. |
 | `--members-see-link <on\|off>` | members may see the invite link. |
 
-**Returns:** chat group change — ; every field: max commands info chats update
+**Returns:** chat group change — operation_id, chat, requested; every field: max commands info chats update
 
 **Example:** `max personal chats update "Book club" --title "Reading group"`
 
@@ -789,7 +789,7 @@ max chats links reset <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
-**Returns:** chat group change — ; every field: max commands info chats links reset
+**Returns:** chat group change — operation_id, chat, requested; every field: max commands info chats links reset
 
 **Example:** `max personal chats links reset "Book club"`
 
@@ -838,7 +838,7 @@ max chats requests confirm <chat> [person] [options]
 |---|---|
 | `--all` | every pending request, counted against the hourly limit first. |
 
-**Returns:** chat request change — ; every field: max commands info chats requests confirm
+**Returns:** chat request change — operation_id, chat_id, person_id, accepted, already, counted; every field: max commands info chats requests confirm
 
 **Example:** `max personal chats requests confirm "Book club" "Alex Example"`
 
@@ -861,7 +861,7 @@ max chats requests reject <chat> [person] [options]
 |---|---|
 | `--all` | every pending request, counted against the hourly limit first. |
 
-**Returns:** chat request change — ; every field: max commands info chats requests reject
+**Returns:** chat request change — operation_id, chat_id, person_id, accepted, already, counted; every field: max commands info chats requests reject
 
 **Example:** `max personal chats requests reject "Book club" "Alex Example"`
 
@@ -1591,7 +1591,7 @@ max contacts context <person> [options]
 | `--chat <chat>` | a chat, by id or name; repeat it for more — then their newest messages in each, 20 unless --limit, short unless -v. |
 | `--sync-first` | with --chat, read their newest messages in each from the messenger first. |
 
-**Returns:** contact context — ; every field: max commands info contacts context
+**Returns:** contact context — person, shared, last, recent, mentions, limits, complete, not_read, and 1 more; every field: max commands info contacts context
 
 **Example:** `max personal contacts context "Alex Example" --limit 10`
 
@@ -1767,7 +1767,7 @@ max messages context <chat> [message] [options]
 | `--before-n <n>` | how many before it. По умолчанию: `5`. |
 | `--after-n <n>` | how many after it. По умолчанию: `5`. |
 
-**Returns:** message context — ; every field: max commands info messages context
+**Returns:** message context — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 40 more; every field: max commands info messages context
 
 **Example:** `max personal messages context "Book club" 101 --before-n 3 --after-n 3`
 
@@ -1829,7 +1829,7 @@ max messages download <chat> [message] [options]
 | `--pause <duration>` | with --all, a pause between pages, to stay under the provider's limits. По умолчанию: `5s`. |
 | `--extract` | read text layers from the files this download maps into the local content index. |
 
-**Returns:** message download — ; every field: max commands info messages download
+**Returns:** message download — files, extraction, complete, batch, chat, saved, existing, stopped; every field: max commands info messages download
 
 **Example:** `max personal messages download "Book club" 101 --output-dir ./downloads`
 
@@ -1884,7 +1884,7 @@ max messages sync [chat] [options]
 | `--background` | run as a job that outlives this command; `store jobs show` follows it. |
 | `--dry-run` | only estimate how many messages, requests and minutes a full fetch would still take — from the store, no request. |
 
-**Returns:** message sync — ; every field: max commands info messages sync
+**Returns:** message sync — chat, held, ranges, missing, requests, runs, seconds, fetched, and 15 more; every field: max commands info messages sync
 
 **Example:** `max personal messages sync "Book club" --last 100`
 
@@ -2167,7 +2167,7 @@ max store gaps repair <chat> [options]
 | `--catch-up-time <duration>` | preparation time within the repair's remaining budget. |
 | `--background` | repair as an existing store job; inspect store jobs show. |
 
-**Returns:** store gap repair — ; every field: max commands info store gaps repair
+**Returns:** store gap repair — job, pid, chat, log, version, scope, before, after, and 6 more; every field: max commands info store gaps repair
 
 **Example:** `max personal store gaps repair "Book club" --limit 100`
 
@@ -2249,7 +2249,7 @@ max store jobs retry [job] [options]
 |---|---|
 | `--failed` | every chat whose newest job partial, failed or died. |
 
-**Returns:** store job retry — ; every field: max commands info store jobs retry
+**Returns:** store job retry — job, pid, chat, log, retried, error; every field: max commands info store jobs retry
 
 **Example:** `max personal store jobs retry --failed`
 
@@ -2291,7 +2291,7 @@ max store export [chat] [options]
 | `--all` | with --output-dir: every stored chat of this account. |
 | `--encrypt` | compress and encrypt with a password, typed at a hidden prompt or piped on stdin; it is never kept — lose it and the file cannot be opened. |
 
-**Returns:** store export — ; every field: max commands info store export
+**Returns:** store export — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 34 more; every field: max commands info store export
 
 **Example:** `max personal store export "Book club" --output ./messages.jsonl`
 
@@ -2323,7 +2323,7 @@ the store file: where it is, its size, its schema and how many rows it holds; ch
 max store info
 ```
 
-**Returns:** store info — ; every field: max commands info store info
+**Returns:** store info — path, exists, opens, error, bytes, schema, rows, pending_normalization, and 2 more; every field: max commands info store info
 
 **Example:** `max personal store info`
 
@@ -2335,7 +2335,7 @@ whether the store is healthy — integrity, search indexes, disk, and which chat
 max store check
 ```
 
-**Returns:** store check — ; every field: max commands info store check
+**Returns:** store check — path, exists, ok, opens, error, checks, schema, integrity, and 11 more; every field: max commands info store check
 
 **Example:** `max personal store check`
 
@@ -2349,7 +2349,7 @@ bring the store up to this build's schema, then normalize, index and stem the me
 max store migrate
 ```
 
-**Returns:** store migration — ; every field: max commands info store migrate
+**Returns:** store migration — path, exists, from, to, normalized, indexed, terms, stemmed, and 1 more; every field: max commands info store migrate
 
 **Example:** `max personal store migrate`
 
@@ -2363,7 +2363,7 @@ rebuild the word index, its typo vocabulary, the stems, the files' word index, t
 max store rebuild
 ```
 
-**Returns:** store reindex — ; every field: max commands info store rebuild
+**Returns:** store reindex — path, exists, normalized, indexed, terms, stemmed, notes_indexed, file_texts, and 1 more; every field: max commands info store rebuild
 
 **Example:** `max personal store rebuild`
 
@@ -2443,7 +2443,7 @@ max store repair [options]
 |---|---|
 | `--dry-run` | say what it would do, and change nothing. |
 
-**Returns:** store repair — ; every field: max commands info store repair
+**Returns:** store repair — path, exists, dry_run, repaired, indexes_created, triggers_created, mismatches, foreign_key_violations, and 1 more; every field: max commands info store repair
 
 **Example:** `max personal store repair --dry-run`
 
@@ -2461,7 +2461,7 @@ max store reset [options]
 |---|---|
 | `--no-backup` | delete the store without backing it up first. |
 
-**Returns:** store reset — ; every field: max commands info store reset
+**Returns:** store reset — path, exists, reset, backup, backed_up, schema; every field: max commands info store reset
 
 **Example:** `max personal store reset`
 
@@ -2683,7 +2683,7 @@ max stats messages evidence <message> [options]
 | `--limit <n>` | evidence rows, 1–100; 20 if not given. |
 | `--cursor <cursor>` | continue the same component and stored-evidence fingerprint. |
 
-**Returns:** evidence — ; every field: max commands info stats messages evidence
+**Returns:** evidence — message, contribution, related, counters, person_ref, joined_at, cohort, checkpoints, and 2 more; every field: max commands info stats messages evidence
 
 **Example:** `max personal stats messages evidence "$message" --selection "$selection" --component reactions`
 
@@ -2764,7 +2764,7 @@ max stats contacts evidence <person> [options]
 | `--limit <n>` | evidence rows, 1–100; 20 if not given. |
 | `--cursor <cursor>` | continue the same component and stored-evidence fingerprint. |
 
-**Returns:** evidence — ; every field: max commands info stats contacts evidence
+**Returns:** evidence — message, contribution, related, counters, person_ref, joined_at, cohort, checkpoints, and 2 more; every field: max commands info stats contacts evidence
 
 **Example:** `max personal stats contacts evidence 101 --selection "$selection" --component messages`
 
@@ -2998,7 +2998,7 @@ max tasks link <task> [targets] [options]
 | `--chat <chat>` | a chat it concerns, repeatable; a chat: its id, or part of its title. |
 | `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by, follow-up-of, duplicate-of or discovered-from. |
 
-**Returns:** task links — ; every field: max commands info tasks link
+**Returns:** task links — id, ref, key, project, title, description, type, status, and 20 more; every field: max commands info tasks link
 
 **Example:** `max personal tasks link DOC-12 https://example.com/draft`
 
@@ -3328,7 +3328,7 @@ max conversations show <conversation> [message]
 | `conversation` | обязательный | a conversation id from `conversations list`; or a chat: its id, or part of its title, with a message. |
 | `message` | необязательный | a message id in that chat: show the conversation it is in. |
 
-**Returns:** conversation details — ; every field: max commands info conversations show
+**Returns:** conversation details — id, chat, first_message, started_at, ended_at, messages_count, senders_count, built_at, and 38 more; every field: max commands info conversations show
 
 **Example:** `max personal conversations show "Book club" 101`
 
@@ -3411,7 +3411,7 @@ max conversations batches show [options]
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--size <n>` | messages to answer per batch, 10–200; 50 by default. |
 
-**Returns:** conversation batch — ; every field: max commands info conversations batches show
+**Returns:** conversation batch — batch, chat, messages, remaining; every field: max commands info conversations batches show
 
 **Example:** `max personal conversations batches show --chat "Book club"`
 
@@ -3440,7 +3440,7 @@ max conversations links rebuild [options]
 | `--max-tokens <n>` | analysis input/output reservation cap per run; default 100000. |
 | `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
 
-**Returns:** conversation build — ; every field: max commands info conversations links rebuild
+**Returns:** conversation build — chat, messages, links, conversations, built_at, rules_version, model, model_available, and 10 more; every field: max commands info conversations links rebuild
 
 **Example:** `max personal conversations links rebuild --chat "Book club"`
 
@@ -3458,7 +3458,7 @@ max conversations links add [options]
 |---|---|
 | `--batch <id>` | the batch id `conversations batches show` printed. |
 
-**Returns:** conversation change — ; every field: max commands info conversations links add
+**Returns:** conversation change — chat, stored, cleared; every field: max commands info conversations links add
 
 **Example:** `max personal conversations links add --batch "$batch"`
 
@@ -3477,7 +3477,7 @@ max conversations links clear [options]
 | `--chat <chat>` | a chat: its id, or part of its title. |
 | `--answer-model <model>` | only the stored answers this model gave. |
 
-**Returns:** conversation change — ; every field: max commands info conversations links clear
+**Returns:** conversation change — chat, stored, cleared; every field: max commands info conversations links clear
 
 **Example:** `max personal conversations links clear --chat "Book club"`
 
@@ -3523,7 +3523,7 @@ max conversations embeddings clear [options]
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
 
-**Returns:** conversation change — ; every field: max commands info conversations embeddings clear
+**Returns:** conversation change — chat, stored, cleared; every field: max commands info conversations embeddings clear
 
 **Example:** `max personal conversations embeddings clear --chat "Book club"`
 
@@ -3609,7 +3609,7 @@ max conversations embed [options]
 | `--max-chats <n>` | at most this many chats in one run; 20 if not given. |
 | `--max-chunks <n>` | at most this many chunks embedded in one run; 2000 if not given, and no limit with --chat. |
 
-**Returns:** conversation embedding — ; every field: max commands info conversations embed
+**Returns:** conversation embedding — chat, model, embedded, skipped, model_available, built, left; every field: max commands info conversations embed
 
 **Example:** `max personal conversations embed --chat "Book club"`
 
@@ -3638,7 +3638,7 @@ max attachments extract [options]
 | `--ocr` | explicitly call models.ocr for bulk image and scanned-PDF text extraction. |
 | `--concurrency <n>` | remote: requests at once (default: 4). |
 
-**Returns:** attachment extraction — ; every field: max commands info attachments extract
+**Returns:** attachment extraction — extracted, failed, needs_agent, complete, unchanged, not_downloaded, unsupported, engines_missing, and 15 more; every field: max commands info attachments extract
 
 **Example:** `max personal attachments extract --chat "Book club" --limit 10`
 
@@ -3778,7 +3778,7 @@ max attachments jobs install <dir> [options]
 | `--chat <chat>` | only this chat; repeat for more; a chat: its id, or part of its title. По умолчанию: ``. |
 | `--since-time <time>` | include messages from this ISO timestamp with a time zone. |
 
-**Returns:** media archive timer — ; every field: max commands info attachments jobs install
+**Returns:** media archive timer — name, installed, service_path, timer_path, active, action; every field: max commands info attachments jobs install
 
 **Example:** `max personal attachments jobs install ./media-archive`
 
@@ -3796,7 +3796,7 @@ max attachments jobs start <dir>
 |---|---|---|
 | `dir` | обязательный | archive directory, used with the same profile as install. |
 
-**Returns:** media archive timer — ; every field: max commands info attachments jobs start
+**Returns:** media archive timer — name, installed, service_path, timer_path, active, action; every field: max commands info attachments jobs start
 
 **Example:** `max personal attachments jobs start ./media-archive`
 
@@ -3814,7 +3814,7 @@ max attachments jobs stop <dir>
 |---|---|---|
 | `dir` | обязательный | archive directory, used with the same profile as install. |
 
-**Returns:** media archive timer — ; every field: max commands info attachments jobs stop
+**Returns:** media archive timer — name, installed, service_path, timer_path, active, action; every field: max commands info attachments jobs stop
 
 **Example:** `max personal attachments jobs stop ./media-archive`
 
@@ -3830,7 +3830,7 @@ max attachments jobs status <dir>
 |---|---|---|
 | `dir` | обязательный | archive directory, used with the same profile as install. |
 
-**Returns:** media archive timer — ; every field: max commands info attachments jobs status
+**Returns:** media archive timer — name, installed, service_path, timer_path, active, action; every field: max commands info attachments jobs status
 
 **Example:** `max personal attachments jobs status ./media-archive`
 
@@ -3848,7 +3848,7 @@ max attachments jobs uninstall <dir>
 |---|---|---|
 | `dir` | обязательный | archive directory, used with the same profile as install. |
 
-**Returns:** media archive timer — ; every field: max commands info attachments jobs uninstall
+**Returns:** media archive timer — name, installed, service_path, timer_path, active, action; every field: max commands info attachments jobs uninstall
 
 **Example:** `max personal attachments jobs uninstall ./media-archive`
 
@@ -3922,7 +3922,7 @@ max tags add <tag> [options]
 | `--message <message>` | the message to tag: its id in --chat, or a msg: locator alone. |
 | `--task <id>` | the task to tag: its id or key, as tasks list shows it. |
 
-**Returns:** tag change — ; every field: max commands info tags add
+**Returns:** tag change — target, unchanged, added, removed; every field: max commands info tags add
 
 **Example:** `max personal tags add reading --chat "Book club"`
 
@@ -3948,7 +3948,7 @@ max tags remove <tag> [options]
 | `--task <id>` | the task to untag: its id or key, as tasks list shows it. |
 | `--claim <claim>` | remove only this ownership claim: manual or auto. |
 
-**Returns:** tag change — ; every field: max commands info tags remove
+**Returns:** tag change — target, unchanged, added, removed; every field: max commands info tags remove
 
 **Example:** `max personal tags remove reading --chat "Book club"`
 
@@ -5413,7 +5413,7 @@ max watch [options]
 |---|---|
 | `--events` | also print edits, deletions, reactions, reads and chat changes; every line then names its event. |
 
-**Returns:** watch item — ; every field: max commands info watch
+**Returns:** watch item — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 30 more; every field: max commands info watch
 
 **Example:** `max personal watch --jsonl --timeout 30s`
 
