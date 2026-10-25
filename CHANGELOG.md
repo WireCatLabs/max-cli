@@ -6,8 +6,15 @@
 
 ## Не выпущено
 
+### Что нового
+
+- **`max doctor --json` перечисляет все ошибки файла настроек в `config.issues` (cli-core 0.423.0).** Каждая ошибка — `{ kind, file, profile?, key?, line?, column?, what, fix? }`; `kind` — `invalid_json`, `unknown_setting`, `unknown_permission`, `missing_setting` или `invalid_value`. Для неверного JSON `line` и `column` показывают, где разбор остановился; для остальных `fix` — команда `config unset`, которая убирает ключ и выполняется как написана. Значение настройки в ответ не попадает. С ошибками в файле `doctor` отвечает и завершается с кодом `0`, а без имени профиля отвечает с `profile: null`.
+- **`config show` работает с файлом, в котором есть ошибки, и называет каждую с командой, которая её убирает.** `config unset` удаляет и ключ, который не знает ни одна схема, в том числе в корне файла (`max config unset <ключ>`).
+
 ### Изменено — может сломать скрипты
 
+- **В ответе `doctor` вместо строки `config.error` — список `config.issues`.** Если настройки не удалось разрешить из-за блокировки профиля, флага или переменной окружения, сообщение — в `settings.error`.
+- **Старые имена настроек больше не распознаются.** `default_profile`, `analysis_provider`, `analysis_model`, `analysis_base_url` с переменными `MAX_ANALYSIS_*` и имена в camelCase (`sendsPerHour` и другие) — неизвестные настройки, как любые другие: команда отказывает и называет `config unset`, который убирает ключ. Модель анализа задаётся в `models.analysis.provider`, `models.analysis.model` и `models.analysis.base_url`.
 - **`messages sync` и `bot messages sync` проверяются по своим ключам `messages.sync` и `bot.messages.sync` (cli-core 0.421.0).** Уровень на `messages` или `bot.messages` по-прежнему действует на них, а запрет, записанный прямо на `messages.sync` или `bot.messages.sync`, теперь останавливает команду. Команды бота проверяют запрет на чтение до подключения.
 - **Сохранённый ключ права, который не проверяет ни одна команда, останавливает и команды бота, и `--dry-run`.** Ошибка называет ключ и `config unset`, который его удаляет; `config show`, `set` и `unset` работают, чтобы файл можно было исправить.
 - **Прежние имена команд получают обычный ответ «unknown command», без подсказки.** `max personal search mail` больше не называет memo: почту ищет `memo search mail`.

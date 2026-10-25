@@ -24,7 +24,7 @@ import {
   type SourcedSetting,
 } from "../config.js"
 import { knownProfiles } from "../diagnose.js"
-import { permissionKeyOf } from "../permissions.js"
+import { configIssuesOf, permissionKeyOf } from "../permissions.js"
 import { environmentOf, forCommand } from "./context.js"
 
 const SHOWN: SourcedSetting[] = [
@@ -77,10 +77,10 @@ export const configCommand = (): Command => {
     .description("the profile, the profiles that exist, and each setting with where it came from")
     .option("--bot", "the settings a bot command on this profile gets, rather than the personal account's")
     .action(async function (this: Command, options: { bot?: boolean }) {
-      const context = forCommand(this, { needsProfile: false })
+      const context = forCommand(this, { needsProfile: false, withIssues: true })
       const { renderer } = context
       const settings = options.bot
-        ? resolveSettings(this.optsWithGlobals<GlobalFlags>(), { kind: "bot", needsProfile: false })
+        ? resolveSettings(this.optsWithGlobals<GlobalFlags>(), { kind: "bot", needsProfile: false, withIssues: true })
         : context.settings
       const overridden = pathsAreOverridden({ appName: "max-cli", prefix: "MAX" })
 
@@ -117,6 +117,8 @@ export const configCommand = (): Command => {
         }),
       )
 
+      for (const issue of configIssuesOf(this, settings))
+        renderer.warn(`${issue.what}, so it is left out${issue.fix ? ` — \`${issue.fix}\` removes it` : ""}`)
       if (overridden) {
         renderer.note(
           "MAX_CONFIG_DIR, MAX_STATE_DIR or MAX_CACHE_DIR is set — a profile's keyring entry is not the usual one, " +
@@ -132,9 +134,8 @@ export const configCommand = (): Command => {
       "MAX lists its provider-specific settings and accepted configuration value forms.",
       () => {
         const [setting, value] = sub.registeredArguments
-        if (setting)
-          setting.description = `one of: ${[...ALL_SETTINGS.filter((key) => sub.name() === "unset" || key !== "default_profile"), ...STORE_SETTINGS].join(", ")}`
-        if (value) value.description = "a number, true or false, or a list like contacts,polls"
+        if (setting) setting.description = `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`
+        if (value) value.description = "a number, true or false, or a list like shop,news"
       },
     )
     sub.hook("preAction", (_parent, action) => {

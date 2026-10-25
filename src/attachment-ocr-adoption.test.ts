@@ -69,6 +69,7 @@ const invoke = async (...args: string[]) => {
     tty: false,
     env,
     connection: refuse,
+    keyring,
     store: () => {
       const session = new SessionStore({ profile, keyring })
       session.writeState({ ...session.readState(), viewerId: account.account })

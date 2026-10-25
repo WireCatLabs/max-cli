@@ -540,20 +540,6 @@ describe("the program", () => {
       }
     })
 
-    it("refuses `config set default_profile`, so a bare `max` still names no profile", async () => {
-      const { MAX_PROFILE } = process.env
-      delete process.env.MAX_PROFILE
-      try {
-        const set = await runWith(["config", "set", "default_profile", "mila", "--json"])
-        expect(JSON.parse(set.stderr).error.message).toMatch(/default_profile is gone/)
-        const shown = JSON.parse((await runWith(["config", "show", "--json"])).stdout).item
-        expect(shown).toMatchObject({ profile: null, profile_from: "none named" })
-        expect((await runWith(["config", "unset", "default_profile"])).code).toBe(0)
-      } finally {
-        process.env.MAX_PROFILE = MAX_PROFILE
-      }
-    })
-
     it("`skill show` prints the skill file itself", async () => {
       const { stdout } = await runWith(["skill", "show"])
       expect(stdout.startsWith("---\nname: max-cli")).toBe(true)

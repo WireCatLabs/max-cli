@@ -141,14 +141,59 @@ describe("max doctor", () => {
     expect(existsSync(join(home, "cache"))).toBe(false)
   })
 
-  it("**answers with the config problem when the config file is invalid**, naming the key and not its value", async () => {
+  it("**lists every config problem with its fix**, naming the key and never its value", async () => {
     const { code, stdout } = await inAnEmptyHome(["work", "doctor", "--json"], {
-      config: JSON.stringify({ defaultProfile: "invented-value-7", profiles: { work: {} } }),
+      config: JSON.stringify({
+        defaultProfile: "invented-value-7",
+        profiles: { work: { permissions: { "messages.dlete": "allow" } } },
+        bot: { defaults: { sendsPerHour: 3 } },
+      }),
     })
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout).item.config.error).toContain("defaultProfile")
+    const answer = JSON.parse(stdout)
+    expect(answer).not.toHaveProperty("error")
+    expect(answer.item.token).toEqual({ present: false, from: "none" })
+    expect(answer.item.config).toMatchObject({ found: true })
+    expect(answer.item.config.issues).toHaveLength(3)
+    expect(answer.item.config.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "unknown_setting",
+          key: "defaultProfile",
+          what: "setting defaultProfile is not a setting of max",
+          fix: "max config unset defaultProfile",
+        }),
+        expect.objectContaining({
+          kind: "unknown_setting",
+          key: "sendsPerHour",
+          fix: "max config unset --defaults --bot sendsPerHour",
+        }),
+        expect.objectContaining({
+          kind: "unknown_permission",
+          profile: "work",
+          key: "permissions.messages.dlete",
+          fix: "max work config unset permissions.messages.dlete",
+        }),
+      ]),
+    )
     expect(stdout).not.toContain("invented-value-7")
+  })
+
+  it("says where a config file stops being JSON, with no profile named", async () => {
+    const { MAX_PROFILE } = process.env
+    delete process.env.MAX_PROFILE
+    try {
+      const { code, stdout } = await inAnEmptyHome(["doctor", "--json"], { config: '{\n  "profiles": {,\n}' })
+
+      expect(code).toBe(0)
+      const { item } = JSON.parse(stdout)
+      expect(item.profile).toBeNull()
+      expect(item.config.issues).toEqual([expect.objectContaining({ kind: "invalid_json", line: 2, column: 16 })])
+      expect(item.config.issues[0]).not.toHaveProperty("fix")
+    } finally {
+      process.env.MAX_PROFILE = MAX_PROFILE
+    }
   })
 
   it("refuses report creation when invalid config prevents checking its write permission", async () => {

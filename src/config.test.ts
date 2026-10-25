@@ -47,14 +47,6 @@ describe("where a setting came from", () => {
     expect(settings({ profile: "work" }, { MAX_PROFILE: "other" }).sources.profile).toBe("first word")
   })
 
-  it("**stops on a leftover default_profile** with the profile to type and how to remove it", () => {
-    withConfig(JSON.stringify({ default_profile: "work" }))
-    expect(() => resolveSettings({}, { env: {}, configDir })).toThrow(
-      "default_profile is no longer read — name the profile: `max work …`; `max config unset default_profile`",
-    )
-    expect(resolveSettings({ profile: "work" }, { env: {}, configDir }).profile).toBe("work")
-  })
-
   it("**names where the command budget came from**, which has no file row to fall back on", () => {
     expect(settings().sources.commandTimeoutMs).toBe("default")
     expect(settings({}, { MAX_TIMEOUT: "10s" }).sources.commandTimeoutMs).toBe("MAX_TIMEOUT")
@@ -147,12 +139,10 @@ describe("paging", () => {
 
 describe("the order a setting is decided in", () => {
   it("prefers the command line to everything else", () => {
-    withConfig(JSON.stringify({ default_profile: "fromFile" }))
     expect(settings({ profile: "fromFlag" }, { MAX_PROFILE: "fromEnv" }).profile).toBe("fromFlag")
   })
 
-  it("prefers the environment to the file", () => {
-    withConfig(JSON.stringify({ default_profile: "fromFile" }))
+  it("takes the profile from the environment when no first word names one", () => {
     expect(settings({}, { MAX_PROFILE: "fromEnv" }).profile).toBe("fromEnv")
   })
 
@@ -202,7 +192,6 @@ describe("permissions across sections", () => {
 
 describe("a process locked to one profile", () => {
   it("uses the locked profile when nothing names one, and refuses any other a first word or MAX_PROFILE names", () => {
-    withConfig(JSON.stringify({ default_profile: "personal", profiles: {} }))
     const lock = { MAX_PROFILE_LOCK: "agent" }
 
     expect(settings({}, lock)).toMatchObject({ profile: "agent", sources: { profile: "MAX_PROFILE_LOCK" } })
@@ -213,18 +202,15 @@ describe("a process locked to one profile", () => {
 })
 
 describe("the configuration file", () => {
-  it("refuses the retired read-marking setting", () => {
-    withConfig(JSON.stringify({ profiles: { default: { catch_up_marks_read: true } } }))
-    expect(() => settings()).toThrowError(/catch_up_marks_read is an unknown setting/)
-  })
-
   it("**is not required** — an unconfigured machine is not a broken one", () => {
     expect(settings().profile).toBe("default")
   })
 
   it("**names the field when one is misspelled**, rather than silently using the default", () => {
     withConfig(JSON.stringify({ profiles: { default: { limitt: 5 } } }))
-    expect(() => settings()).toThrowError(/profiles\.default\.limitt/)
+    expect(() => settings()).toThrowError(
+      "setting limitt is not a setting of max — remove it with `max default config unset limitt`",
+    )
     expect(() => settings()).toThrowError(expect.objectContaining({ code: "configuration_error" }))
   })
 
@@ -240,19 +226,18 @@ describe("the configuration file", () => {
 
   it("refuses a setting of the wrong type, naming it", () => {
     withConfig(JSON.stringify({ profiles: { default: { limit: "20" } } }))
-    expect(() => settings()).toThrowError(/profiles\.default\.limit/)
+    expect(() => settings()).toThrowError(/setting limit has to be a whole number/)
   })
 
   it("**names the first bad key in plain words and never its value**, not the validation library's", () => {
-    withConfig(JSON.stringify({ profiles: { default: { limitt: 5 } } }))
-    expect(() => settings()).toThrowError("profiles.default.limitt is an unknown setting")
-
     withConfig(JSON.stringify({ profiles: { default: { limit: 0, color: "yes" } } }))
-    expect(() => settings()).toThrowError("profiles.default.limit has an invalid value (and 1 more problem)")
+    expect(() => settings()).toThrowError(
+      "setting limit has to be a whole number, 1 or more — remove it with `max default config unset limit` (and 1 more problem — `doctor` lists them all)",
+    )
     expect(() => settings()).not.toThrowError(/yes/)
 
     withConfig(JSON.stringify({ profiles: { default: { limit: 2.5 } }, defaultProfil: "x" }))
-    expect(() => settings()).toThrowError(/\(and 1 more problem\)$/)
+    expect(() => settings()).toThrowError(/\(and 1 more problem — `doctor` lists them all\)$/)
     expect(() => settings()).not.toThrowError(/Expected|Invalid|2\.5/)
   })
 
@@ -365,7 +350,9 @@ describe("personal and bot sections", () => {
 
   it("refuse a personal-only setting in the bot section", () => {
     withConfig(JSON.stringify({ bot: { defaults: { serve: true } } }))
-    expect(() => settings()).toThrowError(/bot\.defaults\.serve is an unknown setting/)
+    expect(() => settings()).toThrowError(
+      /setting serve is not a setting of max — remove it with `max config unset --defaults --bot serve`/,
+    )
   })
 
   it("list the profiles named in any section", () => {
@@ -385,7 +372,7 @@ describe("changing a setting", () => {
 
     changeSetting(path(), { profile: "work", setting: "limit", value: undefined })
     changeSetting(path(), { profile: "work", setting: "record", value: undefined })
-    expect(file()).toEqual({ profiles: {} })
+    expect(file()).toEqual({})
   })
 
   it("writes to `defaults` when no profile is named", () => {
@@ -429,16 +416,6 @@ describe("changing a setting", () => {
     expect(() => changeSetting(path(), { profile: "me", setting: "read_other_bots", value: "true" })).toThrow(/--bot/)
   })
 
-  it("refuses to set default_profile and still clears a leftover one", () => {
-    withConfig(JSON.stringify({ default_profile: "mila", profiles: {} }))
-    expect(() => changeSetting(path(), { profile: undefined, setting: "default_profile", value: "mila" })).toThrow(
-      /default_profile is gone/,
-    )
-    expect(file().default_profile).toBe("mila")
-    changeSetting(path(), { profile: undefined, setting: "default_profile", value: undefined })
-    expect(file().default_profile).toBeUndefined()
-  })
-
   it("**refuses a value the reader would refuse, and leaves the file as it was**", () => {
     withConfig(JSON.stringify({ profiles: { work: { limit: 5 } } }))
 
@@ -461,14 +438,13 @@ describe("shared AI provider configuration", () => {
     withConfig(
       JSON.stringify({
         defaults: { embedding_model: "default-model" },
-        profiles: { work: { embedding_model: "profile-model", analysis_provider: "anthropic" } },
+        profiles: { work: { embedding_model: "profile-model" } },
         personal: { profiles: { work: { embedding_model: "kind-model" } } },
       }),
     )
     const own = settings({ profile: "work" })
     expect(own.embeddingProvider).toBe("local")
     expect(own.embeddingModel).toBe("kind-model")
-    expect(own.analysisProvider).toBe("anthropic")
     expect(own.sources.embeddingModel).toBe("config file: personal.profiles.work")
     expect(settings({ profile: "work" }, { MAX_EMBEDDING_MODEL: "env-model" }).embeddingModel).toBe("env-model")
     expect(() => settings({}, { MAX_EMBEDDING_DIMS: "0" })).toThrow("embedding_dims")
@@ -481,7 +457,7 @@ describe("shared AI provider configuration", () => {
     expect(() =>
       changeSetting(join(configDir, "config.json"), {
         profile: "work",
-        setting: "analysis_base_url",
+        setting: "embedding_base_url",
         value: "https://user:secret@example.test",
       }),
     ).toThrow()

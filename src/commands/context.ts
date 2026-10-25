@@ -115,14 +115,17 @@ export interface CommandContext {
  * what `commander` happened to parse.
  *
  */
-export const forCommand = (command: Command, resolving: Pick<ResolveOptions, "needsProfile"> = {}): CommandContext =>
+export const forCommand = (
+  command: Command,
+  resolving: Pick<ResolveOptions, "needsProfile" | "readOnly" | "withIssues"> = {},
+): CommandContext =>
   contextFor(command.optsWithGlobals<GlobalFlags & { offline?: boolean }>(), environmentOf(command), resolving)
 
 /** The same context from flags already parsed — for `max mcp`, whose calls arrive without argv. */
 export const contextFor = (
   flags: GlobalFlags & { offline?: boolean; yes?: boolean; allowDangerous?: boolean },
   environment: Environment = {},
-  resolving: Pick<ResolveOptions, "needsProfile"> = {},
+  resolving: Pick<ResolveOptions, "needsProfile" | "readOnly" | "withIssues"> = {},
 ): CommandContext => {
   const settings = resolveSettings(flags, { env: environment.env ?? process.env, ...resolving })
   const { renderer, format, color, streams } = resolveOutput({

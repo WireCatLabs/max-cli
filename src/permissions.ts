@@ -1,8 +1,10 @@
 import { AsyncLocalStorage } from "node:async_hooks"
 import { CliError } from "@wirecat/cli-base"
 import { metaOf } from "@wirecat/cli-base/commands"
+import { type ConfigIssue, knownPermissionKeys } from "@wirecat/cli-core/cli"
 import { type Asker, keyForCommand, levelFor, readKeysForCommand, skipFlagFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
+import { MAX_APP } from "./app.js"
 import { BOT_KEYS } from "./bot/permissions.js"
 import type { Environment } from "./commands/context.js"
 import type { Settings } from "./config.js"
@@ -125,3 +127,37 @@ export const askerFor =
     }
     approvals.getStore()?.approved.add(key)
   }
+
+const SHELL_SAFE = /^[A-Za-z0-9_.:@-]*$/
+
+/**
+ * A saved permission key no command checks, wherever in the file it is saved — the same issue cli-core's own doctor
+ * lists. cli-core does not export its builder, so this one follows its shape and its `config unset` fix.
+ */
+const unknownPermissionIssues = (command: Command, settings: Settings): ConfigIssue[] => {
+  const known = knownPermissionKeys(command, permissionKeyOf)
+  return (settings.savedPermissions ?? [])
+    .filter(({ key }) => !known.has(key))
+    .map(({ key, at }) => {
+      const section = at[0] === "personal" || at[0] === "bot" ? at[0] : undefined
+      const [scope, name] = section ? at.slice(1) : at
+      const profile = scope === "profiles" ? name : undefined
+      const setting = `permissions.${key}`
+      const flags = [...(scope === "defaults" ? ["--defaults"] : []), ...(section ? [`--${section}`] : [])]
+      const fix = [MAX_APP.command, ...(profile === undefined ? [] : [profile]), "config", "unset", ...flags, setting]
+      return {
+        kind: "unknown_permission" as const,
+        file: settings.configPath,
+        ...(profile === undefined ? {} : { profile }),
+        key: setting,
+        what: `${setting} names no command`,
+        ...([setting, profile ?? ""].every((word) => SHELL_SAFE.test(word)) ? { fix: fix.join(" ") } : {}),
+      }
+    })
+}
+
+/** Every problem in the file, as `doctor` lists them and `config show` warns of them. */
+export const configIssuesOf = (command: Command, settings: Settings): ConfigIssue[] => [
+  ...(settings.configIssues ?? []),
+  ...unknownPermissionIssues(command, settings),
+]

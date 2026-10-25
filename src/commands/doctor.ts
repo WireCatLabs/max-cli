@@ -1,11 +1,13 @@
+import { existsSync } from "node:fs"
 import { resolve } from "node:path"
-import { CliError, writeSecurely } from "@wirecat/cli-base"
+import { CliError, configFilePath, resolvePaths, writeSecurely } from "@wirecat/cli-base"
 import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import {
   type AnswerOutput,
   destroysNothing,
   itemOf,
   LOCAL_WRITE,
+  NONE_NAMED,
   outputFor,
   REMOTE_READ,
   renderAnswer,
@@ -18,12 +20,14 @@ import { Command } from "commander"
 import { MAX_APP } from "../app.js"
 import { BotTokenStore } from "../bot/auth.js"
 import { BotApiClient } from "../bot/client.js"
+import type { Settings } from "../config.js"
 import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { type Diagnosis, diagnose } from "../diagnose.js"
 import { ownScript } from "../install.js"
 import { maxMessenger } from "../messenger.js"
 import { type Check, checkOnline, mcpHandshake } from "../online.js"
 import { shownTime } from "../output.js"
+import { configIssuesOf } from "../permissions.js"
 import { asFirstWord } from "../profile.js"
 import { buildReport, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
 import { sendsPathFor } from "../sends.js"
@@ -54,14 +58,24 @@ const doctorCommandDefinition = (): Command => {
     const { online } = this.opts<{ online?: boolean }>()
     let context: ReturnType<typeof forCommand>
     try {
-      context = forCommand(this)
+      context = forCommand(this, { ...DOCTOR_SETTINGS, needsProfile: false })
     } catch (error) {
-      if (!(error instanceof CliError) || error.code !== "configuration_error") throw error
-      renderAnswer(this, outputFor(this), itemOf({ config: { error: error.message } }))
+      if (!(error instanceof CliError)) throw error
+      renderAnswer(this, outputFor(this), itemOf(unresolved(this, error)))
       return
     }
     const { renderer, settings, format, streams, run, store, createClient } = context
     const botStore = botStoreFor(this)
+    const config = configOf(this, settings)
+    const warnIssues = () => {
+      for (const issue of config.issues)
+        renderer.warn(`${issue.what}, so it is left out${issue.fix ? ` — \`${issue.fix}\` removes it` : ""}`)
+    }
+    if (settings.sources.profile === NONE_NAMED) {
+      renderAnswer(this, context, itemOf({ profile: null, config }))
+      warnIssues()
+      return
+    }
 
     await run("doctor", async (events) => {
       const report = await diagnoseProfile(settings, store, botStore, sessionStoreFor(this))
@@ -84,9 +98,10 @@ const doctorCommandDefinition = (): Command => {
         renderAnswer(
           this,
           { renderer, format, streams },
-          itemOf(snakeKeys({ ...report, ...(checks ? { online: checks } : {}) })),
+          itemOf({ config, ...(snakeKeys({ ...report, ...(checks ? { online: checks } : {}) }) as object) }),
         )
 
+      warnIssues()
       installNotes(report, renderer.note.bind(renderer))
       // ⚠ Said whenever the environment moved the keyring, because this is the one failure with no
       // other symptom: the profile is there, the login happened, and the answer is "no session".
@@ -145,6 +160,22 @@ const doctorCommandDefinition = (): Command => {
 
   command.addCommand(reportCommand())
   return command
+}
+
+/** Every problem in the file is reported, not refused: doctor is what a person runs when nothing else will. */
+const DOCTOR_SETTINGS = { readOnly: true, withIssues: true }
+
+const configOf = (command: Command, settings: Settings) => ({
+  path: settings.configPath,
+  found: settings.configFound,
+  issues: configIssuesOf(command, settings),
+})
+
+/** Not the file: a profile lock, a flag or an environment variable the settings refuse. */
+const unresolved = (command: Command, error: CliError) => {
+  const env = environmentOf(command).env ?? process.env
+  const path = configFilePath(resolvePaths({ appName: MAX_APP.appName, prefix: MAX_APP.envPrefix, env }).config)
+  return { config: { path, found: existsSync(path), issues: [] }, settings: { error: error.message } }
 }
 
 const botStoreFor = (command: Command) => {
@@ -236,12 +267,12 @@ const reportCommand = (): Command => {
     .action(async function (this: Command) {
       const options = this.opts<{ run?: string; output?: string }>()
       let context: ReturnType<typeof forCommand> | undefined
-      let configError = ""
+      let refused: ReturnType<typeof unresolved> | undefined
       try {
-        context = forCommand(this)
+        context = forCommand(this, DOCTOR_SETTINGS)
       } catch (error) {
-        if (!(error instanceof CliError) || error.code !== "configuration_error") throw error
-        configError = error.message
+        if (!(error instanceof CliError)) throw error
+        refused = unresolved(this, error)
       }
       const { renderer, format, streams } = context ?? outputFor(this)
 
@@ -250,10 +281,13 @@ const reportCommand = (): Command => {
         const profile = context
           ? {
               profile: context.settings.profile,
-              doctor: await diagnoseProfile(context.settings, context.store, botStoreFor(this), sessionStoreFor(this)),
+              doctor: {
+                config: configOf(this, context.settings),
+                ...(await diagnoseProfile(context.settings, context.store, botStoreFor(this), sessionStoreFor(this))),
+              },
               sends: new SendJournal(sendsPathFor(context.settings.profile)).entries(),
             }
-          : { profile: null, doctor: { config: { error: configError } }, sends: [] }
+          : { profile: null, doctor: refused as ReturnType<typeof unresolved>, sends: [] }
         const built = buildReport({
           ...profile,
           runsDir: runsDirFor(MAX_APP),
