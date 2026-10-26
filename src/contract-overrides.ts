@@ -532,6 +532,21 @@ export const SHELL_OVERRIDES: Readonly<{
     },
     {
       command: ["contacts", "lookup"],
+      field: "arguments",
+      before: [],
+      after: [
+        {
+          name: "phone",
+          required: false,
+          variadic: false,
+          description: "refused: the number is asked for, never typed here",
+        },
+      ],
+      reason:
+        "MAX keeps its native contact lookup and full sync transport while inheriting the shared contact contract defaults.",
+    },
+    {
+      command: ["contacts", "lookup"],
       field: "examples",
       before: ["max personal contacts lookup"],
       after: null,

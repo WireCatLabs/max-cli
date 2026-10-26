@@ -37,6 +37,7 @@ const SHOWN: SourcedSetting[] = [
   "searchCatchUp",
   "searchReranker",
   "record",
+  "recordInput",
   "serve",
   "keepRunsForDays",
   "sendsPerHour",
