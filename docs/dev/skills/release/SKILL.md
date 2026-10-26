@@ -7,7 +7,7 @@ description: Prepare and verify a max-cli release — run release:check, draft t
 
 A release is reliable when two things agree: **`pnpm release:check`** (everything a program can
 decide) and **the release report** `docs_ai/releases/<version>.md` (everything that needs judgement,
-signed by the owner). `bin/release` refuses to publish without both. The publishing steps themselves
+signed once the owner says yes). `bin/release` refuses to publish without both. The publishing steps themselves
 are in `docs_ai/releasing.md` — follow them from there, do not restate them.
 
 `docs_ai/` is the private repository `WireCatLabs/cli-private`, cloned into the main checkout. A
@@ -108,7 +108,8 @@ Write `docs_ai/releases/<version>.md` (the template is in `docs_ai/releases/READ
 - one row per step above: result and evidence — the `release:check` output, the changelog as
   accepted, the doc findings and where they were fixed, the requirements verdicts, the live
   scenario rows and the smoke result;
-- no `Signed off:` line — the owner adds it, with the date (`Signed off: YYYY-MM-DD — owner`). **Never write it yourself.**
+- no `Signed off:` line yet — it is written only after the owner says yes (below).
 
-Commit and push `docs_ai/`. Then tell the owner: the report path, and that `bin/release` on `main`
-publishes once they have signed it. Run `bin/release` only when they say so.
+Commit and push `docs_ai/`. Then ask the owner in chat whether to release this version, with the report path. Once
+they say yes for that version, write `Signed off: YYYY-MM-DD — owner (approved in chat)` in the report, commit and push
+`docs_ai/`, and run `bin/release` on `main`. One yes covers one version: a renumbered or later version needs its own.
