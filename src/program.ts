@@ -158,7 +158,8 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
       .option("--no-serve", "do not start it; log in on this command's own connection unless one is running")
     const descriptions: Record<string, string> = {
       "--trace": "one line per request on stderr: ids and timings, never message content",
-      "--record": "keep this run under `max runs` — ids and timings, never message content",
+      "--record":
+        "keep this run under `max runs`, with the command as typed and secrets hidden; record_input false leaves the typed words out",
       "--quiet": "diagnostics off",
     }
     for (const option of program.options) {
