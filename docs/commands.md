@@ -46,7 +46,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 | `--full` | found messages with their whole text and every provider field. |
 | `--dry-run` | preview parsed arguments and permissions before running the action. |
 | `--yes` | go ahead without the question an ask level puts before a write. |
-| `--record` | keep this run under `max runs` — ids and timings, never message content. |
+| `--record` | keep this run under `max runs`, with the command as typed and secrets hidden; record_input false leaves the typed words out. |
 | `--no-record` | do not keep it, whatever the configuration says. |
 | `--serve` | start `max serve` in the background if it is not running (the default). |
 | `--no-serve` | do not start it; log in on this command's own connection unless one is running. |
