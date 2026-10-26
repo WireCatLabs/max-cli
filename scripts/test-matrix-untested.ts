@@ -526,6 +526,19 @@ export const UNTESTED: Untested[] = [
     ...(option ? { option } : {}),
     reason: "needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6",
   })),
+  ...["mcp server start", "mcp server stop", "mcp server status"].map((command) => ({
+    command,
+    reason:
+      "cli-core's mcpServerCommand, which starts, reads and stops a background HTTP server; " +
+      "src/cli/messenger/mcp-server-command.test.ts drives all three there",
+  })),
+  ...["--port", "--public-url", "--permission"].map((option) => ({
+    command: "mcp server start",
+    option,
+    reason:
+      "starts a background HTTP server that listens until stopped; cli-core's " +
+      "src/cli/messenger/mcp-server-command.test.ts drives start, status and stop with these options",
+  })),
   {
     command: "mcp",
     reason:
