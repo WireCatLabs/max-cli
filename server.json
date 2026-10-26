@@ -1,0 +1,35 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "dev.wirecat/max-cli",
+  "title": "WireCat MAX",
+  "description": "Your MAX account and bots for agents: read, search, send messages. Sign in with the max CLI first.",
+  "websiteUrl": "https://wirecat.dev/en/docs/max",
+  "repository": {
+    "url": "https://github.com/WireCatLabs/max-cli",
+    "source": "github"
+  },
+  "version": "0.81.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@wirecat/max-cli",
+      "version": "0.81.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "valueHint": "profile",
+          "description": "The max profile you signed in with",
+          "isRequired": true
+        },
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ]
+    }
+  ]
+}
