@@ -2,11 +2,14 @@ import { CliError } from "@wirecat/cli-base"
 import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import { loginQr } from "@wirecat/cli-core"
 import {
+  answerStdinOption,
   itemOf,
   logsInOrOut,
   REMOTE_WRITE,
   renderAnswer,
+  type SignInSteps,
   sharedCommandTemplate,
+  signInSteps,
   snakeKeys,
 } from "@wirecat/cli-core/cli"
 import { Argument, Command } from "commander"
@@ -62,13 +65,15 @@ const sessionCommandDefinition = (): Command => {
     .addArgument(
       new Argument("[method]", "token (pasted or piped), qr, qr-chrome or sms").choices(METHODS).default("token"),
     )
+    .addOption(answerStdinOption())
     .action(async function (this: Command, method: Method) {
       const context = forCommand(this)
       const { renderer, run } = context
+      const answers = this.opts<{ answerStdin?: boolean }>().answerStdin === true
 
       refuseCommandName(context.settings.profile, commandWords(rootOf(this)))
       await run("session start", async (events) => {
-        const { firstLogin, ...answer } = await startSession(context, method, events)
+        const { firstLogin, ...answer } = await startSession(context, method, events, answers)
         renderAnswer(this, context, itemOf(snakeKeys(answer)))
         renderer.success(`logged in as ${answer.profile.name ?? answer.profile.id}`)
         if (firstLogin) renderer.note(TERMS_NOTICE)
@@ -139,8 +144,19 @@ export const AGENT_QR_HELP =
 const METHODS = ["token", "qr", "qr-chrome", "sms"] as const
 export type Method = (typeof METHODS)[number]
 
-export const startSession = async (context: CommandContext, method: Method, events: MaxClientOptions["events"]) => {
+export const startSession = async (
+  context: CommandContext,
+  method: Method,
+  events: MaxClientOptions["events"],
+  answers = false,
+) => {
   const { renderer, store, createClient, interactive } = context
+  const steps = signInSteps({
+    diagnostic: context.streams.diagnostic,
+    json: context.format !== "pretty",
+    answers,
+    input: context.stdin,
+  })
   if (store.hasLoggedIn()) refuseWhilePaused(store.readState())
   if (method !== "token" && method !== "qr" && !interactive)
     throw new CliError(
@@ -151,13 +167,16 @@ export const startSession = async (context: CommandContext, method: Method, even
     throw new CliError("validation_error", "MAX_TOKEN is set, and it would outrank the new session — unset it first")
   const pasted =
     method === "token"
-      ? process.env.MAX_TOKEN?.trim() || (await context.ask("MAX token: ", { secret: true }))
+      ? process.env.MAX_TOKEN?.trim() ||
+        (await (steps.answers
+          ? steps.ask({ field: "token", secret: true, prompt: "MAX token" }, context.signal)
+          : context.ask("MAX token: ", { secret: true })))
       : undefined
   if (method === "token" && !pasted) throw new CliError("validation_error", "no token given")
   context.signal.throwIfAborted()
   if ((await context.stopServer()) === "stopped")
     renderer.note("stopped `max serve`; it starts again on the new session")
-  const token = method === "token" ? String(pasted) : await obtain(method, context, events)
+  const token = method === "token" ? String(pasted) : await obtain(method, context, events, steps)
   context.signal.throwIfAborted()
   const client = createClient({ events }, { own: true })
   const firstLogin = store.viewerId() === undefined
@@ -175,8 +194,9 @@ const BROWSER_WAIT_MS = 5 * 60_000
 
 const obtain = async (
   method: Exclude<Method, "token">,
-  { createClient, renderer, browser, track, ask, streams, columns, interactive, store, format }: CommandContext,
+  { createClient, renderer, browser, track, ask, streams, columns, interactive, store, format, signal }: CommandContext,
   events: MaxClientOptions["events"],
+  steps: SignInSteps,
 ): Promise<string> => {
   if (method !== "qr") {
     renderer.note(
@@ -201,6 +221,11 @@ const obtain = async (
         qr.show(link, "scan in the MAX app on your phone", new Date(expiresAt))
       },
       askPassword: (hint, again) => {
+        if (steps.answers)
+          return steps.ask(
+            { field: "password", secret: true, prompt: again ? "Wrong password, try again" : "MAX password", hint },
+            signal,
+          )
         if (!interactive)
           throw new CliError(
             "validation_error",

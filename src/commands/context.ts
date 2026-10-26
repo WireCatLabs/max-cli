@@ -95,6 +95,8 @@ export interface CommandContext {
   /** How voice messages are fetched and heard: through `reach`, and by the downloaded model. */
   hearing: Pick<HearAllOptions, "fetchAudio" | "open">
   ask: Ask
+  /** Where a window that drives the login writes its answers (`--answer-stdin`). */
+  stdin: NodeJS.ReadableStream
   signal: AbortSignal
   /** Whether a person is there to scan a code or type one: both stdin and stderr are a terminal. */
   interactive: boolean
@@ -206,6 +208,7 @@ export const contextFor = (
         ? environment.ask(prompt, { secret, signal: stop })
         : readSecret(prompt, { input, echo: !secret, signal: stop })
     },
+    stdin: environment.stdin ?? process.stdin,
     signal,
     interactive:
       !inputPolicy(environment.stdin ?? process.stdin).noInput &&
