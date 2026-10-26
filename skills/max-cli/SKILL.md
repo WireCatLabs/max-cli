@@ -176,9 +176,9 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
 5d. **Ошибку, которую не удаётся объяснить, — в отчёт автору.** Предложите владельцу
    `max personal doctor reports create`: команда пишет файл без текстов сообщений и печатает ссылку на новую
    задачу на GitHub. Задачу создаёт владелец сам: она видна всем.
-5e. **`max` не находится — `npx @wirecat/max-cli personal doctor`.** Вместо `personal` подставьте имя профиля владельца. Он скажет, куда поставлена команда и
+5e. **`max` не находится — `"$(npm prefix -g)/bin/max" personal doctor`** (после pnpm — `"$(pnpm bin -g)/max"`). Вместо `personal` подставьте имя профиля владельца. Он скажет, куда поставлена команда и
    почему терминал её не видит, и напечатает команду исправления. Клиенту MCP без терминала (Claude
-   Desktop, Cursor) готовую запись с полными путями печатает `max personal mcp config`.
+   Desktop) готовую запись с полными путями печатает `max personal mcp config`.
 6. **`messages show` и `messages context` требуют чат и id сообщения** — или одну ссылку `msg:…` из
    `search messages`. Искомое сообщение в JSON помечено `"anchor": true`. Если сообщения нет, это
    `not_found`, а не соседнее сообщение.
