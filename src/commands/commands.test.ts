@@ -261,6 +261,8 @@ describe("max commands", () => {
       "doctor reports create",
       "skill install",
       "upgrade",
+      "mcp server start",
+      "mcp server stop",
       "mcp add",
       "bot auth set",
       "bot auth remove",

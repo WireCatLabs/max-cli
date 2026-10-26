@@ -62,12 +62,16 @@ log this profile in to MAX
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max session start [method]
+max session start [method] [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `method` | необязательный | token (pasted or piped), qr, qr-chrome or sms. Одно из: `token`, `qr`, `qr-chrome`, `sms`. По умолчанию: `token`. |
+
+| Опция | Что делает |
+|---|---|
+| `--answer-stdin` | with --json and no terminal: print each question as a `needs` line on stderr and read its answer, one line, from stdin. |
 
 **Returns:** log this profile in to MAX
 
@@ -5744,6 +5748,56 @@ max mcp [options]
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
 | `--revoke` | forget every login given to a browser app; each must log in again. |
+
+### `max mcp server`
+
+start, stop and check `mcp --http` in the background; status shows the login code for a browser app
+
+#### `max mcp server start`
+
+start `mcp --http` apart from this shell and answer once it listens, with its login code
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max mcp server start [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--port <port>` | the local port (default 8765). |
+| `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net. |
+| `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
+
+**Returns:** start the HTTP MCP server in the background
+
+**Example:** `max personal mcp server start --public-url https://laptop.example.ts.net`
+
+#### `max mcp server stop`
+
+stop `mcp --http` — only one that `mcp server start` started
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max mcp server stop
+```
+
+**Returns:** stop the background HTTP MCP server
+
+**Example:** `max personal mcp server stop`
+
+#### `max mcp server status`
+
+whether `mcp --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
+
+```sh
+max mcp server status
+```
+
+**Returns:** whether the HTTP MCP server runs, its login code and the apps logged in
+
+**Example:** `max personal mcp server status --json`
 
 ### `max mcp config`
 

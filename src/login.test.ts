@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs"
 import { createServer } from "node:net"
 import { dirname } from "node:path"
+import { PassThrough } from "node:stream"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { PASTE_QR, plainQr } from "@wirecat/cli-core"
 import { describe, expect, it } from "vitest"
@@ -175,6 +176,53 @@ describe("max session start qr", () => {
     expect(asked).toEqual(["MAX password (hint: the cat):  (secret)"])
     expect(login.sent.at(-1)?.payload).toEqual({ trackId: "password-track", password: "hunter2" })
     expect(stored()).toBe("password-token")
+  })
+
+  it("with --answer-stdin and no terminal, asks for the cloud password as a `needs` line and reads it from stdin", async () => {
+    const login = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.GET_QR]: qrCode(),
+        [Opcode.GET_QR_STATUS]: { status: { loginAvailable: true } },
+        [Opcode.LOGIN_BY_QR]: { passwordChallenge: { trackId: "password-track", hint: "the cat" } },
+        [Opcode.AUTH_LOGIN_CHECK_PASSWORD]: { tokenAttrs: { LOGIN: { token: "password-token" } } },
+      },
+    })
+    const stdin = Object.assign(new PassThrough(), { isTTY: false })
+    stdin.write("not-a-real-password\n")
+    const { start, stored, streams } = setUp(login, adopting(), { interactive: false, tty: false, stdin })
+
+    expect(await start("qr", "--json", "--answer-stdin")).toBe(0)
+
+    const events = streams.stderr.filter((line) => line.startsWith('{"event"')).map((line) => JSON.parse(line))
+    expect(events.map(({ event }) => event)).toEqual(["qr", "needs"])
+    expect(events[1]).toEqual({
+      event: "needs",
+      field: "password",
+      secret: true,
+      prompt: "MAX password",
+      hint: "the cat",
+    })
+    expect(login.sent.at(-1)?.payload).toEqual({ trackId: "password-track", password: "not-a-real-password" })
+    expect(stored()).toBe("password-token")
+    expect([...streams.stdout, ...streams.stderr].join("\n")).not.toContain("not-a-real-password")
+  })
+
+  it("without --answer-stdin and no terminal, still refuses to ask for the cloud password", async () => {
+    const login = mockMax({
+      answers: {
+        [Opcode.SESSION_INIT]: {},
+        [Opcode.GET_QR]: qrCode(),
+        [Opcode.GET_QR_STATUS]: { status: { loginAvailable: true } },
+        [Opcode.LOGIN_BY_QR]: { passwordChallenge: { trackId: "password-track", hint: "the cat" } },
+      },
+    })
+    const stdin = Object.assign(new PassThrough(), { isTTY: false })
+    const { start, stored, streams } = setUp(login, adopting(), { interactive: false, tty: false, stdin })
+
+    expect(await start("qr", "--json")).not.toBe(0)
+    expect(streams.stderr.join("\n")).toContain("needs a terminal to ask for the MAX password")
+    expect(stored()).toBeUndefined()
   })
 
   it("asks again after a wrong password, and gives up after three", async () => {

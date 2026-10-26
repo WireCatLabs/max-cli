@@ -18,5 +18,6 @@
   "replies edit --template",
   "replies edit --words",
   "replies test --ai",
+  "session start --answer-stdin",
   "stickers list --set"
 ]
