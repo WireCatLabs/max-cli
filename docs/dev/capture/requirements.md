@@ -42,7 +42,7 @@ PyMax шлёт события `PERF` (`login`, `open_chat_to_render`) и моб�
 |---|---|---|---|
 | Адрес, версия 10, MessagePack, LZ4 | да | да ([`frame.ts`](../../../src/protocol/frame.ts)) | ✅ |
 | `seq` с 0 на соединение | да | да ([`connection.ts:100`](../../../src/protocol/connection.ts)) | ✅ |
-| INIT: `appVersion 26.9.8`, `isPwa: false` | да | да ([`identity.ts:18`](../../../src/spec/identity.ts)) | ✅ |
+| INIT: `appVersion 26.10.7` (с 2026-10-26; в записи 2026-09-25 — 26.9.8), `isPwa: false` | да | да ([`identity.ts:18`](../../../src/spec/identity.ts)) | ✅ |
 | INIT: `screen` | `1500x2400 1.3x` (у каждого свой) | `1080x1920 1.0x` | допустимо |
 | LOGIN: `chatsCount` | 15, остальное — один `53 {marker}` | 15 и один 53 ([`handshake.ts`](../../../src/session/handshake.ts), `#readRestOfChats` в [`client.ts`](../../../src/client.ts)); , `MAX-53` | ✅ |
 | LOGIN: `presenceSync` | −1 | −1 ([`handshake.ts`](../../../src/session/handshake.ts)); , `MAX-53` | ✅ |
