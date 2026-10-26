@@ -10,17 +10,17 @@ describe("the web user agent", () => {
       timezone: "Europe/Moscow",
       screen: "900x1440 2.0x",
       headerUserAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
     })
   })
 
-  it("matches the Linux Chrome captured from web.max.ru on 2026-09-25", () => {
+  it("builds the Linux Chrome user agent in the shape captured from web.max.ru on 2026-09-25", () => {
     expect(webUserAgent({ platform: "linux", timeZone: "Europe/Madrid", locale: "en-US" })).toMatchObject({
       osVersion: "Linux",
       locale: "en",
       deviceLocale: "en",
       headerUserAgent:
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
     })
   })
 
