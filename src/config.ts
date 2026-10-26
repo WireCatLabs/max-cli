@@ -33,8 +33,9 @@ const sharedEntries = {
   limit: v.optional(count),
   timeout_ms: v.optional(count),
   color: v.optional(flag),
-  /** The run log reads these two; nothing records anything until it exists. */
+  /** The run log reads these three; nothing records anything until it exists. */
   record: v.optional(flag),
+  record_input: v.optional(flag),
   keep_runs_for_days: v.optional(count),
   permissions: coreEntries.permissions,
   search_reranker: coreEntries.search_reranker,
@@ -165,6 +166,7 @@ export interface Settings extends AISettings {
    */
   commandTimeoutMs: number | undefined
   record: boolean
+  recordInput: boolean
   /** A failed run is kept even unrecorded, unless recording was turned off by name (`NEED-268`). */
   keepFailedRuns: boolean
   serve: boolean
@@ -225,6 +227,7 @@ export type SourcedSetting =
   | "searchCatchUp"
   | "searchReranker"
   | "record"
+  | "recordInput"
   | "serve"
   | "keepRunsForDays"
   | "sendsPerHour"

@@ -5,10 +5,11 @@ import {
   itemOf,
   REMOTE_READ,
   renderAnswer,
+  secretInput,
   contactsCommand as sharedContactsCommand,
   snakeKeys,
 } from "@wirecat/cli-core/cli"
-import { Command } from "commander"
+import { Argument, Command } from "commander"
 import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maxMessenger, sharedSubcommand } from "../messenger.js"
 import { maxRecord } from "../record.js"
@@ -66,6 +67,8 @@ const contactsCommandDefinition = (): Command => {
    */
   annotate(command.command("lookup"), { effects: REMOTE_READ, output: { entity: "contact_lookup" } })
     .description("who MAX has under a phone number — asks for it, or reads it from stdin")
+    // Declared only so a number typed here anyway stays out of the run record, which keeps typed words.
+    .addArgument(secretInput(new Argument("[phone]", "refused: the number is asked for, never typed here")))
     .allowExcessArguments()
     .action(async function (this: Command) {
       if (this.args.length > 0) {

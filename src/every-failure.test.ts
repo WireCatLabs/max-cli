@@ -17,11 +17,18 @@ const runWith = async (argv: string[]) => {
 
 const runsOf = (profile: string) => listRuns(runsDirFor(MAX_APP)).filter((one) => one.profile === profile)
 
-const everythingKeptFor = (profile: string): string =>
+const runDirOf = (one: { startedAt: string; runId: string }) =>
+  join(runsDirFor(MAX_APP), one.startedAt.slice(0, 10), one.runId)
+
+const argvOf = (profile: string): string[][] =>
+  runsOf(profile).map((one) => JSON.parse(readFileSync(join(runDirOf(one), "run.json"), "utf8")).argv)
+
+/** `argv` keeps what was typed unless `record_input` is off, so the rest of the record is checked apart from it. */
+const everythingButArgvFor = (profile: string): string =>
   runsOf(profile)
     .map((one) => {
-      const dir = join(runsDirFor(MAX_APP), one.startedAt.slice(0, 10), one.runId)
-      return readFileSync(join(dir, "run.json"), "utf8") + readFileSync(join(dir, "events.jsonl"), "utf8")
+      const { argv: _argv, ...rest } = JSON.parse(readFileSync(join(runDirOf(one), "run.json"), "utf8"))
+      return JSON.stringify(rest) + readFileSync(join(runDirOf(one), "events.jsonl"), "utf8")
     })
     .join("\n")
 
@@ -32,7 +39,18 @@ describe("every failure is kept as a run", () => {
     expect(runsOf("f-usage")).toMatchObject([
       { command: "messages list", status: "failed", errorCode: "validation_error", keptBecauseFailed: true },
     ])
-    expect(everythingKeptFor("f-usage")).not.toContain("секретный")
+    expect(argvOf("f-usage")).toEqual([["f-usage", "messages", "list", "секретный чат", "--bogus"]])
+    expect(everythingButArgvFor("f-usage")).not.toContain("секретный")
+  })
+
+  it("masks what was typed when record_input is off, and a secret either way", async () => {
+    expect(await runWith(["f-masked", "config", "set", "record_input", "false"])).toBe(0)
+    expect(await runWith(["f-masked", "messages", "list", "секретный чат", "--bogus"])).not.toBe(0)
+    expect(await runWith(["f-typed", "messages", "list", "чат", "--token=fake-secret-value"])).not.toBe(0)
+
+    expect(argvOf("f-masked")).toEqual([["f-masked", "messages", "list", "[redacted]", "--bogus"]])
+    expect(argvOf("f-typed")).toEqual([["f-typed", "messages", "list", "чат", "--token=[redacted]"]])
+    expect(everythingButArgvFor("f-typed")).not.toContain("fake-secret-value")
   })
 
   it("a check a command makes before it opens its run", async () => {
@@ -44,7 +62,7 @@ describe("every failure is kept as a run", () => {
     expect(await runWith(["f-inside", "messages", "send", "111", "секретный текст"])).toBe(4)
 
     expect(runsOf("f-inside")).toMatchObject([{ command: "messages send", errorCode: "authentication_error" }])
-    expect(everythingKeptFor("f-inside")).not.toContain("секретный")
+    expect(everythingButArgvFor("f-inside")).not.toContain("секретный")
   })
 
   it("a command that never talks to MAX", async () => {
