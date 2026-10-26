@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   ci:
-    uses: WireCatLabs/cli-base/.github/workflows/node-ci.yml@3c1ec927befbf4c19844ece6430cce7a0bd3790a # v0.48.0
+    uses: WireCatLabs/cli-base/.github/workflows/node-ci.yml@02e85bb3ea6c5ae4134513a27812575bfd67e0d1 # cli-base main after #352
     with:
       pack: ${{ inputs.pack || false }}
       pack-checks: node --experimental-strip-types scripts/release-check.ts --artifact-only
@@ -31,6 +31,7 @@ jobs:
       parity: true
       bin: max
       platforms: ${{ !inputs.skip-platforms }}
+      test-shards: 4
       # Commands that need no login and reach no network.
       platform-run: |
         node dist/bin/max.js upgrade --check --json
