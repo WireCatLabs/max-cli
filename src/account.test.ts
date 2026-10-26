@@ -2,9 +2,11 @@ import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { Readable } from "node:stream"
 import { captureStreams, memoryKeyring, resolvePaths } from "@wirecat/cli-base"
+import { listRuns, runsDirFor } from "@wirecat/cli-core/cli"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { storePath } from "@wirecat/cli-core/store"
 import { describe, expect, it } from "vitest"
+import { MAX_APP } from "./app.js"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -116,7 +118,26 @@ const expectNowhereOnDisk = (text: string) => {
     for (const file of filesUnder(directory)) expect(readFileSync(file, "latin1"), file).not.toContain(text)
 }
 
+const recordedArgv = (profile: string): string[][] =>
+  listRuns(runsDirFor(MAX_APP))
+    .filter((one) => one.profile === profile)
+    .map(
+      (one) =>
+        JSON.parse(readFileSync(join(runsDirFor(MAX_APP), one.startedAt.slice(0, 10), one.runId, "run.json"), "utf8"))
+          .argv,
+    )
+
 describe("contacts", () => {
+  it("a recorded run keeps the typed query unless record_input is off", async () => {
+    const { environment } = acquaintances()
+    expect((await runWith(["a-typed", "contacts", "list", "name:FakeProbe", "--record"], environment)).code).toBe(0)
+    expect((await runWith(["a-masked", "config", "set", "record_input", "false"], environment)).code).toBe(0)
+    expect((await runWith(["a-masked", "contacts", "list", "name:FakeProbe", "--record"], environment)).code).toBe(0)
+
+    expect(recordedArgv("a-typed")).toEqual([["a-typed", "contacts", "list", "name:FakeProbe", "--record", "--json"]])
+    expect(recordedArgv("a-masked")).toEqual([["a-masked", "contacts", "list", "[redacted]", "--record", "--json"]])
+  })
+
   it("`list` pages the people with a dialog, newest conversation first", async () => {
     const { environment } = acquaintances()
     const first = await runWith(["a-list", "contacts", "list", "--limit", "2"], environment)
