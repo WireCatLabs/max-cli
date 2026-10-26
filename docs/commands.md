@@ -5641,7 +5641,7 @@ max skill show [name] [options]
 
 ### `max skill install`
 
-write SKILL.md to \~/.claude/skills/max-cli/ (Claude Code) and \~/.agents/skills/max-cli/ (Codex, Gemini CLI)
+write SKILL.md to \~/.claude/skills/max-cli/ (Claude Code) and \~/.agents/skills/max-cli/ (Codex, Gemini CLI, OpenClaw); --for hermes also has Hermes read \~/.agents/skills, which changes Hermes's own settings, so all leaves it out
 
 **Меняет что-то только на этом компьютере.**
 
@@ -5651,7 +5651,7 @@ max skill install [options]
 
 | Опция | Что делает |
 |---|---|
-| `--for <agents>` | which agents to install for. Одно из: `claude`, `agents`, `all`. По умолчанию: `all`. |
+| `--for <agents>` | which agents to install for. Одно из: `claude`, `agents`, `hermes`, `all`. По умолчанию: `all`. |
 
 **Returns:** install the tool's instructions for AI agents
 
@@ -5659,7 +5659,7 @@ max skill install [options]
 
 ### `max skill status`
 
-for each place `max skill install` writes to: the path, the version installed there, and whether it is current, stale, missing or unversioned
+for each place `max skill install` writes to, and for the copy Hermes reads: the path, the version installed there, and whether it is current, stale, missing or unversioned
 
 ```sh
 max skill status
