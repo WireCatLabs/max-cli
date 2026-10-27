@@ -1,7 +1,7 @@
 {
   "name": "@wirecat/max-cli",
   "version": "0.82.0",
-  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal \u2014 built for agents and scripts",
+  "description": "MAX Messenger bots through the official Bot API, and a personal MAX account, from the terminal — built for agents and scripts",
   "mcpName": "dev.wirecat/max-cli",
   "license": "Apache-2.0",
   "author": "Viacheslav Ptsarev",
@@ -26,7 +26,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc --build --force",
+    "build": "tsc --build --force && cli-dev bundle --bin dist/bin/max.js --external ws",
     "generate": "node --experimental-strip-types scripts/bot/generate.ts && pnpm build && node --experimental-strip-types scripts/generate.ts && node --experimental-strip-types scripts/commands.ts",
     "bot:spec:sync": "node --experimental-strip-types scripts/bot/sync-spec.ts",
     "bot:generate": "node --experimental-strip-types scripts/bot/generate.ts",
@@ -40,6 +40,7 @@
     "test:matrix": "vitest run >/dev/null && pnpm build >/dev/null && pnpm test:matrix:check",
     "test:slow": "vitest run --reporter=json --outputFile=coverage/tests.json >/dev/null; cli-dev slow-tests",
     "smoke:bun": "bun run scripts/smoke.ts",
+    "smoke:node": "node --experimental-strip-types scripts/smoke.ts",
     "mcp:tools": "node --experimental-strip-types scripts/mcp-tools.ts",
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
     "release:check": "pnpm build && node --experimental-strip-types scripts/release-check.ts",
@@ -126,6 +127,7 @@
     "@vitest/coverage-v8": "^5.0.5",
     "@wirecat/cli-testing": "0.5.3",
     "cspell": "10.4.0",
+    "esbuild": "0.28.2",
     "lefthook": "2.2.2",
     "markdownlint-cli2": "0.24.0",
     "rumdl": "^0.3.0",

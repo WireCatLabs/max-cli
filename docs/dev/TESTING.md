@@ -8,7 +8,8 @@ pnpm test        # vitest
 pnpm lint        # biome: format, lint, and the seam between commands and the protocol
 pnpm typecheck   # the package, then the tests
 pnpm build
-pnpm smoke:bun   # the built command, executed under Bun
+pnpm smoke:node  # the built command: the bundle a user installs
+pnpm smoke:bun   # the same, executed under Bun
 pnpm generate    # then `git diff --exit-code` — generated output must not be stale
 ```
 
