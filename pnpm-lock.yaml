@@ -78,6 +78,9 @@ importers:
       cspell:
         specifier: 10.4.0
         version: 10.4.0
+      esbuild:
+        specifier: 0.28.2
+        version: 0.28.2
       lefthook:
         specifier: 2.2.2
         version: 2.2.2

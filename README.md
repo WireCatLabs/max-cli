@@ -368,7 +368,8 @@ max personal runs list            # неудачные и частичные з�
 ```sh
 pnpm install
 pnpm lint && pnpm typecheck && pnpm test
-pnpm build && pnpm smoke:bun          # собранная команда под Bun
+pnpm build && pnpm smoke:node         # собранная команда: бандл, который ставит пользователь
+pnpm build && pnpm smoke:bun          # то же под Bun
 pnpm generate                         # переписать сгенерированные файлы
 ```
 

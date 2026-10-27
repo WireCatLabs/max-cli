@@ -107,6 +107,12 @@ the adapter.
   account's protocol, session, spec, server, store and client. Test files are exempt
   in the first three, since they wire the real pieces together. Not ruled, because code already does
   it: `messenger.ts` → `commands/context.js`, `session/adopt.ts` → `server/start.js` and `client.js`. Verified by a forbidden import in each place.
+- **What ships is a bundle.** `pnpm build` compiles `src/` to `dist/` with `tsc`, then cli-base's `cli-dev bundle`
+  ([WC-LAY-10](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/layout.md)) bundles `dist/bin/max.js`
+  with esbuild into `dist/bundle/` and makes `dist/bin/max.js` a loader. Every lazy `import()` stays a chunk of its
+  own. cli-core, cli-base, `ws`, `sherpa-onnx` and the native packages stay dependencies, and a bundled module looks
+  up files and packages from its own place, not the chunk's. The tests run against `src/`; `pnpm smoke:node` and
+  `pnpm smoke:bun` run the bundle.
 
 ## 2. What each layer may know
 

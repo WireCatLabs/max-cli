@@ -141,6 +141,31 @@ check("a voice recording decodes under this runtime", decoded.rate === 48_000 &&
 const sherpa = createRequire(import.meta.url)("sherpa-onnx") as { createOfflineRecognizer?: unknown }
 check("the speech engine loads under this runtime", typeof sherpa.createOfflineRecognizer === "function")
 
+// The published bin is a loader for dist/bundle/ (cli-dev bundle, WC-LAY-10): these load from the bundle.
+const loader = readFileSync("dist/bin/max.js", "utf8")
+check("the bin starts the bundle", loader.includes('import("../bundle/max.js")'))
+const preloaded = [...loader.matchAll(/"\.\.\/bundle\/([^"]+)"/g)].map(([, chunk]) => chunk ?? "")
+check(
+  "a server preloads only chunks the bundle has",
+  preloaded.length > 1 && preloaded.every((chunk) => existsSync(join("dist/bundle", chunk))),
+)
+const recorded = spawnSync(process.execPath, ["dist/bin/max.js", "--version"], {
+  encoding: "utf8",
+  env: { ...process.env, MAX_TEST_ARGV_LOG: join(isolated, "argv.jsonl") },
+})
+check("the loader's --version is the bundle's", recorded.stdout === version.stdout)
+check("skill show finds cli-core's skills from the bundle", max("skill", "show", "follow-ups").stdout.startsWith("---"))
+// A profile takes a read as far as the store: its SQLite loads from cli-core's own dependencies.
+maxHere("smoke", "config", "set", "limit", "20")
+check(
+  "the store opens and has nothing recorded",
+  maxHere("smoke", "chats", "list", "--offline", "--json").stderr.includes('"reason":"item.not-found"'),
+)
+check(
+  "doctor finds the document readers",
+  maxHere("smoke", "doctor", "--json").stdout.includes('"files":{"checked":true,"ok":true'),
+)
+
 rmSync(isolated, { recursive: true, force: true })
 
 if (failures.length > 0) {

@@ -37,6 +37,7 @@ jobs:
         node dist/bin/max.js default doctor --json
         node dist/bin/max.js default mcp config --json
       checks: |
+        pnpm smoke:node
         pnpm check:agent-docs
 
   version:
