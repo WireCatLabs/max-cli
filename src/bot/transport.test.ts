@@ -191,6 +191,9 @@ describe("events for the run log", () => {
       operation: "getChat",
       method: "GET",
       endpointTemplate: "/chats/:id",
+      level: "wire",
+      transport: "http",
+      attempt: 1,
       ids: { chat: "5" },
     })
     expect(events[1]).toMatchObject({ endpointTemplate: "/videos/:token" })
@@ -209,5 +212,30 @@ describe("events for the run log", () => {
     ])
     expect(events.map((event) => event.endpointTemplate).join(" ")).not.toContain("70000123456")
     expect(JSON.stringify(events)).not.toContain(TOKEN)
+  })
+
+  it("give a 429 an error line, then the retry its attempt and the Retry-After it waited", async () => {
+    let calls = 0
+    handler = (request, response) => {
+      calls++
+      if (calls === 1) return answer(429, `{"code": "too.many.requests"}`, { "retry-after": "2" })(request, response)
+      answer(200, `{"chat_id": 5}`)(request, response)
+    }
+    const events: Record<string, unknown>[] = []
+    const traced = transport({ events: (event: Record<string, unknown>) => events.push(event) })
+    await traced.call(operation("getChat"), { path: { chatId: "5" }, query: { marker: "m-secret" } })
+
+    expect(
+      events.map(({ event, outcome, status, attempt, waitMs }) => ({ event, outcome, status, attempt, waitMs })),
+    ).toEqual([
+      { event: "request", outcome: undefined, status: undefined, attempt: 1, waitMs: undefined },
+      { event: "response", outcome: "error", status: 429, attempt: 1, waitMs: undefined },
+      { event: "request", outcome: undefined, status: undefined, attempt: 2, waitMs: 2000 },
+      { event: "response", outcome: "ok", status: 200, attempt: 2, waitMs: 2000 },
+    ])
+    expect(events[1]).toMatchObject({ errorCode: "rate_limited", providerError: "too.many.requests" })
+    for (const event of events) expect(event).toMatchObject({ level: "wire", transport: "http" })
+    const written = JSON.stringify(events)
+    for (const sent of ["m-secret", "marker", "127.0.0.1", TOKEN]) expect(written).not.toContain(sent)
   })
 })
