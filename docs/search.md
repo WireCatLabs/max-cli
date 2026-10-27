@@ -44,13 +44,13 @@ AST, `--exact` и `--newest` сохраняют строгую семантик�
 
 ## Что можно сделать
 
-Весь поиск — в одной группе команд, `max personal search`. Если не знаете, где было написано, начните с
-`search all`.
+Весь поиск — в одной группе команд, `max personal search`. Начинайте с `search messages`; `search all` — когда
+нужно искать шире сообщений.
 
 | Задача | Команда |
 |---|---|
-| Искать сразу в сообщениях и заметках | `max personal search all '<запрос>'` |
-| Искать только сообщения мессенджеров, без `--discover`, в одном чате — и на сервере MAX | `max personal search messages '<запрос>'` |
+| Искать сообщения мессенджеров; в одном чате (без `--discover`) — и на сервере MAX | `max personal search messages '<запрос>'` |
+| Искать шире, и в заметках тоже | `max personal search all '<запрос>'` |
 | Искать почту | `memo search mail '<запрос>'` — у `max` этой команды нет |
 | Искать заметки из memo или из папки | `max personal search notes '<запрос>'` |
 | Найти обсуждение по тому, о чём оно было | `max personal search conversations '<вопрос>'` ([поиск по темам](topic-search.md)) |
@@ -118,7 +118,8 @@ max personal search messages '"счёт оплачен" chat:"Книжный к�
 
 Хороший поиск возможен, только когда чаты скачаны. Сервер MAX ищет лишь в одном названном чате, а всё
 остальное читает только архив: поиск по всем чатам, подсчёт `stats`, поиск по темам, `has:`, `filename:`,
-regex, presets, метки и формы слов. Начните со скачивания всех чатов:
+regex, presets, метки и формы слов. Скачивание идёт с вашего аккаунта, поэтому его запускаете вы (агент —
+только с вашего согласия и по одному чату). Чтобы скачать все чаты сразу:
 
 ```sh
 max personal messages sync --all --background     # последние 90 дней каждого чата, в фоне
@@ -137,7 +138,7 @@ max personal store jobs show                    # сколько уже скач
 это исправит:
 
 ```text
-searched 12,430 messages in 37 chats — 5 never fetched; `max personal messages sync --all --background` fetches them
+searched 12,430 messages in 37 chats — 5 never fetched; `max personal messages sync <chat>` fetches one
 ```
 
 С `--json` то же — запись `coverage` в `missing` и шаг `messages.sync` в `next`. Если ничего

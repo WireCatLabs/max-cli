@@ -2,8 +2,8 @@
 title: Find what someone said
 goal: Get back a message, a file or a voice note when you remember only a word or the person.
 steps:
-  - run: max search all "invoice"
-    why: messages, notes, the text of files and voice transcripts in one search, best match first
+  - run: max search messages "invoice"
+    why: messages, the text of files and voice transcripts in one search, best match first
   - run: max contacts events Anna
     why: everything one person wrote or was mentioned in, newest first, from the store
   - run: max messages context Team 1234
@@ -13,5 +13,5 @@ look:
   - the msg locator, to cite it or to open the message
 ---
 
-A search finds only what the store holds. Run `max messages sync --all` once, or `max schedule command` on a timer,
-so older history is there to find.
+A search finds only what the store holds. The owner can run `max messages sync <chat>` for one chat, or `max messages sync --all` once, or set
+`max schedule command` on a timer, so older history is there to find. An agent syncs only after the owner approves.

@@ -151,9 +151,11 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    при подтверждённой дедупликации провайдера и с теми же чатом, темой, содержимым и `--operation-id`;
    никакой автоматической повторной записи только по коду ошибки.
 
-5. **Искать начинайте с `max personal search all`**: сообщения и заметки на этой машине одним ответом, у каждой
-   находки её вид (`message`, `note`, `document`). Импортированные Drive документы находятся в общей базе; `--source drive:<профиль>` выбирает профиль Drive. `max personal chats documents list CHAT_ID` показывает документы из сохранённых ссылок чата. Почта — не здесь: `memo search mail`. Уже: `max personal search messages`, `search notes`,
-   `search conversations` (по смыслу); весь поиск — под `max personal search`.
+5. **Искать начинайте с `max personal search messages`**: только сообщения MAX на этой машине. Заметки, документы
+   Drive и прочие источники — только когда владелец сам попросил искать шире: тогда `max personal search all`
+   (у каждой находки её вид: `message`, `note`, `document`; `--source drive:<профиль>` выбирает профиль Drive).
+   `max personal chats documents list CHAT_ID` показывает документы из сохранённых ссылок чата. Почта — не здесь: `memo search mail`.
+   Уже: `search notes`, `search conversations` (по смыслу); весь поиск — под `max personal search`.
    Для вопроса обычными словами или неточной формулировки используй
    `max personal search messages '<вопрос>' --discover` или MCP `discover: true`. Это локальный поиск без
    скачивания модели, со строгими ограничениями и подходящими прямыми ответами. Проверь
@@ -161,8 +163,9 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    не доказывают ответ. Явный синтаксис остаётся строгим.
    **Без `--discover`, `max personal search messages` с одним чатом (`chat:` в запросе) спрашивает и сервер MAX**
    (`--backend archive` — только архив). Хороший поиск требует скачанных чатов: если ничего не нашлось, а
-   в `next` есть шаг `messages.sync`, выполните его (`max personal messages sync --all --background`) или спросите владельца, прежде чем
-   говорить, что сообщения нет. Слова и фразы находят формы слов; `exact:` или `--exact` — только точную форму.
+   в `next` есть шаг `messages.sync`, сообщите, что результат пуст, и предложите ограниченную загрузку именно этого
+   чата (`max personal messages sync <чат>`, см. 5c); запускайте её только после согласия владельца, не раньше.
+   Не предлагайте и не запускайте `--all`. Слова и фразы находят формы слов; `exact:` или `--exact` — только точную форму.
    Default — строгий профиль Lucene:
    фразы, AND/OR/NOT, field groups и date ranges. `alpha OR beta gamma` = `(alpha OR beta) AND gamma`.
    Для version/coverage используйте --json; пустая выдача не доказывает отсутствие сообщения.
