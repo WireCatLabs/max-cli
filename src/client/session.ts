@@ -87,7 +87,7 @@ export const createSession = (deps: Dependencies) => {
       // in under is the ordinary shape of this failure now that the first word is the profile.
       throw new CliError(
         "authentication_error",
-        `no session for profile "${profile}" — run \`max ${asFirstWord(profile)}setup\` in a local terminal; agents: read \`max skill show\``,
+        `no session for profile "${profile}" — run \`max ${asFirstWord(profile)}setup\` in a local terminal, or sign in from WireCat Desktop (Tools → MAX → Manage); agents: read \`max skill show\``,
       )
     }
 

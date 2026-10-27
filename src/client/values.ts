@@ -217,7 +217,7 @@ export const asRefusal = (error: ProtocolError): CliError => {
   if (text.includes("token") || text.includes("auth")) {
     return new CliError(
       "authentication_error",
-      `${error.message} — the session may have expired; run \`max <profile> session start\``,
+      `${error.message} — the session may have expired; run \`max <profile> session start\`, or sign in from WireCat Desktop (Tools → MAX → Manage)`,
     )
   }
   return new CliError("provider_error", error.message, { operation: String(error.opcode) })
