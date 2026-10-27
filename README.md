@@ -69,7 +69,7 @@ max personal inbox
 сообщением, по локальной копии и без запросов к MAX.
 
 ```sh
-max personal search all "встреча Алиса"
+max personal search messages "встреча Алиса"
 ```
 
 **Понять, кто кому что должен.** «Что я обещал и чего жду от других?» — вся переписка с прошлого
@@ -224,7 +224,8 @@ max personal chats moderate "Поход" --dry-run              # что нар�
 историю чата можно скачать глубже и выгрузить.
 
 ```sh
-max personal search all "договор"                             # сообщения и заметки сразу (для почты есть отдельный CLI memo)
+max personal search messages "договор"                        # только сообщения
+max personal search all "договор"                             # шире, по просьбе: и заметки (для почты есть отдельный CLI memo)
 max personal search messages 'договор chat:"Проект Альфа"'  # только один чат
 max personal messages sync "Проект Альфа" --last 500            # последние 500 сообщений — в копию
 max personal store export "Проект Альфа" --format markdown --output alfa.md
