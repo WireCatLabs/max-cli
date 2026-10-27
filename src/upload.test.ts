@@ -266,6 +266,22 @@ describe("sending files", () => {
     expect(String(second?.message.attaches[0]?.fileId)).toBe("42")
   })
 
+  it("numbers a send repeated while its file is not ready, with the pause before it", async () => {
+    const { code, stderr } = await send(["--file", join(directory, "report.txt"), "--trace"])
+
+    expect(code).toBe(0)
+    const sends = stderr
+      .split(/(?<=\})\n?(?=\{"event")/)
+      .map((line) => JSON.parse(line))
+      .filter((event) => event.opcode === Opcode.MSG_SEND)
+    expect(sends.map(({ event, outcome, attempt, wait_ms }) => ({ event, outcome, attempt, wait_ms }))).toEqual([
+      { event: "request", outcome: undefined, attempt: 1, wait_ms: undefined },
+      { event: "response", outcome: "error", attempt: 1, wait_ms: undefined },
+      { event: "request", outcome: undefined, attempt: 2, wait_ms: 1000 },
+      { event: "response", outcome: "ok", attempt: 2, wait_ms: 1000 },
+    ])
+  })
+
   it("sends a --photo as a photo, and refuses --no-preview, which MAX's own client cannot send", async () => {
     const photo = await send(["--photo", join(directory, "picture.png")])
     expect(photo.code).toBe(0)

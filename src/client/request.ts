@@ -1,4 +1,4 @@
-import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
+import { currentAttempt, type DiagnosticEvent } from "@wirecat/cli-core/cli"
 import type { Wire } from "../protocol/connection.js"
 import type { Payload } from "../protocol/frame.js"
 import { buildRequest, checkResponse, type Operation, type RequestOf } from "../spec/index.js"
@@ -24,6 +24,7 @@ export const createRequest = (deps: Dependencies) => {
       opcode: operation.opcode,
       level: "wire" as const,
       transport: "max-ws" as const,
+      ...currentAttempt(),
     }
 
     let seq = 0
