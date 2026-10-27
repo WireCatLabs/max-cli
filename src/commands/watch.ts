@@ -179,7 +179,10 @@ export const watchLine = (
 /** A message's `ref` names the account that read it; `max serve` saved it when it logged in. */
 const readerOf = (viewerId: string | undefined): AccountKey => {
   if (viewerId === undefined)
-    throw new CliError("authentication_error", "this profile has not logged in yet — `max session start`")
+    throw new CliError(
+      "authentication_error",
+      "this profile has not logged in yet — `max session start`, or sign in from WireCat Desktop (Tools → MAX → Manage)",
+    )
   return { provider: "max", account: viewerId }
 }
 
