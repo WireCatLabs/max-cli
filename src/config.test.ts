@@ -294,11 +294,11 @@ describe("where each setting came from", () => {
 })
 
 describe("keeping a failed run", () => {
-  it("is on unless recording was turned off by name, by flag or in the file", () => {
+  it("is on unless --no-record turns it off; record false in the file still keeps failures", () => {
     expect(settings().keepFailedRuns).toBe(true)
     expect(settings({ record: false }).keepFailedRuns).toBe(false)
     withConfig(JSON.stringify({ profiles: { default: { record: false } } }))
-    expect(settings().keepFailedRuns).toBe(false)
+    expect(settings().keepFailedRuns).toBe(true)
   })
 })
 

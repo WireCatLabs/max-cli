@@ -316,7 +316,7 @@ describe("the run log for a bot command", () => {
     const { code } = await max(["bot", "api", "get-pinned-message", "--chat-id", "404", "--json"])
     expect(code).not.toBe(0)
     expect(await runsOf("bot api get-pinned-message")).toEqual([
-      expect.objectContaining({ status: "failed", requests: 1, error_code: "not_found", kept_because_failed: true }),
+      expect.objectContaining({ status: "failed", requests: 1, error_code: "not_found" }),
     ])
   })
 })

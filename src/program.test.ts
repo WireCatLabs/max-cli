@@ -1022,7 +1022,7 @@ describe("the program", () => {
 })
 
 describe("shared runner adoption", () => {
-  it("preserves separate bot and personal failed-run retention before an action begins", async () => {
+  it("keeps a failure before an action begins for bot and personal alike, even where record is false", async () => {
     const profile = "t-shell-scope"
     expect((await runWith([profile, "config", "set", "--personal", "record", "true", "--json"])).code).toBe(0)
     expect((await runWith([profile, "config", "set", "--bot", "record", "false", "--json"])).code).toBe(0)
@@ -1035,7 +1035,13 @@ describe("shared runner adoption", () => {
     expect(bot.stdout).toBe("")
     expect(personal.stdout).toBe("")
     const added = listRuns(runsDir).filter((item) => !before.has(item.runId))
-    expect(added).toEqual([expect.objectContaining({ profile, command: "account", status: "failed" })])
+    expect(added).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ profile, command: "bot auth", status: "failed" }),
+        expect.objectContaining({ profile, command: "account", status: "failed" }),
+      ]),
+    )
+    expect(added).toHaveLength(2)
   })
 
   it("uses the configured default profile for a failure before context creation", async () => {
