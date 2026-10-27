@@ -1,5 +1,6 @@
 import { CliError, type SleepLike } from "@wirecat/cli-base"
 import type { Id, Message } from "@wirecat/cli-core"
+import { withAttempt } from "@wirecat/cli-core/cli"
 import { namesFrom, toMessage } from "../domain/map.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { type Markup, parseMarkdown } from "../markdown.js"
@@ -7,6 +8,8 @@ import type { Payload } from "../protocol/frame.js"
 import type { SessionStore } from "../session/store.js"
 import type { Upload } from "./types.js"
 import { asCliError, record, viewer } from "./values.js"
+
+const NOT_READY_WAIT_MS = 1000
 
 interface Dependencies {
   upload: (file: Upload) => Promise<Payload>
@@ -89,10 +92,10 @@ export const createDelivery = (deps: Dependencies) => {
   async function untilAttachmentsReady(send: () => Promise<Payload>): Promise<Payload> {
     for (let attempt = 1; ; attempt += 1) {
       try {
-        return await send()
+        return await withAttempt({ attempt, ...(attempt > 1 ? { waitMs: NOT_READY_WAIT_MS } : {}) }, send)
       } catch (error) {
         if (attempt >= 30 || !asCliError(error).message.includes("attachment.not.ready")) throw error
-        await deps.sleep(1000, undefined, "retry")
+        await deps.sleep(NOT_READY_WAIT_MS, undefined, "retry")
       }
     }
   }

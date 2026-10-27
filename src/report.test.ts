@@ -62,7 +62,6 @@ describe("max doctor reports show", () => {
       command: "chats list",
       status: "failed",
       errorCode: "authentication_error",
-      keptBecauseFailed: true,
     })
     expect(report).toMatchObject({ runtime: expect.stringMatching(/^(node|bun) /), doctor: expect.any(Object) })
     expect(answer.issue).toMatch(/^https:\/\/github\.com\/WireCatLabs\/max-cli\/issues\/new\?title=/)

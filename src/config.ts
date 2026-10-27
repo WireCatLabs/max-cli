@@ -33,10 +33,12 @@ const sharedEntries = {
   limit: v.optional(count),
   timeout_ms: v.optional(count),
   color: v.optional(flag),
-  /** The run log reads these three; nothing records anything until it exists. */
+  /** The run log reads these. */
   record: v.optional(flag),
   record_input: v.optional(flag),
   keep_runs_for_days: v.optional(count),
+  keep_successful_runs_for_days: v.optional(count),
+  runs_size_limit_mb: v.optional(count),
   permissions: coreEntries.permissions,
   search_reranker: coreEntries.search_reranker,
   sends_per_hour: v.optional(count),
@@ -171,6 +173,8 @@ export interface Settings extends AISettings {
   keepFailedRuns: boolean
   serve: boolean
   keepRunsForDays: number
+  keepSuccessfulRunsForDays?: number
+  runsSizeLimitMb?: number
   /** The variable that made this process read-only, above every level (`MAX_READ_ONLY`). */
   readOnlyLock?: string
   sendsPerHour: number
@@ -274,6 +278,12 @@ export const resolveSettings = (flags: GlobalFlags = {}, options: ResolveOptions
   } = sharedSettings.resolveSettings(flags, options)
   return settings as Settings
 }
+
+/** How long successful runs live and how large the runs folder may grow; unset leaves cli-core's defaults. */
+export const runRetention = ({ keepSuccessfulRunsForDays, runsSizeLimitMb }: Settings) => ({
+  ...(keepSuccessfulRunsForDays === undefined ? {} : { keepSuccessDays: keepSuccessfulRunsForDays }),
+  ...(runsSizeLimitMb === undefined ? {} : { maxBytes: runsSizeLimitMb * 1024 * 1024 }),
+})
 
 export const configuredProfiles = (options: ResolveOptions = {}): string[] => sharedSettings.configuredProfiles(options)
 

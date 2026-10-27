@@ -15,7 +15,7 @@ import { MAX_APP } from "../app.js"
 import type { BotTokenStore } from "../bot/auth.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
-import { type GlobalFlags, type ResolveOptions, resolveSettings, type Settings } from "../config.js"
+import { type GlobalFlags, type ResolveOptions, resolveSettings, runRetention, type Settings } from "../config.js"
 import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
@@ -227,6 +227,7 @@ export const contextFor = (
             format,
             streams,
             keepDays: settings.keepRunsForDays,
+            ...runRetention(settings),
           },
           (events) =>
             withAbort(environment.commandSignal, () =>

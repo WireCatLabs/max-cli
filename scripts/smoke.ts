@@ -69,25 +69,37 @@ check("`runs list` exits cleanly with nothing to show", empty.status === 0)
 check("`runs list` prints an empty list on stdout", JSON.parse(empty.stdout).items?.length === 0)
 check("`runs list` says on stderr why it is empty", empty.stderr.includes("--record"))
 
-// cli-base's log writer writes the event log, and this is the only place it runs under Bun. `session end` reaches
-// no network and, in this directory, no real session — what it proves is that the run directory,
-// the atomic `run.json` and the log stream all work under this runtime.
+// cli-base's log writer writes the event log, and this is the only place it runs under Bun. A success that logged
+// nothing is only a line in the day's index, so the run kept with a folder is a failed `chats list`: offline, in this
+// directory, it is refused for want of a session, which proves the run directory, the atomic `run.json` and the log
+// stream all work under this runtime.
 const recordedRun = maxHere("session", "end", "--record", "--json")
 check("a recorded command exits cleanly", recordedRun.status === 0)
 check("a recorded command still prints its own answer", JSON.parse(recordedRun.stdout).item?.forgotten === false)
+const failedRun = maxHere("chats", "list", "--no-serve", "--json")
+check("a command without a session fails", failedRun.status !== 0)
 
-const days = readdirSync(join(isolated, "state", "runs"))
+// The runs folder holds cli-core's own marker files beside the days.
+const days = readdirSync(join(isolated, "state", "runs")).filter((name) => /^\d{4}-\d{2}-\d{2}$/.test(name))
 const day = days[0] ?? ""
 const kept = readdirSync(join(isolated, "state", "runs", day), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
+  .filter((entry) => entry.isDirectory() && entry.name.includes("-chats-list-"))
   .map((entry) => entry.name)
 const runDir = join(isolated, "state", "runs", day, kept[0] ?? "")
-check("it left exactly one run directory", days.length === 1 && kept.length === 1)
+check("the failed command left one run directory", days.length === 1 && kept.length === 1)
 check("the run directory holds its metadata", existsSync(join(runDir, "run.json")))
 check("the run directory holds its event log", existsSync(join(runDir, "events.jsonl")))
 
-const listed = maxHere("runs", "list", "--json")
-check("`runs list` finds the run that was just kept", JSON.parse(listed.stdout).items?.[0]?.status === "success")
+type Listed = { run_id?: string; command?: string; status?: string }
+const listed = (JSON.parse(maxHere("runs", "list", "--json").stdout).items ?? []) as Listed[]
+check(
+  "`runs list` finds the success kept as an index line",
+  listed.some((run) => run.command === "session end" && run.status === "success"),
+)
+check(
+  "`runs list` finds the failure kept with its folder",
+  listed.some((run) => run.run_id === kept[0] && run.status === "failed"),
+)
 
 const path = maxHere("runs", "path", kept[0] ?? "", "--json")
 check("`runs path` answers with the directory, as one JSON value", JSON.parse(path.stdout).item?.path === runDir)

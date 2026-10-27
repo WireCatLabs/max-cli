@@ -276,7 +276,16 @@ describe("the run log for a bot command", () => {
     expect(JSON.parse(stdout).item).toEqual({ success: true })
     const events = stderr.split("\n").map((line) => JSON.parse(line))
     expect(events).toEqual([
-      { event: "request", operation: "getChat", method: "GET", endpoint_template: "/chats/:id", ids: { chat: "7" } },
+      {
+        event: "request",
+        operation: "getChat",
+        method: "GET",
+        endpoint_template: "/chats/:id",
+        level: "wire",
+        transport: "http",
+        attempt: 1,
+        ids: { chat: "7" },
+      },
       expect.objectContaining({ event: "response", operation: "getChat", status: 200, outcome: "ok" }),
     ])
   })
@@ -307,7 +316,7 @@ describe("the run log for a bot command", () => {
     const { code } = await max(["bot", "api", "get-pinned-message", "--chat-id", "404", "--json"])
     expect(code).not.toBe(0)
     expect(await runsOf("bot api get-pinned-message")).toEqual([
-      expect.objectContaining({ status: "failed", requests: 1, error_code: "not_found", kept_because_failed: true }),
+      expect.objectContaining({ status: "failed", requests: 1, error_code: "not_found" }),
     ])
   })
 })

@@ -124,9 +124,21 @@ export class BotTransport {
     const timeoutMs = this.#timeoutFor(operation, input)
 
     const ids = idsIn(input)
-    const http = { method: operation.binding.method, endpointTemplate: endpointOf(operation.binding.path) }
+    const http = {
+      method: operation.binding.method,
+      endpointTemplate: endpointOf(operation.binding.path),
+      level: "wire" as const,
+      transport: "http" as const,
+    }
+    let waitMs: number | undefined
     for (let attempt = 1; ; attempt++) {
-      const said = { operation: operation.id, ...http, ...(ids ? { ids } : {}) }
+      const said = {
+        operation: operation.id,
+        ...http,
+        attempt,
+        ...(waitMs === undefined ? {} : { waitMs }),
+        ...(ids ? { ids } : {}),
+      }
       const started = this.#now()
       this.#events({ event: "request", ...said })
       try {
@@ -150,6 +162,7 @@ export class BotTransport {
         } catch {
           throw error
         }
+        waitMs = wait
       }
     }
   }

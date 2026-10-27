@@ -137,6 +137,15 @@ describe("the MAX messenger's connection", () => {
 
     expect(max.sent.map(({ opcode }) => opcode)).toContain(Opcode.MSG_REACTION)
     expect(events.some((event) => event.event === "request" && event.opcode === Opcode.LOGIN)).toBe(true)
+    const frames = events.filter((event) => event.event === "request" || event.event === "response")
+    for (const frame of frames) expect(frame).toMatchObject({ level: "wire", transport: "max-ws" })
+    expect(frames).toContainEqual(
+      expect.objectContaining({
+        event: "request",
+        opcode: Opcode.MSG_REACTION,
+        ids: expect.objectContaining({ chat: "111" }),
+      }),
+    )
     expect(new SendJournal(sendsPathFor("m-connect")).entries()).toEqual([])
   })
 
