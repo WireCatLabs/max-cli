@@ -33,7 +33,7 @@
 | Отвечать на кнопки, задавать меню команд и вебхуки | `max <бот> bot callbacks`, `commands`, `webhooks` |
 | Ограничить чаты, куда бот может писать | `max <бот> bot recipients` |
 | Вызвать любую операцию Bot API | `max <бот> bot api <операция>` |
-| Передать бота AI-агенту | `max <бот> bot mcp` |
+| Передать бота AI-агенту | `max <бот> bot mcp serve` |
 
 Полный список команд и опций — в [справочнике команд](commands.md).
 
@@ -250,7 +250,7 @@ max shop bot contacts show @ann --all-bots            # все, кого раз�
 
 `--all-bots` и `--bots` есть у `search messages`, `contacts show` и `messages between`. Без
 `read_other_bots` оба отказывают с кодом `5` и называют команду, которая разрешает. Агенту через
-`max <имя> bot mcp` те же поля (`all_bots`, `bots`) предлагаются, только когда это разрешено.
+`max <имя> bot mcp serve` те же поля (`all_bots`, `bots`) предлагаются, только когда это разрешено.
 
 ## Обновления
 
@@ -436,10 +436,10 @@ Bot API. В системе ничего не меняется. Запросы б
 
 ## Бот для агента (MCP)
 
-`max <имя> bot mcp` отдаёт бота вашему AI-агенту, как `max personal mcp` — личный аккаунт:
+`max <имя> bot mcp serve` отдаёт бота вашему AI-агенту, как `max personal mcp serve` — личный аккаунт:
 
 ```sh
-claude mcp add sales-bot -- max sales bot mcp
+claude mcp add sales-bot -- max sales bot mcp serve
 max sales bot mcp config          # запись для Claude Desktop, Cursor и других приложений
 ```
 

@@ -92,7 +92,7 @@ max personal review 'date>3d' --transcribe
   (skill) — инструкция для агента — объясняет ему команды и ограничения. `max personal setup` ставит навык
   сам; отдельно — `max skill install`.
 - **Приложение без терминала** — Claude Desktop, Cursor и другие клиенты MCP. Подключите
-  MCP-сервер `max personal mcp`; готовые просьбы `/catch-up`, `/review`, `/reply` и `/find` уже внутри.
+  MCP-сервер `max personal mcp serve`; готовые просьбы `/catch-up`, `/review`, `/reply` и `/find` уже внутри.
 - **ChatGPT или Claude в браузере** — через HTTPS-туннель и вход по коду.
 
 ```sh
@@ -197,7 +197,7 @@ max sales bot list --check                                     # все боты
 - **Копия переписки бота.** `bot contacts show`, `bot search messages --from`,
   `bot messages between` — без запросов к MAX.
 - **Бот не напишет лишнего.** Свой список чатов для записи, журнал отправленного без текста,
-  `permissions` и MCP-сервер `max <бот> bot mcp`. Токен — в системном хранилище паролей, отдельно от вашего.
+  `permissions` и MCP-сервер `max <бот> bot mcp serve`. Токен — в системном хранилище паролей, отдельно от вашего.
 
 Подробнее: [бот MAX](https://github.com/WireCatLabs/max-cli/blob/main/docs/bot.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/bot)).
 
@@ -254,8 +254,8 @@ max skill install --for all     # или --for claude, --for agents
 
 ```sh
 max personal mcp check                                       # проверить локальный MCP
-max personal mcp --http --public-url https://<имя>.ts.net     # для ChatGPT и Claude в браузере
-max personal mcp --permission messages.send=deny              # запретить отправку этому серверу
+max personal mcp serve --http --public-url https://<имя>.ts.net     # для ChatGPT и Claude в браузере
+max personal mcp serve --permission messages.send=deny              # запретить отправку этому серверу
 ```
 
 Подробнее: [MCP-сервер](https://github.com/WireCatLabs/max-cli/blob/main/docs/mcp.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/mcp)), [браузер](https://github.com/WireCatLabs/max-cli/blob/main/docs/remote.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/remote)), [внешние модели](https://github.com/WireCatLabs/max-cli/blob/main/docs/external-models.md) ([wirecat.dev](https://wirecat.dev/ru/docs/max/external-models)).

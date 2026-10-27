@@ -9,10 +9,10 @@ ChatGPT, Codex web или Claude, читало ваш MAX и отвечало в
 Термины на этой странице:
 
 - **MCP** (Model Context Protocol) — общий способ, которым ИИ-приложение вызывает внешние
-  инструменты. `max personal mcp` — MCP-сервер, который ставится вместе с `max`; приложения на вашем
+  инструменты. `max personal mcp serve` — MCP-сервер, который ставится вместе с `max`; приложения на вашем
   компьютере описаны в [руководстве по MCP-серверу](mcp.md).
 - **Удалённое подключение** — приложение подключается со своих серверов, через интернет, к адресу,
-  который вы ему дали. Для этого `max personal mcp --http` отдаёт те же инструменты по HTTP на `127.0.0.1`.
+  который вы ему дали. Для этого `max personal mcp serve --http` отдаёт те же инструменты по HTTP на `127.0.0.1`.
 - **HTTPS-туннель** — программа, которая даёт порту на вашем компьютере публичный адрес HTTPS.
   Здесь используется [Tailscale Funnel](https://tailscale.com/docs/features/tailscale-funnel);
   подходит и Cloudflare Tunnel. Для Funnel покупать домен не нужно.
@@ -22,7 +22,7 @@ ChatGPT, Codex web или Claude, читало ваш MAX и отвечало в
   приложения просит его, поэтому подключить приложение может только тот, кто видит этот терминал.
 
 ```text
-ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max personal mcp --http (вход) ──▶ MAX
+ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max personal mcp serve --http (вход) ──▶ MAX
 ```
 
 Если подключение через Tailscale уже работает, сохраняйте его: второй туннель не нужен. Локальное
@@ -42,7 +42,7 @@ ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max 
 ## До начала
 
 - **Кто вошёл, тот читает ваш MAX.** Для входа нужен код из вашего терминала. Никогда не ставьте
-  туннель перед `max personal mcp` без `--http`: там входа нет совсем.
+  туннель перед `max personal mcp serve` без `--http`: там входа нет совсем.
 - **Что приложение может менять, решают права профиля.** `deny` и `readonly` запрещают запись;
   `ask` и `allow` пропускают запрошенную запись через MCP без формы на сервере. Подтверждение в
   самом приложении — отдельная вещь и зависит от его настроек. Список получателей и лимит в час
@@ -66,7 +66,7 @@ ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max 
 
 Сначала установите CLI и войдите в MAX ([руководство по установке](installation.md)); для
 локальной настройки без агента используйте `max personal setup --agent none`. Сервер запускайте от того же
-пользователя ОС и с тем же профилем. При необходимости поставьте профиль первым: `max work mcp`.
+пользователя ОС и с тем же профилем. При необходимости поставьте профиль первым: `max work mcp serve`.
 Tailscale устанавливается отдельно; такой туннель поддерживают и `max`, и `tg`.
 
 Установите [Tailscale](https://tailscale.com/download), войдите и разрешите
@@ -103,7 +103,7 @@ Tailscale откройте новое окно PowerShell, чтобы обнов
 
 ```powershell
 $mcpPublicUrl = Read-Host 'Вставьте HTTPS origin из Funnel (без /mcp)'
-max.cmd personal mcp --http --port 8765 --public-url $mcpPublicUrl
+max.cmd personal mcp serve --http --port 8765 --public-url $mcpPublicUrl
 ```
 
 Оба процесса запускайте в самой Windows. WSL — отдельная среда: туннель Windows, направленный на
@@ -124,7 +124,7 @@ TAILSCALE_BE_CLI=1 /Applications/Tailscale.app/Contents/MacOS/Tailscale funnel 8
 ```sh
 printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
 IFS= read -r mcpPublicUrl
-max personal mcp --http --port 8765 --public-url "$mcpPublicUrl"
+max personal mcp serve --http --port 8765 --public-url "$mcpPublicUrl"
 ```
 
 ### Linux (Terminal)
@@ -141,7 +141,7 @@ sudo tailscale funnel 8765
 ```sh
 printf 'Вставьте HTTPS origin из Funnel (без /mcp): '
 IFS= read -r mcpPublicUrl
-max personal mcp --http --port 8765 --public-url "$mcpPublicUrl"
+max personal mcp serve --http --port 8765 --public-url "$mcpPublicUrl"
 ```
 
 ## MAX и Telegram одновременно
@@ -165,7 +165,7 @@ MAX — с `--port 8766`. Для `--public-url` MAX и для адреса ег�
 Во втором терминале запустите сервер:
 
 ```sh
-max personal mcp --http --port 8765 --public-url https://mcp.example.com
+max personal mcp serve --http --port 8765 --public-url https://mcp.example.com
 ```
 
 Добавьте в ИИ-приложение `https://mcp.example.com/mcp` с OAuth и DCR, как описано в разделе
@@ -247,7 +247,7 @@ Ctrl-C в обоих окнах останавливает сервер и эт�
 для профиля:
 
 ```sh
-max personal mcp --revoke
+max personal mcp revoke
 ```
 
 Этим приложениям придётся войти заново с новым кодом. Сессия MAX при этом не завершается.
@@ -259,7 +259,7 @@ max personal mcp --revoke
   короткий JSON. Если его нет, Funnel не запущен, не включён в сети Tailscale или смотрит на другой
   порт.
 - **Страница входа пишет «Too many wrong codes»:** после пяти неверных кодов она закрыта до
-  перезапуска `max personal mcp --http`. Если вводили не вы, кто-то нашёл ваш адрес: перезапустите сервер и
+  перезапуска `max personal mcp serve --http`. Если вводили не вы, кто-то нашёл ваш адрес: перезапустите сервер и
   подумайте о новом имени устройства в Tailscale.
 - **Подключается, но инструментов нет:** `max personal mcp check` проверяет, что MCP-сервер запускается и
   отдаёт список инструментов. Вход в MAX и туннель он не проверяет. Подключение аккаунта проверяет
