@@ -12,6 +12,7 @@ import { approvePermission, askerFor, commandPermission, forgetApprovals, permis
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
 import { guardFor } from "./sends.js"
+import { SessionStore } from "./session/store.js"
 import { SKILL } from "./skill.js"
 import { SPEECH_MODELS } from "./transcribe/models.js"
 
@@ -172,6 +173,11 @@ export const maxMessenger: Messenger = {
     }),
   }),
 
+  profileState: (profile, env) => {
+    const store = new SessionStore({ profile, env })
+    if (store.hasLoggedIn()) return "signed-in"
+    return store.isBot() ? "bot" : "signed-out"
+  },
   connect: async (command, context, { events } = {}) => {
     const { createClient, store, reach } = forCommand(command)
     const record = maxRecord({ account: () => store.viewerId(), env: context.env })

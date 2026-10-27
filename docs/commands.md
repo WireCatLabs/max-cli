@@ -126,7 +126,7 @@ max account list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
-**Returns:** account profile — profile, current, account, name; every field: max commands info account list
+**Returns:** account profile — profile, current, account, name, signed_in; every field: max commands info account list
 
 **Example:** `max personal account list`
 
@@ -4314,7 +4314,7 @@ max search messages [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
-**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, match, and 5 more; every field: max commands info search messages
+**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, match, and 6 more; every field: max commands info search messages
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -4341,7 +4341,7 @@ max search notes <query> [options]
 | `--exact` | words as written only; meaning is not searched. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 
-**Returns:** note hit — ref, source, folder_id, path, title, updated_at, kind, provider, and 5 more; every field: max commands info search notes
+**Returns:** note hit — ref, source, folder_id, path, title, updated_at, kind, provider, and 6 more; every field: max commands info search notes
 
 **Example:** `max personal search notes draft --limit 10`
 
@@ -5629,7 +5629,7 @@ the instructions an agent is given for this tool
 
 ### `max skill show`
 
-print SKILL.md — `max skill install` puts it where Claude Code, Codex and Gemini CLI look for it; --for prints the copy already there
+print SKILL.md — `max skill install` puts it where Claude Code, Codex, Gemini CLI and OpenClaw look for it, and where Hermes does on request; --for prints the copy already there
 
 ```sh
 max skill show [name] [options]
