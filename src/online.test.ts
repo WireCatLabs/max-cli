@@ -51,11 +51,12 @@ describe("max doctor --online", () => {
     expect(calls).toEqual(["me", "close"])
   })
 
-  it("speaks MCP to a child process: initialize, then tools/list, then closes its stdin", async () => {
+  it("starts `mcp serve` and speaks MCP to it: initialize, then tools/list, then closes its stdin", async () => {
     const script = join(mkdtempSync(join(tmpdir(), "max-mcp-")), "server.mjs")
     writeFileSync(
       script,
       `import { createInterface } from "node:readline"
+if (process.argv.slice(2).join(" ") !== "mcp serve") process.exit(9)
 const reply = (id, result) => process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id, result }) + "\\n")
 createInterface({ input: process.stdin }).on("line", (line) => {
   const { id, method } = JSON.parse(line)

@@ -8,7 +8,7 @@
 Сначала несколько терминов:
 
 - **MCP** ([Model Context Protocol](https://modelcontextprotocol.io)) — стандартный способ, которым
-  AI-приложение пользуется внешними инструментами. Приложение — это **MCP-клиент**, `max personal mcp` —
+  AI-приложение пользуется внешними инструментами. Приложение — это **MCP-клиент**, `max personal mcp serve` —
   **MCP-сервер**.
 - **Инструмент** — одно действие, которое сервер предлагает агенту, например «прочитать» или
   «записать».
@@ -18,7 +18,7 @@
 - **Профиль** — один набор настроек и один вход в `max`; см. [профили](profiles.md).
 
 Сервер ставится вместе с `max`, отдельно ничего устанавливать не нужно. По умолчанию он общается с
-приложением через stdin и stdout. `max personal mcp --http --public-url` вместо этого отдаёт инструменты на
+приложением через stdin и stdout. `max personal mcp serve --http --public-url` вместо этого отдаёт инструменты на
 локальном порту за вашим HTTPS-туннелем.
 
 ## Нужен ли он вам
@@ -30,7 +30,7 @@ AI-агенту, который умеет запускать команды в 
 - приложениям без терминала — Claude Desktop, чату Cursor;
 - тем, кто хочет, чтобы приложение применяло права профиля к каждой операции.
 
-ChatGPT и Claude **в браузере** подключаются через `max personal mcp --http` — см.
+ChatGPT и Claude **в браузере** подключаются через `max personal mcp serve --http` — см.
 [подключение из браузера или телефона](remote.md).
 
 ## Что даёт сервер
@@ -72,17 +72,17 @@ max personal mcp add claude-code     # или в Claude Code
 **Claude Code вручную:**
 
 ```sh
-claude mcp add max -- max personal mcp
+claude mcp add max -- max personal mcp serve
 ```
 
 Осторожно: по умолчанию агент через этот сервер может отправлять сообщения от вашего имени. Сначала
 ограничьте права: уровни `readonly` и `deny` ([права](permissions.md)) или флаг `--permission`, например
-`claude mcp add max -- max personal mcp --permission messages.send=deny`.
+`claude mcp add max -- max personal mcp serve --permission messages.send=deny`.
 
 С профилем — он идёт первым словом, как в любой команде:
 
 ```sh
-claude mcp add max-work -- max work mcp
+claude mcp add max-work -- max work mcp serve
 ```
 
 **Claude Desktop, Cursor и другие приложения** — готовую запись для их файла настроек печатает сам
@@ -99,7 +99,7 @@ max work mcp config
     "max-personal": {
       "type": "stdio",
       "command": "C:\\Program Files\\nodejs\\node.exe",
-      "args": ["C:\\Users\\you\\AppData\\Roaming\\npm\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js", "personal", "mcp"]
+      "args": ["C:\\Users\\you\\AppData\\Roaming\\npm\\node_modules\\@wirecat\\max-cli\\dist\\bin\\max.js", "personal", "mcp", "serve"]
     }
   }
 }
@@ -127,7 +127,7 @@ max work mcp config
 терминале они заданы, а для MCP-приложения нет (или наоборот), сервер ответит «нет сессии», хотя
 `max` в терминале работает. Задайте им одно и то же — или не задавайте нигде.
 
-У бота свой сервер, `max <имя> bot mcp`; см. [бот для агента](bot.md#бот-для-агента-mcp). Доступ
+У бота свой сервер, `max <имя> bot mcp serve`; см. [бот для агента](bot.md#бот-для-агента-mcp). Доступ
 у него определяет `permissions` профиля бота.
 
 ## Что может агент
@@ -219,7 +219,7 @@ MCP и ограничиваются собственными ключами, н�
 чтение одного чата.
 
 Ресурс `max://skill` — навык `max`, тот же текст, что печатает `max skill show`. Он есть и у
-`max personal mcp`, и у `max sales bot mcp`, и в MAX не ходит.
+`max personal mcp serve`, и у `max sales bot mcp serve`, и в MAX не ходит.
 
 ## Графики статистики
 
@@ -260,9 +260,9 @@ MAX и не пишет файлы; нужен доступ `messages`. Всту�
 входит заново. Вызовы выполняются по одному, даже если приложение прислало их одновременно.
 
 Через stdin и stdout сервер завершается, когда приложение закрыло stdin, и закрывает соединение с
-MAX. По HTTP он работает до Ctrl-C. `max personal mcp --http --public-url https://<имя>.ts.net` доступен через
+MAX. По HTTP он работает до Ctrl-C. `max personal mcp serve --http --public-url https://<имя>.ts.net` доступен через
 HTTPS-туннель со входом по коду из терминала. `max personal mcp server start` запускает тот же сервер в фоне
 и возвращается, когда он слушает; `mcp server status` показывает порт, адрес, код входа и вошедшие приложения,
 `mcp server stop` останавливает только его. Права действуют одинаково через HTTP и через stdin и
-stdout. `max personal mcp --revoke` завершает входы приложений и сохраняет сессию MAX. См.
+stdout. `max personal mcp revoke` завершает входы приложений и сохраняет сессию MAX. См.
 [подключение из браузера или телефона](remote.md).

@@ -1,8 +1,11 @@
 [
   "bot comments get",
+  "bot mcp serve",
   "bot uploads put",
   "chats folders order",
   "chats media",
+  "mcp revoke",
+  "mcp serve",
   "replies audience",
   "replies consents allow",
   "replies consents deny",

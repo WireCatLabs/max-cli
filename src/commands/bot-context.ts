@@ -9,7 +9,7 @@ import { BotApiClient } from "../bot/client.js"
 import { BOT_KEYS } from "../bot/permissions.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { botFetch } from "../bot/transport.js"
-import { type GlobalFlags, resolveSettings, type Settings } from "../config.js"
+import { type GlobalFlags, resolveSettings, runRetention, type Settings } from "../config.js"
 import { resolveOutput } from "../output.js"
 import { askerFor, assertReadable } from "../permissions.js"
 import { asFirstWord, rootOf } from "../profile.js"
@@ -46,6 +46,7 @@ export const startBotRecording = (command: Command): void => {
     format,
     streams,
     keepDays: settings.keepRunsForDays,
+    ...runRetention(settings),
   })
   recordings.set(rootOf(command), recording)
   // A hook cannot wrap the action in inRun, so the answer's meta.run_id would name no recorded run.

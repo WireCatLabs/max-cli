@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { memoryKeyring } from "@wirecat/cli-base"
@@ -137,6 +137,15 @@ describe("the MAX messenger's connection", () => {
 
     expect(max.sent.map(({ opcode }) => opcode)).toContain(Opcode.MSG_REACTION)
     expect(events.some((event) => event.event === "request" && event.opcode === Opcode.LOGIN)).toBe(true)
+    const frames = events.filter((event) => event.event === "request" || event.event === "response")
+    for (const frame of frames) expect(frame).toMatchObject({ level: "wire", transport: "max-ws" })
+    expect(frames).toContainEqual(
+      expect.objectContaining({
+        event: "request",
+        opcode: Opcode.MSG_REACTION,
+        ids: expect.objectContaining({ chat: "111" }),
+      }),
+    )
     expect(new SendJournal(sendsPathFor("m-connect")).entries()).toEqual([])
   })
 
@@ -242,5 +251,20 @@ describe("a guard over max serve", () => {
       for (const entry of outcomes) over.record(entry)
       expect(recorded).toEqual(["refused", "sent"])
     }
+  })
+})
+
+describe("which profiles are signed in", () => {
+  it("reads it from the state files: a personal login, a bot alone, or nothing yet", () => {
+    const state = mkdtempSync(join(tmpdir(), "max-state-"))
+    const env = { MAX_STATE_DIR: state }
+    mkdirSync(join(state, "profiles"))
+    mkdirSync(join(state, "bots"))
+    writeFileSync(join(state, "profiles", "personal.json"), JSON.stringify({ deviceId: "d", logins: 1 }))
+    writeFileSync(join(state, "profiles", "fresh.json"), JSON.stringify({ deviceId: "d", logins: 0 }))
+    writeFileSync(join(state, "bots", "news.json"), "{}")
+    expect(maxMessenger.profileState?.("personal", env)).toBe("signed-in")
+    expect(maxMessenger.profileState?.("fresh", env)).toBe("signed-out")
+    expect(maxMessenger.profileState?.("news", env)).toBe("bot")
   })
 })

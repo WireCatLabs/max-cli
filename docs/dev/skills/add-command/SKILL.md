@@ -91,7 +91,7 @@ if the change lifts them.
 
 ## 5. Agents
 
-`max mcp` reaches every command by its path through `max_read` and `max_write`, under the same permission
+`max mcp serve` reaches every command by its path through `max_read` and `max_write`, under the same permission
 check as the CLI (`docs/dev/ARCHITECTURE.md` §17); bot tools are cli-core's bot MCP or, for max's own,
 `src/bot/mcp-tools.ts`. Say in the PR whether an agent should get a new write — **a product decision for the
 owner, not yours**. If an agent should know the command, add a line to `skills/max-cli/SKILL.md` (Russian,

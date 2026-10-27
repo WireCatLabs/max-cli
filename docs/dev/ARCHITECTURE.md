@@ -461,11 +461,9 @@ starts no session and creates no new run.
 `run.json` (`running`, then the outcome) and 30-day retention, pruned only when a recorded run
 starts, whole days by directory name. Rules not stated there:
 
-- **Off unless asked** (`NEED-49`, `NEED-52`): `--record`, `--no-record`, else the config file.
-  a run that fails is kept anyway —
-  `recorded()` holds the newest 500 events in memory and opens the directory only on a failure,
-  with `keptBecauseFailed: true`. Recording turned off by name (`--no-record`, `"record": false`)
-  keeps nothing (`keepFailedRuns` in `src/config.ts`).
+- **On by default** (cli-core 0.467.0): every run is kept, successes 7 days and failures 30. `"record": false`
+  keeps failures only; `--no-record` keeps nothing (`keepFailedRuns` in `src/config.ts`). A long-running command
+  (`watch`, `serve`, `mcp serve`) keeps a success only under `--record`.
   every failure, not only one inside `run()`. The last catch
   `src/program.ts` delegates parsing and fallback recording to
   cli-core's shared runner. Its consumer hooks supply legacy command context, server options
