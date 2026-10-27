@@ -218,7 +218,7 @@ through `bin/max`. A release: the published build, `max`, since that is what a r
 `--json --timeout 60s` inside a wall-clock `timeout 90`, and the check is: exit code, stdout one JSON
 value, stderr empty or one diagnostic, and the shape (keys, item count) — never the values, which
 are other people's messages. A command that does not exit is a failure. Snapshot before a change,
-restore the exact value after. Long-running commands (`watch`, `serve`, `mcp`, `bot updates watch`)
+restore the exact value after. Long-running commands (`watch`, `serve`, `mcp serve`, `bot updates watch`)
 run in the background and are stopped by the PID taken at start.
 
 | Set | What a person does | Commands it exercises |
@@ -234,7 +234,7 @@ run in the background and are stopped by the PID taken at start.
 | G1–G7 | a group from creation to leaving | `chats create`, `update` (title and settings), `show` (settings), `link show\|reset`, `members add\|remove\|list`, the other side's `inspect\|join`, `events`, `admins add\|remove`, `messages pin\|unpin`, `polls create\|vote\|close`, `rules set\|unset`, `chats check --dry-run`, `leave` |
 | C1 | a channel | `chats create --channel`, the link, the other account joins, a bot made admin |
 | T1–T6 | the bots | `bot list --check`, `me`, `webhooks list`, `commands set\|list\|clear`, `messages send\|edit\|get\|delete` in the group, `chats pin\|unpin\|action`, `members\|admins list`, `admins add\|remove`, `--file`, `recipients`, `updates watch`, `people show`, `api get-my-info` |
-| X1–X3 | agents and operations | `commands`, `skill show`, `config show`, `doctor --online`, `upgrade --check`, `complete zsh`, `--record` + `runs list`, `mcp` and `bot mcp` (`initialize`, `tools/list`, one `tools/call`), errors: exit code and JSON on stderr |
+| X1–X3 | agents and operations | `commands`, `skill show`, `config show`, `doctor --online`, `upgrade --check`, `complete zsh`, `--record` + `runs list`, `mcp serve` and `bot mcp serve` (`initialize`, `tools/list`, one `tools/call`), errors: exit code and JSON on stderr |
 
 Not run, on purpose: anything writing as a bot with a live webhook; `bot webhooks set|delete`;
 `bot members remove` (its ban cannot be lifted, `MAX-62`); `account update` (a description or photo

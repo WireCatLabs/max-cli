@@ -39,7 +39,7 @@ export const checkOnline = async (client: MaxClient, handshake: () => Promise<nu
 }
 
 /**
- * Starts `max mcp` as `node <script>` — never `max`, which on Windows is a `.cmd` file Node does not
+ * Starts `max mcp serve` as `node <script>` — never `max`, which on Windows is a `.cmd` file Node does not
  * start without a shell — asks for its tools and closes stdin, which is how a client lets it exit.
  * Listing tools does not log in.
  */
@@ -53,7 +53,7 @@ export const mcpHandshake = async ({
   env: NodeJS.ProcessEnv
 }): Promise<number> => {
   const { LATEST_PROTOCOL_VERSION } = await import("@modelcontextprotocol/server")
-  const child = spawn(execPath, [scriptPath, "mcp"], { env, stdio: ["pipe", "pipe", "ignore"] })
+  const child = spawn(execPath, [scriptPath, "mcp", "serve"], { env, stdio: ["pipe", "pipe", "ignore"] })
   const send = (message: object) => child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", ...message })}\n`)
   const lines = createInterface({ input: child.stdout })
 

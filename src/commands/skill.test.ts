@@ -54,12 +54,12 @@ const max = async (...argv: string[]) => {
 describe("max skill", () => {
   afterEach(() => vi.unstubAllEnvs())
 
-  it("show prints SKILL.md as it is, and as { name, content } with --json", async () => {
+  it("show prints SKILL.md as it is, and as { item: { name, content } } with --json", async () => {
     const plain = await max("skill", "show")
     const json = await max("skill", "show", "--json")
 
     expect(plain.stdout).toBe(skill.trimEnd())
-    expect(JSON.parse(json.stdout)).toEqual({ name: "max-cli", content: skill.trimEnd() })
+    expect(JSON.parse(json.stdout).item).toEqual({ name: "max-cli", content: skill.trimEnd() })
   })
 
   it("install writes SKILL.md, stamped with this version, where Claude Code and other agents look", async () => {
@@ -69,7 +69,7 @@ describe("max skill", () => {
     const claude = join(dir, ".claude", "skills", "max-cli", "SKILL.md")
 
     expect(code).toBe(0)
-    expect(JSON.parse(stdout)).toEqual({
+    expect(JSON.parse(stdout).item).toEqual({
       name: "max-cli",
       version: VERSION,
       written: [claude, join(dir, ".agents", "skills", "max-cli", "SKILL.md")],
@@ -82,7 +82,7 @@ describe("max skill", () => {
 
     const { stdout } = await max("skill", "install", "--for", "claude", "--json")
 
-    expect(JSON.parse(stdout).written).toEqual([join(dir, ".claude", "skills", "max-cli", "SKILL.md")])
+    expect(JSON.parse(stdout).item.written).toEqual([join(dir, ".claude", "skills", "max-cli", "SKILL.md")])
   })
 
   it("status says which agent's copy is current, and show --for prints that copy", async () => {
@@ -94,7 +94,7 @@ describe("max skill", () => {
 
     expect(JSON.stringify(status)).toContain('"state":"current"')
     expect(JSON.stringify(status)).toContain('"state":"missing"')
-    expect(JSON.parse(shown.stdout)).toMatchObject({ name: "max-cli", target: "claude", installed: VERSION })
+    expect(JSON.parse(shown.stdout).item).toMatchObject({ name: "max-cli", target: "claude", installed: VERSION })
     expect((await max("skill", "show", "--for", "agents")).code).not.toBe(0)
   })
 })

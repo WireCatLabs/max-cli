@@ -540,7 +540,7 @@ export const UNTESTED: Untested[] = [
       "src/cli/messenger/mcp-server-command.test.ts drives start, status and stop with these options",
   })),
   {
-    command: "mcp",
+    command: "mcp serve",
     reason:
       "serves MCP over stdio until the client closes; it is cli-core's mcpCommand, tested there with a fake messenger",
   },
@@ -556,14 +556,14 @@ export const UNTESTED: Untested[] = [
       "starts a separate MCP process; cli-base's src/mcp/index.test.ts checks the handshake and tool list, and isolated CLI doctor was checked without an account",
   },
   {
-    command: "bot mcp",
+    command: "bot mcp serve",
     reason:
       "serves MCP over stdio until the client closes; src/bot-mcp.test.ts drives cli-core's createBotServer with max's run and tools",
   },
   {
     command: "doctor",
     option: "--online",
-    reason: "logs in to MAX and starts `max mcp` as a child; src/online.test.ts covers both steps, live X3",
+    reason: "logs in to MAX and starts `max mcp serve` as a child; src/online.test.ts covers both steps, live X3",
   },
   {
     command: "search conversations",

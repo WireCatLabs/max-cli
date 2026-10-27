@@ -4,4 +4,4 @@ FROM node:24-slim
 # hadolint ignore=DL3016
 RUN npm install -g @wirecat/max-cli && npm cache clean --force
 USER node
-CMD ["max", "glama", "mcp"]
+CMD ["max", "glama", "mcp", "serve"]

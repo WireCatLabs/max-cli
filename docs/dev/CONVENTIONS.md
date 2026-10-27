@@ -152,7 +152,7 @@ Every entry answers, in plain Russian, in this order:
    about it. Skip it only when nothing changes for anyone who does not use the new thing.
 
 ```md
-- **Агент через `max mcp` закрывает опрос, только если профилю разрешено `edit`.** Раньше хватало
+- **Агент через `max mcp serve` закрывает опрос, только если профилю разрешено `edit`.** Раньше хватало
   `reaction`.
   Почему: закрытие правит сообщение с опросом, и команда `max polls close` всегда требовала `edit` —
   агент и человек получали на одно действие разные права.

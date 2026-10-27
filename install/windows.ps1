@@ -139,7 +139,7 @@ if ($Agent -ne 'none') {
     $skillJson = & $shim skill install --for $target --json
     if ($LASTEXITCODE -ne 0) { throw 'Agent skill installation failed.' }
     $skill = ($skillJson -join "`n") | ConvertFrom-Json
-    $written = @($skill.written)
+    $written = @($skill.item.written)
     if (-not $written.Count) { throw 'Agent skill installation wrote no instructions.' }
     foreach ($file in $written) {
         if (-not (Test-Path -LiteralPath $file)) { throw 'An installed agent skill could not be found.' }

@@ -61,7 +61,7 @@ The rules and the shape-only `live` helper are in
 
 - **A write is proven on the other side.** A sends in the A↔B dialog → B's `messages list` shows it
   (by id, not by text). A bot write → a personal profile reads it.
-- **A command that does not exit is a failure.** Long-running ones (`watch`, `serve`, `mcp`,
+- **A command that does not exit is a failure.** Long-running ones (`watch`, `serve`, `mcp serve`,
   `bot updates watch`) start in the background; take the PID at start (`$!`), and stop that PID —
   never by name.
 - **Snapshot before a change, restore the exact value after, and read it back.** A rename, a

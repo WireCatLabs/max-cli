@@ -6,6 +6,19 @@
 
 ## Не выпущено
 
+### Изменено — может сломать скрипты
+
+- **MCP-сервер запускается командой `max mcp serve`, а `max mcp` только показывает справку (cli-core 0.463.0).**
+  Так же для бота: `max <бот> bot mcp serve`. Входы браузерных приложений завершает `max mcp revoke` вместо
+  `max mcp --revoke`. Записи, которые печатают `mcp config` и `mcp add`, `mcp server start`, `doctor --online`,
+  запись в MCP Registry и Docker-образ уже запускают `mcp serve`. Что сделать: в своей записи MCP-клиента или в
+  скрипте замените `max <профиль> mcp` на `max <профиль> mcp serve`, а `mcp --revoke` на `mcp revoke`. Старого
+  вида команды больше нет.
+- **`skill show`, `skill status` и `skill install` с `--json` печатают `{ item, meta }` (cli-core 0.462.0).** Поля,
+  которые были на верхнем уровне (`name`, `content`, `written`), теперь внутри `item`. Установщик для Windows уже
+  читает новый вид.
+- **max требует cli-core 0.463.0** (с cli-base 0.63.0, как и раньше).
+
 ### Исправлено
 
 - **Навык max-cli больше не отправляет агента в `search all` и в `messages sync --all`.** Поиск начинается с
