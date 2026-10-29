@@ -113,6 +113,27 @@ describe("max mcp, cli-core's command over max's messenger", () => {
     expect(JSON.parse(stdout).item).toEqual({ revoked: true, profile: "default" })
     expect(existsSync(file)).toBe(false)
   })
+
+  it("`mcp config --profiles` names one server for the listed profiles", async () => {
+    for (const profile of ["work", "home"]) await cli([profile, "config", "set", "limit", "20", "--json"])
+    const { code, stdout } = await cli(["mcp", "config", "--profiles", "work,home", "--json"])
+    expect(code).toBe(0)
+    const [server] = Object.values(JSON.parse(stdout).item.config.mcpServers) as [{ args: string[] }]
+    expect(server.args.slice(-3)).toEqual(["serve", "--profiles", "home,work"])
+  })
+
+  it("`mcp serve --profiles` refuses a profile that does not exist, before serving", async () => {
+    const { code, stdout, stderr } = await cli(["mcp", "serve", "--profiles", "nosuch", "--json"])
+    expect(code).toBe(2)
+    expect(stdout).toBe("")
+    expect(stderr).toContain("nosuch")
+  })
+
+  it("`mcp revoke --profiles all` forgets the logins of the server of every profile", async () => {
+    const { code, stdout } = await cli(["mcp", "revoke", "--profiles", "all", "--json"])
+    expect(code).toBe(0)
+    expect(JSON.parse(stdout).item).toEqual({ revoked: true, profile: null, profiles: "all" })
+  })
 })
 
 describe("the models commands, through the CLI", () => {

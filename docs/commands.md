@@ -1727,7 +1727,7 @@ max messages list <chat> [query] [options]
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <model>` | which downloaded speech model hears them, with --transcribe; `models list` shows them. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands info messages list
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 30 more; every field: max commands info messages list
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -1746,7 +1746,7 @@ max messages show <chat> [message]
 | `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
 | `message` | необязательный | the message id. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands info messages show
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 30 more; every field: max commands info messages show
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -1775,7 +1775,7 @@ max messages context <chat> [message] [options]
 | `--before-n <n>` | how many before it. По умолчанию: `5`. |
 | `--after-n <n>` | how many after it. По умолчанию: `5`. |
 
-**Returns:** message context — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 40 more; every field: max commands info messages context
+**Returns:** message context — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 41 more; every field: max commands info messages context
 
 **Example:** `max personal messages context "Book club" 101 --before-n 3 --after-n 3`
 
@@ -1964,7 +1964,7 @@ max messages scheduled <chat>
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands info messages scheduled
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 30 more; every field: max commands info messages scheduled
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -2299,7 +2299,7 @@ max store export [chat] [options]
 | `--all` | with --output-dir: every stored chat of this account. |
 | `--encrypt` | compress and encrypt with a password, typed at a hidden prompt or piped on stdin; it is never kept — lose it and the file cannot be opened. |
 
-**Returns:** store export — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 34 more; every field: max commands info store export
+**Returns:** store export — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 35 more; every field: max commands info store export
 
 **Example:** `max personal store export "Book club" --output ./messages.jsonl`
 
@@ -3357,7 +3357,7 @@ max conversations show <conversation> [message]
 | `conversation` | обязательный | a conversation id from `conversations list`; or a chat: its id, or part of its title, with a message. |
 | `message` | необязательный | a message id in that chat: show the conversation it is in. |
 
-**Returns:** conversation details — id, chat, first_message, started_at, ended_at, messages_count, senders_count, built_at, and 38 more; every field: max commands info conversations show
+**Returns:** conversation details — id, chat, first_message, started_at, ended_at, messages_count, senders_count, built_at, and 39 more; every field: max commands info conversations show
 
 **Example:** `max personal conversations show "Book club" 101`
 
@@ -5442,7 +5442,7 @@ max watch [options]
 |---|---|
 | `--events` | also print edits, deletions, reactions, reads and chat changes; every line then names its event. |
 
-**Returns:** watch item — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 30 more; every field: max commands info watch
+**Returns:** watch item — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 31 more; every field: max commands info watch
 
 **Example:** `max personal watch --jsonl --timeout 30s`
 
@@ -5737,7 +5737,7 @@ serve this profile to an agent over MCP and set it up — `claude mcp add max --
 
 ### `max mcp serve`
 
-serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max <profile> mcp serve`; with no profile, `max mcp serve` serves every profile and each tool asks which
+serve this profile to an agent over MCP, on stdin and stdout — `claude mcp add max -- max <profile> mcp serve`; `max mcp serve --profiles a,b` or `--profiles all` serves those profiles from one server and each tool asks which
 
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
@@ -5748,27 +5748,32 @@ max mcp serve [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
+| `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
 | `--http` | serve over HTTP on 127.0.0.1 for ChatGPT and Claude in the browser, behind your tunnel; the profile's permissions decide. |
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
 
 **Returns:** serve this profile's commands to an AI agent
 
-**Example:** `max personal mcp serve`, `max personal mcp serve --http --public-url https://laptop.example.ts.net`
+**Example:** `max personal mcp serve`, `max personal mcp serve --profiles work,personal`, `max personal mcp serve --http --public-url https://laptop.example.ts.net`
 
 ### `max mcp revoke`
 
-forget every login `mcp serve --http` gave a browser app, of this profile or, with no profile, of the server of every profile; each app must log in again
+forget every login `mcp serve --http` gave a browser app, of this profile or of the server `--profiles` names; each app must log in again
 
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max mcp revoke
+max mcp revoke [options]
 ```
+
+| Опция | Что делает |
+|---|---|
+| `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
 
 **Returns:** forget every login given to a browser app
 
-**Example:** `max personal mcp revoke`
+**Example:** `max personal mcp revoke`, `max personal mcp revoke --profiles all`
 
 ### `max mcp server`
 
@@ -5789,6 +5794,7 @@ max mcp server start [options]
 | `--port <port>` | the local port (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
 | `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
+| `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
 **Returns:** start the HTTP MCP server in the background
 
@@ -5801,8 +5807,12 @@ stop `mcp serve --http` — only one that `mcp server start` started
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max mcp server stop
+max mcp server stop [options]
 ```
+
+| Опция | Что делает |
+|---|---|
+| `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
 **Returns:** stop the background HTTP MCP server
 
@@ -5813,8 +5823,12 @@ max mcp server stop
 whether `mcp serve --http` runs, on which port and address, the login code for a new browser app, and the apps logged in
 
 ```sh
-max mcp server status
+max mcp server status [options]
 ```
+
+| Опция | Что делает |
+|---|---|
+| `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
 **Returns:** whether the HTTP MCP server runs, its login code and the apps logged in
 
@@ -5831,10 +5845,11 @@ max mcp config [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
+| `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
 
-**Returns:** print the local MCP configuration, of this profile or of every profile
+**Returns:** print the local MCP configuration of this profile, or of those --profiles names
 
-**Example:** `max personal mcp config`
+**Example:** `max personal mcp config`, `max personal mcp config --profiles all`
 
 ### `max mcp add`
 
@@ -6285,7 +6300,7 @@ max bot messages list <chat> [query] [options]
 |---|---|
 | `--limit <n>` | how many, the newest. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, timestamp, edited_at, text, and 29 more; every field: max commands info bot messages list
+**Returns:** message — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 30 more; every field: max commands info bot messages list
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max bot messages show <chat> <message>`
 

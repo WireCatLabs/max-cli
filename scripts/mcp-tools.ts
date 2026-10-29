@@ -1,7 +1,8 @@
 /**
  * Which tools a `max` MCP server offers, from this worktree's build (release skill, scenario X2).
  *
- *   pnpm mcp:tools -- mcp serve
+ *   pnpm mcp:tools -- default mcp serve
+ *   pnpm mcp:tools -- mcp serve --profiles all
  *   pnpm mcp:tools -- test bot mcp serve
  *
  * Prints the count, then the names, sorted. Tool names only — nothing a tool returns. On 2026-09-29
@@ -14,7 +15,7 @@ import { fileURLToPath } from "node:url"
 const TIMEOUT_MS = 30_000
 const args = process.argv.slice(2).filter((arg) => arg !== "--")
 if (args.length === 0) {
-  console.error("usage: pnpm mcp:tools -- <max arguments that start an MCP server, e.g. mcp serve>")
+  console.error("usage: pnpm mcp:tools -- <max arguments that start an MCP server, e.g. default mcp serve>")
   process.exit(2)
 }
 
