@@ -96,6 +96,28 @@ describe("the record", () => {
     await store.close()
   })
 
+  it("titles a dialog with its partner's contact name, so a title search finds it offline", async () => {
+    const { env, loginOnce } = setUp()
+    const key = { provider: "max", account: ME }
+    const titles = async () => {
+      const store = await openStore({ env })
+      const items = (await store.chats.chats(key, {})).items
+      await store.close()
+      return items.map((chat) => [chat.id, chat.title])
+    }
+
+    await loginOnce(false, (client) => client.chats.partner("222"))
+    expect(await titles()).toContainEqual(["222", "Someone Else"])
+
+    const store = await openStore({ env })
+    await store.chats.saveChats(key, [
+      { id: "222", title: null, kind: "dialog", unreadCount: null, lastMessageAt: null, participantsCount: null },
+    ])
+    await store.close()
+    await loginOnce(false, (client) => client.chats.partner("222"))
+    expect(await titles()).toContainEqual(["222", "Someone Else"])
+  })
+
   it("resolves a contact name under this account, without the legacy cache", async () => {
     const { env, loginOnce } = setUp()
     const other = maxRecord({ account: () => "99", env })
