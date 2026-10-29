@@ -4257,7 +4257,7 @@ max search all <query> [options]
 | `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 
-**Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 7 more; every field: max commands info search all
+**Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 8 more; every field: max commands info search all
 
 **Example:** `max personal search all draft`
 
@@ -4296,7 +4296,7 @@ max search messages [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
-**Returns:** message hit — ref, timestamp, sender_name, chat_title, excerpt, matched_in, score, match, and 6 more; every field: max commands info search messages
+**Returns:** message hit — ref, timestamp, sender_name, sender_is_me, chat_title, excerpt, matched_in, score, and 7 more; every field: max commands info search messages
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -4859,7 +4859,7 @@ max inbox [query] [options]
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <model>` | which downloaded speech model hears them, with --transcribe; `models list` shows them. |
 
-**Returns:** message summary — ref, chat_id, timestamp, sender_name, outgoing, text, attachments, chat_title, and 1 more; every field: max commands info inbox
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 2 more; every field: max commands info inbox
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -4885,7 +4885,7 @@ max review [query] [options]
 | `--model <model>` | which downloaded speech model hears them, with --transcribe; `models list` shows them. |
 | `--new` | what changed since the last `review --new`, a point per chat — for scheduled runs. |
 
-**Returns:** message summary — ref, chat_id, timestamp, sender_name, outgoing, text, attachments, chat_title, and 1 more; every field: max commands info review
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 2 more; every field: max commands info review
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
