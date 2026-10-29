@@ -319,7 +319,9 @@ identically; the built-in's support depends on the bundled undici version.
   parsing a sentence.
 - A dialog has no title, so the partner's name comes from contacts: one `CONTACT_INFO` (32) for all
   unknown partners. Measured: 6 contacts in the login against 17 dialog partners; named dialogs went
-  from 0 of 17 to 16 of 17.
+  from 0 of 17 to 16 of 17. The login saves a dialog with a null title, so after each login `maxRecord`
+  fills every stored untitled dialog from its one stored member's name (`nameDialogs`, `src/record.ts`); that
+  is what `--offline` title search matches, and it backfills rows saved before.
 - The same lookup names **group senders** (`FIND-45`). The login names contacts only, so on
   2026-09-22 every sender in a real group but the owner was a bare id. After a history read, unnamed
   ids are looked up in the store, then in one `CONTACT_INFO`, and kept; the next read of that chat

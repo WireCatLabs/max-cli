@@ -49,6 +49,18 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
     return id === undefined ? undefined : { provider: "max", account: id }
   }
 
+  // MAX gives a dialog no title and the login saves it as null, so the partner's contact name stands in:
+  // `chats list 'title:Стас*'` matches on the stored title. Runs after each login, which also backfills old rows.
+  const nameDialogs = async (db: MessageStore, key: AccountKey) => {
+    const named: Chat[] = []
+    for (const chat of (await db.chats.chats(key, {})).items) {
+      if (chat.kind !== "dialog" || chat.title !== null) continue
+      const [partner, ...others] = await db.roster.members(key, chat.id)
+      if (partner?.name && others.length === 0) named.push({ ...chat, title: partner.name })
+    }
+    if (named.length > 0) await db.chats.saveChats(key, named)
+  }
+
   return {
     transcript: async (chatId, messageId) => {
       const key = keyOf()
@@ -84,6 +96,7 @@ export const maxRecord = ({ account, env }: { account: () => Id | undefined; env
           key,
           chats.map((chat) => chat.id),
         )
+      await nameDialogs(db, key)
       return {
         known: (await db.people.people("max", { account: key.account })).all().length,
         added,
