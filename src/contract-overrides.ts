@@ -472,7 +472,6 @@ export const SHELL_OVERRIDES: Readonly<{
       before: [
         "list",
         "show",
-        "info",
         "context",
         "prepare",
         "events",
@@ -493,7 +492,6 @@ export const SHELL_OVERRIDES: Readonly<{
       after: [
         "list",
         "show",
-        "info",
         "aliases",
         "notes",
         "sync",

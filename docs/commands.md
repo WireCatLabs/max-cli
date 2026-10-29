@@ -132,7 +132,7 @@ max account list [query]
 
 ### `max account show`
 
-who this profile is logged in as; the phone number shows its last four digits
+who this profile is logged in as, with the phone number
 
 ```sh
 max account show [options]
@@ -140,7 +140,7 @@ max account show [options]
 
 | Опция | Что делает |
 |---|---|
-| `--show-phone` | print the whole phone number. |
+| `--hide-phone` | leave the phone number out. |
 
 **Returns:** account — provider, id, name, username, phone, scope; every field: max commands info account show
 
@@ -162,6 +162,7 @@ max account update [options]
 | `--last-name <name>` | your last name. |
 | `--description <text>` | about you. |
 | `--photo <file>` | a new profile photo — an image file. |
+| `--hide-phone` | leave the phone number out of the answer. |
 
 **Returns:** account change — operation_id, account; every field: max commands info account update
 
@@ -502,7 +503,7 @@ max chats members list <chat> [query] [options]
 
 **Returns:** member — id, name, username, role, last_seen_at, registered_at, joined_at, invited_by, and 7 more; every field: max commands info chats members list
 
-**Next usually:** `max contacts show <person>`, `max contacts info <person>`, `max contacts notes list <person> [query]`
+**Next usually:** `max contacts show <person>`, `max contacts notes list <person> [query]`, `max contacts notes show <person> <id>`
 
 **Example:** `max personal chats members list "Book club"`
 
@@ -526,7 +527,7 @@ max chats members check <chat> [query] [options]
 
 **Returns:** member — id, name, username, role, last_seen_at, registered_at, joined_at, invited_by, and 7 more; every field: max commands info chats members check
 
-**Next usually:** `max contacts show <person>`, `max contacts info <person>`, `max contacts notes list <person> [query]`
+**Next usually:** `max contacts show <person>`, `max contacts notes list <person> [query]`, `max contacts notes show <person> <id>`
 
 **Example:** `max personal chats members check "Book club"`
 
@@ -1248,15 +1249,15 @@ max contacts list [query] [options]
 | `--all` | every row, no paging. |
 | `--order <recent\|name>` | newest conversation first, or alphabetical. По умолчанию: `recent`. |
 
-**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 4 more; every field: max commands info contacts list
+**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 15 more; every field: max commands info contacts list
 
-**Next usually:** `max contacts show <person>`, `max contacts info <person>`, `max contacts context <person>`
+**Next usually:** `max contacts show <person>`, `max contacts context <person>`, `max contacts prepare <person>`
 
 **Example:** `max personal contacts list --limit 10`
 
 ### `max contacts show`
 
-one person and the chats you share with them
+one person: what the messenger says about them — handles, flags, last seen, phone, when they registered — your alias, the chats you share, how many of their messages the store holds in each, and the earlier names and usernames the store saw them with; --offline answers from the store alone
 
 ```sh
 max contacts show <person> [options]
@@ -1269,32 +1270,13 @@ max contacts show <person> [options]
 | Опция | Что делает |
 |---|---|
 | `--with-notes` | include your private notes, subject to contacts.notes.list permission. |
+| `--hide-phone` | leave the phone number out. |
 
-**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 4 more; every field: max commands info contacts show
+**Returns:** contact — ref, id, name, username, description, last_messaged_at, alias, display_name, and 15 more; every field: max commands info contacts show
 
-**Next usually:** `max contacts info <person>`, `max contacts context <person>`, `max contacts prepare <person>`
+**Next usually:** `max contacts context <person>`, `max contacts prepare <person>`, `max contacts events <person> [query]`
 
 **Example:** `max personal contacts show "Alex Example"`
-
-### `max contacts info`
-
-everything the messenger says about one person — handles, flags, last seen, when they registered — and how many of their messages the store holds in each chat you share, the first and the last, and the earlier names and usernames the store saw them with
-
-```sh
-max contacts info <person> [options]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `person` | обязательный | their id, @username, or part of their name. |
-
-| Опция | Что делает |
-|---|---|
-| `--show-phone` | print the whole phone number. |
-
-**Returns:** contact profile — id, name, usernames, bio, flags, chats, aliases, birthday, and 7 more; every field: max commands info contacts info
-
-**Example:** `max personal contacts info "Alex Example"`
 
 ### `max contacts aliases`
 
@@ -3689,7 +3671,7 @@ max attachments list [query] [options]
 | `--page <n>` | which page, starting at 1. |
 | `--all` | every row, no paging. |
 
-**Returns:** attachment — kind, message, position, url, name, title, mime, size, and 7 more; every field: max commands info attachments list
+**Returns:** attachment — kind, message, position, url, name, title, mime, size, and 8 more; every field: max commands info attachments list
 
 **Example:** `max personal attachments list --limit 10`
 
@@ -5755,7 +5737,7 @@ max mcp serve [options]
 
 **Returns:** serve this profile's commands to an AI agent
 
-**Example:** `max personal mcp serve`, `max personal mcp serve --profiles work,personal`, `max personal mcp serve --http --public-url https://laptop.example.ts.net`
+**Example:** `max personal mcp serve`, `max mcp serve --profiles work,personal`, `max personal mcp serve --http --public-url https://laptop.example.ts.net`
 
 ### `max mcp revoke`
 
@@ -5773,7 +5755,7 @@ max mcp revoke [options]
 
 **Returns:** forget every login given to a browser app
 
-**Example:** `max personal mcp revoke`, `max personal mcp revoke --profiles all`
+**Example:** `max personal mcp revoke`, `max mcp revoke --profiles all`
 
 ### `max mcp server`
 
@@ -5849,7 +5831,7 @@ max mcp config [options]
 
 **Returns:** print the local MCP configuration of this profile, or of those --profiles names
 
-**Example:** `max personal mcp config`, `max personal mcp config --profiles all`
+**Example:** `max personal mcp config`, `max mcp config --profiles all`
 
 ### `max mcp add`
 

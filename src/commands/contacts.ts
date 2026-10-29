@@ -28,7 +28,6 @@ const contactsCommandDefinition = (): Command => {
   const shared = sharedContactsCommand(maxMessenger)
   command.addCommand(sharedSubcommand(shared, "list"))
   command.addCommand(sharedSubcommand(shared, "show"))
-  command.addCommand(sharedSubcommand(shared, "info"))
   command.addCommand(sharedSubcommand(shared, "aliases"))
   command.addCommand(sharedSubcommand(shared, "notes"))
 

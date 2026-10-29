@@ -54,7 +54,6 @@
   "chats app": "write",
   "contacts list": "read",
   "contacts show": "read",
-  "contacts info": "read",
   "contacts aliases set": "write",
   "contacts aliases remove": "write",
   "contacts notes list": "read",

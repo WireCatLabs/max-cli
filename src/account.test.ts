@@ -421,7 +421,7 @@ describe("the profile", () => {
       { chatId: null, kind: "account", action: "profile", outcome: "refused" },
     ])
   })
-  it("returns the shared account shape with a masked phone", async () => {
+  it("returns the shared account shape with the whole phone", async () => {
     const { environment } = account({
       [Opcode.PROFILE]: {
         profile: {
@@ -442,10 +442,12 @@ describe("the profile", () => {
         id: "10000001",
         name: "Test Person",
         username: null,
-        phone: "***7890",
+        phone: PHONE,
       },
     })
-    expect(result.stdout).not.toContain("1234567890")
+
+    const hidden = await runWith(["account", "update", "--description", "about me", "--hide-phone"], environment)
+    expect(JSON.parse(hidden.stdout).item.account).not.toHaveProperty("phone")
   })
 
   it.each([{ args: [] }, { args: ["--first-name", "   "] }, { args: ["--description", "hi", "--offline"] }])(
@@ -471,17 +473,16 @@ describe("the profile's last name", () => {
 })
 
 describe("the phone number", () => {
-  it("`account show` prints only its last four digits, and `--show-phone` the whole of it", async () => {
+  it("`account show` prints the whole number, and `--hide-phone` leaves it out", async () => {
     const { environment } = account()
-    const masked = await runWith(["account", "show"], environment)
-    const whole = await runWith(["account", "show", "--show-phone"], environment)
+    const masked = await runWith(["account", "show", "--hide-phone"], environment)
+    const whole = await runWith(["account", "show"], environment)
 
     expect(JSON.parse(masked.stdout).item).toEqual({
       provider: "max",
       id: "10000001",
       name: "Test Person",
       username: null,
-      phone: "***7890",
     })
     expect(masked.stdout).not.toContain("123456")
     expect(JSON.parse(whole.stdout).item.phone).toBe(PHONE)

@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**908 ✅ · 182 ⛔ · 0 ❌** — 362 commands, 728 options.
+**908 ✅ · 182 ⛔ · 0 ❌** — 361 commands, 729 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -19,12 +19,13 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `setup` | `--method` | ✅ |  |
 | `account list` |  | ✅ |  |
 | `account show` |  | ✅ |  |
-| `account show` | `--show-phone` | ✅ |  |
+| `account show` | `--hide-phone` | ✅ |  |
 | `account update` |  | ✅ |  |
 | `account update` | `--first-name` | ✅ |  |
 | `account update` | `--last-name` | ✅ |  |
 | `account update` | `--description` | ✅ |  |
 | `account update` | `--photo` | ✅ |  |
+| `account update` | `--hide-phone` | ✅ |  |
 | `account sessions list` |  | ✅ |  |
 | `account sessions end` |  | ✅ |  |
 | `account sessions end` | `--others` | ✅ |  |
@@ -134,8 +135,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts list` | `--order` | ✅ |  |
 | `contacts show` |  | ✅ |  |
 | `contacts show` | `--with-notes` | ✅ |  |
-| `contacts info` |  | ✅ |  |
-| `contacts info` | `--show-phone` | ✅ |  |
+| `contacts show` | `--hide-phone` | ✅ |  |
 | `contacts aliases set` |  | ✅ |  |
 | `contacts aliases remove` |  | ✅ |  |
 | `contacts notes list` |  | ✅ |  |

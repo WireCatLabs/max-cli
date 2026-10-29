@@ -478,9 +478,8 @@ output_dir в MCP также их защищает. Обычные скрыты�
 Чтобы пересказать, что писал человек, вызывайте `contacts context <человек> --chat <чат> --limit <n>`
 (в MCP — `chats` и `limit`); ответ — `{ at, text }` на сообщение. `-v` (в MCP `detail: 1`) — только
 если нужны номера сообщений или локаторы. Связанные через `contacts link` аккаунты собирает только
-`contacts context` без `--chat`; `contacts info` и `--chat` читают лишь названный аккаунт.
-`contacts info` не печатает номер телефона целиком без `--show-phone` по просьбе владельца; MCP
-всегда скрывает его. `contacts check` для MAX ничего не отправляет в списки спамеров; оценка — подсказка, не вывод.
+`contacts context` без `--chat`; `contacts show` и `--chat` читают лишь названный аккаунт.
+`contacts show` печатает номер телефона целиком; `--hide-phone` убирает его, когда ответ пойдёт дальше. `contacts check` для MAX ничего не отправляет в списки спамеров; оценка — подсказка, не вывод.
 
 ```sh
 max personal contacts aliases set 101 'Project lead'
