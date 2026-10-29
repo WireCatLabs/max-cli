@@ -112,6 +112,17 @@ describe("max review", () => {
     expect(max.sent.map((call) => call.opcode)).not.toContain(Opcode.CHAT_MARK)
   })
 
+  it("marks the owner's own messages sender_is_me in `messages list`", async () => {
+    const { environment } = reviewMax({ 111: [message(50, THEM, "can you send it?"), message(40, ME, "Friday")] })
+
+    const { json } = await review(["r-me", "messages", "list", "111", "--json"], environment)
+
+    expect(json.items.map((item: { text: string; sender_is_me: boolean }) => [item.text, item.sender_is_me])).toEqual([
+      ["can you send it?", false],
+      ["Friday", true],
+    ])
+  })
+
   it("stops at the chat list's moment, so what arrives during the review waits for the next one", async () => {
     const { environment } = reviewMax(
       { 111: [message(30, THEM, "before the login"), message(1, THEM, "during the review")] },
