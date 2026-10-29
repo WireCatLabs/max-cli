@@ -85,6 +85,17 @@ claude mcp add max -- max personal mcp serve
 claude mcp add max-work -- max work mcp serve
 ```
 
+Один сервер на несколько профилей — `--profiles` со списком или `all`; у каждого инструмента тогда есть поле
+`profile`:
+
+```sh
+claude mcp add max -- max mcp serve --profiles work,personal
+claude mcp add max -- max mcp serve --profiles all
+```
+
+Без профиля и без `--profiles` сервер не запускается и перечисляет профили этого компьютера: `max` никогда не
+выбирает профиль сам.
+
 **Claude Desktop, Cursor и другие приложения** — готовую запись для их файла настроек печатает сам
 `max`:
 
