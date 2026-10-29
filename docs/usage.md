@@ -118,11 +118,11 @@ MAX_TOKEN="$(cat /path/to/token)" max personal chats list
 Проверить, кто вы:
 
 ```sh
-max personal account show                # номер телефона — только последние 4 цифры
+max personal account show                # номер телефона целиком
 ```
 
 ```sh
-max personal account show --show-phone   # номер целиком
+max personal account show --hide-phone   # без номера
 ```
 
 ```sh
@@ -143,7 +143,7 @@ max personal session end
 из вкладки web.max.ru, вкладка тоже выйдет.
 
 `account show --json` содержит поля MAX `id`, `name`, `phone`, `description` и `username: null`, как
-общий формат аккаунта. Номер маскируется; `--show-phone` явно показывает его целиком.
+общий формат аккаунта. Номер показывается целиком; `--hide-phone` убирает его из ответа.
 
 ## Профиль — первое слово
 
@@ -993,7 +993,7 @@ max personal contacts unblock 20000002
 ```
 
 ```sh
-max personal contacts info 20000002               # профиль, дата создания, его сообщения по общим чатам
+max personal contacts show 20000002               # профиль, дата создания, его сообщения по общим чатам
 ```
 
 ```sh
@@ -1554,7 +1554,7 @@ max config set --defaults permissions.contacts readonly
 
 ## Один человек
 
-`max personal contacts info <человек>` показывает, что MAX и локальная копия знают о человеке.
+`max personal contacts show <человек>` показывает, что MAX и локальная копия знают о человеке.
 `max personal contacts check <человек>` оценивает, похож ли он на бота. `max personal contacts context <человек>` читает
 из копии его последние сообщения по чатам, а `max personal contacts link` связывает его аккаунт MAX с аккаунтом
 Telegram. Подробно — [люди](people.md).
