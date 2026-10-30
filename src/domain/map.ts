@@ -406,9 +406,9 @@ const toSharedContact = (entry: Payload): Attachment["contact"] => {
   if (!name) return undefined
   return {
     name,
-    ...(firstName ? { first_name: firstName } : {}),
-    ...(lastName ? { last_name: lastName } : {}),
-    ...(userId ? { user_id: userId } : {}),
+    ...(firstName ? { firstName } : {}),
+    ...(lastName ? { lastName } : {}),
+    ...(userId ? { userId } : {}),
   }
 }
 

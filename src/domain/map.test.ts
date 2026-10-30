@@ -156,12 +156,12 @@ describe("toMessage", () => {
       {
         kind: "contact",
         name: "Ivan Testov",
-        contact: { name: "Ivan Testov", first_name: "Ivan", last_name: "Testov", user_id: "40000001" },
+        contact: { name: "Ivan Testov", firstName: "Ivan", lastName: "Testov", userId: "40000001" },
       },
     ])
     expect(
       toMessage({ ...messageWire, attaches: [{ _type: "CONTACT", firstName: "Ivan" }] }, "7268926").attachments,
-    ).toEqual([{ kind: "contact", contact: { name: "Ivan", first_name: "Ivan" } }])
+    ).toEqual([{ kind: "contact", contact: { name: "Ivan", firstName: "Ivan" } }])
   })
 
   it("gives a quoted poll the chat and message that carry it", () => {
