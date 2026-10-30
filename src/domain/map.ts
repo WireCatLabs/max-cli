@@ -395,8 +395,23 @@ export const toReactions = (raw: Payload): Reactions => {
  * `pnpm probe:attachments` measured on 2026-09-22: `baseUrl` on a photo, `url` on a share. A file
  * and a video have no link, only `fileId` and `videoId` (measured 2026-09-23). A service message is
  * `CONTROL` with `event`, and `userIds` for `new`/`add` but a single `userId` for `remove`
- * (`pnpm probe:control`, 2026-09-27). MAX's `audio` is a recorded voice message; music goes as a file.
+ * (`pnpm probe:control`, 2026-09-27). A shared contact is `CONTACT` with `contactId`, `firstName`, `lastName`,
+ * `name` and `photoUrl`, and no phone number (`pnpm probe:attachments`, 2026-10-30). MAX's `audio` is a recorded voice message; music goes as a file.
  */
+const toSharedContact = (entry: Payload): Attachment["contact"] => {
+  const firstName = text(entry.firstName)
+  const lastName = text(entry.lastName)
+  const name = text(entry.name) ?? ([firstName, lastName].filter(Boolean).join(" ") || null)
+  const userId = asId(entry.contactId)
+  if (!name) return undefined
+  return {
+    name,
+    ...(firstName ? { first_name: firstName } : {}),
+    ...(lastName ? { last_name: lastName } : {}),
+    ...(userId ? { user_id: userId } : {}),
+  }
+}
+
 const attachments = (value: unknown, chatId: Id, messageId: Id): Attachment[] => {
   if (!Array.isArray(value)) return []
   return value
@@ -420,6 +435,7 @@ const attachments = (value: unknown, chatId: Id, messageId: Id): Attachment[] =>
       const userIds = people?.map(asId).filter((id): id is Id => id !== undefined)
       const poll = entry._type === "POLL" ? toPoll(entry, chatId, messageId) : undefined
       const buttons = entry._type === "INLINE_KEYBOARD" ? toButtons(entry) : undefined
+      const contact = entry._type === "CONTACT" ? toSharedContact(entry) : undefined
       const kind = typeof entry._type === "string" ? entry._type.toLowerCase() : "unknown"
       const ref: ProviderMetadata = {
         ...(fileId ? { fileId } : {}),
@@ -438,6 +454,7 @@ const attachments = (value: unknown, chatId: Id, messageId: Id): Attachment[] =>
         ...(Object.keys(ref).length > 0 ? { providerRef: ref } : {}),
         ...(poll ? { poll } : {}),
         ...(buttons ? { buttons } : {}),
+        ...(contact ? { contact } : {}),
       }
     })
 }
