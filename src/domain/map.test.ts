@@ -143,6 +143,27 @@ describe("toMessage", () => {
     ])
   })
 
+  it("maps a shared contact card to Attachment.contact, without its avatar link or a phone MAX does not send", () => {
+    const card = {
+      _type: "CONTACT",
+      contactId: 40000001,
+      firstName: "Ivan",
+      lastName: "Testov",
+      name: "Ivan Testov",
+      photoUrl: "https://example.test/a.webp",
+    }
+    expect(toMessage({ ...messageWire, attaches: [card] }, "7268926").attachments).toEqual([
+      {
+        kind: "contact",
+        name: "Ivan Testov",
+        contact: { name: "Ivan Testov", first_name: "Ivan", last_name: "Testov", user_id: "40000001" },
+      },
+    ])
+    expect(
+      toMessage({ ...messageWire, attaches: [{ _type: "CONTACT", firstName: "Ivan" }] }, "7268926").attachments,
+    ).toEqual([{ kind: "contact", contact: { name: "Ivan", first_name: "Ivan" } }])
+  })
+
   it("gives a quoted poll the chat and message that carry it", () => {
     const poll = { _type: "POLL", pollId: 900, title: "Lunch?", answers: [{ answerId: 1, text: "Yes" }] }
     const quoted = { id: 9, sender: 3260455, time: 1789776000000, attaches: [poll] }
