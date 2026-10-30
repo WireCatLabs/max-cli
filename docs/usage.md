@@ -37,7 +37,7 @@ max [профиль] [опции] <ресурс> <действие> [аргум�
 | Что ждёт ответа | непрочитанное от других; что вы обещали и что открыто | `max personal inbox`, `max personal review` |
 | Голосовые | превратить голосовое в текст, на этом компьютере | `max personal messages transcribe` |
 | Файлы | скачать вложения сообщения или всего чата; медиа чата | `max personal messages download`, `max personal chats media` |
-| Люди | контакты, свои имена и заметки, профиль человека, проверка на бота | `max personal contacts list`, `max personal contacts info` |
+| Люди | контакты, свои имена и заметки, профиль человека, проверка на бота | `max personal contacts list`, `max personal contacts show` |
 | Поиск | сообщения, файлы, даты, люди; обсуждения по смыслу | `max personal search messages`, `max personal search conversations` |
 | Отправка | текст, файлы, голосовые, ответы, отложенные сообщения | `max personal messages send` |
 | Изменение | правка, пересылка, закрепление, удаление, реакции, опросы, отметка прочитанным | `max personal messages edit`, `max personal reactions add` |
