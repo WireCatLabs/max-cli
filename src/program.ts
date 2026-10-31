@@ -19,6 +19,7 @@ import {
   type ProgramDefinition,
   type ProgramOptions,
   pollsCommand,
+  projectsCommand,
   provide,
   reactionsCommand,
   repliesCommand,
@@ -117,6 +118,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
         )
       },
     ),
+    projectsCommand(maxMessenger),
     conversationsCommand(maxMessenger),
     attachmentsCommand(maxMessenger),
     tagsCommand(maxMessenger),

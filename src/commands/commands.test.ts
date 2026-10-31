@@ -205,6 +205,7 @@ describe("max commands", () => {
       "tasks release",
       "tasks close",
       "tasks reject",
+      "projects evidence (reads remotely)",
       "conversations links add",
       "conversations links clear",
       "conversations embeddings clear",
