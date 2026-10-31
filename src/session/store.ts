@@ -121,8 +121,7 @@ export class SessionStore {
       this.#file.write(this.profile, token)
       return "file"
     }
-    const where = this.#credentials.write(this.profile, token)
-    if (where === "keyring" && storage === "keyring") this.#file.remove(this.profile)
+    const where = this.#credentials.write(this.profile, token, { signIn: storage === "keyring" })
     return where === "keyring" ? "keyring" : "file"
   }
 
