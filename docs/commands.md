@@ -5500,7 +5500,7 @@ max config unset <setting> [options]
 
 ## `max doctor`
 
-the state this installation is in, without contacting MAX unless --online
+the state this installation is in, without connecting unless --online
 
 ```sh
 max doctor [options]

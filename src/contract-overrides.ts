@@ -14,14 +14,6 @@ export const SHELL_OVERRIDES: Readonly<{
   doctor: [
     {
       command: ["doctor"],
-      field: "description",
-      before: "the state this installation is in, without connecting unless --online",
-      after: "the state this installation is in, without contacting MAX unless --online",
-      reason:
-        "MAX reports its own server, protocol library and installation while retaining the shared diagnostic defaults.",
-    },
-    {
-      command: ["doctor"],
       field: "options",
       before: [
         {
