@@ -4,22 +4,22 @@
 номера версий по [семантике](https://semver.org/lang/ru/), то есть до `1.0.0` интерфейс команд
 ещё может меняться.
 
-## Unreleased
+## Не выпущено
 
-### Changed — may break callers
+### Изменено — может сломать скрипты
 
-- **`search messages --discover` searches by meaning when the query uses `-`, `NOT`, `OR`, groups, phrases or
-  `exact:`** (cli-core 0.506.0). Such a query ran strict search alone. Now its words still match the whole query
-  (`discovery.method: "lexical-strict"`), and messages near in meaning to its wanted words join them. Every hit found
-  by meaning, and every reply and follow-up added, matches every field of the query and every excluded word.
+- **`search messages --discover` ищет по смыслу и тогда, когда в запросе есть `-`, `NOT`, `OR`, скобки, фразы или
+  `exact:`** (cli-core 0.506.0). Раньше такой запрос шёл только строгим поиском. Теперь слова по-прежнему ищутся всем
+  запросом (`discovery.method: "lexical-strict"`), а к ним добавляются сообщения, близкие по смыслу к его словам.
+  Каждое сообщение, найденное по смыслу, и каждый добавленный ответ или продолжение подходят под все поля запроса и
+  не содержат исключённых слов.
 
-### Fixed
+### Исправлено
 
-- **`search messages --discover` with a narrow filter (`chat:`, `date:`) ranks that filter's own messages by
-  meaning** when it holds at most 100,000 messages, instead of the 100 nearest overall, so it fills its page
-  (cli-core 0.506.0).
-- **`search messages --discover` works on a read-only store** (cli-core 0.506.0).
-- **A long rebuild in one process no longer makes another process's write fail with "database is locked"**
+- **`search messages --discover` с узким фильтром (`chat:`, `date:`) ранжирует по смыслу сообщения самого фильтра**,
+  если их не больше 100 000, а не 100 ближайших во всём архиве, поэтому страница заполняется (cli-core 0.506.0).
+- **`search messages --discover` работает с базой, открытой только для чтения** (cli-core 0.506.0).
+- **Долгая перестройка в одном процессе больше не ломает запись в другом ошибкой "database is locked"**
   (cli-core 0.506.0).
 
 ## 0.92.0 — 31.10.2026
