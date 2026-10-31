@@ -4317,7 +4317,7 @@ max search notes <query> [options]
 | Опция | Что делает |
 |---|---|
 | `--source <accounts>` | only these notes accounts, separated by commas: notes:internal for notes written in memo, notes:<folder id> as a hit shows it, notes, documents or group:<name>. |
-| `--filter <query>` | a query every hit must also match; it does not change the search by meaning. |
+| `--filter <query>` | a query every hit must also match, found by words or by meaning. |
 | `--limit <n>` | how many. |
 | `--page <n>` | which page, starting at 1. |
 | `--exact` | words as written only; meaning is not searched. |
