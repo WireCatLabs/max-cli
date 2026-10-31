@@ -72,6 +72,7 @@ max session start [method] [options]
 | Опция | Что делает |
 |---|---|
 | `--answer-stdin` | with --json and no terminal: print each question as a `needs` line on stderr and read its answer, one line, from stdin. |
+| `--credential-storage <storage>` | where the token is kept: keyring (the default, which falls back to a private file by itself when no keyring works), or file, not recommended. Одно из: `keyring`, `file`. По умолчанию: `keyring`. |
 
 **Returns:** log this profile in to MAX
 

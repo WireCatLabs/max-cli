@@ -21,7 +21,12 @@ import type { SessionStore } from "./store.js"
  * `forCommand` builds its own store and its own socket, so anything left inside a command action
  * cannot be driven by a test — and this ordering is too expensive to hold on trust.
  */
-export const adoptToken = async (client: MaxClient, store: SessionStore, token: string): Promise<void> => {
+export const adoptToken = async (
+  client: MaxClient,
+  store: SessionStore,
+  token: string,
+  storage?: "keyring" | "file",
+): Promise<"keyring" | "file" | undefined> => {
   const before = store.readToken()
   await client.connect({ token })
 
@@ -30,7 +35,12 @@ export const adoptToken = async (client: MaxClient, store: SessionStore, token: 
   // would put back the older credential. Comparing with what was stored before, rather than asking
   // whether anything is stored, is what lets a new login replace an old session at all — until
   // 2026-09-24 a profile that already held a token kept it, and the command still said "stored".
-  if (store.readToken() === before) store.writeToken(token)
+  const after = store.readToken()
+  // A fresh token `connect` already kept went where the old one was; `storage` moves it where the owner asked.
+  let kept: "keyring" | "file" | undefined
+  if (after === before) kept = store.writeToken(token, storage)
+  else if (after !== undefined && storage) kept = store.writeToken(after, storage)
   // A new session: background servers may try again at once.
   rmSync(refusedPath(store), { force: true })
+  return kept
 }

@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "rule": "option-role",
+    "target": "session start --credential-storage",
+    "reason": "The sign-in flag of WC-SECR-4: keyring, which falls back to a private file by itself, or file. cli-base adds it to the vocabulary (WireCatLabs/cli-base#419); remove this when max is on that cli-base.",
+    "owner": "@WireCatLabs",
+    "review_after": "2027-01-31"
+  }
+]
