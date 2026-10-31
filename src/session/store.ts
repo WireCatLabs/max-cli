@@ -4,9 +4,10 @@ import { join } from "node:path"
 import {
   type CredentialSource,
   Credentials,
+  isMovedRun,
   type KeyringStore,
-  pathsAreOverridden,
   resolvePaths,
+  systemKeyring,
   writeSecurely,
 } from "@wirecat/cli-base"
 
@@ -71,17 +72,22 @@ export class SessionStore {
   readonly profile: string
   readonly #stateDir: string
   readonly #credentials: Credentials
+  readonly #keyring: KeyringStore
+  readonly #moved: boolean
 
-  constructor({ profile, env = process.env, keyring, configDir, stateDir }: SessionStoreOptions) {
+  constructor({ profile, env = process.env, keyring = systemKeyring, configDir, stateDir }: SessionStoreOptions) {
     const paths = resolvePaths({ appName: APP, prefix: "MAX", env })
     this.profile = profile
     this.#stateDir = stateDir ?? paths.state
+    this.#keyring = keyring
+    // cli-base gives a moved run a temporary entry only with the system keyring; the check here must agree with it.
+    this.#moved = keyring === systemKeyring && isMovedRun({ appName: APP, prefix: "MAX", env })
     this.#credentials = new Credentials({
       configDir: configDir ?? paths.config,
       service: APP,
       envVar: "MAX_TOKEN",
-      isolated: pathsAreOverridden({ appName: APP, prefix: "MAX", env }),
-      ...(keyring ? { keyring } : {}),
+      isolated: this.#moved,
+      keyring,
       env,
       warn: (message) => process.stderr.write(`${message}\n`),
     })
@@ -99,6 +105,22 @@ export class SessionStore {
 
   writeToken(token: string): void {
     this.#credentials.write(this.profile, token)
+  }
+
+  /**
+   * **A run with moved folders holding the owner's own sign-in**, which it may use but never end: logging it out or
+   * removing it would sign the owner out everywhere (WC-SECR-24). Compared by value, because a worktree seeded before
+   * cli-base 0.65.4 holds a copy of the owner's token in its temporary entry.
+   */
+  usesOwnersSignIn(): boolean {
+    if (!this.#moved) return false
+    const token = this.#credentials.read(this.profile)
+    if (token?.source !== "keyring") return false
+    try {
+      return this.#keyring.get(APP, this.profile) === token.secret
+    } catch {
+      return false
+    }
   }
 
   /**

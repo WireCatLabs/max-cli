@@ -13,8 +13,8 @@ import { ARGV_LOG } from "./argv-log.js"
  * real machine. **`pnpm test` must not be able to write anything a person owns.**
  *
  * The three variables move config, state and cache together, and tests read them; `MESSAGING_STORE`
- * moves the shared message store, which lives in cli-core's own directory. They also scope the keyring
- * entry (`ARCHITECTURE.md` §14) — the documented trap, which here is precisely the isolation wanted.
+ * moves the shared message store, which lives in cli-core's own directory. The keyring is not theirs to
+ * move: cli-base's setup replaces it with one that throws (`ARCHITECTURE.md` §14).
  */
 const sandbox = tmpdir()
 

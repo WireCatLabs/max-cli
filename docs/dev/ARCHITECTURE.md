@@ -538,10 +538,12 @@ behind it:
 
 - **`MAX_TOKEN` outranks the keyring** (`cli-base`'s `Credentials.read`) — a token for a container
   or probe without storing it.
-- ⚠ **`MAX_CONFIG_DIR`, `MAX_STATE_DIR` and `MAX_CACHE_DIR` change which keyring entry a profile
-  means.** `pathsAreOverridden` makes the service `max-cli:<configDir>`, so a login made with them
-  is invisible without them ("no session" for a profile that exists). Same environment for both, or
-  neither. This cost an afternoon (`UX-1`).
+- ⚠ **A run with moved folders uses the owner's sign-in and never ends it.** `MAX_CONFIG_DIR`,
+  `MAX_STATE_DIR`, `MAX_CACHE_DIR`, or a `HOME` or XDG folder away from the account's own make a moved run
+  (`isMovedRun` in cli-base, WC-SECR-24). It reads the owner's `max-cli` entry; a login it makes goes to a
+  temporary entry `max-cli:<configDir>`, read first. `session end` there ends only that temporary sign-in; on
+  the owner's it logs nothing out, removes nothing and answers `kept: "owners-sign-in"`. A test or script that
+  moves folders must not reach the keyring at all: `DBUS_SESSION_BUS_ADDRESS=disabled:`.
 
 ### Diagnostics all leave by one door
 

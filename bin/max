@@ -5,10 +5,10 @@
 #   bin/max chats list --limit 5
 #
 # A build with a newer cache schema migrates whatever cache it opens and drops the read history, so
-# a build from a worktree never opens the real one. The same variables scope the keyring entry
-# (`pathsAreOverridden` in cli-base), so the first run copies the installed max's sessions in —
-# a `session start` here would be a new device login on the real account. `pnpm seed:worktree`
-# copies them again after a new login.
+# a build from a worktree never opens the real one. A run with moved folders reads the owner's keyring
+# entry and never ends it (`isMovedRun` in cli-base), so the first run copies only the installed max's
+# state, for its device identity — a `session start` here would be a new device login on the real
+# account. `pnpm seed:worktree` copies it again after a new login.
 set -eu
 
 root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
