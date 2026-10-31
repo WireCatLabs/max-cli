@@ -176,7 +176,8 @@ remove|admins|update|link reset|requests accept|requests decline` видят д�
    [поиск по темам](https://github.com/WireCatLabs/max-cli/blob/main/docs/topic-search.md) (разговоры по смыслу),
    [язык запросов](https://github.com/WireCatLabs/max-cli/blob/main/docs/query-language.md).
 5a. **Substring-поиску названий нужны три символа:** `title:` у chats list. Запрос `chats list` отвечает только из
-   локальной копии — с `--offline`; `contacts list name:`/`notes:` отказывают, пока в копии нет контактов. Строгие message
+   локальной копии — с `--offline`; `contacts list name:`/`notes:` отказывают, пока в копии нет контактов. `notes:` ищет часть слова в любом регистре (в том числе по-русски) и
+   тоже отказывает на запросе короче трёх символов: «search needs at least three characters». Строгие message
    terms могут быть короче; не заменяйте strict zero hits fuzzy discovery автоматически.
 
 5b. **`max personal store export` выгружает только скачанное и прочитанное** и в MAX не ходит. Какие куски
