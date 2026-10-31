@@ -72,6 +72,7 @@ export class SessionStore {
   readonly profile: string
   readonly #stateDir: string
   readonly #credentials: Credentials
+  readonly #file: Credentials
   readonly #keyring: KeyringStore
   readonly #moved: boolean
 
@@ -82,29 +83,47 @@ export class SessionStore {
     this.#keyring = keyring
     // cli-base gives a moved run a temporary entry only with the system keyring; the check here must agree with it.
     this.#moved = keyring === systemKeyring && isMovedRun({ appName: APP, prefix: "MAX", env })
-    this.#credentials = new Credentials({
+    const options = {
       configDir: configDir ?? paths.config,
       service: APP,
       envVar: "MAX_TOKEN",
       isolated: this.#moved,
       keyring,
       env,
-      warn: (message) => process.stderr.write(`${message}\n`),
-    })
+      warn: (message: string) => process.stderr.write(`${message}\n`),
+    }
+    this.#credentials = new Credentials(options)
+    this.#file = new Credentials({ ...options, storage: "file" })
+  }
+
+  /** The file first: a token kept there never waits on a locked keyring (WC-SECR-4). */
+  #read() {
+    return this.#file.read(this.profile) ?? this.#credentials.read(this.profile)
   }
 
   /** `undefined` means nobody has logged in on this profile. */
   readToken(): string | undefined {
-    return this.#credentials.read(this.profile)?.secret
+    return this.#read()?.secret
   }
 
   /** Where `readToken` found it: `MAX_TOKEN`, the keyring, or the file that stands in for one. */
   tokenSource(): CredentialSource | undefined {
-    return this.#credentials.read(this.profile)?.source
+    return this.#read()?.source
   }
 
-  writeToken(token: string): void {
-    this.#credentials.write(this.profile, token)
+  /**
+   * Unset, a token goes where the profile's token is now, so a rotation never moves it. `keyring` falls back to the
+   * file when the keyring fails and drops a file copy when it does not; `file` is `session start --credential-storage
+   * file`. Returns where it went.
+   */
+  writeToken(token: string, storage?: "keyring" | "file"): "keyring" | "file" {
+    if ((storage ?? (this.#file.read(this.profile)?.source === "file" ? "file" : "keyring")) === "file") {
+      this.#file.write(this.profile, token)
+      return "file"
+    }
+    const where = this.#credentials.write(this.profile, token)
+    if (where === "keyring" && storage === "keyring") this.#file.remove(this.profile)
+    return where === "keyring" ? "keyring" : "file"
   }
 
   /**
@@ -114,7 +133,7 @@ export class SessionStore {
    */
   usesOwnersSignIn(): boolean {
     if (!this.#moved) return false
-    const token = this.#credentials.read(this.profile)
+    const token = this.#read()
     if (token?.source !== "keyring") return false
     try {
       return this.#keyring.get(APP, this.profile) === token.secret

@@ -1,8 +1,8 @@
 import { mkdtempSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { memoryKeyring } from "@wirecat/cli-base"
-import { describe, expect, it } from "vitest"
+import { brokenKeyring, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
+import { describe, expect, it, vi } from "vitest"
 import { MaxClient } from "../client.js"
 import { Opcode } from "../generated/opcodes.generated.js"
 import { Connection } from "../protocol/connection.js"
@@ -12,11 +12,11 @@ import { SessionStore } from "./store.js"
 
 const loginAnswer = { profile: { contact: { id: 10000001, names: [{ name: "Test Person", type: "FULL_NAME" }] } } }
 
-const setup = (max: ReturnType<typeof mockMax>, existing?: string) => {
+const setup = (max: ReturnType<typeof mockMax>, existing?: string, keyring: KeyringStore = memoryKeyring()) => {
   const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
   const store = new SessionStore({
     profile: "default",
-    keyring: memoryKeyring(),
+    keyring,
     configDir: dir,
     stateDir: join(dir, "state"),
     env: {},
@@ -102,6 +102,39 @@ describe("adoptToken", () => {
     expect(max.sent.find((request) => request.opcode === Opcode.LOGIN)?.payload).toMatchObject({
       token: "the-new-token",
     })
+    await client.close()
+  })
+})
+
+describe("where the token is kept (WC-SECR-4)", () => {
+  const answers = { [Opcode.SESSION_INIT]: {}, [Opcode.LOGIN]: loginAnswer }
+
+  it("falls back to the private file without asking and warns once when the keyring fails", async () => {
+    const { client, store } = setup(mockMax({ answers }), undefined, brokenKeyring())
+    const stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true)
+    const kept = await adoptToken(client, store, "the-pasted-one", "keyring")
+    const warnings = stderr.mock.calls.filter(([text]) => String(text).includes("could not reach the OS keyring"))
+    stderr.mockRestore()
+    expect(kept).toBe("file")
+    expect(warnings).toHaveLength(1)
+    expect(store.tokenSource()).toBe("file")
+    await client.close()
+  })
+
+  it("keeps the token in the file when asked, and a rotation stays there", async () => {
+    const { client, store } = setup(mockMax({ answers }))
+    expect(await adoptToken(client, store, "the-pasted-one", "file")).toBe("file")
+    store.writeToken("the-rotated-one")
+    expect(store.tokenSource()).toBe("file")
+    expect(store.readToken()).toBe("the-rotated-one")
+    await client.close()
+  })
+
+  it("moves a file token back to the keyring on the next keyring login", async () => {
+    const { client, store } = setup(mockMax({ answers }))
+    store.writeToken("the-old-one", "file")
+    expect(await adoptToken(client, store, "the-pasted-one", "keyring")).toBe("keyring")
+    expect(store.tokenSource()).toBe("keyring")
     await client.close()
   })
 })

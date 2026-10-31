@@ -12,7 +12,7 @@ import {
   signInSteps,
   snakeKeys,
 } from "@wirecat/cli-core/cli"
-import { Argument, Command } from "commander"
+import { Argument, Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
 import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { SHELL_OVERRIDES } from "../contract-overrides.js"
@@ -66,14 +66,27 @@ const sessionCommandDefinition = (): Command => {
       new Argument("[method]", "token (pasted or piped), qr, qr-chrome or sms").choices(METHODS).default("token"),
     )
     .addOption(answerStdinOption())
+    .addOption(
+      new Option(
+        "--credential-storage <storage>",
+        "where the token is kept: keyring (the default, which falls back to a private file by itself when no " +
+          "keyring works), or file, not recommended",
+      )
+        .choices(["keyring", "file"])
+        .default("keyring"),
+    )
     .action(async function (this: Command, method: Method) {
       const context = forCommand(this)
       const { renderer, run } = context
-      const answers = this.opts<{ answerStdin?: boolean }>().answerStdin === true
+      const { answerStdin, credentialStorage } = this.opts<{
+        answerStdin?: boolean
+        credentialStorage: "keyring" | "file"
+      }>()
+      const answers = answerStdin === true
 
       refuseCommandName(context.settings.profile, commandWords(rootOf(this)))
       await run("session start", async (events) => {
-        const { firstLogin, ...answer } = await startSession(context, method, events, answers)
+        const { firstLogin, ...answer } = await startSession(context, method, events, answers, credentialStorage)
         renderAnswer(this, context, itemOf(snakeKeys(answer)))
         renderer.success(`logged in as ${answer.profile.name ?? answer.profile.id}`)
         if (firstLogin) renderer.note(TERMS_NOTICE)
@@ -161,6 +174,7 @@ export const startSession = async (
   method: Method,
   events: MaxClientOptions["events"],
   answers = false,
+  storage?: "keyring" | "file",
 ) => {
   const { renderer, store, createClient, interactive } = context
   const steps = signInSteps({
@@ -193,9 +207,9 @@ export const startSession = async (
   const client = createClient({ events }, { own: true })
   const firstLogin = store.viewerId() === undefined
   try {
-    await adoptToken(client, store, token)
+    const kept = await adoptToken(client, store, token, storage)
     const profile = await client.account.me()
-    return { profile: maskedProfile(profile), stored: true, method, firstLogin }
+    return { profile: maskedProfile(profile), stored: true, credentialStorage: kept, method, firstLogin }
   } finally {
     await client.close()
   }

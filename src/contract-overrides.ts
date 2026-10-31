@@ -342,6 +342,15 @@ export const SHELL_OVERRIDES: Readonly<{
           takes_value: false,
           mandatory: false,
         },
+        {
+          flags: "--credential-storage <storage>",
+          description:
+            "where the token is kept: keyring (the default, which falls back to a private file by itself when no keyring works), or file, not recommended",
+          takes_value: true,
+          mandatory: false,
+          choices: ["keyring", "file"],
+          default: "keyring",
+        },
       ],
       reason:
         "This provider binds its own account linking protocol, credential flow and typed receipt to the shared session lifecycle.",

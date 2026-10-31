@@ -1,6 +1,7 @@
-import { mkdirSync } from "node:fs"
+import { mkdirSync, mkdtempSync } from "node:fs"
 import { createServer } from "node:net"
-import { dirname } from "node:path"
+import { tmpdir } from "node:os"
+import { dirname, join } from "node:path"
 import { PassThrough } from "node:stream"
 import { captureStreams, type KeyringStore, memoryKeyring, pathsAreOverridden, systemKeyring } from "@wirecat/cli-base"
 import { PASTE_QR, plainQr } from "@wirecat/cli-core"
@@ -340,6 +341,25 @@ describe("max session start token", () => {
 
     expect(JSON.parse(streams.stdout.join("")).item.profile.phone).toBe("***7890")
     expect(streams.stdout.join("")).not.toContain("71234567890")
+  })
+})
+
+describe("max session start --credential-storage", () => {
+  it("keeps the token in the private file when asked, out of the keyring", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
+    const keyring = memoryKeyring()
+    const store = (profile: string) => new SessionStore({ profile, keyring, configDir: dir, stateDir: join(dir, "s") })
+    const { start, streams } = setUp(undefined, adopting(), { store })
+    process.env.MAX_TOKEN = "a-token"
+    try {
+      expect(await start("token", "--credential-storage", "file", "--json")).toBe(0)
+    } finally {
+      delete process.env.MAX_TOKEN
+    }
+
+    expect(JSON.parse(streams.stdout.join("")).item.credential_storage).toBe("file")
+    expect(store("default").tokenSource()).toBe("file")
+    expect(keyring.entries.size).toBe(0)
   })
 })
 
