@@ -90,15 +90,14 @@ export class SessionStore {
       isolated: this.#moved,
       keyring,
       env,
-      warn: (message: string) => process.stderr.write(`${message}\n`),
     }
     this.#credentials = new Credentials(options)
     this.#file = new Credentials({ ...options, storage: "file" })
   }
 
-  /** The file first: a token kept there never waits on a locked keyring (WC-SECR-4). */
+  /** cli-base reads the file before the keyring, so a token kept there never waits on a locked keyring (WC-SECR-4). */
   #read() {
-    return this.#file.read(this.profile) ?? this.#credentials.read(this.profile)
+    return this.#credentials.read(this.profile)
   }
 
   /** `undefined` means nobody has logged in on this profile. */
@@ -117,12 +116,11 @@ export class SessionStore {
    * file`. Returns where it went.
    */
   writeToken(token: string, storage?: "keyring" | "file"): "keyring" | "file" {
-    if ((storage ?? (this.#file.read(this.profile)?.source === "file" ? "file" : "keyring")) === "file") {
+    if (storage === "file") {
       this.#file.write(this.profile, token)
       return "file"
     }
-    const where = this.#credentials.write(this.profile, token)
-    if (where === "keyring" && storage === "keyring") this.#file.remove(this.profile)
+    const where = this.#credentials.write(this.profile, token, { signIn: storage === "keyring" })
     return where === "keyring" ? "keyring" : "file"
   }
 
