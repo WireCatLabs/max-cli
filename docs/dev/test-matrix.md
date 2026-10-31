@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**909 ✅ · 182 ⛔ · 0 ❌** — 361 commands, 730 options.
+**923 ✅ · 182 ⛔ · 0 ❌** — 362 commands, 743 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -458,6 +458,20 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks close` | `--as-owner` | ✅ |  |
 | `tasks reject` |  | ✅ |  |
 | `tasks reject` | `--as-owner` | ✅ |  |
+| `projects evidence` |  | ✅ |  |
+| `projects evidence` | `--alias` | ✅ |  |
+| `projects evidence` | `--context-query` | ✅ |  |
+| `projects evidence` | `--contact` | ✅ |  |
+| `projects evidence` | `--since-time` | ✅ |  |
+| `projects evidence` | `--before-time` | ✅ |  |
+| `projects evidence` | `--limit` | ✅ |  |
+| `projects evidence` | `--max-pages` | ✅ |  |
+| `projects evidence` | `--cursor` | ✅ |  |
+| `projects evidence` | `--before-n` | ✅ |  |
+| `projects evidence` | `--after-n` | ✅ |  |
+| `projects evidence` | `--no-catch-up` | ✅ |  |
+| `projects evidence` | `--sync-first` | ✅ |  |
+| `projects evidence` | `--sync-time` | ✅ |  |
 | `conversations list` |  | ✅ |  |
 | `conversations list` | `--limit` | ✅ |  |
 | `conversations show` |  | ✅ |  |

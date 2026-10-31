@@ -146,6 +146,7 @@
   "tasks release": "write",
   "tasks close": "write",
   "tasks reject": "write",
+  "projects evidence": "write",
   "conversations list": "read",
   "conversations show": "read",
   "conversations related": "read",

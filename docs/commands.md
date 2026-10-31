@@ -3302,6 +3302,44 @@ max tasks reject <task> [options]
 
 **Example:** `max personal tasks reject Q-15`
 
+## `max projects`
+
+what the store holds about the owner's projects
+
+### `max projects evidence`
+
+cited references about a project in this profile's stored messages. The project's name, key, each alias and each --alias, --context-query and --contact name is its own search; their hits are joined. Every message of a chat confirmed as the project's is read too, and so is what a confirmed person member wrote. Reads what the store holds; with --sync-first it first syncs the project's linked chats the store does not hold for the window
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max projects evidence <project> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `project` | обязательный | an existing project's id, key, exact name or alias, or a new project's name. |
+
+| Опция | Что делает |
+|---|---|
+| `--alias <name>` | another name of the project, searched on its own; repeat for more. По умолчанию: ``. |
+| `--context-query <words>` | more words that all appear in one text; repeat for another. По умолчанию: ``. |
+| `--contact <person>` | a name to search, or person:<id> to read what that person wrote. По умолчанию: ``. |
+| `--since-time <time>` | how far back: days (90d, at most 730d) or a start date (2026-09-01). По умолчанию: `60d`. |
+| `--before-time <time>` | fixed exclusive end: ISO 8601 timestamp with UTC offset. |
+| `--limit <n>` | new references at most, up to 500; 100 if not given. |
+| `--max-pages <pages>` | store pages read at most this run, up to 512. |
+| `--cursor <cursor>` | continue a stopped search from its checkpoint, with the same options. |
+| `--before-n <n>` | messages before each message hit, at most 5. По умолчанию: `2`. |
+| `--after-n <n>` | messages after each message hit, at most 5. По умолчанию: `2`. |
+| `--no-catch-up` | read the search index as it is, without indexing new text first. |
+| `--sync-first` | first sync the linked chats this account does not hold back to --since-time; off by default. |
+| `--sync-time <duration>` | time for all of --sync-first's syncs together; 3m if not given. По умолчанию: `3m`. |
+
+**Returns:** what this account's stored messages hold about a project, linked chats included
+
+**Example:** `max personal projects evidence "Harbour" --since-time 30d --sync-first`
+
 ## `max conversations`
 
 the conversations inside a chat, found in the stored messages by replies, mentions and who wrote next
