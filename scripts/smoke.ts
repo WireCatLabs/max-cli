@@ -68,7 +68,7 @@ check("an unknown option explains itself on stderr", bad.stderr.includes("unknow
 const empty = maxHere("runs", "list", "--json")
 check("`runs list` exits cleanly with nothing to show", empty.status === 0)
 check("`runs list` prints an empty list on stdout", JSON.parse(empty.stdout).items?.length === 0)
-check("`runs list` says on stderr why it is empty", empty.stderr.includes("--record"))
+check("`runs list` says on stderr why it is empty", empty.stderr.includes("nothing recorded"))
 
 // cli-base's log writer writes the event log, and this is the only place it runs under Bun. A success that logged
 // nothing is only a line in the day's index, so the run kept with a folder is a failed `chats list`: offline, in this
