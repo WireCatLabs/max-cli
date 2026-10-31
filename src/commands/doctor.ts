@@ -53,7 +53,7 @@ import { environmentOf, forCommand } from "./context.js"
  */
 const doctorCommandDefinition = (): Command => {
   const command = annotate(new Command("doctor"), { effects: REMOTE_READ })
-    .description("the state this installation is in, without contacting MAX unless --online")
+    .description("the state this installation is in, without connecting unless --online")
     .option("--online", "also log in once, read one chat and start the MCP server; sends nothing")
 
   command.action(async function (this: Command) {
