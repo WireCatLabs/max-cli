@@ -1847,7 +1847,7 @@ max messages evidence <chat> [options]
 
 ### `max messages sync`
 
-bring a chat's history in the local store up to date, newest first; run it again to continue; --all syncs every chat
+bring a chat's history in the local store up to date, newest first; run it again to continue; --all syncs every chat; with --json, stderr carries progress lines: {"event":"progress","step":"sync","chats","chats_done","fetched"}, counts only
 
 **Меняет что-то только на этом компьютере.**
 
