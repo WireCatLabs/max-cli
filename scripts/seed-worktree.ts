@@ -1,20 +1,19 @@
 /**
- * Gives a worktree the owner's sessions by copying them from the installed `max` (`OPS-18`).
+ * Gives a worktree the owner's device identity by copying the installed `max`'s state (`OPS-18`).
  *
  *   node --experimental-strip-types scripts/seed-worktree.ts           # once; bin/max runs it
  *   node --experimental-strip-types scripts/seed-worktree.ts --force   # again, after a new login
  *
  * `bin/max` points a worktree at its own `.max/` so a branch's build never migrates the owner's
- * cache. That also moves the keyring entry (`pathsAreOverridden` in cli-base), and a `session start`
- * per worktree is a new device login on the real account — every release, for every profile.
- * Copying keeps the device and the token; the cache is never copied, so the isolation holds.
- *
- * Tokens go keyring to keyring inside this process: never printed, never in argv or a child's env.
+ * cache. A run with moved folders reads the owner's keyring entry and never writes, removes or logs it
+ * out (cli-base `isMovedRun`, WC-SECR-24), so no token is copied: the worktree needs only the state, whose
+ * device identity a `session start` per worktree would replace with a new device login on the real account.
+ * The cache is never copied, so the isolation holds.
  */
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from "node:fs"
 import { basename, dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { type KeyringStore, keyringService, resolvePaths, systemKeyring } from "@wirecat/cli-base"
+import { type KeyringStore, resolvePaths, systemKeyring } from "@wirecat/cli-base"
 
 const SERVICE = "max-cli"
 
@@ -82,23 +81,17 @@ export const seed = ({ installed, target, keyring, force = false }: SeedOptions)
     chmodSync(join(target.config, "config.json"), statSync(config).mode & 0o777)
   }
 
-  const into = keyringService(SERVICE, target.config, true)
-  const moved = (account: string): boolean => {
-    const token = keyring.get(SERVICE, account)
-    if (token === null) return false
-    keyring.set(into, account, token)
-    return true
-  }
+  const signedIn = (account: string): boolean => keyring.get(SERVICE, account) !== null
   return {
     copied: true,
-    profiles: names(join(installed.state, "profiles")).filter((name) => moved(name)),
-    bots: names(join(installed.state, "bots")).filter((name) => moved(`bot:${name}`)),
+    profiles: names(join(installed.state, "profiles")).filter((name) => signedIn(name)),
+    bots: names(join(installed.state, "bots")).filter((name) => signedIn(`bot:${name}`)),
   }
 }
 
 const describe = ({ copied, reason, profiles, bots }: Seeded): string =>
   copied
-    ? `copied the installed max's sessions into .max/ — profiles: ${profiles.join(", ") || "none"}; bots: ${bots.join(", ") || "none"}`
+    ? `copied the installed max's state into .max/; it uses the owner's sign-ins — profiles: ${profiles.join(", ") || "none"}; bots: ${bots.join(", ") || "none"}`
     : `no sessions copied: ${reason}${reason === "already seeded" ? " (--force copies again)" : " — use bin/max session start"}`
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

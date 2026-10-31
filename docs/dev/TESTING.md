@@ -257,15 +257,14 @@ It runs the build with config, state, cache and the shared message store (`MESSA
 `.max/` inside the worktree (gitignored). shared store migrations
 are forward-only, so a branch must never open the owner's real store.
 
-⚠ **Each worktree therefore has its own session.** The directory variables also move the keyring
-entry — `cli-base` makes the service `max-cli:<config dir>` when any of them is set
-([`ARCHITECTURE.md`](ARCHITECTURE.md) §14) — so a login in one worktree, or in the installed `max`,
-is invisible to another, and every command warns about it on stderr. `bin/max
-session start` once per worktree is gone — each was a new device login on the real account. The first
-`bin/max` in a worktree copies the installed `max`'s sessions (`scripts/seed-worktree.ts`): state and
-`config.json`, and each token keyring to keyring in-process, never printed. Sockets, serve logs,
-`runs/` and the cache are not copied. After a new login in the installed `max`, `pnpm seed:worktree`
-copies again. With no installed `max`, `bin/max session start` is still the way in.
+⚠ **A worktree uses the owner's sign-in.** The directory variables make a moved run, which reads the
+owner's `max-cli` keyring entry and never logs it out or removes it ([`ARCHITECTURE.md`](ARCHITECTURE.md)
+§14): `bin/max session end` answers `kept: "owners-sign-in"`. `bin/max session start` once per worktree is
+gone — each was a new device login on the real account. The first `bin/max` in a worktree copies the
+installed `max`'s state (`scripts/seed-worktree.ts`): the state directory and `config.json`, for the device
+identity, and no token. Sockets, serve logs, `runs/` and the cache are not copied. After a new login in the
+installed `max`, `pnpm seed:worktree` copies again. With no installed `max`, `bin/max session start` is
+still the way in; that sign-in lives in the worktree's temporary entry.
 
 **The check no assertion replaces**: record a real run and read the directory.
 

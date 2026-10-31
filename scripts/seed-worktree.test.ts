@@ -1,8 +1,8 @@
 import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { keyringService, memoryKeyring } from "@wirecat/cli-base"
-import { describe, expect, it } from "vitest"
+import { memoryKeyring } from "@wirecat/cli-base"
+import { describe, expect, it, vi } from "vitest"
 import { seed } from "./seed-worktree.ts"
 
 const installation = () => {
@@ -29,15 +29,16 @@ const installation = () => {
 }
 
 describe("seed", () => {
-  it("copies state and tokens, not sockets, logs or runs, and keeps modes", () => {
+  it("copies state, not tokens, sockets, logs or runs, and keeps modes", () => {
     const { installed, target, keyring } = installation()
+    const set = vi.spyOn(keyring, "set")
+    const removed = vi.spyOn(keyring, "delete")
 
     const result = seed({ installed, target, keyring })
 
     expect(result).toEqual({ copied: true, profiles: ["default", "mila"], bots: ["test"] })
-    const into = keyringService("max-cli", target.config, true)
-    expect(keyring.get(into, "default")).toBe("token-default")
-    expect(keyring.get(into, "bot:test")).toBe("token-bot")
+    expect(set).not.toHaveBeenCalled()
+    expect(removed).not.toHaveBeenCalled()
     if (process.platform !== "win32") {
       expect(statSync(join(target.state, "profiles/default.moderation.json")).mode & 0o777).toBe(0o600)
       expect(statSync(join(target.state, "profiles")).mode & 0o777).toBe(0o700)
@@ -51,13 +52,9 @@ describe("seed", () => {
   it("copies once, and again only with force", () => {
     const { installed, target, keyring } = installation()
     seed({ installed, target, keyring })
-    keyring.set("max-cli", "default", "token-new")
-    const into = keyringService("max-cli", target.config, true)
 
     expect(seed({ installed, target, keyring }).copied).toBe(false)
-    expect(keyring.get(into, "default")).toBe("token-default")
     expect(seed({ installed, target, keyring, force: true }).copied).toBe(true)
-    expect(keyring.get(into, "default")).toBe("token-new")
   })
 
   it("does nothing without an installed max", () => {

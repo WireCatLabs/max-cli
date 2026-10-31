@@ -9,7 +9,14 @@ if (!tarball) throw new Error("Provide the packed npm tarball")
 const sandbox = mkdtempSync(join(tmpdir(), "max-npm-install-"))
 const home = join(sandbox, "home")
 const prefix = join(sandbox, "prefix with spaces")
-const env = { ...process.env, HOME: home, USERPROFILE: home, MAX_INSTALL_AGENT: "all", MAX_NO_UPDATE_CHECK: "1" }
+const env = {
+  ...process.env,
+  HOME: home,
+  USERPROFILE: home,
+  DBUS_SESSION_BUS_ADDRESS: "disabled:",
+  MAX_INSTALL_AGENT: "all",
+  MAX_NO_UPDATE_CHECK: "1",
+}
 execFileSync(
   "npm",
   [

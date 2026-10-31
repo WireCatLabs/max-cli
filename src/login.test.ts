@@ -2,9 +2,9 @@ import { mkdirSync } from "node:fs"
 import { createServer } from "node:net"
 import { dirname } from "node:path"
 import { PassThrough } from "node:stream"
-import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
+import { captureStreams, type KeyringStore, memoryKeyring, pathsAreOverridden, systemKeyring } from "@wirecat/cli-base"
 import { PASTE_QR, plainQr } from "@wirecat/cli-core"
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import type { Environment } from "./commands/context.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
@@ -387,9 +387,12 @@ describe("max session start without a person at the terminal", () => {
 })
 
 describe("max session end", () => {
-  const ending = (logout: { answer?: Payload; refuse?: string; loginRefused?: string } = {}) => {
-    const keyring = memoryKeyring()
-    const store = (profile: string) => new SessionStore({ profile, keyring })
+  const ending = (
+    logout: { answer?: Payload; refuse?: string; loginRefused?: string } = {},
+    keyring: KeyringStore = memoryKeyring(),
+    env: NodeJS.ProcessEnv = process.env,
+  ) => {
+    const store = (profile: string) => new SessionStore({ profile, keyring, env })
     const max = mockMax({
       answers: {
         [Opcode.SESSION_INIT]: {},
@@ -485,5 +488,50 @@ describe("max session end", () => {
     const { end, max } = ending()
     expect((await end()).json).toEqual({ profile: "s-end", forgotten: false, revoked_on_server: false })
     expect(max.sent).toEqual([])
+  })
+
+  describe("with only HOME moved, against the system keyring (SEC-103)", () => {
+    afterEach(() => vi.restoreAllMocks())
+
+    const movedHome = () => {
+      const env = { ...process.env }
+      for (const kind of ["CONFIG", "STATE", "CACHE"]) delete env[`MAX_${kind}_DIR`]
+      expect(pathsAreOverridden({ appName: "max-cli", prefix: "MAX", env })).toBe(false)
+      const entries = new Map<string, string>([["max-cli\u0000s-end", "owners-token"]])
+      const key = (service: string, account: string) => `${service}\u0000${account}`
+      vi.spyOn(systemKeyring, "get").mockImplementation(
+        (service, account) => entries.get(key(service, account)) ?? null,
+      )
+      vi.spyOn(systemKeyring, "set").mockImplementation((service, account, secret) => {
+        entries.set(key(service, account), secret)
+      })
+      const deleted = vi
+        .spyOn(systemKeyring, "delete")
+        .mockImplementation((service, account) => entries.delete(key(service, account)))
+      return { ...ending({}, systemKeyring, env), entries, deleted }
+    }
+
+    it("keeps the owner's sign-in: no logout on MAX, nothing removed, and the answer says so", async () => {
+      const { end, logouts, entries, deleted } = movedHome()
+
+      expect(await end()).toEqual({
+        code: 0,
+        json: { profile: "s-end", forgotten: false, revoked_on_server: false, kept: "owners-sign-in" },
+      })
+      expect(logouts()).toEqual([])
+      expect(deleted).not.toHaveBeenCalled()
+      expect(entries.get("max-cli\u0000s-end")).toBe("owners-token")
+    })
+
+    it("ends a sign-in the run made itself, and removes only its temporary entry", async () => {
+      const { store, end, logouts, entries, deleted } = movedHome()
+      store("s-end").writeToken("own-token")
+
+      expect((await end()).json).toEqual({ profile: "s-end", forgotten: true, revoked_on_server: true })
+      expect(logouts()).toHaveLength(1)
+      expect(deleted.mock.calls.map(([service]) => service)).not.toContain("max-cli")
+      expect(entries.get("max-cli\u0000s-end")).toBe("owners-token")
+      expect([...entries.values()]).toEqual(["owners-token"])
+    })
   })
 })

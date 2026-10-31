@@ -97,6 +97,18 @@ const sessionCommandDefinition = (): Command => {
           renderer.note(`there was no session for "${store.profile}"`)
           return
         }
+        if (store.usesOwnersSignIn()) {
+          renderAnswer(
+            this,
+            context,
+            itemOf({ profile: store.profile, forgotten: false, revoked_on_server: false, kept: "owners-sign-in" }),
+          )
+          renderer.note(
+            `kept "${store.profile}" signed in: this run's folders are moved, and it uses the owner's sign-in, which only ` +
+              "a run with the owner's own folders can end",
+          )
+          return
+        }
         // A server a command started stops; one started by hand or by a unit holds the same session, and
         // logging out here would end its login and delete the token under it.
         if ((await stopServer(store.socketPath())) === "refused")

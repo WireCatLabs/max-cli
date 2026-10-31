@@ -26,9 +26,9 @@ const max = (...args: string[]) => spawnSync(process.execPath, ["dist/bin/max.js
 /**
  * The same command against directories of its own.
  *
- * Every check below writes something, and none of it may land in the owner's real state directory
- * — the overrides also move the keyring entry to a service of this directory's own, so nothing
- * here can read or delete the real session (`cli-base`, `pathsAreOverridden`).
+ * Every check below writes something, and none of it may land in the owner's real state directory.
+ * A moved run still reads the owner's keyring entry, so the keyring is out of reach altogether:
+ * `disabled:` and not an unset variable, which falls back to `$XDG_RUNTIME_DIR/bus`.
  */
 const isolated = mkdtempSync(join(tmpdir(), "max-smoke-run-"))
 const maxHere = (...args: string[]) =>
@@ -40,6 +40,7 @@ const maxHere = (...args: string[]) =>
       MAX_CONFIG_DIR: join(isolated, "config"),
       MAX_STATE_DIR: join(isolated, "state"),
       MAX_CACHE_DIR: join(isolated, "cache"),
+      DBUS_SESSION_BUS_ADDRESS: "disabled:",
     },
   })
 
