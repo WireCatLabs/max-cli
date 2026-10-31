@@ -1,26 +1,24 @@
 ---
 name: release
-description: Prepare and verify a max-cli release — run release:check, draft the changelog in the fixed headings, audit the docs against what changed, review the change against the requirements, run the live scenarios with the owner, write the signed release report that bin/release requires. Use when asked to release, prepare a release, cut a version, «выпуск», «выпустить версию».
+description: Prepare and verify a max-cli release — run release:check, draft the changelog in the fixed headings, audit the docs against what changed, review the change against the requirements, run the live scenarios with the owner, write the release report, ask the owner before bin/release. Use when asked to release, prepare a release, cut a version, «выпуск», «выпустить версию».
 ---
 
 # Release max-cli
 
 A release is reliable when two things agree: **`pnpm release:check`** (everything a program can
-decide) and **the release report** `docs_ai/releases/<version>.md` (everything that needs judgement,
-signed once the owner says yes). `bin/release` refuses to publish without both. The publishing steps themselves
-are in `docs_ai/releasing.md` — follow them from there, do not restate them.
+decide) and **the release report** `docs_ai/releases/<version>.md` (everything that needs judgement).
+`bin/release` runs only after the owner says yes in the conversation (`WC-REL-10`). The publishing steps
+themselves are in `docs_ai/releasing.md` — follow them from there, do not restate them.
 
 `docs_ai/` is the private repository `WireCatLabs/cli-private`, cloned into the main checkout. A
 fresh clone of this repository does not have it: without it there are no live scenarios and no
-report, so stop and say so. **Correction 2026-10-01:** `bin/release` stops there too, naming that
-repository. A fork with its own signed report passes it as `bin/release --report <path>`: the same
-checks, and on a renumber the file is rewritten in place for the caller to commit.
+report, so stop and say so.
 
 Nothing in this skill sends, publishes, tags or merges without the owner's word in this session.
 
 The steps max and tg share are written once, in cli-core's
 [RELEASING.md](https://github.com/WireCatLabs/cli-core/blob/main/docs/dev/RELEASING.md); this skill orders them for max and adds what is max's: the Russian
-changelog, the private scenarios and the signed report.
+changelog, the private scenarios and the report.
 
 ## 0. Scope: what changed
 
@@ -101,15 +99,11 @@ How to run one — `bin/max`, the shape-only helper, snapshot and restore — is
 
 Write `docs_ai/releases/<version>.md` (the template is in `docs_ai/releases/README.md`):
 
-- `Commit: <sha>` — the full SHA of `main` **after** the release PR merged; `bin/release` compares
-  it with `HEAD`. Merging anything else afterwards means running step 1 again and a new SHA. If npm
-  has the version by the time it runs, `bin/release` merges the next free number itself and carries
-  the signed report to it — only when that pull request changes nothing but the number;
+- `Commit: <sha>` — the full SHA of `main` **after** the release PR merged. Merging anything else
+  afterwards means running step 1 again. If npm has the version by the time it runs, `bin/release`
+  merges the next free number itself;
 - one row per step above: result and evidence — the `release:check` output, the changelog as
   accepted, the doc findings and where they were fixed, the requirements verdicts, the live
   scenario rows and the smoke result;
-- no `Signed off:` line yet — it is written only after the owner says yes (below).
-
 Commit and push `docs_ai/`. Then ask the owner in chat whether to release this version, with the report path. Once
-they say yes for that version, write `Signed off: YYYY-MM-DD — owner (approved in chat)` in the report, commit and push
-`docs_ai/`, and run `bin/release` on `main`. One yes covers one version: a renumbered or later version needs its own.
+they say yes for that version, run `bin/release` on `main`. One yes covers one version: a later version needs its own.

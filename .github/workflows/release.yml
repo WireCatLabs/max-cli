@@ -14,7 +14,7 @@ on:
         type: boolean
         default: false
       commit:
-        description: "The commit the release report was signed for; the run refuses any other"
+        description: "The commit bin/release checked; the run refuses any other"
         type: string
         default: ""
 
@@ -26,8 +26,8 @@ concurrency:
 
 jobs:
   # Every job builds github.sha, the tip of main when the run started — which a merge can move past the commit
-  # bin/release checked the report against.
-  signed-commit:
+  # bin/release checked.
+  checked-commit:
     runs-on: ubuntu-latest
     permissions: {}
     steps:
@@ -37,11 +37,11 @@ jobs:
         run: |
           [ "$COMMIT" = "$GITHUB_SHA" ] && exit 0
           [ "$DRY_RUN" = "true" ] && [ -z "$COMMIT" ] && exit 0
-          echo "::error::this run is at $GITHUB_SHA, but the report was signed for '${COMMIT}' — nothing is published"
+          echo "::error::this run is at $GITHUB_SHA, but bin/release checked '${COMMIT}' — nothing is published"
           exit 1
 
   validation:
-    needs: signed-commit
+    needs: checked-commit
     if: github.ref == 'refs/heads/main' || inputs.dry_run
     permissions:
       contents: read
@@ -50,7 +50,7 @@ jobs:
       pack: true
 
   checks:
-    needs: signed-commit
+    needs: checked-commit
     if: github.ref == 'refs/heads/main' || inputs.dry_run
     permissions:
       contents: read
