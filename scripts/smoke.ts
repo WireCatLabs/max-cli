@@ -58,6 +58,12 @@ check(
 const help = max("--help")
 check("--help names the command", help.stdout.includes("Usage: max"))
 
+const described = max("--wcat-describe")
+check(
+  "--wcat-describe prints the tool for wcat",
+  described.status === 0 && (JSON.parse(described.stdout) as { name?: string }).name === "max",
+)
+
 const bad = max("--nonsense")
 check("an unknown option fails", bad.status !== 0)
 check("an unknown option keeps stdout clean", bad.stdout === "")
