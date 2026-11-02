@@ -12,7 +12,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms that narrow the list — the fields are below"
+                "description": "field:value terms joined by AND that narrow the list; fields: name; e.g. name:sales"
               },
               "minItems": 0
             },
@@ -20,7 +20,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms that narrow the list — the fields are below"
+              "description": "field:value terms joined by AND that narrow the list; fields: name; e.g. name:sales"
             }
           ]
         },
@@ -46,7 +46,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms that narrow the list — the fields are below"
+                "description": "field:value terms joined by AND that narrow the list; fields: id, title, kind (dialog|group|channel|saved|unknown); e.g. id:7"
               },
               "minItems": 0
             },
@@ -54,7 +54,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms that narrow the list — the fields are below"
+              "description": "field:value terms joined by AND that narrow the list; fields: id, title, kind (dialog|group|channel|saved|unknown); e.g. id:7"
             }
           ]
         },
@@ -156,7 +156,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms; this list filters by none yet"
+                "description": "field:value terms; this list filters by none yet; field:value terms; this list filters by none yet, so any term is refused"
               },
               "minItems": 0
             },
@@ -164,7 +164,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms; this list filters by none yet"
+              "description": "field:value terms; this list filters by none yet; field:value terms; this list filters by none yet, so any term is refused"
             }
           ]
         },
@@ -305,7 +305,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms that narrow the list — the fields are below"
+                "description": "field:value terms joined by AND that narrow the list; fields: user_id; e.g. user_id:42"
               },
               "minItems": 0
             },
@@ -313,7 +313,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms that narrow the list — the fields are below"
+              "description": "field:value terms joined by AND that narrow the list; fields: user_id; e.g. user_id:42"
             }
           ]
         },
@@ -542,7 +542,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms that narrow the list — the fields are below"
+                "description": "field:value terms joined by AND that narrow the list; fields: id, timestamp, outgoing, thread_id; e.g. id<42"
               },
               "minItems": 0
             },
@@ -550,7 +550,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms that narrow the list — the fields are below"
+              "description": "field:value terms joined by AND that narrow the list; fields: id, timestamp, outgoing, thread_id; e.g. id<42"
             }
           ]
         },
@@ -939,7 +939,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms that narrow the list — the fields are below"
+                "description": "field:value terms joined by AND that narrow the list; fields: id, title; e.g. id:7"
               },
               "minItems": 0
             },
@@ -947,7 +947,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms that narrow the list — the fields are below"
+              "description": "field:value terms joined by AND that narrow the list; fields: id, title; e.g. id:7"
             }
           ]
         }
@@ -1014,7 +1014,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms that narrow the list — the fields are below"
+                "description": "field:value terms joined by AND that narrow the list; fields: chat_id, outcome (sent|outcome_unknown|refused|failed|reserved), key, operation_id, error_code; e.g. chat_id:7"
               },
               "minItems": 0
             },
@@ -1022,7 +1022,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms that narrow the list — the fields are below"
+              "description": "field:value terms joined by AND that narrow the list; fields: chat_id, outcome (sent|outcome_unknown|refused|failed|reserved), key, operation_id, error_code; e.g. chat_id:7"
             }
           ]
         }
@@ -1074,7 +1074,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms; this list filters by none yet"
+                "description": "field:value terms; this list filters by none yet; field:value terms; this list filters by none yet, so any term is refused"
               },
               "minItems": 0
             },
@@ -1082,7 +1082,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms; this list filters by none yet"
+              "description": "field:value terms; this list filters by none yet; field:value terms; this list filters by none yet, so any term is refused"
             }
           ]
         },
@@ -1149,7 +1149,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms; this list filters by none yet"
+                "description": "field:value terms; this list filters by none yet; field:value terms; this list filters by none yet, so any term is refused"
               },
               "minItems": 0
             },
@@ -1157,7 +1157,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms; this list filters by none yet"
+              "description": "field:value terms; this list filters by none yet; field:value terms; this list filters by none yet, so any term is refused"
             }
           ]
         },
@@ -1319,7 +1319,7 @@
                 "type": "string",
                 "minLength": 1,
                 "pattern": "^(?!-$)[\\s\\S]+$",
-                "description": "field:value terms that narrow the list — the fields are below"
+                "description": "field:value terms joined by AND that narrow the list; fields: id; e.g. id:mid.1"
               },
               "minItems": 0
             },
@@ -1327,7 +1327,7 @@
               "type": "string",
               "minLength": 1,
               "pattern": "^(?!-$)[\\s\\S]+$",
-              "description": "field:value terms that narrow the list — the fields are below"
+              "description": "field:value terms joined by AND that narrow the list; fields: id; e.g. id:mid.1"
             }
           ]
         },
