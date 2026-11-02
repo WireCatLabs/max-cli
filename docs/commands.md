@@ -1792,7 +1792,7 @@ max messages link <chat> [message]
 | `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
 | `message` | необязательный | the message id. |
 
-**Returns:** message link — ref, url, access, reason; every field: max commands info messages link
+**Returns:** message link — ref, url, access, reason, files; every field: max commands info messages link
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -1800,7 +1800,7 @@ max messages link <chat> [message]
 
 ### `max messages download`
 
-save a message's photos, files, videos and voice notes to a folder — or a whole chat's with --all
+save a message's photos, files, videos and voice notes to a folder — or a whole chat's with --all; with --offline, copy the ones this computer already holds, one by --attachment
 
 **Меняет что-то только на этом компьютере.**
 
@@ -1810,19 +1810,20 @@ max messages download <chat> [message] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `chat` | обязательный | a chat: its id, or part of its title. |
-| `message` | необязательный | the message id; left out with --all. |
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
+| `message` | необязательный | the message id; left out with --all or a locator. |
 
 | Опция | Что делает |
 |---|---|
 | `--output-dir <dir>` | where to save them; created if missing. По умолчанию: `.`. |
+| `--attachment <n>` | which file of the message, from 1; needed when it has more than one. |
 | `--all` | every file of the chat, newest first; run it again to continue where it stopped. |
 | `--pause <duration>` | with --all, a pause between pages, to stay under the provider's limits. По умолчанию: `5s`. |
 | `--extract` | read text layers from the files this download maps into the local content index. |
 
 **Returns:** message download — files, extraction, complete, batch, chat, saved, existing, stopped; every field: max commands info messages download
 
-**Example:** `max personal messages download "Book club" 101 --output-dir ./downloads`
+**Example:** `max personal messages download "Book club" 101 --output-dir ./downloads`, `max personal messages download msg:max/me/500/101 --attachment 1 --offline`
 
 ### `max messages evidence`
 
@@ -2925,7 +2926,7 @@ max tasks list [query] [options]
 |---|---|
 | `--limit <n>` | how many. |
 
-**Returns:** task — ref, id, title, kind, state, created_at, key, description, and 21 more; every field: max commands info tasks list
+**Returns:** task — ref, id, title, kind, state, created_at, key, description, and 24 more; every field: max commands info tasks list
 
 **Next usually:** `max tasks show <task>`, `max tasks related <task>`, `max tasks update <task>`
 
@@ -2986,7 +2987,7 @@ max tasks update <task> [options]
 | `--remind-time <time>` | when to look at it again: an ISO 8601 time or 2h, 3d from now; none clears it. |
 | `--assignee <person...>` | who does it: sender (whoever sent the task's message) or person:<id>; none clears it. Leave it out when unsure: a task with no assignee is better than none. |
 
-**Returns:** task card — id, ref, key, project, title, description, type, status, and 21 more; every field: max commands info tasks update
+**Returns:** task card — id, ref, key, project, project_key, project_name, created_by, title, and 24 more; every field: max commands info tasks update
 
 **Example:** `max personal tasks update DOC-12 --title "Review draft"`
 
@@ -3010,7 +3011,7 @@ max tasks link <task> [targets] [options]
 | `--chat <chat>` | a chat it concerns, repeatable; a chat: its id, or part of its title. |
 | `--kind <kind>` | related-to (default), evidence — it shows the task is real — or created-from; for task:<id>, related-to, blocked-by, follow-up-of, duplicate-of or discovered-from. |
 
-**Returns:** task links — id, ref, key, project, title, description, type, status, and 23 more; every field: max commands info tasks link
+**Returns:** task links — id, ref, key, project, project_key, project_name, created_by, title, and 26 more; every field: max commands info tasks link
 
 **Example:** `max personal tasks link DOC-12 https://example.com/draft`
 
@@ -3026,7 +3027,7 @@ max tasks show <task>
 |---|---|---|
 | `task` | обязательный | the task's id or key, as tasks list shows it. |
 
-**Returns:** task card — id, ref, key, project, title, description, type, status, and 21 more; every field: max commands info tasks show
+**Returns:** task card — id, ref, key, project, project_key, project_name, created_by, title, and 24 more; every field: max commands info tasks show
 
 **Example:** `max personal tasks show DOC-12`
 
@@ -3229,7 +3230,7 @@ max tasks claim <task> [options]
 | `--lease <duration>` | how long the claim lasts: 30m, 2h (default 30m); claiming again extends it. |
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
-**Returns:** task card — id, ref, key, project, title, description, type, status, and 21 more; every field: max commands info tasks claim
+**Returns:** task card — id, ref, key, project, project_key, project_name, created_by, title, and 24 more; every field: max commands info tasks claim
 
 **Example:** `max personal tasks claim PR-12 --lease 2h`
 
@@ -3251,7 +3252,7 @@ max tasks release <task> [options]
 |---|---|
 | `--holder <name>` | who you are for claims: a session id or a chat id; default WIRECAT_HOLDER, else Claude Code's session, else the agent's name. |
 
-**Returns:** task card — id, ref, key, project, title, description, type, status, and 21 more; every field: max commands info tasks release
+**Returns:** task card — id, ref, key, project, project_key, project_name, created_by, title, and 24 more; every field: max commands info tasks release
 
 **Example:** `max personal tasks release PR-12`
 
@@ -3298,7 +3299,7 @@ max tasks reject <task> [options]
 |---|---|
 | `--as-owner` | refuse it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
-**Returns:** task card — id, ref, key, project, title, description, type, status, and 21 more; every field: max commands info tasks reject
+**Returns:** task card — id, ref, key, project, project_key, project_name, created_by, title, and 24 more; every field: max commands info tasks reject
 
 **Example:** `max personal tasks reject Q-15`
 
@@ -4293,10 +4294,10 @@ max search all <query> [options]
 | `--page <n>` | which page, starting at 1. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does. |
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
-| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
+| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server (default: both; message discovery uses archive only), or both. |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 
-**Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 8 more; every field: max commands info search all
+**Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 10 more; every field: max commands info search all
 
 **Example:** `max personal search all draft`
 
@@ -4323,7 +4324,7 @@ max search messages [query] [options]
 | `--thread-messages <n>` | at most this many messages in each thread context (default: 50). |
 | `--thread-bytes <n>` | at most this many bytes of whole messages and links in each context (default: 65536). |
 | `--thread-within <duration>` | messages within this long either side of the hit (default: 1d). |
-| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server, or both (default: both; message discovery uses archive only). |
+| `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server (default: both; message discovery uses archive only), or both. |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 | `--source <accounts>` | every account of this messenger held in the store; personal, bots or all — the same as in: in the query; or a list: group:work,telegram:Alice. |
 | `--limit <n>` | how many. |
@@ -4335,7 +4336,7 @@ max search messages [query] [options]
 | `--timezone <zone>` | the IANA timezone for calendar date boundaries. |
 | `--saved <name\|id>` | run a saved search or an earlier run; options typed here replace its own. |
 
-**Returns:** message hit — ref, timestamp, sender_name, sender_is_me, chat_title, excerpt, matched_in, score, and 8 more; every field: max commands info search messages
+**Returns:** message hit — ref, timestamp, sender_name, sender_is_me, chat_title, excerpt, matched_in, score, and 9 more; every field: max commands info search messages
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -5352,7 +5353,7 @@ max schedule command <name> <args> [options]
 
 **Returns:** run max <args…> on a timer — reads save what they read, so this is how a…
 
-**Example:** `max personal schedule command daily <args>`
+**Example:** `max personal schedule command health --every 1h -- doctor`, `max personal schedule command morning-check --at 08:00 -- doctor`
 
 ### `max schedule agent`
 
@@ -5379,7 +5380,7 @@ max schedule agent <name> <harness> <prompt> [options]
 
 **Returns:** start an agent (claude or codex) with a prompt on a timer; it runs with…
 
-**Example:** `max personal schedule agent daily claude <prompt>`
+**Example:** `max personal schedule agent review claude "review what came in overnight and draft replies" --at 08:30`, `max personal schedule agent triage codex "list what needs an answer today" --every 2h --max-cost 1`
 
 ### `max schedule list`
 
@@ -5395,7 +5396,7 @@ max schedule list [query]
 
 **Returns:** scheduled job — name, kind, when, last; every field: max commands info schedule list
 
-**Example:** `max personal schedule list`
+**Example:** `max personal schedule list`, `max personal schedule list kind:agent`
 
 ### `max schedule run`
 
@@ -5409,11 +5410,11 @@ max schedule run <name>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `name` | обязательный |  |
+| `name` | обязательный | the schedule's name, as `schedule list` shows it. |
 
 **Returns:** run a schedule now, as its timer would, and wait for it
 
-**Example:** `max personal schedule run daily`
+**Example:** `max personal schedule run health`
 
 ### `max schedule remove`
 
@@ -5427,11 +5428,11 @@ max schedule remove <name>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `name` | обязательный |  |
+| `name` | обязательный | the schedule's name, as `schedule list` shows it. |
 
 **Returns:** stop a schedule and remove its timer; its past output stays
 
-**Example:** `max personal schedule remove daily`
+**Example:** `max personal schedule remove health`
 
 ### `max schedule exec`
 
@@ -5445,11 +5446,11 @@ max schedule exec <file>
 
 | Аргумент | | Что это |
 |---|---|---|
-| `file` | обязательный |  |
+| `file` | обязательный | the schedule's schedule.json in the state folder, as the timer passes it. |
 
 **Returns:** what a timer runs, given the schedule's file; to run one by hand, use run
 
-**Example:** `max personal schedule exec ./report.pdf`
+**Example:** `max personal schedule exec ~/.local/share/max-cli/schedules/health/schedule.json`
 
 ## `max watch`
 
