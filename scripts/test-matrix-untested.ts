@@ -24,6 +24,11 @@ export const UNTESTED: Untested[] = [
       "cli-core src/cli/messenger/tags.test.ts covers the ownership claim through the shared command; consumer integration tests cover mounting, account isolation and permissions",
     ],
     [
+      "messages download",
+      "--attachment",
+      "cli-core src/cli/messenger/attachments.test.ts covers picking one file of a message, with --offline; max mounts the shared command (cli-core 0.532.0)",
+    ],
+    [
       "replies edit",
       "--template-mode",
       "cli-core src/cli/messenger/replies-edit-command.test.ts covers the legacy template mode; max mounts the shared command and src/replies.test.ts drives replies edit",
