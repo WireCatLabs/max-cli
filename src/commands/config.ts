@@ -131,15 +131,18 @@ export const configCommand = (): Command => {
 
   const shared = sharedConfigCommand(MAX_APP, configuration, { permissionKey: permissionKeyOf })
   for (const sub of shared.commands.filter((child) => child.name() !== "show")) {
-    overrideSharedContract(
-      sub,
-      "MAX lists its provider-specific settings and accepted configuration value forms.",
-      () => {
-        const [setting, value] = sub.registeredArguments
-        if (setting) setting.description = `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`
-        if (value) value.description = "a number, true or false, or a list like shop,news"
-      },
-    )
+    // `config repair` names no setting, so there is nothing of MAX's to describe, and an override that changes
+    // nothing is refused.
+    if (sub.registeredArguments.length > 0)
+      overrideSharedContract(
+        sub,
+        "MAX lists its provider-specific settings and accepted configuration value forms.",
+        () => {
+          const [setting, value] = sub.registeredArguments
+          if (setting) setting.description = `one of: ${[...ALL_SETTINGS, ...STORE_SETTINGS].join(", ")}`
+          if (value) value.description = "a number, true or false, or a list like shop,news"
+        },
+      )
     sub.hook("preAction", (_parent, action) => {
       if (environmentOf(action).agent) refuseAgentPermissionChange(String(action.processedArgs[0]))
     })
