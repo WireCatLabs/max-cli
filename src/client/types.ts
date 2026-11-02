@@ -41,4 +41,9 @@ export interface MaxClientOptions {
   events?: (event: DiagnosticEvent) => void
   /** The wait between retries; a test passes one that returns at once. */
   sleep?: SleepLike
+  /**
+   * `max serve` and a timer's run: they can start before the login unlocks the keyring, so a token out of reach
+   * is temporary there — serve's unit restarts and `schedule exec` tries again — not a refused login.
+   */
+  background?: boolean
 }

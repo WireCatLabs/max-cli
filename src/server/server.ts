@@ -278,6 +278,7 @@ export class MaxServer {
       connection,
       now: this.#now,
       fullLogin: true,
+      background: true,
       ...(resume ? { resume } : {}),
       warn: this.#options.note,
       record: this.#record,

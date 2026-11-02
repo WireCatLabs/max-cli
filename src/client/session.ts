@@ -27,6 +27,7 @@ interface Dependencies {
   readonly offline: boolean
   readonly store: SessionStore
   readonly fullLogin: boolean
+  readonly background: boolean
   readonly connection: Wire
   readonly invoke: Invoke
   readonly resume: ResumeFrom | undefined
@@ -70,10 +71,11 @@ export const createSession = (deps: Dependencies) => {
       // register one more device for nothing (MAX-50, measured from cron 2026-09-25).
       if (deps.store.hasLoggedIn()) {
         throw new CliError(
-          "authentication_error",
+          deps.background ? "provider_unavailable" : "authentication_error",
           `no token found for profile "${profile}", although it has logged in on this machine — ` +
             `the keyring is probably out of reach (cron, ssh: set XDG_RUNTIME_DIR); ` +
             `\`max ${asFirstWord(profile)}doctor\` shows it. Log in again only if the token was removed`,
+          deps.background ? { reason: "credentials.unreachable" } : {},
         )
       }
       if (deps.store.isBot()) {
