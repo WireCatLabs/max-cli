@@ -120,6 +120,9 @@ max config show --json     # то же одним объектом
 | `color` | цвет в терминале; без поля решается по тому, терминал ли это | —; без поля цвет выключает `NO_COLOR` | по терминалу |
 | `sender_colors` | в `max personal messages` свой цвет у каждого автора; `вы` — всегда голубым. Без `color` не действует. Только для личного аккаунта | — | `false` |
 | `search_catch_up` | после `messages sync` или ремонта разрывов готовит граф и установленные локальные векторы этого чата в заданных пределах. Модели не скачиваются, удалённые провайдеры не вызываются. Только для личного аккаунта | `--catch-up`, `--no-catch-up` | `false` |
+| `history_dialog_days` | на сколько дней назад `messages sync` читает личный чат, от 1 до 1095 | `messages sync --full-history` | `1095` |
+| `history_group_days` | на сколько дней назад `messages sync` читает группу, от 1 до 1095 | `messages sync --full-history` | `365` |
+| `history_group_members_max` | историю группы, где людей больше, `messages sync` не читает; `store status` показывает, что пропущено. Новые сообщения от `serve` сохраняются всегда | `messages sync --full-history` | `50` |
 | `search_reranker` | какой моделью `search messages --discover` переставляет первые 50 результатов: `mmarco`, `bge-reranker-v2-m3` или `off`. Действует, только когда модель скачана (`max personal models download mmarco`); сама она не скачивается | — | `mmarco` |
 | `record` | записывать ли удачные запуски; неудачные записываются и при `false` ([диагностика](diagnostics.md)) | `--record`, `--no-record` | `true` |
 | `record_input` | хранить ли в записи запуска командную строку так, как вы её набрали; `false` скрывает набранное, секреты скрыты всегда ([диагностика](diagnostics.md#что-вы-набрали)) | — | `true` |
@@ -338,6 +341,8 @@ max personal chats list
 |---|---|---|
 | `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
 | `requests_per_minute` | целое число ≥ 0 | профиль |
+| `history_dialog_days`, `history_group_days` | целое число от 1 до 1095 | профиль |
+| `history_group_members_max` | целое число ≥ 1 | профиль |
 | `color`, `record`, `record_input` | boolean | профиль |
 | `sender_colors`, `search_catch_up`, `serve` | boolean | личный аккаунт |
 | `search_reranker` | `mmarco`, `bge-reranker-v2-m3`, `off` | профиль |
