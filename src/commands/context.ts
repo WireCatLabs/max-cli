@@ -188,6 +188,7 @@ export const contextFor = (
         timeoutMs: settings.timeoutMs,
         warn: renderer.note,
         offline: flags.offline === true,
+        background: (environment.env ?? process.env).MAX_SCHEDULED !== undefined,
         ...(environment.sleep ? { sleep: environment.sleep } : {}),
         ...(environment.connection ? { connection: environment.connection() } : wire ? { connection: wire } : {}),
         ...extra,

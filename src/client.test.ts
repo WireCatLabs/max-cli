@@ -121,6 +121,22 @@ describe("MaxClient", () => {
     await expect(client.connect()).rejects.toMatchObject({ code: "authentication_error" })
   })
 
+  it("**serve and a timer's run take a token out of reach as temporary**, so they try again later", async () => {
+    const max = mockMax({ answers: {} })
+    const { store } = clientWith(max, "")
+    store.writeState({ deviceId: "a-device", logins: 3 })
+    const client = new MaxClient({
+      store,
+      connection: new Connection({ createSocket: max.createSocket, timeoutMs: 50 }),
+      background: true,
+    })
+
+    await expect(client.connect()).rejects.toMatchObject({
+      code: "provider_unavailable",
+      details: { reason: "credentials.unreachable" },
+    })
+  })
+
   it("names the bot commands when the profile holds a bot and no personal session", async () => {
     const max = mockMax({ answers: {} })
     const { client, dir } = clientWith(max, "")

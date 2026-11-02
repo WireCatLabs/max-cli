@@ -55,6 +55,7 @@ export class MaxClient {
       offline: options.offline ?? false,
       store: options.store,
       fullLogin: options.fullLogin ?? false,
+      background: options.background ?? false,
       connection,
       invoke,
       resume: options.resume,
