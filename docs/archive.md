@@ -317,8 +317,8 @@ max personal server status           # работает ли, с какого в
 max personal server restart          # остановить и запустить снова — например, после обновления max
 max personal server stop             # остановить сервер профиля, как бы он ни был запущен
 max personal server logs             # последние строки его журнала; --limit 200 — больше
-max personal server install          # служба systemd (Linux) или launchd (macOS) для профиля; ничего не запускает
-max personal server uninstall        # убрать службу; сначала max personal server stop
+max personal server install          # служба systemd (Linux) или launchd (macOS) для профиля, включена; ничего не запускает
+max personal server uninstall        # выключить и убрать службу; сначала max personal server stop
 max personal watch                   # в другом: новые сообщения по мере прихода
 max personal watch --jsonl           # для скрипта: записи item/data и завершающая end
 max personal watch --jsonl | ./on-message.sh
@@ -337,8 +337,15 @@ max personal watch --events --jsonl  # ещё правки, удаления, р
 - **Служба вместо команды.** После `max personal server install` команда `max personal server start` запускает
   сервер через systemd или launchd, а `max personal server stop` останавливает его там же. Служба запускает
   `max personal serve` — сервер «руками», без простоя. Если MAX не принял вход, служба **не** перезапускает
-  сервер: каждый повтор был бы новым входом в аккаунт. `max personal server status` показывает службу и
-  где её журнал.
+  сервер: каждый повтор был бы новым входом в аккаунт. Если ключница ещё заперта (сразу после загрузки, до входа в
+  систему), сервер выходит с кодом 12, и служба пробует снова каждые 30 секунд. `max personal server status`
+  показывает службу, где её журнал и `starts_at_login`.
+- **Служба включена.** `max personal server install` включает её, и сервер стартует при каждом входе в систему и
+  после перезагрузки. Службу, которую поставил прежний `max`, включите, повторив `max personal server install`.
+  Служба из рабочей копии max (со своими папками `MAX_*_DIR`) записывается, но не включается.
+- **После простоя сервер дочитывает пропущенное.** Через 30 секунд после подключения он читает чаты, в которых есть
+  сообщения новее тех, что лежали в копии при его запуске: не дальше 7 дней назад, до 500 сообщений на чат и не
+  дольше 5 минут. После простоя больше недели запустите один раз `max personal messages sync --all`.
 - **Один сервер на профиль.** Второй `max personal serve` того же профиля откажется. Сокет лежит рядом с
   состоянием профиля, права 600: слушать может только владелец.
 - **Что он делает в сети — как вкладка web.max.ru:** пинг раз в 30 секунд, ответ на пинг MAX,

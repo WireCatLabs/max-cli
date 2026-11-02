@@ -977,4 +977,19 @@ export const UNTESTED: Untested[] = [
     option: "--last",
     reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0)`,
   },
+  ...[undefined, "--since-time", "--before-time", "--context-query"].map((option) => ({
+    command: "projects status",
+    ...(option ? { option } : {}),
+    reason: `cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0)`,
+  })),
+  {
+    command: "messages sync",
+    option: "--full-history",
+    reason: `cli-core src/services/archive.test.ts ("does not read a group above the members cap, and reads it in full with --full-history") drives the shared sync MAX mounts (0.551.0)`,
+  },
+  {
+    command: "",
+    option: "--compact",
+    reason: `cli-core src/cli/compact.test.ts and projects-command.test.ts ("prints one line per item with --compact, and a human summary on a terminal") cover the shared switch; MAX adds no rows of its own (0.550.0)`,
+  },
 ]

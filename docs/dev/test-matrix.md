@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**923 ✅ · 183 ⛔ · 0 ❌** — 362 commands, 744 options.
+**923 ✅ · 189 ⛔ · 0 ❌** — 363 commands, 749 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -207,6 +207,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages sync` | `--catch-up-chunks` | ✅ |  |
 | `messages sync` | `--catch-up-messages` | ✅ |  |
 | `messages sync` | `--catch-up-time` | ✅ |  |
+| `messages sync` | `--full-history` | ⛔ | cli-core src/services/archive.test.ts ("does not read a group above the members cap, and reads it in full with --full-history") drives the shared sync MAX mounts (0.551.0) |
 | `messages sync` | `--background` | ⛔ | starts a detached `max` that outlives the test; cli-core src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6 |
 | `messages sync` | `--dry-run` | ✅ |  |
 | `messages transcribe` |  | ✅ |  |
@@ -473,6 +474,10 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `projects evidence` | `--no-catch-up` | ✅ |  |
 | `projects evidence` | `--sync-first` | ✅ |  |
 | `projects evidence` | `--sync-time` | ✅ |  |
+| `projects status` |  | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
+| `projects status` | `--since-time` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
+| `projects status` | `--before-time` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
+| `projects status` | `--context-query` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
 | `conversations list` |  | ✅ |  |
 | `conversations list` | `--limit` | ✅ |  |
 | `conversations show` |  | ✅ |  |
@@ -1110,6 +1115,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | *global* | `--max-output-bytes` | ✅ |  |
 | *global* | `--brief` | ⛔ | cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0) |
 | *global* | `--full` | ⛔ | cli-core src/output-detail.test.ts and src/cli/messenger/messenger.test.ts drive --brief and --full through the shared program MAX mounts (0.251.0) |
+| *global* | `--compact` | ⛔ | cli-core src/cli/compact.test.ts and projects-command.test.ts ("prints one line per item with --compact, and a human summary on a terminal") cover the shared switch; MAX adds no rows of its own (0.550.0) |
 | *global* | `--dry-run` | ✅ |  |
 | *global* | `--yes` | ✅ |  |
 | *global* | `--record` | ✅ |  |

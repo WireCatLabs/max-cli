@@ -818,17 +818,16 @@ describe("the program", () => {
       expect(history).toMatchObject({ from: Date.parse("2026-09-21T00:00:00Z") - 1, backward: 2, forward: 0 })
     })
 
-    it("**refuses `date>` with `date<`** before connecting to anything", async () => {
+    it("**reads a window bounded on both sides**: `date>` with `date<` reads forward from the start", async () => {
       const { max, environment } = acquaintedMax()
       const { code, stderr } = await runWith(
-        ["t-both", "messages", "list", "111", 'date>"2026-09-20T00:00:00Z"', 'date<"2026-09-21T00:00:00Z"'],
+        ["t-both", "messages", "list", "111", 'date>"2026-09-20T00:00:00Z"', 'date<"2026-09-21T00:00:00Z"', "--json"],
         environment,
       )
 
-      expect(code).toBe(2)
-      expect(JSON.parse(stderr).error).toMatchObject({ reason: "query.unsupported-placement" })
-      expect(stderr).toContain("date only once")
-      expect(max.sent).toEqual([])
+      expect(code, stderr).toBe(0)
+      const history = max.sent.find((call) => call.opcode === Opcode.CHAT_HISTORY)?.payload
+      expect(history).toMatchObject({ from: Date.parse("2026-09-20T00:00:00Z") + 1, backward: 0 })
     })
 
     it("blames `date` for a value that is not a time", async () => {
