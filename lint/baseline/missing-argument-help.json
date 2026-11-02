@@ -12,8 +12,5 @@
   "bot comments list <message>",
   "bot comments send <message>",
   "bot comments send <text>",
-  "bot uploads put <file>",
-  "schedule exec <file>",
-  "schedule remove <name>",
-  "schedule run <name>"
+  "bot uploads put <file>"
 ]
