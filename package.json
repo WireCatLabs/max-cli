@@ -15,7 +15,8 @@
   },
   "packageManager": "pnpm@11.28.8",
   "bin": {
-    "max": "dist/bin/max.js"
+    "max": "dist/bin/max.js",
+    "wcat-max": "dist/bin/max.js"
   },
   "files": [
     "dist",
