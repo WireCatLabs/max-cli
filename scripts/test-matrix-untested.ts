@@ -1,4 +1,5 @@
 import { MEDIA_ARCHIVE_UNTESTED } from "./test-matrix-media-archive.ts"
+import { PROJECTS_UNTESTED } from "./test-matrix-projects.ts"
 
 /**
  * What `max` cannot test offline, each with the reason and where it is checked instead. An entry
@@ -977,11 +978,7 @@ export const UNTESTED: Untested[] = [
     option: "--last",
     reason: `cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0)`,
   },
-  ...[undefined, "--since-time", "--before-time", "--context-query"].map((option) => ({
-    command: "projects status",
-    ...(option ? { option } : {}),
-    reason: `cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0)`,
-  })),
+  ...PROJECTS_UNTESTED,
   {
     command: "messages sync",
     option: "--full-history",
