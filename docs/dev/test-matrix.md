@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**923 ✅ · 192 ⛔ · 0 ❌** — 363 commands, 752 options.
+**924 ✅ · 210 ⛔ · 0 ❌** — 370 commands, 764 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -336,6 +336,14 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `stats messages discussion` | `--saved` | ⛔ | cli-core src/services/admin-statistics.test.ts covers shared report saved-run scope and typed overrides; native admin-statistics-adoption.test.ts checks mounted report paths and both evidence targets without connecting |
 | `stats messages discussion` | `--timezone` | ✅ |  |
 | `stats messages discussion` | `--limit` | ✅ |  |
+| `stats messages responses` |  | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
+| `stats messages responses` | `--who` | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
+| `stats messages responses` | `--by` | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
+| `stats messages responses` | `--timezone` | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
+| `stats messages responses` | `--source` | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
+| `stats messages waiting` |  | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
+| `stats messages waiting` | `--timezone` | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
+| `stats messages waiting` | `--source` | ⛔ | cli-core 0.563.0 src/cli/messenger/reply-stats-command.test.ts drives the shared command; max mounts it unchanged |
 | `stats messages top` |  | ✅ |  |
 | `stats messages top` | `--sync-first` | ✅ |  |
 | `stats messages top` | `--max-chats` | ✅ |  |
@@ -412,6 +420,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks add` | `--category` | ✅ |  |
 | `tasks add` | `--into` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks that may be one job": refuses, --into, --new, lists, merges, unmerges) drives this through the shared handler MAX mounts (0.285.0) |
 | `tasks add` | `--new` | ✅ |  |
+| `tasks add` | `--open-new` | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives --open-new; max mounts the shared command unchanged |
 | `tasks add` | `--title` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
 | `tasks add` | `--description` | ⛔ | cli-core src/cli/messenger/tasks.test.ts drives the sibling options of this command through the shared handler MAX mounts, not this one; parsed by the same code (SDK0.247.0) |
 | `tasks add` | `--due` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("plans, links and shows a task, and lists it on the agenda") drives this through the shared handler MAX mounts (SDK0.247.0) |
@@ -448,6 +457,13 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks categories` |  | ✅ |  |
 | `tasks scan` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0) |
 | `tasks scan` | `--last` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0) |
+| `tasks status` |  | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
+| `tasks status` | `--limit` | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
+| `tasks review` |  | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
+| `tasks review` | `--limit` | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
+| `tasks review` | `--since-time` | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
+| `tasks acknowledge` |  | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
+| `tasks acknowledge` | `--since-time` | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
 | `tasks claim` |  | ✅ |  |
 | `tasks claim` | `--lease` | ✅ |  |
 | `tasks claim` | `--holder` | ✅ |  |
@@ -832,6 +848,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `config unset` | `--defaults` | ✅ |  |
 | `config unset` | `--personal` | ✅ |  |
 | `config unset` | `--bot` | ✅ |  |
+| `config migrate` |  | ✅ |  |
+| `config repair` |  | ⛔ | cli-core 0.563.0 src/cli/config-command.test.ts drives the shared command; max mounts it unchanged |
+| `config repair` | `--dry-run` | ⛔ | cli-core 0.563.0 src/cli/config-command.test.ts drives the shared command; max mounts it unchanged |
 | `doctor` |  | ✅ |  |
 | `doctor` | `--online` | ⛔ | logs in to MAX and starts `max mcp serve` as a child; src/online.test.ts covers both steps, live X3 |
 | `doctor reports show` |  | ✅ |  |

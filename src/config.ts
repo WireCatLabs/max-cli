@@ -234,6 +234,8 @@ export type SourcedSetting =
   | "recordInput"
   | "serve"
   | "keepRunsForDays"
+  | "keepSuccessfulRunsForDays"
+  | "runsSizeLimitMb"
   | "sendsPerHour"
   | "requestsPerMinute"
   | "permissions"
@@ -411,6 +413,14 @@ const sharedSettings = settingsFor(MAX_APP, {
   profiles: (env) => knownProfiles({ env }).map(({ name }) => name),
   profile: { serve: personalEntries.serve },
   defaults: { transcribe_model: defaultsEntries.transcribe_model },
+  settings: [
+    {
+      key: "serve",
+      default: true,
+      description: "start max serve in the background when a command needs MAX and none is running",
+    },
+    { key: "transcribe_model", default: DEFAULT_MODEL, description: "the speech model voice messages are read with" },
+  ],
   sourcePaths: true,
   parseDuration,
   resolve: ({ flags, settings, fromLayers }) => {

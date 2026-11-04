@@ -11,5 +11,6 @@
   "replies on",
   "schedule agent",
   "schedule command",
-  "schedule exec"
+  "schedule exec",
+  "stats messages waiting"
 ]

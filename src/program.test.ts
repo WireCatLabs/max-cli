@@ -438,19 +438,15 @@ describe("the program", () => {
       expect(JSON.parse(set.stdout).item).toMatchObject({ scope: "profiles.work", setting: "limit", value: 30 })
 
       const { stdout } = await runWith(["work", "config", "show", "--json"])
-      expect(JSON.parse(stdout).item.settings).toContainEqual({
-        setting: "limit",
-        value: 30,
-        from: "config file: profiles.work",
-      })
+      expect(JSON.parse(stdout).item.settings).toContainEqual(
+        expect.objectContaining({ setting: "limit", value: 30, from: "config file: profiles.work" }),
+      )
 
       await runWith(["work", "config", "unset", "limit"])
       const after = await runWith(["work", "config", "show", "--json"])
-      expect(JSON.parse(after.stdout).item.settings).toContainEqual({
-        setting: "limit",
-        value: 20,
-        from: "config file: defaults",
-      })
+      expect(JSON.parse(after.stdout).item.settings).toContainEqual(
+        expect.objectContaining({ setting: "limit", value: 20, from: "config file: defaults" }),
+      )
     })
 
     it("`config set --bot` writes the bot side, and `config show --bot` reads it back", async () => {
@@ -460,13 +456,13 @@ describe("the program", () => {
       const bot = JSON.parse((await runWith(["test", "config", "show", "--bot", "--json"])).stdout).item
       expect(bot.kind).toBe("bot")
       expect(bot.settings.map((row: { setting: string }) => row.setting)).not.toContain("serve")
-      expect(bot.settings).toContainEqual({
-        setting: "sends_per_hour",
-        value: 60,
-        from: "config file: bot.profiles.test",
-      })
+      expect(bot.settings).toContainEqual(
+        expect.objectContaining({ setting: "sends_per_hour", value: 60, from: "config file: bot.profiles.test" }),
+      )
       const personal = JSON.parse((await runWith(["test", "config", "show", "--json"])).stdout).item
-      expect(personal.settings).toContainEqual({ setting: "sends_per_hour", value: 30, from: "config file: defaults" })
+      expect(personal.settings).toContainEqual(
+        expect.objectContaining({ setting: "sends_per_hour", value: 30, from: "config file: defaults" }),
+      )
     })
 
     it("`config set --personal` writes the personal section, which a bot on the same profile does not read", async () => {
@@ -477,7 +473,11 @@ describe("the program", () => {
         JSON.parse((await runWith(["t-side", "config", "show", ...argv, "--json"])).stdout).item.settings.find(
           (row: { setting: string }) => row.setting === "limit",
         )
-      expect(await limitOf([])).toEqual({ setting: "limit", value: 40, from: "config file: personal.profiles.t-side" })
+      expect(await limitOf([])).toMatchObject({
+        setting: "limit",
+        value: 40,
+        from: "config file: personal.profiles.t-side",
+      })
       expect(await limitOf(["--bot"])).toMatchObject({ value: 20, from: "config file: defaults" })
     })
 
@@ -505,9 +505,9 @@ describe("the program", () => {
           (row: { setting: string }) => row.setting === "serve",
         )
 
-      expect(await serveOf("--serve")).toEqual({ setting: "serve", value: true, from: "flag" })
+      expect(await serveOf("--serve")).toMatchObject({ setting: "serve", value: true, from: "flag" })
       await runWith(["t-serve", "config", "set", "serve", "true"])
-      expect(await serveOf("--no-serve")).toEqual({ setting: "serve", value: false, from: "flag" })
+      expect(await serveOf("--no-serve")).toMatchObject({ setting: "serve", value: false, from: "flag" })
     })
 
     it("**assumes no profile**: an account command stops and lists them; account list and config show still run", async () => {

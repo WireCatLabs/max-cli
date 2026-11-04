@@ -2649,6 +2649,50 @@ max stats messages discussion [query] [options]
 
 **Example:** `max personal stats messages discussion chat:"Book club"`
 
+#### `max stats messages responses`
+
+how long the owner took to answer (--who me), or the other side took to answer the owner (--who others), in one-to-one chats — the local store only. Several messages in a row followed by one answer count as one reply, timed from the first unanswered message; the day of a row is the day of the reply
+
+```sh
+max stats messages responses [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | date:, chat: and kind: terms, AND-ed — date>=30d, date:[60d TO 30d]; none reads all time. |
+
+| Опция | Что делает |
+|---|---|
+| `--who <side>` | whose replies: the owner's or the other side's. Одно из: `me`, `others`. |
+| `--by <group>` | one row per calendar day of the reply, or none. Одно из: `day`, `total`. |
+| `--timezone <zone>` | the IANA timezone for calendar days and date: bounds. |
+| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all. |
+
+**Returns:** response times — who, replies, median_ms, p90_ms, mean_ms, buckets, rows; every field: max commands info stats messages responses
+
+**Example:** `max personal stats messages responses --who me --by day --timezone Europe/Madrid -- date>=30d`
+
+#### `max stats messages waiting`
+
+how many chats wait on the owner — the local store only: a one-to-one chat whose newest message is a question, or a group whose newest message mentions the owner or replies to them. Muted or archived one-to-one chats are left out, as inbox leaves them out; date: bounds the newest message's time
+
+```sh
+max stats messages waiting [query] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | date:, chat: and kind: terms, AND-ed — date>=30d, date:[60d TO 30d]; none reads all time. |
+
+| Опция | Что делает |
+|---|---|
+| `--timezone <zone>` | the IANA timezone for date: bounds. |
+| `--source <accounts>` | every account of this messenger held in the store; personal, bots or all. |
+
+**Returns:** waiting chats — chats, messages, oldest_at, by_kind; every field: max commands info stats messages waiting
+
+**Example:** `max personal stats messages waiting kind:private`
+
 #### `max stats messages top`
 
 rank stored messages by a measure or explainable score; counters are snapshots with per-field observation freshness
@@ -2954,6 +2998,7 @@ max tasks add <message> [options]
 | `--category <name>` | what it is about, from the list tasks categories prints: money, documents, meeting, …. |
 | `--into <id>` | when tasks add listed tasks that may be the same job: link the message to this one instead of opening a task. |
 | `--new` | when tasks add listed tasks that may be the same job: open the task anyway. |
+| `--open-new` | open a task from a message the chat's task point already passed (a read again with tasks review --since-time); without it such a read only updates and closes tasks. |
 | `--title <title>` | one line: the action and its object — send Alex the API token. |
 | `--description <text>` | the detail, in Markdown: who owes whom, done when, next step, keywords. |
 | `--due <time>` | when it must be done: an ISO 8601 time or 2h, 3d from now; none clears it. |
@@ -3212,6 +3257,66 @@ max tasks scan <chat> [options]
 **Returns:** task scan — chat, messages, added, closed, review, tasks, held, held_chats; every field: max commands info tasks scan
 
 **Example:** `max personal tasks scan <chat>`, `max personal tasks scan <chat> --last 300 --yes`
+
+### `max tasks status`
+
+every chat that can hold your tasks — not a channel or Saved Messages — with the point its messages were read for tasks through, who read them, how many stored messages wait after it, and how many arrived late inside the stretch already read (history fetched afterwards). Its own point: reading a chat, marking it read, inbox --new and review --new never move it; tasks acknowledge does. Reads only the local store
+
+```sh
+max tasks status [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many chats. |
+
+**Returns:** task analysis — chat, title, kind, newest_at, mark, waiting, late, untrusted; every field: max commands info tasks status
+
+**Example:** `max personal tasks status`
+
+### `max tasks review`
+
+the stored messages after the chat's task point, oldest first, and the chat's open tasks, so one read can open new tasks and update or close the old ones. A chat never read starts 14 days back. Moves nothing: when done, tasks acknowledge <chat> <through> records it. Reads only the local store; messages sync or backfill fetch what it lacks
+
+```sh
+max tasks review <chat> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+
+| Опция | Что делает |
+|---|---|
+| `--limit <n>` | how many messages (default 100, 1000 with --since-time; at most 1000). |
+| `--since-time <time>` | read again from this ISO 8601 time, or 30d ago, whatever the point says; what the point already passed only updates and closes tasks, unless tasks add is given --open-new. |
+
+**Returns:** task review — chat, from, mark, late, has_more, through, messages, open_tasks, and 1 more; every field: max commands info tasks review
+
+**Example:** `max personal tasks review <chat>`, `max personal tasks review <chat> --since-time 30d`
+
+### `max tasks acknowledge`
+
+moves the chat's task point to this message once its tasks are opened, updated or closed; it never moves back. With --since-time, the read started there: a read again from the start of the stretch clears what arrived late inside it
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max tasks acknowledge <chat> <message> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `message` | обязательный | the id of the last message read, as tasks review shows it. |
+
+| Опция | Что делает |
+|---|---|
+| `--since-time <time>` | where the read started, when tasks review was given --since-time. |
+
+**Returns:** task analysis mark — chat, from, through, through_id, by, checked_at, checked_through, at, and 1 more; every field: max commands info tasks acknowledge
+
+**Example:** `max personal tasks acknowledge <chat> <message>`
 
 ### `max tasks claim`
 
@@ -4926,7 +5031,7 @@ max inbox [query] [options]
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <model>` | which downloaded speech model hears them, with --transcribe; `models list` shows them. |
 
-**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 2 more; every field: max commands info inbox
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 3 more; every field: max commands info inbox
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -4952,7 +5057,7 @@ max review [query] [options]
 | `--model <model>` | which downloaded speech model hears them, with --transcribe; `models list` shows them. |
 | `--new` | what changed since the last `review --new`, a point per chat — for scheduled runs. |
 
-**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 2 more; every field: max commands info review
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 3 more; every field: max commands info review
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -5563,6 +5668,38 @@ max config unset <setting> [options]
 **Returns:** remove a setting from the configuration file
 
 **Example:** `max personal config unset limit`
+
+### `max config migrate`
+
+write each setting the file lacks at its default, keeping yours
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max config migrate
+```
+
+**Returns:** write each setting the file lacks at its default, keeping yours
+
+**Example:** `max config migrate`
+
+### `max config repair`
+
+fix broken JSON syntax in the settings file — comments, a missing or extra comma, unquoted keys, single quotes, missing closing brackets at the end — keeping every value, with a backup beside it; refuses anything with more than one reading and changes nothing then
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max config repair [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--dry-run` | say what it would fix, and change nothing. |
+
+**Returns:** fix the settings file's JSON syntax, keeping every value
+
+**Example:** `max config repair`, `max config repair --dry-run`
 
 ## `max doctor`
 

@@ -40,6 +40,8 @@ const SHOWN: SourcedSetting[] = [
   "recordInput",
   "serve",
   "keepRunsForDays",
+  "keepSuccessfulRunsForDays",
+  "runsSizeLimitMb",
   "sendsPerHour",
   "permissions",
   "readOtherBots",
@@ -49,6 +51,11 @@ const SHOWN: SourcedSetting[] = [
 ]
 
 const snakeName = (setting: string) => setting.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`)
+
+const declared = (setting: string) => {
+  const found = configuration.declaredSettings.find(({ key }) => key === `defaults.${setting}`)
+  return found ? { default: found.default, description: found.description } : {}
+}
 
 const refuseAgentPermissionChange = (setting: string): void => {
   const key = setting.startsWith("permissions.") ? setting.slice("permissions.".length) : undefined
@@ -108,6 +115,7 @@ export const configCommand = (): Command => {
             setting: snakeName(setting),
             value: settings[setting] ?? null,
             from: settings.sources[setting],
+            ...declared(snakeName(setting)),
             ...(setting === "models"
               ? {
                   sources: Object.fromEntries(
