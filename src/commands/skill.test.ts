@@ -110,7 +110,7 @@ describe("the hint to agents that the skill exists", () => {
     const second = await max("config", "show", "--json")
 
     expect(first.stderr).toContain("agents: `max skill install` installs this tool's guide")
-    expect(first.stdout).not.toContain("skill install")
+    expect(first.stdout).not.toContain("installs this tool's guide")
     expect(JSON.parse(first.stdout)).toMatchObject({ item: { kind: "personal" } })
     expect(second.stderr).not.toContain("skill install")
   })

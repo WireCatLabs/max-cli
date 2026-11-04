@@ -2548,5 +2548,28 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     }
+  },
+  "config migrate": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
+  },
+  "config repair": {
+    "writes": true,
+    "input": {
+      "type": "object",
+      "properties": {
+        "dry_run": {
+          "type": "boolean",
+          "description": "say what it would fix, and change nothing"
+        }
+      },
+      "required": [],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    }
   }
 }

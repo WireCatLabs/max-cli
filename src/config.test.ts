@@ -268,7 +268,12 @@ describe("where each setting came from", () => {
       defaults: { limit: 20 },
       profiles: {},
     })
-    expect(resolved.sources).toMatchObject({ limit: "config file: defaults", profile: "none named", record: "default" })
+    expect(resolved.sources).toMatchObject({
+      limit: "config file: defaults",
+      profile: "none named",
+      serve: "config file: defaults",
+      timeoutMs: "default",
+    })
   })
 
   it("tells a flag from the file from the built-in value", () => {
@@ -368,16 +373,16 @@ describe("changing a setting", () => {
   it("writes a profile's setting as the type the file holds, and removes it again", () => {
     expect(changeSetting(path(), { profile: "work", setting: "limit", value: "50" })).toBe(50)
     changeSetting(path(), { profile: "work", setting: "record", value: "true" })
-    expect(file()).toEqual({ profiles: { work: { limit: 50, record: true } } })
+    expect(file().profiles).toEqual({ work: { limit: 50, record: true } })
 
     changeSetting(path(), { profile: "work", setting: "limit", value: undefined })
     changeSetting(path(), { profile: "work", setting: "record", value: undefined })
-    expect(file()).toEqual({})
+    expect(file()).not.toHaveProperty("profiles")
   })
 
   it("writes to `defaults` when no profile is named", () => {
     changeSetting(path(), { profile: undefined, setting: "keep_runs_for_days", value: "7" })
-    expect(file().defaults).toEqual({ keep_runs_for_days: 7 })
+    expect(file().defaults).toMatchObject({ keep_runs_for_days: 7, serve: true })
   })
 
   it("writes to a side of the file with a kind, and tidies it away when empty", () => {
@@ -478,7 +483,7 @@ describe("local search catch-up setting", () => {
 
 describe("the discovery reranker setting", () => {
   it("defaults to mmarco, takes off from the file, and refuses an unknown id", () => {
-    expect(settings()).toMatchObject({ searchReranker: "mmarco", sources: { searchReranker: "default" } })
+    expect(settings()).toMatchObject({ searchReranker: "mmarco", sources: { searchReranker: "config file: defaults" } })
     withConfig(JSON.stringify({ profiles: { work: { search_reranker: "off" } } }))
     expect(settings({ profile: "work" })).toMatchObject({
       searchReranker: "off",
