@@ -38,7 +38,7 @@ import type { Command } from "commander"
 import { MAX_APP } from "./app.js"
 import { accountCommand } from "./commands/account.js"
 import { botCommand } from "./commands/bot.js"
-import { botRecordingOf } from "./commands/bot-context.js"
+import { botRecordingOf, endBotRun } from "./commands/bot-context.js"
 import { callsCommand } from "./commands/calls.js"
 import { chatsCommand } from "./commands/chats.js"
 import { commandsCommand } from "./commands/commands.js"
@@ -196,7 +196,10 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
       ...(recognizer ? { hear: recognizer } : {}),
     })
   },
-  onFailure: (error, program) => botRecordingOf(program)?.fail(error),
+  onFailure: (error, program) => {
+    endBotRun(program)
+    return botRecordingOf(program)?.fail(error)
+  },
 })
 
 export const createProgram = (options: ProgramOptions = {}): Command => createSharedProgram(definition(), options)
