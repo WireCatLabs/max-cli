@@ -80,6 +80,22 @@ describe("tasks through max", () => {
 
     const counted = await cli(["stats", "tasks", "show", "--chat", "7", "--type", "promise", "--json"])
     expect(JSON.parse(counted.out).item).toMatchObject({ open: 1, rows: [{ chat: "chat:max/601/7", open: 1 }] })
+    const today = await cli([
+      "stats",
+      "tasks",
+      "show",
+      "--by",
+      "chat",
+      "--timezone",
+      "UTC",
+      "--json",
+      "--",
+      "created>=today",
+    ])
+    expect(today.code, today.err).toBe(0)
+    const opened = JSON.parse(today.out).item
+    expect(opened.rows).toMatchObject([{ key: "chat:max/601/7", created: opened.created }])
+    expect(opened.created).toBeGreaterThanOrEqual(1)
 
     const closed = await cli(["tasks", "close", id, "--as", "dismissed", "--reason", "no-reply-needed", "--json"])
     expect(closed.code, closed.err).toBe(0)
