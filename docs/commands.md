@@ -118,7 +118,7 @@ the logged-in account
 
 ### `max account list`
 
-every profile on this computer, and the account each is logged in as; asks the messenger nothing
+every account profile on this computer, and the account each is logged in as; a name that is only a bot is left out (`bot list` has it), one that is a bot too says `bot: true`; asks the messenger nothing
 
 ```sh
 max account list [query]
@@ -128,7 +128,7 @@ max account list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
-**Returns:** account profile — profile, current, account, name, signed_in; every field: max commands info account list
+**Returns:** account profile — profile, current, account, name, signed_in, bot; every field: max commands info account list
 
 **Example:** `max personal account list`
 
@@ -6166,7 +6166,7 @@ max bot list [query] [options]
 
 **Returns:** bot profile — name, token, bot, id, problem; every field: max commands info bot list
 
-**Example:** `max sales bot list`, `max sales bot list --check`
+**Example:** `max personal bot list`, `max personal bot list --check`
 
 ### `max bot chats`
 
