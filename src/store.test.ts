@@ -88,6 +88,10 @@ describe("max store", () => {
 
     const status = await max(["s-fetch", "store", "status", "111", "--json"], environment)
     expect(JSON.parse(status.stdout)).toMatchObject({ items: [{ chat_id: "111", messages: 70 }] })
+
+    const coverage = await max(["s-fetch", "store", "chats", "status", "--json"], environment)
+    expect(coverage.code, coverage.stderr).toBe(0)
+    expect(JSON.parse(coverage.stdout).item).toMatchObject({ fetched: 1 })
   })
 
   it("builds evidence from the local archive without connecting or marking read", async () => {

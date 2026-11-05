@@ -1,1 +1,9 @@
-[]
+[
+  {
+    "rule": "filter-flag",
+    "target": "stats tasks show --chat",
+    "reason": "cli-core 0.564.0 gave stats tasks show a query and keeps --chat until tg and max move to -- chat:<chat>; cli-core overrides it the same way",
+    "owner": "@leemour",
+    "review_after": "2026-12-01"
+  }
+]

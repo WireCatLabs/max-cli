@@ -2112,6 +2112,22 @@ max store status [chat]
 
 **Example:** `max personal store status "Book club"`
 
+### `max store chats`
+
+the account's chats as the store holds them
+
+#### `max store chats status`
+
+over this account's searchable chats of every kind, channels included: fetched (back to the first message, up to date, no gaps), partial, never (no fetch recorded and no message held), and the oldest message held; reads the store only
+
+```sh
+max store chats status
+```
+
+**Returns:** chat coverage — chats, fetched, partial, never, oldest_message_at; every field: max commands info store chats status
+
+**Example:** `max personal store chats status`
+
 ### `max store gaps`
 
 inspect recorded interior coverage gaps and explicitly fetch them
@@ -2911,18 +2927,26 @@ task statistics
 
 #### `max stats tasks show`
 
-per chat: how many tasks are open, the oldest open one, the median time to close
+tasks per chat, meeting or project: open now, and opened and closed in the period (created: in the query), with the median time to close and the mean age of the open ones
 
 ```sh
-max stats tasks show [options]
+max stats tasks show [query] [options]
 ```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
 | Опция | Что делает |
 |---|---|
+| `--by <group>` | chat (default) or meeting: this account's tasks; project: the owner's project tasks, every project. |
 | `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
 | `--type <type>` | only this type: question, request, mention or promise. |
+| `--timezone <zone>` | the IANA timezone for calendar days in the period, such as created>=today. |
 
-**Returns:** task stats — open, rows; every field: max commands info stats tasks show
+**Returns:** task — ref, id, title, kind, state, created_at, key, description, and 24 more; every field: max commands info stats tasks show
+
+**Next usually:** `max tasks show <task>`, `max tasks related <task>`, `max tasks update <task>`
 
 **Example:** `max personal stats tasks show --chat "Project room"`
 
@@ -5031,7 +5055,7 @@ max inbox [query] [options]
 | `--transcribe` | turn voice messages not heard yet into text — by the messenger where it can, else by a model on this machine; can take minutes. |
 | `--model <model>` | which downloaded speech model hears them, with --transcribe; `models list` shows them. |
 
-**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 3 more; every field: max commands info inbox
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 4 more; every field: max commands info inbox
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -5057,7 +5081,7 @@ max review [query] [options]
 | `--model <model>` | which downloaded speech model hears them, with --transcribe; `models list` shows them. |
 | `--new` | what changed since the last `review --new`, a point per chat — for scheduled runs. |
 
-**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 3 more; every field: max commands info review
+**Returns:** message summary — ref, chat_id, timestamp, sender_name, sender_is_me, outgoing, text, attachments, and 4 more; every field: max commands info review
 
 **Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
 
@@ -7796,6 +7820,7 @@ max guide [name]
 | `12` | `provider_unavailable` |
 | `13` | `invalid_response` |
 | `14` | `outcome_unknown` |
+| `15` | `conflict` |
 | `130` | `cancelled` |
 | `1` | всё остальное |
 
