@@ -143,6 +143,27 @@ describe("BotTransport", () => {
     expect(calls).toHaveLength(3)
   })
 
+  it("times out a request that never answers, on its own clock", async () => {
+    const hanging = ((_: unknown, init?: RequestInit) =>
+      new Promise((_, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(init.signal?.reason), { once: true })
+      })) as typeof fetch
+    const error = await failure(transport({ fetch: hanging, timeoutMs: 20 }).call(operation("getMyInfo")))
+    expect(error).toMatchObject({ code: "timeout", message: "getMyInfo got no answer within 20 ms" })
+  })
+
+  it("stops the request's clock once MAX has answered", async () => {
+    handler = answer(200, `{"user_id": 1}`)
+    let signal: AbortSignal | undefined
+    const watched = ((url: URL, init?: RequestInit) => {
+      signal = init?.signal ?? undefined
+      return fetch(url, init)
+    }) as typeof fetch
+    await transport({ fetch: watched, timeoutMs: 20 }).call(operation("getMyInfo"))
+    await new Promise((resolve) => setTimeout(resolve, 60))
+    expect(signal?.aborted).toBe(false)
+  })
+
   it("names MAX's own error code and keeps the token out of the message", async () => {
     handler = answer(401, `{"code": "verify.token", "message": "Invalid access_token ${TOKEN}"}`)
     const error = await failure(transport().call(operation("getMyInfo")))

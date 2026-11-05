@@ -13,6 +13,7 @@ import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-base/
 import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-core/cli"
 import { guardedWrite, newOperationId } from "@wirecat/cli-core/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
+import { withTimeLimit } from "../deadline.js"
 import { VERSION } from "../version.js"
 import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"
 
@@ -187,13 +188,18 @@ export class BotTransport {
       : this.#timeoutMs
   }
 
-  async #once(
+  #once(operation: ManifestOperation, url: URL, body: string | undefined, timeoutMs: number) {
+    return withTimeLimit(timeoutMs, (deadline) => this.#exchange(operation, url, body, timeoutMs, deadline))
+  }
+
+  async #exchange(
     operation: ManifestOperation,
     url: URL,
     body: string | undefined,
     timeoutMs: number,
+    deadline: AbortSignal,
   ): Promise<{ answer: unknown; status: number; bytes: number }> {
-    const signals = [AbortSignal.timeout(timeoutMs), ...(this.#signal ? [this.#signal] : [])]
+    const signals = [deadline, ...(this.#signal ? [this.#signal] : [])]
     const reads = operation.effect === "read"
     let response: Response
     try {

@@ -15,7 +15,7 @@ import { checkBody, checkParameter } from "../bot/input.js"
 import { plainJson } from "../bot/transport.js"
 import type { run } from "../program.js"
 import { commentsCommand } from "./bot-comments.js"
-import { assertAllowed, botContext, botRecordingOf, startBotRecording } from "./bot-context.js"
+import { assertAllowed, botContext, botRecordingOf, endBotRun, startBotRecording } from "./bot-context.js"
 import { addMembersCommands } from "./bot-members.js"
 import { maxBot, maxBotMcp } from "./bot-messenger.js"
 import { guardedCall } from "./bot-sends.js"
@@ -42,7 +42,10 @@ export const botCommand = (program: typeof run): Command => {
     .hook("preAction", (_group, action) => {
       if (!shared.has(action)) startBotRecording(action)
     })
-    .hook("postAction", async (_group, action) => botRecordingOf(action)?.succeed())
+    .hook("postAction", async (_group, action) => {
+      endBotRun(action)
+      await botRecordingOf(action)?.succeed()
+    })
 
   annotate(command.command("me"), { effects: REMOTE_READ, offline: false })
     .summary("the bot this profile's token belongs to")

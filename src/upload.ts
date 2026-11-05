@@ -4,6 +4,7 @@ import { basename, extname } from "node:path"
 import { CliError, isCliError } from "@wirecat/cli-base"
 import { refusedPlace } from "@wirecat/cli-core/sends"
 import { MAX_APP } from "./app.js"
+import { withTimeLimit } from "./deadline.js"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
 const HEADERS = {
@@ -53,8 +54,6 @@ export const openUpload = async (path: string, { anyFile = false }: { anyFile?: 
 /** The whole upload, not a stall: `fetch` reports no progress on a body it sends. */
 const UPLOAD_MS = 15 * 60_000
 
-const uploadDeadline = () => AbortSignal.timeout(UPLOAD_MS)
-
 const refused = (kind: string, status: number) =>
   new CliError("network_error", `the ${kind} could not be uploaded: HTTP ${status} — nothing was sent`)
 
@@ -64,30 +63,33 @@ export const uploadPhoto = async (url: string, path: string, body: Blob): Promis
   const type = IMAGE_TYPES[extname(path).toLowerCase()] ?? "application/octet-stream"
   form.append("file", new Blob([body], { type }), `image${extname(path).toLowerCase()}`)
 
-  const response = await fetch(url, { method: "POST", headers: HEADERS, body: form, signal: uploadDeadline() })
-  if (!response.ok) throw refused("photo", response.status)
-  const answer = (await response.json().catch(() => ({}))) as { photos?: Record<string, { token?: unknown }> }
+  const answer = await withTimeLimit(UPLOAD_MS, async (signal) => {
+    const response = await fetch(url, { method: "POST", headers: HEADERS, body: form, signal })
+    if (!response.ok) throw refused("photo", response.status)
+    return (await response.json().catch(() => ({}))) as { photos?: Record<string, { token?: unknown }> }
+  })
   const token = Object.values(answer.photos ?? {})[0]?.token
   if (typeof token !== "string")
     throw new CliError("provider_error", "the photo upload answered no token — nothing was sent")
   return token
 }
 
-const postRaw = async (kind: string, url: string, path: string, body: Blob, range: string): Promise<void> => {
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      ...HEADERS,
-      "Content-Disposition": `attachment; filename=${encodeURIComponent(basename(path))}`,
-      "Content-Range": range,
-      "Content-Type": "application/octet-stream",
-    },
-    body,
-    signal: uploadDeadline(),
+const postRaw = (kind: string, url: string, path: string, body: Blob, range: string): Promise<void> =>
+  withTimeLimit(UPLOAD_MS, async (signal) => {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        ...HEADERS,
+        "Content-Disposition": `attachment; filename=${encodeURIComponent(basename(path))}`,
+        "Content-Range": range,
+        "Content-Type": "application/octet-stream",
+      },
+      body,
+      signal,
+    })
+    await response.body?.cancel()
+    if (!response.ok) throw refused(kind, response.status)
   })
-  await response.body?.cancel()
-  if (!response.ok) throw refused(kind, response.status)
-}
 
 /**
  * Measured 2026-09-24: the bytes raw, with `Content-Range: 0-<end>/<size>` — no `bytes ` unit, as

@@ -4,6 +4,7 @@ import { CliError, type ErrorCode, realSleep, type SleepLike } from "@wirecat/cl
 import { type FetchLike, statusToCode } from "@wirecat/cli-base/http"
 import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
 import { parse } from "lossless-json"
+import { timeLimit } from "../deadline.js"
 import { plainJson } from "./transport.js"
 
 export const UPLOAD_TYPES = ["image", "video", "audio", "file"] as const
@@ -88,30 +89,33 @@ export const uploadFile = async (options: {
   if (size === undefined) throw new CliError("not_found", `no file at ${path}`)
   const form = new FormData()
   form.append("data", content ? content.blob : await openAsBlob(path ?? ""), name)
-  const signals = [
-    AbortSignal.timeout(options.timeoutMs ?? UPLOAD_TIMEOUT_MS),
-    ...(options.signal ? [options.signal] : []),
-  ]
+  const limit = timeLimit(options.timeoutMs ?? UPLOAD_TIMEOUT_MS)
+  const signal = options.signal ? AbortSignal.any([limit.signal, options.signal]) : limit.signal
   const operation = `upload.${type}`
   const emit = options.events ?? (() => {})
   const started = Date.now()
   emit({ event: "request", operation, bytes: size })
   let response: Response
+  let text: string
   try {
-    response = await options.fetch(endpoint.url, { method: "POST", body: form, signal: AbortSignal.any(signals) })
-  } catch {
-    emit({
-      event: "response",
-      operation,
-      durationMs: Date.now() - started,
-      outcome: "error",
-      errorCode: "network_error",
-    })
-    throw new CliError("network_error", `the upload of ${name} did not finish; nothing was sent to the chat`, {
-      retryable: false,
-    })
+    try {
+      response = await options.fetch(endpoint.url, { method: "POST", body: form, signal })
+    } catch {
+      emit({
+        event: "response",
+        operation,
+        durationMs: Date.now() - started,
+        outcome: "error",
+        errorCode: "network_error",
+      })
+      throw new CliError("network_error", `the upload of ${name} did not finish; nothing was sent to the chat`, {
+        retryable: false,
+      })
+    }
+    text = await response.text()
+  } finally {
+    limit.clear()
   }
-  const text = await response.text()
   emit({
     event: "response",
     operation,

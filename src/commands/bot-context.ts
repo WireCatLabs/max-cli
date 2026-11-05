@@ -10,6 +10,7 @@ import { BOT_KEYS } from "../bot/permissions.js"
 import { ChatRegistry } from "../bot/registry.js"
 import { botFetch } from "../bot/transport.js"
 import { type GlobalFlags, resolveSettings, runRetention, type Settings } from "../config.js"
+import { timeLimit } from "../deadline.js"
 import { resolveOutput } from "../output.js"
 import { askerFor, assertReadable } from "../permissions.js"
 import { asFirstWord, rootOf } from "../profile.js"
@@ -60,6 +61,23 @@ export const startBotRecording = (command: Command): void => {
 
 export const botRecordingOf = (command: Command): Recording | undefined => recordings.get(rootOf(command))
 
+const limits = new WeakMap<Command, ReturnType<typeof timeLimit>>()
+
+/** One `--timeout` per run, however many contexts the command builds. */
+const commandLimit = (command: Command, ms: number): AbortSignal => {
+  const root = rootOf(command)
+  const limit = limits.get(root) ?? timeLimit(ms)
+  limits.set(root, limit)
+  return limit.signal
+}
+
+/** Called when the run ends either way, so its timer does not hold the finished run until the deadline. */
+export const endBotRun = (command: Command): void => {
+  const root = rootOf(command)
+  limits.get(root)?.clear()
+  limits.delete(root)
+}
+
 /** `offline` is for the reads the local copy can answer; every other command still refuses the flag. */
 export const botContext = (command: Command, { offline: answersOffline = false }: { offline?: boolean } = {}) => {
   const environment = environmentOf(command)
@@ -85,7 +103,7 @@ export const botContext = (command: Command, { offline: answersOffline = false }
       ...(environment.keyring ? { keyring: environment.keyring } : {}),
     })
   const recording = botRecordingOf(command)
-  const timeout = settings.commandTimeoutMs === undefined ? undefined : AbortSignal.timeout(settings.commandTimeoutMs)
+  const timeout = settings.commandTimeoutMs === undefined ? undefined : commandLimit(command, settings.commandTimeoutMs)
   const deadline =
     timeout && environment.signal ? AbortSignal.any([timeout, environment.signal]) : (timeout ?? environment.signal)
   /** `events` is a shared command's own run, which max's group hooks do not start. */
