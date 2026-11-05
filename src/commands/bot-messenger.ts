@@ -85,6 +85,7 @@ export const maxBot: BotMessenger = {
         ...(options.configDir === undefined ? {} : { configDir: options.configDir }),
         ...(options.readOnly === undefined ? {} : { readOnly: options.readOnly }),
         ...(options.withIssues === undefined ? {} : { withIssues: options.withIssues }),
+        ...(options.needsProfile === undefined ? {} : { needsProfile: options.needsProfile }),
       },
     )
     return {
