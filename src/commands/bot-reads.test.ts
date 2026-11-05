@@ -4,7 +4,7 @@ import type { AddressInfo } from "node:net"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "../bot/auth.js"
 import { run } from "../program.js"
 
@@ -261,6 +261,37 @@ describe("max bot chats", () => {
 })
 
 describe("max bot list", () => {
+  describe("with no profile named", () => {
+    let profile: string | undefined
+    beforeEach(() => {
+      profile = process.env.MAX_PROFILE
+      delete process.env.MAX_PROFILE
+    })
+    afterEach(() => {
+      if (profile !== undefined) process.env.MAX_PROFILE = profile
+    })
+
+    it("answers, and lists the names that have a bot token", async () => {
+      const { code, stdout, stderr } = await max(["bot", "list", "--json"])
+      expect(stderr).toBe("")
+      expect(code).toBe(0)
+      expect(JSON.parse(stdout).items).toEqual(expect.arrayContaining([{ name: "default", token: "keyring" }]))
+    })
+
+    it("answers with an empty list when no bot token exists", async () => {
+      keyring = memoryKeyring()
+      const { code, stdout } = await max(["bot", "list", "--json"])
+      expect(code).toBe(0)
+      expect(JSON.parse(stdout).items).toEqual([])
+    })
+
+    it("still refuses a command that acts on one bot", async () => {
+      const { code, stderr } = await max(["bot", "chats", "show", "-100", "--json"])
+      expect(code).toBe(2)
+      expect(JSON.parse(stderr).error.message).toMatch(/^name a profile: /)
+    })
+  })
+
   it("shows each name with a bot token, and which bot it is with --check", async () => {
     new BotTokenStore({ profile: "sales", keyring }).write(TOKEN)
     await max(["sales", "bot", "chats", "show", "-100", "--json"])
