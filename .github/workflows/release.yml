@@ -188,7 +188,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: openclaw/clawhub/.github/workflows/skill-publish.yml@52358852d3510f1150756d48e8a72cb8c8e698e0 # main, 2026-10-25
+    uses: openclaw/clawhub/.github/workflows/skill-publish.yml@46dbc1f6e3ee18653eb62d4962eadb1bd272bbc9 # main, 2026-10-25
     with:
       skill_path: skills/max-cli
       owner: wirecat
