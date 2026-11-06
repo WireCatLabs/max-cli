@@ -1,5 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname } from "node:path"
+import { provide } from "@wirecat/cli-core/cli"
+import { levelFor } from "@wirecat/cli-core/sends"
 import { Command } from "commander"
 import { describe, expect, it, vi } from "vitest"
 import * as nativeServer from "../server/server-connection.js"
@@ -38,6 +40,26 @@ describe("a command's context", () => {
         const overridden = forCommand(commandWith({ serve: false, permission: ["messages.send=allow"] }))
         await overridden.createClient().close()
         expect(native).toHaveBeenCalledTimes(1)
+      } finally {
+        native.mockRestore()
+      }
+    },
+  )
+
+  it.skipIf(process.platform === "win32")(
+    "keeps an agent run with mcp serve --permission levels off the native server, which reads only saved ones",
+    async () => {
+      const native = vi.spyOn(nativeServer, "ServerConnection")
+      try {
+        const command = commandWith({ serve: false })
+        provide(command, { agent: { overrides: ["contacts=deny"], result: () => {}, failure: () => {} } })
+        const agent = forCommand(command)
+        expect(levelFor(agent.settings.permissions, "contacts.sync").level).toBe("deny")
+        const socket = agent.store.socketPath()
+        mkdirSync(dirname(socket), { recursive: true })
+        writeFileSync(socket, "synthetic socket marker")
+        await agent.createClient().close()
+        expect(native).not.toHaveBeenCalled()
       } finally {
         native.mockRestore()
       }

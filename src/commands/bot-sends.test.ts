@@ -340,6 +340,23 @@ describe("every bot write, whichever command sends it", () => {
     expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
   })
 
+  it("refuses a bot write an agent's mcp serve --permission denies, before the Bot API is asked", async () => {
+    const failures: unknown[] = []
+    const code = await run(["bot", "comments", "send", "mid.9", "hi", "--json"], {
+      streams: captureStreams(),
+      tty: false,
+      botStore: (profile) => new BotTokenStore({ profile, keyring }),
+      botUrl,
+      sleep: async () => {},
+      agent: { overrides: ["bot.messages=deny"], result: () => {}, failure: (error) => failures.push(error) },
+    })
+    expect(code).toBe(5)
+    expect(failures).toContainEqual(
+      expect.objectContaining({ error: expect.objectContaining({ code: "permission_error" }) }),
+    )
+    expect(requests.filter((request) => request.method === "POST")).toHaveLength(0)
+  })
+
   it("does not list a bot's recipients file as a bot", async () => {
     const names = JSON.parse((await max(["bot", "list", "--json"])).stdout).items.map(
       (row: { name: string }) => row.name,
