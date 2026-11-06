@@ -63,6 +63,12 @@ export type Ask = (prompt: string, options?: { secret?: boolean; signal?: AbortS
 
 export const environmentOf = (command: Command): Environment => sharedEnvironmentOf<Environment>(command)
 
+/** `mcp serve --permission` levels reach a run on its agent, never in argv, as cli-core's `baseContext` knows. */
+export const withAgentLevels = <F extends GlobalFlags>(flags: F, environment: Environment): F => {
+  const overrides = environment.agent?.overrides ?? []
+  return overrides.length > 0 ? { ...flags, permission: [...overrides, ...(flags.permission ?? [])] } : flags
+}
+
 export interface CommandContext {
   settings: Settings
   renderer: Renderer
@@ -129,7 +135,8 @@ export const contextFor = (
   environment: Environment = {},
   resolving: Pick<ResolveOptions, "needsProfile" | "readOnly" | "withIssues"> = {},
 ): CommandContext => {
-  const settings = resolveSettings(flags, { env: environment.env ?? process.env, ...resolving })
+  const runFlags = withAgentLevels(flags, environment)
+  const settings = resolveSettings(runFlags, { env: environment.env ?? process.env, ...resolving })
   const { renderer, format, color, streams } = resolveOutput({
     ...settings,
     env: environment.env ?? process.env,
@@ -154,8 +161,8 @@ export const contextFor = (
 
   // Only for the real thing: a test hands in its own store, and must never start a process.
   // A server does not take `MAX_TOKEN` along, so a token from there has no server to share.
-  // The native server reads saved permissions; startup overrides belong to this connection.
-  const overridesPermissions = (flags.permission?.length ?? 0) > 0
+  // The native server reads saved permissions; startup and agent overrides belong to this connection.
+  const overridesPermissions = (runFlags.permission?.length ?? 0) > 0
   const starts =
     !overridesPermissions && !environment.store && !environment.connection && settings.serve && !process.env.MAX_TOKEN
 

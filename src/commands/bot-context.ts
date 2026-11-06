@@ -15,7 +15,7 @@ import { resolveOutput } from "../output.js"
 import { askerFor, assertReadable } from "../permissions.js"
 import { asFirstWord, rootOf } from "../profile.js"
 import { readSecret } from "../session/prompt.js"
-import { environmentOf } from "./context.js"
+import { environmentOf, withAgentLevels } from "./context.js"
 
 const recordings = new WeakMap<Command, Recording>()
 
@@ -26,7 +26,7 @@ const recordings = new WeakMap<Command, Recording>()
 export const startBotRecording = (command: Command): void => {
   const environment = environmentOf(command)
   // The program's own flags only: `bot api get-updates --limit` is the API's limit, not ours.
-  const settings = resolveSettings(rootOf(command).opts<GlobalFlags>(), {
+  const settings = resolveSettings(withAgentLevels(rootOf(command).opts<GlobalFlags>(), environment), {
     kind: "bot",
     env: environment.env ?? process.env,
   })
@@ -88,7 +88,10 @@ export const botContext = (command: Command, { offline: answersOffline = false }
     throw new CliError("validation_error", `--offline reads the local copy; \`${command.name()}\` has to ask MAX`)
   }
   const nativeApi = command.name() === "api" || command.parent?.name() === "api"
-  const settings = resolveSettings(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, { kind: "bot", env })
+  const settings = resolveSettings(
+    withAgentLevels(nativeApi ? rootOf(command).opts<GlobalFlags>() : flags, environment),
+    { kind: "bot", env },
+  )
   const { renderer, streams, format, color } = resolveOutput({
     ...settings,
     ...(environment.agent ? { capture: environment.agent.result } : {}),

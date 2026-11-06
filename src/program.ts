@@ -45,7 +45,7 @@ import { commandsCommand } from "./commands/commands.js"
 import { completeCommand } from "./commands/complete.js"
 import { configCommand } from "./commands/config.js"
 import { contactsCommand } from "./commands/contacts.js"
-import { type Environment, environmentOf } from "./commands/context.js"
+import { type Environment, environmentOf, withAgentLevels } from "./commands/context.js"
 import { doctorCommand } from "./commands/doctor.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
@@ -172,7 +172,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
       const key = commandPermission(action)
       if (key) {
         // The command's own context refuses an unnamed profile when it uses an account; this only checks levels.
-        const settings = resolveSettings(rootOf(action).opts(), {
+        const settings = resolveSettings(withAgentLevels(rootOf(action).opts(), environmentOf(action)), {
           kind: key.startsWith("bot.") ? "bot" : "personal",
           needsProfile: false,
           env: environmentOf(action).env ?? process.env,
