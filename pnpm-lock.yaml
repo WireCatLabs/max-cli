@@ -22,11 +22,11 @@ importers:
         specifier: 1.8.0
         version: 1.8.0(valibot@1.5.0(typescript@7.0.2))
       '@wirecat/cli-base':
-        specifier: 0.77.1
-        version: 0.77.1(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
+        specifier: 0.80.7
+        version: 0.80.7(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
       '@wirecat/cli-core':
-        specifier: 0.567.0
-        version: 0.567.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.77.1(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
+        specifier: 0.599.0
+        version: 0.599.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.80.7(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
       commander:
         specifier: 15.0.0
         version: 15.0.0
@@ -1332,8 +1332,8 @@ packages:
   '@wasm-audio-decoders/opus-ml@0.0.3':
     resolution: {integrity: sha512-SEeTmk0eb3q5etJA/NHCRWW6BivTx9tqvNTmG0kg2ynuATEQRUZnwQE6Ibvl1BBvqIGHqI57+qyJMWmJBwb5XQ==}
 
-  '@wirecat/cli-base@0.77.1':
-    resolution: {integrity: sha512-xE/iWoQzbPhNl0ZRhtQoQqxfgLeEy0hy2o6RkSVFJ5RFExzV/5q6Xtw3bB6hCxtUfJps2VrUPUMR88+dU+3tsA==}
+  '@wirecat/cli-base@0.80.7':
+    resolution: {integrity: sha512-XkMmYmoL540EEDeIreivy4D3vpjIgQvKhwKUPzYcLAFqee4syxHDLsf/UI5OHpRDH7GZPRfjVVX3KCNPh/32fQ==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -1354,13 +1354,13 @@ packages:
   '@wirecat/cli-core-sqlite@1.1.0':
     resolution: {integrity: sha512-GpGlh/dAIX/nblBYCdT6DfWSLFxav9mxxeELQAfEuw+QZdT9unKxbi5xa02s/s4JS1P7n0PQx2sCABj4FlMRNw==}
 
-  '@wirecat/cli-core@0.567.0':
-    resolution: {integrity: sha512-odUFRlwE/S/enZb6nAssLeW3wxkSWSP8ri2jmoQO2EeTC/XzBkgjd5qT5Yr0oYC1wvcgjzR8/XtMqwjhvawNtg==}
+  '@wirecat/cli-core@0.599.0':
+    resolution: {integrity: sha512-kMr35x/WjElE+V14z2MBx/mgzpSW1PvIvfyOTYRKVOHuKISDtnouvQFpog/8BQz5QFRufV3BqSx/E8JvdrK5bA==}
     engines: {node: ^22.16.0 || >=24}
     hasBin: true
     peerDependencies:
       '@napi-rs/canvas': '>=0.1.69 <2'
-      '@wirecat/cli-base': '>=0.76.0 <0.78.0'
+      '@wirecat/cli-base': '>=0.76.0 <0.81.0'
       commander: '>=15'
     peerDependenciesMeta:
       '@napi-rs/canvas':
@@ -3684,7 +3684,7 @@ snapshots:
     dependencies:
       '@wasm-audio-decoders/common': 9.0.7
 
-  '@wirecat/cli-base@0.77.1(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)':
+  '@wirecat/cli-base@0.80.7(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)':
     dependencies:
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       cli-table3: 0.6.5
@@ -3704,7 +3704,7 @@ snapshots:
 
   '@wirecat/cli-core-sqlite@1.1.0': {}
 
-  '@wirecat/cli-core@0.567.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.77.1(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
+  '@wirecat/cli-core@0.599.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.80.7(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
     dependencies:
       '@anthropic-ai/sdk': 1.3.0(zod@4.6.7)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
@@ -3714,7 +3714,7 @@ snapshots:
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       '@wasm-audio-decoders/flac': 0.2.11
       '@wasm-audio-decoders/ogg-vorbis': 0.1.20
-      '@wirecat/cli-base': 0.77.1(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
+      '@wirecat/cli-base': 0.80.7(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
       '@wirecat/cli-core-onnx': 1.2.0
       '@wirecat/cli-core-sqlite': 1.1.0
       '@xmldom/xmldom': 0.9.12

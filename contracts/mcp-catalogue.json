@@ -114,6 +114,8 @@
   "store reset": "write",
   "store copies delete": "write",
   "store tables list": "read",
+  "store recover": "read",
+  "store recover run": "write",
   "stats messages show": "read",
   "stats messages counters show": "read",
   "stats messages counters sync": "write",
