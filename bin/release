@@ -73,7 +73,15 @@ land() {
   done
   gh pr checks "$pr" --watch --required --fail-fast >/dev/null ||
     { echo "checks failed on $pr — nothing is published" >&2; exit 1; }
-  gh pr merge "$pr" --squash --delete-branch --subject "$title (#${pr##*/})"
+  gh pr merge "$pr" --auto --squash --delete-branch --subject "$title (#${pr##*/})" ||
+    { echo "$pr could not be queued for auto merge" >&2; exit 1; }
+  for _ in $(seq 180); do
+    state=$(gh pr view "$pr" --json state -q .state)
+    [ "$state" = MERGED ] && break
+    [ "$state" = CLOSED ] && { echo "$pr was closed without merging" >&2; exit 1; }
+    sleep 10
+  done
+  [ "$state" = MERGED ] || { echo "$pr did not merge within 30 minutes" >&2; exit 1; }
   git fetch -q origin
   git merge -q --ff-only origin/main
   [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ] ||
