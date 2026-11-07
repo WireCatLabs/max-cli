@@ -191,6 +191,7 @@ describe("max commands", () => {
       "store repair",
       "store reset",
       "store copies delete",
+      "store recover run",
       "stats messages counters sync (reads remotely)",
       "stats charts",
       "tasks add",
