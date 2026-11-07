@@ -73,6 +73,13 @@ land() {
   done
   gh pr checks "$pr" --watch --required --fail-fast >/dev/null ||
     { echo "checks failed on $pr — nothing is published" >&2; exit 1; }
+  for _ in $(seq 180); do
+    state=$(gh pr view "$pr" --json mergeStateStatus -q .mergeStateStatus)
+    case "$state" in CLEAN|HAS_HOOKS|UNSTABLE) break ;; esac
+    [ "$(gh pr view "$pr" --json state -q .state)" = CLOSED ] && { echo "$pr was closed without merging" >&2; exit 1; }
+    sleep 10
+  done
+  case "$state" in CLEAN|HAS_HOOKS|UNSTABLE) ;; *) echo "$pr is $state after 30 minutes" >&2; exit 1 ;; esac
   gh pr merge "$pr" --squash --delete-branch --subject "$title (#${pr##*/})"
   git fetch -q origin
   git merge -q --ff-only origin/main
