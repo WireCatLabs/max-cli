@@ -6,7 +6,7 @@ const test = (file: string) => `cli-core ${file} drives the shared command max m
 export const SHARED_0599_UNTESTED: Untested[] = [
   { command: "store recover", reason: test("src/cli/store-recover.test.ts") },
   { command: "store recover run", reason: test("src/cli/store-recover.test.ts") },
-  ...["--notify-on", "--to"].map((option) => ({
+  ...["--notify-on", "--deliver-to"].map((option) => ({
     command: "schedule command",
     option,
     reason: test("src/cli/messenger/schedule.test.ts"),
