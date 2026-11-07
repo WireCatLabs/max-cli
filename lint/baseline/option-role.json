@@ -25,7 +25,5 @@
   "replies edit --words",
   "replies test --ai",
   "session start --answer-stdin",
-  "stats messages responses --who",
-  "stickers list --set",
-  "tasks add --open-new"
+  "stickers list --set"
 ]
