@@ -237,6 +237,8 @@ describe("max commands", () => {
       "models keys set",
       "models keys remove",
       "models download (reads remotely)",
+      "models set",
+      "models add (reads remotely)",
       "recipients add (reads remotely)",
       "recipients remove",
       "recipients clear",

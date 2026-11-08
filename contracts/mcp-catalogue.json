@@ -215,6 +215,8 @@
   "models keys remove": "write",
   "models list": "read",
   "models download": "write",
+  "models set": "write",
+  "models add": "write",
   "polls show": "read",
   "polls vote": "write",
   "polls close": "write",
