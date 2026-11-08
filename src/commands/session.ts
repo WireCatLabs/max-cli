@@ -14,12 +14,13 @@ import {
 } from "@wirecat/cli-core/cli"
 import { Argument, Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
-import { type MaxClient, type MaxClientOptions, refuseWhilePaused } from "../client.js"
+import { type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maskedProfile } from "../domain/map.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { stopServer } from "../server/server-connection.js"
 import { adoptToken } from "../session/adopt.js"
+import { logOut } from "../session/logout.js"
 import { type CommandContext, forCommand } from "./context.js"
 
 // NEED-149: gentle on purpose — it asks for ordinary use alongside, and does not cite blocked accounts.
@@ -142,22 +143,6 @@ const sessionCommandDefinition = (): Command => {
     })
 
   return command
-}
-
-/** A token MAX no longer accepts is as logged out as it gets; anything else keeps the session, to try again. */
-const logOut = async (client: MaxClient): Promise<boolean> => {
-  try {
-    await client.logout()
-    return true
-  } catch (error) {
-    if (error instanceof CliError && error.code === "authentication_error") return true
-    throw new CliError(
-      error instanceof CliError ? error.code : "provider_error",
-      `MAX did not log the session out (${error instanceof Error ? error.message : String(error)}); nothing was forgotten — try again`,
-    )
-  } finally {
-    await client.close()
-  }
 }
 
 /** Said the same way in `session start --help`, `setup --help` and the skill. */

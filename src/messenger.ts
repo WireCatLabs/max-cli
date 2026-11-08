@@ -6,6 +6,7 @@ import type { Command } from "commander"
 import { type MaxAdapter, maxAdapter } from "./adapter/max-adapter.js"
 import { MAX_APP } from "./app.js"
 import type { MaxClient } from "./client.js"
+import { MAX_REMOVAL } from "./commands/account-removal.js"
 import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
 import { approvePermission, askerFor, commandPermission, forgetApprovals, permissionKeyOf } from "./permissions.js"
@@ -61,6 +62,7 @@ export const maxMessenger: Messenger = {
   provider: "max",
   topics: false,
   skill: SKILL,
+  accountRemoval: MAX_REMOVAL,
   diagnose: async (command) => {
     const { store } = forCommand(command)
     let token: string

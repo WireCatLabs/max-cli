@@ -208,6 +208,26 @@ max account sessions end [options]
 
 **Example:** `max personal account sessions end --others`
 
+### `max account remove`
+
+sign the profile out, then forget it on this computer: its settings, its saved sign-in and its files; --keep-data leaves its messages in the store, where search still finds them, --delete-data deletes them; asks first, or --yes
+
+**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
+
+```sh
+max account remove [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--keep-data` | leave what the store holds of this account, still searchable. |
+| `--delete-data` | delete what the store and the tool's own files hold of this account. |
+| `--dry-run` | list what it would remove and keep, and change nothing. |
+
+**Returns:** account removal — profile, data, dry_run, account, revoked, config_file, removed, kept; every field: max commands info account remove
+
+**Example:** `max personal account remove --keep-data --dry-run`, `max personal account remove --delete-data --yes`
+
 ### `max account privacy`
 
 who may find, call or add the account

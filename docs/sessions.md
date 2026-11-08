@@ -136,6 +136,11 @@ max personal session end              # выйти из MAX и забыть то
 { "item": { "profile": "personal", "forgotten": true, "revoked_on_server": true }, "meta": { … } }
 ```
 
+Чтобы забыть профиль целиком, есть `max personal account remove --keep-data` или `--delete-data`: он так же
+завершает сессию на сервере MAX, потом стирает токен, файлы профиля и всё, что для него хранит общий слой.
+`--keep-data` оставляет сообщения в хранилище, поиск их находит; `--delete-data` удаляет и их. Токен бота
+(`bot:personal`) остаётся.
+
 **Если вход был токеном из вкладки web.max.ru, это одна и та же сессия:** `session end` выведет из MAX
 и эту вкладку.
 
