@@ -974,9 +974,7 @@ describe("changing a group", () => {
     const args = name === "members" ? [name, "list", "Team"] : name === "inspect" ? [name, GROUP.link] : [name, "Team"]
     const result = await runWith([`gr-read-offline-${name}`, "chats", ...args, "--offline", "--json"], environment)
     // Offline, a member list is read from the store, which this profile has never filled.
-    expect(JSON.parse(result.stderr).error.code).toMatch(
-      name === "members" ? /^not_found$/ : /^(validation|permission)_error$/,
-    )
+    expect(JSON.parse(result.stderr).error.code).toBe(name === "members" ? "not_found" : "permission_error")
     expect(max.sent).toEqual([])
   })
 
