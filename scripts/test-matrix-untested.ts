@@ -2,6 +2,7 @@ import { MEDIA_ARCHIVE_UNTESTED } from "./test-matrix-media-archive.ts"
 import { PROJECTS_UNTESTED } from "./test-matrix-projects.ts"
 import { SHARED_0563_UNTESTED } from "./test-matrix-shared-0563.ts"
 import { SHARED_0599_UNTESTED } from "./test-matrix-shared-0599.ts"
+import { SHARED_0609_UNTESTED } from "./test-matrix-shared-0609.ts"
 
 /**
  * What `max` cannot test offline, each with the reason and where it is checked instead. An entry
@@ -17,6 +18,7 @@ export interface Untested {
 export const UNTESTED: Untested[] = [
   ...SHARED_0563_UNTESTED,
   ...SHARED_0599_UNTESTED,
+  ...SHARED_0609_UNTESTED,
   ...[
     [
       "conversations links clear",
