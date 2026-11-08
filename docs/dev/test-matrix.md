@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**927 ✅ · 218 ⛔ · 0 ❌** — 373 commands, 772 options.
+**927 ✅ · 221 ⛔ · 0 ❌** — 375 commands, 773 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -736,6 +736,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `models list` |  | ✅ |  |
 | `models download` |  | ✅ |  |
 | `models download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-core's src/cli/messenger/models-command.test.ts drives it offline |
+| `models set` |  | ⛔ | cli-core src/cli/model-catalogue-command.test.ts drives the shared command max mounts unchanged (cli-core 0.609.0) |
+| `models add` |  | ⛔ | cli-core src/cli/model-catalogue-command.test.ts drives the shared command max mounts unchanged (cli-core 0.609.0) |
+| `models add` | `--payload` | ⛔ | cli-core src/cli/model-catalogue-command.test.ts drives the shared command max mounts unchanged (cli-core 0.609.0) |
 | `polls show` |  | ✅ |  |
 | `polls vote` |  | ✅ |  |
 | `polls vote` | `--retract` | ✅ |  |
