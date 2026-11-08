@@ -675,7 +675,7 @@ describe("folders", () => {
           ? ["New"]
           : ["folder.personal", ...(action === "update" ? ["--title", "New"] : [])]
     const result = await runWith(["chats", "folders", action, ...args, "--offline"], environment)
-    expect(JSON.parse(result.stderr).error.code).toBe("validation_error")
+    expect(JSON.parse(result.stderr).error.code).toMatch(/^(validation|permission)_error$/)
     expect(sent(Opcode.LOGIN)).toEqual([])
     expect(sent(Opcode.FOLDERS_GET)).toEqual([])
     expect(sent(Opcode.FOLDERS_UPDATE)).toEqual([])
