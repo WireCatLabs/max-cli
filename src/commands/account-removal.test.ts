@@ -86,6 +86,18 @@ describe("account remove", () => {
     expect(held(here.keyring, "personal")).toBe(true)
   })
 
+  it("**--dry-run changes nothing** and logs nothing out", async () => {
+    const here = setup()
+    max.loggedOut = 0
+
+    const { code } = await maxCli(["personal", "account", "remove", "--keep-data", "--dry-run", "--json"], here)
+
+    expect(code).toBe(0)
+    expect(max.loggedOut).toBe(0)
+    expect(held(here.keyring, "personal")).toBe(true)
+    expect(existsSync(join(here.profiles, "personal.json"))).toBe(true)
+  })
+
   it("**succeeds on a profile that is already signed out** and logs nothing out", async () => {
     const here = setup()
     here.keyring.delete(SERVICE, "work")

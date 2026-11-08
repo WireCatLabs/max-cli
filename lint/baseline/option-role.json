@@ -1,4 +1,6 @@
 [
+  "account remove --delete-data",
+  "account remove --keep-data",
   "account show --hide-phone",
   "account update --hide-phone",
   "bot search messages --from",
