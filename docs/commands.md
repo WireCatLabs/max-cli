@@ -4377,9 +4377,9 @@ max images models list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
 
-**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands info images models list
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 6 more; every field: max commands info images models list
 
-**Next usually:** `max models download <model>`, `max images models download <model>`
+**Next usually:** `max models download <model>`, `max models set <model>`, `max images models download <model>`
 
 **Example:** `max personal images models list`
 
@@ -4397,9 +4397,9 @@ max images models download <model>
 |---|---|---|
 | `model` | обязательный | a model id from `images models list`. |
 
-**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands info images models download
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 6 more; every field: max commands info images models download
 
-**Next usually:** `max models download <model>`
+**Next usually:** `max models download <model>`, `max models set <model>`
 
 **Example:** `max personal images models download clip-b32`
 
@@ -4791,9 +4791,9 @@ max models list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
-**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands info models list
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 6 more; every field: max commands info models list
 
-**Next usually:** `max models download <model>`, `max images models download <model>`
+**Next usually:** `max models download <model>`, `max models set <model>`, `max images models download <model>`
 
 **Example:** `max personal models list`, `max personal models list kind:audio`
 
@@ -4815,11 +4815,55 @@ max models download <model> [options]
 |---|---|
 | `--accept-terms` | accept the model's licence terms, for a model that has its own. |
 
-**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 1 more; every field: max commands info models download
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 6 more; every field: max commands info models download
 
-**Next usually:** `max images models download <model>`
+**Next usually:** `max models set <model>`, `max images models download <model>`
 
 **Example:** `max personal models download e5-small`, `max personal models download mmarco`
+
+### `max models set`
+
+make a downloaded text model the one every embed and every search by meaning uses, in every WireCat CLI. Each model keeps its own vectors: the next syncs embed what the new one lacks, and switching back is instant
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max models set <model>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `model` | обязательный | a downloaded text model id from models list. |
+
+**Returns:** model chosen — id, kind, title, languages, size_bytes, downloaded, default, path, and 9 more; every field: max commands info models set
+
+**Next usually:** `max models download <model>`, `max images models download <model>`
+
+**Example:** `max personal models set e5-large`
+
+### `max models add`
+
+add an ONNX embedding model from Hugging Face, pinned and checked by sha256
+
+**Читает из внешнего сервиса.**
+
+```sh
+max models add <id> [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `id` | обязательный | the id to give it: a-z, 0-9, . _ -. |
+
+| Опция | Что делает |
+|---|---|
+| `--payload <json>` | where the model is and how to run it, as JSON (below). |
+
+**Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 6 more; every field: max commands info models add
+
+**Next usually:** `max models download <model>`, `max models set <model>`, `max images models download <model>`
+
+**Example:** `max personal models add e5-base --payload '{"repository":"Xenova/multilingual-e5-base","onnx":"onnx/model_quantized.onnx","dims":768,"pooling":"mean","prefix":{"query":"query: ","passage":"passage: "}}'`
 
 ## `max polls`
 
@@ -5680,7 +5724,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, owner_languages, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 | `value` | обязательный | a number, true or false, or a list like shop,news. |
 
 | Опция | Что делает |
@@ -5705,7 +5749,7 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, owner_languages, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 
 | Опция | Что делает |
 |---|---|
