@@ -51,6 +51,15 @@
       "diagnostic": "4 terms\n"
     },
     {
+      "id": "candidate-store-settle",
+      "args": ["contract", "--offline", "--json", "messages", "list", "7"],
+      "exit": 0,
+      "stream": "stdout",
+      "kind": "json",
+      "previous": false,
+      "allowSensitiveOutput": true
+    },
+    {
       "id": "candidate-store-data",
       "args": ["contract", "--offline", "--json", "--trace", "--record", "messages", "list", "7"],
       "exit": 0,

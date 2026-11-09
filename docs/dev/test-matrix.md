@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 221 ⛔ · 0 ❌** — 376 commands, 776 options.
+**931 ✅ · 225 ⛔ · 0 ❌** — 376 commands, 780 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -173,6 +173,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts check` |  | ✅ |  |
 | `contacts check` | `--no-registries` | ✅ |  |
 | `contacts link` |  | ⛔ | cli-core src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
+| `contacts link` | `--reason` | ⛔ | cli-core src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
 | `contacts unlink` |  | ⛔ | cli-core src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
 | `messages list` |  | ✅ |  |
 | `messages list` | `--limit` | ✅ |  |
@@ -212,6 +213,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages sync` | `--catch-up-messages` | ✅ |  |
 | `messages sync` | `--catch-up-time` | ✅ |  |
 | `messages sync` | `--full-history` | ⛔ | cli-core src/services/archive.test.ts ("does not read a group above the members cap, and reads it in full with --full-history") drives the shared sync MAX mounts (0.551.0) |
+| `messages sync` | `--with-muted` | ⛔ | cli-core src/cli/messenger/backfill.test.ts |
 | `messages sync` | `--background` | ⛔ | starts a detached `max` that outlives the test; cli-core src/cli/messenger/backfill.test.ts drives it with spawnJob, live P6 |
 | `messages sync` | `--dry-run` | ✅ |  |
 | `messages transcribe` |  | ✅ |  |
@@ -660,7 +662,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search all` |  | ✅ |  |
 | `search all` | `--only` | ✅ |  |
 | `search all` | `--source` | ✅ |  |
-| `search all` | `--max-meetings` | ⛔ | cli-core src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through |
 | `search all` | `--limit` | ✅ |  |
 | `search all` | `--page` | ✅ |  |
 | `search all` | `--exact` | ✅ |  |
@@ -950,6 +951,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot messages send` | `--silent` | ✅ |  |
 | `bot messages send` | `--md` | ✅ |  |
 | `bot messages send` | `--html` | ✅ |  |
+| `bot messages send` | `--button` | ⛔ | cli-core src/cli/bot/messages.test.ts drives the shared bot commands' inline buttons |
 | `bot messages send` | `--file` | ✅ |  |
 | `bot messages send` | `--photo` | ✅ |  |
 | `bot messages send` | `--as-file` | ✅ |  |
@@ -961,6 +963,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `bot messages edit` |  | ✅ |  |
 | `bot messages edit` | `--md` | ✅ |  |
 | `bot messages edit` | `--html` | ✅ |  |
+| `bot messages edit` | `--button` | ⛔ | cli-core src/cli/bot/messages.test.ts drives the shared bot commands' inline buttons |
+| `bot messages edit` | `--no-buttons` | ⛔ | cli-core src/cli/bot/messages.test.ts drives the shared bot commands' inline buttons |
 | `bot messages delete` |  | ✅ |  |
 | `bot messages delete` | `--allow-dangerous` | ✅ |  |
 | `bot messages pin` |  | ✅ |  |

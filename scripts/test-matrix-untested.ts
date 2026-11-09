@@ -16,6 +16,12 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
+  { command: "messages sync", option: "--with-muted", reason: "cli-core src/cli/messenger/backfill.test.ts" },
+  ...["send --button", "edit --button", "edit --no-buttons"].map((entry) => ({
+    command: `bot messages ${entry.split(" ")[0]}`,
+    option: entry.split(" ")[1],
+    reason: "cli-core src/cli/bot/messages.test.ts drives the shared bot commands' inline buttons",
+  })),
   ...SHARED_0563_UNTESTED,
   ...SHARED_0599_UNTESTED,
   ...SHARED_0609_UNTESTED,
@@ -369,11 +375,6 @@ export const UNTESTED: Untested[] = [
     option: "--saved",
     reason:
       "cli-core src/cli/messenger/searches.test.ts covers saved query execution and src/services/searches.test.ts validates shared query parameters",
-  },
-  {
-    command: "search all",
-    option: "--max-meetings",
-    reason: "cli-core src/cli/messenger/messenger.test.ts bounds how many meetings search all looks through",
   },
   {
     command: "search all",
