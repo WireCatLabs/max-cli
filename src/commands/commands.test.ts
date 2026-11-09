@@ -262,6 +262,8 @@ describe("max commands", () => {
       "schedule command",
       "schedule agent",
       "schedule remove",
+      "schedule pause",
+      "schedule resume",
       "config set",
       "config unset",
       "config migrate",

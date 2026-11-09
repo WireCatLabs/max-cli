@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 225 ⛔ · 0 ❌** — 376 commands, 780 options.
+**931 ✅ · 229 ⛔ · 0 ❌** — 378 commands, 782 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -853,7 +853,11 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `schedule agent` | `--deliver-to` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule list` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule run` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
+| `schedule run` | `--no-notify` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
+| `schedule run` | `--deliver-to` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
 | `schedule remove` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule pause` |  | ⛔ | cli-core src/cli/schedule/schedule.test.ts drives it through the shared schedule commands MAX mounts (0.624.0) |
+| `schedule resume` |  | ⛔ | cli-core src/cli/schedule/schedule.test.ts drives it through the shared schedule commands MAX mounts (0.624.0) |
 | `schedule exec` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
 | `watch` |  | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |
 | `watch` | `--events` | ⛔ | needs a running `max serve`; src/commands/watch.test.ts pins each line, live P6 |

@@ -256,6 +256,8 @@
   "schedule list": "read",
   "schedule run": "write",
   "schedule remove": "write",
+  "schedule pause": "write",
+  "schedule resume": "write",
   "schedule exec": "write",
   "config show": "read",
   "config set": "write",
