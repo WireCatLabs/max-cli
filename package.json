@@ -45,7 +45,7 @@
     "mcp:tools": "node --experimental-strip-types scripts/mcp-tools.ts",
     "smoke:live": "pnpm build && node --experimental-strip-types scripts/smoke-live.ts",
     "release:check": "pnpm build && node --experimental-strip-types scripts/release-check.ts",
-    "docs:check": "cli-dev docs-check --rules scripts/release/checks.ts --pages && cspell --no-progress --no-summary README.md 'docs/*.md' && rumdl check --config config/wirecat/rumdl.toml README.md docs/*.md",
+    "docs:check": "cli-dev docs-check --rules scripts/release/checks.ts --pages && node --experimental-strip-types scripts/changelog-fragments.ts --rules scripts/release/checks.ts && cspell --no-progress --no-summary README.md 'docs/*.md' && rumdl check --config config/wirecat/rumdl.toml README.md docs/*.md",
     "parity:check": "pnpm build && node dist/bin/max.js commands --json | cli-core-parity max && node dist/bin/max.js commands --json | cli-core-parity max --pages README.md docs/*.md",
     "version:check": "cli-dev version",
     "version:sync": "cli-dev version --sync",

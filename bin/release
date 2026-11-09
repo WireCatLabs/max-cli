@@ -7,8 +7,8 @@
 # Steps 3–7 of docs_ai/releasing.md. Run on a clean, up-to-date `main`, after the release skill and the owner's yes
 # for this version in the conversation (WC-REL-10). When npm already has that version, or a higher one, it merges the
 # next free version into `main` through a pull request and publishes that. A «Не выпущено» section left above the
-# dated, unpublished version is folded into it the same way. The npm token is never printed — not on success, not in
-# an error.
+# dated, unpublished version is folded into it the same way, and the changes/ fragments are collected into the
+# version's section in the release's pull request. The npm token is never printed — not on success, not in an error.
 set -eu
 
 usage() { echo "usage: bin/release [--local]" >&2; exit 2; }
@@ -106,6 +106,7 @@ rerun_if_changed "$@"
 latest=$(npm view @wirecat/max-cli version --prefer-online 2>/dev/null || true)
 versions=$(npm view @wirecat/max-cli versions --json --prefer-online 2>/dev/null || true)
 next=$(node scripts/next-version.mjs "$version" "$latest" "$versions")
+fragments=$(find changes -maxdepth 1 -type f -name '*.md' ! -name README.md 2>/dev/null | wc -l)
 if [ "$next" != "$version" ]; then
   if published; then why="$version is already on npm"; else why="$version is not above npm's latest $latest"; fi
   echo "$why — publishing $next instead"
@@ -119,10 +120,18 @@ if [ "$next" != "$version" ]; then
     if (taken) swap("CHANGELOG.md", "\n## Не выпущено\n", `\n## ${n} — ${today}\n`)
     else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next" "$taken"
   pnpm exec cli-dev version --sync >/dev/null
-  body="bin/release: $why. Only the number changes: package.json, src/version.ts, the CHANGELOG heading."
+  node --experimental-strip-types scripts/changelog-fragments.ts --rules scripts/release/checks.ts "$next"
+  body="bin/release: $why. Only the number changes: package.json, src/version.ts, the CHANGELOG heading, and the
+changes/ fragments collected under it."
   land "release/$next" "chore(release): $next" "$body"
   rerun_if_changed "$@"
   version=$next
+elif [ "$fragments" -gt 0 ]; then
+  # The version was dated by hand; fragments merged since then still belong to it.
+  node --experimental-strip-types scripts/changelog-fragments.ts --rules scripts/release/checks.ts "$version"
+  land "release/$version-changes" "chore(changelog): collect changes/ into $version" \
+    "bin/release: the changes/ fragments merged since $version was dated, collected into its section."
+  rerun_if_changed "$@"
 fi
 if published; then
   echo "$version is already on npm — raise the version first" >&2

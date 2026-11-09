@@ -138,6 +138,12 @@ follows the language of the file it lands in. Do not mix languages inside one fi
 The rules are [WC-DOC-14 to WC-DOC-20](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md); max writes them in Russian. The pending section is
 `## Не выпущено`, on top while something is unreleased; each version is `## <version> — DD.MM.YYYY`, newest first.
 
+A pull request adds its entries as a changelog fragment: a new file `changes/<branch>.md` (lower case, `/` as `-`)
+with one or more of the changelog's `###` headings and the entries under them, written as they will read in
+`CHANGELOG.md`, with links relative to `changes/` (`../docs/…`). Do not edit `## Не выпущено`: every open pull request
+edits the same lines there and conflicts at each merge. `pnpm docs:check` checks the fragments; `bin/release` collects
+them into the version's section and deletes them in its pull request.
+
 `CHANGELOG.md` is read by someone deciding whether to upgrade, and by the GitHub release built from
 it. **A line that only names the change is not an entry.** «`bot search messages --limit` говорил
 `hasMore: false`» leaves the reader asking what that broke, whether it touched them, and what to do.
