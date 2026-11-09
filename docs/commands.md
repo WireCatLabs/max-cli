@@ -1630,7 +1630,7 @@ max contacts prepare <person> [options]
 
 ### `max contacts events`
 
-everything one person took part in, in every messenger linked to them — messages they wrote or were mentioned in, chats, mail, meetings, tasks — newest first, from the store; never connects
+everything one person took part in, in every messenger linked to them — messages they wrote or were mentioned in, chats, mail, meetings, tasks — newest first, from the store; only in this account's scope, personal or work, and scope: of the other one is refused; never connects
 
 ```sh
 max contacts events <person> [query] [options]
@@ -1677,7 +1677,7 @@ record that two people in the store are one person — the same name is never en
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max contacts link <person> <other>
+max contacts link <person> <other> [options]
 ```
 
 | Аргумент | | Что это |
@@ -1685,7 +1685,11 @@ max contacts link <person> <other>
 | `person` | обязательный | their id, @username, or part of their name. |
 | `other` | обязательный | the same in another messenger of the store, as <messenger>:<person> — max:Ana; me: it is you, as zoom:<id> me. |
 
-**Returns:** linked person — uid, name, identities; every field: max commands info contacts link
+| Опция | Что делает |
+|---|---|
+| `--reason <text>` | why they are one person; an agent's link is a proposal and needs it. |
+
+**Returns:** linked person — uid, name, identities, proposal; every field: max commands info contacts link
 
 **Example:** `max personal contacts link "Alex Example" zoom:101`
 
@@ -1703,7 +1707,7 @@ max contacts unlink <person>
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name; <messenger>:<person> for another messenger. |
 
-**Returns:** linked person — uid, name, identities; every field: max commands info contacts unlink
+**Returns:** linked person — uid, name, identities, proposal; every field: max commands info contacts unlink
 
 **Example:** `max personal contacts unlink "Alex Example"`
 
@@ -1883,7 +1887,7 @@ max messages sync [chat] [options]
 
 | Опция | Что делает |
 |---|---|
-| `--all` | every chat, most recently active first — what search needs; the last 90d unless --since-time or --last. |
+| `--all` | every chat, most recently active first — what search needs; the last 90d unless --since-time or --last; muted chats only with --with-muted or history_muted true. |
 | `--limit <n>` | at most this many messages in this run, per chat with --all; 1200 if not given. |
 | `--page-size <n>` | how many messages one request asks for; 30 if not given. |
 | `--pause <duration>` | the least pause between pages, to stay under the provider's limits; each is up to twice that. По умолчанию: `5s`. |
@@ -1895,6 +1899,7 @@ max messages sync [chat] [options]
 | `--catch-up-messages <n>` | skip a graph rebuild larger than this many messages. |
 | `--catch-up-time <duration>` | local preparation time budget, 30s by default. |
 | `--full-history` | read and keep this chat's history in full from now on, past the history limits (history_* settings). |
+| `--with-muted` | with --all: also read the chats the owner muted, as history_muted true does. |
 | `--background` | run as a job that outlives this command; `store jobs show` follows it. |
 | `--dry-run` | only estimate how many messages, requests and minutes a full fetch would still take — from the store, no request. |
 
@@ -3593,7 +3598,7 @@ max conversations related <chat> <message> [options]
 | Опция | Что делает |
 |---|---|
 | `--limit <n>` | how many. |
-| `--model <model>` | local: a model id from `models list` (default: e5-small); remote: the provider's model. |
+| `--model <model>` | local: a model id from `models list` (default: embeddinggemma); remote: the provider's model. |
 | `--embedding-provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
@@ -3613,7 +3618,7 @@ max conversations status [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | only this chat: a chat: its id, or part of its title. |
-| `--model <model>` | local: a model id from `models list` (default: e5-small); remote: the provider's model. |
+| `--model <model>` | local: a model id from `models list` (default: embeddinggemma); remote: the provider's model. |
 | `--embedding-provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
@@ -3741,7 +3746,7 @@ max conversations embeddings status [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
-| `--model <model>` | local: a model id from `models list` (default: e5-small); remote: the provider's model. |
+| `--model <model>` | local: a model id from `models list` (default: embeddinggemma); remote: the provider's model. |
 | `--embedding-provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
@@ -3763,7 +3768,7 @@ max conversations embeddings clear [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
-| `--model <model>` | local: a model id from `models list` (default: e5-small); remote: the provider's model. |
+| `--model <model>` | local: a model id from `models list` (default: embeddinggemma); remote: the provider's model. |
 | `--embedding-provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
@@ -3844,7 +3849,7 @@ max conversations embed [options]
 | Опция | Что делает |
 |---|---|
 | `--chat <chat>` | a chat: its id, or part of its title. |
-| `--model <model>` | local: a model id from `models list` (default: e5-small); remote: the provider's model. |
+| `--model <model>` | local: a model id from `models list` (default: embeddinggemma); remote: the provider's model. |
 | `--embedding-provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
@@ -4313,7 +4318,7 @@ max mentions confirm <id> [person] [options]
 | `--all-in-chat` | a name: also every undecided place of the same name in its chat. |
 | `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
-**Returns:** mention decision — kind, value, status, target, mentions; every field: max commands info mentions confirm
+**Returns:** mention decision — kind, value, status, target, mentions, proposal; every field: max commands info mentions confirm
 
 **Example:** `max personal mentions confirm 12 person:7`, `max personal mentions confirm 15`, `max personal mentions confirm 31 person:7 --all-in-chat`
 
@@ -4336,7 +4341,7 @@ max mentions reject <id> [options]
 | `--all-in-chat` | a name: also every undecided place of the same name in its chat. |
 | `--as-owner` | record it as yours although an agent's terminal runs the tool (AI_AGENT or CLAUDECODE set). |
 
-**Returns:** mention decision — kind, value, status, target, mentions; every field: max commands info mentions reject
+**Returns:** mention decision — kind, value, status, target, mentions, proposal; every field: max commands info mentions reject
 
 **Example:** `max personal mentions reject 12`
 
@@ -4469,7 +4474,7 @@ find things by text: one resource when you know it (messages, notes), or search 
 
 ### `max search all`
 
-search messenger messages and notes in the local store, and by default the messenger's server for messages too (notes and events are local only; --backend archive or --offline keeps it to the local store), calendar events when the store holds a calendar, and a meeting account's transcripts when --source names one — best match first; not mail (the separate memo CLI searches it: memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
+search messenger messages and notes in the local store, and by default the messenger's server for messages too (notes and events are local only; --backend archive or --offline keeps it to the local store), calendar events when the store holds a calendar, and meeting transcripts, chat and summaries when it holds a meeting account — best match first; not mail (the separate memo CLI searches it: memo search mail), tasks, people, memories or projects. Use it when you do not know where something was written; search messages or notes reads one kind with all its fields
 
 ```sh
 max search all <query> [options]
@@ -4481,9 +4486,8 @@ max search all <query> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--only <resources>` | only these resources, separated by commas: messages, notes, events; meetings when --source names a meeting account. |
-| `--source <accounts>` | only these accounts, separated by commas: provider:account as a hit shows it, a provider, a kind or group:<name>; each resource reads the ones of its kind, and meetings only when it names one. |
-| `--max-meetings <n>` | how many of the meeting account's meetings to look through, newest first, or all for every one (default 100). |
+| `--only <resources>` | only these resources, separated by commas: messages, notes, events, meetings. |
+| `--source <accounts>` | only these accounts, separated by commas: provider:account as a hit shows it, a provider, a kind or group:<name>; each resource reads the ones of its kind. |
 | `--limit <n>` | how many. |
 | `--page <n>` | which page, starting at 1. |
 | `--exact` | bare words and quotes match their exact form only, as exact:word does. |
@@ -4491,7 +4495,7 @@ max search all <query> [options]
 | `--backend <archive\|server\|both>` | where to search: the local archive, the messenger's server (default: both; message discovery uses archive only), or both. |
 | `--server-time <duration>` | stop waiting for the server after this long (default: 5s). |
 
-**Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 15 more; every field: max commands info search all
+**Returns:** hit — kind, ref, provider, account, title, timestamp, excerpt, url, and 17 more; every field: max commands info search all
 
 **Example:** `max personal search all draft`
 
@@ -4577,7 +4581,7 @@ max search conversations <query> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--model <model>` | local: a model id from `models list` (default: e5-small); remote: the provider's model. |
+| `--model <model>` | local: a model id from `models list` (default: embeddinggemma); remote: the provider's model. |
 | `--embedding-provider <provider>` | embedding provider: local or openai; flags override profile settings. |
 | `--base-url <url>` | a server with OpenAI's /v1/embeddings: Gemini, Jina, or Ollama and LM Studio on this machine. |
 | `--dims <n>` | remote: the vector size — needed with --base-url; shortens an OpenAI model's. |
@@ -4833,13 +4837,13 @@ max models download <model> [options]
 
 | Опция | Что делает |
 |---|---|
-| `--accept-terms` | accept the model's licence terms, for a model that has its own. |
+| `--accept-terms` | no longer needed; kept so older scripts still run. |
 
 **Returns:** model — id, kind, title, languages, size_bytes, downloaded, default, path, and 6 more; every field: max commands info models download
 
 **Next usually:** `max models set <model>`, `max images models download <model>`
 
-**Example:** `max personal models download e5-small`, `max personal models download mmarco`
+**Example:** `max personal models download embeddinggemma`, `max personal models download mmarco`
 
 ### `max models set`
 
@@ -6571,6 +6575,7 @@ max bot messages send <chat> [text] [options]
 | `--silent` | deliver without a notification. |
 | `--md` | read this messenger's Markdown; see its formatting guide for supported syntax. |
 | `--html` | the text is HTML: <b>, <i>, <a href>, <code>. |
+| `--button <text=data>` | an inline button, as <text>=<data>; repeat for more in one row; the data (1 to 64 bytes) goes back to the bot. |
 | `--file <file>` | attach a file; the text becomes its caption. |
 | `--photo <file>` | attach a .jpg, .png or .webp as a photo; the text becomes its caption. |
 | `--as-file` | send the --file as a file to download, a video included. |
@@ -6623,7 +6628,7 @@ max bot messages show <chat> <message>
 
 #### `max bot messages edit`
 
-replace the text of a message the bot sent
+replace the text of a message the bot sent; --button replaces its buttons, --no-buttons takes them off
 
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
@@ -6641,8 +6646,10 @@ max bot messages edit <chat> <message> <text> [options]
 |---|---|
 | `--md` | read this messenger's Markdown; see its formatting guide for supported syntax. |
 | `--html` | the text is HTML: <b>, <i>, <a href>, <code>. |
+| `--button <text=data>` | a button under the message, as <text>=<data>; replaces its buttons; repeat for more in one row. |
+| `--no-buttons` | take the buttons off the message. |
 
-**Returns:** replace the text of a message the bot sent
+**Returns:** replace the text or buttons of a message the bot sent
 
 **Example:** `max sales bot messages edit Team 101 "Doors open at 10"`
 
