@@ -117,7 +117,10 @@ if [ "$next" != "$version" ]; then
     const swap = (file, from, to) => fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace(from, to))
     const today = new Date().toLocaleDateString("ru-RU", { timeZone: "Europe/Madrid" })
     swap("package.json", `"version": "${o}"`, `"version": "${n}"`)
-    if (taken) swap("CHANGELOG.md", "\n## Не выпущено\n", `\n## ${n} — ${today}\n`)
+    // With every entry in changes/ there is no «Не выпущено» to rename: the new version gets its own heading.
+    const log = fs.readFileSync("CHANGELOG.md", "utf8")
+    if (taken && log.includes("\n## Не выпущено\n")) swap("CHANGELOG.md", "\n## Не выпущено\n", `\n## ${n} — ${today}\n`)
+    else if (taken) swap("CHANGELOG.md", /\n## /, `\n## ${n} — ${today}\n\n## `)
     else swap("CHANGELOG.md", `\n## ${o} — `, `\n## ${n} — `)' "$version" "$next" "$taken"
   pnpm exec cli-dev version --sync >/dev/null
   node --experimental-strip-types scripts/changelog-fragments.ts --rules scripts/release/checks.ts "$next"
