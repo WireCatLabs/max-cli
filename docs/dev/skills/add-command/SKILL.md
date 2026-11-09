@@ -103,7 +103,7 @@ what `max skill show` prints).
   drift ([WC-DOC-4](https://github.com/WireCatLabs/cli-base/blob/main/docs/standards/docs.md)).
 - The user page for the area (`docs/usage.md`, `docs/bot.md`, …) — Russian, current facts only, no
   «поправка» marks on user pages (`CONVENTIONS.md`, "User pages").
-- `CHANGELOG.md` under «Не выпущено» — Russian, what a user notices.
+- A changelog fragment, `changes/<branch>.md` — Russian, what a user notices.
 - A live check for it, if it reaches MAX: a line in the live scenarios (`docs/dev/TESTING.md` and the
   private `docs_ai/plans/2026-09-28-live-scenarios.md`), run through `bin/max`, never
   `node dist/bin/max.js` (it opens the real cache).
