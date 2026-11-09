@@ -2,7 +2,14 @@ import { writeFileSync } from "node:fs"
 import { CliError } from "@wirecat/cli-base"
 import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import { holdLock, lockPath, releaseLock } from "@wirecat/cli-core/background"
-import { REMOTE_WRITE, serveCommand as sharedServeCommand } from "@wirecat/cli-core/cli"
+import {
+  outdatedReason,
+  ownPackageRoot,
+  REMOTE_WRITE,
+  serveCommand as sharedServeCommand,
+  watchOutdated,
+} from "@wirecat/cli-core/cli"
+import { storePath } from "@wirecat/cli-core/store"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
 import { parseDuration } from "../config.js"
@@ -81,6 +88,14 @@ const serveCommandDefinition = (): Command =>
         const lock = lockPath(MAX_APP, store.profile, environmentOf(this).env ?? process.env)
         const startedAt = new Date().toISOString()
         const stems = serveStems({ note })
+        const packageRoot = ownPackageRoot(VERSION)
+        const env = environmentOf(this).env ?? process.env
+        const outdated = watchOutdated({
+          check: () => outdatedReason({ command: "max", running: VERSION, storePath: storePath(env), packageRoot }),
+          // The unit restarts a serve that failed, and the restart is what loads the installed build.
+          onOutdated: (reason) =>
+            void server.stop(new CliError("configuration_error", reason, { reason: "serve.outdated" })),
+        })
         try {
           await server.start()
           stems.start()
@@ -96,6 +111,7 @@ const serveCommandDefinition = (): Command =>
           }
           throw error
         } finally {
+          outdated.stop()
           await stems.stop().catch(() => note("filling search stems could not close its store"))
           releaseLock(lock)
           process.off("SIGINT", stop)
