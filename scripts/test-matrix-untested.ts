@@ -3,6 +3,7 @@ import { PROJECTS_UNTESTED } from "./test-matrix-projects.ts"
 import { SHARED_0563_UNTESTED } from "./test-matrix-shared-0563.ts"
 import { SHARED_0599_UNTESTED } from "./test-matrix-shared-0599.ts"
 import { SHARED_0609_UNTESTED } from "./test-matrix-shared-0609.ts"
+import { SHARED_0624_UNTESTED } from "./test-matrix-shared-0624.ts"
 
 /**
  * What `max` cannot test offline, each with the reason and where it is checked instead. An entry
@@ -16,12 +17,7 @@ export interface Untested {
 }
 
 export const UNTESTED: Untested[] = [
-  { command: "messages sync", option: "--with-muted", reason: "cli-core src/cli/messenger/backfill.test.ts" },
-  ...["send --button", "edit --button", "edit --no-buttons"].map((entry) => ({
-    command: `bot messages ${entry.split(" ")[0]}`,
-    option: entry.split(" ")[1],
-    reason: "cli-core src/cli/bot/messages.test.ts drives the shared bot commands' inline buttons",
-  })),
+  ...SHARED_0624_UNTESTED,
   ...SHARED_0563_UNTESTED,
   ...SHARED_0599_UNTESTED,
   ...SHARED_0609_UNTESTED,
