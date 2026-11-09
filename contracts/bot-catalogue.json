@@ -515,6 +515,12 @@
         "html": {
           "type": "boolean",
           "description": "the text is HTML: <b>, <i>, <a href>, <code>"
+        },
+        "button": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "an inline button, as <text>=<data>; repeat for more in one row; the data (1 to 64 bytes) goes back to the bot"
         }
       },
       "required": [
@@ -629,6 +635,16 @@
         "html": {
           "type": "boolean",
           "description": "the text is HTML: <b>, <i>, <a href>, <code>"
+        },
+        "button": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(?!-$)[\\s\\S]+$",
+          "description": "a button under the message, as <text>=<data>; replaces its buttons; repeat for more in one row"
+        },
+        "no_buttons": {
+          "type": "boolean",
+          "description": "take the buttons off the message"
         }
       },
       "required": [
