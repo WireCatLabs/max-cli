@@ -103,6 +103,7 @@
   "store jobs clear": "write",
   "store export": "write",
   "store clear": "write",
+  "store import": "write",
   "store info": "read",
   "store check": "read",
   "store migrate": "write",

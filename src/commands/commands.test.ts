@@ -184,6 +184,7 @@ describe("max commands", () => {
       "store jobs clear",
       "store export",
       "store clear",
+      "store import",
       "store migrate",
       "store rebuild",
       "store backup",
