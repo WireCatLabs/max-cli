@@ -2718,7 +2718,7 @@ max stats messages responses [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | date:, chat: and kind: terms, AND-ed — date>=30d, date:[60d TO 30d]; none reads all time. |
+| `query` | необязательный | date:, chat:, kind: and muted: terms, AND-ed — date>=30d, date:[60d TO 30d], muted:false; none reads all time. |
 
 | Опция | Что делает |
 |---|---|
@@ -2741,7 +2741,7 @@ max stats messages waiting [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | date:, chat: and kind: terms, AND-ed — date>=30d, date:[60d TO 30d]; none reads all time. |
+| `query` | необязательный | date:, chat:, kind: and muted: terms, AND-ed — date>=30d, date:[60d TO 30d], muted:false; none reads all time. |
 
 | Опция | Что делает |
 |---|---|
