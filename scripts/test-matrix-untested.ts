@@ -75,6 +75,11 @@ export const UNTESTED: Untested[] = [
     reason:
       "cli-core src/cli/messenger/admin-commands.test.ts tests folder show with cached and remote chat names plus pinned/excluded entries; MAX mounts the same shared handler (SDK0.189.0)",
   },
+  {
+    command: "store import",
+    reason:
+      "cli-core 0.633.0 src/cli/messenger/store-import.test.ts loads a synthetic seed and refuses the owner's real store; MAX mounts the shared command unchanged",
+  },
   ...[["store jobs retry"], ["store jobs retry", "--failed"], ["store jobs clear"]].map(([command, option]) => ({
     command: command as string,
     ...(option ? { option } : {}),

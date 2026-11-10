@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 229 ⛔ · 0 ❌** — 378 commands, 782 options.
+**931 ✅ · 230 ⛔ · 0 ❌** — 379 commands, 782 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -284,6 +284,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store clear` | `--left` | ✅ |  |
 | `store clear` | `--allow-dangerous` | ✅ |  |
 | `store clear` | `--dry-run` | ✅ |  |
+| `store import` |  | ⛔ | cli-core 0.633.0 src/cli/messenger/store-import.test.ts loads a synthetic seed and refuses the owner's real store; MAX mounts the shared command unchanged |
 | `store info` |  | ✅ |  |
 | `store check` |  | ✅ |  |
 | `store migrate` |  | ✅ |  |
