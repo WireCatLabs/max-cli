@@ -2350,6 +2350,24 @@ max store clear [options]
 
 **Example:** `max personal store clear --left --dry-run`
 
+### `max store import`
+
+load a JSON file marked "synthetic": true (account, people, chats, members, messages) into this profile's account in the local store, as a sync would save them; the same file twice adds nothing and a changed message is updated in place. Refuses the owner's real store. Without --yes, says what it would load and changes nothing
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max store import <file>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `file` | обязательный | the JSON file to load. |
+
+**Returns:** store import — store, profile, account, imported, file, added; every field: max commands info store import
+
+**Example:** `max personal store import ./synthetic-chats.json --yes`
+
 ### `max store info`
 
 the store file: where it is, its size, its schema against the one this tool speaks, which tools used it and how many rows it holds, by provider, chat kind, account, year (UTC) and attachment kind, over every account; changes nothing
@@ -2718,7 +2736,7 @@ max stats messages responses [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | date:, chat: and kind: terms, AND-ed — date>=30d, date:[60d TO 30d]; none reads all time. |
+| `query` | необязательный | date:, chat:, kind: and muted: terms, AND-ed — date>=30d, date:[60d TO 30d], muted:false; none reads all time. |
 
 | Опция | Что делает |
 |---|---|
@@ -2741,7 +2759,7 @@ max stats messages waiting [query] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `query` | необязательный | date:, chat: and kind: terms, AND-ed — date>=30d, date:[60d TO 30d]; none reads all time. |
+| `query` | необязательный | date:, chat:, kind: and muted: terms, AND-ed — date>=30d, date:[60d TO 30d], muted:false; none reads all time. |
 
 | Опция | Что делает |
 |---|---|
