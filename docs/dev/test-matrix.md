@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 230 ⛔ · 0 ❌** — 379 commands, 782 options.
+**931 ✅ · 231 ⛔ · 0 ❌** — 379 commands, 783 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -175,6 +175,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `contacts link` |  | ⛔ | cli-core src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
 | `contacts link` | `--reason` | ⛔ | cli-core src/cli/messenger/messenger.test.ts drives local identity linking; src/store/contacts.test.ts checks graph identity isolation |
 | `contacts unlink` |  | ⛔ | cli-core src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
+| `contacts unlink` | `--from` | ⛔ | cli-core src/store/contacts.test.ts covers local identity unlinking; consumer mounts the shared command |
 | `messages list` |  | ✅ |  |
 | `messages list` | `--limit` | ✅ |  |
 | `messages list` | `--cursor` | ⛔ | cli-core src/cli/messenger/messenger.test.ts pages the timeline and messages list by --cursor through the shared commands MAX mounts (0.269.0) |

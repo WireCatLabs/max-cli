@@ -209,8 +209,10 @@ max personal chats members check "Книжный клуб" --deep 10
 
 ```sh
 max personal contacts link 20000002 telegram:1000001
-max personal contacts unlink 20000002
+max personal contacts unlink 20000002 --from person:<uid>
 ```
+
+`--from` называет человека, от которого отвязывается аккаунт: его `uid` выводит `contacts link`.
 
 После этого `contacts context` без `--chat` собирает оба аккаунта: общие чаты и сообщения из MAX и
 из Telegram. `contacts show` и `contacts context --chat` по-прежнему показывают только тот
