@@ -109,7 +109,7 @@ describe("max doctor", () => {
     const { code, stderr } = await inAnEmptyHome(["doctor", "--json"], { loggedIn: true })
 
     expect(code).toBe(0)
-    expect(stderr).toContain("keyring is probably out of reach")
+    expect(stderr).toContain("keyring is probably locked or out of reach")
     expect(stderr).not.toContain("session start")
   })
 

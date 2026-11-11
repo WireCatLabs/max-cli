@@ -152,8 +152,9 @@ const doctorCommandDefinition = (): Command => {
       const words = asFirstWord(settings.profile)
       if (!report.token.present && ((report.session.logins ?? 0) > 0 || report.session.viewerId)) {
         renderer.note(
-          "no token, although this profile has logged in here — the keyring is probably out of reach " +
-            "(cron, ssh: set XDG_RUNTIME_DIR). Log in again only if the token was removed",
+          "no token, although this profile has logged in here — the keyring is probably locked or out of reach " +
+            "(right after boot it opens at your login; from cron or ssh, set XDG_RUNTIME_DIR). " +
+            "Log in again only if the token was removed",
         )
       } else if (!report.token.present && report.bot.token.present) {
         renderer.note(

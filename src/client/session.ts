@@ -73,7 +73,7 @@ export const createSession = (deps: Dependencies) => {
         throw new CliError(
           deps.background ? "provider_unavailable" : "authentication_error",
           `no token found for profile "${profile}", although it has logged in on this machine — ` +
-            `the keyring is probably out of reach (cron, ssh: set XDG_RUNTIME_DIR); ` +
+            `the keyring is probably locked or out of reach (right after boot it opens at your login, and a timer's run waits for it; from cron or ssh, set XDG_RUNTIME_DIR); ` +
             `\`max ${asFirstWord(profile)}doctor\` shows it. Log in again only if the token was removed`,
           deps.background ? { reason: "credentials.unreachable" } : {},
         )
