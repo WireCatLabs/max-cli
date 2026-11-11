@@ -1689,7 +1689,7 @@ max contacts link <person> <other> [options]
 |---|---|
 | `--reason <text>` | why they are one person; an agent's link is a proposal and needs it. |
 
-**Returns:** linked person — uid, name, identities, proposal; every field: max commands info contacts link
+**Returns:** linked person — uid, name, identities, display_name, proposal; every field: max commands info contacts link
 
 **Example:** `max personal contacts link "Alex Example" zoom:101`
 
@@ -1700,16 +1700,20 @@ undo contacts link for one identity: it is a person of its own again
 **Меняет что-то только на этом компьютере.**
 
 ```sh
-max contacts unlink <person>
+max contacts unlink <person> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `person` | обязательный | their id, @username, or part of their name; <messenger>:<person> for another messenger. |
 
-**Returns:** linked person — uid, name, identities, proposal; every field: max commands info contacts unlink
+| Опция | Что делает |
+|---|---|
+| `--from <person>` | the person it leaves, person:<uid> or person:me; refused when it sits on another. |
 
-**Example:** `max personal contacts unlink "Alex Example"`
+**Returns:** linked person — uid, name, identities, display_name, proposal; every field: max commands info contacts unlink
+
+**Example:** `max personal contacts unlink "Alex Example" --from person:me`
 
 ## `max messages`
 
@@ -6848,7 +6852,7 @@ max bot search messages [query] [options]
 | `--limit <n>` | how many. |
 | `--page <n>` | which page, starting at 1. |
 | `--newest` | newest first instead of best first. |
-| `--from <who>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several. |
+| `--from <person>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several. |
 
 **Returns:** search the messages this bot has seen, in the local copy, by text
 

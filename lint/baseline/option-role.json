@@ -3,7 +3,6 @@
   "account remove --keep-data",
   "account show --hide-phone",
   "account update --hide-phone",
-  "bot search messages --from",
   "contacts show --hide-phone",
   "projects evidence --include-proposed",
   "projects evidence --purpose",
