@@ -230,6 +230,7 @@ describe("max commands", () => {
       "mentions reject",
       "mentions rebuild",
       "images embed (reads remotely)",
+      "images read (reads remotely)",
       "images models download (reads remotely)",
       "metadata sync (reads remotely)",
       "searches create",
