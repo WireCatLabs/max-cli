@@ -5664,6 +5664,7 @@ max schedule agent <name> <harness> <prompt> [options]
 |---|---|
 | `--model <model>` | the model it runs on: an alias such as sonnet, or a model id; "" for the agent's own default (default sonnet for claude, the agent's own for the others, or the config file's). |
 | `--max-cost <usd>` | claude only: stop a run that costs more than this, in US dollars. |
+| `--allow-dangerous` | start an agent its own limits cannot hold to these CLIs' commands, where `schedule agents list` says allowed_with_ack: it may then run any program inside its sandbox. |
 | `--max-cost-per-day <usd>` | claude only, as the others report no cost: start no run for the rest of the day once its runs cost this much, in US dollars; 0 for no cap (default 5, or the config file's). |
 | `--every <duration>` | repeat: 30m, 2h, 1d. |
 | `--at <HH:MM>` | every day at this local time; 'mon 09:00' once a week, 'mon,fri 09:00' on several days (mon, tue, wed, thu, fri, sat, sun); repeat it for more times. |
@@ -5673,7 +5674,7 @@ max schedule agent <name> <harness> <prompt> [options]
 
 **Returns:** start an agent (claude, codex, gemini, cursor, opencode, openclaw, hermes,…
 
-**Example:** `max personal schedule agent review claude "review what came in overnight and draft replies" --at 08:30`, `max personal schedule agent triage codex "list what needs an answer today" --every 2h --max-cost 1`, `max personal schedule agent weekly claude "review the week's open threads" --at 09:00 --model opus`
+**Example:** `max personal schedule agent review claude "review what came in overnight and draft replies" --at 08:30`, `max personal schedule agent triage gemini "list what needs an answer today" --every 2h`, `max personal schedule agent weekly claude "review the week's open threads" --at 09:00 --model opus`
 
 ### `max schedule list`
 
@@ -5707,7 +5708,7 @@ max schedule agents list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms; this list filters by none yet. |
 
-**Returns:** schedule harness — id, name, programs, reports_cost, restricted, restricted_reason, installed, path; every field: max commands info schedule agents list
+**Returns:** schedule harness — id, name, programs, reports_cost, restricted, restricted_reason, allowed_with_ack, installed, and 1 more; every field: max commands info schedule agents list
 
 **Example:** `max personal schedule agents list`, `max personal schedule agents list --json`
 
