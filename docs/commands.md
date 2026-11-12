@@ -5623,7 +5623,7 @@ max schedule command <name> <args> [options]
 
 ### `max schedule agent`
 
-start an agent (claude or codex) with a prompt on a timer; it runs with MAX_READ_ONLY=1, so it reads and drafts and cannot send — its answer is kept and you are notified
+start an agent (claude, codex, gemini, cursor, opencode, openclaw, hermes, grok, kimi) with a prompt on a timer; it runs with MAX_READ_ONLY=1, so it reads and drafts and cannot send, and its own limits hold it to these CLIs' commands; an agent with no such limit is refused (`schedule agents list` says which) — its answer is kept and you are notified
 
 **Меняет что-то только на этом компьютере.**
 
@@ -5634,21 +5634,21 @@ max schedule agent <name> <harness> <prompt> [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | обязательный | lowercase letters, digits and dashes. |
-| `harness` | обязательный | the agent to start. Одно из: `claude`, `codex`. |
+| `harness` | обязательный | the agent to start. Одно из: `claude`, `codex`, `gemini`, `cursor`, `opencode`, `openclaw`, `hermes`, `grok`, `kimi`. |
 | `prompt` | обязательный | what to do, e.g. "run the daily follow-up review: max skill show follow-ups". |
 
 | Опция | Что делает |
 |---|---|
-| `--model <model>` | the model it runs on: an alias such as sonnet, or a model id; "" for the harness's default (default sonnet for claude, codex's own for codex, or the config file's). |
+| `--model <model>` | the model it runs on: an alias such as sonnet, or a model id; "" for the agent's own default (default sonnet for claude, the agent's own for the others, or the config file's). |
 | `--max-cost <usd>` | claude only: stop a run that costs more than this, in US dollars. |
-| `--max-cost-per-day <usd>` | claude only: start no run for the rest of the day once its runs cost this much, in US dollars; 0 for no cap (default 5, or the config file's). |
+| `--max-cost-per-day <usd>` | claude only, as the others report no cost: start no run for the rest of the day once its runs cost this much, in US dollars; 0 for no cap (default 5, or the config file's). |
 | `--every <duration>` | repeat: 30m, 2h, 1d. |
 | `--at <HH:MM>` | every day at this local time; 'mon 09:00' once a week, 'mon,fri 09:00' on several days (mon, tue, wed, thu, fri, sat, sun); repeat it for more times. |
 | `--at-time <time>` | one run: 30m, 2d from now, or an ISO time; the schedule removes itself after it. |
 | `--notify-on <when>` | desktop notice after a run (default failures for an agent that repeats with --every, else always). Одно из: `always`, `failures`, `never`. |
 | `--deliver-to <route>` | also send the result, when --notify-on says so, by the owner's own tg or mail: telegram-bot:<profile>/<chat id or user:id>, or email:<profile>/<address>; repeat it for more. |
 
-**Returns:** start an agent (claude or codex) with a prompt on a timer; it runs with…
+**Returns:** start an agent (claude, codex, gemini, cursor, opencode, openclaw, hermes,…
 
 **Example:** `max personal schedule agent review claude "review what came in overnight and draft replies" --at 08:30`, `max personal schedule agent triage codex "list what needs an answer today" --every 2h --max-cost 1`, `max personal schedule agent weekly claude "review the week's open threads" --at 09:00 --model opus`
 
@@ -5664,9 +5664,29 @@ max schedule list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
-**Returns:** scheduled job — name, kind, when, last, paused, notify, deliver_to, spent_today_usd, and 2 more; every field: max commands info schedule list
+**Returns:** scheduled job — name, kind, when, last, paused, notify, deliver_to, harness, and 4 more; every field: max commands info schedule list
 
 **Example:** `max personal schedule list`, `max personal schedule list kind:agent`
+
+### `max schedule agents`
+
+the coding agents an agent schedule may start
+
+#### `max schedule agents list`
+
+the agents a schedule may start, and which are on PATH here
+
+```sh
+max schedule agents list [query]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
+
+**Returns:** schedule harness — id, name, programs, reports_cost, restricted, restricted_reason, installed, path; every field: max commands info schedule agents list
+
+**Example:** `max personal schedule agents list`, `max personal schedule agents list --json`
 
 ### `max schedule run`
 
