@@ -218,15 +218,22 @@ describe("max doctor", () => {
     expect(stderr).not.toContain("invented-value-7")
   })
 
-  it("writes a problem report under MAX_READ_ONLY, since it only adds a file", async () => {
-    const output = join(mkdtempSync(join(tmpdir(), "max-report-")), "report.json")
-    homes.push(dirname(output))
+  it("writes a problem report under MAX_READ_ONLY inside the run's work folder, and nowhere else", async () => {
+    const work = mkdtempSync(join(tmpdir(), "max-report-"))
+    const outside = mkdtempSync(join(tmpdir(), "max-report-outside-"))
+    homes.push(work, outside)
     process.env.MAX_READ_ONLY = "1"
+    process.env.MAX_WORK_FOLDER = work
     try {
-      const { code } = await inAnEmptyHome(["work", "doctor", "reports", "create", "--output", output, "--json"])
-      expect(code).toBe(0)
+      const report = (folder: string) =>
+        inAnEmptyHome(["work", "doctor", "reports", "create", "--output", join(folder, "report.json"), "--json"])
+      expect((await report(work)).code).toBe(0)
+      const elsewhere = await report(outside)
+      expect(elsewhere.code).toBe(5)
+      expect(elsewhere.stderr).toContain("read-only.output-outside")
     } finally {
       delete process.env.MAX_READ_ONLY
+      delete process.env.MAX_WORK_FOLDER
     }
   })
 

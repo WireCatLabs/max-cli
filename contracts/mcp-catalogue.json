@@ -255,6 +255,7 @@
   "schedule command": "write",
   "schedule agent": "write",
   "schedule list": "read",
+  "schedule agents list": "read",
   "schedule run": "write",
   "schedule remove": "write",
   "schedule pause": "write",

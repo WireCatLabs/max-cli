@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**931 ✅ · 231 ⛔ · 0 ❌** — 379 commands, 783 options.
+**931 ✅ · 235 ⛔ · 0 ❌** — 381 commands, 785 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -653,6 +653,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `images embed` |  | ⛔ | downloads pictures through the messenger and embeds them with cli-core's picture model; cli-core's src/services/pictures.test.ts and src/cli/messenger/images-command.test.ts drive it with stand-ins |
 | `images embed` | `--chat` | ⛔ | narrows cli-core's picture pass to one chat; covered by cli-core's src/services/pictures.test.ts |
 | `images embed` | `--limit` | ⛔ | bounds cli-core's picture pass; covered by cli-core's src/services/pictures.test.ts (limit and resume) |
+| `images read` |  | ⛔ | cli-core src/cli/messenger/attachments.test.ts drives the shared command max mounts unchanged (cli-core 0.647.0) |
+| `images read` | `--attachment` | ⛔ | cli-core src/cli/messenger/attachments.test.ts drives the shared command max mounts unchanged (cli-core 0.647.0) |
 | `images models list` |  | ⛔ | lists picture models from cli-core's images command; its image tests (WireCatLabs/cli-core#1102) cover it |
 | `images models download` |  | ⛔ | downloads the picture model over the network; cli-core's images command and its image tests (WireCatLabs/cli-core#1102) drive it offline |
 | `metadata show` |  | ✅ |  |
@@ -847,6 +849,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `schedule agent` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--model` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--max-cost` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agent` | `--allow-dangerous` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--max-cost-per-day` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--every` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--at` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
@@ -854,6 +857,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `schedule agent` | `--notify-on` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule agent` | `--deliver-to` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
 | `schedule list` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives this through the shared handler MAX mounts; schedules.os.test.ts runs the timers on macOS and Windows CI (0.250.1) |
+| `schedule agents list` |  | ⛔ | cli-core src/cli/schedule/harnesses.test.ts drives the shared command max mounts unchanged (cli-core 0.647.0) |
 | `schedule run` |  | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
 | `schedule run` | `--no-notify` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |
 | `schedule run` | `--deliver-to` | ⛔ | cli-core src/cli/messenger/schedule.test.ts drives the runner this calls (runSchedule) and schedules.os.test.ts starts it from launchd and Task Scheduler on CI; the shared handler MAX mounts (0.250.1) |

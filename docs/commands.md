@@ -2547,7 +2547,7 @@ max store copies delete <name>
 
 ### `max store tables`
 
-the tables of the local archive
+the tables of the local store
 
 #### `max store tables list`
 
@@ -3981,7 +3981,7 @@ max attachments update <chat> [message] [options]
 | `--attachment <n>` | which file of the message, from 1; needed when it has more than one. |
 | `--text-file <path>` | read the text from this file; - or none reads stdin. |
 
-**Returns:** attachment text change — ref, attachment, origin, chars, replaced; every field: max commands info attachments update
+**Returns:** attachment text change — ref, attachment, origin, chars, replaced, extractor, text; every field: max commands info attachments update
 
 **Example:** `max personal attachments update "Book club" 101 --text-file ./transcript.txt`
 
@@ -4407,6 +4407,29 @@ max images embed [options]
 **Returns:** image embedding — model, embedded, skipped, failed, more; every field: max commands info images embed
 
 **Example:** `max personal images embed`, `max personal images embed --limit 500`
+
+### `max images read`
+
+give one picture of a message to the coding agent chosen in `models picture-reading` (Claude Code or Codex) and keep the text it read, so search finds it; the picture goes to that agent's provider. Refused while picture reading is never; the saved copy is used when there is one, else the messenger's download
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max images read <chat> [message] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
+| `message` | необязательный | the message id. |
+
+| Опция | Что делает |
+|---|---|
+| `--attachment <n>` | which file of the message, from 1; needed when it has more than one. |
+
+**Returns:** attachment text change — ref, attachment, origin, chars, replaced, extractor, text; every field: max commands info images read
+
+**Example:** `max personal images read "msg:..." --attachment 1`, `max personal images read "Book club" 101`
 
 ### `max images models`
 
@@ -5623,7 +5646,7 @@ max schedule command <name> <args> [options]
 
 ### `max schedule agent`
 
-start an agent (claude or codex) with a prompt on a timer; it runs with MAX_READ_ONLY=1, so it reads and drafts and cannot send — its answer is kept and you are notified
+start an agent (claude, codex, gemini, cursor, opencode, openclaw, hermes, grok, kimi) with a prompt on a timer; it runs with MAX_READ_ONLY=1, so it reads and drafts and cannot send, and its own limits hold it to these CLIs' commands; an agent with no such limit is refused (`schedule agents list` says which) — its answer is kept and you are notified
 
 **Меняет что-то только на этом компьютере.**
 
@@ -5634,23 +5657,24 @@ max schedule agent <name> <harness> <prompt> [options]
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | обязательный | lowercase letters, digits and dashes. |
-| `harness` | обязательный | the agent to start. Одно из: `claude`, `codex`. |
+| `harness` | обязательный | the agent to start. Одно из: `claude`, `codex`, `gemini`, `cursor`, `opencode`, `openclaw`, `hermes`, `grok`, `kimi`. |
 | `prompt` | обязательный | what to do, e.g. "run the daily follow-up review: max skill show follow-ups". |
 
 | Опция | Что делает |
 |---|---|
-| `--model <model>` | the model it runs on: an alias such as sonnet, or a model id; "" for the harness's default (default sonnet for claude, codex's own for codex, or the config file's). |
+| `--model <model>` | the model it runs on: an alias such as sonnet, or a model id; "" for the agent's own default (default sonnet for claude, the agent's own for the others, or the config file's). |
 | `--max-cost <usd>` | claude only: stop a run that costs more than this, in US dollars. |
-| `--max-cost-per-day <usd>` | claude only: start no run for the rest of the day once its runs cost this much, in US dollars; 0 for no cap (default 5, or the config file's). |
+| `--allow-dangerous` | start an agent its own limits cannot hold to these CLIs' commands, where `schedule agents list` says allowed_with_ack: it may then run any program inside its sandbox. |
+| `--max-cost-per-day <usd>` | claude only, as the others report no cost: start no run for the rest of the day once its runs cost this much, in US dollars; 0 for no cap (default 5, or the config file's). |
 | `--every <duration>` | repeat: 30m, 2h, 1d. |
 | `--at <HH:MM>` | every day at this local time; 'mon 09:00' once a week, 'mon,fri 09:00' on several days (mon, tue, wed, thu, fri, sat, sun); repeat it for more times. |
 | `--at-time <time>` | one run: 30m, 2d from now, or an ISO time; the schedule removes itself after it. |
 | `--notify-on <when>` | desktop notice after a run (default failures for an agent that repeats with --every, else always). Одно из: `always`, `failures`, `never`. |
 | `--deliver-to <route>` | also send the result, when --notify-on says so, by the owner's own tg or mail: telegram-bot:<profile>/<chat id or user:id>, or email:<profile>/<address>; repeat it for more. |
 
-**Returns:** start an agent (claude or codex) with a prompt on a timer; it runs with…
+**Returns:** start an agent (claude, codex, gemini, cursor, opencode, openclaw, hermes,…
 
-**Example:** `max personal schedule agent review claude "review what came in overnight and draft replies" --at 08:30`, `max personal schedule agent triage codex "list what needs an answer today" --every 2h --max-cost 1`, `max personal schedule agent weekly claude "review the week's open threads" --at 09:00 --model opus`
+**Example:** `max personal schedule agent review claude "review what came in overnight and draft replies" --at 08:30`, `max personal schedule agent triage gemini "list what needs an answer today" --every 2h`, `max personal schedule agent weekly claude "review the week's open threads" --at 09:00 --model opus`
 
 ### `max schedule list`
 
@@ -5664,9 +5688,29 @@ max schedule list [query]
 |---|---|---|
 | `query` | необязательный | field:value terms that narrow the list — the fields are below. |
 
-**Returns:** scheduled job — name, kind, when, last, paused, notify, deliver_to, spent_today_usd, and 2 more; every field: max commands info schedule list
+**Returns:** scheduled job — name, kind, when, last, paused, notify, deliver_to, harness, and 4 more; every field: max commands info schedule list
 
 **Example:** `max personal schedule list`, `max personal schedule list kind:agent`
+
+### `max schedule agents`
+
+the coding agents an agent schedule may start
+
+#### `max schedule agents list`
+
+the agents a schedule may start, and which are on PATH here
+
+```sh
+max schedule agents list [query]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms; this list filters by none yet. |
+
+**Returns:** schedule harness — id, name, programs, reports_cost, restricted, restricted_reason, allowed_with_ack, installed, and 1 more; every field: max commands info schedule agents list
+
+**Example:** `max personal schedule agents list`, `max personal schedule agents list --json`
 
 ### `max schedule run`
 
@@ -5752,12 +5796,13 @@ what a timer runs, given the schedule's file; to run one by hand, use run
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max schedule exec <file>
+max schedule exec <file> [seal]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `file` | обязательный | the schedule's schedule.json in the state folder, as the timer passes it. |
+| `seal` | необязательный | the file's SHA-256 as it was saved, which the timer passes; a file that differs does not run. |
 
 **Returns:** what a timer runs, given the schedule's file; to run one by hand, use run
 
@@ -5892,6 +5937,10 @@ max doctor [options]
 |---|---|
 | `--online` | also log in once, read one chat and start the MCP server; sends nothing. |
 
+**Returns:** the state this installation is in, without connecting unless --online
+
+**Example:** `max personal doctor`
+
 ### `max doctor reports`
 
 problem reports
@@ -5904,7 +5953,7 @@ what a problem report holds and where it goes; writes nothing
 max doctor reports show
 ```
 
-**Returns:** what a problem report holds and where it goes; writes nothing
+**Returns:** what a report holds and never holds, and where to send it; writes nothing
 
 **Example:** `max personal doctor reports show`
 
@@ -5923,7 +5972,7 @@ max doctor reports create [options]
 | `--run <id>` | the run the report is about; the newest failed one if not given. |
 | `--output <file>` | where to write it; a new file in this directory if not given. |
 
-**Returns:** write a problem report to a file, and print how to send it
+**Returns:** the report file written: its path, the run it is about, and where to send it
 
 **Example:** `max personal doctor reports create --output ./problem-report.json`
 
