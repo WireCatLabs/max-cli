@@ -7,6 +7,7 @@ import {
   destroysNothing,
   itemOf,
   LOCAL_WRITE,
+  NO_EFFECTS,
   NONE_NAMED,
   outputFor,
   type PrivateFiles,
@@ -284,10 +285,11 @@ const EXCLUDES = ["текстов сообщений", "названий чат�
  * steps (`NEED-267`).
  */
 const reportCommand = (): Command => {
-  const report = new Command("reports").description("problem reports")
+  const report = annotate(new Command("reports"), { effects: NO_EFFECTS }).description("problem reports")
 
   annotate(report.command("show"), { effects: REMOTE_READ, examples: ["max doctor reports show"] })
     .description("what a problem report holds and where it goes; writes nothing")
+    .summary("what a report holds and never holds, and where to send it; writes nothing")
     .action(async function (this: Command) {
       const { renderer, format, streams, run } = forCommand(this)
       await run("doctor reports show", async () => explain(this, { renderer, format, streams }))
@@ -300,6 +302,7 @@ const reportCommand = (): Command => {
     }),
   )
     .description("write a problem report to a file, and print how to send it")
+    .summary("the report file written: its path, the run it is about, and where to send it")
     .option("--run <id>", "the run the report is about; the newest failed one if not given")
     .option("--output <file>", "where to write it; a new file in this directory if not given")
     .action(async function (this: Command) {

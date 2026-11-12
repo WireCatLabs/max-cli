@@ -24,7 +24,7 @@ it("**docs/mcp.md names every command excluded by transport**, and only those (C
   const authority = changesAuthorityAt(program)
   const runnable: string[] = []
   const walk = (info: CommandInfo) => {
-    if (info.commands.length === 0 || info.effects !== undefined) runnable.push(info.path.join(" "))
+    if (info.commands.length === 0 || info.runnable) runnable.push(info.path.join(" "))
     info.commands.forEach(walk)
   }
   tree.forEach(walk)
