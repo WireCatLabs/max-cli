@@ -38,6 +38,9 @@ export const checkOnline = async (client: MaxClient, handshake: () => Promise<nu
   return checks
 }
 
+/** Any version the server supports answers; this is the one cli-core's own MCP client asks for. */
+const MCP_PROTOCOL = "2025-06-18"
+
 /**
  * Starts `max mcp serve` as `node <script>` — never `max`, which on Windows is a `.cmd` file Node does not
  * start without a shell — asks for its tools and closes stdin, which is how a client lets it exit.
@@ -52,7 +55,6 @@ export const mcpHandshake = async ({
   scriptPath: string
   env: NodeJS.ProcessEnv
 }): Promise<number> => {
-  const { LATEST_PROTOCOL_VERSION } = await import("@modelcontextprotocol/server")
   const child = spawn(execPath, [scriptPath, "mcp", "serve"], { env, stdio: ["pipe", "pipe", "ignore"] })
   const send = (message: object) => child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", ...message })}\n`)
   const lines = createInterface({ input: child.stdout })
@@ -79,7 +81,7 @@ export const mcpHandshake = async ({
         id: 1,
         method: "initialize",
         params: {
-          protocolVersion: LATEST_PROTOCOL_VERSION,
+          protocolVersion: MCP_PROTOCOL,
           capabilities: {},
           clientInfo: { name: "max-doctor", version: VERSION },
         },

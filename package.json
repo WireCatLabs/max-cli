@@ -104,9 +104,7 @@
     "package:check": "node --experimental-strip-types scripts/release-check.ts --package-only"
   },
   "dependencies": {
-    "@modelcontextprotocol/server": "2.4.0",
     "@msgpack/msgpack": "3.1.3",
-    "@valibot/to-json-schema": "1.8.0",
     "@wirecat/cli-base": "0.98.0",
     "@wirecat/cli-core": "0.647.0",
     "commander": "15.0.0",
@@ -122,9 +120,11 @@
     "@cspell/dict-es-es": "3.0.9",
     "@cspell/dict-ru_ru": "2.3.4",
     "@modelcontextprotocol/client": "~2.4.0",
+    "@modelcontextprotocol/server": "2.4.0",
     "@napi-rs/canvas": "1.0.13",
     "@types/node": "^22.20.5",
     "@types/ws": "^8.18.2",
+    "@valibot/to-json-schema": "1.8.0",
     "@vitest/coverage-v8": "^5.0.5",
     "@wirecat/cli-testing": "0.7.0",
     "cspell": "10.4.0",

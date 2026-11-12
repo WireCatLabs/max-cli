@@ -5,5 +5,61 @@
     "reason": "cli-core 0.564.0 gave stats tasks show a query and keeps --chat until tg and max move to -- chat:<chat>; cli-core overrides it the same way",
     "owner": "@leemour",
     "review_after": "2026-12-01"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/bot/trust.ts node:tls",
+    "reason": "adds the Russian Trusted Root CA that the Bot API certificate needs (NEED-293); it opens no connection, and the Bot API calls themselves go through hostFetch",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/bot/trust.ts fetch",
+    "reason": "a bot upload goes to the URL MAX hands out for each file, on hosts nobody has measured; the Bot API calls wrap this fetch in hostFetch",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/download.ts fetch",
+    "reason": "attachment links point at whatever file host MAX names in the message, a set nobody has measured; each redirect hop is checked by hand",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/upload.ts fetch",
+    "reason": "uploads go to the URL MAX hands out for each file, on hosts nobody has measured",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/protocol/connection.ts ws",
+    "reason": "the personal account speaks MAX's own protocol over a WebSocket, not HTTP",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/server/server.ts node:net",
+    "reason": "a local socket between max and its own background server; it reaches no host",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/server/server-connection.ts node:net",
+    "reason": "a local socket between max and its own background server; it reaches no host",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
+  },
+  {
+    "rule": "raw-network",
+    "target": "src/server/subscribe.ts node:net",
+    "reason": "a local socket between max and its own background server; it reaches no host",
+    "owner": "@leemour",
+    "review_after": "2027-05-13"
   }
 ]
