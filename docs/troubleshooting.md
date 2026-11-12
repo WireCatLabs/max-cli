@@ -213,10 +213,10 @@ Id сообщения — в `id<…`: время берётся из самог
 Код `2`. `--at-time` — местное время или задержка от сейчас в минутах, часах или днях, но не в
 секундах. Не раньше чем через минуту и не позже чем через год.
 
-### «--timeout takes a duration with a unit — 30s, 2m or 500ms»
+### «--timeout takes a duration with a unit — 500ms, 30s, 2m, 4h or 1d»
 
-Код `2`. `--timeout` и `MAX_TIMEOUT` принимают `ms`, `s` или `m`. Часов нет: два часа — это
-`120m`.
+Код `2`. `--timeout` и `MAX_TIMEOUT` принимают `ms`, `s`, `m`, `h` или `d`. Число без единицы
+отвергается.
 
 ### «--all and --page ask for different things; use one or the other»
 

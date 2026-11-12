@@ -2,7 +2,6 @@ import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import type { Environment } from "./commands/context.js"
-import { sendTime } from "./config.js"
 import { Opcode } from "./generated/opcodes.generated.js"
 import { run } from "./program.js"
 import { Connection } from "./protocol/connection.js"
@@ -82,19 +81,6 @@ describe("sending later with --at-time", () => {
     expect(new SendJournal(sendsPathFor("s-later")).entries()).toMatchObject([
       { outcome: "sent", scheduledFor: new Date(fire).toISOString() },
     ])
-  })
-
-  it("reads a delay in minutes, hours or days", () => {
-    const now = Date.parse("2026-09-24T12:00:00Z")
-    expect(sendTime("90m", now) - now).toBe(90 * MINUTE)
-    expect(sendTime("2h", now) - now).toBe(120 * MINUTE)
-    expect(sendTime("1d", now) - now).toBe(24 * 60 * MINUTE)
-  })
-
-  it("reads a time without an offset as local time", () => {
-    const now = Date.parse("2026-09-24T12:00:00")
-    expect(sendTime("2026-09-25T09:00", now)).toBe(Date.parse("2026-09-25T09:00:00"))
-    expect(sendTime("2026-09-25 09:00:45", now)).toBe(Date.parse("2026-09-25T09:00:00"))
   })
 
   it.each([

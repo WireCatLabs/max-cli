@@ -122,7 +122,9 @@ export const askerFor =
                   : readSecret(question, { echo: true }))
               : null
       if (answer === null)
-        throw new CliError("confirmation_required", `${key} asks before it acts — add ${flag} to go ahead`)
+        throw new CliError("confirmation_required", `${key} asks before it acts — add ${flag} to go ahead`, {
+          permission: key,
+        })
       if (!/^\s*y(es)?\s*$/i.test(answer)) throw new CliError("cancelled", `${key}: not done — the answer was no`)
     }
     approvals.getStore()?.approved.add(key)

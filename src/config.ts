@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import { AI_ENTRIES, type AISettings, type ConfigIssue, first, settingsFor } from "@wirecat/cli-core/cli"
+import { type AISettings, type ConfigIssue, first, settingsFor } from "@wirecat/cli-core/cli"
 import type { Level } from "@wirecat/cli-core/sends"
 import * as v from "valibot"
 import { MAX_APP } from "./app.js"
@@ -10,10 +10,6 @@ const plain =
   (rule: string) =>
   (issue: v.BaseIssue<unknown>): string =>
     `${rule}, not ${issue.received}`
-const wholeNumber = plain("has to be a whole number, 1 or more")
-const count = v.pipe(v.number(wholeNumber), v.integer(wholeNumber), v.minValue(1, wholeNumber))
-const zeroOrMore = plain("has to be a whole number, 0 or more")
-const countOrZero = v.pipe(v.number(zeroOrMore), v.integer(zeroOrMore), v.minValue(0, zeroOrMore))
 const flag = v.boolean(plain("has to be true or false"))
 
 const coreEntries = settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries
@@ -29,28 +25,15 @@ const coreEntries = settingsFor(MAX_APP).schema.entries.defaults.wrapped.entries
  * **No field here can hold a secret.** No token, no phone number, no chat id: a schema with
  * nowhere to put one is stronger than a rule saying do not put one there.
  */
-const sharedEntries = {
-  limit: v.optional(count),
-  timeout_ms: v.optional(count),
-  color: v.optional(flag),
-  /** The run log reads these. */
-  record: v.optional(flag),
-  record_input: v.optional(flag),
-  keep_runs_for_days: v.optional(count),
-  keep_successful_runs_for_days: v.optional(count),
-  runs_size_limit_mb: v.optional(count),
-  permissions: coreEntries.permissions,
-  search_reranker: coreEntries.search_reranker,
-  sends_per_hour: v.optional(count),
-  requests_per_minute: v.optional(countOrZero),
-  ...AI_ENTRIES,
-}
+// max's voice setting is transcribe_model: the shared speech_model and transcribe_with would be read by nothing here.
+const { update_check, skill_hint, sender_colors, search_catch_up, speech_model, transcribe_with, ...sharedEntries } =
+  coreEntries
 
 /** A bot has no server and no sender colours, so `bot.*` refuses these rather than ignoring them. */
 const personalEntries = {
   ...sharedEntries,
-  sender_colors: v.optional(flag),
-  search_catch_up: v.optional(flag),
+  sender_colors,
+  search_catch_up,
   /** Start `max serve` in the background when a command needs MAX and none is running (`MAX-35`). */
   serve: v.optional(flag),
 }
@@ -71,8 +54,8 @@ const botSettings = v.strictObject(sharedEntries)
  */
 const defaultsEntries = {
   ...personalEntries,
-  update_check: v.optional(flag),
-  skill_hint: v.optional(flag),
+  update_check,
+  skill_hint,
   transcribe_model: v.optional(
     v.picklist(
       MODELS.map((model) => model.id),
@@ -289,36 +272,7 @@ export const runRetention = ({ keepSuccessfulRunsForDays, runsSizeLimitMb }: Set
 
 export const configuredProfiles = (options: ResolveOptions = {}): string[] => sharedSettings.configuredProfiles(options)
 
-/**
- * `30s`, `2m`, `500ms` — **the unit is required, and a bare number is refused.**
- *
- * `--timeout 30` is ambiguous in a way that costs real time: the neighbouring setting in the
- * configuration file is called `timeoutMs` and is milliseconds, while every other tool that spells
- * it this way means seconds. Guessing either one is a thirty-fold surprise in one direction or the
- * other, so this asks instead — the same rule as `--kind`, and the reason is the same.
- *
- * The refusal names whichever of the two supplied the value — see `durationMs`.
- */
-const DURATION = /^(\d+)(ms|s|m)$/
-
-const UNIT_MS: Record<string, number> = { ms: 1, s: 1000, m: 60_000 }
-
-/** `30s`, `2m`, `500ms` — the one spelling of a duration, whatever it is for. */
-export const parseDuration = (value: string, source: string): number => {
-  const match = DURATION.exec(value.trim())
-  if (!match?.[1] || !match[2]) {
-    throw new CliError("validation_error", `${source} takes a duration with a unit — 30s, 2m or 500ms — not "${value}"`)
-  }
-
-  const ms = Number(match[1]) * (UNIT_MS[match[2]] ?? 0)
-  if (ms <= 0) {
-    throw new CliError("validation_error", `${source} has to be more than zero, and "${value}" is not`)
-  }
-  return ms
-}
-
 const MINUTE = 60_000
-const YEAR = 365 * 24 * 60 * MINUTE
 const DELAY = /^(\d+)(m|h|d)$/
 const DELAY_UNIT_MS: Record<string, number> = { m: MINUTE, h: 60 * MINUTE, d: 24 * 60 * MINUTE }
 
@@ -326,31 +280,6 @@ const DELAY_UNIT_MS: Record<string, number> = { m: MINUTE, h: 60 * MINUTE, d: 24
 export const delayMs = (value: string): number | undefined => {
   const [, amount, unit] = DELAY.exec(value.trim()) ?? []
   return amount && unit ? Number(amount) * (DELAY_UNIT_MS[unit] ?? 0) : undefined
-}
-
-/**
- * Rounded down to the minute: MAX drops the seconds and sends at the start of the minute (measured
- * 2026-09-24, `FIND-141`), so the time we print is the time it goes. A time without an offset is
- * local, which is how `Date.parse` reads one with a clock and no zone. The delay has hours and days,
- * unlike `--timeout`: nobody schedules a message 90 seconds ahead.
- */
-export const sendTime = (value: string, now = Date.now()): number => {
-  const trimmed = value.trim()
-  const delay = delayMs(trimmed)
-  const at = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}/.test(trimmed)
-    ? Date.parse(trimmed.replace(" ", "T"))
-    : delay !== undefined
-      ? now + delay
-      : Number.NaN
-  if (Number.isNaN(at)) {
-    throw new CliError(
-      "validation_error",
-      `--at takes a time like 2026-09-25T09:00 or a delay like 30m, 2h, 1d — not "${value}"`,
-    )
-  }
-  if (at < now + MINUTE) throw new CliError("validation_error", "--at has to be at least a minute from now")
-  if (at > now + YEAR) throw new CliError("validation_error", "--at can be at most a year from now, as in MAX itself")
-  return at - (at % MINUTE)
 }
 
 /** Where `config set` writes: one profile, or everyone, optionally narrowed to one kind. */
@@ -422,7 +351,6 @@ const sharedSettings = settingsFor(MAX_APP, {
     { key: "transcribe_model", default: DEFAULT_MODEL, description: "the speech model voice messages are read with" },
   ],
   sourcePaths: true,
-  parseDuration,
   resolve: ({ flags, settings, fromLayers }) => {
     const serveFlag = (flags as GlobalFlags).serve
     const serve = serveFlag === undefined ? fromLayers("serve", true) : { value: serveFlag, from: "flag" }
