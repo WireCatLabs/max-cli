@@ -3981,7 +3981,7 @@ max attachments update <chat> [message] [options]
 | `--attachment <n>` | which file of the message, from 1; needed when it has more than one. |
 | `--text-file <path>` | read the text from this file; - or none reads stdin. |
 
-**Returns:** attachment text change — ref, attachment, origin, chars, replaced; every field: max commands info attachments update
+**Returns:** attachment text change — ref, attachment, origin, chars, replaced, extractor, text; every field: max commands info attachments update
 
 **Example:** `max personal attachments update "Book club" 101 --text-file ./transcript.txt`
 
@@ -4407,6 +4407,29 @@ max images embed [options]
 **Returns:** image embedding — model, embedded, skipped, failed, more; every field: max commands info images embed
 
 **Example:** `max personal images embed`, `max personal images embed --limit 500`
+
+### `max images read`
+
+give one picture of a message to the coding agent chosen in `models picture-reading` (Claude Code or Codex) and keep the text it read, so search finds it; the picture goes to that agent's provider. Refused while picture reading is never; the saved copy is used when there is one, else the messenger's download
+
+**Меняет что-то только на этом компьютере.**
+
+```sh
+max images read <chat> [message] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title; or a msg: locator, with no message id after it. |
+| `message` | необязательный | the message id. |
+
+| Опция | Что делает |
+|---|---|
+| `--attachment <n>` | which file of the message, from 1; needed when it has more than one. |
+
+**Returns:** attachment text change — ref, attachment, origin, chars, replaced, extractor, text; every field: max commands info images read
+
+**Example:** `max personal images read "msg:..." --attachment 1`, `max personal images read "Book club" 101`
 
 ### `max images models`
 
@@ -5772,12 +5795,13 @@ what a timer runs, given the schedule's file; to run one by hand, use run
 **Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max schedule exec <file>
+max schedule exec <file> [seal]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `file` | обязательный | the schedule's schedule.json in the state folder, as the timer passes it. |
+| `seal` | необязательный | the file's SHA-256 as it was saved, which the timer passes; a file that differs does not run. |
 
 **Returns:** what a timer runs, given the schedule's file; to run one by hand, use run
 
