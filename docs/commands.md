@@ -2547,7 +2547,7 @@ max store copies delete <name>
 
 ### `max store tables`
 
-the tables of the local archive
+the tables of the local store
 
 #### `max store tables list`
 
@@ -5937,6 +5937,10 @@ max doctor [options]
 |---|---|
 | `--online` | also log in once, read one chat and start the MCP server; sends nothing. |
 
+**Returns:** the state this installation is in, without connecting unless --online
+
+**Example:** `max personal doctor`
+
 ### `max doctor reports`
 
 problem reports
@@ -5949,7 +5953,7 @@ what a problem report holds and where it goes; writes nothing
 max doctor reports show
 ```
 
-**Returns:** what a problem report holds and where it goes; writes nothing
+**Returns:** what a report holds and never holds, and where to send it; writes nothing
 
 **Example:** `max personal doctor reports show`
 
@@ -5968,7 +5972,7 @@ max doctor reports create [options]
 | `--run <id>` | the run the report is about; the newest failed one if not given. |
 | `--output <file>` | where to write it; a new file in this directory if not given. |
 
-**Returns:** write a problem report to a file, and print how to send it
+**Returns:** the report file written: its path, the run it is about, and where to send it
 
 **Example:** `max personal doctor reports create --output ./problem-report.json`
 
