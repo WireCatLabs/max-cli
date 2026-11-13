@@ -4,11 +4,16 @@ import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
 import { listRuns, runsDirFor } from "@wirecat/cli-core/cli"
 import { describe, expect, it } from "vitest"
 import { MAX_APP } from "./app.js"
+import { BotTokenStore } from "./bot/auth.js"
 import type { Environment } from "./commands/context.js"
 import { run } from "./program.js"
 import { SessionStore } from "./session/store.js"
 
-const environment: Environment = { store: (profile) => new SessionStore({ profile, keyring: memoryKeyring() }) }
+const keyring = memoryKeyring()
+const environment: Environment = {
+  store: (profile) => new SessionStore({ profile, keyring }),
+  botStore: (profile) => new BotTokenStore({ profile, keyring }),
+}
 
 const runWith = async (argv: string[]) => {
   const streams = captureStreams()
@@ -59,9 +64,12 @@ describe("every failure is kept as a run", () => {
   })
 
   it("a failure inside a run, once, with nothing it was given", async () => {
+    expect(await runWith(["f-inside", "config", "set", "limit", "5"])).toBe(0)
     expect(await runWith(["f-inside", "messages", "send", "111", "секретный текст"])).toBe(4)
 
-    expect(runsOf("f-inside")).toMatchObject([{ command: "messages send", errorCode: "authentication_error" }])
+    expect(runsOf("f-inside").filter(({ command }) => command === "messages send")).toMatchObject([
+      { errorCode: "authentication_error" },
+    ])
     expect(everythingButArgvFor("f-inside")).not.toContain("секретный")
   })
 
@@ -89,9 +97,9 @@ describe("every failure is kept as a run", () => {
       await runWith(["f-off", "messages", "sync", "111", "--since-time", "1d", "--last", "5", "--no-record"]),
     ).toBe(2)
     expect(await runWith(["f-help", "messages", "--help"])).toBe(0)
-    expect(await runWith(["f-help", "doctor", "reports", "show"])).toBe(0)
+    expect(await runWith(["f-help", "doctor"])).toBe(0)
 
     expect(runsOf("f-off")).toEqual([])
-    expect(runsOf("f-help")).toMatchObject([{ command: "doctor reports show", status: "success" }])
+    expect(runsOf("f-help")).toMatchObject([{ command: "doctor", status: "success" }])
   })
 })

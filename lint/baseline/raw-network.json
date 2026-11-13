@@ -1,0 +1,5 @@
+[
+  "src/server/server-connection.ts node:net",
+  "src/server/server.ts node:net",
+  "src/server/subscribe.ts node:net"
+]

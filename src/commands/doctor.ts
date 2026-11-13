@@ -1,20 +1,16 @@
 import { existsSync } from "node:fs"
-import { dirname, resolve } from "node:path"
-import { CliError, configFilePath, resolvePaths, writeSecurely } from "@wirecat/cli-base"
+import { dirname } from "node:path"
+import { CliError, configFilePath, resolvePaths } from "@wirecat/cli-base"
 import { annotate, customizeSharedCommand } from "@wirecat/cli-base/commands"
 import {
-  type AnswerOutput,
-  destroysNothing,
+  doctorReportsCommand,
   itemOf,
-  LOCAL_WRITE,
-  NO_EFFECTS,
   NONE_NAMED,
   outputFor,
   type PrivateFiles,
   privateFiles,
   REMOTE_READ,
   renderAnswer,
-  runsDirFor,
   doctorCommand as sharedDoctorCommand,
   snakeKeys,
 } from "@wirecat/cli-core/cli"
@@ -32,7 +28,7 @@ import { type Check, checkOnline, mcpHandshake } from "../online.js"
 import { shownTime } from "../output.js"
 import { configIssuesOf } from "../permissions.js"
 import { asFirstWord } from "../profile.js"
-import { buildReport, type DoctorFiles, issueUrlFor, REPORT_URL, reportFileName } from "../report.js"
+import type { DoctorFiles } from "../report.js"
 import { sendsPathFor } from "../sends.js"
 import { SessionStore } from "../session/store.js"
 import { environmentOf, forCommand } from "./context.js"
@@ -271,140 +267,45 @@ const checkBot = async (command: Command, store: BotTokenStore): Promise<Check> 
 }
 
 const INCLUDES = [
-  "версия max, среда (node или bun) и система",
-  "то же, что показывает `max doctor`; домашний каталог заменён на ~",
-  "последний запуск, который кончился ошибкой: команда, запросы к MAX, коды ошибок, время",
-  "последние 20 действий-записей (отправки, реакции, удаления): исход, без текста",
-  "вместо номеров чатов и сообщений — метки: одинаковые внутри отчёта и разные в каждом новом",
+  "the version, the runtime and the operating system",
+  "what `max doctor` answers, with the home folder shown as ~",
+  "the failed run — the newest, or the one named: each request's operation, duration and error code",
+  "the last 20 write attempts (sends, reactions, deletions): outcome only, no text",
+  "every chat and message id replaced by a label that means nothing outside the file",
 ]
-const EXCLUDES = ["текстов сообщений", "названий чатов", "имён", "номеров телефонов", "токена"]
+const EXCLUDES = ["message text", "chat titles", "names", "phone numbers", "the token"]
 
-/**
- * **A report is posted by the person, not by `max`**: there is no server of ours, and `max` holds
- * no GitHub credentials. So `create` writes a file and prints a pre-filled new-issue link and the
- * steps (`NEED-267`).
- */
-const reportCommand = (): Command => {
-  const report = annotate(new Command("reports"), { effects: NO_EFFECTS }).description("problem reports")
-
-  annotate(report.command("show"), { effects: REMOTE_READ, examples: ["max doctor reports show"] })
-    .description("what a problem report holds and where it goes; writes nothing")
-    .summary("what a report holds and never holds, and where to send it; writes nothing")
-    .action(async function (this: Command) {
-      const { renderer, format, streams, run } = forCommand(this)
-      await run("doctor reports show", async () => explain(this, { renderer, format, streams }))
-    })
-
-  destroysNothing(
-    annotate(report.command("create"), {
-      effects: LOCAL_WRITE,
-      examples: ["max personal doctor reports create --output ./problem-report.json"],
-    }),
-  )
-    .description("write a problem report to a file, and print how to send it")
-    .summary("the report file written: its path, the run it is about, and where to send it")
-    .option("--run <id>", "the run the report is about; the newest failed one if not given")
-    .option("--output <file>", "where to write it; a new file in this directory if not given")
-    .action(async function (this: Command) {
-      const options = this.opts<{ run?: string; output?: string }>()
-      let context: ReturnType<typeof forCommand> | undefined
-      let refused: ReturnType<typeof unresolved> | undefined
+/** A report is posted by the person, not by `max`: there is no server of ours (`NEED-267`). */
+const reportCommand = (): Command =>
+  doctorReportsCommand({
+    app: MAX_APP,
+    includes: INCLUDES,
+    excludes: EXCLUDES,
+    example: "max personal",
+    check: "no message text, and chat and message ids are labels",
+    collect: async (command) => {
+      let context: ReturnType<typeof forCommand>
       try {
-        context = forCommand(this, DOCTOR_SETTINGS)
+        context = forCommand(command, DOCTOR_SETTINGS)
       } catch (error) {
         if (!(error instanceof CliError)) throw error
-        refused = unresolved(this, error)
+        return { doctor: unresolved(command, error), sends: [] }
       }
-      const { renderer, format, streams } = context ?? outputFor(this)
-
-      const create = async () => {
-        const now = new Date()
-        const profile = context
-          ? {
-              profile: context.settings.profile,
-              doctor: {
-                config: configOf(this, context.settings),
-                ...(await diagnoseProfile(context.settings, context.store, botStoreFor(this), sessionStoreFor(this))),
-                files: filesReport(configFileModes(context.settings.configPath)),
-              },
-              sends: new SendJournal(sendsPathFor(context.settings.profile)).entries(),
-            }
-          : { profile: null, doctor: refused as ReturnType<typeof unresolved>, sends: [] }
-        const built = buildReport({
-          ...profile,
-          runsDir: runsDirFor(MAX_APP),
-          ...(options.run === undefined ? {} : { runId: options.run }),
-          now,
-        })
-        const path = resolve(options.output ?? reportFileName(now))
-        writeSecurely(path, `${JSON.stringify(built, null, 2)}\n`, 0o600)
-
-        const issue = issueUrlFor(built, path)
-        const steps = [
-          `Откройте ссылку: GitHub откроет новую задачу с заголовком и заготовкой текста. Нужен аккаунт на GitHub.`,
-          `Перетащите в поле текста файл ${path} — GitHub приложит его.`,
-          "Напишите, что делали, что ожидали и что случилось.",
-          "Нажмите «Submit new issue». Задача будет видна всем.",
-        ]
-        const noRun = built.run
-          ? undefined
-          : "Неудачных запусков не записано. Если проблема повторяется, повторите команду, которая не работает, и создайте отчёт снова: неудачный запуск сохранится сам."
-
-        if (format !== "pretty") {
-          renderAnswer(
-            this,
-            { renderer, format, streams },
-            itemOf({ path, send_to: REPORT_URL, issue, run: built.run?.metadata.runId ?? null, steps }),
-          )
-          if (noRun) renderer.note(noRun)
-          return
-        }
-        streams.data(
-          [
-            `Отчёт записан: ${path}`,
-            ...(built.run ? [`Запуск в отчёте: ${built.run.metadata.runId} (${built.run.metadata.command})`] : [noRun]),
-            "",
-            "Что сделать:",
-            `1. ${steps[0]}`,
-            `   ${issue}`,
-            ...steps.slice(1).map((step, index) => `${index + 2}. ${step}`),
-            "",
-            "Перед отправкой файл можно открыть и посмотреть: в нём нет текстов сообщений, а вместо номеров чатов и",
-            "сообщений — метки.",
-          ].join("\n"),
-        )
+      const { settings, store, renderer } = context
+      const diagnosis = await diagnoseProfile(settings, store, botStoreFor(command), sessionStoreFor(command))
+      return {
+        // Shell commands in fix quote home paths; binDir already says where the command is missing.
+        doctor: {
+          config: configOf(command, settings),
+          ...diagnosis,
+          install: { ...diagnosis.install, fix: [] },
+          files: filesReport(configFileModes(settings.configPath)),
+        },
+        sends: new SendJournal(sendsPathFor(settings.profile)).entries(),
+        renderer,
       }
-      await (context ? context.run("doctor reports create", create) : create())
-    })
-
-  return report
-}
-
-const explain = (command: Command, output: AnswerOutput): void => {
-  const { format, streams } = output
-  if (format !== "pretty") {
-    renderAnswer(
-      command,
-      output,
-      itemOf({ send_to: REPORT_URL, includes: INCLUDES, excludes: EXCLUDES, create: "max doctor reports create" }),
-    )
-    return
-  }
-  streams.data(
-    [
-      "Отчёт о проблеме — один файл для автора max. Он прикладывается к новой задаче на GitHub.",
-      "",
-      "В файле:",
-      ...INCLUDES.map((line, index) => `- ${line}${index === INCLUDES.length - 1 ? "." : ";"}`),
-      "",
-      `В файле нет: ${EXCLUDES.join(", ")}.`,
-      "Задачи на GitHub видны всем — и приложенный файл тоже.",
-      "",
-      "Создать отчёт:             max doctor reports create",
-      "Про определённый запуск:   max doctor reports create --run <id>   (номера — max runs list)",
-    ].join("\n"),
-  )
-}
+    },
+  })
 
 const profileLine = ({ name, personal, bot }: Diagnosis["profiles"][number]): string =>
   `${name} (${[personal ? "personal" : "", bot ? "bot" : ""].filter(Boolean).join(" + ") || "not logged in"})`

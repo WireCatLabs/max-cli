@@ -1,14 +1,10 @@
-import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs"
-import { tmpdir } from "node:os"
+import { readFileSync, statSync } from "node:fs"
 import { join } from "node:path"
 import { captureStreams, memoryKeyring } from "@wirecat/cli-base"
-import { SendJournal } from "@wirecat/cli-core/sends"
 import { describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
 import type { Environment } from "./commands/context.js"
-import type { Diagnosis } from "./diagnose.js"
 import { run } from "./program.js"
-import { buildReport, issueUrlFor, type Report } from "./report.js"
 import { SessionStore } from "./session/store.js"
 
 const keyring = memoryKeyring()
@@ -25,17 +21,14 @@ const runWith = async (argv: string[]) => {
 
 const output = (name: string) => join(process.env.TMPDIR ?? "", name)
 
-describe("max doctor reports show", () => {
+describe("max doctor reports", () => {
   it("says what a report holds and where it goes, and writes nothing", async () => {
     const { code, stdout } = await runWith(["doctor", "reports", "show", "--json"])
 
     expect(code).toBe(0)
     const { item } = JSON.parse(stdout)
-    expect(item).toMatchObject({
-      send_to: "https://github.com/WireCatLabs/max-cli/issues/new",
-      create: "max doctor reports create",
-    })
-    expect(item.excludes).toContain("токена")
+    expect(item).toMatchObject({ send_to: "https://github.com/WireCatLabs/max-cli/issues/new" })
+    expect(item.excludes).toContain("the token")
   })
 
   it("with no failed run yet, still writes the report and says how to get one", async () => {
@@ -44,16 +37,15 @@ describe("max doctor reports show", () => {
 
     expect(code).toBe(0)
     expect(JSON.parse(stdout).item).toMatchObject({ path: file, run: null })
-    expect(stderr).toContain("Неудачных запусков не записано")
+    expect(stderr).toContain("no failed run is recorded")
   })
 
-  it("puts the newest failed run in a file only its owner reads, and a letter to send it with", async () => {
+  it("puts the newest failed run in a file only its owner reads, and never overwrites one", async () => {
     await runWith(["r-failed", "chats", "list"])
     const file = output("report.json")
 
     const { code, stdout } = await runWith(["doctor", "reports", "create", "--output", file, "--json"])
-    const answer = JSON.parse(stdout).item
-    const report = JSON.parse(readFileSync(file, "utf8")) as Report
+    const report = JSON.parse(readFileSync(file, "utf8"))
 
     expect(code).toBe(0)
     // Windows has no owner-only mode bits.
@@ -63,172 +55,13 @@ describe("max doctor reports show", () => {
       status: "failed",
       errorCode: "authentication_error",
     })
-    expect(report).toMatchObject({ runtime: expect.stringMatching(/^(node|bun) /), doctor: expect.any(Object) })
-    expect(answer.issue).toMatch(/^https:\/\/github\.com\/WireCatLabs\/max-cli\/issues\/new\?title=/)
-    expect(answer.steps).toHaveLength(4)
+    expect(JSON.parse(stdout).item).toMatchObject({ send_to: "https://github.com/WireCatLabs/max-cli/issues/new" })
+    const again = await runWith(["doctor", "reports", "create", "--output", file, "--json"])
+    expect(JSON.parse(again.stderr).error).toMatchObject({ reason: "doctor.report-exists" })
   })
 
   it("refuses a run that does not exist", async () => {
     const { code } = await runWith(["doctor", "reports", "create", "--run", "nope", "--output", output("x.json")])
     expect(code).toBe(6)
-  })
-})
-
-describe("the new issue", () => {
-  it("names the version and the failure in the title, and only the file's name in the body", () => {
-    const report = {
-      version: "0.10.0",
-      runtime: "node 24.1.0",
-      platform: "linux",
-      arch: "x64",
-      run: {
-        metadata: { runId: "r1", command: "chats list", errorCode: "provider_error", providerError: "proto.payload" },
-      },
-    } as unknown as Report
-
-    const link = decodeURIComponent(issueUrlFor(report, "/home/someone/r.json"))
-
-    expect(link).toContain("title=max 0.10.0: chats list — provider_error")
-    expect(link).toContain("run r1: provider_error (proto.payload)")
-    expect(link).toContain("Файл отчёта: r.json")
-    expect(link).not.toContain("/home/someone")
-  })
-
-  it("hides the home directory", async () => {
-    const { buildReport } = await import("./report.js")
-    const report = buildReport({
-      profile: "p",
-      doctor: { session: { stateFile: "/home/someone/.local/state/max-cli/profiles/p.json" } } as never,
-      runsDir: output("no-runs"),
-      sends: [],
-      home: "/home/someone",
-    })
-    expect(JSON.stringify(report)).not.toContain("/home/someone")
-    expect(JSON.stringify(report)).toContain("~/.local/state")
-  })
-
-  it("hides a Windows home directory in any case, and leaves out the quoted fix lines", async () => {
-    const { buildReport } = await import("./report.js")
-    const report = buildReport({
-      profile: "p",
-      doctor: {
-        session: { stateFile: "C:\\Users\\O'Neil Smith\\AppData\\Roaming\\max-cli\\profiles\\p.json" },
-        install: {
-          binDir: "C:/Users/O'Neil Smith/AppData/Roaming/npm",
-          onPath: "C:\\USERS\\O'NEIL SMITH\\APPDATA\\ROAMING\\NPM\\max.cmd",
-          fix: ["$env:Path = 'C:\\Users\\O''Neil Smith\\AppData\\Roaming\\npm' + ';' + $env:Path"],
-        },
-      } as never,
-      runsDir: output("no-runs"),
-      sends: [],
-      home: "C:\\Users\\O'Neil Smith",
-    })
-    expect(JSON.stringify(report).toLowerCase()).not.toContain("neil")
-    expect((report.doctor as Diagnosis).session.stateFile).toBe("~\\AppData\\Roaming\\max-cli\\profiles\\p.json")
-  })
-
-  it("replaces chat and message ids with labels that match inside one report and nowhere else", async () => {
-    const { buildReport } = await import("./report.js")
-    const runsDir = output("labelled-runs")
-    const dir = join(runsDir, "2026-09-25", "run-1")
-    mkdirSync(dir, { recursive: true })
-    writeFileSync(
-      join(dir, "run.json"),
-      JSON.stringify({
-        runId: "run-1",
-        command: "messages send",
-        profile: "p",
-        startedAt: "",
-        status: "failed",
-        cliVersion: "",
-      }),
-    )
-    writeFileSync(
-      join(dir, "events.jsonl"),
-      `${JSON.stringify({ event: "request", ids: { chat: "4242", message: "99", cid: "7" } })}\n`,
-    )
-    const sends = [{ at: "", profile: "p", chatId: "4242", messageId: "99", outcome: "sent" as const }]
-    const build = () =>
-      buildReport({ profile: "p", doctor: { session: {} } as never, runsDir, runId: "run-1", sends, home: "/nowhere" })
-
-    const report = build()
-    const ids = report.run?.events[0]?.ids as Record<string, string>
-
-    expect(ids.chat).toMatch(/^id:[0-9a-f]{12}$/)
-    expect(ids.message).toMatch(/^id:[0-9a-f]{12}$/)
-    expect(report.sends[0]?.chatId).toBe(ids.chat)
-    expect(report.sends[0]?.messageId).toBe(ids.message)
-    expect(ids.cid).toMatch(/^id:[0-9a-f]{12}$/)
-    expect(build().sends[0]?.chatId).not.toBe(ids.chat)
-  })
-})
-
-const ids = {
-  chatId: "7000000000000000001",
-  messageId: "7000000000000000002",
-  replyTo: "7000000000000000003",
-  sendId: "synthetic-send-id",
-  operationId: "synthetic-send-id",
-}
-
-const fixture = () => {
-  const dir = mkdtempSync(join(tmpdir(), "report-privacy-"))
-  const journal = new SendJournal(join(dir, "sends.jsonl"))
-  journal.append({ ...ids, at: "2026-10-16T00:00:00.000Z", profile: "synthetic", outcome: "refused" })
-  const runsDir = join(dir, "runs")
-  const runDir = join(runsDir, "2026-10-16", "run-1")
-  mkdirSync(runDir, { recursive: true })
-  writeFileSync(
-    join(runDir, "run.json"),
-    JSON.stringify({
-      runId: "run-1",
-      command: "messages send",
-      profile: "synthetic",
-      startedAt: "",
-      status: "failed",
-      cliVersion: "",
-    }),
-  )
-  writeFileSync(
-    join(runDir, "events.jsonl"),
-    `${JSON.stringify({ time: "2026-10-16T00:00:00.000Z", severity: "info", attributes: { event: "request", opcode: 77, ids: { chat: ids.chatId, message: ids.replyTo, send: ids.sendId } } })}\n`,
-  )
-  const report = () =>
-    buildReport({
-      profile: "synthetic",
-      doctor: { session: {} } as never,
-      runsDir,
-      runId: "run-1",
-      sends: journal.entries(),
-      home: "/synthetic-home",
-    })
-  return { journal, report }
-}
-
-describe("native diagnostic report privacy", () => {
-  it("labels an ordinary reply target preserved by the real send journal", () => {
-    const { journal, report } = fixture()
-    expect(journal.entries()[0]?.replyTo).toBe(ids.replyTo)
-    expect(report().sends[0]?.replyTo).toMatch(/^id:[0-9a-f]{12}$/)
-  })
-  it("preserves useful links within a report while keeping correlation values private", () => {
-    const { report } = fixture()
-    const output = report()
-    expect(output.run?.events[0]).toMatchObject({ time: "2026-10-16T00:00:00.000Z", severity: "info", opcode: 77 })
-    const eventIds = output.run?.events[0]?.ids as Record<string, string>
-    expect(output.sends[0]?.chatId).toBe(eventIds.chat)
-    expect(output.sends[0]?.replyTo).toBe(eventIds.message)
-    expect(output.sends[0]?.sendId).toBe(eventIds.send)
-    expect(output.sends[0]?.operationId).toBe(eventIds.send)
-    for (const value of Object.values(ids)) expect(JSON.stringify(output)).not.toContain(value)
-  })
-  it("uses fresh labels across reports for reply targets as well as chat and message IDs", () => {
-    const { report } = fixture()
-    const first = report(),
-      second = report()
-    expect(first.sends[0]?.chatId).not.toBe(second.sends[0]?.chatId)
-    expect(first.sends[0]?.messageId).not.toBe(second.sends[0]?.messageId)
-    expect(first.sends[0]?.replyTo).not.toBe(second.sends[0]?.replyTo)
-    expect(first.sends[0]?.sendId).not.toBe(second.sends[0]?.sendId)
   })
 })

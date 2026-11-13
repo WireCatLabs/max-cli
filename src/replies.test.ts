@@ -250,7 +250,7 @@ describe("reply editors and model templates", () => {
       { via: "test" },
     )
     await store.close()
-    const taskCounts = await invoke("stats", "tasks", "show", "--chat", "11", "--type", "request")
+    const taskCounts = await invoke("stats", "tasks", "show", "chat:11", "--type", "request")
     expect(taskCounts.code).toBe(0)
     expect(JSON.parse(taskCounts.data).item).toMatchObject({ open: 0, rows: [] })
     await invoke("replies", "add", "away")
