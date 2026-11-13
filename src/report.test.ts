@@ -56,6 +56,7 @@ describe("max doctor reports", () => {
       errorCode: "authentication_error",
     })
     expect(JSON.parse(stdout).item).toMatchObject({ send_to: "https://github.com/WireCatLabs/max-cli/issues/new" })
+    expect(JSON.parse(stdout).item.issue_url).toMatch(/^https:\/\/github\.com\/WireCatLabs\/max-cli\/issues\/new\?/)
     const again = await runWith(["doctor", "reports", "create", "--output", file, "--json"])
     expect(JSON.parse(again.stderr).error).toMatchObject({ reason: "doctor.report-exists" })
   })
