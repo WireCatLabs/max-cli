@@ -1,12 +1,12 @@
-### Fixed
+### Исправлено
 
-- **A shared config that cannot be read no longer makes this tool read-only.** A WireCat config
-  (`~/.config/WireCat/config.json`) with a byte-order mark, broken JSON, a folder in its place or an older `setup`
-  shape capped every profile at read-only, and an MCP server hid `messages sync`. Now only the owner's own "read only"
-  answer limits a tool, and even then `messages sync` is offered over MCP: it only reads the messenger into the local
-  store (cli-core 0.656.0).
+- **Общий конфиг, который не читается, больше не делает max доступным только для чтения.** Конфиг WireCat
+  (`~/.config/WireCat/config.json`) с меткой порядка байтов (BOM), сломанным JSON, папкой вместо файла или старым видом
+  раздела `setup` ограничивал все профили чтением, и сервер MCP прятал `messages sync`. Теперь ограничивает только
+  ваш собственный ответ «только чтение», и даже тогда `messages sync` доступен по MCP: он только читает мессенджер в
+  локальное хранилище (cli-core 0.656.0).
 
-### Changed — may break callers
+### Изменено — может сломать скрипты
 
-- **Built on cli-core 0.656.0** (was 0.651.0). See the
-  [cli-core changelog](https://github.com/WireCatLabs/cli-core/blob/main/CHANGELOG.md).
+- **Собран на cli-core 0.656.0** (был 0.651.0). Подробности в
+  [журнале изменений cli-core](https://github.com/WireCatLabs/cli-core/blob/main/CHANGELOG.md).
