@@ -80,7 +80,7 @@
 | `chat` | чат: по названию, @username или id | `chat:"Книжный клуб"` |
 | `date` | когда отправлено | `date:today`, `date:7d`, `date:[2026-01-01 TO 2026-02-01}` |
 | `kind` | вид чата: `private`, `group`, `channel`, `saved`, `bot`, `service`, `unknown` | `kind:private` |
-| `muted` | `true` — чат, который вы заглушили, пока не кончилось время; `false` — любой другой. max пока не узнаёт у MAX, какие чаты заглушены, поэтому сейчас подходит только `muted:false` | `muted:false` |
+| `muted` | `true` — чат, который вы заглушили, пока не кончилось время; `false` — любой другой. max узнаёт это при входе в MAX, например при `chats list` | `muted:true` |
 | `has` | `attachment`, `link`, `file`, `photo`, `image`, `video`, `audio`, `voice`, `sticker`, `contact`, `location`, `poll` | `has:file` |
 | `topic` | одну ветку обсуждения; нужен один чат | `chat:"Книжный клуб" AND topic:42` |
 | `in` | какие аккаунты: провайдер или `bots` | `in:bots` |

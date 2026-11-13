@@ -10,14 +10,14 @@ import { sendsPathFor } from "./sends.js"
 import { SessionStore } from "./session/store.js"
 import { mockMax } from "./testing/mock-max.js"
 
-const messenger = () => {
+const messenger = (config: Record<string, unknown> = {}, chats: Record<string, unknown>[] = []) => {
   const max = mockMax({
     answers: {
       [Opcode.SESSION_INIT]: {},
       [Opcode.LOGIN]: {
         profile: { contact: { id: 10000001 } },
-        config: { user: { SEARCH_BY_PHONE: "ALL", HIDDEN: false } },
-        chats: [{ id: 111, title: "Friends", type: "CHAT", lastEventTime: 1789776000000 }],
+        config: { user: { SEARCH_BY_PHONE: "ALL", HIDDEN: false }, ...config },
+        chats: [{ id: 111, title: "Friends", type: "CHAT", lastEventTime: 1789776000000 }, ...chats],
       },
       [Opcode.CONFIG]: {},
     },
@@ -57,6 +57,31 @@ describe("the owner's own settings", () => {
     expect(sent[0]).toBe(-1)
     expect((sent[1] ?? 0) - Date.now()).toBeGreaterThan(7_000_000)
     expect(sent[2]).toBe(0)
+  })
+
+  it("knows from the login which chats the owner muted, and until when", async () => {
+    const until = Date.parse("2099-01-01T00:00:00Z")
+    const { environment } = messenger(
+      {
+        chats: { "111": { dontDisturbUntil: -1 }, "222": { dontDisturbUntil: until }, "333": { dontDisturbUntil: 0 } },
+      },
+      [
+        { id: 222, title: "Work", type: "CHAT", lastEventTime: 1789776000000 },
+        { id: 333, title: "News", type: "CHAT", lastEventTime: 1789776000000 },
+      ],
+    )
+    const online = await runWith(["mutes", "chats", "list"], environment)
+    const offline = await runWith(["mutes", "--offline", "chats", "list"], environment)
+
+    for (const { json } of [online, offline]) {
+      expect(json.items).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: "111", muted: true }),
+          expect.objectContaining({ id: "222", muted: true, muted_until: "2099-01-01T00:00:00.000Z" }),
+          expect.objectContaining({ id: "333", muted: false }),
+        ]),
+      )
+    }
   })
 
   it("`account privacy set` sends only the settings named, under MAX's names, and answers all five", async () => {

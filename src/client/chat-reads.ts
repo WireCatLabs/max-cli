@@ -1,6 +1,6 @@
 import { CliError } from "@wirecat/cli-base"
 import type { Chat, ChatEvents, Contact, Id, JoinRequest, Message, Page } from "@wirecat/cli-core"
-import { namesFrom, toChat, toGroupCard, toGroupMember } from "../domain/map.js"
+import { muteOf, namesFrom, toChat, toGroupCard, toGroupMember } from "../domain/map.js"
 import type { wireClient } from "../generated/client.generated.js"
 import { asId, type Payload } from "../protocol/frame.js"
 import type { MaxRecord } from "../record.js"
@@ -52,12 +52,14 @@ export const createChatReads = (deps: Dependencies) => {
       await deps.connectOnce()
       const raw = asArray(deps.session().chats)
       const people = await deps.peopleFor(raw)
+      const mutes = record(record(deps.session().config)?.chats)
 
       // A one-to-one chat has no title of its own — its name is the other person's, and MAX does
       // not put it in the chat object. Without this, the chats a person recognises by name are a
       // column of blanks.
       const chats = raw.map((chat) => {
-        const mapped = toChat(chat)
+        const mute = muteOf(mutes?.[asId(chat.id) ?? ""])
+        const mapped = { ...toChat(chat), ...mute }
         if (mapped.kind !== "dialog") return mapped
 
         const partner = deps.partnerOf(chat)
