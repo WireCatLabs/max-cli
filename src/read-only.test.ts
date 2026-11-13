@@ -110,7 +110,7 @@ describe("MAX_READ_ONLY", () => {
     const { code, error, frames } = await locked(["ro-store", ...words], { MESSAGING_STORE: store })
 
     expect([code, error.code, frames]).toEqual([5, "permission_error", []])
-    expect(error.message).toContain("cannot change the message store")
+    expect(error.message).toMatch(/cannot change the message store|changes what a later run may do/)
     expect(readFileSync(store, "utf8")).toBe("kept")
     expect(existsSync(output)).toBe(false)
   })

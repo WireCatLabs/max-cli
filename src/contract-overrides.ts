@@ -34,36 +34,6 @@ export const SHELL_OVERRIDES: Readonly<{
       reason:
         "MAX reports its own server, protocol library and installation while retaining the shared diagnostic defaults.",
     },
-    {
-      command: ["doctor", "reports", "show"],
-      field: "description",
-      before: "what a problem report holds; writes nothing",
-      after: "what a problem report holds and where it goes; writes nothing",
-      reason:
-        "MAX reports its own server, protocol library and installation while retaining the shared diagnostic defaults.",
-    },
-    {
-      command: ["doctor", "reports", "show"],
-      field: "effects",
-      before: {
-        remote: "none",
-        local: "none",
-      },
-      after: {
-        remote: "read",
-        local: "read",
-      },
-      reason:
-        "MAX reports its own server, protocol library and installation while retaining the shared diagnostic defaults.",
-    },
-    {
-      command: ["doctor", "reports", "create"],
-      field: "description",
-      before: "write a problem report to a file, and say where to send it",
-      after: "write a problem report to a file, and print how to send it",
-      reason:
-        "MAX reports its own server, protocol library and installation while retaining the shared diagnostic defaults.",
-    },
   ],
   messages: [
     {

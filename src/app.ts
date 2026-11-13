@@ -8,6 +8,7 @@ export const MAX_APP: AppIdentity = {
   envPrefix: "MAX",
   description: "the MAX messenger from the terminal",
   version: VERSION,
+  issues: "https://github.com/WireCatLabs/max-cli/issues/new",
   // The Bot API's own refusal code, and the messages a deletion left behind.
   errors: { reasons: REASONS, details: ["provider_error", "max_code", "retained"] },
 }

@@ -1,9 +1,4 @@
 [
-  "account remove --delete-data",
-  "account remove --keep-data",
-  "account show --hide-phone",
-  "account update --hide-phone",
-  "contacts show --hide-phone",
   "projects evidence --include-proposed",
   "projects evidence --purpose",
   "projects status --purpose",
@@ -25,6 +20,5 @@
   "replies edit --template",
   "replies edit --words",
   "replies test --ai",
-  "session start --answer-stdin",
   "stickers list --set"
 ]

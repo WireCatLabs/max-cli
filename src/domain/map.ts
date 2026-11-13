@@ -51,6 +51,19 @@ export const toChat = (raw: Payload): Chat => ({
   participantsCount: count(raw.participantsCount),
 })
 
+/**
+ * The owner's mute of one chat, from LOGIN's `config.chats[<id>].dontDisturbUntil`: -1 for good, 0 not muted, else
+ * epoch milliseconds (the web client's `isMuted`; seen in the LOGIN answer of a web capture, 2026-09-25). `undefined`
+ * when MAX said nothing, so a stored mute is kept.
+ */
+export const muteOf = (setting: unknown): Pick<Chat, "muted" | "mutedUntil"> | undefined => {
+  const until = asRecord(setting)?.dontDisturbUntil
+  if (typeof until !== "number") return undefined
+  if (until === -1) return { muted: true, mutedUntil: null }
+  if (until <= 0) return { muted: false }
+  return { muted: true, mutedUntil: new Date(until).toISOString() }
+}
+
 /** Our name for each flag MAX lets an owner write (PyMax `ChatOption`); the rest are read-only. */
 export const SETTING_FLAGS: Record<Exclude<keyof GroupSettings, "joinApproval">, string> = {
   allCanPin: "ALL_CAN_PIN_MESSAGE",

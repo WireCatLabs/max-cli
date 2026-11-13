@@ -1,4 +1,3 @@
-import tls from "node:tls"
 import {
   backoffMs,
   CliError,
@@ -9,38 +8,19 @@ import {
   singleLine,
 } from "@wirecat/cli-base"
 import type { ManifestOperation } from "@wirecat/cli-base/codegen"
-import { type FetchLike, providerWaitMs, statusToCode } from "@wirecat/cli-base/http"
+import { type FetchLike, hostFetch, providerWaitMs, statusToCode } from "@wirecat/cli-base/http"
 import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-core/cli"
 import { guardedWrite, newOperationId } from "@wirecat/cli-core/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
 import { withTimeLimit } from "../deadline.js"
 import { VERSION } from "../version.js"
-import { RUSSIAN_TRUSTED_ROOT_CA } from "./russian-trusted-root.js"
+import { botFetch } from "./trust.js"
 
 export const BOT_API_URL = "https://platform-api2.max.ru"
 
 const DEFAULT_TIMEOUT_MS = 60_000
 /** `GET /updates` holds the request open for up to its own `timeout`; ours has to outlast it. */
 const LONG_POLL_MARGIN_MS = 15_000
-
-let trusted = false
-
-/**
- * Adds the Минцифры root to the trusted roots (`NEED-293`). On Node (22.19+) that changes the
- * process-wide default, so every TLS connection this process makes from then on trusts it, not only
- * the Bot API's: Node's `fetch` takes no per-request list. Bun does, so there only these calls do.
- */
-export const botFetch = (): FetchLike => {
-  if ("Bun" in globalThis) {
-    const ca = [...tls.rootCertificates, RUSSIAN_TRUSTED_ROOT_CA]
-    return (input, init) => fetch(input, { ...init, tls: { ca } } as RequestInit)
-  }
-  if (!trusted && typeof tls.setDefaultCACertificates === "function") {
-    tls.setDefaultCACertificates([...tls.getCACertificates("default"), RUSSIAN_TRUSTED_ROOT_CA])
-    trusted = true
-  }
-  return fetch
-}
 
 export interface CallInput {
   path?: Readonly<Record<string, string>>
@@ -93,6 +73,7 @@ const causeCode = (error: unknown): string | undefined => {
 export class BotTransport {
   readonly #token: string
   readonly #baseUrl: string
+  readonly #hosts: readonly string[]
   readonly #fetch: FetchLike
   readonly #timeoutMs: number
   readonly #retry: RetryConfig
@@ -105,6 +86,7 @@ export class BotTransport {
   constructor(options: TransportOptions) {
     this.#token = options.token
     this.#baseUrl = (options.baseUrl ?? BOT_API_URL).replace(/\/$/, "")
+    this.#hosts = [new URL(this.#baseUrl).hostname]
     this.#fetch = options.fetch ?? botFetch()
     this.#timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS
     this.#retry = options.retry ?? DEFAULT_RETRY
@@ -202,8 +184,16 @@ export class BotTransport {
     const signals = [deadline, ...(this.#signal ? [this.#signal] : [])]
     const reads = operation.effect === "read"
     let response: Response
+    let raw: unknown
+    const send: FetchLike = (input, init) =>
+      this.#fetch(input, init).catch((error: unknown) => {
+        raw = error
+        throw error
+      })
+    // Its own deadline stays behind the call's, so the call's is the one that fires and names the timeout.
+    const guarded = hostFetch({ hosts: this.#hosts, fetch: send, timeoutMs: timeoutMs + LONG_POLL_MARGIN_MS })
     try {
-      response = await this.#fetch(url, {
+      response = await guarded(url, {
         method: operation.binding.kind === "http" ? operation.binding.method : "POST",
         headers: {
           Authorization: this.#token,
@@ -215,7 +205,9 @@ export class BotTransport {
         signal: AbortSignal.any(signals),
       })
     } catch (error) {
-      throw this.#transportFailure(operation, error, reads, timeoutMs)
+      // hostFetch refused before anything left: no unknown outcome, whatever the operation.
+      if (raw === undefined && error instanceof CliError && error.details.sent === false) throw error
+      throw this.#transportFailure(operation, raw ?? error, reads, timeoutMs)
     }
 
     const text = await response.text()

@@ -70,16 +70,18 @@ describe("the profiles a file lists", () => {
 })
 
 describe("--timeout", () => {
-  it("reads a duration in the three units it accepts", () => {
+  it("reads a duration in milliseconds, seconds, minutes, hours or days", () => {
     expect(settings({ timeout: "500ms" }).commandTimeoutMs).toBe(500)
     expect(settings({ timeout: "30s" }).commandTimeoutMs).toBe(30_000)
     expect(settings({ timeout: "2m" }).commandTimeoutMs).toBe(120_000)
+    expect(settings({ timeout: "6h" }).commandTimeoutMs).toBe(6 * 3_600_000)
+    expect(settings({ timeout: "1d" }).commandTimeoutMs).toBe(86_400_000)
   })
 
   it("**refuses a bare number**, because the unit is the whole question", () => {
     // `timeout_ms` in the configuration file is milliseconds and every comparable tool means
     // seconds. Either guess is a thirty-fold surprise, so it asks.
-    expect(() => settings({ timeout: "30" })).toThrow(/30s, 2m or 500ms/)
+    expect(() => settings({ timeout: "30" })).toThrow(/500ms, 30s, 2m, 4h or 1d/)
     expect(() => settings({ timeout: "abc" })).toThrow(/duration with a unit/)
   })
 
@@ -395,6 +397,30 @@ describe("changing a setting", () => {
 
     changeSetting(path(), { profile: "test", kind: "bot", setting: "sends_per_hour", value: undefined })
     expect(file().bot).toBeUndefined()
+  })
+
+  it("takes the settings every WireCat messenger shares, which max reads through cli-core", () => {
+    changeSetting(path(), { profile: "work", setting: "picture_search", value: "true" })
+    changeSetting(path(), { profile: "work", setting: "history_dialog_days", value: "30" })
+    changeSetting(path(), { profile: "work", setting: "history_muted", value: "true" })
+    changeSetting(path(), { profile: "work", setting: "keep_store_runs_for_days", value: "3" })
+    changeSetting(path(), { profile: "work", setting: "record_input", value: "failed" })
+    expect(file().profiles.work).toEqual({
+      picture_search: true,
+      history_dialog_days: 30,
+      history_muted: true,
+      keep_store_runs_for_days: 3,
+      record_input: "failed",
+    })
+    expect(resolveSettings({ profile: "work" }, { configDir })).toMatchObject({ pictureSearch: true })
+  })
+
+  it("keeps transcribe_model as max's speech setting, and refuses the shared speech_model it would not read", () => {
+    changeSetting(path(), { profile: undefined, setting: "transcribe_model", value: "gigaam-v3" })
+    expect(file().defaults).toMatchObject({ transcribe_model: "gigaam-v3" })
+    expect(() => changeSetting(path(), { profile: undefined, setting: "speech_model", value: "gigaam-v3" })).toThrow(
+      /not a setting of max/,
+    )
   })
 
   it("refuses a personal-only setting for a bot, and a whole-program one for a side", () => {

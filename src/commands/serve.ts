@@ -5,6 +5,7 @@ import { holdLock, lockPath, releaseLock } from "@wirecat/cli-core/background"
 import {
   outdatedReason,
   ownPackageRoot,
+  parseDuration,
   REMOTE_WRITE,
   serveCommand as sharedServeCommand,
   watchOutdated,
@@ -12,7 +13,6 @@ import {
 import { storePath } from "@wirecat/cli-core/store"
 import { Command, Option } from "commander"
 import { MAX_APP } from "../app.js"
-import { parseDuration } from "../config.js"
 import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maxMessenger } from "../messenger.js"
 import { asFirstWord } from "../profile.js"

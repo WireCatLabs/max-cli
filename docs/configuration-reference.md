@@ -123,11 +123,14 @@ max config show --json     # то же одним объектом
 | `history_dialog_days` | на сколько дней назад `messages sync` читает личный чат, от 1 до 1095 | `messages sync --full-history` | `1095` |
 | `history_group_days` | на сколько дней назад `messages sync` читает группу, от 1 до 1095 | `messages sync --full-history` | `365` |
 | `history_group_members_max` | историю группы, где людей больше, `messages sync` не читает; `store status` показывает, что пропущено. Новые сообщения от `serve` сохраняются всегда | `messages sync --full-history` | `50` |
+| `history_muted` | читает ли `messages sync --all` и заглушённые чаты; без поля они пропускаются | `messages sync --all --with-muted` | `false` |
+| `picture_search` | искать картинки по тому, что на них, моделью на этом компьютере (`max images embed`, `search`); модель скачивается отдельно: `max images models download clip-b32` | — | `false` |
 | `search_reranker` | какой моделью `search messages --discover` переставляет первые 50 результатов: `mmarco`, `bge-reranker-v2-m3` или `off`. Действует, только когда модель скачана (`max personal models download mmarco`); сама она не скачивается | — | `mmarco` |
 | `record` | записывать ли удачные запуски; неудачные записываются и при `false` ([диагностика](diagnostics.md)) | `--record`, `--no-record` | `true` |
-| `record_input` | хранить ли в записи запуска командную строку так, как вы её набрали; `false` скрывает набранное, секреты скрыты всегда ([диагностика](diagnostics.md#что-вы-набрали)) | — | `true` |
+| `record_input` | хранить ли в записи запуска командную строку так, как вы её набрали; `false` скрывает набранное, `failed` хранит его только у неудачных запусков, секреты скрыты всегда ([диагностика](diagnostics.md#что-вы-набрали)) | — | `true` |
 | `keep_runs_for_days` | сколько дней хранятся записи неудачных запусков | — | `30` |
 | `keep_successful_runs_for_days` | сколько дней хранятся записи удачных запусков | — | `7` |
+| `keep_store_runs_for_days` | сколько дней хранятся записи удачных запусков, которые меняли хранилище, даже при `record: false` | — | `3` |
 | `runs_size_limit_mb` | сколько мегабайт может занимать каталог запусков; сверх него сначала удаляются самые старые удачные | — | `200` |
 | `permissions` | уровни прав по ресурсам и командам: `deny`, `readonly`, `ask`, `allow`; более точный ключ имеет приоритет ([ниже](#права-доступа)) | —; `--yes` и `--allow-dangerous` только отвечают на `ask`, `deny` они не снимают | всё `allow`, кроме: удаление, завершение других сессий и ещё несколько необратимых изменений — `ask`; автоответы `replies.send` — `deny` |
 | `sends_per_hour` | сколько сообщений профиль может отправить за час — вместе с пересылками, правками, закреплениями с уведомлением, удалёнными сообщениями, добавленными в группы людьми и принятыми заявками на вступление; сверх — отказ с кодом `8`. **Боту** лимит задаётся только в разделе `bot`; без него бот не ограничен ([защита от отправки](security.md#защита-от-отправки-не-туда)) | — | `30`, у бота — нет |
@@ -152,7 +155,7 @@ max config show --json     # то же одним объектом
 и никогда ему не равно.
 
 Записываются они по-разному нарочно, чтобы их нельзя было спутать: `timeout_ms` — число
-миллисекунд в файле, `--timeout` — длительность с единицей на командной строке (`30s`, `2m`,
+миллисекунд в файле, `--timeout` — длительность с единицей на командной строке (`30s`, `2m`, `6h`,
 `500ms`). Единица обязательна: `--timeout 30` отвергается, потому что рядом лежит поле в
 миллисекундах, а все остальные программы пишут так секунды — ошибиться можно в тридцать раз в
 любую сторону.
@@ -339,11 +342,12 @@ max personal chats list
 
 | Ключ | Допустимый тип или значение | Область |
 |---|---|---|
-| `limit`, `timeout_ms`, `keep_runs_for_days`, `sends_per_hour` | целое число ≥ 1 | профиль |
+| `limit`, `timeout_ms`, `keep_runs_for_days`, `keep_successful_runs_for_days`, `keep_store_runs_for_days`, `runs_size_limit_mb`, `sends_per_hour` | целое число ≥ 1 | профиль |
 | `requests_per_minute` | целое число ≥ 0 | профиль |
 | `history_dialog_days`, `history_group_days` | целое число от 1 до 1095 | профиль |
 | `history_group_members_max` | целое число ≥ 1 | профиль |
-| `color`, `record`, `record_input` | boolean | профиль |
+| `color`, `record`, `history_muted`, `picture_search` | boolean | профиль |
+| `record_input` | boolean или `failed` | профиль |
 | `sender_colors`, `search_catch_up`, `serve` | boolean | личный аккаунт |
 | `search_reranker` | `mmarco`, `bge-reranker-v2-m3`, `off` | профиль |
 | `permissions` | объект путей команд и уровней `deny`, `readonly`, `ask`, `allow` | профиль |

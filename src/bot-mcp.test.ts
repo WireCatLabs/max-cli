@@ -3,11 +3,11 @@ import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
 import { InMemoryTransport } from "@modelcontextprotocol/server"
-import { toJsonSchema } from "@valibot/to-json-schema"
 import { captureStreams, type KeyringStore, memoryKeyring } from "@wirecat/cli-base"
 import { describeProgram } from "@wirecat/cli-base/commands"
 import { botInstructions, changesAuthorityAt } from "@wirecat/cli-core/cli"
 import { createBotServer } from "@wirecat/cli-core/mcp"
+import { ownCatalogue } from "@wirecat/cli-core/testing"
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { BotTokenStore } from "./bot/auth.js"
 import { botMcpRun, maxBot, maxBotMcp } from "./commands/bot-messenger.js"
@@ -363,11 +363,15 @@ describe("max bot mcp", () => {
     })
   })
 
-  it("**pins the catalogue** before profile permissions, including authority and raw API commands", async () => {
-    const { tools } = await connect({ readOtherBots: true })
-    const catalogue = Object.fromEntries(
-      tools.map((tool) => [tool.command, { writes: tool.writes, input: toJsonSchema(tool.input) }]),
-    )
+  it("**pins max's own bot catalogue** before profile permissions, including the raw API commands", async () => {
+    const program = createProgram()
+    const catalogue = ownCatalogue(program, {
+      root: ["bot"],
+      offline: true,
+      levels: {},
+      includeUnavailable: true,
+      authority: changesAuthorityAt(program),
+    })
     await expect(`${JSON.stringify(catalogue, null, 2)}\n`).toMatchFileSnapshot("../contracts/bot-catalogue.json")
   })
 })

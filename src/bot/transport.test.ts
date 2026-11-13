@@ -129,6 +129,16 @@ describe("BotTransport", () => {
     expect(seen).toHaveLength(3)
   })
 
+  it("follows no redirect away from the Bot API's host", async () => {
+    handler = (_, response) => {
+      response.writeHead(302, { location: "https://elsewhere.example/messages" })
+      response.end()
+    }
+    const error = await failure(transport().call(operation("sendMessage"), { body: "{}" }))
+    expect(error).toMatchObject({ code: "configuration_error", details: { reason: "network.host-undeclared" } })
+    expect(seen).toHaveLength(1)
+  })
+
   it("calls a write that got no answer an unknown outcome, not a failure to repeat", async () => {
     const { calls, fetch: silent } = timingOut()
     const error = await failure(transport({ fetch: silent }).call(operation("sendMessage"), { body: "{}" }))

@@ -75,8 +75,6 @@ max session start [method] [options]
 | `--answer-stdin` | with --json and no terminal: print each question as a `needs` line on stderr and read its answer, one line, from stdin. |
 | `--credential-storage <storage>` | where the token is kept: keyring (the default, which falls back to a private file by itself when no keyring works), or file, not recommended. Одно из: `keyring`, `file`. По умолчанию: `keyring`. |
 
-**Returns:** log this profile in to MAX
-
 **Example:** `max personal session start`
 
 ### `max session end`
@@ -88,8 +86,6 @@ log this profile out on MAX's side and forget the session here
 ```sh
 max session end
 ```
-
-**Returns:** log this profile out on MAX's side and forget the session here
 
 **Example:** `max personal session end`
 
@@ -107,8 +103,6 @@ max setup [options]
 |---|---|
 | `--agent <agent>` | install the skill for this agent; asks at a terminal, otherwise none. Одно из: `none`, `codex`, `cursor`, `claude`, `gemini`, `all`. |
 | `--method <method>` | how to log in when there is no session. Одно из: `token`, `qr`, `qr-chrome`, `sms`. По умолчанию: `qr`. |
-
-**Returns:** set up your personal MAX account and connect your agent
 
 **Example:** `max personal setup`
 
@@ -1116,8 +1110,6 @@ max chats media <chat> [options]
 | `--limit <n>` | how many to show. |
 | `--cursor <cursor>` | go on from where page.next says the last page stopped. |
 
-**Returns:** a chat's photos, videos, files, audio and links, from the messenger's…
-
 **Example:** `max personal chats media Team`
 
 ### `max chats mute`
@@ -1222,8 +1214,6 @@ max chats start <bot> [options]
 |---|---|
 | `--start <param>` | the start parameter the bot reads; a link's own ?start= when not given. |
 
-**Returns:** start a bot, as its Start button does; the bot sees that you started it
-
 **Example:** `max personal chats start "Example Bot"`
 
 ### `max chats app`
@@ -1243,8 +1233,6 @@ max chats app <bot> [options]
 | Опция | Что делает |
 |---|---|
 | `--start <param>` | the start parameter the app reads. |
-
-**Returns:** the address that opens a bot's mini app, signed in as you — keep it to yourself
 
 **Example:** `max personal chats app "Example Bot"`
 
@@ -2117,8 +2105,6 @@ max messages press <chat> <message> <button>
 | `message` | обязательный | the id of the message with the buttons. |
 | `button` | обязательный | its number as `messages show` prints it, or its exact text. |
 
-**Returns:** press a bot's button under a message; the bot sees that you pressed it
-
 **Example:** `max personal messages press "Example Bot" 101 1`
 
 ## `max store`
@@ -2579,8 +2565,6 @@ copy every readable row into a new file with the sqlite3 program, rebuild the se
 max store recover run
 ```
 
-**Returns:** rebuild a damaged store from every row it can read
-
 **Example:** `max personal store recover run`
 
 ## `max stats`
@@ -3005,7 +2989,6 @@ max stats tasks show [query] [options]
 | Опция | Что делает |
 |---|---|
 | `--by <group>` | chat (default) or meeting: this account's tasks; project: the owner's project tasks, every project. |
-| `--chat <chat>` | only this chat; a chat: its id, or part of its title. |
 | `--type <type>` | only this type: question, request, mention or promise. |
 | `--timezone <zone>` | the IANA timezone for calendar days in the period, such as created>=today. |
 
@@ -3013,7 +2996,7 @@ max stats tasks show [query] [options]
 
 **Next usually:** `max tasks show <task>`, `max tasks related <task>`, `max tasks update <task>`
 
-**Example:** `max personal stats tasks show --chat "Project room"`
+**Example:** `max personal stats tasks show -- chat:"Project room"`
 
 ### `max stats charts`
 
@@ -3534,8 +3517,6 @@ max projects evidence <project> [options]
 | `--no-catch-up` | read the search index as it is, without indexing new text first. |
 | `--sync-first` | first sync the linked chats this account does not hold back to --since-time; off by default. |
 | `--sync-time <duration>` | time for all of --sync-first's syncs together; 3m if not given. По умолчанию: `3m`. |
-
-**Returns:** what this account's stored messages hold about a project, linked chats included
 
 **Example:** `max personal projects evidence "Harbour" --since-time 30d --sync-first`
 
@@ -4800,8 +4781,6 @@ forget them, lift the hold and the profile's pace, once MAX no longer limits the
 max flood clear
 ```
 
-**Returns:** clear a profile's stored rate-limit hold
-
 **Example:** `max personal flood clear`
 
 ## `max models`
@@ -5236,8 +5215,6 @@ max replies add <id>
 |---|---|---|
 | `id` | обязательный | lower-case letters, digits and -; unique in this profile. |
 
-**Returns:** add a rule with every default written out, off until you edit and enable it
-
 **Example:** `max personal replies add 1`
 
 ### `max replies on`
@@ -5254,8 +5231,6 @@ max replies on <id>
 |---|---|---|
 | `id` | обязательный | the rule's id. |
 
-**Returns:** enable one reply rule; its template must be ready
-
 **Example:** `max personal replies on 1`
 
 ### `max replies off`
@@ -5271,8 +5246,6 @@ max replies off <id>
 | Аргумент | | Что это |
 |---|---|---|
 | `id` | обязательный | the rule's id. |
-
-**Returns:** disable one reply rule
 
 **Example:** `max personal replies off 1`
 
@@ -5316,8 +5289,6 @@ max replies edit <id> [options]
 | `--timezone <zone>` | the IANA timezone for the working window. |
 | `--no-hours` | clear the working window. |
 
-**Returns:** change only the named fields of a reply rule; lists replace the whole list
-
 **Example:** `max personal replies edit 1`
 
 ### `max replies audience`
@@ -5338,8 +5309,6 @@ max replies audience [options]
 | `--deny-people <ids>` | replace denied sender ids, comma-separated; empty clears; deny wins. |
 | `--deny-chats <ids>` | replace denied chat ids, comma-separated; empty clears; deny wins. |
 
-**Returns:** show the reply audience, who the rules may answer, or replace its named…
-
 **Example:** `max personal replies audience`
 
 ### `max replies consents`
@@ -5354,8 +5323,6 @@ show the reply model consent and chat opt-outs; never calls a model
 max replies consents show
 ```
 
-**Returns:** show the reply model consent and chat opt-outs; never calls a model
-
 **Example:** `max personal replies consents show`
 
 #### `max replies consents grant`
@@ -5368,8 +5335,6 @@ allow incoming message data to go to the configured reply model for this profile
 max replies consents grant
 ```
 
-**Returns:** allow incoming message data to go to the configured reply model for this…
-
 **Example:** `max personal replies consents grant`
 
 #### `max replies consents revoke`
@@ -5381,8 +5346,6 @@ revoke the profile's reply model consent immediately; chat opt-outs remain
 ```sh
 max replies consents revoke
 ```
-
-**Returns:** revoke the profile's reply model consent immediately; chat opt-outs remain
 
 **Example:** `max personal replies consents revoke`
 
@@ -5400,8 +5363,6 @@ max replies consents deny <chat>
 |---|---|---|
 | `chat` | обязательный | the native chat id, used as written; never resolved over the network. |
 
-**Returns:** keep this chat's incoming data away from the reply model
-
 **Example:** `max personal replies consents deny Team`
 
 #### `max replies consents allow`
@@ -5417,8 +5378,6 @@ max replies consents allow <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | the native chat id, used as written; never resolved over the network. |
-
-**Returns:** remove this chat's model opt-out; does not grant profile consent
 
 **Example:** `max personal replies consents allow Team`
 
@@ -5439,8 +5398,6 @@ max replies test [rule] [options]
 | `--since-time <time>` | from this ISO 8601 time, or 2h / 1d ago; 7d ago if not given. |
 | `--ai` | call the configured reply model with stored message data; requires reply consent, otherwise uses fallback. |
 
-**Returns:** what the rules would have answered in the stored messages, to whom and why —…
-
 **Example:** `max personal replies test`
 
 ### `max replies pause`
@@ -5452,8 +5409,6 @@ stop every reply rule of this profile at once, a running serve too; resume undoe
 ```sh
 max replies pause
 ```
-
-**Returns:** stop every reply rule of this profile at once, a running serve too; resume…
 
 **Example:** `max personal replies pause`
 
@@ -5467,8 +5422,6 @@ let the reply rules answer again after pause
 max replies resume
 ```
 
-**Returns:** let the reply rules answer again after pause
-
 **Example:** `max personal replies resume`
 
 ### `max replies status`
@@ -5478,8 +5431,6 @@ whether the rules may send, which are on, and who they may answer
 ```sh
 max replies status
 ```
-
-**Returns:** whether the rules may send, which are on, and who they may answer
 
 **Example:** `max personal replies status`
 
@@ -5498,8 +5449,6 @@ max serve [options]
 | `--idle <duration>` | stop after this long with nobody using it — 15m, 1h is 60m. |
 | `--max-subscriber-buffer-bytes <bytes>` | buffer per watcher before disconnecting it; 0 is unlimited. |
 | `--max-subscriber-total-buffer-bytes <bytes>` | combined watcher buffer budget; 0 is unlimited. |
-
-**Returns:** stay connected to MAX and stream new messages to `max watch`, until Ctrl-C
 
 **Example:** `max personal serve`
 
@@ -5521,8 +5470,6 @@ max server start [options]
 |---|---|
 | `--idle <duration>` | stop after this long with nobody using it — 15m, 1h. |
 
-**Returns:** start this profile's background server
-
 **Example:** `max personal server start`
 
 ### `max server stop`
@@ -5534,8 +5481,6 @@ stop this profile's serve — through the unit if it runs under one
 ```sh
 max server stop
 ```
-
-**Returns:** stop this profile's serve — through the unit if it runs under one
 
 **Example:** `max personal server stop`
 
@@ -5553,8 +5498,6 @@ max server restart [options]
 |---|---|
 | `--idle <duration>` | stop after this long with nobody using it — 15m, 1h. |
 
-**Returns:** stop it and start it again
-
 **Example:** `max personal server restart`
 
 ### `max server status`
@@ -5564,8 +5507,6 @@ whether serve runs for this profile, since when, who started it, and the unit if
 ```sh
 max server status
 ```
-
-**Returns:** this profile's background-server status
 
 **Example:** `max personal server status`
 
@@ -5581,8 +5522,6 @@ max server logs [options]
 |---|---|
 | `-n, --limit <n>` | how many lines. По умолчанию: `50`. |
 
-**Returns:** serve's latest log lines — from the journal under systemd, else its log file
-
 **Example:** `max personal server logs --limit 20`
 
 ### `max server install`
@@ -5595,8 +5534,6 @@ write a systemd user unit or a launchd agent for this profile and have it start 
 max server install
 ```
 
-**Returns:** install this profile's background server to start at every login
-
 **Example:** `max personal server install`
 
 ### `max server uninstall`
@@ -5608,8 +5545,6 @@ remove this profile's unit, so it no longer starts at login; stop it first
 ```sh
 max server uninstall
 ```
-
-**Returns:** remove this profile's unit, so it no longer starts at login; stop it first
 
 **Example:** `max personal server uninstall`
 
@@ -5640,8 +5575,6 @@ max schedule command <name> <args> [options]
 | `--notify-on <when>` | desktop notice after a run (default failures for an agent that repeats with --every, else always). Одно из: `always`, `failures`, `never`. |
 | `--deliver-to <route>` | also send the result, when --notify-on says so, by the owner's own tg or mail: telegram-bot:<profile>/<chat id or user:id>, or email:<profile>/<address>; repeat it for more. |
 
-**Returns:** run max <args…> on a timer — reads save what they read, so this is how a…
-
 **Example:** `max personal schedule command health --every 1h -- doctor`, `max personal schedule command morning-check --at 08:00 -- doctor`
 
 ### `max schedule agent`
@@ -5671,8 +5604,6 @@ max schedule agent <name> <harness> <prompt> [options]
 | `--at-time <time>` | one run: 30m, 2d from now, or an ISO time; the schedule removes itself after it. |
 | `--notify-on <when>` | desktop notice after a run (default failures for an agent that repeats with --every, else always). Одно из: `always`, `failures`, `never`. |
 | `--deliver-to <route>` | also send the result, when --notify-on says so, by the owner's own tg or mail: telegram-bot:<profile>/<chat id or user:id>, or email:<profile>/<address>; repeat it for more. |
-
-**Returns:** start an agent (claude, codex, gemini, cursor, opencode, openclaw, hermes,…
 
 **Example:** `max personal schedule agent review claude "review what came in overnight and draft replies" --at 08:30`, `max personal schedule agent triage gemini "list what needs an answer today" --every 2h`, `max personal schedule agent weekly claude "review the week's open threads" --at 09:00 --model opus`
 
@@ -5731,8 +5662,6 @@ max schedule run <name> [options]
 | `--no-notify` | keep the result here: send it along none of its routes. |
 | `--deliver-to <route>` | send it along only this one of its own routes; repeat it for more. |
 
-**Returns:** run a schedule now, as its timer would, and wait for it; a paused one runs too
-
 **Example:** `max personal schedule run health`
 
 ### `max schedule remove`
@@ -5748,8 +5677,6 @@ max schedule remove <name>
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | обязательный | the schedule's name, as `schedule list` shows it. |
-
-**Returns:** stop a schedule and remove its timer; its past output stays
 
 **Example:** `max personal schedule remove health`
 
@@ -5767,8 +5694,6 @@ max schedule pause <name>
 |---|---|---|
 | `name` | обязательный | the schedule's name, as `schedule list` shows it. |
 
-**Returns:** take a schedule off its timer and keep it; run runs it, resume puts it back
-
 **Example:** `max personal schedule pause health`
 
 ### `max schedule resume`
@@ -5784,8 +5709,6 @@ max schedule resume <name>
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | обязательный | the schedule's name, as `schedule list` shows it. |
-
-**Returns:** put a paused schedule back on its timer
 
 **Example:** `max personal schedule resume health`
 
@@ -5803,8 +5726,6 @@ max schedule exec <file> [seal]
 |---|---|---|
 | `file` | обязательный | the schedule's schedule.json in the state folder, as the timer passes it. |
 | `seal` | необязательный | the file's SHA-256 as it was saved, which the timer passes; a file that differs does not run. |
-
-**Returns:** what a timer runs, given the schedule's file; to run one by hand, use run
 
 **Example:** `max personal schedule exec ~/.local/share/max-cli/schedules/health/schedule.json`
 
@@ -5840,8 +5761,6 @@ max config show [options]
 |---|---|
 | `--bot` | the settings a bot command on this profile gets, rather than the personal account's. |
 
-**Returns:** the profile, the profiles that exist, and each setting with where it came from
-
 **Example:** `max personal config show`
 
 ### `max config set`
@@ -5856,7 +5775,7 @@ max config set <setting> <value> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, owner_languages, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, keep_store_runs_for_days, runs_size_limit_mb, permissions, sends_per_hour, requests_per_minute, history_dialog_days, history_group_days, history_group_members_max, history_muted, picture_search, search_reranker, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, owner_languages, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 | `value` | обязательный | a number, true or false, or a list like shop,news. |
 
 | Опция | Что делает |
@@ -5864,8 +5783,6 @@ max config set <setting> <value> [options]
 | `--defaults` | change what every profile gets, rather than this profile. |
 | `--personal` | only for personal accounts — the personal section of the file. |
 | `--bot` | only for bots — the bot section of the file. |
-
-**Returns:** save a setting to the configuration file
 
 **Example:** `max personal config set limit 20`
 
@@ -5881,15 +5798,13 @@ max config unset <setting> [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, runs_size_limit_mb, permissions, search_reranker, sends_per_hour, requests_per_minute, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, owner_languages, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
+| `setting` | обязательный | one of: limit, timeout_ms, color, record, record_input, keep_runs_for_days, keep_successful_runs_for_days, keep_store_runs_for_days, runs_size_limit_mb, permissions, sends_per_hour, requests_per_minute, history_dialog_days, history_group_days, history_group_members_max, history_muted, picture_search, search_reranker, embedding_provider, embedding_model, embedding_base_url, embedding_dims, models, sender_colors, search_catch_up, serve, read_other_bots, update_check, skill_hint, transcribe_model, search_stemmers.cyrillic, search_stemmers.latin, owner_languages, phone_countries, task_categories.<name>, task_agent_close, task_agent_close_min, task_first_pass_per_chat. |
 
 | Опция | Что делает |
 |---|---|
 | `--defaults` | change what every profile gets, rather than this profile. |
 | `--personal` | only for personal accounts — the personal section of the file. |
 | `--bot` | only for bots — the bot section of the file. |
-
-**Returns:** remove a setting from the configuration file
 
 **Example:** `max personal config unset limit`
 
@@ -5902,8 +5817,6 @@ write each setting the file lacks at its default, keeping yours
 ```sh
 max config migrate
 ```
-
-**Returns:** write each setting the file lacks at its default, keeping yours
 
 **Example:** `max config migrate`
 
@@ -5921,8 +5834,6 @@ max config repair [options]
 |---|---|
 | `--dry-run` | say what it would fix, and change nothing. |
 
-**Returns:** fix the settings file's JSON syntax, keeping every value
-
 **Example:** `max config repair`, `max config repair --dry-run`
 
 ## `max doctor`
@@ -5937,8 +5848,6 @@ max doctor [options]
 |---|---|
 | `--online` | also log in once, read one chat and start the MCP server; sends nothing. |
 
-**Returns:** the state this installation is in, without connecting unless --online
-
 **Example:** `max personal doctor`
 
 ### `max doctor reports`
@@ -5947,19 +5856,17 @@ problem reports
 
 #### `max doctor reports show`
 
-what a problem report holds and where it goes; writes nothing
+what a problem report holds; writes nothing
 
 ```sh
 max doctor reports show
 ```
 
-**Returns:** what a report holds and never holds, and where to send it; writes nothing
-
 **Example:** `max personal doctor reports show`
 
 #### `max doctor reports create`
 
-write a problem report to a file, and print how to send it
+write a problem report to a file, and say where to send it
 
 **Меняет что-то только на этом компьютере.**
 
@@ -5971,8 +5878,6 @@ max doctor reports create [options]
 |---|---|
 | `--run <id>` | the run the report is about; the newest failed one if not given. |
 | `--output <file>` | where to write it; a new file in this directory if not given. |
-
-**Returns:** the report file written: its path, the run it is about, and where to send it
 
 **Example:** `max personal doctor reports create --output ./problem-report.json`
 
@@ -6057,8 +5962,6 @@ max skill show [name] [options]
 |---|---|
 | `--for <agents>` | print the copy installed for these agents instead of this version's. Одно из: `claude`, `agents`. |
 
-**Returns:** print the tool's instructions for AI agents
-
 **Example:** `max skill show`, `max skill show follow-ups`
 
 ### `max skill install`
@@ -6075,8 +5978,6 @@ max skill install [options]
 |---|---|
 | `--for <agents>` | which agents to install for. Одно из: `claude`, `agents`, `hermes`, `all`. По умолчанию: `all`. |
 
-**Returns:** install the tool's instructions for AI agents
-
 **Example:** `max skill install --for agents`
 
 ### `max skill status`
@@ -6086,8 +5987,6 @@ for each place `max skill install` writes to, and for the copy Hermes reads: the
 ```sh
 max skill status
 ```
-
-**Returns:** whether the installed instructions for AI agents match this version
 
 **Example:** `max skill status`, `max skill status --json`
 
@@ -6107,8 +6006,6 @@ max commands info [path]
 |---|---|---|
 | `path` | необязательный | one command path; without one, export schemas, error reasons and explicit overrides. |
 
-**Returns:** one command contract, or all schemas, error reasons and explicit overrides
-
 **Example:** `max commands info messages list`
 
 ## `max upgrade`
@@ -6125,8 +6022,6 @@ max upgrade [options]
 |---|---|
 | `--check` | say whether a newer version exists, and install nothing. |
 
-**Returns:** upgrade max with the package manager that installed it; --check only looks
-
 **Example:** `max upgrade --check`
 
 ## `max complete`
@@ -6140,8 +6035,6 @@ max complete [words]
 | Аргумент | | Что это |
 |---|---|---|
 | `words` | необязательный | zsh for the shell script, or command words to complete. |
-
-**Returns:** shell completion: `max complete zsh` prints the script to source
 
 **Example:** `max complete zsh`
 
@@ -6167,8 +6060,6 @@ max mcp serve [options]
 | `--port <port>` | the local port for --http (default 8765). |
 | `--public-url <url>` | the tunnel's https address the browser apps use, e.g. https://<name>.ts.net or https://<name>.ts.net/tg. |
 
-**Returns:** serve this profile's commands to an AI agent
-
 **Example:** `max personal mcp serve`, `max mcp serve --profiles work,personal`, `max personal mcp serve --http --public-url https://laptop.example.ts.net`
 
 ### `max mcp revoke`
@@ -6184,8 +6075,6 @@ max mcp revoke [options]
 | Опция | Что делает |
 |---|---|
 | `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
-
-**Returns:** forget every login given to a browser app
 
 **Example:** `max personal mcp revoke`, `max mcp revoke --profiles all`
 
@@ -6210,8 +6099,6 @@ max mcp server start [options]
 | `--permission <key=level>` | make a permission stricter for this server only; repeat for more keys. |
 | `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
-**Returns:** start the HTTP MCP server in the background
-
 **Example:** `max personal mcp server start --public-url https://laptop.example.ts.net`
 
 #### `max mcp server stop`
@@ -6228,8 +6115,6 @@ max mcp server stop [options]
 |---|---|
 | `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
 
-**Returns:** stop the background HTTP MCP server
-
 **Example:** `max personal mcp server stop`
 
 #### `max mcp server status`
@@ -6243,8 +6128,6 @@ max mcp server status [options]
 | Опция | Что делает |
 |---|---|
 | `--profiles <names\|all>` | the server of several profiles that `mcp serve --profiles` serves: names, comma-separated, or all. |
-
-**Returns:** whether the HTTP MCP server runs, its login code and the apps logged in
 
 **Example:** `max personal mcp server status --json`
 
@@ -6260,8 +6143,6 @@ max mcp config [options]
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 | `--profiles <names\|all>` | serve several profiles from one server instead of one: names, comma-separated, or all for every profile. |
-
-**Returns:** print the local MCP configuration of this profile, or of those --profiles names
 
 **Example:** `max personal mcp config`, `max mcp config --profiles all`
 
@@ -6284,8 +6165,6 @@ max mcp add <client> [options]
 | `--allow-writes` | acknowledge that this profile offers writing tools. |
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
 
-**Returns:** add this profile's local MCP server to Codex or Claude Code
-
 **Example:** `max personal mcp add codex --allow-writes`
 
 ### `max mcp check`
@@ -6299,8 +6178,6 @@ max mcp check [options]
 | Опция | Что делает |
 |---|---|
 | `--permission <key=level>` | make a permission stricter for this server only, like messages.send=deny; it never loosens the profile; repeat for more keys. |
-
-**Returns:** check this profile's local MCP handshake and tool list
 
 **Example:** `max personal mcp check`
 
@@ -6322,8 +6199,6 @@ check a bot token with MAX, then keep it — typed at a hidden prompt or piped o
 max bot auth set
 ```
 
-**Returns:** check a bot token, then keep it; or keep a named secret beside it
-
 **Example:** `max sales bot auth set`
 
 #### `max bot auth show`
@@ -6333,8 +6208,6 @@ where this profile's bot token comes from, and which bot it is
 ```sh
 max bot auth show
 ```
-
-**Returns:** where this profile's bot token comes from, and which bot it is
 
 **Example:** `max sales bot auth show`
 
@@ -6347,8 +6220,6 @@ forget this profile's bot token
 ```sh
 max bot auth remove
 ```
-
-**Returns:** forget this profile's bot token
 
 **Example:** `max sales bot auth remove`
 
@@ -6404,8 +6275,6 @@ max bot chats show <chat>
 |---|---|---|
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
 
-**Returns:** one chat from MAX, and remember it
-
 **Example:** `max sales bot chats show Team`
 
 #### `max bot chats leave`
@@ -6421,8 +6290,6 @@ max bot chats leave <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
-
-**Returns:** take the bot out of a chat; only an admin of the chat can bring it back
 
 **Example:** `max sales bot chats leave Team`
 
@@ -6440,8 +6307,6 @@ max bot chats action <chat> <action>
 |---|---|---|
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
 | `action` | обязательный | what the chat sees. Одно из: `typing`, `photo`, `video`, `voice`, `file`. |
-
-**Returns:** show what the bot is doing in a chat, for a few seconds
 
 **Example:** `max sales bot chats action Team typing`
 
@@ -6486,8 +6351,6 @@ max bot chats admins add <chat> <person> [options]
 | `--can <rights>` | what they may do, comma-separated: read, members, admins, info, pin, link, edit, delete. |
 | `--title <title>` | the title shown beside their name. |
 
-**Returns:** make a member an admin with these rights
-
 **Example:** `max sales bot chats admins add Team 42 --title Helper`
 
 #### `max bot chats admins remove`
@@ -6504,8 +6367,6 @@ max bot chats admins remove <chat> <person>
 |---|---|---|
 | `chat` | обязательный | a chat id, or the title of a chat this bot has seen. |
 | `person` | обязательный | the person's user id. |
-
-**Returns:** take an admin's rights back; they stay a member
 
 **Example:** `max sales bot chats admins remove Team 42`
 
@@ -6531,8 +6392,6 @@ max bot chats members remove <chat> <person> [options]
 | Опция | Что делает |
 |---|---|
 | `--block` | also keep them from coming back by the chat's link. |
-
-**Returns:** take a person out of a chat; their messages stay
 
 **Example:** `max sales bot chats members remove Team 42 --block`
 
@@ -6573,8 +6432,6 @@ max bot chats members add <chat> <users>
 | `chat` | обязательный |  |
 | `users` | обязательный |  |
 
-**Returns:** add people to a chat by user id, at most 100; the bot must be an admin that may add…
-
 **Example:** `max personal bot chats members add Team <users>`
 
 #### `max bot chats rules`
@@ -6592,8 +6449,6 @@ max bot chats rules show <chat>
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
-
-**Returns:** the chat's rules; the defaults, marked not saved, if it has none yet
 
 **Example:** `max sales bot chats rules show Team`
 
@@ -6613,8 +6468,6 @@ max bot chats rules set <chat> <key> <value>
 | `key` | обязательный | the rule. |
 | `value` | обязательный | its new value. |
 
-**Returns:** change one moderation rule of a chat
-
 **Example:** `max sales bot chats rules set Team links delete`
 
 #### `max bot chats rules unset`
@@ -6631,8 +6484,6 @@ max bot chats rules unset <chat> <key>
 |---|---|---|
 | `chat` | обязательный | a group's id, or the title of a group this bot has seen. |
 | `key` | обязательный | the rule. |
-
-**Returns:** put one rule back to its default
 
 **Example:** `max sales bot chats rules unset Team links`
 
@@ -6657,8 +6508,6 @@ max bot chats moderate <chat> [options]
 | `--allow-dangerous` | yes to every action whose level in the group's rules is ask. |
 | `--no-block` | remove without banning; by default a removed person cannot come back by the link. |
 | `--max-actions <n>` | at most this many actions in one run; 10 if not given. |
-
-**Returns:** act on a group's new messages and joins by its rules, as the bot
 
 **Example:** `max sales bot chats moderate Team --dry-run`
 
@@ -6693,8 +6542,6 @@ max bot messages send <chat> [text] [options]
 | `--as-file` | send the --file as a file to download, a video included. |
 | `--voice <file>` | send an Ogg Opus file as a voice message, alone, with no text. |
 | `--allow-any-file` | send a file even from credential folders or this CLI's own folders. |
-
-**Returns:** send a message as the bot; without [text], the text is read from stdin
 
 **Example:** `max sales bot messages send Team "Doors open at 9"`, `max sales bot messages send Team "Here it is" --file report.pdf`
 
@@ -6734,8 +6581,6 @@ max bot messages show <chat> <message>
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
 | `message` | обязательный | message id. |
 
-**Returns:** one message by its id in a chat
-
 **Example:** `max sales bot messages show Team 101`
 
 #### `max bot messages edit`
@@ -6761,8 +6606,6 @@ max bot messages edit <chat> <message> <text> [options]
 | `--button <text=data>` | a button under the message, as <text>=<data>; replaces its buttons; repeat for more in one row. |
 | `--no-buttons` | take the buttons off the message. |
 
-**Returns:** replace the text or buttons of a message the bot sent
-
 **Example:** `max sales bot messages edit Team 101 "Doors open at 10"`
 
 #### `max bot messages delete`
@@ -6783,8 +6626,6 @@ max bot messages delete <chat> <messages> [options]
 | Опция | Что делает |
 |---|---|
 | `--allow-dangerous` | delete without asking. |
-
-**Returns:** delete messages in a chat the bot can delete in; it cannot be undone
 
 **Example:** `max sales bot messages delete Team 101`
 
@@ -6807,8 +6648,6 @@ max bot messages pin <chat> <message> [options]
 |---|---|
 | `--notify` | tell the chat's members. |
 
-**Returns:** pin a message in a chat; quietly unless --notify
-
 **Example:** `max sales bot messages pin Team 101`
 
 #### `max bot messages unpin`
@@ -6825,8 +6664,6 @@ max bot messages unpin <chat> <message>
 |---|---|---|
 | `chat` | обязательный | a chat id, user:<id> for a person, or the title of a chat this bot has seen. |
 | `message` | обязательный | message id. |
-
-**Returns:** unpin a message in a chat
 
 **Example:** `max sales bot messages unpin Team 101`
 
@@ -6847,8 +6684,6 @@ max bot messages between <people> [options]
 | `--all-bots` | also read every other bot's copy on this machine that read_other_bots allows. |
 | `--bots <profiles>` | also read these bots' copies, comma separated — each allowed by read_other_bots. |
 | `--limit <n>` | how many of the latest messages from each chat. |
-
-**Returns:** what two or more people wrote in the chats they share, from the local copy
 
 **Example:** `max sales bot messages between @ann @bob`
 
@@ -6873,8 +6708,6 @@ max bot messages sync <chat> [options]
 | `--pause <duration>` | pause between pages, to stay under the messenger's limits. По умолчанию: `1s`. |
 | `--since-time <time>` | stop once it reaches messages older than this: ISO 8601, or 2h / 1d ago. |
 | `--last <n>` | stop once the newest n messages are held. |
-
-**Returns:** fetch a chat's history into the bot's local copy, newest first; run it again…
 
 **Example:** `max personal bot messages sync Team`
 
@@ -6902,8 +6735,6 @@ max bot search messages [query] [options]
 | `--page <n>` | which page, starting at 1. |
 | `--newest` | newest first instead of best first. |
 | `--from <person>` | only what this person wrote — an id, @username or part of a name; repeat it for any of several. |
-
-**Returns:** search the messages this bot has seen, in the local copy, by text
 
 **Example:** `max sales bot search messages refund`, `max sales bot search messages invoice --from @ann`
 
@@ -6941,8 +6772,6 @@ max bot recipients add <chat>
 |---|---|---|
 | `chat` | обязательный | a chat id, `user:<id>`, or the title of a chat this bot has seen. |
 
-**Returns:** allow a chat: its id, `user:<id>`, or the title of a chat this bot has seen
-
 **Example:** `max sales bot recipients add Team`
 
 #### `max bot recipients remove`
@@ -6959,8 +6788,6 @@ max bot recipients remove <chat>
 |---|---|---|
 | `chat` | обязательный | the chat id, or the title as the list shows it. |
 
-**Returns:** take a chat off the list
-
 **Example:** `max sales bot recipients remove Team`
 
 #### `max bot recipients clear`
@@ -6972,8 +6799,6 @@ remove the list: the bot may write to any chat again
 ```sh
 max bot recipients clear
 ```
-
-**Returns:** remove the list: the bot may write to any chat again
 
 **Example:** `max sales bot recipients clear`
 
@@ -7014,8 +6839,6 @@ max bot watch [options]
 | `--public-url <url>` | receive by webhook at your tunnel's https address instead of polling, e.g. https://<name>.ts.net. |
 | `--port <port>` | the local port behind the tunnel for --public-url (default 8766). |
 
-**Returns:** print new messages as they arrive and keep them, until Ctrl-C
-
 **Example:** `max sales bot watch --jsonl`, `max sales bot watch --events`
 
 ### `max bot callbacks`
@@ -7040,8 +6863,6 @@ max bot callbacks answer <callback> [options]
 |---|---|
 | `--text <text>` | the message's new text. |
 | `--notification <text>` | a note only the person who pressed sees. |
-
-**Returns:** answer a pressed button: a note to that person, or new message text
 
 **Example:** `max sales bot callbacks answer 4385 --notification "Saved"`
 
@@ -7079,8 +6900,6 @@ max bot commands set <commands>
 |---|---|---|
 | `commands` | обязательный | name=description, one per command. |
 
-**Returns:** replace the whole menu: each command as name=description, e.g. start=Begin
-
 **Example:** `max sales bot commands set "start=Begin here" "help=What I can do"`
 
 #### `max bot commands clear`
@@ -7092,8 +6911,6 @@ empty the menu
 ```sh
 max bot commands clear
 ```
-
-**Returns:** empty the menu
 
 **Example:** `max sales bot commands clear`
 
@@ -7137,8 +6954,6 @@ max bot webhooks set <url> [options]
 | `--secret-stdin` | a secret the messenger sends back with each update — asked for, or read from a pipe. |
 | `--append` | keep the webhooks already set and add this one beside them. |
 
-**Returns:** send this bot's updates to an HTTPS address; refused while another is set
-
 **Example:** `max sales bot webhooks set https://bot.example.ts.net/`
 
 #### `max bot webhooks delete`
@@ -7154,8 +6969,6 @@ max bot webhooks delete <url>
 | Аргумент | | Что это |
 |---|---|---|
 | `url` | обязательный | the address. |
-
-**Returns:** stop sending updates to this address; with none left, `bot watch` works again
 
 **Example:** `max sales bot webhooks delete https://bot.example.ts.net/`
 
@@ -7182,8 +6995,6 @@ max bot contacts show <who> [options]
 | `--limit <n>` | how many messages from the private chat. |
 | `--sync-first` | read the private chat with them again from the messenger first — one request. |
 
-**Returns:** one person: the chats they wrote in and their chat with the bot
-
 **Example:** `max sales bot contacts show @ann`
 
 ### `max bot mcp`
@@ -7200,8 +7011,6 @@ serve this bot to an agent over MCP, on stdin and stdout — `claude mcp add sal
 max bot mcp serve
 ```
 
-**Returns:** serve this bot to an agent over MCP, on stdin and stdout
-
 **Example:** `max sales bot mcp serve`
 
 #### `max bot mcp config`
@@ -7212,8 +7021,6 @@ print the mcpServers entry for Claude Desktop, Cursor and others, with full path
 max bot mcp config
 ```
 
-**Returns:** print the mcpServers entry for an MCP client; writes nothing
-
 **Example:** `max sales bot mcp config`
 
 ### `max bot me`
@@ -7223,8 +7030,6 @@ the bot this profile's token belongs to: name, id, description, commands
 ```sh
 max bot me
 ```
-
-**Returns:** the bot this profile's token belongs to
 
 **Example:** `max personal bot me`
 
@@ -7266,8 +7071,6 @@ max bot comments get <message> <comment>
 | `message` | обязательный |  |
 | `comment` | обязательный |  |
 
-**Returns:** one comment under a post
-
 **Example:** `max personal bot comments get 1234 <comment>`
 
 #### `max bot comments send`
@@ -7288,8 +7091,6 @@ max bot comments send <message> <text> [options]
 | Опция | Что делает |
 |---|---|
 | `--format <format>` | how the text is marked up. Одно из: `markdown`, `html`. |
-
-**Returns:** comment under a post as the bot; - reads stdin
 
 **Example:** `max personal bot comments send 1234 "on my way"`
 
@@ -7313,8 +7114,6 @@ max bot comments edit <message> <comment> <text> [options]
 |---|---|
 | `--format <format>` | how the text is marked up. Одно из: `markdown`, `html`. |
 
-**Returns:** replace the text of a comment the bot wrote; - reads stdin
-
 **Example:** `max personal bot comments edit 1234 <comment> "on my way"`
 
 #### `max bot comments delete`
@@ -7335,8 +7134,6 @@ max bot comments delete <message> <comment> [options]
 | Опция | Что делает |
 |---|---|
 | `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
-
-**Returns:** delete a comment under a post
 
 **Example:** `max personal bot comments delete 1234 <comment>`
 
@@ -7363,8 +7160,6 @@ max bot uploads put <file> [options]
 | `--type <type>` | upload as this kind instead of guessing by extension. Одно из: `image`, `video`, `audio`, `file`. |
 | `--allow-any-file` | upload a file even from credential folders or WireCat apps' folders. |
 
-**Returns:** upload a file from disk and print the attachment to put in a message's `attachments` —…
-
 **Example:** `max personal bot uploads put ./report.pdf`
 
 ### `max bot api`
@@ -7387,8 +7182,6 @@ Get current bot info — read (GET /me)
 max bot api get-my-info
 ```
 
-**Returns:** Get current bot info — read (GET /me)
-
 **Example:** `max personal bot api get-my-info`
 
 #### `max bot api edit-my-commands`
@@ -7406,8 +7199,6 @@ max bot api edit-my-commands [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Edit current bot commands — write (PATCH /me/commands)
-
 **Example:** `max personal bot api edit-my-commands`
 
 #### `max bot api get-chat`
@@ -7421,8 +7212,6 @@ max bot api get-chat [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Requested chat or channel identifier. |
-
-**Returns:** Get chat — read (GET /chats/{chatId})
 
 **Example:** `max personal bot api get-chat --chat-id <value>`
 
@@ -7442,8 +7231,6 @@ max bot api edit-chat [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Edit chat or channel info — write (PATCH /chats/{chatId})
-
 **Example:** `max personal bot api edit-chat --chat-id <value>`
 
 #### `max bot api send-action`
@@ -7462,8 +7249,6 @@ max bot api send-action [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Send action — write (POST /chats/{chatId}/actions)
-
 **Example:** `max personal bot api send-action --chat-id <value>`
 
 #### `max bot api get-pinned-message`
@@ -7477,8 +7262,6 @@ max bot api get-pinned-message [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Chat identifier to get its pinned message. |
-
-**Returns:** Get pinned message — read (GET /chats/{chatId}/pin)
 
 **Example:** `max personal bot api get-pinned-message --chat-id <value>`
 
@@ -7498,8 +7281,6 @@ max bot api pin-message [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Pin message — write (PUT /chats/{chatId}/pin)
-
 **Example:** `max personal bot api pin-message --chat-id <value>`
 
 #### `max bot api unpin-message`
@@ -7516,8 +7297,6 @@ max bot api unpin-message [options]
 |---|---|
 | `--chat-id <value>` | Chat identifier to remove pinned message. |
 
-**Returns:** Unpin message — write (DELETE /chats/{chatId}/pin)
-
 **Example:** `max personal bot api unpin-message --chat-id <value>`
 
 #### `max bot api get-membership`
@@ -7531,8 +7310,6 @@ max bot api get-membership [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Chat or channel identifier. |
-
-**Returns:** Get chat or channel membership — read (GET /chats/{chatId}/members/me)
 
 **Example:** `max personal bot api get-membership --chat-id <value>`
 
@@ -7550,8 +7327,6 @@ max bot api leave-chat [options]
 |---|---|
 | `--chat-id <value>` | Chat or channel identifier. |
 
-**Returns:** Leave chat — destructive (DELETE /chats/{chatId}/members/me)
-
 **Example:** `max personal bot api leave-chat --chat-id <value>`
 
 #### `max bot api get-admins`
@@ -7565,8 +7340,6 @@ max bot api get-admins [options]
 | Опция | Что делает |
 |---|---|
 | `--chat-id <value>` | Chat or channel identifier. |
-
-**Returns:** Get chat or channel admins — read (GET /chats/{chatId}/members/admins)
 
 **Example:** `max personal bot api get-admins --chat-id <value>`
 
@@ -7586,8 +7359,6 @@ max bot api post-admins [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Set chat or channel admins — write (POST /chats/{chatId}/members/admins)
-
 **Example:** `max personal bot api post-admins --chat-id <value>`
 
 #### `max bot api delete-admins`
@@ -7605,8 +7376,6 @@ max bot api delete-admins [options]
 | `--chat-id <value>` | Chat or channel identifier. |
 | `--user-id <value>` | User identifier. |
 
-**Returns:** Revoke admin rights — write (DELETE /chats/{chatId}/members/admins/{userId})
-
 **Example:** `max personal bot api delete-admins --chat-id <value> --user-id <value>`
 
 #### `max bot api get-members`
@@ -7623,8 +7392,6 @@ max bot api get-members [options]
 | `--user-ids <value>` | Comma-separated list of users identifiers to get their membership. When this parameter is passed, both `count` and `marker` are ignored. |
 | `--marker <value>` | Marker. |
 | `--count <value>` | Count. |
-
-**Returns:** Get members — read (GET /chats/{chatId}/members)
 
 **Example:** `max personal bot api get-members --chat-id <value>`
 
@@ -7644,8 +7411,6 @@ max bot api add-members [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Add members — write (POST /chats/{chatId}/members)
-
 **Example:** `max personal bot api add-members --chat-id <value>`
 
 #### `max bot api remove-member`
@@ -7664,8 +7429,6 @@ max bot api remove-member [options]
 | `--user-id <value>` | User id to remove from chat or channel. |
 | `--block <value>` | Set to `true` if user should be blocked in chat. |
 
-**Returns:** Remove member — write (DELETE /chats/{chatId}/members)
-
 **Example:** `max personal bot api remove-member --chat-id <value> --user-id <value>`
 
 #### `max bot api get-subscriptions`
@@ -7675,8 +7438,6 @@ Get subscriptions — read (GET /subscriptions)
 ```sh
 max bot api get-subscriptions
 ```
-
-**Returns:** Get subscriptions — read (GET /subscriptions)
 
 **Example:** `max personal bot api get-subscriptions`
 
@@ -7695,8 +7456,6 @@ max bot api subscribe [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Subscribe — write (POST /subscriptions)
-
 **Example:** `max personal bot api subscribe`
 
 #### `max bot api unsubscribe`
@@ -7713,8 +7472,6 @@ max bot api unsubscribe [options]
 |---|---|
 | `--url <value>` | URL to remove from WebHook subscriptions. |
 
-**Returns:** Unsubscribe — write (DELETE /subscriptions)
-
 **Example:** `max personal bot api unsubscribe --url <value>`
 
 #### `max bot api get-upload-url`
@@ -7730,8 +7487,6 @@ max bot api get-upload-url [options]
 | Опция | Что делает |
 |---|---|
 | `--type <value>` | Uploaded file type: image, audio, video, file. |
-
-**Returns:** Get upload URL — write (POST /uploads)
 
 **Example:** `max personal bot api get-upload-url --type <value>`
 
@@ -7753,8 +7508,6 @@ max bot api get-messages [options]
 | `--after <value>` | Messages after timestamp. |
 | `--count <value>` | Maximum amount of messages in response. |
 
-**Returns:** Get messages — read (GET /messages)
-
 **Example:** `max personal bot api get-messages`
 
 #### `max bot api send-message`
@@ -7775,8 +7528,6 @@ max bot api send-message [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Send message — write (POST /messages)
-
 **Example:** `max personal bot api send-message`
 
 #### `max bot api edit-message`
@@ -7795,8 +7546,6 @@ max bot api edit-message [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Edit message — write (PUT /messages)
-
 **Example:** `max personal bot api edit-message --message-id <value>`
 
 #### `max bot api delete-message`
@@ -7814,8 +7563,6 @@ max bot api delete-message [options]
 | `--message-id <value>` | Deleting message identifier. |
 | `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
 
-**Returns:** Delete message — destructive (DELETE /messages)
-
 **Example:** `max personal bot api delete-message --message-id <value>`
 
 #### `max bot api get-message-by-id`
@@ -7829,8 +7576,6 @@ max bot api get-message-by-id [options]
 | Опция | Что делает |
 |---|---|
 | `--message-id <value>` | Message identifier (`mid`) to get single message in chat or channel. |
-
-**Returns:** Get message — read (GET /messages/{messageId})
 
 **Example:** `max personal bot api get-message-by-id --message-id <value>`
 
@@ -7849,8 +7594,6 @@ max bot api get-comments [options]
 | `--before <value>` | Comments before timestamp. |
 | `--after <value>` | Comments after timestamp. |
 | `--count <value>` | Maximum amount of comments in response. |
-
-**Returns:** Get comments — read (GET /messages/{messageId}/comments)
 
 **Example:** `max personal bot api get-comments --message-id <value>`
 
@@ -7871,8 +7614,6 @@ max bot api send-comment [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Send comment — write (POST /messages/{messageId}/comments)
-
 **Example:** `max personal bot api send-comment --message-id <value>`
 
 #### `max bot api edit-comment`
@@ -7892,8 +7633,6 @@ max bot api edit-comment [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Edit comment — write (PUT /messages/{messageId}/comments)
-
 **Example:** `max personal bot api edit-comment --message-id <value> --comment-id <value>`
 
 #### `max bot api delete-comment`
@@ -7912,8 +7651,6 @@ max bot api delete-comment [options]
 | `--comment-id <value>` | Deleting comment identifier. |
 | `--allow-dangerous` | skip confirmation for bot.messages.delete at level ask. |
 
-**Returns:** Delete comment — destructive (DELETE /messages/{messageId}/comments)
-
 **Example:** `max personal bot api delete-comment --message-id <value> --comment-id <value>`
 
 #### `max bot api get-comment-by-id`
@@ -7929,8 +7666,6 @@ max bot api get-comment-by-id [options]
 | `--message-id <value>` | Message identifier (`mid`) of the commented message. |
 | `--comment-id <value>` | Comment identifier (`mid`) to get single comment in channel. |
 
-**Returns:** Get comment — read (GET /messages/{messageId}/comments/{commentId})
-
 **Example:** `max personal bot api get-comment-by-id --message-id <value> --comment-id <value>`
 
 #### `max bot api get-video-attachment-details`
@@ -7944,8 +7679,6 @@ max bot api get-video-attachment-details [options]
 | Опция | Что делает |
 |---|---|
 | `--video-token <value>` | Video attachment token. |
-
-**Returns:** Get video details — read (GET /videos/{videoToken})
 
 **Example:** `max personal bot api get-video-attachment-details --video-token <value>`
 
@@ -7966,8 +7699,6 @@ max bot api answer-on-callback [options]
 | `--body <json>` | the request body as JSON; - reads it from stdin. |
 | `--body-file <path>` | the request body from a JSON file; - is stdin. |
 
-**Returns:** Answer on callback — write (POST /answers)
-
 **Example:** `max personal bot api answer-on-callback --callback-id <value>`
 
 #### `max bot api get-updates`
@@ -7987,8 +7718,6 @@ max bot api get-updates [options]
 | `--marker <value>` | Pass `null` to get updates you didn't get yet. |
 | `--types <value>` | Comma separated list of update types your bot want to receive. |
 
-**Returns:** Get updates — write (GET /updates)
-
 **Example:** `max personal bot api get-updates`
 
 ## `max guide`
@@ -8002,8 +7731,6 @@ max guide [name]
 | Аргумент | | Что это |
 |---|---|---|
 | `name` | необязательный | one scenario; without it, the list. |
-
-**Returns:** scenarios: the commands for a common task, in order, and why each
 
 **Example:** `max guide`, `max guide agent-on-a-timer --json`
 

@@ -722,7 +722,10 @@ describe("sessions", () => {
     const refused = await runWith(["account", "sessions", "end", "--others"], environment)
     const unnamed = await runWith(["account", "sessions", "end", "--yes"], environment)
 
-    expect(JSON.parse(refused.stderr).error.code).toBe("confirmation_required")
+    expect(JSON.parse(refused.stderr).error).toMatchObject({
+      code: "confirmation_required",
+      details: { permission: "account.sessions.end" },
+    })
     expect(JSON.parse(unnamed.stderr).error).toMatchObject({ code: "validation_error" })
     expect(unnamed.stderr).toContain("--others")
     expect(sent(Opcode.SESSIONS_CLOSE)).toEqual([])

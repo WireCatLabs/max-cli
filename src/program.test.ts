@@ -400,7 +400,7 @@ describe("the program", () => {
   it("**refuses `--timeout` without a unit**, because the neighbouring setting is milliseconds", async () => {
     const { code, stderr } = await runWith(["--timeout", "30", "chats", "list"])
     expect(code).not.toBe(0)
-    expect(stderr).toContain("30s, 2m or 500ms")
+    expect(stderr).toContain("500ms, 30s, 2m, 4h or 1d")
   })
 
   it("offers --timeout at the top level, where every command can be given one", async () => {
@@ -981,9 +981,9 @@ describe("the program", () => {
     })
 
     expect(stdout).toBe("")
-    expect(JSON.parse(stderr).error.code).toBe("authentication_error")
-    // 4 is authentication_error in cli-base's table: a script branches on this, not on the text.
-    expect(code).toBe(4)
+    expect(JSON.parse(stderr).error).toMatchObject({ code: "not_found", reason: "profile.unknown" })
+    // 6 is not_found in cli-base's table: a script branches on this, not on the text.
+    expect(code).toBe(6)
   })
 
   it("tells a person what to do next, **naming the profile they actually typed**", async () => {
@@ -996,7 +996,7 @@ describe("the program", () => {
 
     expect(streams.stdout).toEqual([])
     expect(streams.stderr.join("")).toContain("max a-profile-that-does-not-exist setup")
-    expect(code).toBe(4)
+    expect(code).toBe(6)
   })
 
   it("**refuses a profile with no command instead of printing help on stdout**", async () => {
