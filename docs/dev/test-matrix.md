@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 235 ⛔ · 0 ❌** — 381 commands, 784 options.
+**930 ✅ · 236 ⛔ · 0 ❌** — 381 commands, 785 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -469,6 +469,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `tasks categories` |  | ✅ |  |
 | `tasks scan` |  | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0) |
 | `tasks scan` | `--last` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0) |
+| `tasks scan` | `--yes` | ⛔ | cli-core src/cli/messenger/tasks.test.ts ("tasks scan lists what a chat's history would open, and opens it only with --yes") drives this through the shared handler MAX mounts (0.320.0) |
 | `tasks status` |  | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
 | `tasks status` | `--limit` | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
 | `tasks review` |  | ⛔ | cli-core 0.563.0 src/cli/messenger/tasks.test.ts drives the shared command; max mounts it unchanged |
