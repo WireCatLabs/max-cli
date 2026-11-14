@@ -570,7 +570,10 @@ describe("max bot webhooks", () => {
 it("deletes a comment without a question at the built-in level, and keeps its raw HTTP contract", async () => {
   const accepted = await max(["bot", "comments", "delete", "mid.9", "c1", "--json"])
   expect(accepted.code, accepted.stderr).toBe(0)
+  const flagged = await max(["bot", "comments", "delete", "mid.9", "c2", "--allow-dangerous", "--json"])
+  expect(flagged.code, flagged.stderr).toBe(0)
   expect(writes()).toEqual([
     expect.objectContaining({ method: "DELETE", url: "/messages/mid.9/comments?comment_id=c1" }),
+    expect.objectContaining({ method: "DELETE", url: "/messages/mid.9/comments?comment_id=c2" }),
   ])
 })
