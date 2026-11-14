@@ -164,7 +164,7 @@ describe("the MAX messenger's connection", () => {
     const { program } = commandFor("m-ask")
     const settings = maxMessenger.resolveSettings({ profile: "m-ask" })
     const asked: string[] = []
-    const request = { chatId: "111", kind: "delete" as const, count: 1, key: "messages.delete" }
+    const request = { chatId: "111", kind: "delete" as const, count: 1, key: "chats.delete" }
     const overMcp = maxMessenger.guard?.(
       program,
       settings,
@@ -174,7 +174,7 @@ describe("the MAX messenger's connection", () => {
       },
     )
     await expect(overMcp?.ask?.(request)).resolves.toBeUndefined()
-    expect(asked).toEqual(["messages.delete"])
+    expect(asked).toEqual(["chats.delete"])
     await expect(maxMessenger.guard?.(program, settings, () => {})?.ask?.(request)).rejects.toThrow()
   })
 

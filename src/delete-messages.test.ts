@@ -88,8 +88,9 @@ describe("deleting messages", () => {
     })
     expect(deletes()).toHaveLength(1)
   })
-  it("**refuses without --allow-dangerous**, sending nothing past the login", async () => {
+  it("**at ask, refuses without --allow-dangerous**, sending nothing past the login", async () => {
     const { environment, beyondLogin } = messenger()
+    await runWith(["d-word", "config", "set", "permissions.messages.delete", "ask"])
     const { code, stderr } = await runWith(["d-word", "messages", "delete", "111", FIRST], environment)
 
     expect(code).toBe(7)
