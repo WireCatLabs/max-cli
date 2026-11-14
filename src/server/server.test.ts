@@ -1514,6 +1514,12 @@ describe("max server on the shared commands", () => {
 
 describe("P7 policy on the raw server socket", () => {
   it("requires explicit confirmation of a raw ask write and still enforces readonly", async () => {
+    expect(
+      await run(["p7-raw-ask", "config", "set", "permissions.messages.delete", "ask", "--json"], {
+        streams: captureStreams(),
+        tty: false,
+      }),
+    ).toBe(0)
     const { store, max } = await serve("p7-raw-ask", scripted())
     const request = {
       id: "delete",
@@ -1526,7 +1532,7 @@ describe("P7 policy on the raw server socket", () => {
     expect(max.sent.filter(({ opcode }) => opcode === Opcode.MSG_DELETE)).toHaveLength(1)
     const streams = captureStreams()
     expect(
-      await run([store.profile, "config", "set", "permissions.messages", "readonly", "--json"], {
+      await run([store.profile, "config", "set", "permissions.messages.delete", "readonly", "--json"], {
         streams,
         tty: false,
       }),
@@ -1750,6 +1756,7 @@ describe("auto-replies in max serve", () => {
 
   it("sends nothing while replies.send is not allow, or while paused", async () => {
     rules("ar-deny", [FRIEND])
+    await allow("ar-deny", "deny")
     const { max } = await serve("ar-deny", withDialog())
     arrive(max, FRIEND, 116762160362694604n, 5)
     await observeFor(100)
@@ -1773,7 +1780,7 @@ describe("auto-replies in max serve", () => {
     }
 
     expect((await json("replies", "status")).item).toMatchObject({
-      send: "deny",
+      send: "allow",
       audience: { reply: "listed", allow: 1 },
       rules: [{ id: "away" }],
     })

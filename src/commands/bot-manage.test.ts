@@ -567,11 +567,8 @@ describe("max bot webhooks", () => {
   })
 })
 
-it("requires explicit confirmation for a comment deletion and keeps its raw HTTP contract", async () => {
-  const refused = await max(["bot", "comments", "delete", "mid.9", "c1", "--json"])
-  expect(refused.code).toBe(7)
-  expect(writes()).toEqual([])
-  const accepted = await max(["bot", "comments", "delete", "mid.9", "c1", "--allow-dangerous", "--json"])
+it("deletes a comment without a question at the built-in level, and keeps its raw HTTP contract", async () => {
+  const accepted = await max(["bot", "comments", "delete", "mid.9", "c1", "--json"])
   expect(accepted.code, accepted.stderr).toBe(0)
   expect(writes()).toEqual([
     expect.objectContaining({ method: "DELETE", url: "/messages/mid.9/comments?comment_id=c1" }),
