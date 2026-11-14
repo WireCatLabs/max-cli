@@ -1044,6 +1044,8 @@ max personal chats clear "Поход" --allow-dangerous   # удалить вс�
 max personal chats delete "Поход" --allow-dangerous  # удалить чат у себя; у остальных он останется
 ```
 
+`chats clear` и `chats delete` не предлагаются MCP-приложению: их запускаете вы сами в терминале.
+
 ```sh
 max personal calls list                              # звонки, новые сверху
 ```
