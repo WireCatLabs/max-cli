@@ -239,6 +239,7 @@ describe("max commands", () => {
       "flood clear",
       "models keys set",
       "models keys remove",
+      "models chats set",
       "models download (reads remotely)",
       "models set",
       "models add (reads remotely)",

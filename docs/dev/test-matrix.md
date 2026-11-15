@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 236 ⛔ · 0 ❌** — 381 commands, 785 options.
+**930 ✅ · 241 ⛔ · 0 ❌** — 383 commands, 788 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -534,6 +534,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations links rebuild` |  | ✅ |  |
 | `conversations links rebuild` | `--chat` | ✅ |  |
 | `conversations links rebuild` | `--analyze` | ✅ |  |
+| `conversations links rebuild` | `--yes` | ⛔ | cli-core src/cli/messenger/analysis.test.ts drives the shared command max mounts unchanged (cli-core 0.664.0) |
 | `conversations links rebuild` | `--analysis-provider` | ✅ |  |
 | `conversations links rebuild` | `--model` | ✅ |  |
 | `conversations links rebuild` | `--base-url` | ✅ |  |
@@ -574,6 +575,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `conversations embed` | `--threads` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--concurrency` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--max-tokens` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
+| `conversations embed` | `--yes` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--max-chats` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `conversations embed` | `--max-chunks` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `attachments extract` |  | ✅ |  |
@@ -742,6 +744,9 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `flood clear` |  | ✅ |  |
 | `models keys set` |  | ⛔ | writes a provider key into the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
 | `models keys remove` |  | ⛔ | removes a provider key from the real keyring; cli-core's src/cli/messenger/models-command.test.ts drives it with a memory keyring |
+| `models chats show` |  | ⛔ | cli-core src/cli/messenger/models-command.test.ts drives the shared command max mounts unchanged (cli-core 0.664.0) |
+| `models chats set` |  | ⛔ | cli-core src/cli/messenger/models-command.test.ts drives the shared command max mounts unchanged (cli-core 0.664.0) |
+| `models chats set` | `--from-app` | ⛔ | cli-core src/cli/messenger/models-command.test.ts drives the shared command max mounts unchanged (cli-core 0.664.0) |
 | `models list` |  | ✅ |  |
 | `models download` |  | ✅ |  |
 | `models download` | `--accept-terms` | ⛔ | downloads a model over the network after the licence is accepted; cli-core's src/cli/messenger/models-command.test.ts drives it offline |
