@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs"
+import { readdirSync, readFileSync } from "node:fs"
 import { createServer, type Server } from "node:http"
 import type { AddressInfo } from "node:net"
 import { Client, type ElicitResult } from "@modelcontextprotocol/client"
@@ -202,7 +202,7 @@ describe("max bot mcp", () => {
     })
   })
 
-  it("serves SKILL.md as max://skill, and names it last in instructions within 2048 characters", async () => {
+  it("serves SKILL.md and each reference, and names it last in instructions within 2048 characters", async () => {
     const { rawClient } = await connect()
     const text = botInstructions({
       command: "max",
@@ -214,10 +214,18 @@ describe("max bot mcp", () => {
 
     const { resources } = await rawClient.listResources()
     const read = await rawClient.readResource({ uri: "max://skill" })
+    const references = readdirSync(new URL("references/", SKILL)).sort()
+    const search = await rawClient.readResource({ uri: "max://skill/references/search.md" })
 
-    expect(resources.map(({ uri }) => uri)).toEqual(["max://skill"])
+    expect(resources.map(({ uri }) => uri)).toEqual([
+      "max://skill",
+      ...references.map((name) => `max://skill/references/${name}`),
+    ])
     expect(read.contents).toEqual([
       { uri: "max://skill", mimeType: "text/markdown", text: readFileSync(SKILL, "utf8") },
+    ])
+    expect(search.contents).toMatchObject([
+      { uri: "max://skill/references/search.md", text: readFileSync(new URL("references/search.md", SKILL), "utf8") },
     ])
     expect(text.length).toBeLessThanOrEqual(2048)
     expect(calls).toEqual([])
