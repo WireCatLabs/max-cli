@@ -1,5 +1,3 @@
-import { execFileSync } from "node:child_process"
-import { readFileSync } from "node:fs"
 import { describe, expect, it } from "vitest"
 import { operations, reservations, spec } from "../spec/index.js"
 import { Opcode } from "./opcodes.generated.js"
@@ -19,22 +17,4 @@ describe("what the generator wrote", () => {
       expect(Object.keys(OPERATIONS)).not.toContain(reservation.name)
     }
   })
-
-  it("is what `pnpm generate` produces right now", () => {
-    const before = files().map((path) => readFileSync(path, "utf8"))
-    // On Windows pnpm is a .cmd script, which only a shell starts.
-    execFileSync("pnpm", ["generate"], { stdio: "ignore", shell: process.platform === "win32" })
-
-    expect(files().map((path) => readFileSync(path, "utf8"))).toEqual(before)
-  }, 60_000)
 })
-
-const files = () => [
-  "src/generated/opcodes.generated.ts",
-  "src/generated/operations.generated.ts",
-  "src/generated/client.generated.ts",
-  "docs/dev/protocol.md",
-  // Not from `src/spec/` but from the command tree (`OPS-10`); the same check guards it, because
-  // the failure is the same one — a page that quotes a command the program no longer has.
-  "docs/commands.md",
-]

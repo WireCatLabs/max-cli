@@ -143,6 +143,8 @@ const ask = async (store: SessionStore, request: Record<string, unknown>): Promi
 const waitUntil = (condition: () => boolean, message: string) =>
   expect.poll(condition, { timeout: 2000, interval: 10, message }).toBe(true)
 
+const BEYOND_TEST_LIMIT_MS = 60_000
+
 const observeFor = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const tabReads = (max: ReturnType<typeof scripted>, logins = 1) =>
@@ -612,14 +614,14 @@ describe("a command through max serve", () => {
       },
     })
 
-  const commandClient = (store: SessionStore, direct = own()) => {
+  const commandClient = (store: SessionStore, direct = own(), timeoutMs = 200) => {
     let opened = 0
     const client = new MaxClient({
       store,
       connection: new ServerConnection({
         path: store.socketPath(),
         store,
-        timeoutMs: 200,
+        timeoutMs,
         direct: () => {
           opened += 1
           return new Connection({ createSocket: direct.createSocket, timeoutMs: 200 })
@@ -692,10 +694,11 @@ describe("a command through max serve", () => {
   })
 
   it("sends through the server too: one connection to MAX for everything", async () => {
-    // Coverage instrumentation can use the short retry fixtures' entire request budget.
-    const { store, max } = await serve("c-send", scripted(), { requestTimeoutMs: 2000 })
+    // A send that times out is sent again with the same cid, so on a slow runner a short timeout on either hop
+    // made two MSG_SENDs. Past the test's own limit, neither can fire before the test fails anyway.
+    const { store, max } = await serve("c-send", scripted(), { requestTimeoutMs: BEYOND_TEST_LIMIT_MS })
     await tabReads(max)
-    const { client, opened } = commandClient(store)
+    const { client, opened } = commandClient(store, own(), BEYOND_TEST_LIMIT_MS)
 
     const sent = await client.messages.send("111", "sent")
     await client.close()
