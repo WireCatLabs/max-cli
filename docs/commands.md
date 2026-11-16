@@ -5997,7 +5997,7 @@ max skill show [name] [options]
 
 | Аргумент | | Что это |
 |---|---|---|
-| `name` | необязательный | one of the skills shipped for a task: follow-ups, link-conversations. |
+| `name` | необязательный | a part of this skill, or a skill shipped for a task: tasks, stats, setup, sending, search, reading, mcp, machine, groups, contacts, bot, attachments, follow-ups, link-conversations. |
 
 | Опция | Что делает |
 |---|---|

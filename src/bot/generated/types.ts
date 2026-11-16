@@ -121,7 +121,7 @@ export type Chat = {
   /** Identifier of chat owner. Visible only for chat admins */
   owner_id?: UserId | null
   /** Participants in chat with time of last activity. Can be *null* when you request list of chats. Visible for chat admins only */
-  participants?: Record<string, string> | null
+  participants?: { [key: string]: string } | null
   /** Is current chat publicly available. Always `false` for dialogs */
   is_public: boolean
   /** Link on chat */
@@ -680,7 +680,7 @@ export type PhotoAttachmentRequestPayload = {
   /** Token of any existing attachment */
   token?: string | null
   /** Tokens were obtained after uploading images */
-  photos?: Record<string, PhotoToken> | null
+  photos?: { [key: string]: PhotoToken } | null
 }
 
 /** Token representing an uploaded image */
