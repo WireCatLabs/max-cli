@@ -16,11 +16,11 @@ importers:
         specifier: 3.1.3
         version: 3.1.3
       '@wirecat/cli-base':
-        specifier: 0.103.0
-        version: 0.103.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
+        specifier: 0.106.0
+        version: 0.106.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
       '@wirecat/cli-core':
         specifier: 0.674.0
-        version: 0.674.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.103.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
+        version: 0.674.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.106.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)
       commander:
         specifier: 15.0.0
         version: 15.0.0
@@ -1313,8 +1313,8 @@ packages:
   '@wasm-audio-decoders/opus-ml@0.0.3':
     resolution: {integrity: sha512-SEeTmk0eb3q5etJA/NHCRWW6BivTx9tqvNTmG0kg2ynuATEQRUZnwQE6Ibvl1BBvqIGHqI57+qyJMWmJBwb5XQ==}
 
-  '@wirecat/cli-base@0.103.0':
-    resolution: {integrity: sha512-yWzm5JDkr++sMi4vWc7rB1NXqx9YsV1Vo5wgKSSV1Omc0grM84w5J9j0ArDbRVZU0wLpckU09Gakf7+H40UyhQ==}
+  '@wirecat/cli-base@0.106.0':
+    resolution: {integrity: sha512-4VW/EhPteBUbuZtsCg1vNLDVPx3KF0tH17/Ib2feWCt/I68IMXDfjEuY+gDZSncP4FjQ+2JlKyiDGzoBWHvH5A==}
     engines: {node: '>=22'}
     hasBin: true
     peerDependencies:
@@ -3356,7 +3356,7 @@ snapshots:
     dependencies:
       '@wasm-audio-decoders/common': 9.0.7
 
-  '@wirecat/cli-base@0.103.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)':
+  '@wirecat/cli-base@0.106.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)':
     dependencies:
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       cli-table3: 0.6.5
@@ -3376,7 +3376,7 @@ snapshots:
 
   '@wirecat/cli-core-sqlite@1.1.0': {}
 
-  '@wirecat/cli-core@0.674.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.103.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
+  '@wirecat/cli-core@0.674.0(@napi-rs/canvas@1.0.13)(@wirecat/cli-base@0.106.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5))(cac@6.7.14)(commander@15.0.0)(typescript@7.0.2)(zod@4.6.7)':
     dependencies:
       '@anthropic-ai/sdk': 1.3.0(zod@4.6.7)
       '@bomb.sh/tab': 0.0.22(cac@6.7.14)(commander@15.0.0)
@@ -3386,7 +3386,7 @@ snapshots:
       '@valibot/to-json-schema': 1.8.0(valibot@1.5.0(typescript@7.0.2))
       '@wasm-audio-decoders/flac': 0.2.11
       '@wasm-audio-decoders/ogg-vorbis': 0.1.20
-      '@wirecat/cli-base': 0.103.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
+      '@wirecat/cli-base': 0.106.0(commander@15.0.0)(esbuild@0.28.2)(typescript@7.0.2)(vitest@5.0.5)
       '@wirecat/cli-core-onnx': 1.2.0
       '@wirecat/cli-core-sqlite': 1.1.0
       '@xmldom/xmldom': 0.9.12

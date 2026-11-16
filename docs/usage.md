@@ -1431,9 +1431,9 @@ fi
 
 ИИ-агент, который запускает команды в терминале (например, Claude Code, Codex или Gemini CLI), читает
 навык `max`: правила и ловушки, которые не объяснит `--help`. Его ставит `max personal setup`, а также
-`max skill install` (`--for claude`, `agents` или `all`, по умолчанию): он пишет SKILL.md в
+`max skill install` (`--for claude`, `agents` или `all`, по умолчанию): он пишет SKILL.md и папку `references/` в
 `~/.claude/skills/max-cli/` (Claude Code) и `~/.agents/skills/max-cli/` (Codex, Gemini CLI).
-`max skill show` печатает тот же текст. После обновления `max` запустите `max skill install` ещё раз:
+`max skill show` печатает SKILL.md, а `max skill show <имя>` — один файл из `references/` (`max skill show search`). После обновления `max` запустите `max skill install` ещё раз:
 если навыка нет или он старше `max`, агент раз в сутки увидит об этом строку в stderr. Выключается
 подсказка командой `max config set skill_hint false --defaults`. Как агенты находят навыки —
 [Codex](https://learn.chatgpt.com/docs/build-skills), [Gemini CLI](https://geminicli.com/docs/cli/skills/).

@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { captureStreams } from "@wirecat/cli-base"
@@ -9,6 +9,15 @@ import { createProgram, run } from "../program.js"
 import { VERSION } from "../version.js"
 
 const skill = readFileSync(new URL("../../skills/max-cli/SKILL.md", import.meta.url), "utf8")
+const referencesDir = new URL("../../skills/max-cli/references/", import.meta.url)
+const references = readdirSync(referencesDir)
+  .filter((name) => name.endsWith(".md"))
+  .map((name) => {
+    const file = new URL(name, referencesDir)
+    return { name, path: file.pathname, content: readFileSync(file, "utf8") }
+  })
+// validateSkill reads frontmatter first; a reference has none, so it gets the skill's own.
+const asSkill = (body: string) => `---\nname: max-cli\ndescription: reference\n---\n${body}`
 
 const everyCommand = (command: Command): Command[] => [command, ...command.commands.flatMap(everyCommand)]
 
@@ -19,7 +28,9 @@ describe("the skill an agent is given", () => {
   it("**names only flags that exist** — a skill that recommends a missing flag is worse than none", () => {
     const flags = new Set(commands.flatMap((command) => command.options.map((option) => option.long)))
     flags.add("--help")
-    const cliSkill = skill.replace(/`npm\.cmd exec[^`]+`/g, "")
+    const cliSkill = [skill, ...references.map(({ content }) => content)]
+      .join("\n")
+      .replace(/`npm\.cmd exec[^`]+`/g, "")
     const named = [...new Set(cliSkill.match(/--[a-z][a-z-]*/g) ?? [])]
 
     expect(named.filter((flag) => !flags.has(flag) && flag !== "--profile")).toEqual([])
@@ -33,6 +44,16 @@ describe("the skill an agent is given", () => {
 
   it("names only commands that exist", () => {
     expect(validateSkill(skill, { folder: "max-cli", program })).toEqual([])
+  })
+
+  it("links only reference files that ship, and every reference names only commands and links that exist", () => {
+    const file = new URL("../../skills/max-cli/SKILL.md", import.meta.url).pathname
+    expect(validateSkill(skill, { folder: "max-cli", file, program })).toEqual([])
+    expect(references.length).toBeGreaterThan(0)
+    for (const { name, path, content } of references)
+      expect([name, validateSkill(asSkill(content), { file: path, program })]).toEqual([name, []])
+    const linked = [...skill.matchAll(/\]\(references\/([^)#]+)\)/g)].map((match) => match[1])
+    expect(references.map(({ name }) => name).filter((name) => !linked.includes(name))).toEqual([])
   })
 })
 
@@ -75,6 +96,14 @@ describe("max skill", () => {
       written: [claude, join(dir, ".agents", "skills", "max-cli", "SKILL.md")],
     })
     expect(readFileSync(claude, "utf8")).toContain(`version: "${VERSION}"`)
+    for (const { name, content } of references)
+      expect(readFileSync(join(dir, ".agents", "skills", "max-cli", "references", name), "utf8")).toBe(content)
+  })
+
+  it("show <name> prints a reference file, for an agent that has no folder to follow a link into", async () => {
+    const search = references.find(({ name }) => name === "search.md")
+
+    expect((await max("skill", "show", "search")).stdout).toBe(search?.content.trimEnd())
   })
 
   it("install --for claude writes only Claude Code's copy", async () => {

@@ -14,14 +14,14 @@ export const CHANGELOG: ChangelogRules = {
   ids: IDS,
 }
 
-// The agent skill ships because `max skill show` reads it from the package (`src/commands/skill.ts`); the scenarios
+// The agent skill (SKILL.md and its references/) ships because `max skill show` reads it from the package (`src/commands/skill.ts`); the scenarios
 // because `max guide` reads them from it.
 export const PACKED = [
   "dist/",
   "package.json",
   "README.md",
   "LICENSE",
-  "skills/max-cli/SKILL.md",
+  "skills/max-cli/",
   "scenarios/",
   "install/postinstall.mjs",
   "install/windows.ps1",
@@ -37,6 +37,7 @@ export const docsRules = (root: string): DocsRules => ({
     join(root, "README.md"),
     join(root, "CHANGELOG.md"),
     join(root, "skills", "max-cli", "SKILL.md"),
+    ...markdownFiles(join(root, "skills", "max-cli", "references")),
     ...markdownFiles(join(root, "docs")),
   ],
   ids: IDS,
