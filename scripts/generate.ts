@@ -13,14 +13,11 @@
  * It imports from `dist/` because Node's type stripping will not resolve a `.js` specifier to a
  * `.ts` file, so `pnpm generate` builds first.
  */
-import { execFileSync } from "node:child_process"
 import { mkdirSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import type { Entry, Operation, Reservation } from "../dist/spec/define.js"
-import { spec } from "../dist/spec/index.js"
-
-const root = join(dirname(fileURLToPath(import.meta.url)), "..")
+import type { Entry, Operation, Reservation } from "../src/spec/define.ts"
+import { formatted } from "./format.ts"
 
 interface Row {
   entry: Entry
@@ -207,28 +204,25 @@ ${notes}
 `
 }
 
-const rows = normalize(spec)
-
-const files = [
-  { path: "src/generated/opcodes.generated.ts", contents: opcodes(rows) },
-  { path: "src/generated/operations.generated.ts", contents: operations(rows) },
-  { path: "src/generated/client.generated.ts", contents: client(rows) },
-  { path: "docs/dev/protocol.md", contents: reference(rows) },
-]
-
-for (const file of files) {
-  const full = join(root, file.path)
-  mkdirSync(dirname(full), { recursive: true })
-  writeFileSync(full, file.contents)
+/** Every file the specification gives, before formatting; `scripts/generate.test.ts` checks the committed ones. */
+export const generatedFiles = (spec: readonly Entry[]): { path: string; contents: string }[] => {
+  const rows = normalize(spec)
+  return [
+    { path: "src/generated/opcodes.generated.ts", contents: opcodes(rows) },
+    { path: "src/generated/operations.generated.ts", contents: operations(rows) },
+    { path: "src/generated/client.generated.ts", contents: client(rows) },
+    { path: "docs/dev/protocol.md", contents: reference(rows) },
+  ]
 }
 
-// Formatting happens here rather than being left to the linter: `pnpm generate` and `pnpm lint`
-// disagreeing is what turns the staleness check in CI into a permanent failure.
-execFileSync("pnpm", ["exec", "biome", "check", "--write", "--no-errors-on-unmatched", ...files.map((f) => f.path)], {
-  cwd: root,
-  stdio: "ignore",
-  // pnpm is a .cmd script on Windows, which only a shell starts.
-  shell: process.platform === "win32",
-})
-
-console.log(`generated ${files.length} files from ${rows.length} entries`)
+if (import.meta.main) {
+  const root = join(dirname(fileURLToPath(import.meta.url)), "..")
+  const { spec } = await import("../dist/spec/index.js")
+  const files = generatedFiles(spec)
+  for (const file of files) {
+    const full = join(root, file.path)
+    mkdirSync(dirname(full), { recursive: true })
+    writeFileSync(full, formatted(root, file.path, file.contents))
+  }
+  console.log(`generated ${files.length} files from ${spec.length} entries`)
+}

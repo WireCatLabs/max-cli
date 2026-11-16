@@ -166,22 +166,36 @@ describe("the program", () => {
     expect((await runWith(["--help"])).stdout).toContain("Usage: max")
   })
 
-  it("prints help and exits 0 for `--help` on every command", async () => {
-    type Node = { name(): string; commands: readonly Node[] }
-    const leaves = (command: Node, path: string[] = []): string[][] =>
+  it("prints help for `--help` on every command", async () => {
+    let help = ""
+    const program = createProgram({ out: (text) => (help += text), err: (text) => (help += text) })
+    program.setOptionValue("profile", "h-sweep")
+    type Node = { name(): string; commands: readonly Node[]; outputHelp(): void }
+    const leaves = (command: Node, path: string[] = []): [string[], Node][] =>
       command.commands.flatMap((child) => {
         const here = [...path, child.name()]
-        return child.commands.length === 0 ? [here] : leaves(child, here)
+        return child.commands.length === 0 ? [[here, child] as [string[], Node]] : leaves(child, here)
       })
-    const paths = leaves(createProgram()).filter(([top]) => top !== "help")
+    const found = leaves(program).filter(([[top]]) => top !== "help")
     const failed: string[] = []
-    for (const path of paths) {
-      const { code, stderr } = await runWith(["h-sweep", ...path, "--help"], { keyring: memoryKeyring() })
-      if (code !== 0) failed.push(`${path.join(" ")}: ${code} ${stderr}`)
+    // One program for every command: a `run()` each builds the whole tree again, 300 times over (WC-TEST-20).
+    // `outputHelp()`, not `helpInformation()`, because the Returns, Next and Example lines are added as help text.
+    for (const [path, command] of found) {
+      help = ""
+      try {
+        command.outputHelp()
+        if (!help.includes("Usage: max ") || !help.includes("Example")) failed.push(`${path.join(" ")}: ${help}`)
+      } catch (error) {
+        failed.push(`${path.join(" ")}: ${(error as Error).message}`)
+      }
     }
-    expect(paths.length).toBeGreaterThan(300)
+    expect(found.length).toBeGreaterThan(300)
     expect(failed).toEqual([])
-  }, 120_000)
+
+    const { code, stdout } = await runWith(["h-sweep", "chats", "list", "--help"], { keyring: memoryKeyring() })
+    expect(code).toBe(0)
+    expect(stdout).toContain("Usage: max <profile> chats list")
+  })
 
   it("**opens on the first screen**, which says what max does and where the full list is", async () => {
     const { stdout } = await runWith(["--help"])

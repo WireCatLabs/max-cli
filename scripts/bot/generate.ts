@@ -6,7 +6,6 @@
  *
  * Reads only `spec/bot/`; never the network. `pnpm bot:spec:sync` refreshes the snapshot.
  */
-import { execFileSync } from "node:child_process"
 import { readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
@@ -20,6 +19,7 @@ import {
   writeArtifacts,
 } from "@wirecat/cli-base/codegen"
 import { parse } from "yaml"
+import { formatted } from "../format.ts"
 import { overrides } from "./overrides.ts"
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "../..")
@@ -46,17 +46,7 @@ const artifacts = generate(
   { overrides, banner: ["Source: spec/bot/schema.yaml", "Run: pnpm bot:generate"] },
 )
 
-const biome = join(root, "node_modules/@biomejs/biome/bin/biome")
-const format = (path: string, content: string): string =>
-  path.endsWith(".ts")
-    ? execFileSync(process.execPath, [biome, "check", "--write", `--stdin-file-path=${path}`], {
-        input: content,
-        encoding: "utf8",
-        cwd: root,
-      })
-    : content
-
-const stale = writeArtifacts(artifacts, { root, check, format })
+const stale = writeArtifacts(artifacts, { root, check, format: (path, content) => formatted(root, path, content) })
 if (check && stale.length > 0) {
   process.stderr.write(`out of date — run pnpm bot:generate:\n${stale.map((path) => `  ${path}`).join("\n")}\n`)
   process.exit(1)
