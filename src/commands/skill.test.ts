@@ -1,6 +1,7 @@
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { fileURLToPath } from "node:url"
 import { captureStreams } from "@wirecat/cli-base"
 import { validateSkill } from "@wirecat/cli-core/skill-validation"
 import type { Command } from "commander"
@@ -14,7 +15,7 @@ const references = readdirSync(referencesDir)
   .filter((name) => name.endsWith(".md"))
   .map((name) => {
     const file = new URL(name, referencesDir)
-    return { name, path: file.pathname, content: readFileSync(file, "utf8") }
+    return { name, path: fileURLToPath(file), content: readFileSync(file, "utf8") }
   })
 // validateSkill reads frontmatter first; a reference has none, so it gets the skill's own.
 const asSkill = (body: string) => `---\nname: max-cli\ndescription: reference\n---\n${body}`
@@ -47,7 +48,7 @@ describe("the skill an agent is given", () => {
   })
 
   it("links only reference files that ship, and every reference names only commands and links that exist", () => {
-    const file = new URL("../../skills/max-cli/SKILL.md", import.meta.url).pathname
+    const file = fileURLToPath(new URL("../../skills/max-cli/SKILL.md", import.meta.url))
     expect(validateSkill(skill, { folder: "max-cli", file, program })).toEqual([])
     expect(references.length).toBeGreaterThan(0)
     for (const { name, path, content } of references)
