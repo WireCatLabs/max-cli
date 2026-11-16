@@ -22,7 +22,8 @@ metadata:
 **Первое слово — профиль:** `max work chats list` — профиль `work`; флага `--profile` нет. **Профиль не
 подразумевается, даже единственный:** без него код `2` и список `error.details.profiles` — спросите владельца,
 не берите первый. Без профиля работают `--help`, `commands`, `skill show`, `account list`, `config show`.
-Ниже `personal` — пример. Нет входа (код `4`) — [setup.md](references/setup.md).
+Ниже `personal` — пример. Нет входа (код `4`) — владелец сам запускает `max personal setup` в своём терминале
+([setup.md](references/setup.md)).
 
 ## Главные задачи
 
