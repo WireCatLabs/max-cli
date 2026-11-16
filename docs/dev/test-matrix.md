@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 241 ⛔ · 0 ❌** — 383 commands, 788 options.
+**930 ✅ · 243 ⛔ · 0 ❌** — 383 commands, 790 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -493,7 +493,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `projects evidence` | `--alias` | ✅ |  |
 | `projects evidence` | `--context-query` | ✅ |  |
 | `projects evidence` | `--contact` | ✅ |  |
-| `projects evidence` | `--purpose` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("reads every linked chat with --purpose all, and the asked one with --purpose sales") drives the shared command MAX mounts (0.553.0) |
+| `projects evidence` | `--purposes` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("reads every linked chat with --purpose all, and the asked one with --purpose sales") drives the shared command MAX mounts (0.553.0) |
+| `projects evidence` | `--purpose` | ⛔ | the hidden old name of --purposes, kept for one version by the shared command (cli-core 0.674.0) |
 | `projects evidence` | `--include-proposed` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("reads a proposed chat only with --include-proposed, and marks every item it alone brought") drives the shared command MAX mounts (0.553.0) |
 | `projects evidence` | `--since-time` | ✅ |  |
 | `projects evidence` | `--before-time` | ✅ |  |
@@ -508,7 +509,8 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `projects status` |  | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
 | `projects status` | `--since-time` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
 | `projects status` | `--before-time` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
-| `projects status` | `--purpose` | ⛔ | cli-core src/services/project-status/project-status.test.ts ("reads only the default purposes, and leaves every chat out when none of them is asked") covers the shared status MAX mounts (0.553.0) |
+| `projects status` | `--purposes` | ⛔ | cli-core src/services/project-status/project-status.test.ts ("reads only the default purposes, and leaves every chat out when none of them is asked") covers the shared status MAX mounts (0.553.0) |
+| `projects status` | `--purpose` | ⛔ | the hidden old name of --purposes, kept for one version by the shared command (cli-core 0.674.0) |
 | `projects status` | `--context-query` | ⛔ | cli-core src/cli/messenger/projects-command.test.ts ("answers from the store alone, for this profile's account, and syncs the chat it holds in part first") drives the shared command MAX mounts, over the store (0.551.0) |
 | `conversations list` |  | ✅ |  |
 | `conversations list` | `--limit` | ✅ |  |

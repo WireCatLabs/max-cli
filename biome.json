@@ -12,6 +12,7 @@
       "!config/wirecat",
       "!lint/baseline",
       "!contracts/bot-catalogue.json",
+      "!contracts/wirecat.json",
       "!contracts/previous",
       "!spec/bot/schema.yaml"
     ]
