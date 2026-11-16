@@ -25,9 +25,10 @@ export const PACKED = [
   "scenarios/",
   "install/postinstall.mjs",
   "install/windows.ps1",
+  "contracts/wirecat.json",
 ]
 export const PACKED_SAID =
-  "dist/, package.json, README.md, LICENSE, the agent skill, the scenarios and installation entrypoints"
+  "dist/, package.json, README.md, LICENSE, the agent skill, the scenarios, installation entrypoints and the WireCat manifest"
 
 const GENERATED = new Set(["docs/commands.md", "docs/dev/protocol.md"])
 

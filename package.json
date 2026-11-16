@@ -23,12 +23,13 @@
     "skills",
     "scenarios",
     "install",
+    "contracts/wirecat.json",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "build": "tsc --build --force && cli-dev bundle --bin dist/bin/max.js --external ws",
-    "generate": "node --experimental-strip-types scripts/bot/generate.ts && pnpm build && node --experimental-strip-types scripts/generate.ts && node --experimental-strip-types scripts/commands.ts",
+    "generate": "node --experimental-strip-types scripts/bot/generate.ts && pnpm build && node --experimental-strip-types scripts/generate.ts && node --experimental-strip-types scripts/commands.ts && cli-dev manifest --program dist/program.js --identity dist/wcat.js",
     "bot:spec:sync": "node --experimental-strip-types scripts/bot/sync-spec.ts",
     "bot:generate": "node --experimental-strip-types scripts/bot/generate.ts",
     "bot:generate:check": "node --experimental-strip-types scripts/bot/generate.ts --check",
@@ -105,8 +106,8 @@
   },
   "dependencies": {
     "@msgpack/msgpack": "3.1.3",
-    "@wirecat/cli-base": "0.101.0",
-    "@wirecat/cli-core": "0.665.0",
+    "@wirecat/cli-base": "0.103.0",
+    "@wirecat/cli-core": "0.674.0",
     "commander": "15.0.0",
     "lossless-json": "4.3.3",
     "ogg-opus-decoder": "1.7.5",

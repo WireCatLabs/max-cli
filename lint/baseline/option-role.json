@@ -1,7 +1,7 @@
 [
   "projects evidence --include-proposed",
-  "projects evidence --purpose",
-  "projects status --purpose",
+  "projects evidence --purposes",
+  "projects status --purposes",
   "replies audience --reply",
   "replies edit --as-reply",
   "replies edit --contacts-only",

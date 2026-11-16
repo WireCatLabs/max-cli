@@ -8,14 +8,19 @@ export const PROJECTS_UNTESTED: Untested[] = [
     ...(option ? { option } : {}),
     reason: `cli-core ${STATUS_TEST} drives the shared command MAX mounts, over the store (0.551.0)`,
   })),
+  ...["projects evidence", "projects status"].map((command) => ({
+    command,
+    option: "--purpose",
+    reason: "the hidden old name of --purposes, kept for one version by the shared command (cli-core 0.674.0)",
+  })),
   {
     command: "projects status",
-    option: "--purpose",
+    option: "--purposes",
     reason: `cli-core src/services/project-status/project-status.test.ts ("reads only the default purposes, and leaves every chat out when none of them is asked") covers the shared status MAX mounts (0.553.0)`,
   },
   {
     command: "projects evidence",
-    option: "--purpose",
+    option: "--purposes",
     reason: `cli-core src/cli/messenger/projects-command.test.ts ("reads every linked chat with --purpose all, and the asked one with --purpose sales") drives the shared command MAX mounts (0.553.0)`,
   },
   {
