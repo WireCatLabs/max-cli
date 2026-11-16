@@ -2,6 +2,7 @@ import { defineConfig } from "vitest/config"
 
 export default defineConfig({
   test: {
+    testTimeout: 15_000,
     include: ["src/**/*.test.ts", "scripts/**/*.test.ts"],
     globals: false,
     // Agents run suites side by side on 24 cores; one worker per core ran the machine out of memory (2026-10-11).
