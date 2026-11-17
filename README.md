@@ -11,7 +11,8 @@
 
 <p align="center">
   <a href="https://wirecat.dev/ru/docs/max">Документация</a> ·
-  <a href="https://github.com/WireCatLabs/max-cli/blob/main/docs/recipes.md">Примеры</a> ·
+  <a href="https://github.com/WireCatLabs/max-cli/blob/main/docs/installation.md">Установка</a> ·
+  <a href="https://github.com/WireCatLabs/max-cli/blob/main/docs/usage.md">Использование</a> ·
   <a href="https://t.me/wirecatdev">Чат в Telegram</a>
 </p>
 
