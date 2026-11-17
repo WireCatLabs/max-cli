@@ -228,6 +228,9 @@ message id** and **one** copy, also across two connections and logins — the ca
 - Measured in Saved messages — the same `cid` resent 5 and 15 minutes after the first send got
   the first message's id back each time, and one copy stayed. Fifteen minutes is the longest gap measured; beyond
   it is unproven, and `--operation-id` reuse hours later should not be relied on.
+- Through `max serve`, the command waits 5 s longer than the server waits for MAX, so the server's "MAX did not
+  answer" comes first and the retry follows the first attempt instead of racing it. Two sends with one `cid` in flight
+  at once were never measured.
 - `cid` is monotonic per process. `Date.now()` alone gave two sends in one millisecond the same
   `cid`, and deduplication would have silently dropped the second. A test caught it.
 - `--silent` sends `notify: false` (normally `true`). ⚠ **Only `true` is measured**; what MAX does
