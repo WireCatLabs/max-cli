@@ -8,7 +8,7 @@ import { rememberAccount, repliesPathFor } from "@wirecat/cli-core/cli"
 import { guardedWrite, RecipientList, SendJournal } from "@wirecat/cli-core/sends"
 import { openStore } from "@wirecat/cli-core/store"
 import { Command } from "commander"
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { MAX_APP } from "../app.js"
 import { MaxClient } from "../client.js"
 import { contextFor } from "../commands/context.js"
@@ -1448,6 +1448,39 @@ describe("starting a server in the background", () => {
     })
     await wire.close()
     server.close()
+  })
+
+  it("waits past its own timeout for the server, so a retried send never overlaps the first (RISK-2320)", async () => {
+    const store = new SessionStore({ profile: "v-grace", keyring: memoryKeyring() })
+    let answer: (() => void) | undefined
+    let received: () => void = () => {}
+    const arrived = new Promise<void>((resolve) => {
+      received = resolve
+    })
+    const server = createServer((socket) =>
+      socket.on(
+        "data",
+        lineReader((line) => {
+          const { id } = fromLine(line)
+          answer = () => socket.write(toLine({ id, payload: { ok: true } }))
+          received()
+        }),
+      ),
+    )
+    await new Promise<void>((resolve) => server.listen(store.socketPath(), () => resolve()))
+    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+    try {
+      const wire = new ServerConnection({ path: store.socketPath(), store, timeoutMs: 30_000 })
+      const reply = wire.invoke(Opcode.MSG_SEND, {})
+      await arrived
+      vi.advanceTimersByTime(30_001)
+      answer?.()
+      await expect(reply).resolves.toEqual({ ok: true })
+      await wire.close()
+    } finally {
+      vi.useRealTimers()
+      server.close()
+    }
   })
 
   it("lets `ensure` check the server before the first request, even one that answers, and only once", async () => {

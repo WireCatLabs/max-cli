@@ -11,6 +11,10 @@ import type { SessionStore } from "../session/store.js"
 import type { Operation } from "../spec/define.js"
 import { fromLine, lineReader, toLine } from "./lines.js"
 
+// The server waits for MAX as long as the command would; waiting longer lets its "MAX did not answer" arrive first, so
+// a retried send never overlaps the first (RISK-2320): the same `cid` sent again after one is measured to be dropped.
+const SERVER_GRACE_MS = 5_000
+
 interface Pending {
   resolve: (answer: Record<string, unknown>) => void
   reject: (error: Error) => void
@@ -162,10 +166,11 @@ export class ServerConnection implements Wire {
     this.#id += 1
     const id = this.#id
     const answer = await new Promise<Record<string, unknown>>((resolve, reject) => {
+      const waitMs = this.#timeoutMs + SERVER_GRACE_MS
       const timer = setTimeout(() => {
         this.#pending.delete(id)
-        reject(new Error(`max serve did not answer within ${this.#timeoutMs}ms`))
-      }, this.#timeoutMs)
+        reject(new Error(`max serve did not answer within ${waitMs}ms`))
+      }, waitMs)
       this.#pending.set(id, { resolve, reject, timer })
       socket.write(toLine({ id, ...request }))
     })
