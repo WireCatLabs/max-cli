@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { errorObjectOf, memoryKeyring } from "@wirecat/cli-base"
+import { brokenKeyring, errorObjectOf, memoryKeyring } from "@wirecat/cli-base"
 import { type DiagnosticEvent, REMOTE_WRITE } from "@wirecat/cli-core/cli"
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { MaxClient } from "./client.js"
@@ -134,6 +134,29 @@ describe("MaxClient", () => {
     await expect(client.connect()).rejects.toMatchObject({
       code: "provider_unavailable",
       details: { reason: "credentials.unreachable" },
+    })
+  })
+
+  it("**takes a keyring that does not answer as temporary in a background run**, and reports it to a command", async () => {
+    const max = mockMax({ answers: {} })
+    const dir = mkdtempSync(join(tmpdir(), "max-cli-"))
+    const options = {
+      profile: "default",
+      keyring: brokenKeyring(),
+      configDir: dir,
+      stateDir: join(dir, "state"),
+      env: {},
+    }
+    const store = new SessionStore(options)
+    const connection = () => new Connection({ createSocket: max.createSocket, timeoutMs: 50 })
+
+    await expect(new MaxClient({ store, connection: connection(), background: true }).connect()).rejects.toMatchObject({
+      code: "provider_unavailable",
+      details: { reason: "credentials.unreachable" },
+    })
+    await expect(new MaxClient({ store, connection: connection() }).connect()).rejects.toMatchObject({
+      code: "configuration_error",
+      details: { reason: "keyring.unreachable" },
     })
   })
 

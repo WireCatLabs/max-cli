@@ -1292,3 +1292,40 @@ export type FailedUserDetails = {
   /** List of user IDs failed to add */
   user_ids: Array<UserId>
 }
+
+/** What each operation answers, by its id. */
+export interface Responses {
+  getMyInfo: BotInfo
+  editMyCommands: BotCommandsInfo
+  getChat: Chat
+  editChat: Chat
+  sendAction: unknown
+  getPinnedMessage: GetPinnedMessageResult
+  pinMessage: unknown
+  unpinMessage: unknown
+  getMembership: ChatMember
+  leaveChat: unknown
+  getAdmins: ChatMembersList
+  postAdmins: unknown
+  deleteAdmins: unknown
+  getMembers: ChatMembersList
+  addMembers: ModifyMembersResult
+  removeMember: unknown
+  getSubscriptions: GetSubscriptionsResult
+  subscribe: unknown
+  unsubscribe: unknown
+  getUploadUrl: UploadEndpoint
+  getMessages: MessageList
+  sendMessage: SendMessageResult
+  editMessage: unknown
+  deleteMessage: unknown
+  getMessageById: Message
+  getComments: CommentMessageList
+  sendComment: SendCommentResult
+  editComment: unknown
+  deleteComment: unknown
+  getCommentById: CommentMessage
+  getVideoAttachmentDetails: VideoAttachmentDetails
+  answerOnCallback: unknown
+  getUpdates: UpdateList
+}

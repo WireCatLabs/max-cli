@@ -1957,21 +1957,74 @@ max messages send <chat> [text] [options]
 
 ### `max messages scheduled`
 
-messages waiting to be sent later in a chat, soonest first; cancel one in the app
+messages waiting to be sent later in a chat, soonest first, with their scheduled ids
+
+#### `max messages scheduled cancel`
+
+cancel scheduled messages before they are sent; they cannot be got back
+
+**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
 
 ```sh
-max messages scheduled <chat>
+max messages scheduled cancel <chat> <scheduled-id> [options]
 ```
 
 | Аргумент | | Что это |
 |---|---|---|
 | `chat` | обязательный | a chat: its id, or part of its title. |
+| `scheduled-id` | обязательный | the scheduled ids `messages scheduled <chat>` lists, by spaces or commas, at most 10; never the id of a sent message. |
 
-**Returns:** message — ref, id, chat_id, sender_id, sender_name, sender_is_me, timestamp, edited_at, and 31 more; every field: max commands info messages scheduled
+| Опция | Что делает |
+|---|---|
+| `--allow-dangerous` | go ahead without the question an ask level puts before a cancellation. |
 
-**Next usually:** `max messages links <chat> <message>`, `max messages transcribe <chat> <message>`, `max stats messages evidence <message>`
+**Returns:** scheduled cancellation — operation_id, chat_id, cancelled; every field: max commands info messages scheduled cancel
 
-**Example:** `max personal messages scheduled "Book club"`
+**Example:** `max personal messages scheduled cancel "Book club" 3`
+
+#### `max messages scheduled edit`
+
+change the text or the time of a scheduled message before it is sent
+
+**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
+
+```sh
+max messages scheduled edit <chat> <scheduled-id> [text] [options]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `scheduled-id` | обязательный | the scheduled id `messages scheduled <chat>` lists; never the id of a sent message. |
+| `text` | необязательный | the new text; without it and without --at-time, read from stdin. |
+
+| Опция | Что делает |
+|---|---|
+| `--at-time <time>` | send it at this time instead: 2026-09-25T09:00 (local time), or 30m, 2h, 1d from now. |
+| `--md` | read this messenger's Markdown; see its formatting guide for supported syntax. |
+
+**Returns:** message write — operation_id, message, messages, scheduled_for; every field: max commands info messages scheduled edit
+
+**Example:** `max personal messages scheduled edit "Book club" 3 "The meeting starts at 11."`, `max personal messages scheduled edit "Book club" 3 --at-time 2026-12-01T09:00`
+
+#### `max messages scheduled send`
+
+deliver what is scheduled right away instead of at its time; each gets a new id
+
+**Меняет что-то вне этого компьютера: в MAX или во внешнем сервисе.**
+
+```sh
+max messages scheduled send <chat> <scheduled-id>
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `chat` | обязательный | a chat: its id, or part of its title. |
+| `scheduled-id` | обязательный | the scheduled ids `messages scheduled <chat>` lists, by spaces or commas, at most 10; never the id of a sent message. |
+
+**Returns:** scheduled send — operation_id, chat_id, sent, messages; every field: max commands info messages scheduled send
+
+**Example:** `max personal messages scheduled send "Book club" 3`
 
 ### `max messages edit`
 

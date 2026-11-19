@@ -43,3 +43,13 @@ Run: pnpm bot:generate
 | `getVideoAttachmentDetails` | `GET /videos/{videoToken}` | `max bot api get-video-attachment-details` | read | — | generated | Get video details |
 | `answerOnCallback` | `POST /answers` | `max bot api answer-on-callback` | write | contract | generated | Answer on callback |
 | `getUpdates` | `GET /updates` | `max bot api get-updates` | write | — | generated | Get updates |
+
+## Effects not taken from the HTTP method
+
+| Operation | Effect | Why |
+|---|---|---|
+| `unpinMessage` | write | override: the message can be pinned again |
+| `deleteAdmins` | write | override: admin rights can be granted again |
+| `removeMember` | write | override: the member can be added again |
+| `unsubscribe` | write | override: the webhook can be subscribed again |
+| `getUpdates` | write | override: passing a marker commits every earlier update; another consumer of the bot never sees them |

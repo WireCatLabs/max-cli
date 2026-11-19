@@ -137,7 +137,7 @@ const setupCommandDefinition = (): Command =>
           "validation_error",
           `this is a bot profile — use max ${asFirstWord(settings.profile)}bot auth set; setup is for your personal account`,
         )
-      const reused = store.readToken() !== undefined
+      const reused = store.tokenBeforeSignIn() !== undefined
       if (
         !reused &&
         !store.hasLoggedIn() &&

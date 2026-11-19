@@ -1209,13 +1209,55 @@
         "messages",
         "scheduled"
       ],
-      "summary": "messages waiting to be sent later in a chat, soonest first; cancel one in…",
+      "summary": "messages waiting to be sent later in a chat, soonest first, with their…",
       "effects": {
         "remote": "read",
         "local": "read"
       },
       "permission": "messages.scheduled",
       "entity": "message"
+    },
+    {
+      "path": [
+        "messages",
+        "scheduled",
+        "cancel"
+      ],
+      "summary": "cancel scheduled messages before they are sent; they cannot be got back",
+      "effects": {
+        "remote": "write",
+        "local": "write"
+      },
+      "permission": "messages.scheduled.cancel",
+      "entity": "scheduled_cancellation"
+    },
+    {
+      "path": [
+        "messages",
+        "scheduled",
+        "edit"
+      ],
+      "summary": "change the text or the time of a scheduled message before it is sent",
+      "effects": {
+        "remote": "write",
+        "local": "write"
+      },
+      "permission": "messages.scheduled.edit",
+      "entity": "message_write"
+    },
+    {
+      "path": [
+        "messages",
+        "scheduled",
+        "send"
+      ],
+      "summary": "deliver what is scheduled right away instead of at its time; each gets a new id",
+      "effects": {
+        "remote": "write",
+        "local": "write"
+      },
+      "permission": "messages.scheduled.send",
+      "entity": "scheduled_send"
     },
     {
       "path": [
@@ -5622,6 +5664,44 @@
       "app": "max-cli",
       "env": "MAX"
     },
-    "settings": null
+    "settings": null,
+    "accountRemove": {
+      "signOut": [
+        "{profile}",
+        "session",
+        "end",
+        "--record",
+        "--json"
+      ],
+      "remove": {
+        "minVersion": "0.0.0",
+        "keepData": [
+          "{profile}",
+          "account",
+          "remove",
+          "--keep-data",
+          "--record",
+          "--json"
+        ],
+        "deleteData": [
+          "{profile}",
+          "account",
+          "remove",
+          "--delete-data",
+          "--record",
+          "--json"
+        ],
+        "dryRun": "--dry-run",
+        "confirm": "--yes"
+      },
+      "removes": [
+        "signIn"
+      ],
+      "keeps": [
+        "settings",
+        "data",
+        "listed"
+      ]
+    }
   }
 }
