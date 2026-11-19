@@ -26,6 +26,8 @@ Works with:
   pbx                               Asterisk PBX calls and recordings, searchable with your other WireCat data
   notion                            Notion pages and databases as local text, searchable with your other WireCat data
   ydisk                             Yandex Disk folders as local text, searchable with your other WireCat data
+  wordpress                         WordPress posts and pages, searchable with your other WireCat data
+  linear                            Linear issues and projects, searchable with your other WireCat data
 
 Start here:   max personal setup  (any profile name works)
               max account list    your profiles and their logged-in accounts

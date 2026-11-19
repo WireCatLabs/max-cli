@@ -106,8 +106,8 @@
   },
   "dependencies": {
     "@msgpack/msgpack": "3.1.3",
-    "@wirecat/cli-base": "0.124.0",
-    "@wirecat/cli-core": "0.707.0",
+    "@wirecat/cli-base": "0.125.0",
+    "@wirecat/cli-core": "0.714.0",
     "commander": "15.0.0",
     "lossless-json": "4.3.3",
     "ogg-opus-decoder": "1.7.5",
