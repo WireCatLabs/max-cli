@@ -1,4 +1,4 @@
-import { CliError } from "@wirecat/cli-base"
+import { CliError, isCliError } from "@wirecat/cli-base"
 import type { Id } from "@wirecat/cli-core"
 import { toChat, toContact, toProfile } from "../domain/map.js"
 import type { Invoke, wireClient } from "../generated/client.generated.js"
@@ -63,10 +63,18 @@ export const createSession = (deps: Dependencies) => {
   async function performConnect({ token: candidate }: { token?: string } = {}): Promise<void> {
     if (deps.offline)
       throw new CliError("validation_error", "`--offline` reads through the shared store; it cannot connect to MAX")
-    const token = candidate ?? deps.store.readToken()
+    let token: string | undefined
+    try {
+      token = candidate ?? deps.store.readToken()
+    } catch (error) {
+      // A background run retries later, when the keyring opens again (MAX-50).
+      if (deps.background && isCliError(error) && error.details.reason === "keyring.unreachable")
+        throw new CliError("provider_unavailable", error.message, { reason: "credentials.unreachable" })
+      throw error
+    }
     if (!token) {
       const profile = deps.store.profile
-      // cli-base swallows a keyring that will not open, so the state file is the only witness: a
+      // A keyring that answers without the token leaves the state file as the only witness: a
       // profile that has logged in lost its keyring, not its session, and another login would
       // register one more device for nothing (MAX-50, measured from cron 2026-09-25).
       if (deps.store.hasLoggedIn()) {

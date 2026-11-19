@@ -121,6 +121,13 @@ describe("where the token is kept (WC-SECR-4)", () => {
     await client.close()
   })
 
+  it("reads no token before a sign-in when the keyring fails, and still says so to every other read", async () => {
+    const { client, store } = setup(mockMax({ answers }), undefined, brokenKeyring())
+    expect(store.tokenBeforeSignIn()).toBeUndefined()
+    expect(() => store.readToken()).toThrow(expect.objectContaining({ details: { reason: "keyring.unreachable" } }))
+    await client.close()
+  })
+
   it("keeps the token in the file when asked, and a rotation stays there", async () => {
     const { client, store } = setup(mockMax({ answers }))
     expect(await adoptToken(client, store, "the-pasted-one", "file")).toBe("file")

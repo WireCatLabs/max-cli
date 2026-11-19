@@ -27,7 +27,7 @@ export const adoptToken = async (
   token: string,
   storage?: "keyring" | "file",
 ): Promise<"keyring" | "file" | undefined> => {
-  const before = store.readToken()
+  const before = store.tokenBeforeSignIn()
   await client.connect({ token })
 
   // ⚠ **Only if the login did not already leave a better one.** MAX answers a login with a fresh
@@ -35,10 +35,10 @@ export const adoptToken = async (
   // would put back the older credential. Comparing with what was stored before, rather than asking
   // whether anything is stored, is what lets a new login replace an old session at all — until
   // 2026-09-24 a profile that already held a token kept it, and the command still said "stored".
-  const after = store.readToken()
+  const after = store.tokenBeforeSignIn()
   // A fresh token `connect` already kept went where the old one was; `storage` moves it where the owner asked.
   let kept: "keyring" | "file" | undefined
-  if (after === before) kept = store.writeToken(token, storage)
+  if (after === before || after === undefined) kept = store.writeToken(token, storage)
   else if (after !== undefined && storage) kept = store.writeToken(after, storage)
   // A new session: background servers may try again at once.
   rmSync(refusedPath(store), { force: true })

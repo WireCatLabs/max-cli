@@ -5,7 +5,7 @@ import { SHARED_0599_UNTESTED } from "./test-matrix-shared-0599.ts"
 import { SHARED_0609_UNTESTED } from "./test-matrix-shared-0609.ts"
 import { SHARED_0624_UNTESTED } from "./test-matrix-shared-0624.ts"
 import { SHARED_0647_UNTESTED } from "./test-matrix-shared-0647.ts"
-import { SHARED_0664_UNTESTED } from "./test-matrix-shared-0664.ts"
+import { SHARED_0664_0706_UNTESTED } from "./test-matrix-shared-0706.ts"
 
 /**
  * What `max` cannot test offline, each with the reason and where it is checked instead. An entry
@@ -23,7 +23,7 @@ export const UNTESTED: Untested[] = [
   ...SHARED_0563_UNTESTED,
   ...SHARED_0599_UNTESTED,
   ...SHARED_0647_UNTESTED,
-  ...SHARED_0664_UNTESTED,
+  ...SHARED_0664_0706_UNTESTED,
   ...SHARED_0609_UNTESTED,
   ...[
     [

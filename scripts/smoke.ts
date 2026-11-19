@@ -80,9 +80,12 @@ check("`runs list` says on stderr why it is empty", empty.stderr.includes("nothi
 // nothing is only a line in the day's index, so the run kept with a folder is a failed `chats list`: offline, in this
 // directory, it is refused for want of a session, which proves the run directory, the atomic `run.json` and the log
 // stream all work under this runtime.
-const recordedRun = maxHere("session", "end", "--record", "--json")
+const recordedRun = maxHere("doctor", "--record", "--json")
 check("a recorded command exits cleanly", recordedRun.status === 0)
-check("a recorded command still prints its own answer", JSON.parse(recordedRun.stdout).item?.forgotten === false)
+check("a recorded command still prints its own answer", JSON.parse(recordedRun.stdout).item?.token?.present === false)
+// With no keyring, "no session" could hide a sign-in the keyring still holds (cli-base keyring.unreachable).
+const endWithoutKeyring = maxHere("session", "end", "--json")
+check("session end names a keyring that does not answer", endWithoutKeyring.stderr.includes('"keyring.unreachable"'))
 const failedRun = maxHere("chats", "list", "--no-serve", "--json")
 check("a command without a session fails", failedRun.status !== 0)
 
@@ -101,7 +104,7 @@ type Listed = { run_id?: string; command?: string; status?: string }
 const listed = (JSON.parse(maxHere("runs", "list", "--json").stdout).items ?? []) as Listed[]
 check(
   "`runs list` finds the success kept as an index line",
-  listed.some((run) => run.command === "session end" && run.status === "success"),
+  listed.some((run) => run.command === "doctor" && run.status === "success"),
 )
 check(
   "`runs list` finds the failure kept with its folder",

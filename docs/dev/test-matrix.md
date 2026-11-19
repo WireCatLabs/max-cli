@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 243 ⛔ · 0 ❌** — 383 commands, 790 options.
+**930 ✅ · 249 ⛔ · 0 ❌** — 386 commands, 793 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -234,6 +234,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `messages send` | `--at-time` | ✅ |  |
 | `messages send` | `--sticker` | ✅ |  |
 | `messages scheduled` |  | ✅ |  |
+| `messages scheduled cancel` |  | ⛔ | MAX has no scheduled-message actions, so cli-core refuses them with "this messenger cannot …"; cli-core src/cli/messenger/messages-scheduled.test.ts drives the shared command and its refusal (cli-core 0.706.0) |
+| `messages scheduled cancel` | `--allow-dangerous` | ⛔ | MAX has no scheduled-message actions, so cli-core refuses them with "this messenger cannot …"; cli-core src/cli/messenger/messages-scheduled.test.ts drives the shared command and its refusal (cli-core 0.706.0) |
+| `messages scheduled edit` |  | ⛔ | MAX has no scheduled-message actions, so cli-core refuses them with "this messenger cannot …"; cli-core src/cli/messenger/messages-scheduled.test.ts drives the shared command and its refusal (cli-core 0.706.0) |
+| `messages scheduled edit` | `--at-time` | ⛔ | MAX has no scheduled-message actions, so cli-core refuses them with "this messenger cannot …"; cli-core src/cli/messenger/messages-scheduled.test.ts drives the shared command and its refusal (cli-core 0.706.0) |
+| `messages scheduled edit` | `--md` | ⛔ | MAX has no scheduled-message actions, so cli-core refuses them with "this messenger cannot …"; cli-core src/cli/messenger/messages-scheduled.test.ts drives the shared command and its refusal (cli-core 0.706.0) |
+| `messages scheduled send` |  | ⛔ | MAX has no scheduled-message actions, so cli-core refuses them with "this messenger cannot …"; cli-core src/cli/messenger/messages-scheduled.test.ts drives the shared command and its refusal (cli-core 0.706.0) |
 | `messages edit` |  | ✅ |  |
 | `messages edit` | `--md` | ✅ |  |
 | `messages delete` |  | ✅ |  |

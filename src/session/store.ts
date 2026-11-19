@@ -4,6 +4,7 @@ import { join } from "node:path"
 import {
   type CredentialSource,
   Credentials,
+  isCliError,
   isMovedRun,
   type KeyringStore,
   resolvePaths,
@@ -103,6 +104,19 @@ export class SessionStore {
   /** `undefined` means nobody has logged in on this profile. */
   readToken(): string | undefined {
     return this.#read()?.secret
+  }
+
+  /**
+   * Before a sign-in: it lands in the file when the keyring does not answer, so a token the keyring cannot give is
+   * none.
+   */
+  tokenBeforeSignIn(): string | undefined {
+    try {
+      return this.readToken()
+    } catch (error) {
+      if (isCliError(error) && error.details.reason === "keyring.unreachable") return undefined
+      throw error
+    }
   }
 
   /** Where `readToken` found it: `MAX_TOKEN`, the keyring, or the file that stands in for one. */

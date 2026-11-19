@@ -2,7 +2,7 @@
 // Source: spec/bot/schema.yaml
 // Run: pnpm bot:generate
 
-import type { ManifestOperation } from "@wirecat/cli-base/codegen"
+import type { ApiServer, ManifestOperation, SecurityRequirement, SecurityScheme } from "@wirecat/cli-base/codegen"
 
 export const operations: readonly ManifestOperation[] = [
   {
@@ -1247,5 +1247,27 @@ export const operations: readonly ManifestOperation[] = [
       confidence: "contract",
       schema: "UpdateList",
     },
+  },
+]
+
+export const servers: readonly ApiServer[] = [
+  {
+    url: "/",
+  },
+]
+
+export const securitySchemes: Readonly<Record<string, SecurityScheme>> = {
+  access_token: {
+    description:
+      "A token is given to you on https://business.max.ru/ after you have created a bot.\nIn all subsequent requests to the Bot API, you **must** pass the received token as an Authorization header in the HTTPS request. ",
+    name: "Authorization",
+    in: "header",
+    type: "apiKey",
+  },
+}
+
+export const security: readonly SecurityRequirement[] = [
+  {
+    access_token: [],
   },
 ]
