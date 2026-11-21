@@ -106,8 +106,8 @@
   },
   "dependencies": {
     "@msgpack/msgpack": "3.1.3",
-    "@wirecat/cli-base": "0.106.0",
-    "@wirecat/cli-core": "0.681.0",
+    "@wirecat/cli-base": "0.108.0",
+    "@wirecat/cli-core": "file:/var/tmp/claude/claude-1000/-home-leemour-Projects-AI-cli-template/de832675-583b-4b84-91de-a51670ff9fca/scratchpad/oauthpack/wirecat-cli-core-0.687.0.tgz",
     "commander": "15.0.0",
     "lossless-json": "4.3.3",
     "ogg-opus-decoder": "1.7.5",
