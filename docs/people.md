@@ -143,7 +143,7 @@ max personal contacts context 20000002 --chat "Книжный клуб" --sync-f
 - `more: true` — есть сообщения старше лимита; `complete: false` — копия хранит чат не с начала.
 - У голосового сообщения есть `transcript`, когда оно переведено в текст.
 
-## Бот, фейк или спамер: `contacts check`
+## Проверить признаки аккаунта и их ограничения: `contacts check`
 
 ```sh
 max personal contacts check 20000002

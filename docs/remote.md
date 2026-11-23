@@ -59,8 +59,7 @@ ChatGPT / Claude ──интернет──▶ Tailscale Funnel ──▶ max 
 | Claude | любой; на бесплатном — один свой коннектор | [custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp) |
 | Gemini | только взрослым в США с личным аккаунтом Google — из России и Европы недоступно | [connected apps](https://support.google.com/gemini/answer/17209137?hl=en) |
 
-Шаги для каждой ОС проверены не на всех системах. Если шаг не работает,
-[откройте issue](https://github.com/WireCatLabs/max-cli/issues).
+Если шаг настройки не работает, [откройте issue](https://github.com/WireCatLabs/max-cli/issues).
 
 ## 1. Подготовить Tailscale
 
