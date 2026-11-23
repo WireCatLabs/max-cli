@@ -57,8 +57,7 @@ max personal messages transcribe "Учебная группа" 204 --model parak
 max config set --defaults transcribe_model parakeet-v3
 ```
 
-Не путайте группы команд. `models audio` — модели речи. `models text` — модели для поиска и
-ключи API, это другое. Настройка `models.ocr` для картинок на распознавание голоса не влияет.
+Настройка `models.ocr` для картинок на распознавание голоса не влияет.
 
 ## Несколько сообщений
 

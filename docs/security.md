@@ -162,7 +162,7 @@
 - **Не отправляет ничего, чего не просили.** Что-то меняют только `messages send|edit|delete|forward|pin|unpin|press`,
   `reactions add|remove`, `polls vote|close|create`, `contacts add|remove|import|rename|block|unblock`,
   `account update`, `account sessions end`, `session end`, `chats join|leave|create|update|start|app`,
-  `chats members|admins …`, `chats requests confirm|decline`, `chats links reset`, `chats folders create|update|delete|order`, `chats moderate`
+  `chats members|admins …`, `chats requests confirm|reject`, `chats links reset`, `chats folders create|update|delete|order`, `chats moderate`
   (только то, что разрешают правила группы), `chats mark-read` — и каждая делает
   только то, что написано в набранной строке. `max commands --json` помечает их `effects.remote: "write"`.
 - **Удаление по умолчанию требует подтверждения.** Уровень `ask` для `messages.delete` требует
