@@ -107,7 +107,7 @@
   "dependencies": {
     "@msgpack/msgpack": "3.1.3",
     "@wirecat/cli-base": "0.126.1",
-    "@wirecat/cli-core": "0.714.0",
+    "@wirecat/cli-core": "0.717.0",
     "commander": "15.0.0",
     "lossless-json": "4.3.3",
     "ogg-opus-decoder": "1.7.5",
@@ -126,7 +126,7 @@
     "@types/node": "^22.20.5",
     "@types/ws": "^8.18.2",
     "@vitest/coverage-v8": "^5.0.5",
-    "@wirecat/cli-testing": "0.7.0",
+    "@wirecat/cli-testing": "0.7.4",
     "cspell": "10.4.0",
     "esbuild": "0.28.2",
     "lefthook": "2.2.2",
