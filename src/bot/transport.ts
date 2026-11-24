@@ -7,7 +7,7 @@ import {
   type SleepLike,
   singleLine,
 } from "@wirecat/cli-base"
-import type { ManifestOperation } from "@wirecat/cli-base/codegen"
+import type { ManifestOperation } from "@wirecat/cli-base/codegen/runtime"
 import { type FetchLike, hostFetch, providerWaitMs, statusToCode } from "@wirecat/cli-base/http"
 import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-core/cli"
 import { guardedWrite, newOperationId } from "@wirecat/cli-core/sends"

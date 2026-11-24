@@ -1,10 +1,10 @@
-import type { Override } from "@wirecat/cli-base/codegen"
+import type { ModelOverride } from "@wirecat/cli-base/codegen"
 
 /**
  * Corrections to the effect the adapter derives from the HTTP method (GET read, DELETE
  * destructive, the rest write). "Destructive" is kept for what cannot be undone.
  */
-export const overrides: Record<string, Override> = {
+export const overrides: Record<string, ModelOverride> = {
   getUpdates: {
     effect: "write",
     reason: "passing a marker commits every earlier update; another consumer of the bot never sees them",

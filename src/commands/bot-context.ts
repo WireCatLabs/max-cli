@@ -1,5 +1,5 @@
 import { CliError } from "@wirecat/cli-base"
-import type { ManifestOperation } from "@wirecat/cli-base/codegen"
+import type { ManifestOperation } from "@wirecat/cli-base/codegen/runtime"
 import { type EventSink, type Recording, startRecording, useAsProcessRun } from "@wirecat/cli-core/cli"
 import { levelFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
