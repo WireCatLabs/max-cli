@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 251 ⛔ · 0 ❌** — 386 commands, 795 options.
+**932 ✅ · 250 ⛔ · 0 ❌** — 387 commands, 795 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -15,10 +15,12 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `session start` | `--answer-stdin` | ✅ |  |
 | `session start` | `--credential-storage` | ✅ |  |
 | `session end` |  | ✅ |  |
+| `session status` |  | ✅ |  |
+| `session status` | `--check` | ✅ |  |
+| `session list` |  | ✅ |  |
 | `setup` |  | ✅ |  |
 | `setup` | `--agent` | ✅ |  |
 | `setup` | `--method` | ✅ |  |
-| `session list` |  | ✅ |  |
 | `account show` |  | ✅ |  |
 | `account show` | `--hide-phone` | ✅ |  |
 | `account update` |  | ✅ |  |
@@ -295,7 +297,6 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store info` |  | ✅ |  |
 | `store check` |  | ✅ |  |
 | `store migrate` |  | ✅ |  |
-| `store migrate` | `--no-backup` | ⛔ | cli-core src/cli/messenger/store-maintenance.test.ts covers store migrate; consumer mounts the shared command |
 | `store rebuild` |  | ✅ |  |
 | `store backup` |  | ✅ |  |
 | `store backup` | `--encrypt` | ✅ |  |
