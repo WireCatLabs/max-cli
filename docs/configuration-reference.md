@@ -84,7 +84,7 @@ max config show --json     # то же одним объектом
 
 `~/.config/max-cli/config.json` на Linux; пути на других системах — в
 [руководстве по настройкам](configuration.md#где-лежит-файл). Первая команда, читающая настройки, —
-например `config show`, `account list` или `chats list` — создаёт его с `limit`, `keep_runs_for_days`, `sends_per_hour`, `update_check` и `skill_hint` в `defaults`.
+например `config show`, `session list` или `chats list` — создаёт его с `limit`, `keep_runs_for_days`, `sends_per_hour`, `update_check` и `skill_hint` в `defaults`.
 Файл создаётся и записывается `max personal config set` с правами `0600`, каталог — `0700`. `max personal doctor`
 называет файл или каталог, которые могут читать другие, в `files.problems` и печатает `chmod`, который это исправляет.
 `max personal doctor` файл только читает: если его нет, он отвечает `config.found: false` и не создаёт его.

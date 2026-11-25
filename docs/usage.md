@@ -128,7 +128,7 @@ max personal account show --hide-phone   # без номера
 ```
 
 ```sh
-max account list                # все профили на этом компьютере и аккаунт каждого; в MAX не обращается
+max session list                # все профили на этом компьютере и аккаунт каждого; в MAX не обращается
 ```
 
 ```sh

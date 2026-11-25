@@ -18,7 +18,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `setup` |  | ✅ |  |
 | `setup` | `--agent` | ✅ |  |
 | `setup` | `--method` | ✅ |  |
-| `account list` |  | ✅ |  |
+| `session list` |  | ✅ |  |
 | `account show` |  | ✅ |  |
 | `account show` | `--hide-phone` | ✅ |  |
 | `account update` |  | ✅ |  |

@@ -179,7 +179,7 @@ export interface Settings extends AISettings {
   kind: ProfileKind
   /** Profiles the configuration file names, whether or not anyone has logged in to them. */
   configuredProfiles: string[]
-  /** The profiles on this computer, as `account list` shows them. */
+  /** The profiles on this computer, as `session list` shows them. */
   profilesHere: string[]
   /** Where each value came from — `max config show` prints it. */
   sources: Record<SourcedSetting, Source>

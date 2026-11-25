@@ -132,7 +132,7 @@ MAX_TOKEN="$(cat /path/to/token)" max personal chats list --json
 
 ```sh
 max personal account show             # под кем выполнен вход: id, имя, последние четыре цифры телефона
-max account list             # все профили на этом компьютере и аккаунт каждого
+max session list             # все профили на этом компьютере и аккаунт каждого
 max personal account sessions list    # все устройства и приложения, вошедшие в аккаунт; ничего не завершает
 max personal session end              # выйти из MAX и забыть токен на этой машине
 ```
@@ -195,7 +195,7 @@ export MAX_PROFILE=personal # или на всю сессию оболочки
 
 На компьютере без профилей сообщение говорит, как создать первый: `max personal setup`. Без
 профиля работают только команды, которым аккаунт не нужен: `--help`, `--version`, `commands`,
-`skill show`, `account list`, `config show`.
+`skill show`, `session list`, `config show`.
 
 Если первое слово не команда и команды за ним нет, программа не показывает справку молча, а
 говорит, что произошло:
