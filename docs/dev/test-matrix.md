@@ -7,7 +7,7 @@ ran it · ⛔ not tested offline, with the reason and where it is checked instea
 Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 [TESTING.md](TESTING.md) for how, and for the states and failures that cut across commands.
 
-**930 ✅ · 249 ⛔ · 0 ❌** — 386 commands, 793 options.
+**930 ✅ · 251 ⛔ · 0 ❌** — 386 commands, 795 options.
 
 | Command | Option | | Note |
 |---|---|---|---|
@@ -295,6 +295,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `store info` |  | ✅ |  |
 | `store check` |  | ✅ |  |
 | `store migrate` |  | ✅ |  |
+| `store migrate` | `--no-backup` | ⛔ | cli-core src/cli/messenger/store-maintenance.test.ts covers store migrate; consumer mounts the shared command |
 | `store rebuild` |  | ✅ |  |
 | `store backup` |  | ✅ |  |
 | `store backup` | `--encrypt` | ✅ |  |
@@ -720,6 +721,7 @@ Measured from the test run (`coverage/argv.jsonl`), not searched for — see
 | `search conversations` | `--sync-first` | ✅ |  |
 | `search conversations` | `--sync-time` | ✅ |  |
 | `search conversations` | `--max-messages` | ✅ |  |
+| `search conversations` | `--like` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `search conversations` | `--chat` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `search conversations` | `--since-time` | ⛔ | phase 5's shared command; it runs a text model — downloaded over the network, or an external one with its own key — so max's offline tests cannot; cli-core's src/services/embeddings.test.ts drives it with a stand-in model |
 | `search conversations` | `--filter` | ✅ |  |
