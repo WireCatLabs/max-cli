@@ -5,7 +5,7 @@ import { delimiter, join } from "node:path"
 import type { Readable, Writable } from "node:stream"
 import { setTimeout as delay } from "node:timers/promises"
 import { CliError } from "@wirecat/cli-base"
-import type { Closeable } from "../deadline.js"
+import type { Closeable } from "@wirecat/cli-core/cli"
 
 /**
  * What `session start` needs from a browser. Injected in tests, which must never open a window on
