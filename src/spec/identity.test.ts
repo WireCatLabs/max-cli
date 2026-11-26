@@ -10,7 +10,7 @@ describe("the web user agent", () => {
       timezone: "Europe/Moscow",
       screen: "900x1440 2.0x",
       headerUserAgent:
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36",
     })
   })
 
@@ -20,7 +20,7 @@ describe("the web user agent", () => {
       locale: "en",
       deviceLocale: "en",
       headerUserAgent:
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.0.0 Safari/537.36",
     })
   })
 
