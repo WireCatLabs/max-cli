@@ -19,7 +19,7 @@ max [профиль] [опции] <команда> <действие> [аргу�
 **Профиль никогда не подразумевается**: если его не назвать, команда, которой нужен аккаунт,
 останавливается и перечисляет профили этого компьютера — даже если профиль один. Первый вход тоже
 с именем: `max personal setup`. Без профиля работают только команды, которым аккаунт не нужен:
-`--help`, `--version`, `commands`, `skill show`, `account list`, `config show`.
+`--help`, `--version`, `commands`, `skill show`, `session list`, `config show`.
 
 ⚠ Описания команд и опций ниже — ровно те, что печатает `max --help`, то есть по-английски. Это
 не недоработка перевода: текст живёт в программе, и второй его копии здесь быть не должно.
@@ -89,6 +89,36 @@ max session end
 
 **Example:** `max personal session end`
 
+### `max session status`
+
+show whether this profile has a session on this computer and the account it was logged in as; --check asks the messenger whose the session is, without the phone number (`account show` has it)
+
+```sh
+max session status [options]
+```
+
+| Опция | Что делает |
+|---|---|
+| `--check` | ask the messenger whether the session still works, and whose it is. |
+
+**Example:** `max personal session status`, `max personal session status --check --json`
+
+### `max session list`
+
+every account profile on this computer, and the account each is logged in as; a name that is only a bot is left out (`bot list` has it), one that is a bot too says `bot: true`; asks the messenger nothing
+
+```sh
+max session list [query]
+```
+
+| Аргумент | | Что это |
+|---|---|---|
+| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
+
+**Returns:** account profile — profile, current, account, name, signed_in, bot; every field: max commands info session list
+
+**Example:** `max session list`, `max session list --json`
+
 ## `max setup`
 
 set up your personal MAX account and connect your agent
@@ -109,22 +139,6 @@ max setup [options]
 ## `max account`
 
 the logged-in account
-
-### `max account list`
-
-every account profile on this computer, and the account each is logged in as; a name that is only a bot is left out (`bot list` has it), one that is a bot too says `bot: true`; asks the messenger nothing
-
-```sh
-max account list [query]
-```
-
-| Аргумент | | Что это |
-|---|---|---|
-| `query` | необязательный | field:value terms that narrow the list — the fields are below. |
-
-**Returns:** account profile — profile, current, account, name, signed_in, bot; every field: max commands info account list
-
-**Example:** `max personal account list`
 
 ### `max account show`
 

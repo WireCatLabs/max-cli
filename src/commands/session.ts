@@ -5,6 +5,7 @@ import {
   answerStdinOption,
   itemOf,
   logsInOrOut,
+  messengerSessionCommands,
   REMOTE_WRITE,
   renderAnswer,
   type SignInSteps,
@@ -17,6 +18,7 @@ import { MAX_APP } from "../app.js"
 import { type MaxClientOptions, refuseWhilePaused } from "../client.js"
 import { SHELL_OVERRIDES } from "../contract-overrides.js"
 import { maskedProfile } from "../domain/map.js"
+import { maxMessenger } from "../messenger.js"
 import { asFirstWord, commandWords, refuseCommandName, rootOf } from "../profile.js"
 import { stopServer } from "../server/server-connection.js"
 import { adoptToken } from "../session/adopt.js"
@@ -142,6 +144,7 @@ const sessionCommandDefinition = (): Command => {
       })
     })
 
+  for (const shared of messengerSessionCommands(maxMessenger)) command.addCommand(shared)
   return command
 }
 

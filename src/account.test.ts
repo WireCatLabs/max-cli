@@ -820,14 +820,14 @@ describe("sessions", () => {
   })
 })
 
-describe("account list", () => {
+describe("session list", () => {
   it("lists the profiles on this computer without asking MAX", async () => {
     const streams = captureStreams()
-    const code = await run(["a-list", "account", "list", "--json"], {
+    const code = await run(["a-list", "session", "list", "--json"], {
       streams,
       tty: false,
       connection: () => {
-        throw new Error("account list asked MAX")
+        throw new Error("session list asked MAX")
       },
     })
 
@@ -835,5 +835,27 @@ describe("account list", () => {
     expect(code).toBe(0)
     const listed = JSON.parse(streams.stdout.join("\n"))
     expect(JSON.stringify(listed)).toContain("a-list")
+  })
+  it("**says a profile with no session is not logged in**, even with --check, asking MAX nothing", async () => {
+    for (const argv of [
+      ["fresh", "session", "status", "--json"],
+      ["fresh", "session", "status", "--check", "--json"],
+    ]) {
+      const streams = captureStreams()
+      const code = await run(argv, {
+        streams,
+        tty: false,
+        connection: () => {
+          throw new Error("session status asked MAX")
+        },
+      })
+
+      expect(code).toBe(0)
+      expect(JSON.parse(streams.stdout.join("\n")).item).toMatchObject({
+        profile: "fresh",
+        signed_in: false,
+        verified: false,
+      })
+    }
   })
 })

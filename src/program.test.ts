@@ -524,14 +524,14 @@ describe("the program", () => {
       expect(await serveOf("--no-serve")).toMatchObject({ setting: "serve", value: false, from: "flag" })
     })
 
-    it("**assumes no profile**: an account command stops and lists them; account list and config show still run", async () => {
+    it("**assumes no profile**: an account command stops and lists them; session list and config show still run", async () => {
       const { MAX_PROFILE } = process.env
       delete process.env.MAX_PROFILE
       try {
         const chats = await runWith(["chats", "list", "--json"])
         expect(chats.code).toBe(2)
         expect(JSON.parse(chats.stderr).error.message).toMatch(/^name a profile: /)
-        expect((await runWith(["account", "list", "--json"])).code).toBe(0)
+        expect((await runWith(["session", "list", "--json"])).code).toBe(0)
         expect(JSON.parse((await runWith(["config", "show", "--json"])).stdout).item).toMatchObject({
           profile: null,
           profile_from: "none named",
