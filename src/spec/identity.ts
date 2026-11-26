@@ -3,7 +3,7 @@
  *
  * **We imitate MAX's own web client rather than announcing ourselves** (`REQUIREMENTS.md` §34), so
  * none of these values names this tool. Fields and their order are what web.max.ru sent on 2026-09-25
- * (`src/testing/fixtures/web-capture-2026-09-25.json`, the INIT frame). The versions were read on 2026-10-26: the
+ * (`src/testing/fixtures/web-capture-2026-09-25.json`, the INIT frame). The versions were read on 2026-11-26: the
  * app version from the web client's public bundle, next to its socket address, and Chrome from the current stable.
  *
  * **Built from this machine, as the web client builds it from the browser** (`MAX-55`): timezone
@@ -15,14 +15,14 @@
  * because a client presenting a new device on every command is not imitating anything.
  */
 
-const CHROME = "Chrome/154.0.0.0"
-const APP_VERSION = "26.10.7"
+const CHROME = "Chrome/158.0.0.0"
+const APP_VERSION = "26.11.11"
 
 /**
  * When `APP_VERSION` and `CHROME` were read from a live tab. MAX refuses a client version it has
  * dropped (PyMax #86), so `max doctor` reports their age (`MAX-39`); a release updates all three.
  */
-export const CLIENT = { appVersion: APP_VERSION, chrome: CHROME, readOn: "2026-10-26" } as const
+export const CLIENT = { appVersion: APP_VERSION, chrome: CHROME, readOn: "2026-11-26" } as const
 
 /** Chrome's reduced user agent keeps one frozen OS string per platform. */
 const PLATFORMS = {
