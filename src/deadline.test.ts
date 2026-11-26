@@ -1,5 +1,5 @@
+import { withDeadline } from "@wirecat/cli-core/cli"
 import { describe, expect, it } from "vitest"
-import { withDeadline } from "./deadline.js"
 
 const never = () => new Promise<never>(() => {})
 

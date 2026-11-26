@@ -3,8 +3,8 @@ import { basename, extname } from "node:path"
 import { CliError, type ErrorCode, realSleep, type SleepLike } from "@wirecat/cli-base"
 import { type FetchLike, statusToCode } from "@wirecat/cli-base/http"
 import type { DiagnosticEvent } from "@wirecat/cli-core/cli"
+import { timeLimit } from "@wirecat/cli-core/cli"
 import { parse } from "lossless-json"
-import { timeLimit } from "../deadline.js"
 import { plainJson } from "./transport.js"
 
 export const UPLOAD_TYPES = ["image", "video", "audio", "file"] as const

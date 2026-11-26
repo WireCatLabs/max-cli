@@ -2,9 +2,9 @@ import { openAsBlob } from "node:fs"
 import { stat } from "node:fs/promises"
 import { basename, extname } from "node:path"
 import { CliError, isCliError } from "@wirecat/cli-base"
+import { withTimeLimit } from "@wirecat/cli-core/cli"
 import { refusedPlace } from "@wirecat/cli-core/sends"
 import { MAX_APP } from "./app.js"
-import { withTimeLimit } from "./deadline.js"
 import { WEB_USER_AGENT } from "./spec/identity.js"
 
 const HEADERS = {

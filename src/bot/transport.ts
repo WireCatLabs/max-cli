@@ -9,10 +9,9 @@ import {
 } from "@wirecat/cli-base"
 import type { ManifestOperation } from "@wirecat/cli-base/codegen/runtime"
 import { type FetchLike, hostFetch, providerWaitMs, statusToCode } from "@wirecat/cli-base/http"
-import { type DiagnosticEvent, providerErrorKey, type RequestEvent } from "@wirecat/cli-core/cli"
+import { type DiagnosticEvent, providerErrorKey, type RequestEvent, withTimeLimit } from "@wirecat/cli-core/cli"
 import { guardedWrite, newOperationId } from "@wirecat/cli-core/sends"
 import { isLosslessNumber, isSafeNumber, parse, stringify } from "lossless-json"
-import { withTimeLimit } from "../deadline.js"
 import { VERSION } from "../version.js"
 import { botFetch } from "./trust.js"
 

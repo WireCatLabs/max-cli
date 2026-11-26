@@ -4,10 +4,12 @@ import type { FetchLike } from "@wirecat/cli-base/http"
 import type { ServerSystem } from "@wirecat/cli-core/background"
 import {
   type BaseEnvironment,
+  type Closeable,
   inputPolicy,
   recorded,
   environmentOf as sharedEnvironmentOf,
   withAbort,
+  withDeadline,
 } from "@wirecat/cli-core/cli"
 import { levelFor } from "@wirecat/cli-core/sends"
 import type { Command } from "commander"
@@ -16,7 +18,6 @@ import type { BotTokenStore } from "../bot/auth.js"
 import type { ChatRegistry } from "../bot/registry.js"
 import { MaxClient, type MaxClientOptions } from "../client.js"
 import { type GlobalFlags, type ResolveOptions, resolveSettings, runRetention, type Settings } from "../config.js"
-import { type Closeable, withDeadline } from "../deadline.js"
 import { fetchBytes, httpOnly, type Reach } from "../download.js"
 import { resolveOutput } from "../output.js"
 import { permissionScope } from "../permissions.js"
