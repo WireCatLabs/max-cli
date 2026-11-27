@@ -9,6 +9,7 @@ import type { MaxClient } from "./client.js"
 import { MAX_REMOVAL } from "./commands/account-removal.js"
 import { environmentOf, forCommand } from "./commands/context.js"
 import { resolveSettings } from "./config.js"
+import { diagnoseMax, maxNotes, maxOnlineChecks } from "./doctor.js"
 import { approvePermission, askerFor, commandPermission, forgetApprovals, permissionKeyOf } from "./permissions.js"
 import { rootOf } from "./profile.js"
 import { maxRecord } from "./record.js"
@@ -63,16 +64,9 @@ export const maxMessenger: Messenger = {
   topics: false,
   skill: SKILL,
   accountRemoval: MAX_REMOVAL,
-  diagnose: async (command) => {
-    const { store } = forCommand(command)
-    let token: string
-    try {
-      token = store.tokenSource() ?? "none"
-    } catch {
-      token = "unreachable"
-    }
-    return { kind: store.isBot() ? "personal + bot" : "personal", token, logged_in_here: store.hasLoggedIn() }
-  },
+  diagnose: diagnoseMax,
+  doctorNotes: maxNotes,
+  doctorOnline: maxOnlineChecks,
   counterFields: ["views", "reactions"],
   name: "MAX",
   chatArgument: "a chat: its id, or part of its title",

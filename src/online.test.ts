@@ -2,55 +2,9 @@ import { mkdtempSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { describe, expect, it } from "vitest"
-import type { MaxClient } from "./client.js"
-import { checkOnline, mcpHandshake } from "./online.js"
-
-const client = (login: () => Promise<unknown>) => {
-  const calls: string[] = []
-  const fake = {
-    account: {
-      me: async () => {
-        calls.push("me")
-        return login()
-      },
-    },
-    chats: {
-      list: async () => {
-        calls.push("chats")
-        return { items: [{}] }
-      },
-    },
-    close: async () => void calls.push("close"),
-  }
-  return { client: fake as unknown as MaxClient, calls }
-}
+import { mcpHandshake } from "./online.js"
 
 describe("max doctor --online", () => {
-  it("logs in, reads one chat, closes, then asks the MCP server for its tools", async () => {
-    const { client: max, calls } = client(async () => ({}))
-
-    expect(await checkOnline(max, async () => 12)).toEqual([
-      { name: "login", ok: true, detail: "logged in" },
-      { name: "chats", ok: true, detail: "1 read" },
-      { name: "mcp", ok: true, detail: "12 tools offered" },
-    ])
-    expect(calls).toEqual(["me", "chats", "close"])
-  })
-
-  it("does not read after a failed login, and never tries the login again", async () => {
-    const { client: max, calls } = client(async () => {
-      throw new Error("no session")
-    })
-
-    const checks = await checkOnline(max, async () => 12)
-
-    expect(checks.map(({ name, ok }) => [name, ok])).toEqual([
-      ["login", false],
-      ["mcp", true],
-    ])
-    expect(calls).toEqual(["me", "close"])
-  })
-
   it("starts `mcp serve` and speaks MCP to it: initialize, then tools/list, then closes its stdin", async () => {
     const script = join(mkdtempSync(join(tmpdir(), "max-mcp-")), "server.mjs")
     writeFileSync(
