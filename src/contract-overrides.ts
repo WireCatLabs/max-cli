@@ -2,7 +2,6 @@ import type { SharedContractOverride } from "@wirecat/cli-base/commands"
 
 // Reviewed differences from Core. A changed default requires reviewing this declaration.
 export const SHELL_OVERRIDES: Readonly<{
-  doctor: readonly SharedContractOverride[]
   messages: readonly SharedContractOverride[]
   chats: readonly SharedContractOverride[]
   session: readonly SharedContractOverride[]
@@ -11,30 +10,6 @@ export const SHELL_OVERRIDES: Readonly<{
   contacts: readonly SharedContractOverride[]
   watch: readonly SharedContractOverride[]
 }> = {
-  doctor: [
-    {
-      command: ["doctor"],
-      field: "options",
-      before: [
-        {
-          flags: "--online",
-          description: "also connect once and read the account; sends nothing",
-          takes_value: false,
-          mandatory: false,
-        },
-      ],
-      after: [
-        {
-          flags: "--online",
-          description: "also log in once, read one chat and start the MCP server; sends nothing",
-          takes_value: false,
-          mandatory: false,
-        },
-      ],
-      reason:
-        "MAX reports its own server, protocol library and installation while retaining the shared diagnostic defaults.",
-    },
-  ],
   messages: [
     {
       command: ["messages"],

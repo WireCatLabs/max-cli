@@ -6,6 +6,7 @@ import {
   attachmentsCommand,
   conversationsCommand,
   createProgram as createSharedProgram,
+  doctorCommand,
   floodCommand,
   guideCommand,
   imagesCommand,
@@ -46,7 +47,6 @@ import { completeCommand } from "./commands/complete.js"
 import { configCommand } from "./commands/config.js"
 import { contactsCommand } from "./commands/contacts.js"
 import { type Environment, environmentOf, withAgentLevels } from "./commands/context.js"
-import { doctorCommand } from "./commands/doctor.js"
 import { messagesCommand } from "./commands/messages.js"
 import { modelsCommand } from "./commands/models.js"
 import { lockedStore } from "./commands/read-only.js"
@@ -141,7 +141,7 @@ const definition = (options: RunOptions = {}): ProgramDefinition => ({
     scheduleCommand(maxMessenger),
     watchCommand(),
     configCommand(),
-    doctorCommand(),
+    doctorCommand(maxMessenger),
     runsCommand(),
     skillCommand(),
     commandsCommand(),

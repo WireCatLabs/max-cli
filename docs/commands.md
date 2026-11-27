@@ -5959,7 +5959,7 @@ max doctor [options]
 
 | Опция | Что делает |
 |---|---|
-| `--online` | also log in once, read one chat and start the MCP server; sends nothing. |
+| `--online` | also connect once and read the account; sends nothing. |
 
 **Example:** `max personal doctor`
 

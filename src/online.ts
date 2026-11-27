@@ -1,44 +1,9 @@
 import { spawn } from "node:child_process"
 import { createInterface } from "node:readline"
-import type { MaxClient } from "./client.js"
 import { VERSION } from "./version.js"
-
-export interface Check {
-  name: string
-  ok: boolean
-  detail: string
-}
 
 const HANDSHAKE_MS = 20_000
 
-/**
- * `max doctor --online`: **one login and two reads**, then the MCP server started the way a client
- * starts it. Nothing is sent and nothing is marked read. A failed step is an answer, never a retry —
- * each login counts toward MAX's too-many-logins pause (`MAX-38`).
- */
-export const checkOnline = async (client: MaxClient, handshake: () => Promise<number>): Promise<Check[]> => {
-  const checks: Check[] = []
-  const step = async (name: string, body: () => Promise<string>): Promise<boolean> => {
-    try {
-      checks.push({ name, ok: true, detail: await body() })
-      return true
-    } catch (error) {
-      checks.push({ name, ok: false, detail: error instanceof Error ? error.message : String(error) })
-      return false
-    }
-  }
-
-  const loggedIn = await step("login", async () => {
-    await client.account.me()
-    return "logged in"
-  })
-  if (loggedIn) await step("chats", async () => `${(await client.chats.list({ limit: 1 })).items.length} read`)
-  await client.close()
-  await step("mcp", async () => `${await handshake()} tools offered`)
-  return checks
-}
-
-/** Any version the server supports answers; this is the one cli-core's own MCP client asks for. */
 const MCP_PROTOCOL = "2025-06-18"
 
 /**

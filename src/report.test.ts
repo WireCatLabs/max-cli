@@ -28,7 +28,7 @@ describe("max doctor reports", () => {
     expect(code).toBe(0)
     const { item } = JSON.parse(stdout)
     expect(item).toMatchObject({ send_to: "https://github.com/WireCatLabs/max-cli/issues/new" })
-    expect(item.excludes).toContain("the token")
+    expect(item.excludes).toEqual(expect.arrayContaining(["message text", "the session", "the app credentials"]))
   })
 
   it("with no failed run yet, still writes the report and says how to get one", async () => {
