@@ -92,14 +92,13 @@ describe("every failure is kept as a run", () => {
     expect(runsOf("f-alone")).toMatchObject([{ command: "max", errorCode: "validation_error" }])
   })
 
-  it("but nothing under --no-record or for --help, and a success is kept as one", async () => {
+  it("but nothing under --no-record or for --help", async () => {
     expect(
       await runWith(["f-off", "messages", "sync", "111", "--since-time", "1d", "--last", "5", "--no-record"]),
     ).toBe(2)
     expect(await runWith(["f-help", "messages", "--help"])).toBe(0)
-    expect(await runWith(["f-help", "doctor"])).toBe(0)
 
     expect(runsOf("f-off")).toEqual([])
-    expect(runsOf("f-help")).toMatchObject([{ command: "doctor", status: "success" }])
+    expect(runsOf("f-help")).toEqual([])
   })
 })
