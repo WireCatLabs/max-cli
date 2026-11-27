@@ -58,8 +58,8 @@ export const httpOnly: Reach = async (url) => {
 /** MAX takes attachments up to 4 GB (help.max.ru, "Как отправить в чат фото и другие файлы"). */
 const LARGEST_ATTACHMENT = 4 * 1024 ** 3
 
-/** A voice message is read into memory whole; minutes of Opus are a few megabytes. */
-export const LARGEST_VOICE = 32 * 1024 * 1024
+/** A voice message is read into memory whole and decoded there; minutes of Opus are a few megabytes. */
+export const LARGEST_VOICE = 320 * 1024 * 1024
 
 /** No byte for this long and the download is given up — however large the file, it is moving or not. */
 export const STALL_MS = 60_000

@@ -51,7 +51,7 @@ beforeAll(async () => {
     }
     if (request.url === "/too-large-file")
       return response.writeHead(200, { "content-length": String(5 * 1024 ** 3) }).end()
-    if (request.url === "/huge") return response.writeHead(200, { "content-length": String(64 * 1024 * 1024) }).end()
+    if (request.url === "/huge") return response.writeHead(200, { "content-length": String(640 * 1024 * 1024) }).end()
     if (request.url === "/endless") {
       response.writeHead(200)
       const chunk = Buffer.alloc(1024 * 1024)
@@ -401,7 +401,7 @@ describe("fetchBytes, for a voice message", () => {
   })
 
   it("stops reading a body that runs past the limit without saying its length", async () => {
-    await expect(fetchBytes(voice("/endless"), anywhere)).rejects.toThrow(/larger than 32 MiB/)
+    await expect(fetchBytes(voice("/endless"), anywhere)).rejects.toThrow(/larger than 320 MiB/)
   })
 })
 
